@@ -1,0 +1,56 @@
+extends ../layout
+
+block content
+	style.
+		html{
+			overflow: visible;
+		}
+	include templates/heatmap
+	h2(class="gear-text-white") Scoring data for team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
+	p
+
+	if (matches)
+		h6 <i>Click on a match number to see alliance data for that match</i>
+		- var aggRangeMap = [];
+		for scoreItem in currentAggRanges
+			- aggRangeMap[scoreItem.key] = scoreItem;
+
+		table(class="w3-table" id="metricTable")
+			tr
+				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')") Match
+				- var colIdx = 2;
+				for item in layout
+					if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+						- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+						th(class="w3-right-align" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
+						- colIdx++
+			for row in matches
+				if (row.data)
+					tr
+						td(class="w3-center")
+							a(href="/reports/matchdata?key=" + row.match_key)= row.match_number
+						for item in layout
+							if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+								- var valStyle = 'w3-right-align w3-text-white'
+								- if (row.data[item.id] == 0) valStyle = 'w3-right-align w3-text-gray'
+								if (aggRangeMap[item.id])
+									td(class=`${valStyle}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, row.data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, row.data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, row.data[item.id])})`)= row.data[item.id]
+								else
+									td(class=`${valStyle}`)= row.data[item.id]
+	else
+		p <i>Insufficient data at this time, come back later!</i>
+	script.
+		$('th').click(function(){
+			var table = $(this).parents('table').eq(0)
+			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+			this.asc = !this.asc
+			if (!this.asc){rows = rows.reverse()}
+			for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+		})
+		function comparer(index) {
+			return function(a, b) {
+				var valA = getCellValue(a, index), valB = getCellValue(b, index)
+				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+			}
+		}
+		function getCellValue(row, index){ return $(row).children('td').eq(index).text() }

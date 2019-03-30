@@ -1,0 +1,11 @@
+h5=element.label
+- if ( !answer || isNaN(answer) )
+	- answer = 0;
+div(class="w3-col s2 m4")
+	button(class="w3-btn theme-red scouting-counter" onclick=`updateCounter_${element.id}(-1)` type="button") -
+label(class="w3-col s8 m4 w3-center")
+	input(class="" style="width:95%" type="number" value=answer name=element.id id=element.id onclick="this.select()")
+div(class="w3-col s2 m4")
+	button(class="w3-btn w3-green scouting-counter" onclick=`updateCounter_${element.id}(1)` type="button") +
+br 
+br 

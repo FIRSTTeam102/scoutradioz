@@ -1,0 +1,132 @@
+extends ../layout
+
+block content
+	style.
+		html{
+			overflow: visible;
+		}
+	include templates/heatmap
+	h2(class="gear-text-white") All Team Metrics
+
+	if (aggdata)
+		span Show:  
+		input(type="radio" id="showAvg" name="sel" checked="checked" onclick="showAvg();")
+		label(for="showAvg")  Averages    
+		input(type="radio" id="showMax" name="sel" onclick="showMax();")
+		label(for="showMax")  Maximums 
+		p
+		- var aggRangeMap = [];
+		for scoreItem in currentAggRanges
+			- aggRangeMap[scoreItem.key] = scoreItem;
+
+		div#avgSect
+			table(class="w3-table" id="metricTable")
+				tr
+					th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") V
+					th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')") Team
+					th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')") Rank
+					- var colIdx = 4;
+					for item in layout
+						if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+							- var text = item.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+							th(class="w3-right-align" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
+							- colIdx++
+				for row in aggdata
+					tr
+						td(class="w3-center")= row.value
+						if (row.value == -1)
+							td(class="w3-center")
+								a(href=`/reports/teamintel?team=${row._id}`)
+									strike= row._id.substring(3)
+						else if (row.value == 1)
+							td(class="w3-center" style="font-weight:800")
+								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+						else
+							td(class="w3-center")
+								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+						td(class="w3-right-align")= row.rank
+						for item in layout
+							if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+								- var valStyle = 'w3-right-align w3-text-white'
+								- if (row[item.key] == 0) valStyle = 'w3-right-align w3-text-gray'
+								if (aggRangeMap[item.key])
+									td(class=`${valStyle}` style=`background-color: rgb(${getValR(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key + "AVG"])},${getValG(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key + "AVG"])},${getValB(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key + "AVG"])})`)= row[item.key + "AVG"]
+								else
+									td(class=`${valStyle}`)= row[item.key + "AVG"]
+		div#maxSect
+			table(class="w3-table" id="metricTable")
+				tr
+					th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") V
+					th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')") Team
+					th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')") Rank
+					- var colIdx = 4;
+					for item in layout
+						if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+							- var text = item.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+							th(class="w3-right-align" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
+							- colIdx++
+				for row in aggdata
+					tr
+						td(class="w3-center")= row.value
+						if (row.value == -1)
+							td(class="w3-center")
+								a(href=`/reports/teamintel?team=${row._id}`)
+									strike= row._id.substring(3)
+						else if (row.value == 1)
+							td(class="w3-center" style="font-weight:800")
+								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+						else
+							td(class="w3-center")
+								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+						td(class="w3-right-align")= row.rank
+						for item in layout
+							if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+								- var valStyle = 'w3-right-align w3-text-white'
+								- if (row[item.key] == 0) valStyle = 'w3-right-align w3-text-gray'
+								if (aggRangeMap[item.key])
+									td(class=`${valStyle}` style=`background-color: rgb(${getValR(aggRangeMap[item.key].MAXmin, aggRangeMap[item.key].MAXmax, row[item.key + "MAX"])},${getValG(aggRangeMap[item.key].MAXmin, aggRangeMap[item.key].MAXmax, row[item.key + "MAX"])},${getValB(aggRangeMap[item.key].MAXmin, aggRangeMap[item.key].MAXmax, row[item.key + "MAX"])})`)= row[item.key + "MAX"]
+								else
+									td(class=`${valStyle}`)= row[item.key + "MAX"]
+	else
+		p <i>Insufficient data at this time, come back later!</i>
+	script.
+		showAvg();
+
+		function showAvg() {
+			var avg = document.getElementById('avgSect');
+			avg.style.display = "block";
+			var max = document.getElementById('maxSect');
+			max.style.display = "none";
+		}
+
+		function showMax() {
+			var avg = document.getElementById('avgSect');
+			avg.style.display = "none";
+			var max = document.getElementById('maxSect');
+				max.style.display = "block";
+		}
+
+		function setValue(teamKey, value)
+		{
+			console.log("teamKey " + teamKey + ", value " + value);
+			
+			document.getElementById("updatekey").value = teamKey;
+			document.getElementById("updatevalue").value = value;
+			
+			document.getElementById("updateteamvalue").submit();
+		}
+
+		$('th').click(function(){
+			var table = $(this).parents('table').eq(0)
+			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+			this.asc = !this.asc
+			if (!this.asc){rows = rows.reverse()}
+			for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+		})
+		function comparer(index) {
+			return function(a, b) {
+				var valA = getCellValue(a, index), valB = getCellValue(b, index)
+				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+			}
+		}
+		function getCellValue(row, index){ return $(row).children('td').eq(index).text() }

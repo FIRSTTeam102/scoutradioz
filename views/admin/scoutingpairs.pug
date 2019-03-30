@@ -1,0 +1,172 @@
+//-
+	Admin page to create or delete pit/match scouting pairs.
+	PARAM
+		assigned(optional)	[Object Array] [{_id, member1, member2 (,member3)}] from db.assigned
+	CALLED FROM
+		scoutingpairs.js	'/admin/scoutingpairs'
+	//
+extends ../layout
+block content
+	table(class="w3-table")
+		th programming
+		th mechanical
+		th electrical
+		tr
+			td
+				ul(class="w3-ul w3-card")
+					each member, i in prog
+						li(class="w3-no-border")
+							button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
+			td
+				ul(class="w3-ul")
+					each member, i in mech
+						li(class="w3-no-border")
+							button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
+			td
+				ul(class="w3-ul")
+					each member, i in elec
+						li(class="w3-no-border")
+							button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
+	form#setmemberpair(name="setmemberpair" method="post" action="/admin/scoutingpairs/setscoutingpair")
+		input#setmemberpairdata(type="hidden", name="data")
+	button(class="w3-btn w3-block theme-submit" onclick="submitPair()") Submit selected members as a new scouting group
+
+	if assigned.length > 0
+		p(class="theme-spacer")
+		h2 Scouting pairs
+	ul(class="w3-ul w3-left-align")
+		each pair in assigned
+			li(class="w3-no-border")
+				- var selectedArray = [];
+				- var pairId;
+				- for (var key in pair) if (key != "_id") selectedArray.push(" "+pair[key]);
+				- for (var key in pair) if (key == "_id") pairId=pair[key];
+				- thisButtonLabel = selectedArray.toString();
+				button(onclick=`deletePair("${pairId}")` class="w3-btn theme-red") Delete pair
+				|	#{thisButtonLabel}
+	form(method="post" action="/admin/scoutingpairs/deletescoutingpair" id="deletememberpair")
+		input(id="deletememberpairinput" name="data" type="hidden")
+	p(class="theme-spacer")
+	div( onclick="promptPass('WARNING: Erases existing SCOUTING data for current event.', '/admin/scoutingpairs/generateteamallocations');")
+		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams to PIT SCOUTING members
+	br
+	div( onclick="promptPass('WARNING: Erases existing SCORING data for current event.', '/admin/scoutingpairs/generatematchallocations');")
+		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams@matches to MATCH SCORING members
+	br 
+	br 
+	div( onclick="promptPass('WARNING: Erases MATCH SCORING ASSIGNMENTS for current event.', '/admin/scoutingpairs/clearmatchallocations');")
+		button(class="w3-btn theme-red theme-strong" type="submit") Clear all MATCH SCORING assignments
+	p(class="theme-spacer")
+	h2 Team@Match Allocation v2.0
+	form(action="/admin/scoutingpairs/generatematchallocations2" method="post")
+		each member in available
+			div(class="w3-container" style="max-width:300px;margin:auto;")
+				div(class="w3-left w3-margin-left")
+					input(type="checkbox" class="w3-check" name=member.name id=member.name)
+					label(class="w3-text-white" for=member.name) &nbsp;#{member.name} (#{member.subteam})
+					br
+		br
+		button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
+	
+	script.
+		
+		function promptPass(message, url){
+			
+			var pass = prompt(message + "\nTo continue, enter password.");
+			
+			$.post(url, {
+				password: pass
+			}, 
+			function( data, status ){
+				console.log(data);
+				if(data && data.alert)
+					alert(data.alert);
+			});
+		}
+		
+		var selectedDict = {};
+		var selectedArray = [];
+		var selected = 0;
+		
+		function toggle(id)
+		{
+			console.log(id);
+			var currentstate = document.getElementById(id).getAttribute("chosenstate");
+			console.log(currentstate);
+			
+			if (currentstate == "false")
+			{
+				if (selected >= 3)
+					return;
+				
+				document.getElementById(id).className = "w3-btn w3-light-gray w3-block";
+				document.getElementById(id).setAttribute("chosenstate", "true");
+				
+				if( selectedDict.member1 && selectedDict.member2 )
+					selectedDict.member3 = id;
+					
+				else if( selectedDict.member2 && selectedDict.member3 )
+					selectedDict.member1 = id;
+					
+				else if( selectedDict.member1 && selectedDict.member3 )
+					selectedDict.member2 = id;
+				
+				else if( selectedDict.member1 )
+					selectedDict.member2 = id;
+					
+				else
+					selectedDict.member1 = id;
+				
+				selected++;
+			}
+			else
+			{
+				document.getElementById(id).className = "w3-dark-gray w3-btn w3-block";
+				document.getElementById(id).setAttribute("chosenstate", "false");
+				
+				//shuffles selectedDict down to make sure we always have member1 and 2
+				if( selectedDict.member1 == id ){
+					selectedDict.member1 = selectedDict.member2;
+					selectedDict.member2 = selectedDict.member3;
+					delete selectedDict.member3;
+					
+				}else if( selectedDict.member2 == id ){
+					selectedDict.member2 = selectedDict.member3;
+					delete selectedDict.member3;
+				
+				}else if( selectedDict.member3 == id ){
+					delete selectedDict.member3;
+				
+				}if (selected > 0)
+					selected--;
+			}
+		}
+		
+		function submitPair()
+		{
+			if (selected < 1)
+				return;
+			
+			console.log(selectedArray);
+			var selectedArray = [];
+			for (var key in selectedDict)
+			{
+				console.log(selectedDict[key]);
+				selectedArray.push(selectedDict[key]);
+			}
+			console.log(selectedArray.toString());
+			//document.getElementById("selectedString").innerHTML = selectedArray.toString();
+			document.getElementById("setmemberpairdata").value = JSON.stringify(selectedDict);
+			
+			document.getElementById("setmemberpair").submit();
+		}
+		
+		function deletePair(pairId)
+		{
+			console.log("deleted " + pairId);
+			
+			document.getElementById("deletememberpairinput").value = pairId;
+			
+			document.getElementById("deletememberpair").submit();
+		}
+	div(id="selectedString")

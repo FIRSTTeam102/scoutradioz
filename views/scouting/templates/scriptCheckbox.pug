@@ -1,0 +1,10 @@
+|
+| var #{element.id} = false;
+|
+| function updateCheck_#{element.id}()
+| {
+|	#{element.id} = !#{element.id};
+|	console.log(#{element.id});
+|	document.getElementById("#{element.id}FormInput").value = #{element.id};
+|	console.log(document.getElementById("#{element.id}FormInput").value);
+| }

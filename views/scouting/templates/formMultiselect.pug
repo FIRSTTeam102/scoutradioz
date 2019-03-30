@@ -1,0 +1,10 @@
+h5=element.label
+select(class="theme-input theme-inline-padding w3-no-border w3-half" style="float: none" type="text" name=element.id)
+	option
+	each option, i in element.options
+		if( answer == option )
+			option(value=option class="w3-bar-item" selected) #{option}
+		else
+			option(value=option class="w3-bar-item") #{option}
+br 
+br 

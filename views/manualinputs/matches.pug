@@ -1,0 +1,69 @@
+//-
+	Admin matches page. Shows TBA details of each match and buttons to update matches.
+	PARAM
+		locals.matches	?????????
+		matches			[Object Array]	Pulled straight from db.matches.
+	CALLED BY
+		externaldata.js '/admin/current/matches'
+	//
+extends ..\layout
+block content
+	form#updateForEvent(name="updateForEvent" method="post" action="/admin/data/matches")
+		input#seteventid(type="text", name="eventId")
+		button#btnSubmit(type="submit" class="w3-button w3-orange") Update DB for specified event ID
+	if locals.matches
+		table(class="w3-table")
+			tr
+				th Lvl
+				th #
+				th Schedule
+				th Actual
+				th Blue
+				th Blue Score
+				th Red
+				th Red Score
+				th Won?
+				th Update
+				//use these instead of "eventId" and "seteventid" for each input ("Won?" needs to be changed to "Won")
+			each match in matches
+				tr
+					td= match.comp_level
+					td= match.match_number
+					td= new Date(1000*match.time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")
+					if match.actual_time
+						td
+							input#seteventid(type="text", name="eventId", value=`${new Date(1000*match.actual_time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")}`)
+					else
+						td
+							input#seteventid(type="text", name="eventId")
+					td= match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3)
+					if (match.alliances.blue.score > -1)
+						td
+							input#seteventid(type="text", name="eventId", value=`${match.alliances.blue.score}`)
+					else
+						td
+							input#seteventid(type="text", name="eventId")
+					td= match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3)
+					if (match.alliances.red.score > -1)
+						td
+							input#seteventid(type="text", name="eventId", value=`${match.alliances.red.score}`)
+					else
+						td
+							input#seteventid(type="text", name="eventId")
+					td
+						input#seteventid(type="text", name="eventId", value=`${match.winning_alliance}`)
+					td
+						button(class="w3-button theme-submit" onClick=`updateMatch('${match.key}')`) Update #{match.key}
+	br
+	form#updatematchdata(name="updatematchdata" method="post" action="/manualinput/matches")
+		input#matchId(type="hidden", name="matchId")
+		input#Won(type="hidden", name="Won")
+	script.
+		function updateMatch(matchId)
+		{
+			console.log('matchId='+matchId);
+			document.getElementById("matchId").value = matchId;
+			//Finish this --> document.getElementById("Won").value = winning_alliance;
+			document.getElementById("updatematchdata").submit();
+		}
+	

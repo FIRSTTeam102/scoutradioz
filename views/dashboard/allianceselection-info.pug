@@ -1,0 +1,80 @@
+include ../reports/templates/heatmap
+if (aggdata)
+	- var aggRangeMap = [];
+	for scoreItem in currentAggRanges
+		- aggRangeMap[scoreItem.key] = scoreItem;
+	br 
+	table(class="w3-table w3-text-white" id="metricTable")
+		tr
+			th V
+			th Team
+			th FRC Rank
+			//th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") V
+			//th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')") Team
+			//th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')") Rank
+			- var colIdx = 4;
+			for item in layout
+				if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+					- var text = item.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+					th(class="w3-right-align" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
+					- colIdx++
+		tr 
+			th 
+			th 
+			th 
+			for item in layout
+				if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+					th(class="w3-small" style="font-weight: 100") 
+						span(class="w3-left" style="margin-top: 3px;") Max 
+						span(class="w3-right w3-medium") Avg
+		for row in aggdata
+			tr(id=`row_${row._id}` style="background-color: #b0b0c057")
+				td(class="w3-center")= row.value
+				if (row.value == -1)
+					td(class="w3-center")
+						strike= row._id.substring(3)
+				else if (row.value == 1)
+					td(class="w3-center" style="font-weight:800")= row._id.substring(3)
+				else
+					td(class="w3-center")= row._id.substring(3)
+				td(class="w3-right-align")= row.rank
+				for item in layout
+					if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+						- var valStyle = 'w3-right-align'
+						- if (row[item.key] == 0) valStyle = 'w3-right-align theme-text-gray'
+						//- td(class=`${valStyle}`)= row[item.key]
+						if (aggRangeMap[item.key])
+							td(class=`${valStyle}` style=`background-color: rgb(${getValR(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValG(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValB(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])})`)
+								//-span(class="w3-left") MAX DATA HERE
+								span(class="w3-left w3-small" style="margin-top:2px;") 1
+								span(class="w3-right")= row[item.key]
+						else
+							td(class=`${valStyle}`)= row[item.key]
+else
+	p <i>Insufficient data at this time, come back later!</i>
+script.
+	$('th').click(function(){
+		var table = $(this).parents('table').eq(0)
+		var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+		this.asc = !this.asc
+		if (!this.asc){rows = rows.reverse()}
+		for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+		
+		//prettifyTable();
+	})
+	function comparer(index) {
+		return function(a, b) {
+			var valA = getCellValue(a, index),
+				valB = getCellValue(b, index)
+			return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+		}
+	}
+	function getCellValue(row, index){
+		return $(row).children('td').eq(index).text() }
+style.
+	th{
+		cursor: pointer;
+	}
+	html{
+		overflow: visible;
+	}

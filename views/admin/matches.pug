@@ -1,0 +1,56 @@
+//-
+	Admin matches page. Shows TBA details of each match and buttons to update matches.
+	PARAM
+		locals.matches	?????????
+		matches			[Object Array]	Pulled straight from db.matches.
+	CALLED BY
+		externaldata.js '/admin/current/matches'
+	//
+extends ../layout
+block content
+	style.
+		html{
+			overflow: visible;
+		}
+	form#updateForEvent(name="updateForEvent" method="post" action="/admin/data/matches")
+		div(class="w3-show-inline-block w3-padding-small")
+			input#seteventid(class="theme-input w3-no-border theme-inline-padding" type="text", name="eventId")
+		div(class="w3-show-inline-block w3-padding-small")
+			button#btnSubmit(class="theme-submit w3-btn w3-no-border" type="submit") Update DB for specified event ID
+	br 
+	if locals.matches
+		table(class="w3-table")
+			tr
+				th Lvl
+				th #
+				th Schedule
+				th Actual
+				th Blue
+				th Score
+				th Red
+				th Score
+				th Won?
+				th Update
+			each match in matches
+				tr
+					td= match.comp_level
+					td= match.match_number
+					td= new Date(1000*match.time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")
+					if match.actual_time
+						td= new Date(1000*match.actual_time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")
+					else
+						td
+					td= match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3)
+					if (match.alliances.blue.score > -1)
+						td= match.alliances.blue.score
+					else
+						td
+					td= match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3)
+					if (match.alliances.red.score > -1)
+						td= match.alliances.red.score
+					else
+						td
+					td= match.winning_alliance
+					td
+						button(class="w3-button theme-submit" style="min-width: 175px;") #{match.key}
+	

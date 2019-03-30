@@ -1,0 +1,67 @@
+extends ../layout
+
+block content
+	if user
+		h2(class="gear-text-white") Dashboard for
+		h2(class="gear-text-white")= user.name
+		h4(style="font-style:italic") Scouting group:
+		h4(style="font-style:italic")= thisPair
+		p(class="theme-spacer")
+		if assignedTeams.length > 0
+			h3(class="gear-text-white") Scouting assignments
+			each team in assignedTeams
+				if team.data
+					a(href=`/scouting/pit?team=${team.team_key}`) 
+						div(class="gear-btn w3-dark-grey w3-btn w3-section gear-margin-sides")
+							span= team.team_key.substring(3)
+				else
+					a(href=`/scouting/pit?team=${team.team_key}`) 
+						div(class="gear-btn theme-link gear-hover-white w3-btn w3-section gear-margin-sides")
+							span= team.team_key.substring(3)
+			p(class="theme-spacer")
+		if backupTeams.length > 0
+			h3(class="gear-text-white") Partner(s) scouting assignments
+			each team in backupTeams
+				if team.data
+					a(href=`/scouting/pit?team=${team.team_key}`) 
+						div(class="gear-btn w3-dark-grey w3-btn w3-section gear-margin-sides")
+							span= team.team_key.substring(3)
+				else
+					a(href=`/scouting/pit?team=${team.team_key}`) 
+						div(class="gear-btn theme-link gear-hover-white w3-btn w3-section gear-margin-sides")
+							span= team.team_key.substring(3)
+			p(class="theme-spacer")
+		if scoringMatches.length > 0
+			h3(class="gear-text-white") Upcoming matches to be scored
+			br 
+			each match in scoringMatches
+				- match.alliance = (match.alliance == "red") ? "Red" : "Blue";
+				- var btnColor = (match.alliance == "Red") ? "theme-red" : "gear-blue"
+				
+				- //gets date crap
+				- var date = new Date( match.time * 1000 )
+				- if (match.predicted_time) date = new Date( match.predicted_time * 1000 );
+				- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+				- var day = days[date.getDay()];
+				- var hour = date.getHours();
+				- var minute = date.getMinutes();
+				- //makes minute crap 2 digits
+				- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
+				
+				h4 Match #{match.match_number} <br/> #{day} @ #{hour}:#{minute} 
+					if match.data
+						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
+							div(class="gear-btn theme-gray w3-btn w3-section gear-margin-sides")
+								span= match.team_key.substring(3)
+					else
+						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
+							div(class=`gear-btn ${btnColor} gear-hover-white w3-btn w3-section gear-margin-sides`)
+								span= match.team_key.substring(3)
+			p(class="theme-spacer")
+		div(class="w3-container w3-padding-16")
+			a(href="/dashboard/pits") 
+				div(class="gear-btn theme-link gear-hover-white w3-btn w3-section gear-margin-sides")
+					span One-off Pit Scouting
+			a(href="/dashboard/matches") 
+				div(class="gear-btn theme-link gear-hover-white w3-btn w3-section gear-margin-sides")
+					span One-off Match Scouting

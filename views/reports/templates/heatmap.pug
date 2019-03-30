@@ -1,0 +1,5 @@
+- var minR = 63; var minG = 0; var minB = 0;
+- var maxR = 0; var maxG = 255; var maxB = 0;
+- function getValR(min, max, val) { if (min == max) return minR; var thisVal = val; if (thisVal < min) thisVal = min; if (thisVal > max) thisVal = max; return ( Math.round(((thisVal - min)/(max - min)) * (maxR - minR) + minR) ) }
+- function getValG(min, max, val) { if (min == max) return minR; var thisVal = val; if (thisVal < min) thisVal = min; if (thisVal > max) thisVal = max; return ( Math.round(((thisVal - min)/(max - min)) * (maxG - minG) + minG) ) }
+- function getValB(min, max, val) { if (min == max) return minR; var thisVal = val; if (thisVal < min) thisVal = min; if (thisVal > max) thisVal = max; return ( Math.round(((thisVal - min)/(max - min)) * (maxB - minB) + minB) ) }

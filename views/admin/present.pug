@@ -1,0 +1,40 @@
+//-
+	Admin page with checkboxes to view who is attending the current event.
+	PARAM
+		members 	[Object Array]	from db.teammembers
+	CALLED BY
+		teammembers.js	'/admin/teammembers/present'
+	//
+extends ../layout
+block content
+	div(class="w3-section")
+		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") Uncheck All
+		button(class="theme-submit w3-btn gear-btn" onclick="check()") Check All
+	form(action="/admin/teammembers/updatepresent" method="post")
+		each member in members
+			div(class="w3-container" style="max-width:200px;margin:auto;")
+				div(class="w3-left w3-margin-left")
+					- if(member.present == "true")
+						input(type="checkbox" class="w3-check" name=member._id id=member._id checked="checked")
+					- else
+						input(type="checkbox" class="w3-check" name=member._id id=member._id)
+					label(class="w3-text-white" for=member._id) &nbsp;#{member.name}
+					br
+		div(style="width:200px;margin:auto;text-align:center")
+			button(type="submit" class="w3-btn theme-submit") Update Present Members
+	script(type="text/javascript").
+		function uncheck(){
+			var elements = document.getElementsByTagName("input");
+			
+			for(var i in elements){
+				elements[i].removeAttribute("checked");
+			}
+		}
+		
+		function check(){
+			var elements = document.getElementsByTagName("input");
+			
+			for(var i in elements){
+				elements[i].setAttribute("checked", "checked");
+			}
+		}

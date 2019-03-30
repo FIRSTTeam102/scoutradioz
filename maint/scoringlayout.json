@@ -1,0 +1,66 @@
+{"year" : 2019, "order": "1000", "type": "spacer"}
+{"year" : 2019, "order": "1010", "type": "checkbox", "label": "Started on Level 2?", "id": "sandstormStartLevel2"}
+{"year" : 2019, "order": "1020", "type": "checkbox", "label": "Did they cross the hab line during sandstorm?", "id": "sandstormCrossHabLine"}
+{"year" : 2019, "order": "1098", "type": "spacer"}
+{"year" : 2019, "order": "1099", "type": "h2", "label": "Sandstorm", "id": "labelSandstorm"}
+{"year" : 2019, "order": "1100", "type": "h3", "label": "Cargo ship", "id": "labelSandstormCargoShip"}
+{"year" : 2019, "order": "1110", "type": "counter", "label": "Hatch panel", "id": "sandstormCargoShipPanel"}
+{"year" : 2019, "order": "1120", "type": "counter", "label": "Cargo", "id": "sandstormCargoShipCargo"}
+{"year" : 2019, "order": "1200", "type": "h3", "label": "Rocket", "id": "labelSandstormRocket"}
+{"year" : 2019, "order": "1210", "type": "counter", "label": "Hatch panel", "id": "sandstormRocketPanel"}
+{"year" : 2019, "order": "1220", "type": "counter", "label": "Cargo", "id": "sandstormRocketCargo"}
+{"year" : 2019, "order": "1990", "type": "spacer"}
+{"year" : 2019, "order": "2000", "type": "h2", "label": "Teleop", "id": "labelTeleop"}
+{"year" : 2019, "order": "2100", "type": "h3", "label": "Cargo ship", "id": "labelTeleopCargoShip"}
+{"year" : 2019, "order": "2110", "type": "counter", "label": "Hatch panel", "id": "teleopCargoShipPanel"}
+{"year" : 2019, "order": "2120", "type": "counter", "label": "Cargo", "id": "teleopCargoShipCargo"}
+{"year" : 2019, "order": "2200", "type": "h3", "label": "Rocket", "id": "labelTeleopRocket"}
+{"year" : 2019, "order": "2210", "type": "counter", "label": "Hatch panel", "id": "teleopRocketPanel"}
+{"year" : 2019, "order": "2220", "type": "counter", "label": "Cargo", "id": "teleopRocketCargo"}
+{"year" : 2019, "order": "2990", "type": "spacer"}
+{"year" : 2019, "order": "3000", "type": "h2", "label": "End Game", "id": "labelEndgame"}
+{"year" : 2019, "order": "3110", "type": "counter", "label": "Attempted climb level", "id": "endgameAttemptedClimbLevel"}
+{"year" : 2019, "order": "3120", "type": "counter", "label": "Actual scored climb level", "id": "endgameActualScoredClimbLevel"}
+{"year" : 2019, "order": "3990", "type": "spacer"}
+{"year" : 2019, "order": "4000", "type": "h2", "label": "General", "id": "labelEndgame"}
+{"year" : 2019, "order": "4010", "type": "checkbox", "label": "Defended (stopped or delayed at least one score)?", "id": "playedDefense"}
+{"year" : 2019, "order": "4011", "type": "checkbox", "label": "Attempted to stop or deflect a defender?", "id": "playedCounterDefense"}
+{"year" : 2019, "order": "4020", "type": "checkbox", "label": "Died during the match (or never started)?", "id": "diedDuringMatch"}
+{"year" : 2019, "order": "4021", "type": "checkbox", "label": "Recovered from freeze?", "id": "recoveredFromFreeze"}
+{"year" : 2019, "order": "4025", "type": "spacer"}
+{"year" : 2019, "order": "4027", "type": "checkbox", "label": "Outstanding performance? (if so, definitely explain why!)", "id": "outstandingPerformance"}
+{"year" : 2019, "order": "4030", "type": "textblock", "label":"Other comments and notes:", "id":"otherNotes"}
+
+{"year" : 2018, "order":"1000","type":"h2","label":"Autonomous","id":"autolabel"}
+{"year" : 2018, "order":"1010","type":"checkbox","label":"Attempted to move?","id":"autoTriedMove"}
+{"year" : 2018, "order":"1020","type":"checkbox","label":"Crossed line?","id":"autoCrossedLine"}
+{"year" : 2018, "order":"1025","type":"spacer"}
+{"year" : 2018, "order":"1030","type":"checkbox","label":"Tried to score switch?","id":"autoTriedSwitch"}
+{"year" : 2018, "order":"1040","type":"counter","label":"Auto scored switch","id":"autoScoredSwitch"}
+{"year" : 2018, "order":"1045","type":"spacer"}
+{"year" : 2018, "order":"1050","type":"checkbox","label":"Tried to score scale?","id":"autoTriedScale"}
+{"year" : 2018, "order":"1060","type":"counter","label":"Auto scored scale","id":"autoScoredScale"}
+{"year" : 2018, "order":"1065","type":"spacer"}
+{"year" : 2018, "order":"2000","type":"h2","label":"Teleop","id":"telelabel"}
+{"year" : 2018, "order":"2010","type":"counter","label":"Vault","id":"teleVault"}
+{"year" : 2018, "order":"2015","type":"spacer"}
+{"year" : 2018, "order":"2020","type":"counter","label":"Switch","id":"teleSwitch"}
+{"year" : 2018, "order":"2025","type":"counter","label":"Position changed","id":"teleSwitchTipped"}
+{"year" : 2018, "order":"2027","type":"spacer"}
+{"year" : 2018, "order":"2030","type":"counter","label":"Scale","id":"teleScale"}
+{"year" : 2018, "order":"2032","type":"counter","label":"Position changed","id":"teleScaleTipped"}
+{"year" : 2018, "order":"2033","type":"spacer"}
+{"year" : 2018, "order":"2035","type":"counter","label":"Opposing switch","id":"teleOppSwitch"}
+{"year" : 2018, "order":"2037","type":"counter","label":"Position changed","id":"teleOppSwitchTipped"}
+{"year" : 2018, "order":"2038","type":"spacer"}
+{"year" : 2018, "order":"2040","type":"badcounter","label":"Fouls","id":"teleFouls"}
+{"year" : 2018, "order":"2050","type":"spacer"}
+{"year" : 2018, "order":"2060","type":"checkbox","label":"Did they break down?","id":"teleBrokeDown"}
+{"year" : 2018, "order":"2070","type":"spacer"}
+{"year" : 2018, "order":"3000","type":"h2","label":"Endgame","id":"endlabel"}
+{"year" : 2018, "order":"3010","type":"checkbox","label":"Parked?","id":"endParked"}
+{"year" : 2018, "order":"3020","type":"checkbox","label":"Climbed?","id":"endClimbed"}
+{"year" : 2018, "order":"3025","type":"spacer"}
+{"year" : 2018, "order":"3030","type":"checkbox","label":"Assisted other(s)?","id":"endAssisted"}
+{"year" : 2018, "order":"4000","type":"spacer"}
+{"year" : 2018, "order":"4010","type":"textblock","label":"Other comments and notes:","id":"otherNotes"}

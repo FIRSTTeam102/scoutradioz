@@ -1,0 +1,66 @@
+//-
+	Main layout page.
+	All universal links and meta tags are here. Body includes nav and main at the top. Nav is outside of main. 
+	Content of pages are located within main.
+	PARAM
+		title		[String] Title of page; if doesn't exist, will be replaced by "Untitled Page"
+		alert		[String] (Optional) When page loads, create JS alert with message.
+	CALLED FROM
+		none
+	EXTENDED FROM
+		All pages
+	INCLUDES
+		nav
+		main
+	//
+doctype html
+html
+	head
+		if !title
+			- title = "Untitled Page"
+		title #{title} | Team 102 Scouting App
+		meta(name="keywords" content="first robotics,frc,first robotics competition,somerville,new jersey,102,team 102,gearheads,gearheads 102,the gearheads,scoring,scoring app,standings,match standings,team 102 scoring app,scouting,gearheads scouting,team 102 scouting")
+		meta(name="theme-color" content="#333")
+		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
+		
+		//link(rel="icon" sizes="192x192" href="favicon-192x.png")
+		link(rel="stylesheet" href="/lib/w3.css")
+		link(rel="stylesheet" href="/css/style-2018.css")
+		link(rel="stylesheet" href="/css/theme-2019.css")
+		link(rel="stylesheet" href="/css/w3-additions.css")
+		
+		script(src="/lib/w3.js")
+		script(src="/lib/jquery.min.js")
+		script(src="/js/notification-cards.js")
+		script(src="/js/submit-data.js")
+		script(src="/js/easteregg.js")
+		if alert
+			script.
+				$(function(){
+					alert("#{alert}");
+				});
+		
+	body(class="theme-text")
+		include nav
+		include main
+			block content
+		div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
+			img(src="/images/deepspace-mountains.svg" style="width: 2048px; position: fixed; bottom: 0px; left: 0px;")
+			div(class="star star-10" style="top: 500px; left: 30px;")
+			div(class="star star-10" style="top: 200px; left: 300px;")
+			div(class="star star-10" style="top: 50px; left: 1200px;")
+			div(class="star star-10" style="top: 300px; left: 1800px;")
+			div(class="star star-10" style="top: 900px; left: 800px;")
+			div(class="star star-5" style="top: 400px; left: 700px;")
+			div(class="star star-5" style="top: 600px; left: 350px;")
+			div(class="star star-5" style="top: 700px; left: 1100px;")
+			div(class="star star-5" style="top: 100px; left: 500px;")
+			div(class="star star-5" style="top: 600px; left: 1700px;")
+			div(class="star star-5" style="top: 200px; left: 1400px;")
+			div(class="star star-5" style="top: 500px; left: 1400px;")
+			div(class="star star-2" style="top: 800px; left: 1000px;")
+			div(class="star star-2" style="top: 200px; left: 1100px;")
+			div(class="star star-2" style="top: 800px; left: 1000px;")
+			div(class="star star-2" style="top: 700px; left: 1600px;")
+			div(class="star star-2" style="top: 100px; left: 200px;")
+			div(class="star star-2" style="top: 300px; left: 400px;")

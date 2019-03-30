@@ -1,0 +1,33 @@
+//-
+	Admin page for viewing or updating teams list for any event ID.
+	PARAM
+		teams	[Object Array]	from db.teams
+	CALLED FROM
+		externaldata '/admin/data/teams'
+extends ../layout
+block content
+	form#updateForEvent(name="updateForEvent" method="get" action="/admin/data/teams")
+		div(class="w3-show-inline-block w3-padding-small")
+			input#seteventid(class="theme-input w3-no-border theme-inline-padding" type="text", name="eventId")
+		div(class="w3-show-inline-block w3-padding-small")
+			button#btnSubmit(class="theme-submit w3-no-border w3-btn" type="submit") Show teams for specified event ID
+	br 
+	if locals.teams
+		table(class="w3-table")
+			tr
+				th Number
+				th Nickname
+				th City
+				th State
+				th Country
+				th Update
+			each team in teams
+				tr
+					td= team.team_number
+					td= team.nickname
+					td= team.city
+					td= team.state_prov
+					td= team.country
+					td
+						button(class="w3-btn theme-submit" style="min-width: 90px") #{team.key}
+	
