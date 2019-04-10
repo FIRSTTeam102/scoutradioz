@@ -16,6 +16,10 @@
 doctype html
 html
 	head
+		- if(process.env.local)
+			base(href="/")
+		- else
+			base(href="/prod/")
 		if !title
 			- title = "Untitled Page"
 		title #{title} | Team 102 Scouting App
@@ -24,16 +28,16 @@ html
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
 		
 		//link(rel="icon" sizes="192x192" href="favicon-192x.png")
-		link(rel="stylesheet" href="/lib/w3.css")
-		link(rel="stylesheet" href="/css/style-2018.css")
-		link(rel="stylesheet" href="/css/theme-2019.css")
-		link(rel="stylesheet" href="/css/w3-additions.css")
+		link(rel="stylesheet" href=`${s3url}lib/w3.css`)
+		link(rel="stylesheet" href=`${s3url}css/style-2018.css`)
+		link(rel="stylesheet" href=`${s3url}css/theme-2019.css`)
+		link(rel="stylesheet" href=`${s3url}css/w3-additions.css`)
 		
-		script(src="/lib/w3.js")
-		script(src="/lib/jquery.min.js")
-		script(src="/js/notification-cards.js")
-		script(src="/js/submit-data.js")
-		script(src="/js/easteregg.js")
+		script(src=`${s3url}lib/w3.js`)
+		script(src=`${s3url}lib/jquery.min.js`)
+		script(src=`${s3url}js/notification-cards.js`)
+		script(src=`${s3url}js/submit-data.js`)
+		script(src=`${s3url}js/easteregg.js`)
 		if alert
 			script.
 				$(function(){
@@ -45,7 +49,7 @@ html
 		include main
 			block content
 		div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
-			img(src="/images/deepspace-mountains.svg" style="width: 2048px; position: fixed; bottom: 0px; left: 0px;")
+			img(src=`${s3url}images/deepspace-mountains.svg` style="width: 2048px; position: fixed; bottom: 0px; left: 0px;")
 			div(class="star star-10" style="top: 500px; left: 30px;")
 			div(class="star star-10" style="top: 200px; left: 300px;")
 			div(class="star star-10" style="top: 50px; left: 1200px;")

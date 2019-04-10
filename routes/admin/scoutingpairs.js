@@ -248,15 +248,24 @@ router.post("/generatematchallocations2", function(req, res) {
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
+	var thisFuncName = "scoutingpairs.generateMATCHallocations2[post]: ";
+
 	// HARDCODED
 	var activeTeamKey = 'frc102';
 	
 	// Gap between matches equal to or over this value means a "major" gap (e.g., lunch, overnight, etc.)
-	var matchGapBreakThreshold = 15 * 60;  // 12 minutes, in seconds
-	// Size of match blocks to be scouted
-	var matchBlockSize = 5;  // scouts will do this many matches in a row
+	var matchGapBreakThreshold = 30 * 60;  // 30 minutes, in seconds
+	// Size of match blocks to be scouted - scouts will do this many matches in a row
+	var matchBlockSize = 5;  // default
+	res.log(thisFuncName + 'req.body.blockSize=' + req.body.blockSize);
+	if (req.body.blockSize)
+	{
+		matchBlockSize = req.body.blockSize;
+		console.log(thisFuncName + 'Overriding matchBlockSize to ' + matchBlockSize);
+		// remove from req.body before proceeding to pulling out the multi-checkbox list
+		req.body.blockSize = null;
+	}
 	
-	var thisFuncName = "scoutingpairs.generateMATCHallocations2[post]: ";
 	// Log message so we can see on the server side when we enter this
 	res.log(thisFuncName + "ENTER");
 

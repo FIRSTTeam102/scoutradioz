@@ -1,6 +1,33 @@
-var colors = require("colors");
+const colors = require("colors");
+const monk = require("monk");						//Monk for connecting to db
+const fs = require("fs");
 
 var functions = module.exports = {};
+
+/**
+ * One-time (non-Express) function that returns Monk DB, with specified DB string name.
+ * @param {string} dbName name of DB
+ * @return {*} Monk db
+ */
+functions.getDB = function(dbName){
+	
+	//check if we have a db user file
+	var hasDBUserFile = fs.existsSync(".dbuser");
+	var db;
+	
+	if(hasDBUserFile){
+		var dbUser = JSON.parse(fs.readFileSync(".dbuser", {"encoding": "utf8"}));
+		console.log(dbUser);
+		console.log(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+		db = monk(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+	}
+	else{
+		db = monk(`localhost:27017/${dbName}`);			//Local db on localhost without authentication
+	}
+	
+	return db;
+}
+
 //View engine locals variables
 functions.userViewVars = function(req, res, next){
 	
@@ -143,7 +170,7 @@ functions.logger = function(req, res, next){
 		+ formattedReqTime);
 	
 	next();
-	}
+}
 
 /**
  * Logs when res.render is called

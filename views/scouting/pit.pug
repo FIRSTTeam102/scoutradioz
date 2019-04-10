@@ -88,32 +88,6 @@ block content
 			when "badcounter"
 				include templates/scriptCounterInput
 	| </script>
-	script.
-		window.onbeforeunload = function() {
-			return "Leaving this page will lose pit scouting data.";
-		};		
-		var chkToggleText = function(){
-			var txtInput = this.nextElementSibling.firstElementChild;
-			if(this.checked){
-				txtInput.disabled = false;
-				txtInput.classList.remove("gear-disabled-click");
-			}else{
-				txtInput.disabled = true;
-				txtInput.classList.add("gear-disabled-click");
-			}
-		}
-		var chkToggleFromTxt = function(){
-			var chk = this.previousElementSibling;
-			chk.checked = true;
-			var txtInput = this.firstElementChild;
-			txtInput.disabled = false;
-			txtInput.classList.remove("gear-disabled-click");
-		}
-		$(function(){
-			$(".chkText").on('click', chkToggleText);
-			$(".chkTextLabel").on('click', chkToggleFromTxt);
-		});
-		
 	style.
 		.w3-check{
 			top: 7.7px!important;

@@ -96,7 +96,8 @@ block content
 					tr
 						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
 						td(class="w3-text-light-gray w3-small")
-							a(href=`/reports/metricintel?key=${agg.key}`)= result2
+							//-2019-4-02 JL: Custom "top" so it's inline with the data
+							a(style="position:relative;top:3px;" href=`/reports/metricintel?key=${agg.key}`)= result2
 						- var minCol = 'w3-right-align w3-text-white'
 						- if (agg.min == 0) minCol = 'w3-right-align w3-text-gray'
 						- var avgCol = 'w3-right-align w3-text-white'
@@ -115,6 +116,13 @@ block content
 							td(class=`${avgCol}`)= agg.avg
 							td(class=`${varCol}`)= agg.var
 							td(class=`${maxCol}`)= agg.max
+					//-2019-4-02 JL: Borders for row visibility
+					tr(style="height:0px;")
+						td(style="border-bottom: 1px solid #ffffff80; height: 0px; padding: 0;")
+						td(style="padding:0;")
+						td(style="padding:0;")
+						td(style="padding:0;")
+						td(style="padding:0;")
 
 
 
@@ -146,7 +154,7 @@ block content
 			h6 <i>Click team number for match scouting details</i>
 			h6 <i>Click match button for overall alliance performances</i>
 			h6(class="gear-text-white")
-				a(class="gear-btn theme-link w3-btn" href="/reports/teamdata?key=" + team.key) See scoring data for all team #{team.key.substring(3)} matches
+				a(class="gear-btn theme-link w3-btn" href="/reports/teamdata?key=" + team.key) Scoring data for all team #{team.key.substring(3)} matches
 			p(class="theme-spacer")
 			
 			each match in matches

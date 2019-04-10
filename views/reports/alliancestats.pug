@@ -1,6 +1,10 @@
 extends ../layout
 
 block content
+	style.
+		html{
+			overflow: visible;
+		}
 	include templates/heatmap
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
@@ -12,9 +16,9 @@ block content
 	h6 <i>Click on a metric to compare all event teams</i>
 	
 	span Show:  
-	input(type="radio" id="showAvg" name="sel" checked="checked" onclick="showAvg();")
+	input(type="radio" id="showAvg" name="sel" onclick="showAvg();")
 	label(for="showAvg")  Averages    
-	input(type="radio" id="showMax" name="sel" onclick="showMax();")
+	input(type="radio" id="showMax" name="sel" checked="checked" onclick="showMax();")
 	label(for="showMax")  Maximums 
 	p
 
@@ -30,8 +34,8 @@ block content
 				each agg in avgdata
 					tr
 						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-						if (teamList.length > 3)
-							- var abbrSplit = result2.split(" "); var abbr = ""; for (abbrIdx = 0; abbrIdx < abbrSplit.length; abbrIdx++) abbr = abbr + abbrSplit[abbrIdx].charAt(0); result2 = abbr;
+						-// if (teamList.length > 3)
+						-//	- var abbrSplit = result2.split(" "); var abbr = ""; for (abbrIdx = 0; abbrIdx < abbrSplit.length; abbrIdx++) abbr = abbr + abbrSplit[abbrIdx].charAt(0); result2 = abbr;
 						td(class="w3-text-light-gray w3-small")
 							a(href=`/reports/metricintel?key=${agg.key}`)= result2
 						for team in teamList
@@ -55,8 +59,8 @@ block content
 				each agg in maxdata
 					tr
 						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-						if (teamList.length > 3)
-							- var abbrSplit = result2.split(" "); var abbr = ""; for (abbrIdx = 0; abbrIdx < abbrSplit.length; abbrIdx++) abbr = abbr + abbrSplit[abbrIdx].charAt(0); result2 = abbr;
+						-// if (teamList.length > 3)
+						-//	- var abbrSplit = result2.split(" "); var abbr = ""; for (abbrIdx = 0; abbrIdx < abbrSplit.length; abbrIdx++) abbr = abbr + abbrSplit[abbrIdx].charAt(0); result2 = abbr;
 						td(class="w3-text-light-gray w3-small")
 							a(href=`/reports/metricintel?key=${agg.key}`)= result2
 						for team in teamList
@@ -68,10 +72,10 @@ block content
 								td(class=`${valueCol}`)= agg[team]
 			p
 
-	a(href='/reports/metricsranked') <b>Click here to see overall ranked event data</b>
+	a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') Overall ranked event data
 
 	script.
-		showAvg();
+		showMax();
 
 		function showAvg() {
 			var avg = document.getElementById('avgSect');

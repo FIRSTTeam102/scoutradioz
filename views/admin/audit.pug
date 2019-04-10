@@ -12,6 +12,8 @@ extends ../layout
 block content
 	h2 Audit trail for match scouting
 	p
+		a(href="/admin/audit/comments")
+			i Click here to audit the "other notes" comments.
 	each row in audit
 		//- console.log(row)
 		if (row.member)

@@ -13,15 +13,15 @@ block content
 	div(class="w3-container w3-section")
 		h4(class="gear-text-white") Tournament Info
 		
-		a(href="/reports/rankings")
+		a(href="reports/rankings")
 			div(class="gear-btn theme-link gear-hover-white w3-btn")
 				span Current Rankings
 		br 
-		a(href="/reports/finishedmatches")
+		a(href="reports/finishedmatches")
 			div(class="gear-btn theme-link gear-hover-white w3-btn")
 				span Completed Matches [All teams]
 		br 
-		a(href="/reports/allteammetrics")
+		a(href="reports/allteammetrics")
 			div(class="gear-btn theme-link gear-hover-white w3-btn")
 				span Statistics
 	div(class="w3-container w3-section")
@@ -43,22 +43,22 @@ block content
 	if( !user || (user && user.name == "[Dev]"))
 		div(class="w3-container w3-section")
 			h4(class="gear-text-white") Team 102 Log In
-			a(href="/login/scouter") 
+			a(href="login/scouter") 
 				div(class="gear-btn theme-link gear-hover-white w3-btn")
 					span Scouter Login
 			br 
-			a(href="/login/admin")
+			a(href="login/admin")
 				div(class="gear-btn theme-link gear-hover-white w3-btn")
 					span Admin Login
 	if user
 		div(class="w3-container w3-section")
 			h4(class="gear-text-white")=user.name
-			a(href="/dashboard")
+			a(href="dashboard")
 				div(class="gear-btn theme-link gear-hover-white w3-btn") Dashboard
-			a(href="/reports/allteammetrics")
+			a(href="reports/allteammetrics")
 				div(class="gear-btn theme-link gear-hover-white w3-btn") All Team Metrics
 			if( user.subteam == "support" || user.subteam == "exec" )
-				a(href="/admin")
+				a(href="admin")
 					div(class="gear-btn theme-link gear-hover-white w3-btn") Admin Index
 	script.
 		$(function(){

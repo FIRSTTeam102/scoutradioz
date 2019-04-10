@@ -65,7 +65,17 @@ block content
 					input(type="checkbox" class="w3-check" name=member.name id=member.name)
 					label(class="w3-text-white" for=member.name) &nbsp;#{member.name} (#{member.subteam})
 					br
-		br
+		- var defaultBlockSize = 5;
+		p
+		label Allocate in blocks of&nbsp;
+		select(class="theme-input theme-inline-padding w3-no-border" style="float: none" type="text" name="blockSize")
+			each val in [1, 2, 3, 4, 5, 6, 7, 8]
+				if( val == defaultBlockSize )
+					option(value=val class="w3-bar-item" selected) #{val}
+				else
+					option(value=val class="w3-bar-item") #{val}
+		label &nbsp;matches
+		p
 		button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
 	
 	script.

@@ -7,12 +7,14 @@ block content
 		}
 	include templates/heatmap
 	h2(class="gear-text-white") All Team Metrics
+	h6 <i>Click on a column header to sort teams by that column's information (click again to change sort direction)</i>
+	h6 <i>Click on a team number to jump to that team's intel page</i>
 
 	if (aggdata)
 		span Show:  
-		input(type="radio" id="showAvg" name="sel" checked="checked" onclick="showAvg();")
+		input(type="radio" id="showAvg" name="sel" onclick="showAvg();")
 		label(for="showAvg")  Averages    
-		input(type="radio" id="showMax" name="sel" onclick="showMax();")
+		input(type="radio" id="showMax" name="sel" checked="checked" onclick="showMax();")
 		label(for="showMax")  Maximums 
 		p
 		- var aggRangeMap = [];
@@ -90,7 +92,7 @@ block content
 	else
 		p <i>Insufficient data at this time, come back later!</i>
 	script.
-		showAvg();
+		showMax();
 
 		function showAvg() {
 			var avg = document.getElementById('avgSect');

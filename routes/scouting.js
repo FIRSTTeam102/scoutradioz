@@ -275,11 +275,23 @@ router.get('/teampictures', function(req, res) {
 		var db = req.db;
 		var teamCol = db.get("currentteams");
 		
+		var event_year = req.event.year;
+
 		teamCol.find({}, {sort: {team_number: 1}}, function(e, docs) {
 			var teams = [];
 			if (docs && docs.length > 0)
 				teams = docs;
-
+			var fs = require("fs");
+			var path = require("path");
+			var UPLOAD_PATH = path.resolve(__dirname, '..', process.env.AVATAR_STORAGE) + "\\";
+			for (var i = 0; i < teams.length; i++) {
+				var team = teams[i];
+					//console.log(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`);
+				if (fs.existsSync(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`)) {
+					teams[i].hasPicture = true;
+				}
+				else {teams[i].hasPicture = false;}
+			}
 			//res.log(thisFuncName + 'rankings=' + JSON.stringify(rankings));
 			
 			res.render("./scouting/teampictures", {

@@ -18,27 +18,27 @@ div(style="font-size:1.1em;")
 				div(class="w3-bar-item")=user.name
 			button( class="w3-button w3-show-small gear-clear w3-rest w3-right gear-text-white" style="font-size:1.6em; padding:4px 16px; " onclick="w3_open( $('#navBar')[0], this );" id="navBtn") &#x2261;
 			div(id="navBar" style="display: none; z-index: 2; position: relative")
-				a(href="/dashboard" class="w3-bar-item w3-button gear-clear w3-mobile") Dashboard
-				a(href="/dashboard/pits" class="w3-bar-item w3-button gear-clear w3-mobile") Pit scouting
-				a(href="/dashboard/matches" class="w3-bar-item w3-button gear-clear w3-mobile") Match scouting
-				a(href="/reports/allteammetrics" class="w3-bar-item w3-button gear-clear w3-mobile") All Team Metrics
-				a(href="/dashboard/allianceselection" class="w3-bar-item w3-button gear-clear w3-mobile") Alliance Selection
+				a(href="dashboard" class="w3-bar-item w3-button gear-clear w3-mobile") Dashboard
+				a(href="dashboard/pits" class="w3-bar-item w3-button gear-clear w3-mobile") Pit scouting
+				a(href="dashboard/matches" class="w3-bar-item w3-button gear-clear w3-mobile") Match scouting
+				a(href="reports/allteammetrics" class="w3-bar-item w3-button gear-clear w3-mobile") All Team Metrics
+				a(href="dashboard/allianceselection" class="w3-bar-item w3-button gear-clear w3-mobile") Alliance Selection
 				if user.subteam == "support" || user.subteam == "exec"
-					a(href="/admin" class="w3-bar-item w3-button gear-clear w3-mobile") Admin Index
+					a(href="admin" class="w3-bar-item w3-button gear-clear w3-mobile") Admin Index
 		if user.name != "[Dev]"
 			div#userBar(class="w3-dropdown-content w3-bar-block w3-margin-left" style="position:absolute;top:2.1rem; z-index:99; max-width: 10rem;")
-				a(href="/logout" class="w3-bar-item w3-button w3-padding-24") Log out
-				a(href="/login/changepassword" class="w3-bar-item w3-button") Change Password
+				a(href="logout" class="w3-bar-item w3-button w3-padding-24") Log out
+				a(href="login/changepassword" class="w3-bar-item w3-button") Change Password
 	else
 		nav(class="w3-bar gear-opacity w3-container gear-text-white w3-rest" style="position:relative;z-index:2;")
 			div(id="navBar" style="display: none; z-index: 2; position: relative")
-				a(href="/" class="w3-bar-item w3-button gear-clear w3-mobile") Home
+				a(href="" class="w3-bar-item w3-button gear-clear w3-mobile") Home
 
 br 
 header(class="w3-center w3-container w3-content w3-padding-8")
 	div(style="max-width:250px" class="w3-content w3-section")
-		a(href="/") 
-			img(src="/images/deepspace-header-300px.png" class="w3-image")
+		a(href="") 
+			img(src="images/deepspace-header-300px.png" class="w3-image")
 	h4(class="gear-text-white" style="margin:0px;padding:0px;")=eventName
 	br 
 	script.

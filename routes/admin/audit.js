@@ -1,4 +1,5 @@
-var express = require('express');
+const express = require('express');
+const utilities = require("../../utilities");
 var router = express.Router();
 
 /**
@@ -133,5 +134,39 @@ router.get("/", function(req, res) {
 		});
 	});
 });
+
+router.get('/comments', async function(req, res){
+	
+	var eventId = req.event.key;
+	
+	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	var matches = utilities.find("matches", {event_key: eventId, "alliances.red.score": -1}, {sort: {"time": 1}});
+	
+	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
+	var earliestTimestamp = 9999999999;
+	
+	if (matches[0]){
+		var earliestMatch = matches[0];
+		earliestTimestamp = earliestMatch.time;
+	}
+	
+	res.log("Comments audit: earliestTimestamp=" + earliestTimestamp);
+		
+	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"actual_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
+	
+	var audit = [];
+	
+	for(var i in scoreData){
+		if(scoreData[i].data && scoreData[i].data.otherNotes != ""){
+			audit.push(scoreData[i]);
+		}
+	}
+	
+	res.render('./admin/auditcomments', {
+		title: "Audit for match comments",
+		"audit": audit
+	});
+});
+
 
 module.exports = router;

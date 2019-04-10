@@ -22,6 +22,54 @@ router.get('/', function(req, res) {
 	});
 });
 
+/**
+ * 
+ */
+router.get('/backup', async function(req, res){
+	
+	var times = [];
+	
+	//times.push({time: Date.now(), event: ""});
+	var current = await getCurrent();
+	//times.push({time: Date.now(), event: "current"});
+	var currentaggrankings = await find("currentaggrankings");
+	//times.push({time: Date.now(), event: "currentaggrankings"});
+	var currentrankings = await find("currentrankings", {}, {sort: {rank: 1}});
+	//times.push({time: Date.now(), event: "currentrankings"});
+	var currentteams = await find("currentteams", {}, {sort: {team_number: 1}});
+	//times.push({time: Date.now(), event: "currentteams"});
+	var matches = await find("matches", {event_key: current.key}, {sort: {match_number: 1}});
+	//times.push({time: Date.now(), event: "matches"});
+	var scoringdata = await find("scoringdata", {event_key: current.key}, {sort: {match_number: 1}});
+	//times.push({time: Date.now(), event: "scoringdata"});
+	var scoutingdata = await find("scoutingdata", {event_key: current.key}, {sort: {team_key: 1}});
+	//times.push({time: Date.now(), event: "scoutingdata"});
+	
+	/*
+	var message = "TIMES (ms): ";
+	for(var i = 1; i < times.length; i++){
+		message += times[i].event + " " + (times[i].time - times[i - 1].time) + "\n";
+	}
+	console.log(message);
+	*/
+	
+	res.render('./admin/backup', {
+		title: "Data Backup Scheduling",
+		"current": current,
+		"currentaggrankings": currentaggrankings,
+		"currentrankings": currentrankings,
+		"currentteams": currentteams,
+		"matches": matches,
+		"scoringdata": scoringdata,
+		"scoutingdata": scoutingdata
+	});
+});
+
+//hardcoded temporarily
+var db = require("monk")("localhost:27017/app");
+var Client = require('node-rest-client').Client;
+var client = new Client();
+
 /** POST method to set current event id.
  * @url /admin/setcurrent
  * @redirect /admin
@@ -59,12 +107,14 @@ router.post('/setcurrent', function(req, res) {
 				
 				var currentTeams = JSON.parse(teamsData);
 				
-				if(!currentTeams){
-					return res.status(500).send("didn't get teams list");
-				}
-				
 				//delete contents of currentteams
 				currentTeamsCol.remove({},function(){
+					
+					//2019-4-01 JL: Moved !currentTeams check to AFTER currentTeamsCol was emptied.
+					
+					if(!currentTeams){
+						return res.redirect(`/admin?alert=Set current event ${eventId} successfully but NO TEAMS WERE ADDED TO THE SYSTEM`);
+					}
 					
 					//insert teams into currentteams
 					currentTeamsCol.insert(currentTeams, function(){
@@ -73,21 +123,29 @@ router.post('/setcurrent', function(req, res) {
 						
 						client.get(rankingsUrl, args, function(rankData, response){
 							
-							//get rankings
-							var currentRankings = JSON.parse(rankData).rankings;
-							
 							//clear currentrankings
-							rankCol.remove({},function(){
+							rankCol.remove({}, function () {
 								
-								//now, insert rankings whether it's empty or not
-								rankCol.insert(currentRankings, function(){
+								//2019-04-1 JL: page now checks if rankings exist so server doesn't crash
+								//if rankdata exists, insert, otherwise don't
+								if (rankData && rankData != "null" && rankData[0]) {
 									
-									res.redirect(`/admin?alert=Set current event ${eventId} successfuly and got list of teams/rankings for event ${eventId} successfully.`);
-								})
+									//get rankings
+									var currentRankings = JSON.parse(rankData).rankings;
+									
+									//now, insert rankings whether it's empty or not
+									rankCol.insert(currentRankings, function () {
+										
+										res.redirect(`/admin?alert=Set current event ${eventId} successfuly and got list of teams/rankings for event ${eventId} successfully.`);
+									});
+								}
+								//if rankings don't exist, redirect w/o rankings info
+								else{
+									res.redirect(`/admin?alert=Set current event ${eventId} successfully and got list of teams for event ${eventId} successfully. NO RANKINGS HAVE BEEN RETRIEVED.`)
+								}
 							});
 						});
-						
-						});
+					});
 				})
 			});
 		});

@@ -31,5 +31,30 @@ $(function(){
 		
 		submitData(toSubmit.url, toSubmit.dataKey, toSubmit.callback);
 	});
-
+	
+	window.onbeforeunload = function() {
+		return "Leaving this page will lose pit scouting data.";
+	};
+	
+	//$(".chkText").on('click', chkToggleText);
+	//$(".chkTextLabel").on('click', chkToggleFromTxt);
 });
+/*
+function chkToggleText(){
+	var txtInput = this.nextElementSibling.firstElementChild;
+	if(this.checked){
+		txtInput.disabled = false;
+		txtInput.classList.remove("gear-disabled-click");
+	}else{
+		txtInput.disabled = true;
+		txtInput.classList.add("gear-disabled-click");
+	}
+}
+function chkToggleFromTxt(){
+	var chk = this.previousElementSibling;
+	chk.checked = true;
+	var txtInput = this.firstElementChild;
+	txtInput.disabled = false;
+	txtInput.classList.remove("gear-disabled-click");
+}
+*/

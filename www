@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+//for views to either have a base of /prod/ or /
+process.env.local = true;
+
 /**
  * Module dependencies.
  */
