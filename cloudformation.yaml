@@ -9,7 +9,7 @@ Resources:
       DefinitionUri: ./simple-proxy-api.yaml
       StageName: prod
       Variables:
-        ServerlessExpressLambdaFunctionName: !Ref StarterTest01
+        ServerlessExpressLambdaFunctionName: !Ref AwsServerlessExpressFunction
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -38,7 +38,7 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt StarterTest01.Arn
+      FunctionName: !GetAtt AwsServerlessExpressFunction.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Join
         - ''
@@ -50,7 +50,7 @@ Resources:
           - !Ref ApiGatewayApi
           - "/*/*"
 
-  StarterTest01:
+  AwsServerlessExpressFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
@@ -83,7 +83,7 @@ Outputs:
         - ".console.aws.amazon.com/lambda/home?region="
         - !Ref AWS::Region
         - "#/functions/"
-        - !Ref StarterTest01
+        - !Ref AwsServerlessExpressFunction
 
   ApiGatewayApiConsoleUrl:
     Description: Console URL for the API Gateway API's Stage.

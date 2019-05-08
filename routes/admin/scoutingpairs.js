@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 
 router.get("/", function(req, res) {
 	if( !require('../checkauthentication')(req, res, 'admin') ){

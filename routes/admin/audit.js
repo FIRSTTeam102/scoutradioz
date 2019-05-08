@@ -128,14 +128,86 @@ router.get("/", function(req, res) {
 			}
 			
 			res.render('./admin/audit',{
-				title: "Scoring Audit",
+				title: "Scouter Audit",
 				audit: memberArr
 			});
 		});
 	});
 });
 
+router.get('/bymatch', async function(req, res){
+	if(!require('../checkauthentication')(req, res, 'admin')){
+		return null;
+	}
+	
+	var audit = {};
+	var eventId = req.event.key;
+	
+	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	var matches = await utilities.find("matches", {event_key: eventId, "alliances.red.score": -1}, {sort: {"time": 1}});
+	
+	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
+	var earliestTimestamp = 9999999999;
+	
+	if (matches[0]){
+		var earliestMatch = matches[0];
+		earliestTimestamp = earliestMatch.time;
+	}
+	
+	res.log("Per-match audit: earliestTimestamp=" + earliestTimestamp);
+	
+	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1, "alliance": 1, "team_key": 1} });
+	
+	//Create array of matches for audit, with each match-team inside each match
+	var audit = [];
+	
+	var lastMatchNum = scoreData[0].match_number;
+	
+	for(var i = 0, thisAuditIdx = 0; i < scoreData.length; i++){
+		
+		let thisMatchNum  = scoreData[i].match_number;
+		
+		//if we finished going through last match, go to next match and create a new array to push to audit
+		if(thisMatchNum > lastMatchNum || i == 0){
+			lastMatchNum = thisMatchNum;
+			
+			let matchTeamArr = [];
+			
+			//go through the next 6 elements in scoreData and add to matchTeamArr
+			for(var j = 0; j < 6; j++){
+				
+				let thisMatchTeam = scoreData[i + j];
+				let thisMatchTeamNum = thisMatchTeam.match_number;
+				
+				//if scoreData[i+j] is the same match as thisMatchNum, insert into matchTeamArr
+				if(thisMatchTeamNum == thisMatchNum){
+					matchTeamArr.push(thisMatchTeam);
+				}
+				//if not, JUST IN CASE something went wrong with the data, push an object with scored: false
+				else{
+					matchTeamArr.push({
+						"match_number": thisMatchNum,
+						"scored": false
+					});
+				}
+				//this way, each matchTeamArr is 6 objects large
+			}
+			
+			//finally, push matchTeamArr
+			audit.push(matchTeamArr);
+		}
+	}
+	
+	res.render('./admin/auditbymatch', {
+		title: "Match Scouting Audit",
+		"audit": audit
+	});
+})
+
 router.get('/comments', async function(req, res){
+	if(!require('../checkauthentication')(req, res, 'admin')){
+		return null;
+	}
 	
 	var eventId = req.event.key;
 	
@@ -163,7 +235,7 @@ router.get('/comments', async function(req, res){
 	}
 	
 	res.render('./admin/auditcomments', {
-		title: "Audit for match comments",
+		title: "Scouter Comments Audit",
 		"audit": audit
 	});
 });

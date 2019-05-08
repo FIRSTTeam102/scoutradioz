@@ -7,7 +7,7 @@
     "s3BucketName": "scoringapp-bkt",
     "region": "us-east-1",
     "cloudFormationStackName": "AwsServerlessExpressStack",
-    "functionName": "AwsServerlessExpressFunction",
+    "functionName": "ScoringAppServerless02",
     "accountId": "972817646947"
   },
   "scripts": {
@@ -44,6 +44,7 @@
     "cors": "^2.8.3",
     "express": "^4.16.4",
     "express-useragent": "^1.0.12",
+    "minimist": "^1.2.0",
     "monk": "^6.0.6",
     "pug": "^2.0.3",
     "serve-favicon": "^2.5.0"

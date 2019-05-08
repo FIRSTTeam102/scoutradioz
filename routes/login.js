@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 
 /**
  * Regular user login.
@@ -216,7 +216,6 @@ router.post('/changepassword', function(req, res){
 					res.redirect('/?alert=Password changed successfully.');
 				});
 			});
-
 		}
 	});
 });
