@@ -4,11 +4,11 @@
   "description": "Example application for running a Node Express app on AWS Lambda using Amazon API Gateway.",
   "main": "lambda.js",
   "config": {
-    "s3BucketName": "scoringapp-bkt",
+    "s3BucketName": "ardag-test02-bucket",
     "region": "us-east-1",
     "cloudFormationStackName": "AwsServerlessExpressStack",
     "functionName": "AwsServerlessExpressFunction",
-    "accountId": "972817646947"
+    "accountId": "879522394239"
   },
   "scripts": {
     "start": "node app.local.js",
