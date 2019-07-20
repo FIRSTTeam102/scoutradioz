@@ -16,10 +16,6 @@
 doctype html
 html
 	head
-		- if(process.env.local)
-			base(href="/")
-		- else
-			base(href="/prod/")
 		if !title
 			- title = "Untitled Page"
 		title #{title} | Team 102 Scouting App
