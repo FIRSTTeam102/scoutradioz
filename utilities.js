@@ -28,7 +28,8 @@ utilities.getDB = function(uri){
 }
 
 //
-var db = utilities.getDB("mongodb+srv://TestUser:uZnk9zqfXwGyfjym@cluster0-obbqu.mongodb.net/test?retryWrites=true");
+//var db = utilities.getDB("mongodb+srv://TestUser:uZnk9zqfXwGyfjym@cluster0-obbqu.mongodb.net/test?retryWrites=true");
+var db = utilities.getDB(`localhost:27017/app`);
 
 /**
  * Asynchronous "find" function to a collection specified in first parameter.
