@@ -7,6 +7,45 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const usefunctions = require("./scripts/usefunctions");	//extra functions for app.use
 const app = express();
 
+var isDev = false, debug = false, production = false;
+
+/* Check process arguments.
+	If -dev or --dev, isDev = true.
+	If -debug or --debug, debug = true.
+	If -d or --d, both = true.
+*/
+for(var i in process.argv){
+	switch(process.argv[i]){
+		case "-dev":
+		case "--dev":
+			console.log("Dev");
+			isDev = true;
+			break;
+		case "-d":
+		case "--d":
+			console.log("Dev");
+			isDev = true;
+		case "-debug":
+		case "--debug":
+			console.log("Debug");
+			debug = true;
+			break;
+		case "-production":
+		case "--production":
+			production = true;
+	}
+}
+
+//PUG CACHING (if dev is NOT enabled or production IS enabled)
+if(!isDev || production){
+	console.log("Production");
+	process.env.NODE_ENV = "production";
+}
+
+//set app's bools to these arguments
+app.isDev = isDev; 
+app.debug = debug; 
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
@@ -44,9 +83,48 @@ app.use(usefunctions.renderLogger);
 //adds TBA API key to req
 //app.use(useFunctions.setupNodeRestClient);
 
-const index = require('./routes/index');
+//const index = require('./routes/index');
 
+//app.use('/', index);
+
+//USER ROUTES
+var index = require('./routes/index');
+var login = require('./routes/login');
+var dashboard = require("./routes/dashboard");
+var scouting = require("./routes/scouting");
+var reports = require('./routes/reports');
+var allianceselection = require('./routes/allianceselection');
+var image = require("./routes/image");
+//ADMIN ROUTES
+var adminindex = require('./routes/admin/adminindex');
+var scoutingaudit = require("./routes/admin/audit");
+var current = require("./routes/admin/current");
+var externaldata = require("./routes/admin/externaldata");
+var scoutingpairs = require('./routes/admin/scoutingpairs');
+var teammembers = require("./routes/admin/teammembers");
+var manualinput = require("./routes/admin/manualinput");
+
+//CONNECT URLS TO ROUTES
 app.use('/', index);
+app.use('/login', login);
+app.use('/scouting', scouting);
+app.use("/dashboard", dashboard);
+app.use('/reports', reports);
+app.use('/allianceselection', allianceselection);
+app.use('/admin', adminindex);
+app.use('/admin/scoutingpairs', scoutingpairs);
+app.use("/admin/teammembers", teammembers);
+app.use('/admin/data', externaldata);
+app.use('/admin/current', current);
+app.use('/admin/audit', scoutingaudit);
+app.use('/admin/manualinput', manualinput);
+app.use('/image', image);
+
+// catch 404 and forward to error handler
+app.use(useFunctions.notFoundHandler);
+// error handler
+app.use(useFunctions.errorHandler);
+
 
 // Export your express server so you can import it in the lambda function.
 module.exports = app;
