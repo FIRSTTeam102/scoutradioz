@@ -1,36 +1,29 @@
 var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcryptjs');
+var utilities = require("../utilities");
 
 /**
  * Regular user login.
  * @url /login/scouter
  * @view /login/login
  */
-router.get('/scouter', function(req, res) {
+router.get('/scouter', async function(req, res) {
 	
 	//If there's been a GET request, prepare an alert
 	if(req.query)
 		var alert = req.query.alert || null;
 	
-	var teammembers = req.db.get("teammembers");
+	var users = await utilities.find("teammembers", {}, {sort:{ "name": 1 }});
 	
-	//gets all users and spits them on dropdown
-	teammembers.find( {}, {sort:{ "name": 1 }}, function(e, users){
-		
-		if(e){
-			res.log(e);
-			return res.sendStatus(500);
-		}
-		return res.render('./login/login', { 
-			members: users,
-			title: "Scouter Login",
-			alert: alert
-		});
+	res.render('./login/login', { 
+		members: users,
+		title: "Scouter Login",
+		alert: alert
 	});
 });
 
-router.get('/admin', function(req, res) {
+router.get('/admin', async function(req, res) {
 
 	//If there's been a GET request, prepare an alert
 	if(req.query)
@@ -40,19 +33,13 @@ router.get('/admin', function(req, res) {
 	//Get a list of all admin/exec members
 	var teammembers = req.db.get("teammembers");
 	
-	teammembers.find( {subteam: {$in: ["exec", "support"]} }, {sort: { password: -1, name: 1}}, function(e, users){
-		
-		if(e){
-			res.log(e);
-			return res.sendStatus(500);
-		}
-		
-		return res.render('./login/login', { 
-			title: "Admin Login",
-			members: users,
-			alert: alert
-		});
-	});  
+	var users = await utilities.find("teammembers", {subteam: {$in: ["exec", "support"]} }, {sort: { password: -1, name: 1}});
+	
+	res.render('./login/login', { 
+		title: "Admin Login",
+		members: users,
+		alert: alert
+	});
 });
 
 /**
@@ -60,7 +47,7 @@ router.get('/admin', function(req, res) {
  * @url /login/adduser
  * @view /login/adduser
  */
-router.get('/adduser', function(req, res){
+router.get('/adduser', async function(req, res){
 	
 	if( !require('./checkauthentication')(req, res, 'admin') ){
 		return null;
@@ -77,7 +64,7 @@ router.get('/adduser', function(req, res){
  * @url /login/changepassword
  * @view /login/changepassword
  */
-router.get('/changepassword', function(req, res){
+router.get('/changepassword', async function(req, res){
 	
 	if( !require('./checkauthentication')(req, res) ){
 		return res.log('authentication failed for /login/changepassword');
@@ -94,25 +81,16 @@ router.get('/changepassword', function(req, res){
  * @view /login/resetpassword
  * @db teammembers
  */
-router.get('/resetpassword', function(req, res){
-	
+router.get('/resetpassword', async function(req, res){
 	if( !require('./checkauthentication')(req, res, 'admin') ){
 		return res.log('authentication failed for /login/changepassword');
 	}
 	
-	var teammembers = req.db.get("teammembers");
+	var users = await utilities.find("teammembers", {}, {sort:{ "name": 1 }});
 	
-	//gets all users and spits them on dropdown
-	teammembers.find( {}, {sort:{ "name": 1 }}, function(e, users){
-		if(e){
-			res.log(e);
-			return res.sendStatus(500);
-		}
-		
-		res.render('./login/resetpassword', { 
-			members: users,
-			title: "Reset Password for Any User"
-		});
+	res.render('./login/resetpassword', { 
+		members: users,
+		title: "Reset Password for Any User"
 	});
 });
 
@@ -122,6 +100,9 @@ router.get('/resetpassword', function(req, res){
  * @redirect /
  */
 router.post('/resetpassword', function(req, res){
+	if( !require('./checkauthentication')(req, res, 'admin') ){
+		return res.log('authentication failed for /login/resetpassword');
+	}
 	
 	var userToReset = req.body.username;
 	
