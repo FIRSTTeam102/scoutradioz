@@ -121,9 +121,9 @@ app.use('/admin/manualinput', manualinput);
 app.use('/image', image);
 
 // catch 404 and forward to error handler
-app.use(useFunctions.notFoundHandler);
+app.use(usefunctions.notFoundHandler);
 // error handler
-app.use(useFunctions.errorHandler);
+app.use(usefunctions.errorHandler);
 
 
 // Export your express server so you can import it in the lambda function.
