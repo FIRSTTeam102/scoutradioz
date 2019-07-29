@@ -75,7 +75,7 @@ var AvatarStorage = function(options) {
         
         if (this.options.storage == 'local') {
         //if upload path does not exist, create the upload path structure
-        !fs.existsSync(this.uploadPath) && mkdirp.sync(this.uploadPath);
+        ///////////////////////////////////////!fs.existsSync(this.uploadPath) && mkdirp.sync(this.uploadPath);
         }
     }
     
