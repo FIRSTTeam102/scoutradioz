@@ -4,8 +4,13 @@ const favicon = require('serve-favicon');			//serves favicon
 const bodyParser = require('body-parser');			//parses http request information
 const useragent = require('express-useragent');		//for info on connected users
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
+const monk = require("monk");						//Monk for connecting to db
 const usefunctions = require("./scripts/usefunctions");	//extra functions for app.use
 const app = express();
+
+var db;
+//db = monk("localhost:27017/app");			//Local db on localhost without authentication
+db = monk("mongodb+srv://USER:PASSWORD@scoutradioz-test-01-obbqu.mongodb.net/test?retryWrites=true&w=majority");
 
 var isDev = false, debug = false, production = false;
 
@@ -64,7 +69,7 @@ app.use(function(req, res, next){
 	//For logging
 	req.requestTime = Date.now();
 	//For database
-	/////////////////req.db = db;
+	req.db = db;
 	//For user login
 	////////////////req.passport = passport;
 	
