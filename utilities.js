@@ -3,33 +3,67 @@ const fs = require("fs");
 
 var utilities = module.exports =  {};
 
+// cached DB reference
+var dbRef;
+
+utilities.getDB = async function(dbName) {
+	if (dbRef)
+		return dbRef;
+	
+	var db = utilities.getDBinner();
+	await new Promise(resolve => setTimeout(() => resolve(), 2000));
+	console.log("DEBUG - utilities.js - getDB*: Post 2000");
+	//db = dbRef;
+	//return db;
+}
+
 /**
  * One-time function that returns Monk DB, with specified DB string name.
  * @param {string} dbName name of DB
  * @return {*} Monk db
  */
-utilities.getDB = function(uri){
-	
+utilities.getDBinner = async function(uri) {
+	console.log("DEBUG - utilities.js - utilities.getDB: ENTER");
+
 	//check if we have a db user file
 	var hasDBUserFile = fs.existsSync(".dbuser");
 	var db;
 	
-	if(hasDBUserFile){
-		var dbUser = JSON.parse(fs.readFileSync(".dbuser", {"encoding": "utf8"}));
-		console.log(dbUser);
-		console.log(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
-		db = monk(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+	// if we already have a cached copy, use that
+	if (dbRef) {
+		console.log("DEBUG - usefunctions.js - functions.getDB: Using reference");
+		db = dbRef;
 	}
-	else{
-		db = monk(uri);			//Local db on localhost without authentication
+	// otherwise, get a reference
+	else
+	{
+		if(hasDBUserFile) {
+			var dbUser = JSON.parse(fs.readFileSync(".dbuser", {"encoding": "utf8"}));
+			console.log(dbUser);
+			console.log(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+			db = monk(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+		}
+		else {
+			console.log("DEBUG - utilities.js - getDB: Retrieving remote...");
+			const dbMonk = monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1");
+			//await monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1").then(function() {});
+			console.log("DEBUG - app.js - getDB - dbMonk=" + dbMonk);
+			db = dbMonk;
+			//db = await monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1");
+			//db = monk(uri);			//Local db on localhost without authentication
+		}
+		// set the DB reference for re-use later
+		dbRef = db;
 	}
-	
+
+
+	console.log("DEBUG - utilities.js - utilities.getDB: EXIT returning db=" + db);
 	return db;
 }
 
 //
-//var db = utilities.getDB("mongodb+srv://TestUser:uZnk9zqfXwGyfjym@cluster0-obbqu.mongodb.net/test?retryWrites=true");
-var db = utilities.getDB(`localhost:27017/app`);
+//var db = utilities.getDB("mongodb+srv://USER:PASSWORD@cluster0-obbqu.mongodb.net/test?retryWrites=true");
+//var db = utilities.getDB(`localhost:27017/app`);
 
 /**
  * Asynchronous "find" function to a collection specified in first parameter.
@@ -62,6 +96,12 @@ utilities.find = async function(collection, parameters, options){
 	}
 	
 	//Get collection
+	console.log("DEBUG - utilities.js - find: Calling getDB()");
+	var db;
+	if (!dbRef)
+		db = this.getDB();
+	db = dbRef;
+	console.log("DEBUG - utilities.js - find: db=" + db);
 	var Col = db.get(collection);
 	//Find in collection with parameters and options
 	var data = [];

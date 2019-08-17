@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+var utilities = require('../utilities');
 
 router.get("/", function(req, res){
 
@@ -8,24 +9,18 @@ router.get("/", function(req, res){
 	
 });
 
-router.get("/rankings", function(req, res){
+router.get("/rankings", async function(req, res){
 	var thisFuncName = "reports.rankings[get]: ";
 	res.log(thisFuncName + 'ENTER');
-	
-	var db = req.db;
-	var rankCol = db.get("currentrankings");
-	
-	rankCol.find({}, {sort: {rank: 1}}, function(e, docs) {
-		var rankings = null;
-		if (docs && docs.length > 0)
-			rankings = docs;
 
-		//res.log(thisFuncName + 'rankings=' + JSON.stringify(rankings));
-		
-		res.render("./reports/rankings", {
-			title: "Rankings",
-			rankings: rankings
-		});
+	var rankings = await utilities.find("currentrankings", {}, {sort:{rank: 1}});
+	if (!rankings)
+		rankings = [];
+	console.log("DEBUG - reports.js - get(/rankings) - rankings=" + rankings);
+
+	res.render("./reports/rankings", {
+		title: "Rankings",
+		rankings: rankings
 	});
 });
 

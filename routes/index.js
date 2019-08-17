@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var utilities = require('../utilities');
 
-router.get('/', async function(req, res){
+router.get('/PREV', async function(req, res){
 	
 	//Prepare an alert. (Used w/ url /?alert=(alert))
 	if(req.query) var alert = req.query.alert || null;
@@ -18,14 +18,14 @@ router.get('/', async function(req, res){
  * @url /
  * @view /index
  */
-router.get('/TEMP', async function(req, res) {
+router.get('/', async function(req, res) {
 	
 	//Prepare an alert. (Used w/ url /?alert=(alert))
 	if(req.query)
 		var alert = req.query.alert || null;
 	
 	var teams = await utilities.find("currentteams", {}, {sort:{team_number: 1}});
-	
+	console.log("DEBUG - index.js - get(/) - teams=" + teams);
 		
 	//If no current teams, then render page without team list.
 	if(!teams || !teams[0]){

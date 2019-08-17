@@ -4,32 +4,65 @@ const fs = require("fs");
 
 var functions = module.exports = {};
 
+// cached db reference once grabbed
+var dbRef;
+
+functions.getDB = async function(dbName) {
+	if (dbRef)
+		return dbRef;
+	
+	var db = functions.getDBinner();
+	await new Promise(resolve => setTimeout(() => resolve(), 2000));
+	console.log("DEBUG - usefunctions.js - functions.getDB*: Post 2000");
+	//db = dbRef;
+	//return db;
+}
+
 /**
  * One-time (non-Express) function that returns Monk DB, with specified DB string name.
  * @param {string} dbName name of DB
  * @return {*} Monk db
  */
-functions.getDB = function(dbName){
+functions.getDBinner = async function(dbName){
+	console.log("DEBUG - usefunctions.js - getDB: ENTER");
 	
 	//check if we have a db user file
 	var hasDBUserFile = fs.existsSync(".dbuser");
 	var db;
-	
-	if(hasDBUserFile){
-		var dbUser = JSON.parse(fs.readFileSync(".dbuser", {"encoding": "utf8"}));
-		console.log(dbUser);
-		console.log(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
-		db = monk(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+
+	// if we already have a cached copy, use that
+	if (dbRef) {
+		console.log("DEBUG - usefunctions.js - getDB: Using reference");
+		db = dbRef;
 	}
-	else{
-		db = monk(`localhost:27017/${dbName}`);			//Local db on localhost without authentication
+	// otherwise, get a reference
+	else
+	{
+		if(hasDBUserFile){
+			var dbUser = JSON.parse(fs.readFileSync(".dbuser", {"encoding": "utf8"}));
+			console.log(dbUser);
+			console.log(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+			db = monk(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
+		}
+		else {
+			console.log("DEBUG - usefunctions.js - getDB: Retrieving remote...");
+			const dbMonk = monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1");
+			//await monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1").then(function() {});
+			console.log("DEBUG - usefunctions.js - getDB - dbMonk=" + dbMonk);
+			db = dbMonk;
+				//db = monk(`localhost:27017/${dbName}`);			//Local db on localhost without authentication
+		}
+		// set the cached reference
+		dbRef = db;
 	}
 	
+	console.log("DEBUG - usefunctions.js - getDB - EXIT db=" + db);
 	return db;
 }
 
 //View engine locals variables
 functions.userViewVars = function(req, res, next){
+	console.log("DEBUG - usefunctions.js - functions.userViewVars: ENTER");
 	
 	if(req.user)
 		res.locals.user = req.user;
@@ -48,7 +81,8 @@ functions.userViewVars = function(req, res, next){
  * @param {*} res 
  * @param {*} next 
  */
-functions.getEventInfo = function(req, res, next) {
+functions.getEventInfo = async function(req, res, next) {
+	console.log("DEBUG - usefunctions.js - functions.getEventInfo: ENTER dbRef=" + dbRef);
 	
 	//req.passport = passport;
 	req.event = {
@@ -57,7 +91,15 @@ functions.getEventInfo = function(req, res, next) {
 	};
 	
 	//Get s collections for finding current event
-	var db = req.db;
+	var db;
+	if (dbRef)
+		db = dbRef;
+	else
+	{
+		await functions.getDB();
+		db = dbRef;
+	}
+	console.log("DEBUG - usefunctions.js - functions.getEventInfo() - db=" + db);
 	var current = db.get('current');
 	var events = db.get('events');
 	
@@ -214,9 +256,17 @@ functions.renderLogger = function(req, res, next){
  * @param {*} res 
  * @param {*} next 
  */
-functions.setupNodeRestClient = function(req, res, next){
+functions.setupNodeRestClient = async function(req, res, next){
 	
-	var passwordsCol = req.db.get("passwords");
+	var db;
+	if (dbRef)
+		db = dbRef;
+	else
+	{
+		await functions.getDB("");
+		db = dbRef;
+	}
+	var passwordsCol = db.get("passwords");
 	
 	//Get thebluealliance API key from db
 	passwordsCol.find({ name:"thebluealliance-args" }, function(e, args){

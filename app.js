@@ -10,7 +10,10 @@ const app = express();
 
 var db;
 //db = monk("localhost:27017/app");			//Local db on localhost without authentication
-db = monk("mongodb+srv://USER:PASSWORD@scoutradioz-test-01-obbqu.mongodb.net/test?retryWrites=true&w=majority");
+
+console.log("DEBUG - app.js - Current state db=" + db);
+
+//console.log(db);
 
 var isDev = false, debug = false, production = false;
 
@@ -65,11 +68,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 //User agent for logging
 app.use(useragent.express());
 
-app.use(function(req, res, next){
+app.use(async function(req, res, next){
 	//For logging
 	req.requestTime = Date.now();
 	//For database
-	req.db = db;
+	console.log("DEBUG - app.js - app.use(function(req, res, next){ - db=" + db);
+	//req.db = db;
+	//req.db = await getDB();
 	//For user login
 	////////////////req.passport = passport;
 	
@@ -78,15 +83,15 @@ app.use(function(req, res, next){
 	next();
 });
 //sets view engine vars for user
-//app.use(useFunctions.userViewVars);
+app.use(usefunctions.userViewVars);
 //Event stuff
-//app.use(useFunctions.getEventInfo);
+app.use(usefunctions.getEventInfo);
 //Logging and timestamping
 app.use(usefunctions.logger);
 //adds logging to res.render function
 app.use(usefunctions.renderLogger);
 //adds TBA API key to req
-//app.use(useFunctions.setupNodeRestClient);
+app.use(usefunctions.setupNodeRestClient);
 
 //const index = require('./routes/index');
 
