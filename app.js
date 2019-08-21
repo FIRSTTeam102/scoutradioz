@@ -2,6 +2,8 @@ const express = require('express');					//main express shiz
 const path = require('path');						//for filesystem
 const favicon = require('serve-favicon');			//serves favicon
 const bodyParser = require('body-parser');			//parses http request information
+const session = require('express-session');			//session middleware (uses cookies)
+const passport = require('passport');				//for user sessions
 const useragent = require('express-useragent');		//for info on connected users
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
 const monk = require("monk");						//Monk for connecting to db
@@ -65,8 +67,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+//Session
+app.use(session({
+	secret: 'marcus night',
+	resave: true,
+	saveUninitialized: true
+}));
+
 //User agent for logging
 app.use(useragent.express());
+
+//Passport setup (user authentication)
+require('./passport-config');
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(async function(req, res, next){
 	//For logging
@@ -76,7 +90,7 @@ app.use(async function(req, res, next){
 	//req.db = db;
 	//req.db = await getDB();
 	//For user login
-	////////////////req.passport = passport;
+	req.passport = passport;
 	
 	res.locals.s3url = "https://s3.amazonaws.com/scoringapp-bkt/public/";
 	
