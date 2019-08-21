@@ -25,7 +25,9 @@ var limits = {
 };
 
 //file filter to guarantee filetype is image
-var fileFilter = function(req, file, cb) {
+var fileFilter = function (req, file, cb) {
+    
+    console.log("Entering file filter");
     
     //supported image file mimetypes
     var allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'];
@@ -44,17 +46,17 @@ var upload = multer({
     storage: storage,
     limits: limits,
     fileFilter: fileFilter
-}).single("avatarfield");
+}).any();
 
 /**
  * Image storage and retrieval page. Meant to help with image down- & up-loads to the main directory
  * @url /image
  * @view image/test
  */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
     // res.render('index', { title: 'Upload Avatar', avatar_field: process.env.AVATAR_FIELD });
     //This stuff works
-    res.render('./image/test',{
+    res.render('./image/test', {
         title: "Image Testing Page",
         avatar_field: process.env.AVATAR_FIELD
     });
@@ -67,25 +69,35 @@ router.get('/', function(req, res, next) {
  * @param (post) avatarfield, used in upload
  * @redirect /scouting/pit?team=team_key
  */
-router.post('/upload*', function(req, res, next) {
+router.post('/upload*', function (req, res, next) {
     
+    res.log("req.body=" + JSON.stringify(req.body));
+
     var team_key = req.query.team_key;
     res.log("going to upload");
-    console.log("going to upload");
+    
     var true_key = "init value";
-    if (team_key.charAt(team_key.length-1) == 'a' || team_key.charAt(team_key.length-1) == 'b' || team_key.charAt(team_key.length-1) == 'c') {
-    true_key = team_key.slice(0, team_key.length-1);
-    console.log(true_key);
+    
+    switch(team_key.charAt(team_key.length - 1)){
+        case 'a':
+        case 'b':
+        case 'c':
+            true_key = team_key.slice(0, team_key.length - 1);
+            break;
+        default:
+            true_key = team_key;
     }
-    else {
-        true_key = team_key;
-    }
+    
     var year = req.event.year;
     req.baseFilename = year + "_" + team_key;
-    upload(req, res, function(e){
+    
+    upload(req, res, function (e) {
+        
         console.log(team_key);
-        console.log("_________________________________________________________________");
-        console.log("req.file="+JSON.stringify(req.file));
+        console.log("_______________________________________________");
+        console.log("req.file=" + JSON.stringify(req.file));
+        console.log("req.files=" + JSON.stringify(req.files));
+        //res.send("Upload successful?");
         res.redirect("/scouting/pit?team=" + true_key);
         console.log(true_key);
     });
@@ -101,6 +113,3 @@ module.exports = router;
 // ||   \\|  ||    ||  ||    //  ||               ||           ||
 // ||    ||  ||    ||  ||   //   ||               ||           ||
 // ||    ||  \\||||//  ||||//    ||||||||  ||  ||||/     |||||||/
-//
-//
-//...because why not
