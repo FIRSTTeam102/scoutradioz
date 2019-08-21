@@ -28,11 +28,7 @@ router.get('/admin', async function(req, res) {
 	//If there's been a GET request, prepare an alert
 	if(req.query)
 		var alert = req.query.alert || null;
-	
-	
-	//Get a list of all admin/exec members
-	var teammembers = req.db.get("teammembers");
-	
+		
 	var users = await utilities.find("teammembers", {subteam: {$in: ["exec", "support"]} }, {sort: { password: -1, name: 1}});
 	
 	res.render('./login/login', { 
@@ -99,7 +95,7 @@ router.get('/resetpassword', async function(req, res){
  * @url POST: /login/resetpassword
  * @redirect /
  */
-router.post('/resetpassword', function(req, res){
+router.post('/resetpassword', async function(req, res){
 	if( !require('./checkauthentication')(req, res, 'admin') ){
 		return res.log('authentication failed for /login/resetpassword');
 	}
@@ -110,19 +106,9 @@ router.post('/resetpassword', function(req, res){
 		return res.redirect('./resetpassword');
 	}
 	
-	var teammembers = req.db.get("teammembers");
+	var writeResult = await utilities.update("teammembers", { name: userToReset }, { $set: { password: 'default' } }, {});
 	
-	teammembers.update( { name: userToReset }, { 
-		$set: { password: 'default' } 
-	}, {}, function(e, result){
-		if(e)
-			return console.error(e);
-		
-		res.redirect('/?alert=Password successfully changed for user ' + userToReset);
-		
-		if(result)
-			res.log(result);
-	});
+	res.redirect('/?alert=Password successfully changed for user ' + userToReset);
 });
 
 /**
@@ -130,7 +116,7 @@ router.post('/resetpassword', function(req, res){
  * @url POST: /login/changepassword
  * @redirect /
  */
-router.post('/changepassword', function(req, res){
+router.post('/changepassword', async function(req, res){
 	
 	//Grabs both passwords entered
 	var p1 = req.body.passwordOne;
@@ -155,50 +141,43 @@ router.post('/changepassword', function(req, res){
 		return console.error("User doesn't exist in /login/changepassword");
 	}
 	
-	var teammembers = req.db.get("teammembers");
+	console.log(req.user);
 	
-	//Searches for user in db.
-	teammembers.find({ name: req.user.name },{}, function(e, result){
+	var member = await utilities.find("teammembers", {name: req.user.name}, {});
+	
+	res.log(`DEBUG - changepassword - member: ${member}`);
+	
+	member = member[0];
+	
+	if(!member){
+		return res.send(500, "user don't exist");
+	}
+	else{
 		
-		//gets member
-		var member = result[0];
-		if(!member){
-			return res.send(500, "user don't exist");
-		}
-		else{
+		res.log(member);
+		res.log(member.password);
+		
+		//Hashes new password
+		const saltRounds = 10;
+		
+		bcrypt.hash(p1, saltRounds, async function(err, hash) {
 			
-			res.log(member);
-			res.log(member.password);
+			//if error, err out
+			if(err){
+				res.log(err, true);
+				return res.sendStatus(500);
+			}
 			
-			//Hashes new password
-			const saltRounds = 10;
+			res.log(hash);
 			
-			bcrypt.hash(p1, saltRounds, function(err, hash) {
-				
-				//if error, err out
-				if(err){
-					res.log(err, true);
-					return res.sendStatus(500);
-				}
-				
-				//Updates teammembers collection w/ new password
-				teammembers.update({
-					name: req.user.name
-				},{
-					$set: {
-						password: hash
-					}
-				},{}, function(e, data){
-					
-					if(e)
-						return console.error(e);
-						
-					//redirects to home
-					res.redirect('/?alert=Password changed successfully.');
-				});
-			});
-		}
-	});
+			var writeResult = await utilities.update("teammembers", {name: req.user.name}, {$set: {password: hash}}, {});
+			
+			console.log(writeResult);
+			
+			//redirect to home
+			res.redirect('/?alert=Password changed successfully.');
+		});
+	}
 });
 
 /**
@@ -296,7 +275,10 @@ router.post('/admin', function(req, res) {
  * @redirect none
  * @view /login/adduser
 */
-router.post('/adduser', function(req, res){
+router.post('/adduser', async function(req, res){
+	if( !require('../checkauthentication')(req, res, 'admin') ){
+		return null;
+	}
 	
 	//set all attributes that will go into the new user
 	var name = req.body.username;
@@ -315,45 +297,40 @@ router.post('/adduser', function(req, res){
 		});
 	}
 	
-	var teammembers = req.db.get("teammembers");
+	var userThatExists = await utilities.findOne("teammembers", { "name": name }, {});
 	
-	//Searches to see if another user exists with same name
-	teammembers.findOne( { "name": name }, {}, function( e, user ){
+	//if user already exists, reload w/ warning
+	if( userThatExists != null ){
+		return res.render('./login/adduser', { 
+			title: "Create Admin User",
+			alert: "Error: User already exists."
+		});
+	}
 		
-		//if user already exists, reload w/ warning thingy
-		if( user != null ){
-			return res.render('./login/adduser', { 
-				title: "Create Admin User",
-				alert: "Error: User already exists."
-			});
+	//hash password
+	const saltRounds = 10;
+	
+	bcrypt.hash(txtPassword, saltRounds, async function(err, hash) {
+		
+		//if error, err out
+		if(err){
+			res.log(err);
+			return res.sendStatus(500);
 		}
 		
-		//hashes password
-		const saltRounds = 10;
+		await utilities.insert("teammembers", {
+			"name": name,
+			"subteam": subteam,
+			"className": className,
+			"years": years,
+			"present": present,
+			"password": hash
+		});
 		
-		bcrypt.hash(txtPassword, saltRounds, function(err, hash) {
-			
-			//if error, err out
-			if(err){
-				res.log(err);
-				return res.sendStatus(500);
-			}
-			
-			//Inserts new user
-			teammembers.insert({
-				"name": name,
-				"subteam": subteam,
-				"className": className,
-				"years": years,
-				"present": present,
-				"password": hash
-			});
-			
-			//return to page
-			return res.render('./login/adduser', { 
-				title: "Create Admin User",
-				alert: "User" + name + " created successfully."
-			});
+		//return to page
+		return res.render('./login/adduser', { 
+			title: "Create Admin User",
+			alert: "User" + name + " created successfully."
 		});
 	});
 });
