@@ -102,6 +102,7 @@ utilities.find = async function(collection, parameters, options){
 		db = this.getDB();
 	db = dbRef;
 	console.log("DEBUG - utilities.js - find: db=" + db);
+	
 	var Col = db.get(collection);
 	//Find in collection with parameters and options
 	var data = [];
@@ -109,6 +110,171 @@ utilities.find = async function(collection, parameters, options){
 	
 	//Return (Promise to get) data
 	return data;
+}
+
+/**
+ * Asynchronous "findOne" function to a collection specified in first parameter.
+ * @param collection [String] Collection to find in.
+ * @param parameters [Object] Query parameters.
+ * @param options [Object] Query options, such as sort.
+ */
+utilities.findOne = async function(collection, parameters, options){
+	
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string"){
+		throw new Error("Collection must be specified.");
+	}
+	//If query parameters are not set, create an empty object for the DB call.
+	if(!parameters){
+		var parameters = {};
+	}
+	//If parameters exists and is not an object, throw an error. 
+	if(typeof(parameters) != "object"){
+		throw new Error("Utilities.find Error: Parameters must be of type object");
+	}
+	//If query options are not set, create an empty object for the DB call.
+	if(!options){
+		var options = {};
+	}
+	//If options exists and is not an object, throw an error.
+	if(typeof(options) != "object"){
+		throw new Error("Utilities.find Error: Options must be of type object");
+	}
+	
+	//Get collection
+	console.log("DEBUG - utilities.js - find: Calling getDB()");
+	var db;
+	if (!dbRef)
+		db = this.getDB();
+	db = dbRef;
+	console.log("DEBUG - utilities.js - find: db=" + db);
+	
+	var Col = db.get(collection);
+	//Find in collection with parameters and options
+	var data = [];
+	data = await Col.findOne(parameters, options);
+	
+	//Return (Promise to get) data
+	return data;
+}
+
+/**
+ * Asynchronous "update" function to a collection specified in first parameter.
+ * @param collection [String] Collection to find in.
+ * @param parameters [Object] Query parameters.
+ * @param update [Object] Update query.
+ * @param options [Object] Query options, such as sort.
+ */
+utilities.update = async function(collection, parameters, update, options){
+	
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string"){
+		throw new Error("Collection must be specified.");
+	}
+	//If query parameters are not set, create an empty object for the DB call.
+	if(!parameters){
+		var parameters = {};
+	}
+	//If parameters exists and is not an object, throw an error. 
+	if(typeof(parameters) != "object"){
+		throw new Error("Utilities.find Error: Parameters must be of type object");
+	}
+	//If update does not exist or is not an object, throw an error. 
+	if(typeof(parameters) != "object"){
+		throw new Error("Utilities.find Error: Parameters must be specified and of type object");
+	}
+	//If query options are not set, create an empty object for the DB call.
+	if(!options){
+		var options = {};
+	}
+	//If options exists and is not an object, throw an error.
+	if(typeof(options) != "object"){
+		throw new Error("Utilities.find Error: Options must be of type object");
+	}
+	
+	var db;
+	if (!dbRef)
+		db = this.getDB();
+	db = dbRef;
+	
+	//Get collection
+	var Col = db.get(collection);
+	//Remove in collection with parameters
+	var writeResult;
+	writeResult = await Col.update(parameters, update, options);
+	
+	//return writeResult
+	return writeResult;
+}
+
+/**
+ * Asynchronous "remove" function to a collection specified in first parameter.
+ * @param collection [String] Collection to remove from.
+ * @param parameters [Object] Query parameters (Element/s to remove).
+ */
+utilities.remove = async function(collection, parameters){
+	
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string"){
+		throw new Error("Collection must be specified.");
+	}
+	//If query parameters are not set, create an empty object for the DB call.
+	if(!parameters){
+		var parameters = {};
+	}
+	//If parameters exists and is not an object, throw an error. 
+	if(typeof(parameters) != "object"){
+		throw new Error("Utilities.find Error: Parameters must be of type object");
+	}
+	
+	var db;
+	if (!dbRef)
+		db = this.getDB();
+	db = dbRef;
+	
+	//Get collection
+	var Col = db.get(collection);
+	//Remove in collection with parameters
+	var writeResult;
+	writeResult = await Col.remove(parameters);
+	
+	//return writeResult
+	return writeResult;
+}
+
+/**
+ * Asynchronous "insert" function to a collection specified in first parameter.
+ * @param collection [String] Collection to insert into.
+ * @param parameters [Any] Element or array of elements to insert
+ */
+utilities.insert = async function(collection, elements){
+	
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string"){
+		throw new Error("Collection must be specified.");
+	}
+	//If query parameters are not set, create an empty object for the DB call.
+	if(!elements){
+		throw new Error("Must contain an element or array of elements to insert.");
+	}
+	
+	var db;
+	if (!dbRef)
+		db = this.getDB();
+	db = dbRef;
+	
+	//Get collection
+	var Col = db.get(collection);
+	//Insert in collection
+	var writeResult;
+	writeResult = await Col.insert(elements);
+	
+	//return writeResult
+	return writeResult;
 }
 
 /**
