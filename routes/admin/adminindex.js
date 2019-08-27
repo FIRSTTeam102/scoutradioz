@@ -1,10 +1,11 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const utilities = require('../../utilities');
+const router = express.Router();
 
 /**
  * Admin index page. Provides links to all admin functionality.
  * @url /admin/
- * @views /adminindex
+ * @views /admin/adminindex
  */
 router.get('/', function(req, res) {
 	if( !require('../checkauthentication')(req, res, 'admin') ){
@@ -31,7 +32,7 @@ var client = new Client();
  * @url /admin/setcurrent
  * @redirect /admin
  */
-router.post('/setcurrent', function(req, res) {
+router.post('/setcurrent', async function(req, res) {
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
@@ -40,73 +41,57 @@ router.post('/setcurrent', function(req, res) {
 	var eventId = req.body.eventId;
 	res.log(thisFuncName + 'ENTER eventId=' + eventId);
 	
-	//Set our collection to change current event key
-	var currentCol = req.db.get("current");
-	var currentTeamsCol = req.db.get("currentteams");
-	var rankCol = req.db.get("currentrankings");
+	//Remove the previous 'current' data
+	await utilities.remove('current');
 	
-	//set up tba calls
-	var client = req.client;
-	var args = req.tbaRequestArgs;
-	var teamsUrl = `https://www.thebluealliance.com/api/v3/event/${eventId}/teams`;
-	var rankingsUrl = `https://www.thebluealliance.com/api/v3/event/${eventId}/rankings`;
+	//Now, insert the new data
+	await utilities.insert('current', {"event": eventId});
 	
-	// Remove the previous 'current' data
-	currentCol.remove({}, function(e, docs) {
+	//Now get teams and rankings from TBA
+	var teamsUrl = `event/${eventId}/teams`;
+	var rankingsUrl = `event/${eventId}/rankings`;
+	
+	var promiseForTeams = utilities.requestTheBlueAlliance(teamsUrl);
+	var promiseForRankings = utilities.requestTheBlueAlliance(rankingsUrl);
+	
+	//Delete contents of currentTeams
+	await utilities.remove("currentteams");
+	
+	//Await TBA request for teams
+	var teamsData = await promiseForTeams;
+	
+	//Now, insert teams into currentTeams
+	if( typeof teamsData == "object" ){
+		await utilities.insert("currentteams", teamsData);
+	}
+	else{
+		await utilities.insert("currentteams", JSON.parse(teamsData));
+	}
 		
-		// Now, insert the new data
-		currentCol.insert({"event": eventId}, function(e, docs) {
-			
-			//Now attempt to get list of teams at event from TheBlueAlliance
-				
-			//get teams from tba
-			client.get(teamsUrl, args, function (teamsData, response) {
-				
-				var currentTeams = JSON.parse(teamsData);
-				
-				//delete contents of currentteams
-				currentTeamsCol.remove({},function(){
-					
-					//2019-4-01 JL: Moved !currentTeams check to AFTER currentTeamsCol was emptied.
-					
-					if(!currentTeams){
-						return res.redirect(`/admin?alert=Set current event ${eventId} successfully but NO TEAMS WERE ADDED TO THE SYSTEM`);
-					}
-					
-					//insert teams into currentteams
-					currentTeamsCol.insert(currentTeams, function(){
-						
-						//Now attempt to get rankings at event from TheBlueAlliance
-						
-						client.get(rankingsUrl, args, function(rankData, response){
-							
-							//clear currentrankings
-							rankCol.remove({}, function () {
-								
-								//2019-04-1 JL: page now checks if rankings exist so server doesn't crash
-								//if rankdata exists, insert, otherwise don't
-								if (rankData && rankData != "null" && rankData[0]) {
-									
-									//get rankings
-									var currentRankings = JSON.parse(rankData).rankings;
-									
-									//now, insert rankings whether it's empty or not
-									rankCol.insert(currentRankings, function () {
-										
-										res.redirect(`/admin?alert=Set current event ${eventId} successfuly and got list of teams/rankings for event ${eventId} successfully.`);
-									});
-								}
-								//if rankings don't exist, redirect w/o rankings info
-								else{
-									res.redirect(`/admin?alert=Set current event ${eventId} successfully and got list of teams for event ${eventId} successfully. NO RANKINGS HAVE BEEN RETRIEVED.`)
-								}
-							});
-						});
-					});
-				})
-			});
-		});
-	});
+	//Delete contents of currentrankings
+	await utilities.remove("currentrankings");
+	
+	//Await TBA request for rankings
+	var rankingsResponse = await promiseForRankings;
+	
+	res.log(rankingsResponse);
+		
+	if (rankingsResponse && rankingsResponse != "null" 
+		&& rankingsResponse.rankings && rankingsResponse.rankings != "null") {
+		
+		//get rankings array
+		var rankings = rankingsResponse.rankings;
+		
+		//Now, insert rankings into currentrankings
+		await utilities.insert("currentrankings", rankings);
+		
+		//Finished with teams AND rankings
+		res.redirect(`/admin?alert=Set current event ${eventId} successfuly and got list of teams/rankings for event ${eventId} successfully.`);
+	}
+	else{
+		//Finished with teams and NO rankings
+		res.redirect(`/admin?alert=Set current event ${eventId} successfully and got list of teams for event ${eventId} successfully. NO RANKINGS HAVE BEEN RETRIEVED.`)
+	}
 });
 
 /** Page to generate sample data. Might not be necessary anymore?
@@ -127,6 +112,8 @@ router.get('/generatedata', function(req, res) {
 	
 	// for later querying by event_key
 	var eventId = req.event.key;
+	
+	//  Async/await this  //////////////////////
 	
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
