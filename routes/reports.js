@@ -10,13 +10,13 @@ router.get("/", function(req, res){
 });
 
 router.get("/rankings", async function(req, res){
+	
 	var thisFuncName = "reports.rankings[get]: ";
 	res.log(thisFuncName + 'ENTER');
 
 	var rankings = await utilities.find("currentrankings", {}, {sort:{rank: 1}});
 	if (!rankings)
 		rankings = [];
-	console.log("DEBUG - reports.js - get(/rankings) - rankings=" + rankings);
 
 	res.render("./reports/rankings", {
 		title: "Rankings",
