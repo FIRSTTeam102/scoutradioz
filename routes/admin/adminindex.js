@@ -22,49 +22,6 @@ router.get('/', function(req, res) {
 	});
 });
 
-/**
- * 
- */
-router.get('/backup', async function(req, res){
-	
-	var times = [];
-	
-	//times.push({time: Date.now(), event: ""});
-	var current = await getCurrent();
-	//times.push({time: Date.now(), event: "current"});
-	var currentaggrankings = await find("currentaggrankings");
-	//times.push({time: Date.now(), event: "currentaggrankings"});
-	var currentrankings = await find("currentrankings", {}, {sort: {rank: 1}});
-	//times.push({time: Date.now(), event: "currentrankings"});
-	var currentteams = await find("currentteams", {}, {sort: {team_number: 1}});
-	//times.push({time: Date.now(), event: "currentteams"});
-	var matches = await find("matches", {event_key: current.key}, {sort: {match_number: 1}});
-	//times.push({time: Date.now(), event: "matches"});
-	var scoringdata = await find("scoringdata", {event_key: current.key}, {sort: {match_number: 1}});
-	//times.push({time: Date.now(), event: "scoringdata"});
-	var scoutingdata = await find("scoutingdata", {event_key: current.key}, {sort: {team_key: 1}});
-	//times.push({time: Date.now(), event: "scoutingdata"});
-	
-	/*
-	var message = "TIMES (ms): ";
-	for(var i = 1; i < times.length; i++){
-		message += times[i].event + " " + (times[i].time - times[i - 1].time) + "\n";
-	}
-	console.log(message);
-	*/
-	
-	res.render('./admin/backup', {
-		title: "Data Backup Scheduling",
-		"current": current,
-		"currentaggrankings": currentaggrankings,
-		"currentrankings": currentrankings,
-		"currentteams": currentteams,
-		"matches": matches,
-		"scoringdata": scoringdata,
-		"scoutingdata": scoutingdata
-	});
-});
-
 //hardcoded temporarily
 var db = require("monk")("localhost:27017/app");
 var Client = require('node-rest-client').Client;
