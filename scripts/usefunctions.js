@@ -82,7 +82,6 @@ functions.userViewVars = function(req, res, next){
  * @param {*} next 
  */
 functions.getEventInfo = async function(req, res, next) {
-	console.log("DEBUG - usefunctions.js - functions.getEventInfo: ENTER dbRef=" + dbRef);
 	
 	//req.passport = passport;
 	req.event = {
@@ -90,58 +89,35 @@ functions.getEventInfo = async function(req, res, next) {
 		name: "undefined"
 	};
 	
-	//Get s collections for finding current event
-	var db;
-	if (dbRef)
-		db = dbRef;
-	else
-	{
-		await functions.getDB();
-		db = dbRef;
-	}
-	console.log("DEBUG - usefunctions.js - functions.getEventInfo() - db=" + db);
-	var current = db.get('current');
-	var events = db.get('events');
+	var utilities = require("../utilities");
 	
-	//finds current event
-	current.find({}, {}, function(e, current) {
+	var current = await utilities.find("current", {}, {});
+	
+	//sets locals to no event defined just in case we don't find thing and we can just do next();
+	var eventId = 'No event defined';
+	var eventYear = 'No year defined';
+	res.locals.eventName = eventId;
+	
+	//if exist
+	if (current && current[0]){
 		
-		//sets locals to no event defined just in case we don't find thing and we can just do next();
-		var eventId = 'No event defined';
-		var eventYear = 'No year defined';
-		res.locals.eventName = eventId;
+		eventId = current[0].event;
+		eventYear = parseInt(eventId)
+		//set event key
+		req.event.key = eventId;
+		req.event.year = eventYear;
+		res.locals.event_key = req.event.key;
+		res.locals.event_year = req.event.year;
 		
-		//if exist
-		if (current && current[0]){
-			
-			eventId = current[0].event;
-			eventYear = parseInt(eventId)
-			//set event key
-			req.event.key = eventId;
-			req.event.year = eventYear;
-			res.locals.event_key = req.event.key;
-			res.locals.event_year = req.event.year;
-			
-			//find data for current event
-			events.find({ key: eventId }, {}, function(e, event){
-				
-				if(e){
-					console.error(e);
-					return next();
-				}
-				//set tournament thing to event name
-				if(event && event[0]){
-					res.locals.eventName = event[0].name;
-					req.event.name = event[0].name;
-					next();
-				}else{
-					next();
-				}
-			});
-		}else{
-			next();
+		var currentEvent = await utilities.find("events", {key: eventId}, {});
+		
+		//set tournament thing to event name
+		if(currentEvent && currentEvent[0]){
+			res.locals.eventName = currentEvent[0].name;
+			req.event.name = currentEvent[0].name;
 		}
-	});
+	}
+	next();
 }
 
 /**
