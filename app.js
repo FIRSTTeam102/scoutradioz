@@ -3,21 +3,16 @@ const path = require('path');						//for filesystem
 const favicon = require('serve-favicon');			//serves favicon
 const bodyParser = require('body-parser');			//parses http request information
 const session = require('express-session');			//session middleware (uses cookies)
+const MongoStore = require('connect-mongo')(session);//Alternative session storage
 const passport = require('passport');				//for user sessions
 const useragent = require('express-useragent');		//for info on connected users
-const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
-const monk = require("monk");						//Monk for connecting to db
 const usefunctions = require("./scripts/usefunctions");	//extra functions for app.use
-const app = express();
 
-var db;
-//db = monk("localhost:27017/app");			//Local db on localhost without authentication
+//AWS middleware magic
+require('aws-serverless-express/middleware');
 
-console.log("DEBUG - app.js - Current state db=" + db);
-
-//console.log(db);
-
-var isDev = false, debug = false, production = false;
+//          This is set temporarily
+var isDev = false, debug = true, production = false;
 
 /* Check process arguments.
 	If -dev or --dev, isDev = true.
@@ -52,26 +47,40 @@ if(!isDev || production){
 	process.env.NODE_ENV = "production";
 }
 
+//Create app
+const app = express();
+
 //set app's bools to these arguments
 app.isDev = isDev; 
 app.debug = debug; 
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
 
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
+app.use(express.static(path.join(__dirname, 'public')));
+//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
+console.log(path.join(__dirname, 'public', 'favicon.ico'));
+console.log(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 //Session
 app.use(session({
-	secret: 'marcus night',
-	resave: true,
-	saveUninitialized: true
+    secret: 'marcus night',
+    saveUninitialized: false, // don't create session until something stored
+	resave: false, //don't save session if unmodified
+	
+	store: new MongoStore({
+        url: 'mongodb://USERNAME:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1',
+        ttl: 3 * 24 * 60 * 60, // = 14 days. Default
+		autoRemove: 'interval',
+		autoRemoveInterval: 10, // In minutes. Default
+        touchAfter: 24 * 3600, // time period in seconds for lazy loading session
+    })
 }));
 
 //User agent for logging
@@ -86,7 +95,6 @@ app.use(async function(req, res, next){
 	//For logging
 	req.requestTime = Date.now();
 	//For database
-	console.log("DEBUG - app.js - app.use(function(req, res, next){ - db=" + db);
 	//req.db = db;
 	//req.db = await getDB();
 	//For user login
@@ -105,7 +113,7 @@ app.use(usefunctions.logger);
 //adds logging to res.render function
 app.use(usefunctions.renderLogger);
 //adds TBA API key to req
-app.use(usefunctions.setupNodeRestClient);
+//app.use(usefunctions.setupNodeRestClient);
 
 //const index = require('./routes/index');
 
