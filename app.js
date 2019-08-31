@@ -10,6 +10,8 @@ const usefunctions = require("./scripts/usefunctions");	//extra functions for ap
 
 //AWS middleware magic
 require('aws-serverless-express/middleware');
+//load .env variables
+require('dotenv').config();
 
 //          This is set temporarily
 var isDev = false, debug = true, production = false;
@@ -74,7 +76,7 @@ app.use(session({
 	resave: false, //don't save session if unmodified
 	
 	store: new MongoStore({
-        url: 'mongodb://USERNAME:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1',
+        url: 'mongodb://GearheadsAdmin:2lyd76t5qKXq6qbF@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1',
         ttl: 3 * 24 * 60 * 60, // = 14 days. Default
 		autoRemove: 'interval',
 		autoRemoveInterval: 10, // In minutes. Default
