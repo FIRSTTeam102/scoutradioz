@@ -1,17 +1,6 @@
-var express = require('express');
-var router = express.Router();
-var utilities = require('../utilities');
-
-router.get('/PREV', async function(req, res){
-	
-	//Prepare an alert. (Used w/ url /?alert=(alert))
-	if(req.query) var alert = req.query.alert || null;
-	
-	res.render('./index', {
-		title: "Temp Home",
-		alert: alert
-	});
-});
+const express = require('express');
+const router = express.Router();
+const utilities = require('../utilities');
 
 /**
  * Main homepage.
@@ -66,9 +55,6 @@ router.get("/logout", function(req, res) {
 		//Redirect user
 		res.redirect('/')
 	});
-	
-	//Redirects user
-	//res.redirect('/')
 });
 
 module.exports = router;
