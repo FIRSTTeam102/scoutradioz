@@ -1,0 +1,12 @@
+/*
+JSON format; For every process tier, plus default, add an object with a "url" attribute.
+.database is ignored by git, so you must change this in every environment.
+*/
+{
+	"app": {
+		"url": "localhost:27017"
+	},
+	"default": {
+		"url": "localhost:27017"
+	}
+}
