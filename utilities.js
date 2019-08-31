@@ -6,7 +6,10 @@ var utilities = module.exports =  {};
 // cached DB reference
 var dbRef;
 
-function getDB(){
+/**
+ * Function that first caches, then returns the cached database for the server process.
+ */
+utilities.getDB = function(){
 	
 	//create db return variable
 	var db;
@@ -23,42 +26,67 @@ function getDB(){
 	return db;
 }
 
+//Make it a local variable too
+var getDB = utilities.getDB;
+
+/**
+ * Internal function that connects to a database, depending on .database file inside process directory.
+ */
 function connectToDB(){
 	console.log("DEBUG - utilities.js - utilities.connectToDB: ENTER");
 	
-	//check if we have a db user file
-	var hasDBUserFile = fs.existsSync(".dbuser");
+	//check if we have a db file
+	var hasDotDatabase = fs.existsSync(".database");
 	var db;
 	
-	// if we already have a cached copy, use that
-	if (dbRef) {
-		console.log("DEBUG - usefunctions.js - functions.connectToDB: Using reference");
-		db = dbRef;
+	if(hasDotDatabase) {
+		
+		//Read JSON-encoded database file.
+		var dotdatabase = JSON.parse(fs.readFileSync(".database", {"encoding": "utf8"}));
+		//Grab process tier 
+		var thisProcessTier = process.env.tier;
+		
+		console.log(dotdatabase);
+		
+		//If a process tier is specified, then attempt to read db URL from that tier.
+		if(thisProcessTier){
+			
+			var thisDBinfo = dotdatabase[thisProcessTier];
+			
+			//If there is an object inside .database for process tier, proceed with connecting to db.
+			if(thisDBinfo){
+				//Connect to db with specified url.
+				console.log(`utilities.connectToDB: Connecting to ${thisProcessTier} : ${thisDBinfo.url}`);
+				db = monk(thisDBinfo.url);
+			}
+			//If there is no object in .database for process tier, throw an error.
+			else{
+				throw new Error(`utilities.connectToDB: No database specified for process tier ${thisProcessTier} in .database`);
+			}
+		}
+		//If there is no process tier, then connect to specified default db
+		else{
+			
+			var thisDBinfo = dotdatabase["default"];
+			
+			//If default db exists, proceed with connecting to db.
+			if(thisDBinfo){
+				//Connect to db with specified url.
+				console.log(`utilities.connectToDB: Connecting to ${thisProcessTier} : ${thisDBinfo.url}`);
+				db = monk(thisDBinfo.url);
+			}
+			//If there is no object in .database for default, throw an error.
+			else{
+				throw new Error(`utilities.connectToDB: No default database URL specified in .database`);
+			}
+		}
 	}
-	// otherwise, get a reference
-	else
-	{
-		if(hasDBUserFile) {
-			var dbUser = JSON.parse(fs.readFileSync(".dbuser", {"encoding": "utf8"}));
-			console.log(dbUser);
-			console.log(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
-			db = monk(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
-		}
-		else {
-			console.log("DEBUG - utilities.js - connectToDB: Retrieving remote...");
-			console.log("DEBUG - utilities.js - getDB: Retrieving remote...");
-			const dbMonk = monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1");
-			//await monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1").then(function() {});
-			console.log("DEBUG - app.js - connectToDB - dbMonk=" + dbMonk);
-			db = dbMonk;
-			//db = await monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1");
-			//db = monk(uri);			//Local db on localhost without authentication
-		}
-		// set the DB reference for re-use later
-		dbRef = db;
+	//If there is no .database file, then connect to localhost
+	else {
+		console.log("utilities: No .database file found; Connecting to localhost:27017");
+		db = monk("localhost:27017");
 	}
 	
-	console.log("DEBUG - utilities.js - utilities.connectToDB: EXIT returning db=" + db);
 	return db;
 }
 
@@ -266,7 +294,7 @@ utilities.insert = async function(collection, elements){
  * @param {string} url ENDING of URL, after "https://.../api/v3/"
  * @return {Promise} Promise; Resolves when client receives a request from TBA
  */
-utilities.requestTheBlueAliance = async function(url){
+utilities.requestTheBlueAlliance = async function(url){
 	
 	//Setup our request URL, including specified URL ending parameter
 	var requestURL = "https://www.thebluealliance.com/api/v3/" + url;
@@ -309,31 +337,4 @@ utilities.getTBAKey = async function(){
 		//**********CONSIDER ANOTHER OPTION FOR HANDLING "CAN'T FIND REQUEST ARGS"
 		return null;
 	}
-}
-
-/**
- * Asynchronous function to get current event from database.
- * @return {Promise}-[Object] Event key and name for current event
- */
-utilities.getCurrent = async function(){
-	
-	var currentCol = db.get("current");
-	var current = {
-		key: "undefined",
-		name: "undefined"
-	};
-	
-	var currentKey = await currentCol.find({});
-	
-	if(currentKey && currentKey[0]){
-		current.key = currentKey[0].event;
-		
-		var currentData = await find("events", {key: current.key});
-		
-		if(currentData && currentData[0]){
-			current.name = currentData[0].name;
-		}
-	}
-	
-	return current;
 }
