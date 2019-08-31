@@ -17,7 +17,7 @@ router.get('/', async function(req, res) {
 		
 	//If no current teams, then render page without team list.
 	if(!teams || !teams[0]){
-		res.log(e || "No teams listed yet");
+		res.log("No teams listed yet");
 		return res.render('./index', { 
 			title: 'Home',
 			alert: alert
