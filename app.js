@@ -54,13 +54,12 @@ const app = express();
 app.isDev = isDev; 
 app.debug = debug; 
 
-
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(express.static(path.join(__dirname, 'public')));
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.png')));
 
 console.log(path.join(__dirname, 'public', 'favicon.ico'));
 console.log(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -126,7 +125,7 @@ var dashboard = require("./routes/dashboard");
 var scouting = require("./routes/scouting");
 var reports = require('./routes/reports');
 var allianceselection = require('./routes/allianceselection');
-var image = require("./routes/image");
+//var image = require("./routes/image");
 //ADMIN ROUTES
 var adminindex = require('./routes/admin/adminindex');
 var scoutingaudit = require("./routes/admin/audit");
@@ -150,13 +149,12 @@ app.use('/admin/data', externaldata);
 app.use('/admin/current', current);
 app.use('/admin/audit', scoutingaudit);
 app.use('/admin/manualinput', manualinput);
-app.use('/image', image);
+//app.use('/image', image);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);
 // error handler
 app.use(usefunctions.errorHandler);
-
 
 // Export your express server so you can import it in the lambda function.
 module.exports = app;

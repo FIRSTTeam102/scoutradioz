@@ -1,64 +1,7 @@
-const colors = require("colors");
-const monk = require("monk");						//Monk for connecting to db
-const fs = require("fs");
+//For colorful logging
+require("colors");
 
 var functions = module.exports = {};
-
-// cached db reference once grabbed
-var dbRef;
-
-functions.getDB = async function(dbName) {
-	if (dbRef)
-		return dbRef;
-	
-	var db = functions.getDBinner();
-	await new Promise(resolve => setTimeout(() => resolve(), 2000));
-	console.log("DEBUG - usefunctions.js - functions.getDB*: Post 2000");
-	//db = dbRef;
-	//return db;
-}
-
-/**
- * One-time (non-Express) function that returns Monk DB, with specified DB string name.
- * @param {string} dbName name of DB
- * @return {*} Monk db
- */
-functions.getDBinner = async function(dbName){
-	console.log("DEBUG - usefunctions.js - getDB: ENTER");
-	
-	//check if we have a db user file
-	var hasDBUserFile = fs.existsSync(".dbuser");
-	var db;
-
-	// if we already have a cached copy, use that
-	if (dbRef) {
-		console.log("DEBUG - usefunctions.js - getDB: Using reference");
-		db = dbRef;
-	}
-	// otherwise, get a reference
-	else
-	{
-		if(hasDBUserFile){
-			var dbUser = JSON.parse(fs.readFileSync(".dbuser", {"encoding": "utf8"}));
-			console.log(dbUser);
-			console.log(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
-			db = monk(`${dbUser.username}:${dbUser.password}@localhost:27017/${dbName}`);	
-		}
-		else {
-			console.log("DEBUG - usefunctions.js - getDB: Retrieving remote...");
-			const dbMonk = monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1");
-			//await monk("mongodb://USER:PASSWORD@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1").then(function() {});
-			console.log("DEBUG - usefunctions.js - getDB - dbMonk=" + dbMonk);
-			db = dbMonk;
-				//db = monk(`localhost:27017/${dbName}`);			//Local db on localhost without authentication
-		}
-		// set the cached reference
-		dbRef = db;
-	}
-	
-	console.log("DEBUG - usefunctions.js - getDB - EXIT db=" + db);
-	return db;
-}
 
 //View engine locals variables
 functions.userViewVars = function(req, res, next){
@@ -225,44 +168,6 @@ functions.renderLogger = function(req, res, next){
 	}());
 	next();
 }
-
-/**
- * Sets up node rest client
- * @param {*} req
- * @param {*} res 
- * @param {*} next 
- */
-functions.setupNodeRestClient = async function(req, res, next){
-	
-	var db;
-	if (dbRef)
-		db = dbRef;
-	else
-	{
-		await functions.getDB("");
-		db = dbRef;
-	}
-	var passwordsCol = db.get("passwords");
-	
-	//Get thebluealliance API key from db
-	passwordsCol.find({ name:"thebluealliance-args" }, function(e, args){
-		if(e || !args[0]){
-			res.log(e, true);
-			return res.status(500).send("couldn't find TBA args in db");
-		}
-		args = args[0];
-		
-		//set up node rest client
-		var Client = require('node-rest-client').Client;
-		var client = new Client();
-		
-		//adds client func and args to req
-		req.client = client;
-		req.tbaRequestArgs = args;
-		
-		next();
-	});
-};
  
 /**
  * Handles 404 errors

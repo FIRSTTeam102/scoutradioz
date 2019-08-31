@@ -1,9 +1,7 @@
-var passport = require('passport');
-var bcrypt = require('bcryptjs');					//bcrypt for password encryption
-var LocalStrategy = require('passport-local').Strategy; //strategy for passport
-var monk = require('monk');
-var utilities = require("./utilities");
-const fs = require("fs");
+const passport = require('passport');
+const bcrypt = require('bcryptjs');					//bcrypt for password encryption
+const LocalStrategy = require('passport-local').Strategy; //strategy for passport
+const utilities = require("./utilities");
 
 //Configure local strategy for use by Passport.
 passport.use(new LocalStrategy(
@@ -47,7 +45,8 @@ passport.use(new LocalStrategy(
 				return compare( password, hash, user, done );
 			}
 		}
-	}));
+	}
+));
 
 function compare( password, hash, user, done ){
 	
@@ -92,9 +91,7 @@ passport.deserializeUser(async function(id, done) {
     });
 	*/
 	
-	var mid = monk.id(id);
-	
-	var user = await utilities.findOne("teammembers", { "_id": mid }, {});
+	var user = await utilities.findOne("teammembers", { "_id": id }, {});
 	
 	if(!user)
 		console.error( err || "User not found in db: deserializeUser " + id);
