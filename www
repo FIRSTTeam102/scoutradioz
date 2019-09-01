@@ -8,7 +8,6 @@ process.env.local = true;
  */
 
 var app = require('./app');
-var debug = require('debug')('experiments:server');
 var http = require('http');
 
 /**
