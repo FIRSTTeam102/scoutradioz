@@ -27,6 +27,10 @@ utilities.getDB = function(){
 	return db;
 }
 
+/**
+ * Function that retrieves the database connection string from .database, and returns that connection string URL.
+ * If .database does not exist, it defaults to localhost.
+ */
 utilities.getDBurl = function(){	
 	
 	//check if we have a db file
@@ -48,7 +52,7 @@ utilities.getDBurl = function(){
 			//If there is an object inside .database for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				console.log(`utilities.getDBurl: Connecting to tier ${thisProcessTier}: ${thisDBinfo.url.substring(0, 23)}...`);
+				console.log(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in .database for process tier, throw an error.
@@ -64,7 +68,7 @@ utilities.getDBurl = function(){
 			//If default db exists, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				console.log(`utilities.getDBurl: Connecting to tier ${thisProcessTier}: ${thisDBinfo.url.substring(0, 23)}...`);
+				console.log(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in .database for default, throw an error.
