@@ -5,8 +5,8 @@
     - Enter access key ID
     - Enter secret access key
 4. Make sure `.env` is populated with necessary environment variables for your system.
-5. Make sure `.databases` is populated with necessary database information.
-    - `.databases` must be in JSON format
+5. Make sure `.database` is populated with necessary database information.
+    - `.database` must be in JSON format
     - For each process "tier" (`process.env.tier`), include a Mongo database URL, as well as a default fallback. (e.g. `dotdatabase.app.url`. `dotdatabase.beta.url`, `dotdatabase.default.url`)
 6. This project has already been configured. To deploy, run `npm run package-deploy`. On Windows, run `npm run win-package-deploy`.
 
