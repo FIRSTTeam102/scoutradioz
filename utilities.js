@@ -16,7 +16,8 @@ utilities.getDB = function(){
 	
 	//if cached db reference doesn't exist, create it by connecting to db
 	if(!dbRef){
-		dbRef = connectToDB();
+		var url = this.getDBurl();
+		dbRef = monk(url);
 	}
 	
 	//set return var equal to dbRef
@@ -26,18 +27,11 @@ utilities.getDB = function(){
 	return db;
 }
 
-//Make it a local variable too
-var getDB = utilities.getDB;
-
-/**
- * Internal function that connects to a database, depending on .database file inside process directory.
- */
-function connectToDB(){
-	console.log("DEBUG - utilities.js - utilities.connectToDB: ENTER");
+utilities.getDBurl = function(){	
 	
 	//check if we have a db file
 	var hasDotDatabase = fs.existsSync(".database");
-	var db;
+	var url;
 	
 	if(hasDotDatabase) {
 		
@@ -45,9 +39,7 @@ function connectToDB(){
 		var dotdatabase = JSON.parse(fs.readFileSync(".database", {"encoding": "utf8"}));
 		//Grab process tier 
 		var thisProcessTier = process.env.tier;
-		
-		console.log(dotdatabase);
-		
+				
 		//If a process tier is specified, then attempt to read db URL from that tier.
 		if(thisProcessTier){
 			
@@ -56,12 +48,12 @@ function connectToDB(){
 			//If there is an object inside .database for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				console.log(`utilities.connectToDB: Connecting to ${thisProcessTier} : ${thisDBinfo.url}`);
-				db = monk(thisDBinfo.url);
+				console.log(`utilities.getDBurl: Connecting to tier ${thisProcessTier}: ${thisDBinfo.url.substring(0, 23)}...`);
+				url = thisDBinfo.url;
 			}
 			//If there is no object in .database for process tier, throw an error.
 			else{
-				throw new Error(`utilities.connectToDB: No database specified for process tier ${thisProcessTier} in .database`);
+				throw new Error(`utilities.getDBurl: No database specified for process tier ${thisProcessTier} in .database`);
 			}
 		}
 		//If there is no process tier, then connect to specified default db
@@ -72,22 +64,22 @@ function connectToDB(){
 			//If default db exists, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				console.log(`utilities.connectToDB: Connecting to ${thisProcessTier} : ${thisDBinfo.url}`);
-				db = monk(thisDBinfo.url);
+				console.log(`utilities.getDBurl: Connecting to tier ${thisProcessTier}: ${thisDBinfo.url.substring(0, 23)}...`);
+				url = thisDBinfo.url;
 			}
 			//If there is no object in .database for default, throw an error.
 			else{
-				throw new Error(`utilities.connectToDB: No default database URL specified in .database`);
+				throw new Error(`utilities.getDBurl: No default database URL specified in .database`);
 			}
 		}
 	}
 	//If there is no .database file, then connect to localhost
 	else {
-		console.log("utilities: No .database file found; Connecting to localhost:27017");
-		db = monk("localhost:27017");
+		console.log("utilities: No .database file found; Defaulting to localhost:27017");
+		url = "localhost:27017";
 	}
 	
-	return db;
+	return url;
 }
 
 /**
@@ -120,7 +112,7 @@ utilities.find = async function(collection, parameters, options){
 		throw new Error("Utilities.find Error: Options must be of type object");
 	}
 	
-	var db = getDB();
+	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
@@ -167,7 +159,7 @@ utilities.findOne = async function(collection, parameters, options){
 	//Get collection
 	console.log("DEBUG - utilities.js - find: " + collection);
 	
-	var db = getDB();
+	var db = this.getDB();
 	
 	console.log("DEBUG - utilities.js - find: db=" + db);
 	
@@ -215,7 +207,7 @@ utilities.update = async function(collection, parameters, update, options){
 		throw new Error("Utilities.find Error: Options must be of type object");
 	}
 	
-	var db = getDB();
+	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
@@ -248,7 +240,7 @@ utilities.remove = async function(collection, parameters){
 		throw new Error("Utilities.find Error: Parameters must be of type object");
 	}
 	
-	var db = getDB();
+	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
@@ -277,7 +269,7 @@ utilities.insert = async function(collection, elements){
 		throw new Error("Must contain an element or array of elements to insert.");
 	}
 	
-	var db = getDB();
+	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);

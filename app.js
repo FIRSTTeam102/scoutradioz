@@ -1,12 +1,13 @@
-const express = require('express');					//main express shiz
-const path = require('path');						//for filesystem
-const favicon = require('serve-favicon');			//serves favicon
-const bodyParser = require('body-parser');			//parses http request information
-const session = require('express-session');			//session middleware (uses cookies)
-const MongoStore = require('connect-mongo')(session);//Alternative session storage
-const passport = require('passport');				//for user sessions
-const useragent = require('express-useragent');		//for info on connected users
+const express = require('express');						//main express shiz
+const path = require('path');							//for filesystem
+const favicon = require('serve-favicon');				//serves favicon
+const bodyParser = require('body-parser');				//parses http request information
+const session = require('express-session');				//session middleware (uses cookies)
+const MongoStore = require('connect-mongo')(session);	//Alternative session storage
+const passport = require('passport');					//for user sessions
+const useragent = require('express-useragent');			//for info on connected users
 const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
+const utilities = require('./utilities');				//database utilities
 
 //AWS middleware magic
 require('aws-serverless-express/middleware');
@@ -63,9 +64,6 @@ app.set('view engine', 'pug');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon(path.join(__dirname, 'public', 'favicon.png')));
 
-console.log(path.join(__dirname, 'public', 'favicon.ico'));
-console.log(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -76,11 +74,14 @@ app.use(session({
 	resave: false, //don't save session if unmodified
 	
 	store: new MongoStore({
-        url: 'mongodb://GearheadsAdmin:2lyd76t5qKXq6qbF@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1',
+        url: utilities.getDBurl(),
         ttl: 3 * 24 * 60 * 60, // = 14 days. Default
 		autoRemove: 'interval',
 		autoRemoveInterval: 10, // In minutes. Default
-        touchAfter: 24 * 3600, // time period in seconds for lazy loading session
+		touchAfter: 24 * 3600, // time period in seconds for lazy loading session
+		mongoOptions: {
+			useUnifiedTopology: true
+		}
     })
 }));
 
