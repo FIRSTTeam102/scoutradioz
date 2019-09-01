@@ -6,7 +6,7 @@ const session = require('express-session');			//session middleware (uses cookies
 const MongoStore = require('connect-mongo')(session);//Alternative session storage
 const passport = require('passport');				//for user sessions
 const useragent = require('express-useragent');		//for info on connected users
-const usefunctions = require("./scripts/usefunctions");	//extra functions for app.use
+const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
 
 //AWS middleware magic
 require('aws-serverless-express/middleware');
@@ -88,7 +88,7 @@ app.use(session({
 app.use(useragent.express());
 
 //Passport setup (user authentication)
-require('./passport-config');
+require('./helpers/passport-config');
 app.use(passport.initialize());
 app.use(passport.session());
 

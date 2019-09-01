@@ -1,7 +1,7 @@
 const passport = require('passport');
 const bcrypt = require('bcryptjs');					//bcrypt for password encryption
 const LocalStrategy = require('passport-local').Strategy; //strategy for passport
-const utilities = require("./utilities");
+const utilities = require("../utilities");
 
 //Configure local strategy for use by Passport.
 passport.use(new LocalStrategy(
