@@ -1,0 +1,8 @@
+{
+	"app": {
+		"url": "localhost:27017"
+	},
+	"default": {
+		"url": "localhost:27017"
+	}
+}
