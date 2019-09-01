@@ -30,19 +30,19 @@ utilities.getDB = function(){
 var getDB = utilities.getDB;
 
 /**
- * Internal function that connects to a database, depending on .database file inside process directory.
+ * Internal function that connects to a database, depending on .databases file inside process directory.
  */
 function connectToDB(){
 	console.log("DEBUG - utilities.js - utilities.connectToDB: ENTER");
 	
 	//check if we have a db file
-	var hasDotDatabase = fs.existsSync(".database");
+	var hasDotDatabase = fs.existsSync(".databases");
 	var db;
 	
 	if(hasDotDatabase) {
 		
 		//Read JSON-encoded database file.
-		var dotdatabase = JSON.parse(fs.readFileSync(".database", {"encoding": "utf8"}));
+		var dotdatabase = JSON.parse(fs.readFileSync(".databases", {"encoding": "utf8"}));
 		//Grab process tier 
 		var thisProcessTier = process.env.tier;
 		
@@ -53,15 +53,15 @@ function connectToDB(){
 			
 			var thisDBinfo = dotdatabase[thisProcessTier];
 			
-			//If there is an object inside .database for process tier, proceed with connecting to db.
+			//If there is an object inside .databases for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
 				console.log(`utilities.connectToDB: Connecting to ${thisProcessTier} : ${thisDBinfo.url}`);
 				db = monk(thisDBinfo.url);
 			}
-			//If there is no object in .database for process tier, throw an error.
+			//If there is no object in .databases for process tier, throw an error.
 			else{
-				throw new Error(`utilities.connectToDB: No database specified for process tier ${thisProcessTier} in .database`);
+				throw new Error(`utilities.connectToDB: No database specified for process tier ${thisProcessTier} in .databases`);
 			}
 		}
 		//If there is no process tier, then connect to specified default db
@@ -75,15 +75,15 @@ function connectToDB(){
 				console.log(`utilities.connectToDB: Connecting to ${thisProcessTier} : ${thisDBinfo.url}`);
 				db = monk(thisDBinfo.url);
 			}
-			//If there is no object in .database for default, throw an error.
+			//If there is no object in .databases for default, throw an error.
 			else{
-				throw new Error(`utilities.connectToDB: No default database URL specified in .database`);
+				throw new Error(`utilities.connectToDB: No default database URL specified in .databases`);
 			}
 		}
 	}
-	//If there is no .database file, then connect to localhost
+	//If there is no .databases file, then connect to localhost
 	else {
-		console.log("utilities: No .database file found; Connecting to localhost:27017");
+		console.log("utilities: No .databases file found; Connecting to localhost:27017");
 		db = monk("localhost:27017");
 	}
 	
