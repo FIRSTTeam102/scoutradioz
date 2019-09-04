@@ -1,100 +1,59 @@
-var express = require("express");
-var router = express.Router();
+const router = require("express").Router();
+const utilities = require("../../utilities");
 
-router.get("/", function(req, res) {
+router.get("/", async function(req, res) {
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
-	var db = req.db;
 	
-	if(db._state == 'closed'){ //If database does not exist, send error
-		res.render('./error',{
-			message: "Database error: Offline",
-			error: {status: "If the database is running, try restarting the Node server."}
-		});
-	}
+	var teamMembers = await utilities.find("teammembers", {}, {sort: {"name": 1}});
 	
-	//Gets collection ("table") from db
-	var collection = db.get("teammembers");	
-	
-	collection.find({},{sort: {"name": 1}}, function(e, docs){
-		
-		if(e){ //if error, log to console
-			res.log(e);
-		}
-		teamMembers = docs;
-		
-		res.render("./admin/members", { 
-			title: "Team Members",
-			"members": teamMembers 
-		});
+	res.render("./admin/members", { 
+		title: "Team Members",
+		"members": teamMembers 
 	});
 });
 
-router.get("/present", function(req, res) {
+router.get("/present", async function(req, res) {
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
-	var db = req.db;
-		
-	var collection = db.get("teammembers");
 	
-	collection.find({}, {sort: {"name": 1}}, function(e, docs) {
-		if(e)
-			res.log(e);
+	var teamMembers = await utilities.find("teammembers", {}, {sort: {"name": 1}});
 		
-		teammembers = docs;
-		
-		res.render("./admin/present", {
-			title: "Assign Who Is Present",
-			"members": teammembers
-		});
+	res.render("./admin/present", {
+		title: "Assign Who Is Present",
+		"members": teamMembers
 	});
 });
 
-router.post("/updatepresent", function(req, res){
+router.post("/updatepresent", async function(req, res){
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
-	var db = req.db;
 	
-	if(db._state == 'closed'){ //If database does not exist, send error
-		res.render('./error',{
-			message: "Database error: Offline",
-			error: {status: "If the database is running, try restarting the Node server."}
-		});
-	}
+	await utilities.update("teammembers", {}, { $set: { "present" : "false" } }, {multi: true});
 	
-	var collection = db.get("teammembers");
+	//Get a list of all present member IDs.
+	var allPresentMembers = [];
+	for(var i in req.body) allPresentMembers.push(i);
 	
-	collection.bulkWrite([{updateMany:{filter:{}, update:{ $set: { "present" : "false" } }}}], function(e, docs){
-		for(var i in req.body){
-			res.log(i);
-			collection.update({"_id": i}, {$set: {"present": "true"}});
-		}
-		
-		res.redirect("./present");
-	});
+	res.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
 	
+	var query = {"_id": {$in: allPresentMembers}};
+	var update = {$set: {"present": "true"}};
+	
+	await utilities.update("teammembers", query, update, {multi: true});
+	
+	res.redirect("./present");
 });
 
-router.post("/addmember", function(req, res){
+router.post("/addmember", async function(req, res){
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
 	var thisFuncName = "teammembers.addmember[post]: ";
 	res.log(thisFuncName + 'ENTER')
-
-	var db = req.db;
-	
-	if(db._state == 'closed'){ //If database does not exist, send error
-		res.render('./error',{
-			message: "Database error: Offline",
-			error: {status: "If the database is running, try restarting the Node server."}
-		});
-	}
-	
-	var collection = db.get("teammembers");
 	
 	var name = req.body.name;
 	var subteam = req.body.subteam;
@@ -130,28 +89,17 @@ router.post("/addmember", function(req, res){
 	res.log(thisFuncName + 'seniority=' + seniority);
 	
 	// 2018-04-05, M.O'C - Adding "assigned" as "false" so that the field has a value upon insert
-	collection.insert({"name": name, "subteam": subteam, "className": className, "years": years, "seniority": seniority, "password": "default", "assigned": "false"});
+	await utilities.insert("teammembers", {"name": name, "subteam": subteam, "className": className, "years": years, "seniority": seniority, "password": "default", "assigned": "false"});
 	
 	res.redirect("./");
 });
 
-router.post("/updatemember", function(req, res){
+router.post("/updatemember", async function(req, res){
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
 	var thisFuncName = "teammembers.updatemember[post]: ";
 	res.log(thisFuncName + 'ENTER')
-	
-	var db = req.db;
-	
-	if (db._state == "closed"){
-		res.render("./error",{
-			message: "database error: offline",
-			error: {status: "if the database is running, try restarting the node server"}
-		});
-	}
-	
-	var collection = db.get("teammembers");
 	
 	var memberId = req.body.memberId;
 	var name = req.body.name;
@@ -189,46 +137,30 @@ router.post("/updatemember", function(req, res){
 	
 	res.log({memberId, name, subteam, className, years});
 	
-	collection.update({"_id": memberId}, {$set: {"name": name, "subteam": subteam, "className": className, "years": years, "seniority": seniority}});
+	await utilities.update("teammembers", {"_id": memberId}, {$set: {"name": name, "subteam": subteam, "className": className, "years": years, "seniority": seniority}});
 	
 	res.redirect("./");
 });
 
-router.post("/deletemember",function(req, res){
+router.post("/deletemember", async function(req, res){
 	if( !require('../checkauthentication')(req, res, 'admin') ){
 		return null;
 	}
-	var db = req.db;
-	
-	if (db._state == "closed"){
-		res.render("./error",{
-			message: "database error: offline",
-			error: {status: "if the database is running, try restarting the node server"}
-		});
-	}
-
-	var teammembers = db.get("teammembers");
 	
 	if(req.body.memberId){
-
+		
 		var memberId = req.body.memberId;
 		
 		//log it
 		res.log(`Request to delete member ${memberId} by user ${req.user}`, true);
 		
 		res.log("Going to remove member with id: "+memberId, "white");
-
-		teammembers.remove({"_id": memberId}, {}, function(err){
-			res.log("callback", "red");
-			if(err){
-				res.log(err, "red");
-				return res.send(500);
-			}else{
-				return res.redirect('/admin/teammembers');
-			}
-		});
+		
+		await utilities.remove("teammembers", {"_id": memberId}, {});
+		
 	}
 	
+	res.redirect('/admin/teammembers');
 });
 
 module.exports = router;
