@@ -4,7 +4,7 @@ const favicon = require('serve-favicon');				//serves favicon
 const bodyParser = require('body-parser');				//parses http request information
 const session = require('express-session');				//session middleware (uses cookies)
 const MongoStore = require('connect-mongo')(session);	//Alternative session storage
-const passport = require('passport');					//for user sessions
+const passport = require('passport');					//for user authentication
 const useragent = require('express-useragent');			//for info on connected users
 const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
 const utilities = require('./utilities');				//database utilities
@@ -74,6 +74,7 @@ app.use(session({
 	resave: false, //don't save session if unmodified
 	
 	store: new MongoStore({
+		//Use same URL that utilities uses for database
         url: utilities.getDBurl(),
         ttl: 3 * 24 * 60 * 60, // = 14 days. Default
 		autoRemove: 'interval',
@@ -106,6 +107,7 @@ app.use(async function(req, res, next){
 	
 	next();
 });
+
 //sets view engine vars for user
 app.use(usefunctions.userViewVars);
 //Event stuff
@@ -114,12 +116,6 @@ app.use(usefunctions.getEventInfo);
 app.use(usefunctions.logger);
 //adds logging to res.render function
 app.use(usefunctions.renderLogger);
-//adds TBA API key to req
-//app.use(usefunctions.setupNodeRestClient);
-
-//const index = require('./routes/index');
-
-//app.use('/', index);
 
 //USER ROUTES
 var index = require('./routes/index');
