@@ -119,7 +119,7 @@ app.use(usefunctions.renderLogger);
 
 //USER ROUTES
 var index = require('./routes/index');
-var login = require('./routes/login'); //Will soon be gone
+//var login = require('./routes/login'); //Will soon be gone
 var user = require('./routes/user');
 var dashboard = require("./routes/dashboard");
 var scouting = require("./routes/scouting");
@@ -137,7 +137,7 @@ var manualinput = require("./routes/admin/manualinput");
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
-app.use('/login', login); //Will soon be gone
+//app.use('/login', login); //Will soon be gone
 app.use('/user', user);
 app.use('/scouting', scouting);
 app.use("/dashboard", dashboard);
