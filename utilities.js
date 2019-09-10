@@ -88,9 +88,9 @@ utilities.getDBurl = function(){
 
 /**
  * Asynchronous "find" function to a collection specified in first parameter.
- * @param collection [String] Collection to find in.
- * @param parameters [Object] Query parameters.
- * @param options [Object] Query options, such as sort.
+ * @param {String} collection Collection to find in.
+ * @param {Object} parameters Query parameters.
+ * @param {Object} options Query options, such as sort.
  */
 utilities.find = async function(collection, parameters, options){
 	
@@ -130,9 +130,9 @@ utilities.find = async function(collection, parameters, options){
 
 /**
  * Asynchronous "findOne" function to a collection specified in first parameter.
- * @param collection [String] Collection to find in.
- * @param parameters [Object] Query parameters.
- * @param options [Object] Query options, such as sort.
+ * @param {String} collection Collection to find in.
+ * @param {Object} parameters Query parameters.
+ * @param {Object} options Query options, such as sort.
  */
 utilities.findOne = async function(collection, parameters, options){
 	
@@ -178,10 +178,10 @@ utilities.findOne = async function(collection, parameters, options){
 
 /**
  * Asynchronous "update" function to a collection specified in first parameter.
- * @param collection [String] Collection to find in.
- * @param parameters [Object] Query parameters.
- * @param update [Object] Update query.
- * @param options [Object] Query options, such as sort.
+ * @param {String} collection Collection to find in.
+ * @param {Object} parameters Query parameters.
+ * @param {Object} update Update query.
+ * @param {Object} options Query options, such as sort.
  */
 utilities.update = async function(collection, parameters, update, options){
 	
@@ -225,8 +225,8 @@ utilities.update = async function(collection, parameters, update, options){
 
 /**
  * Asynchronous "remove" function to a collection specified in first parameter.
- * @param collection [String] Collection to remove from.
- * @param parameters [Object] Query parameters (Element/s to remove).
+ * @param {String} collection Collection to remove from.
+ * @param {Object} parameters Query parameters (Element/s to remove).
  */
 utilities.remove = async function(collection, parameters){
 	
@@ -258,8 +258,8 @@ utilities.remove = async function(collection, parameters){
 
 /**
  * Asynchronous "insert" function to a collection specified in first parameter.
- * @param collection [String] Collection to insert into.
- * @param parameters [Any] Element or array of elements to insert
+ * @param {String} collection Collection to insert into.
+ * @param {Object} parameters [Any] Element or array of elements to insert
  */
 utilities.insert = async function(collection, elements){
 	
@@ -316,7 +316,7 @@ utilities.requestTheBlueAlliance = async function(url){
 
 /**
  * Asynchronous function to get our TheBlueAlliance API key from the DB.
- * @return {Promise} - [Object] TBA arguments
+ * @return {Promise} - TBA arguments
  */
 utilities.getTBAKey = async function(){
 	
