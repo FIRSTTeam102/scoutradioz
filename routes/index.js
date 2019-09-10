@@ -39,22 +39,4 @@ router.get('/', async function(req, res) {
 	});
 });
 
-/**
- * Simple logout link. (if I put it in login, url would be /login/logout... and cmon that's silly)
- * @url /logout
- * @redirect /
- */
-router.get("/logout", function(req, res) {
-	
-	//Logs out user with message
-	req.logout();
-	
-	//destroy session
-	req.session.destroy(function (err) {
-		if (err) { return next(err); }
-		//Redirect user
-		res.redirect('/')
-	});
-});
-
 module.exports = router;

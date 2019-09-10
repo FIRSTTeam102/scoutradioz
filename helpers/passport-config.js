@@ -1,8 +1,9 @@
 const passport = require('passport');
 const bcrypt = require('bcryptjs');					//bcrypt for password encryption
-const LocalStrategy = require('passport-local').Strategy; //strategy for passport
+//const LocalStrategy = require('passport-local').Strategy; //strategy for passport
 const utilities = require("../utilities");
 
+/*
 //Configure local strategy for use by Passport.
 passport.use(new LocalStrategy(
 	async function(username, password, done) {
@@ -74,6 +75,7 @@ function compare( password, hash, user, done ){
 		}
 	});
 }
+*/
 
 // Creates the data necessary to store in the session cookie
 passport.serializeUser(function(user, done) {
@@ -85,16 +87,10 @@ passport.serializeUser(function(user, done) {
 // Reads the session cookie to determine the user from a user ID
 passport.deserializeUser(async function(id, done) {
 	
-	/*if we switch to mongoose, change to 
-	[schema name].findById(id, function (err, user) {
-        done(err, user);
-    });
-	*/
-	
-	var user = await utilities.findOne("teammembers", { "_id": id }, {});
+	var user = await utilities.findOne("users", { "_id": id }, {});
 	
 	if(!user)
-		console.error( err || "User not found in db: deserializeUser " + id);
+		console.error("User not found in db: deserializeUser " + id);
 	else
 		done(null, user);
 		

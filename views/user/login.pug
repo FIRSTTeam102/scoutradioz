@@ -1,0 +1,21 @@
+extends ../layout
+block content
+	form#login-form(name="login-form" method="post" action="/user/login")
+		h3(class="gear-text-white")=title
+		div(class="w3-container w3-padding-16")
+			div(class="w3-quarter w3-label theme-inline-padding")
+				label Organization Name: 
+			div(class="w3-half")
+				select(class="w3-select theme-input w3-no-border" type="text" name="org_key")
+					option
+					each org, i in orgs
+						option(value=org.org_key class="w3-bar-item") #{org.nickname}
+		div(class="w3-container w3-padding-16")
+			div(class="w3-quarter w3-label theme-inline-padding")
+				label Password: 
+			div(class="w3-half")
+				input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="org_password")
+		div(class="w3-padding-16")
+			input(type="submit" class="gear-btn theme-submit w3-btn" value="Next")
+	if error == "true"
+		script alert(error);

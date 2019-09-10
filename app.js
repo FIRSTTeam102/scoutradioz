@@ -44,8 +44,8 @@ for(var i in process.argv){
 	}
 }
 
-//PUG CACHING (if dev is NOT enabled or production IS enabled)
-if(!isDev || production){
+//PUG CACHING (if production IS enabled)
+if(production){
 	console.log("Production");
 	process.env.NODE_ENV = "production";
 }
@@ -101,7 +101,7 @@ app.use(async function(req, res, next){
 	//req.db = db;
 	//req.db = await getDB();
 	//For user login
-	req.passport = passport;
+	//req.passport = passport;
 	
 	res.locals.s3url = "https://s3.amazonaws.com/scoringapp-bkt/public/";
 	
@@ -119,7 +119,8 @@ app.use(usefunctions.renderLogger);
 
 //USER ROUTES
 var index = require('./routes/index');
-var login = require('./routes/login');
+var login = require('./routes/login'); //Will soon be gone
+var user = require('./routes/user');
 var dashboard = require("./routes/dashboard");
 var scouting = require("./routes/scouting");
 var reports = require('./routes/reports');
@@ -136,7 +137,8 @@ var manualinput = require("./routes/admin/manualinput");
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
-app.use('/login', login);
+app.use('/login', login); //Will soon be gone
+app.use('/user', user);
 app.use('/scouting', scouting);
 app.use("/dashboard", dashboard);
 app.use('/reports', reports);

@@ -1,0 +1,112 @@
+extends ../layout
+block content
+	h3(class="gear-text-white")=title
+	//-User name input
+	div(class="w3-container w3-padding-16")
+		div(class="w3-quarter w3-label theme-inline-padding")
+			label Name: 
+		div(class="w3-half")
+			select(class="w3-select theme-input w3-no-border" type="text" name="user")
+				option
+				each user, i in users
+					option(value=user._id class="w3-bar-item") #{user.name}
+	//-Password input starts hidden, then is revealed if user is of a higher rank than scouter
+	div#passwordContainer(class="w3-container w3-padding-16 w3-hide")
+		div(class="w3-quarter w3-label theme-inline-padding")
+			label Password: 
+		div(class="w3-half")
+			input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="password")
+	//-Organization's id and password must be passed back to user so they can send it with their request.
+		The alternative to this is either to AJAX the entire login process (tedious) or use tokens (more tedious).
+		My reasoning that this is okay is because the user already submitted the password literally 100 milliseconds ago...
+		so it's okay if we keep it hidden on the next page for a few more seconds.
+	div(class="w3-hide")
+		input(type="hidden" name="org_key" value=org.org_key)
+		input(type="hidden" name="org_password" value=org_password)
+	div(class="w3-padding-16")
+		input#btnLogin(type="submit" class="gear-btn theme-submit w3-btn" value="Login")
+	script.
+	
+		$("#btnLogin").click(handleSubmit);
+		//If user presses enter in password input, invoke submit handler.
+		$("input[name=password]").keyup(function(e){
+			if(e.keyCode == 13){
+				handleSubmit();
+			}
+		})
+	
+		function handleSubmit(){
+			
+			var selectedUser = $("select[name=user]").val();
+			var org_key = $("input[name=org_key").val();
+			var org_password = $("input[name=org_password").val();
+			
+			//If password has no input, then submit to /user/login/withoutpassword
+			if( $("input[name=password]").val() == "" ){
+				
+				var data = {user: selectedUser, org_key: org_key, org_password: org_password};
+				
+				$.post('/user/login/withoutpassword', data ).done( function(response, status){
+					
+					//Possible response information: alert, password_needed, and redirect_url
+					console.log(response);
+					
+					//if redirect, then redirect
+					if(response.redirect_url){
+						window.location.pathname = redirect_url;
+					}
+					
+					//finally, if password is needed, then show password prompt.
+					if(response.password_needed == true){
+						$("#passwordContainer").removeClass("w3-hide");
+					}
+				
+				//If non-200 status code, we must handle response slightly differently (:/)
+				}).fail( function(status){
+					
+					var response = JSON.parse(status.responseText);
+					
+					//if alert, then send alert prompt
+					if(response.alert){
+						alert(response.alert);
+					}
+					
+					//if redirect, then redirect
+					if(response.redirect_url){
+						window.location.pathname = response.redirect_url;
+					}
+				});
+			}
+			//If password is filled, then submit to /user/login/withpassword
+			else{
+				
+				var password = $("input[name=password]").val();
+				
+				var data = {user: selectedUser, password: password, org_key: org_key, org_password: org_password};
+				
+				$.post('/user/login/withpassword', data).done( function(response, status){
+					
+					//Possible response information: alert and redirect_url
+					
+					//if alert, then send alert prompt
+					if(response.alert){
+						alert(response.alert);
+					}
+					
+					//if redirect, then redirect
+					if(response.redirect_url){
+						window.location.pathname = response.redirect_url;
+					}
+				}).fail( function(status){
+					
+					var response = JSON.parse(status.responseText);
+					
+					//Possible failed response information: alert
+					
+					//if alert, then send alert prompt
+					if(response.alert){
+						alert(response.alert);
+					}
+				});
+			}
+		}

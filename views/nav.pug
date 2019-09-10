@@ -27,8 +27,8 @@ div(style="font-size:1.1em;")
 					a(href="admin" class="w3-bar-item w3-button gear-clear w3-mobile") Admin Index
 		if user.name != "[Dev]"
 			div#userBar(class="w3-dropdown-content w3-bar-block w3-margin-left" style="position:absolute;top:2.1rem; z-index:99; max-width: 10rem;")
-				a(href="/logout" class="w3-bar-item w3-button w3-padding-24") Log out
-				a(href="/login/changepassword" class="w3-bar-item w3-button") Change Password
+				a(href="/user/logout" class="w3-bar-item w3-button w3-padding-24") Log out
+				//a(href="/login/changepassword" class="w3-bar-item w3-button") Change Password
 	else
 		nav(class="w3-bar gear-opacity w3-container gear-text-white w3-rest" style="position:relative;z-index:2;")
 			div(id="navBar" style="display: none; z-index: 2; position: relative")

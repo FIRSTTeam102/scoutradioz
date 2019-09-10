@@ -42,14 +42,10 @@ block content
 	//Login if not logged in
 	if( !user || (user && user.name == "[Dev]"))
 		div(class="w3-container w3-section")
-			h4(class="gear-text-white") Team 102 Log In
-			a(href="/login/scouter") 
+			h4(class="gear-text-white") User Login
+			a(href="/user/login") 
 				div(class="gear-btn theme-link gear-hover-white w3-btn")
-					span Scouter Login
-			br 
-			a(href="/login/admin")
-				div(class="gear-btn theme-link gear-hover-white w3-btn")
-					span Admin Login
+					span Log In
 	if user
 		div(class="w3-container w3-section")
 			h4(class="gear-text-white")=user.name
