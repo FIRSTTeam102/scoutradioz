@@ -158,16 +158,11 @@ utilities.findOne = async function(collection, parameters, options){
 		throw new Error("Utilities.find Error: Options must be of type object");
 	}
 	
-	console.log("DEBUG - utilities.js - dbref: " + dbRef);
-	
-	//Get collection
-	console.log("DEBUG - utilities.js - find: " + collection);
-	
 	var db = this.getDB();
 	
-	console.log("DEBUG - utilities.js - find: db=" + db);
-	
+	//Get collection
 	var Col = db.get(collection);
+	
 	//Find in collection with parameters and options
 	var data = [];
 	data = await Col.findOne(parameters, options);
