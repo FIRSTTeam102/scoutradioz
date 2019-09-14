@@ -20,6 +20,9 @@ because it has to backtrack one folder.
 
  */
 module.exports = function(req, res, type){
+	
+	res.send(`checkauthentication.js is no longer supported`);
+	return false;
     
 	//if dev server, always return true.
 	if(req.app.isDev){

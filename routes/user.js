@@ -304,22 +304,13 @@ router.post('/login/withpassword', async function(req, res){
 			
 			var redirectURL;
 			
-			switch(userRole.access_level){
-				//Since process.env variables are strings, gotta add "- 0" to easily typecast to integer
-				case process.env.ACCESS_GLOBAL_ADMIN-0:
-					redirectURL = '/admin';
-					break;
-				case process.env.ACCESS_TEAM_ADMIN-0:
-					redirectURL = '/admin';
-					break;
-				case process.env.ACCESS_SCOUTER-0:
-					redirectURL = '/dashboard';
-					break;
-				default:
-					redirectURL = '/';
-			}
+			//Set redirect url depending on user's access level
+			if(userRole.access_level == process.env.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
+			else if(userRole.access_level == process.env.ACCESS_TEAM_ADMIN) redirectURL = '/admin';
+			else if(userRole.access_level == process.env.ACCESS_SCOUTER) redirectURL = '/dashboard';
+			else redirectURL = '/';
 			
-			res.log(`User ${user.name} has logged in with role ${userRole.label} and is redirected to ${redirectURL}`);
+			res.log(`User ${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
 			
 			//otherwise, send success and redirect
 			//*** When we add a global_admin page, we should modify this to add a global_admin page redirect
