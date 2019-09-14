@@ -153,7 +153,7 @@ app.use(function(req, res, next){
 		}
 		
 		//Finally, check if isAuthenticated is true, and return a value corresponding to it
-		if( isAuthenticated ){
+		if( isAuthenticated || app.isDev ){
 			
 			return true;
 		}
