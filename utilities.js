@@ -176,6 +176,39 @@ utilities.findOne = async function(collection, parameters, options){
 	return data;
 }
 
+utilities.aggregate = async function(collection, parameters) {
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string"){
+		throw new Error("Collection must be specified.");
+	}
+	//If query parameters are not set, create an empty object for the DB call.
+	if(!parameters){
+		var parameters = {};
+	}
+	//If parameters exists and is not an object, throw an error. 
+	if(typeof(parameters) != "object"){
+		throw new Error("Utilities.find Error: Parameters must be of type object");
+	}
+	
+	console.log("DEBUG - utilities.js - dbref: " + dbRef);
+	
+	//Get collection
+	console.log("DEBUG - utilities.js - aggregate: " + collection);
+	
+	var db = this.getDB();
+	
+	console.log("DEBUG - utilities.js - aggregate: db=" + db);
+	
+	var Col = db.get(collection);
+	//Find in collection with parameters and options
+	var data = [];
+	data = await Col.aggregate(parameters);
+	
+	//Return (Promise to get) data
+	return data;
+}
+
 /**
  * Asynchronous "update" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
