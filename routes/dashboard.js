@@ -6,10 +6,10 @@ var router = express.Router();
  * @url /dashboard
  * @view dashboard/dashboard-index
  */
-router.get('/', function(req, res) {
-	if( !require('./checkauthentication')(req, res, 'scouting') ){
-		return res.log(thisFuncName + 'returning null');
-	}
+router.get('/', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
+	
 	var thisFuncName = "dashboard.{root}[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
@@ -133,10 +133,10 @@ router.get('/', function(req, res) {
  * @url /dashboard/unassigned
  * @view dashboard/unassigned
  */
-router.get('/unassigned', function(req, res) {
-	if( !require('./checkauthentication')(req, res, 'scouting') ){
-		return res.log(thisFuncName + 'returning null');
-	}
+router.get('/unassigned', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
+	
 	var thisFuncName = "dashboard.unassigned[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
@@ -150,10 +150,9 @@ router.get('/unassigned', function(req, res) {
  * @url /dashboard/allianceselection
  * @view dashboard/allianceselection
  */
-router.get('/allianceselection', function(req, res){
-	if( !require('./checkauthentication')(req, res, 'scouting') ){
-		return res.log(thisFuncName + 'returning null');
-	}
+router.get('/allianceselection', async function(req, res){
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var event_key = req.event.key;
 	var event_year = req.event.year;
@@ -298,10 +297,10 @@ router.get('/allianceselection', function(req, res){
 	);
 });
 
-router.get('/pits', function(req, res) {
-	if( !require('./checkauthentication')(req, res, 'scouting') ){
-		return res.log(thisFuncName + 'returning null');
-	}
+router.get('/pits', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
+	
 	var thisFuncName = "dashboard.pits[get]: ";
 	res.log(thisFuncName + 'ENTER');
 
@@ -360,10 +359,10 @@ router.get('/pits', function(req, res) {
 	});
 });
 
-router.get('/matches', function(req, res) {
-	if( !require('./checkauthentication')(req, res, 'scouting') ){
-		return res.log(thisFuncName + 'returning null');
-	}
+router.get('/matches', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
+	
 	var thisFuncName = "dashboard.matches[get]: ";
 	res.log(thisFuncName + 'ENTER');
 

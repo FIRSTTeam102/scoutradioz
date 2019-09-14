@@ -7,10 +7,9 @@ const router = express.Router();
  * @url /admin/
  * @views /admin/adminindex
  */
-router.get('/', function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.get('/', async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	//Prepare an alert. (Used w/ url /?alert=(alert))
 	if(req.query)
@@ -23,19 +22,13 @@ router.get('/', function(req, res) {
 	});
 });
 
-//hardcoded temporarily
-var db = require("monk")("localhost:27017/app");
-var Client = require('node-rest-client').Client;
-var client = new Client();
-
 /** POST method to set current event id.
  * @url /admin/setcurrent
  * @redirect /admin
  */
 router.post('/setcurrent', async function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "adminindex.setcurrent[post]: ";
 	var eventId = req.body.eventId;
@@ -98,10 +91,10 @@ router.post('/setcurrent', async function(req, res) {
  * @url /admin/generatedata
  * @redirect /
  */
-router.get('/generatedata', function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.get('/generatedata', async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "adminindex.generatedata[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	

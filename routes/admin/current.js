@@ -1,11 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
-router.get("/matches", function(req, res) {
-	
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.get("/matches", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 
 	var thisFuncName = "current.matches[get]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -30,10 +28,9 @@ router.get("/matches", function(req, res) {
 	});
 });
 
-router.get("/getcurrentteams", function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.get("/getcurrentteams", async function(req, res){
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	//set up db collections
 	var db = req.db;
@@ -74,10 +71,10 @@ router.get("/getcurrentteams", function(req, res){
 	});
 })
 
-router.post("/resetmatches", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/resetmatches", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "current.resetmatches[post]: ";
 	res.log(thisFuncName + 'ENTER');
 	
@@ -105,10 +102,10 @@ router.post("/resetmatches", function(req, res) {
 	});		
 });
 
-router.post("/updatematch", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/updatematch", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "current.updatematch[post]: ";
 	res.log(thisFuncName + 'ENTER')
 	
@@ -274,10 +271,10 @@ router.post("/updatematch", function(req, res) {
 	});
 });
 
-router.post("/updatematches", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/updatematches", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "current.updatematches[post]: ";
 	res.log(thisFuncName + 'ENTER')
 	

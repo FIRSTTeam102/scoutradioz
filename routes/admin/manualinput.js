@@ -8,9 +8,8 @@ var utilities = require('../../utilities');
  * @views manualinput/teams
  */
 router.get('/teams', async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	//Get list of currentteams
 	var teamsArray = await utilities.find("currentteams", {}, {sort: {"team_number": 1}});
@@ -27,9 +26,8 @@ router.get('/teams', async function(req, res){
  * @redirect /admin
  */
 router.post('/teams', async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	res.log(req.body);
 	
@@ -158,9 +156,8 @@ router.post('/api/team', async function(req, res){
  * @views manualinput/matchschedule
  */
 router.get('/matchschedule', async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "[GET] /admin/manualinput/matchschedule => ";
 	
@@ -177,6 +174,9 @@ router.get('/matchschedule', async function(req, res){
 });
 
 router.post('/matchschedule', async function(req, res){
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	/*
 		"actual_time": "",
 		"alliances": {
@@ -311,9 +311,8 @@ router.post('/matchschedule', async function(req, res){
  * @views manualinput/matches
  */
 router.get('/matches', async function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var alert = req.query.alert ? req.query.alert : null;
 	
@@ -332,10 +331,8 @@ router.get('/matches', async function(req, res) {
  * 
  */
 router.post('/matches', async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
-	
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;	
 	
 	var event_key = req.event.key;
 	

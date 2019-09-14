@@ -2,9 +2,8 @@ const router = require("express").Router();
 const utilities = require("../../utilities");
 
 router.get("/", async function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var teamMembers = await utilities.find("teammembers", {}, {sort: {"name": 1}});
 	
@@ -15,9 +14,8 @@ router.get("/", async function(req, res) {
 });
 
 router.get("/present", async function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var teamMembers = await utilities.find("teammembers", {}, {sort: {"name": 1}});
 		
@@ -28,9 +26,8 @@ router.get("/present", async function(req, res) {
 });
 
 router.post("/updatepresent", async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	await utilities.update("teammembers", {}, { $set: { "present" : "false" } }, {multi: true});
 	
@@ -49,9 +46,9 @@ router.post("/updatepresent", async function(req, res){
 });
 
 router.post("/addmember", async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "teammembers.addmember[post]: ";
 	res.log(thisFuncName + 'ENTER')
 	
@@ -95,9 +92,9 @@ router.post("/addmember", async function(req, res){
 });
 
 router.post("/updatemember", async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "teammembers.updatemember[post]: ";
 	res.log(thisFuncName + 'ENTER')
 	
@@ -143,9 +140,8 @@ router.post("/updatemember", async function(req, res){
 });
 
 router.post("/deletemember", async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	if(req.body.memberId){
 		

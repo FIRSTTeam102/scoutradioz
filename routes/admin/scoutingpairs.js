@@ -9,9 +9,9 @@ var utilities = require("../../utilities");
  * @views /admin/scoutingpairs
  */
 router.get("/", async function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "scoutingpairs root: ";
 	
 	//Log message so we can see on the server side when we enter this
@@ -117,10 +117,10 @@ router.get("/", async function(req, res) {
 });
 
 /* POST to Set scoutingPair Service */
-router.post('/setscoutingpair', function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post('/setscoutingpair', async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "setscoutingpair: ";
 	
 	// Log message so we can see on the server side when we enter this
@@ -176,10 +176,10 @@ router.post('/setscoutingpair', function(req, res) {
 	res.log(thisFuncName + "DONE");
 });
 
-router.post("/deletescoutingpair", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/deletescoutingpair", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "deletescoutingpair: ";
 	
 	// Log message so we can see on the server side when we enter this
@@ -228,10 +228,9 @@ router.post("/deletescoutingpair", function(req, res) {
 	res.log(thisFuncName + "DONE");
 });
 
-router.post("/generateteamallocations", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/generateteamallocations", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var passCheckSuccess;
 	
@@ -245,8 +244,6 @@ router.post("/generateteamallocations", function(req, res) {
 			
 			return res.send({status: 401, alert: "No password entered."});
 		}
-		if( !require('../checkauthentication')(req, res, 'admin') )
-			return res.log('admin not logged in on generateteamallocations');
 		
 		var teammembers = req.db.get('teammembers');
 		
@@ -276,10 +273,10 @@ router.post("/generateteamallocations", function(req, res) {
 
 //////////// Match allocating by batches of matches
 
-router.post("/generatematchallocations2", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/generatematchallocations2", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "scoutingpairs.generateMATCHallocations2[post]: ";
 
 	// HARDCODED
@@ -550,17 +547,15 @@ router.post("/generatematchallocations2", function(req, res) {
 	});
 });
 
-router.post("/clearmatchallocations", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/clearmatchallocations", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var passCheckSuccess;
 	
 	if( !req.body.password || req.body.password == ""){
 		return res.send({status: 401, alert: "No password entered."});
 	}
-	if( !require('../checkauthentication')(req, res, 'admin') )
-		return res.log('admin not logged in on generateteamallocations');
 	
 	var teammembers = req.db.get('teammembers');
 	
@@ -639,10 +634,9 @@ router.post("/clearmatchallocations", function(req, res) {
 
 //////////// Match allocating by team assignment
 
-router.post("/generatematchallocations", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/generatematchallocations", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	//override if dev
 	if( req.app.isDev ){
@@ -655,8 +649,6 @@ router.post("/generatematchallocations", function(req, res) {
 		if( !req.body.password || req.body.password == ""){
 			return res.send({status: 401, alert: "No password entered."});
 		}
-		if( !require('../checkauthentication')(req, res, 'admin') )
-			return res.log('admin not logged in on generateteamallocations');
 		
 		var teammembers = req.db.get('teammembers');
 		
@@ -684,10 +676,10 @@ router.post("/generatematchallocations", function(req, res) {
 	}
 });
 
-router.get("/swapmembers", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.get("/swapmembers", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "scoutingpairs.swapmembers[get]: ";
 	
 	// Log message so we can see on the server side when we enter this
@@ -749,10 +741,10 @@ router.get("/swapmembers", function(req, res) {
 	});
 });
 
-router.post("/swapmembers", function(req, res) {
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
+router.post("/swapmembers", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "scoutingpairs.swapmembers[post]: ";
 	
 	// Log message so we can see on the server side when we enter this

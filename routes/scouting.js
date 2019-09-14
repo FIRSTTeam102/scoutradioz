@@ -1,11 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
-router.get('/match*', function(req, res) {
-	
-	//auth
-	if(!require('./checkauthentication')(req, res))
-		return null;
+router.get('/match*', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var thisFuncName = "scouting.match*[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -61,7 +59,9 @@ router.get('/match*', function(req, res) {
 	});
 });
 
-router.post('/match/submit', function(req, res) {
+router.post('/match/submit', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	/** We need to do this eventually for security. Commented out of fear that scouters may be logged out while scouting (by accident)
 	//auth
@@ -161,10 +161,9 @@ router.post('/submitmatch', function(req, res) {
 	});
 });
 
-router.get('/pit*', function(req, res) {
-	//auth
-	if(!require('./checkauthentication')(req, res))
-		return null;
+router.get('/pit*', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 
 	//Add event key and pit data to get pit function
 	var event_key = req.event.key;
@@ -205,12 +204,10 @@ router.get('/pit*', function(req, res) {
 	});
 });
 
-router.post('/pit/submit', function(req, res){
-	/** We need to do this eventually for security. Commented out of fear that scouters may be logged out while scouting (by accident)
-	//auth
-	if(!require('./checkauthentication')(req, res))
-		return null;
-	*/
+router.post('/pit/submit', async function(req, res){
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
+	
 	var thisFuncName = "scouting.submitpit[post]: ";
 	res.log(thisFuncName + 'ENTER');
 	
@@ -267,7 +264,9 @@ router.post('/submitpit', function(req, res) {
 });
 
 //For \views\scouting\teampictures.pug
-router.get('/teampictures', function(req, res) {
+router.get('/teampictures', async function(req, res) {
+	//Check authentication for scouter level
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 
 	var thisFuncName = "scouting.teampictures[get]: ";
 		res.log(thisFuncName + 'ENTER');
@@ -300,11 +299,6 @@ router.get('/teampictures', function(req, res) {
 			});
 		});
 });
-/////////////////////////////////////////
-/////////////////////////////////////////
-///////// PREVIOUS LEGACY CODE: /////////
-/////////////////////////////////////////
-/////////////////////////////////////////
 
 router.get('/', function(req, res){
 	

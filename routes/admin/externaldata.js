@@ -6,9 +6,9 @@ var router = express.Router();
  * @url /admin/data/events
  * @view /events
  */
-router.get("/events", function(req, res) {
-	if(!require('../checkauthentication')(req, res, 'admin'))
-		return null;
+router.get("/events", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.events[get]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -57,9 +57,9 @@ router.get("/events", function(req, res) {
  * @url POST: /admin/data/events
  * @redirect /admin/data/events
  */
-router.post("/events", function(req, res) {
-	if(!require('../checkauthentication')(req, res, 'admin'))
-		return null;
+router.post("/events", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.events[post]: ";
 	
@@ -151,9 +151,9 @@ router.post("/events", function(req, res) {
  * @url /admin/data/matches
  * @view /matches
  */
-router.get("/matches", function(req, res) {
-	if(!require('../checkauthentication')(req, res, 'admin'))
-		return null;
+router.get("/matches", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.matches[get]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -194,9 +194,9 @@ router.get("/matches", function(req, res) {
  * @redirect /admin (to handle error)
  * @redirect /admin/data/matches
  */
-router.post("/matches", function(req, res) {
-	if(!require('../checkauthentication')(req, res, 'admin'))
-		return null;
+router.post("/matches", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.matches[post]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -244,9 +244,9 @@ router.post("/matches", function(req, res) {
  * @url /admin/data/teams
  * @view /teams
  */
-router.get("/teams", function(req, res) {
-	if(!require('../checkauthentication')(req, res, 'admin'))
-		return null;
+router.get("/teams", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.teams[get]: ";
 	res.log(thisFuncName + 'ENTER')

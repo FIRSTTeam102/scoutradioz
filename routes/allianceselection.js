@@ -1,7 +1,10 @@
 var express = require("express");
 var router = express.Router();
 
-router.get("/", function(req, res){
+router.get("/", async function(req, res){
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "allianceselection{root}[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
@@ -100,7 +103,10 @@ router.get("/", function(req, res){
 	});
 });
 
-router.post("/updateteamvalue", function(req, res){
+router.post("/updateteamvalue", async function(req, res){
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
 	var thisFuncName = "allianceselection.updateteamvalue[post]: ";
 	res.log(thisFuncName + 'ENTER')
 
