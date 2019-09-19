@@ -28,36 +28,37 @@ utilities.getDB = function(){
 }
 
 /**
- * Function that retrieves the database connection string from .database, and returns that connection string URL.
- * If .database does not exist, it defaults to localhost.
+ * Function that retrieves the database connection string from databases, and returns that connection string URL.
+ * If databases does not exist, it defaults to localhost.
  */
 utilities.getDBurl = function(){	
 	
 	//check if we have a db file
-	var hasDotDatabase = fs.existsSync(".database");
+	var hasDotDatabase = fs.existsSync("databases.json");
 	var url;
 	
 	if(hasDotDatabase) {
 		
 		//Read JSON-encoded database file.
-		var dotdatabase = JSON.parse(fs.readFileSync(".database", {"encoding": "utf8"}));
+		//var dotdatabase = JSON.parse(fs.readFileSync("databases", {"encoding": "utf8"}));
+		var dotdatabase = require('./databases.json');
 		//Grab process tier 
-		var thisProcessTier = process.env.tier;
+		var thisProcessTier = process.env.TIER;
 				
 		//If a process tier is specified, then attempt to read db URL from that tier.
 		if(thisProcessTier){
 			
 			var thisDBinfo = dotdatabase[thisProcessTier];
 			
-			//If there is an object inside .database for process tier, proceed with connecting to db.
+			//If there is an object inside databases for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
 				console.log(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
-			//If there is no object in .database for process tier, throw an error.
+			//If there is no object in databases for process tier, throw an error.
 			else{
-				throw new Error(`utilities.getDBurl: No database specified for process tier ${thisProcessTier} in .database`);
+				throw new Error(`utilities.getDBurl: No database specified for process tier ${thisProcessTier} in databases`);
 			}
 		}
 		//If there is no process tier, then connect to specified default db
@@ -71,15 +72,15 @@ utilities.getDBurl = function(){
 				console.log(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
-			//If there is no object in .database for default, throw an error.
+			//If there is no object in databases for default, throw an error.
 			else{
-				throw new Error(`utilities.getDBurl: No default database URL specified in .database`);
+				throw new Error(`utilities.getDBurl: No default database URL specified in databases`);
 			}
 		}
 	}
-	//If there is no .database file, then connect to localhost
+	//If there is no databases file, then connect to localhost
 	else {
-		console.log("utilities: No .database file found; Defaulting to localhost:27017");
+		console.log("utilities: No databases file found; Defaulting to localhost:27017");
 		url = "localhost:27017";
 	}
 	

@@ -6,13 +6,14 @@ const session = require('express-session');				//session middleware (uses cookie
 const MongoStore = require('connect-mongo')(session);	//Alternative session storage
 const passport = require('passport');					//for user authentication
 const useragent = require('express-useragent');			//for info on connected users
-const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
-const utilities = require('./utilities');				//database utilities
 
 //AWS middleware magic
 require('aws-serverless-express/middleware');
 //load .env variables
 require('dotenv').config();
+
+const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
+const utilities = require('./utilities');				//database utilities
 
 //          This is set temporarily
 var isDev = false, debug = true, production = false;
@@ -103,7 +104,7 @@ app.use(async function(req, res, next){
 	//For user login
 	//req.passport = passport;
 	
-	res.locals.s3url = "https://s3.amazonaws.com/scoringapp-bkt/public/";
+	//res.locals.s3url = "https://s3.amazonaws.com/scoringapp-bkt/public/";
 	
 	next();
 });

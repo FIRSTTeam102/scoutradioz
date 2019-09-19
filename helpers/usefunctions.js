@@ -1,11 +1,13 @@
 //For colorful logging
 require("colors");
+const fs = require('fs');
 
 var functions = module.exports = {};
 
 //View engine locals variables
 functions.userViewVars = function(req, res, next){
-	console.log("DEBUG - usefunctions.js - functions.userViewVars: ENTER");
+	
+	if(req.app.debug) console.log("DEBUG - usefunctions.js - functions.userViewVars: ENTER");
 	
 	if(req.user)
 		res.locals.user = req.user;
@@ -15,6 +17,23 @@ functions.userViewVars = function(req, res, next){
 		req.user = {name: '[Dev]', subteam: 'support'};
 		res.locals.user = req.user;
 	}
+	
+	var fileRoot;
+	
+	//If we have set a process tier and S3 bucket name, then set fileRoot to an S3 url
+	if( process.env.TIER && process.env.S3_BUCKET ){
+		
+		fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}/`;
+		
+	}
+	//Otherwise set fileRoot as / for local filesystem
+	else{
+		
+		fileRoot = '/'
+	}
+	
+	res.locals.fileRoot = fileRoot;
+	
 	next();
 }
 
