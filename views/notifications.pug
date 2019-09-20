@@ -1,0 +1,75 @@
+extends layout
+block content
+	div(class="w3-auto")
+		form(action="send" method="post" name="send-form")
+			input(class="w3-input theme-input" type="text" placeholder="Notification content") 
+			button(class="w3-btn gear-btn theme-submit") Send Notification
+		br 
+		//form(action="subscribe" method="post" name="subscribe-form")
+		button(class="w3-btn gear-btn theme-submit" id="btn-subscribe") Subscribe
+	script.
+		function registerServiceWorker() {
+			
+			if (!('serviceWorker' in navigator)) {
+			// Service Worker isn't supported on this browser, disable or hide UI.
+				return;
+			}
+			
+			if (!('PushManager' in window)) {
+			// Push isn't supported on this browser, disable or hide UI.
+				return;
+			}
+			
+			return navigator.serviceWorker.register('/js/service-worker.js')
+			.then(function(registration) {
+				console.log('Service worker successfully registered.');
+				return registration;
+			})
+			.catch(function(err) {
+				console.error('Unable to register service worker.', err);
+			});
+		}
+		$("#btn-subscribe").click(async function(){
+			
+			var registration = await registerServiceWorker();
+			
+			console.log(registration);
+			
+			askPermission();
+			
+		});
+		
+		function askPermission() {
+			return new Promise(function(resolve, reject) {
+				const permissionResult = Notification.requestPermission(function(result) {
+					resolve(result);
+				});
+				
+				if (permissionResult) {
+					permissionResult.then(resolve, reject);
+				}
+			})
+			.then(function(permissionResult) {
+				if (permissionResult !== 'granted') {
+					throw new Error('We weren\'t granted permission.');
+				}
+			});
+		}
+		function subscribeUserToPush() {
+			return navigator.serviceWorker.register('/service-worker.js')
+			.then(function(registration) {
+				const subscribeOptions = {
+				userVisibleOnly: true,
+				applicationServerKey: urlBase64ToUint8Array(
+					//Generate random key from server? We need to investigate how to generate public and private keys.
+					'ifNOVabQDIztr4A9QewlSXBKhUwwGMzVQuF2Pjt9Jcr3aIlxWEQtJLgQZvzE5sbpV'
+				)
+				};
+				
+				return registration.pushManager.subscribe(subscribeOptions);
+			})
+			.then(function(pushSubscription) {
+				console.log('Received PushSubscription: ', JSON.stringify(pushSubscription));
+				return pushSubscription;
+			});
+		}
