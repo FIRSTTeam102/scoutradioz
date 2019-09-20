@@ -1,14 +1,14 @@
 {
-  "name": "aws-serverless-express-example",
+  "name": "scoutradioz-primary",
   "version": "2.1.1",
-  "description": "Example application for running a Node Express app on AWS Lambda using Amazon API Gateway.",
+  "description": "The primary HTTP Lambda function that serves most requests on Scoutradioz.",
   "main": "lambda.js",
   "config": {
-    "s3BucketName": "ardag-test02-bucket",
+    "s3BucketName": "scoutradioz-cloudformation",
     "region": "us-east-1",
-    "cloudFormationStackName": "AwsServerlessExpressStack",
-    "functionName": "AwsServerlessExpressFunction",
-    "accountId": "879522394239"
+    "cloudFormationStackName": "ScoutradiozPrimaryStack",
+    "functionName": "ScoutradiozPrimaryFunction",
+    "accountId": "243452333432"
   },
   "scripts": {
     "start": "node app.local.js",
