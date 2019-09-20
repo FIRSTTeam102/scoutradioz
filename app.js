@@ -172,12 +172,13 @@ app.use(function(req, res, next){
 
 //USER ROUTES
 var index = require('./routes/index');
-//var login = require('./routes/login'); //Will soon be gone
 var user = require('./routes/user');
 var dashboard = require("./routes/dashboard");
 var scouting = require("./routes/scouting");
 var reports = require('./routes/reports');
 var allianceselection = require('./routes/allianceselection');
+var notifications = require('./routes/notifications');
+var webhook = require('./routes/webhook');
 //var image = require("./routes/image");
 //ADMIN ROUTES
 var adminindex = require('./routes/admin/adminindex');
@@ -190,12 +191,14 @@ var manualinput = require("./routes/admin/manualinput");
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
-//app.use('/login', login); //Will soon be gone
 app.use('/user', user);
 app.use('/scouting', scouting);
 app.use("/dashboard", dashboard);
 app.use('/reports', reports);
 app.use('/allianceselection', allianceselection);
+app.use('/notifications', notifications);
+app.use('/webhook', webhook);
+
 app.use('/admin', adminindex);
 app.use('/admin/scoutingpairs', scoutingpairs);
 app.use("/admin/teammembers", teammembers);
