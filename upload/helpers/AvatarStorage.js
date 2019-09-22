@@ -80,6 +80,8 @@ var AvatarStorage = function(options) {
 		//set the S3 upload path
 		this.s3UploadPath = this.options.responsive ? S3_URL + "/responsive" : S3_URL;
 		
+		console.log(`AvatarStorage: Storage option: ${this.options.storage}`);
+		
 		if (this.options.storage == 'local') {
 			//if upload path does not exist, create the upload path structure
 			!fs.existsSync(this.uploadPath) && mkdirp.sync(this.uploadPath);
