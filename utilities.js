@@ -173,6 +173,38 @@ utilities.findOne = async function(collection, parameters, options){
 }
 
 /**
+ * Asynchronous "distinct" function to a collection specified in first parameter.
+ * @param {String} collection Collection to find in.
+ * @param {Object} parameters Query parameters.
+ */
+utilities.distinct = async function(collection, parameters){
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string"){
+		throw new Error("Utilities.distinct Collection must be specified.");
+	}
+	//If query parameters are not set, create an empty object for the DB call.
+	if(!parameters){
+		var parameters = {};
+	}
+	//If parameters exists and is not an object, throw an error. 
+	if(typeof(parameters) != "object"){
+		throw new Error("Utilities.distinct Error: Parameters must be of type object");
+	}
+	
+	var db = this.getDB();
+	
+	//Get collection
+	var Col = db.get(collection);
+	//Find in collection with parameters and options
+	var data = [];
+	data = await Col.distinct(parameters);
+	
+	//Return (Promise to get) data
+	return data;
+}
+
+/**
  * Asynchronous "aggregate" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
  * @param {Object} parameters Query parameters.
