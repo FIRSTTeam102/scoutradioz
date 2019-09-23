@@ -89,8 +89,11 @@ router.post('/match/submit', async function(req, res) {
 	//res.log(thisFuncName + 'match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
 	//res.log(thisFuncName + 'matchData=' + JSON.stringify(matchData));
 
+	var db = req.db;
 	// Get the 'layout' so we know types of data elements
-	var scoreCol = req.db.get("scoringlayout");
+	var scoreCol = db.get("scoringlayout");
+	var matchCol = db.get('scoringdata');
+
 	scoreCol.find({}, {sort: {"order": 1}}, function(e, docs){
 		var layout = docs;
 		var layoutTypeById = {};
@@ -125,7 +128,6 @@ router.post('/match/submit', async function(req, res) {
 		res.log(thisFuncName + "matchData(UPDATED)=" + JSON.stringify(matchData));
 	
 		// Post modified data to DB
-		var matchCol = req.db.get('scoringdata');
 		
 		matchCol.update( { "match_team_key" : match_team_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName, useragent: req.shortagent } }, function(e, docs){
 			if(e)
@@ -180,8 +182,7 @@ router.get('/pit*', async function(req, res) {
 
 	var db = req.db;
 	var scoutCol = db.get("scoutinglayout");
-	var pitCol = req.db.get('scoutingdata'); //for pitcol.find()
-	
+	var pitCol = db.get('scoutingdata'); //for pitcol.find()
 	
 	scoutCol.find({ "year": event_year }, {sort: {"order": 1}}, function(e, docs){
 		var layout = docs;

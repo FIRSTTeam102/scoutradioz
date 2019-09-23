@@ -172,11 +172,16 @@ utilities.findOne = async function(collection, parameters, options){
 	return data;
 }
 
+/**
+ * Asynchronous "aggregate" function to a collection specified in first parameter.
+ * @param {String} collection Collection to find in.
+ * @param {Object} parameters Query parameters.
+ */
 utilities.aggregate = async function(collection, parameters) {
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Collection must be specified.");
+		throw new Error("Utilities.aggregate Error: Collection must be specified.");
 	}
 	//If query parameters are not set, create an empty object for the DB call.
 	if(!parameters){
@@ -184,7 +189,7 @@ utilities.aggregate = async function(collection, parameters) {
 	}
 	//If parameters exists and is not an object, throw an error. 
 	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.find Error: Parameters must be of type object");
+		throw new Error("Utilities.aggregate Error: Parameters must be of type object");
 	}
 	
 	console.log("DEBUG - utilities.js - dbref: " + dbRef);
@@ -250,6 +255,45 @@ utilities.update = async function(collection, parameters, update, options){
 	
 	//return writeResult
 	return writeResult;
+}
+
+/**
+ * Asynchronous "bulkWrite" function to a collection specified in first parameter.
+ * @param {String} collection Collection to find in.
+ * @param {Array} operations Array of bulkWrite operations.
+ * @param {Object} parameters Query parameters.
+ */
+utilities.bulkWrite = async function(collection, operations, parameters){
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string"){
+		throw new Error("Collection must be specified.");
+	}
+
+	//If operations does not exist or is not an array, throw an error. 
+	if(!Array.isArray(operations)){
+		throw new Error("Utilities.bulkWrite Error: Operations must be specified and is an array of operations");
+	}
+	
+	//If query parameters are not set, create an empty object for the DB call.
+	if(!parameters){
+		var parameters = {};
+	}
+	//If parameters exists and is not an object, throw an error. 
+	if(typeof(parameters) != "object"){
+		throw new Error("Utilities.find Error: Parameters must be of type object");
+	}
+
+	var db = this.getDB();
+	
+	//Get collection
+	var Col = db.get(collection);
+	//Update in collection with parameters
+	var result;
+	result = await Col.bulkWrite(operations, parameters);
+	
+	//return result
+	return result;
 }
 
 /**

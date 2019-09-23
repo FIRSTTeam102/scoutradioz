@@ -99,8 +99,8 @@ app.use(async function(req, res, next){
 	//For logging
 	req.requestTime = Date.now();
 	//For database
-	//req.db = db;
-	//req.db = await getDB();
+	//rq.db = db;  (was 'req')
+	//rq.db = await getDB(); (was 'req')
 	//For user login
 	//req.passport = passport;
 	

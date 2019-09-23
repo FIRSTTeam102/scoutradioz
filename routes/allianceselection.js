@@ -9,7 +9,7 @@ router.get("/", async function(req, res){
 	res.log(thisFuncName + 'ENTER');
 	
 	var db = req.db;
-	var aggCol = req.db.get('scoringdata');
+	var aggCol = db.get('scoringdata');
 	var scoreCol = db.get("scoringlayout");
 	var rankCol = db.get('currentrankings');
 	// 2019-03-21, M.O'C: Utilize the currentaggranges

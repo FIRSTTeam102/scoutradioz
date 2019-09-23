@@ -1,5 +1,6 @@
-var express = require("express");
-var router = express.Router();
+const express = require('express');
+const utilities = require('../../utilities');
+const router = express.Router();
 
 /**
  * Admin page to show a list of events by any given year.
@@ -17,6 +18,8 @@ router.get("/events", async function(req, res) {
 	
     // Set our internal DB variable
     var db = req.db;
+	// Read events from DB for specified year
+	var eventCol = db.get("events");
 
     // Get our query value(s)
     var year = req.query.year;
@@ -27,27 +30,19 @@ router.get("/events", async function(req, res) {
 	}
 	res.log(thisFuncName + 'Year: ' + year);
 
-	// Read events from DB for specified year
-	var eventCol = db.get("events");
-	eventCol.find({"year": parseInt(year)},{sort: {"start_date": 1, "end_date": 1, "name": 1}}, function(e, docs){
+	var events = await utilities.find("events", {"year": parseInt(year)},{sort: {"start_date": 1, "end_date": 1, "name": 1}});
 		
-		if(e){ //if error, log to console
-			res.log(e);
-		}
-		events = docs;
+	// Read unique list of years in DB
+	var uniqueYears;
+	eventCol.distinct("year", function(e, docs) {
+		uniqueYears = docs.sort();
+		res.log(thisFuncName + "uniqueYears=" + uniqueYears);
 		
-		// Read unique list of years in DB
-		var uniqueYears;
-		eventCol.distinct("year", function(e, docs) {
-			uniqueYears = docs.sort();
-			res.log(thisFuncName + "uniqueYears=" + uniqueYears);
-			
-			res.render("./admin/events", {
-				title: "Events",
-				"events": events,
-				"years": uniqueYears,
-				"selectedYear": year
-			});
+		res.render("./admin/events", {
+			title: "Events",
+			"events": events,
+			"years": uniqueYears,
+			"selectedYear": year
 		});
 	});
 });

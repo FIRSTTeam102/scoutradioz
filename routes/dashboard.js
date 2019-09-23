@@ -158,9 +158,11 @@ router.get('/allianceselection', async function(req, res){
 	var event_year = req.event.year;
 	
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
-	var currentAggCol = req.db.get("currentaggranges");
-	var rankCol = req.db.get("currentrankings");
-	var scoreDataCol = req.db.get('scoringdata');
+	var db = req.db;
+	var currentAggCol = db.get("currentaggranges");
+	var rankCol = db.get("currentrankings");
+	var scoreDataCol = db.get('scoringdata');
+	var scoreLayoutCol = db.get('scoringlayout');
 
 	rankCol.find(
 		{}, {}, function(e, rankings){
@@ -182,7 +184,7 @@ router.get('/allianceselection', async function(req, res){
 				rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 			}
 			
-			req.db.get('scoringlayout').find(
+			scoreLayoutCol.find(
 				{ year: event_year }, {sort: {"order": 1}}, function(e, scoreLayout){
 					if(e || !scoreLayout[0])
 						return console.error(e || "Couldn't find scoringlayout in allianceselection".red);
@@ -306,7 +308,7 @@ router.get('/pits', async function(req, res) {
 
 	var db = req.db;
 	var scoutDataCol = db.get("scoutingdata");
-	var currentTeamsCol = req.db.get('currentteams');
+	var currentTeamsCol = db.get('currentteams');
 	
 	// are we asking for pictures?
 	var pics = req.query.pics;
@@ -370,7 +372,7 @@ router.get('/matches', async function(req, res) {
 	var scoreDataCol = db.get("scoringdata");
 	var matchCol = db.get("matches");
 	//var teamsCol = db.get("teams");
-	var currentTeamsCol = req.db.get('currentteams');
+	var currentTeamsCol = db.get('currentteams');
 
 	// for later querying by event_key
 	var eventId = req.event.key;
