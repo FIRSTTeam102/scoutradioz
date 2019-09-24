@@ -16,7 +16,7 @@ const usefunctions = require("./helpers/usefunctions");	//extra functions for ap
 const utilities = require('./utilities');				//database utilities
 
 //          This is set temporarily
-var isDev = false, debug = true, production = false;
+var isDev = false, debug = false, production = false;
 
 /* Check process arguments.
 	If -dev or --dev, isDev = true.

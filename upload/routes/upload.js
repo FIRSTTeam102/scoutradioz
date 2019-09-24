@@ -1,15 +1,27 @@
-var express = require('express');
-var router = express.Router();
-
+const express = require('express');
+const router = express.Router();
 
 //import multer and the AvatarStorage engine
-var _ = require('lodash');
-var path = require('path');
-var multer = require('multer');
-var AvatarStorage = require('../helpers/AvatarStorage');
+const _ = require('lodash');
+const multer = require('multer');
+const AvatarStorage = require('../helpers/AvatarStorage');
+
+var storageMethod;
+
+if( process.env.UPLOAD_LOCAL == "false" ){
+    
+    storageMethod = "s3";
+    console.log("Images will be uploaded to S3. To upload to local filesystem, set process.env.UPLOAD_LOCAL=true.")
+}
+else{
+    
+    storageMethod = "local"
+    console.log("Images will be uploaded to local filesystem. To upload to S3, set process.env.UPLOAD_LOCAL=false." );
+}
 
 //create AvatarStorage object with our own parameters
 var storage = AvatarStorage({
+    storage: storageMethod,
     square: false,
     responsive: true,
     output: "jpg",
@@ -48,35 +60,22 @@ var upload = multer({
     fileFilter: fileFilter
 }).any();
 
-/**
- * Image storage and retrieval page. Meant to help with image down- & up-loads to the main directory
- * @url /image
- * @view image/test
- */
-router.get('/', function (req, res, next) {
-    // res.render('index', { title: 'Upload Avatar', avatar_field: process.env.AVATAR_FIELD });
-    //This stuff works
-    res.render('./image/test', {
-        title: "Image Testing Page",
+
+router.get('/', async function(req, res) {
+	
+	res.render('imageupload', {
         avatar_field: process.env.AVATAR_FIELD
-    });
+	});
+	
 });
 
-/**
- * POST: Image upload page for pit scouting. 
- * @url /image/upload
- * @param (query) team_key
- * @param (post) avatarfield, used in upload
- * @redirect /scouting/pit?team=team_key
- */
-router.post('/upload*', function (req, res, next) {
+router.post('/image*', function (req, res, next) {
     
-    res.log("req.body=" + JSON.stringify(req.body));
-
-    var team_key = req.query.team_key;
+    var team_key = "frc102";
+    
     res.log("going to upload");
     
-    var true_key = "init value";
+    var true_key;
     
     switch(team_key.charAt(team_key.length - 1)){
         case 'a':
@@ -88,7 +87,8 @@ router.post('/upload*', function (req, res, next) {
             true_key = team_key;
     }
     
-    var year = req.event.year;
+    var year = 2019;
+    
     req.baseFilename = year + "_" + team_key;
     
     upload(req, res, function (e) {
@@ -97,19 +97,10 @@ router.post('/upload*', function (req, res, next) {
         console.log("_______________________________________________");
         console.log("req.file=" + JSON.stringify(req.file));
         console.log("req.files=" + JSON.stringify(req.files));
-        //res.send("Upload successful?");
-        res.redirect("/scouting/pit?team=" + true_key);
-        console.log(true_key);
+        
+        res.redirect("/upload");
     });
-    
-    res.log("called upload");
 });
 
-module.exports = router;
 
-// ||\\  ||  //||||\\  ||||\\    ||||||||      ||||||||  /|||||||
-// || \\ ||  ||    ||  ||   \\   ||               ||     ||
-// ||  \\||  ||    ||  ||    \\  |||||            ||     \||||||\
-// ||   \\|  ||    ||  ||    //  ||               ||           ||
-// ||    ||  ||    ||  ||   //   ||               ||           ||
-// ||    ||  \\||||//  ||||//    ||||||||  ||  ||||/     |||||||/
+module.exports = router;

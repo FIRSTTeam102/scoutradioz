@@ -34,15 +34,13 @@ const passport = require('passport');
 
 */
 
-//Redirect to /user/login
+//Redirect to index
 router.get('/', async function(req, res){
-	res.redirect(301, "/user/login");
+	res.redirect(301, "/");
 });
 
-//1) Page (user/login.pug) shows a dropdown of existing organizations '/user/login'
-//2) User selects org from dropdown
-//3) User enters org's password ("password" ad "password2" for now)
-router.get('/login', async function (req, res){
+//User selects the organization they wish to view the data of / log in to
+router.get('/selectorg', async function(req, res) {
 	
 	//Get list of participating organizations.
 	var orgs = await utilities.find("orgs", {}, {});
@@ -54,9 +52,75 @@ router.get('/login', async function (req, res){
 	//Prepare an alert. (Used w/ url /?alert=(alert))
 	if(req.query) var alert = req.query.alert || null;
 	
-	res.render('./user/login', {
+	res.render('./user/selectorg', {
 		title: "Select Organization",
 		orgs: orgs,
+		alert: alert
+	});
+});
+
+//Sign in to the organization's "default_user"
+router.post('/selectorg', async function(req, res) {
+	
+	var org_key = req.body.org_key;
+	
+	//Make sure that form is filled
+	if(!org_key || org_key == ""){
+		return res.redirect('/user/selectorg?alert=Please select an organization.');
+	}
+	
+	//search for organization in database
+	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	
+	//If organization does not exist, send internal error
+	if(!selectedOrg) return res.redirect(500, '/user');
+	
+	//Now, sign in to organization's default user
+	var defaultUser = await utilities.findOne("users", {org_key: org_key, name: "default_user"});
+	
+	if(!defaultUser){
+		return res.redirect(`/user/selectorg?alert=Error: No default user for organization ${org_key} exists in database.`);
+	}
+	
+	//Now, log in to defaultUser
+	req.logIn(defaultUser, function(err){
+			
+		//If error, then log and return an error
+		if(err){ console.error(err); return res.status(500).send({alert: err}) };
+		
+		//now, once default user is logged in, redirect to index
+		res.redirect('/');
+	});
+});
+
+//1) Page only loads if user is logged in as default user (has selected organization)
+//3) User enters org's password ("password" ad "password2" for now)
+router.get('/login', async function (req, res){
+	
+	//If there is no user logged in, send them to select-org page
+	if( !req.user ){
+		return res.redirect('/user/selectorg?alert=Please select an organization to sign in to.');
+	}
+	//If the user logged in is NOT default_user, then send them to index.
+	else if( req.user.name != "default_user" ){
+		return res.redirect('/?alert=Please log out before you can sign in to another user.');
+	}
+	//Otherwise, proceed.
+	
+	//Get organization that user has picked
+	var org_key = req.user.org_key;
+	
+	//search for organization in database
+	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	
+	//If organization does not exist, send internal error
+	if(!selectedOrg) return res.redirect(500, '/user');
+		
+	//Prepare an alert. (Used w/ url /?alert=(alert))
+	if(req.query) var alert = req.query.alert || null;
+	
+	res.render('./user/logintoorg', {
+		title: `Log In to ${selectedOrg.nickname}`,
 		alert: alert
 	});
 });
@@ -74,11 +138,13 @@ router.post('/login', async function(req, res){
 //6b) If correct, go to users db and get all users under that organization
 //7) Page (user/selectuser.pug) shows a dropdown of users '/user/login/select'
 router.post('/login/select', async function(req, res){
-	
 	//This URL can only be accessed via a POST method, because it requires an organization's password.
 	
-	//get contents of request
-	var org_key = req.body.org_key;
+	//this can only be accessed if someone has logged in to default_user'
+	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return null;
+	
+	//get contents of request and selected organization
+	var org_key = req.user.org_key;
 	var org_password = req.body.org_password;
 	
 	//Make sure that form is filled
@@ -92,7 +158,7 @@ router.post('/login/select', async function(req, res){
 	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
 	
 	//If organization does not exist, send internal error
-	if(!selectedOrg) return res.redirect(500, '/user/login');
+	if(!selectedOrg) return res.redirect(500, '/user/selectorg');
 	
 	var passwordHash = selectedOrg.default_password;
 	
@@ -263,8 +329,6 @@ router.post('/login/withpassword', async function(req, res){
 	
 	//Get org that matches request
 	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
-	
-	//If organization does not exist, send internal error
 	if(!selectedOrg) return res.redirect(500, '/user/login');
 	
 	var orgPasswordHash = selectedOrg.default_password;
@@ -332,16 +396,36 @@ router.post('/login/withpassword', async function(req, res){
  * @url /user/logout
  * @redirect /
  */
-router.get("/logout", function(req, res) {
+router.get("/logout", async function(req, res) {
 	
-	//Logs out user with message
-	req.logout();
+	//Logout works a bit differently now.
+	//First destroy session, THEN "log in" to default_user of organization.
+	
+	var org_key = req.user.org_key;
 	
 	//destroy session
-	req.session.destroy(function (err) {
+	req.logout();
+	
+	req.session.destroy(async function (err) {
 		if (err) { return next(err); }
-		//Redirect user
-		res.redirect('/')
+		
+		//after current session is destroyed, now re log in to org
+		var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+		if(!selectedOrg) return res.redirect(500, '/');
+		
+		var defaultUser = await utilities.findOne('users', {"org_key": org_key, name: "default_user"});
+		if(!defaultUser) return res.redirect(500, '/');
+		
+		
+		//Now, log in to defaultUser
+		req.logIn(defaultUser, async function(err){
+				
+			//If error, then log and return an error
+			if(err){ console.error(err); return res.status(500).send({alert: err}) };
+			
+			//now, once default user is logged in, redirect to index
+			res.redirect('/');
+		});
 	});
 });
 
