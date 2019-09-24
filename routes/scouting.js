@@ -1,4 +1,5 @@
 var express = require('express');
+const utilities = require('../utilities');
 var router = express.Router();
 
 router.get('/match*', async function(req, res) {
@@ -8,9 +9,9 @@ router.get('/match*', async function(req, res) {
 	var thisFuncName = "scouting.match*[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
-	var db = req.db;
-	var scoringLayoutCol = db.get("scoringlayout");
-	var scoringDataCol = db.get("scoringdata");
+	// var scoringLayoutCol = db.get("scoringlayout");
+	// var scoringDataCol = db.get("scoringdata");
+
 	var event_year = req.event.year;
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
@@ -25,37 +26,35 @@ router.get('/match*', async function(req, res) {
 	}
 	
 	//check if there is already data for this match
-	scoringDataCol.find({"year" : event_year, "match_team_key": match_team_key}, {sort: {"order": 1}}, function(e, scoringdata){
+	var scoringdata = await utilities.find("scoringdata", {"year" : event_year, "match_team_key": match_team_key}, {sort: {"order": 1}});
 		
-		//scouting answers for this match are initialized as null for visibility
-		var answers = null;
+	//scouting answers for this match are initialized as null for visibility
+	var answers = null;
+	
+	if( scoringdata && scoringdata[0] ){
 		
-		if( scoringdata && scoringdata[0] ){
-			
-			//if we have data for this match, 
-			var data = scoringdata[0].data;
-			if(data){
-				res.log(`${thisFuncName}- data: ${JSON.stringify(scoringdata[0].data)}`);
-				//set answers to data if exists
-				answers = data;
-			}
-			else{
-				res.log(`${thisFuncName}- no data for this match`)
-			}
+		//if we have data for this match, 
+		var data = scoringdata[0].data;
+		if(data){
+			res.log(`${thisFuncName}- data: ${JSON.stringify(scoringdata[0].data)}`);
+			//set answers to data if exists
+			answers = data;
 		}
-		
-		//load layout
-		scoringLayoutCol.find({ "year": event_year }, {sort: {"order": 1}}, function(e, docs){
-			var layout = docs;
-			//render page
-			res.render("./scouting/match", {
-				title: "Match Scouting",
-				layout: layout,
-				key: match_team_key,
-				alliance: alliance,
-				answers: answers
-			});
-		});
+		else{
+			res.log(`${thisFuncName}- no data for this match`)
+		}
+	}
+	
+	//load layout
+	var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+
+	//render page
+	res.render("./scouting/match", {
+		title: "Match Scouting",
+		layout: layout,
+		key: match_team_key,
+		alliance: alliance,
+		answers: answers
 	});
 });
 
@@ -90,49 +89,46 @@ router.post('/match/submit', async function(req, res) {
 	//res.log(thisFuncName + 'matchData=' + JSON.stringify(matchData));
 
 	// Get the 'layout' so we know types of data elements
-	var scoreCol = req.db.get("scoringlayout");
-	scoreCol.find({}, {sort: {"order": 1}}, function(e, docs){
-		var layout = docs;
-		var layoutTypeById = {};
-		//res.log(thisFuncName + "layout=" + JSON.stringify(layout));
-		for (var property in layout) {
-			if (layout.hasOwnProperty(property)) {
-				//res.log(thisFuncName + layout[property].id + " is a " + layout[property].type);
-				layoutTypeById[layout[property].id] = layout[property].type;
-			}
+	// var scoreCol = db.get("scoringlayout");
+	// var matchCol = db.get('scoringdata');
+
+	var layout = await utilities.find("scoringlayout", {}, {sort: {"order": 1}});
+
+	var layoutTypeById = {};
+	//res.log(thisFuncName + "layout=" + JSON.stringify(layout));
+	for (var property in layout) {
+		if (layout.hasOwnProperty(property)) {
+			//res.log(thisFuncName + layout[property].id + " is a " + layout[property].type);
+			layoutTypeById[layout[property].id] = layout[property].type;
 		}
-	
-		// Process input data, convert to numeric values
-		for (var property in matchData) {
-			var thisType = layoutTypeById[property];
-			//res.log(thisFuncName + property + " :: " + matchData[property] + " ~ is a " + thisType);
-			if ('counter' == thisType || 'badcounter' == thisType) {
-				//res.log(thisFuncName + "...converting " + matchData[property] + " to a number");
-				var newVal = -1;
-				if (matchData[property]) {
-					var parseVal = parseInt(matchData[property]);
-					if (!isNaN(parseVal))
-						newVal = parseVal;
-				}
-				matchData[property] = newVal;
+	}
+
+	// Process input data, convert to numeric values
+	for (var property in matchData) {
+		var thisType = layoutTypeById[property];
+		//res.log(thisFuncName + property + " :: " + matchData[property] + " ~ is a " + thisType);
+		if ('counter' == thisType || 'badcounter' == thisType) {
+			//res.log(thisFuncName + "...converting " + matchData[property] + " to a number");
+			var newVal = -1;
+			if (matchData[property]) {
+				var parseVal = parseInt(matchData[property]);
+				if (!isNaN(parseVal))
+					newVal = parseVal;
 			}
-			if ('checkbox' == thisType) {
-				//res.log(thisFuncName + "...converting " + matchData[property] + " to a boolean 1/0 number");
-				var newVal = (matchData[property] == "true" || matchData[property] == true) ? 1 : 0;
-				matchData[property] = newVal;
-			}
+			matchData[property] = newVal;
 		}
-		res.log(thisFuncName + "matchData(UPDATED)=" + JSON.stringify(matchData));
-	
-		// Post modified data to DB
-		var matchCol = req.db.get('scoringdata');
-		
-		matchCol.update( { "match_team_key" : match_team_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName, useragent: req.shortagent } }, function(e, docs){
-			if(e)
-				return res.send({status: 500, message: e});
-			return res.send({message: "Submitted data successfully.", status: 200});
-		});
-	});
+		if ('checkbox' == thisType) {
+			//res.log(thisFuncName + "...converting " + matchData[property] + " to a boolean 1/0 number");
+			var newVal = (matchData[property] == "true" || matchData[property] == true) ? 1 : 0;
+			matchData[property] = newVal;
+		}
+	}
+	res.log(thisFuncName + "matchData(UPDATED)=" + JSON.stringify(matchData));
+
+	// Post modified data to DB
+	await utilities.update("scoringdata", { "match_team_key" : match_team_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName, useragent: req.shortagent } });
+
+	return res.send({message: "Submitted data successfully.", status: 200});
 });
 
 router.post('/submitmatch', function(req, res) {
@@ -153,12 +149,11 @@ router.post('/submitmatch', function(req, res) {
 	res.log(thisFuncName + 'match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
 	res.log(thisFuncName + 'matchData=' + JSON.stringify(matchData));
 
-	var db = req.db;
-    var matchCol = db.get('scoringdata');
+    // var matchCol = db.get('scoringdata');
 
-	matchCol.update( { "match_team_key" : match_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName } }, function(e, docs){
-		res.redirect("/dashboard");
-	});
+	await utilities.update("scoringdata", { "match_team_key" : match_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName } });
+
+	res.redirect("/dashboard");
 });
 
 router.get('/pit*', async function(req, res) {
@@ -178,29 +173,24 @@ router.get('/pit*', async function(req, res) {
 		return;
 	}
 
-	var db = req.db;
-	var scoutCol = db.get("scoutinglayout");
-	var pitCol = req.db.get('scoutingdata'); //for pitcol.find()
-	
-	
-	scoutCol.find({ "year": event_year }, {sort: {"order": 1}}, function(e, docs){
-		var layout = docs;
+	// var scoutCol = db.get("scoutinglayout");
+	// var pitCol = db.get('scoutingdata'); //for pitcol.find()
 
-		//pasted code
-		pitCol.find({ "event_key" : event_key, "team_key" : teamKey }, {}, function(e, docs){
-			var pitData = null;
-			if (docs && docs[0])
-				if (docs[0].data)
-					pitData = docs[0].data;
+	var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
 
-			//res.log(layout);
-			res.render("./scouting/pit", {
-				title: "Pit Scouting",
-				layout: layout,
-				pitData: pitData, 
-				key: teamKey
-			});
-		});
+	//pasted code
+	var pitFind = await utilities.find("scoutingdata", { "event_key" : event_key, "team_key" : teamKey }, {});
+	var pitData = null;
+	if (pitFind && pitFind[0])
+		if (pitFind[0].data)
+			pitData = pitFind[0].data;
+
+	//res.log(layout);
+	res.render("./scouting/pit", {
+		title: "Pit Scouting",
+		layout: layout,
+		pitData: pitData, 
+		key: teamKey
 	});
 });
 
@@ -223,18 +213,15 @@ router.post('/pit/submit', async function(req, res){
 	res.log(thisFuncName + 'teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
 	res.log(thisFuncName + 'pitData=' + JSON.stringify(pitData));
 
-	var db = req.db;
-    var pitCol = db.get('scoutingdata');
+    // var pitCol = db.get('scoutingdata');
 
 	var event_key = req.event.key;
 
 	//res.redirect("/dashboard");
-	
-	pitCol.update( { "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName, useragent: req.shortagent } }, function(e, docs){
-		if(e)
-			return res.send({status: 500, message: e});
-		return res.send({message: "Submitted data successfully.", status: 200});
-	});
+
+	await utilities.update("scoutingdata", { "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName, useragent: req.shortagent } });
+
+	return res.send({message: "Submitted data successfully.", status: 200});
 });
 
 router.post('/submitpit', function(req, res) {
@@ -254,13 +241,12 @@ router.post('/submitpit', function(req, res) {
 	res.log(thisFuncName + 'teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
 	res.log(thisFuncName + 'pitData=' + JSON.stringify(pitData));
 
-	var db = req.db;
-    var pitCol = db.get('scoutingdata');
+    // var pitCol = db.get('scoutingdata');
 	var event_key = req.event.key;
-	
-	pitCol.update( { "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName } }, function(e, docs){
-		res.redirect("/dashboard");
-	});
+
+	await utilities.update("scoutingdata", { "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName } });
+
+	res.redirect("/dashboard");
 });
 
 //For \views\scouting\teampictures.pug
@@ -269,35 +255,32 @@ router.get('/teampictures', async function(req, res) {
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 
 	var thisFuncName = "scouting.teampictures[get]: ";
-		res.log(thisFuncName + 'ENTER');
-		
-		var db = req.db;
-		var teamCol = db.get("currentteams");
-		
-		var event_year = req.event.year;
 
-		teamCol.find({}, {sort: {team_number: 1}}, function(e, docs) {
-			var teams = [];
-			if (docs && docs.length > 0)
-				teams = docs;
-			var fs = require("fs");
-			var path = require("path");
-			var UPLOAD_PATH = path.resolve(__dirname, '..', process.env.AVATAR_STORAGE) + "\\";
-			for (var i = 0; i < teams.length; i++) {
-				var team = teams[i];
-					//console.log(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`);
-				if (fs.existsSync(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`)) {
-					teams[i].hasPicture = true;
-				}
-				else {teams[i].hasPicture = false;}
-			}
-			//res.log(thisFuncName + 'rankings=' + JSON.stringify(rankings));
-			
-			res.render("./scouting/teampictures", {
-				title: "Team Pictures",
-				teams: teams
-			});
-		});
+	res.log(thisFuncName + 'ENTER');
+	
+	// var teamCol = db.get("currentteams");
+	
+	var event_year = req.event.year;
+
+	var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
+
+	var fs = require("fs");
+	var path = require("path");
+	var UPLOAD_PATH = path.resolve(__dirname, '..', process.env.AVATAR_STORAGE) + "\\";
+	for (var i = 0; i < teams.length; i++) {
+		var team = teams[i];
+			//console.log(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`);
+		if (fs.existsSync(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`)) {
+			teams[i].hasPicture = true;
+		}
+		else {teams[i].hasPicture = false;}
+	}
+	//res.log(thisFuncName + 'rankings=' + JSON.stringify(rankings));
+	
+	res.render("./scouting/teampictures", {
+		title: "Team Pictures",
+		teams: teams
+	});
 });
 
 router.get('/', function(req, res){

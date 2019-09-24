@@ -245,7 +245,8 @@ router.post("/generateteamallocations", async function(req, res) {
 			return res.send({status: 401, alert: "No password entered."});
 		}
 		
-		var teammembers = req.db.get('teammembers');
+		var db = req.db;
+		var teammembers = db.get('teammembers');
 		
 		teammembers.find( { name: req.user.name }, {}, function( e, user ){
 			if(e)
@@ -557,8 +558,9 @@ router.post("/clearmatchallocations", async function(req, res) {
 		return res.send({status: 401, alert: "No password entered."});
 	}
 	
-	var teammembers = req.db.get('teammembers');
-	
+	var db = req.db;
+	var teammembers = db.get('teammembers');
+
 	teammembers.find( { name: req.user.name }, {}, function( e, user ){
 		if(e)
 			return console.error(e);
@@ -650,7 +652,8 @@ router.post("/generatematchallocations", async function(req, res) {
 			return res.send({status: 401, alert: "No password entered."});
 		}
 		
-		var teammembers = req.db.get('teammembers');
+		var db = req.db;
+		var teammembers = db.get('teammembers');
 		
 		teammembers.find( { name: req.user.name }, {}, function( e, user ){
 			if(e)
@@ -689,7 +692,7 @@ router.get("/swapmembers", async function(req, res) {
 	var currentCol = db.get("current");
 	var scoreDataCol = db.get("scoringdata");
 	var matchCol = db.get("matches");
-	var teammembers = req.db.get("teammembers");
+	var teammembers = db.get("teammembers");
 
 	//
 	// Get the 'current' event from DB

@@ -155,12 +155,11 @@ router.get("/teamintel", async function(req, res){
 	}
 	res.log(thisFuncName + 'teamKey=' + teamKey);
 	
-	// var db = req.db;
 	// var rankCol = db.get("currentrankings");
-	// var teamsCol = req.db.get('currentteams');
-	// var pitCol = req.db.get('scoutingdata');
-	// var aggCol = req.db.get('scoringdata');
-	// var matchCol = req.db.get('matches');
+	// var teamsCol = db.get('currentteams');
+	// var pitCol = db.get('scoutingdata');
+	// var aggCol = db.get('scoringdata');
+	// var matchCol = db.get('matches');
 	// var scoutCol = db.get("scoutinglayout");
 	// var scoreCol = db.get("scoringlayout");
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
@@ -332,10 +331,9 @@ router.get("/teamintelhistory", async function(req, res){
 	var yearString = year + '-01-01T00:00:00';
 	var yearInt = new Date(yearString).getTime() / 1000;
 	
-	// var db = req.db;
-	// var teamsCol = req.db.get('teams');
-	// var aggCol = req.db.get('scoringdata');
-	// var matchCol = req.db.get('matches');
+	// var teamsCol = db.get('teams');
+	// var aggCol = db.get('scoringdata');
+	// var matchCol = db.get('matches');
 	// var scoreCol = db.get("scoringlayout");
 
 	var event_year = req.event.year;
@@ -465,10 +463,9 @@ router.get("/matchintel*", async function(req, res){
 	}
 	res.log(thisFuncName + 'matchKey=' + matchKey);
 	
-	// var db = req.db;
-	// var matchCol = req.db.get('matches');
-	//var teamsCol = req.db.get('teams');
-	//var pitCol = req.db.get('scoutingdata');
+	// var matchCol = db.get('matches');
+	//var teamsCol = db.get('teams');
+	//var pitCol = db.get('scoutingdata');
 	//var currentCol = db.get("current");
 	//var scoutCol = db.get("scoutinglayout");
 
@@ -495,10 +492,9 @@ router.get("/teammatchintel*", async function(req, res){
 	}
 	res.log(thisFuncName + 'teamMatchKey=' + match_team_key);
 	
-	// var db = req.db;
-	// var scoringDataCol = req.db.get('scoringdata');
-	//var teamsCol = req.db.get('teams');
-	//var pitCol = req.db.get('scoutingdata');
+	// var scoringDataCol = db.get('scoringdata');
+	//var teamsCol = db.get('teams');
+	//var pitCol = db.get('scoutingdata');
 	//var currentCol = db.get("current");
 	// var scoringLayoutCol = db.get("scoringlayout");
 
@@ -552,8 +548,7 @@ router.get("/alliancestats", async function(req, res) {
 	var thisFuncName = "reports.alliancestats[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
-	// var db = req.db;
-	// var aggCol = req.db.get('scoringdata');
+	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
 	// var currentCol = db.get("current");
 	// var matchCol = db.get('matches');
@@ -646,8 +641,7 @@ router.get("/teamdata", async function(req, res) {
 	var thisFuncName = "reports.teamdata[get]: ";
 	res.log(thisFuncName + 'ENTER');
 
-	// var db = req.db;
-	// var scoringCol = req.db.get('scoringdata');
+	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
 	// var currentAggCol = db.get("currentaggranges");
 	// var teamCol = db.get('currentteams');
@@ -701,8 +695,7 @@ router.get("/matchdata", async function(req, res) {
 	var thisFuncName = "reports.matchdata[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
-	// var db = req.db;
-	// var scoringCol = req.db.get('scoringdata');
+	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
 	// var currentAggCol = db.get("currentaggranges");
 	// var matchCol = db.get('matches');
@@ -756,8 +749,7 @@ router.get("/matchmetrics", async function(req, res) {
 	var thisFuncName = "reports.matchmetrics[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
-	// var db = req.db;
-	// var aggCol = req.db.get('scoringdata');
+	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
 	// var currentCol = db.get("current");
 	// var matchCol = db.get('matches');
@@ -868,8 +860,7 @@ router.get("/metricsranked", async function(req, res){
 	var thisFuncName = "reports.metricsranked[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
-	// var db = req.db;
-	// var aggCol = req.db.get('scoringdata');
+	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
 	// var currentCol = db.get("current");
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
@@ -986,8 +977,7 @@ router.get("/metrics", async function(req, res){
 	var thisFuncName = "reports.metrics[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
-	// var db = req.db;
-	// var aggCol = req.db.get('scoringdata');
+	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
 	// var currentCol = db.get("current");
 	// var currentAggCol = db.get("currentaggranges");
@@ -1092,8 +1082,7 @@ router.get("/metricintel*", async function(req, res){
 	}
 	res.log(thisFuncName + 'metricKey=' + metricKey);
 	
-	// var db = req.db;
-	// var aggCol = req.db.get('scoringdata');
+	// var aggCol = db.get('scoringdata');
 	// var currentCol = db.get("current");
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// var currentAggCol = db.get("currentaggranges");
@@ -1182,8 +1171,7 @@ router.get("/allteammetrics", async function(req, res){
 	var thisFuncName = "reports.allteammetrics[get]: ";
 	res.log(thisFuncName + 'ENTER');
 	
-	// var db = req.db;
-	// var aggCol = req.db.get('scoringdata');
+	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
 	// var rankCol = db.get('currentrankings');
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
@@ -1241,7 +1229,7 @@ router.get("/allteammetrics", async function(req, res){
 	if (aggR)
 		aggArray = aggR;
 		
-	res.log(rankMap);
+	//res.log(thisFuncName + 'rankMap=' + rankMap);
 	
 	// Rewrite data into display-friendly values
 	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
@@ -1261,7 +1249,7 @@ router.get("/allteammetrics", async function(req, res){
 			aggArray[aggIdx] = thisAgg;
 		}
 	}
-	res.log(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
+	//res.log(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
 
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});
