@@ -1,16 +1,17 @@
 extends ../layout
 block content
-	form#login-form(name="login-form" method="post" action="")
-		h3(class="gear-text-white")=title
-		div(class="w3-container w3-padding-16")
-			div(class="w3-quarter w3-label theme-inline-padding")
-				label Organization Name: 
-			div(class="w3-half")
-				select(class="w3-select theme-input w3-no-border" type="text" name="org_key")
-					option
-					each org, i in orgs
-						option(value=org.org_key class="w3-bar-item") #{org.nickname}
-		div(class="w3-padding-16")
-			input(type="submit" class="gear-btn theme-submit w3-btn" value="Submit")
-	if error == "true"
-		script alert(error);
+	form#selectorg-form(name="login-form" method="post" action="")
+		h3(class="theme-text")=title
+		div(class="w3-container w3-auto w3-padding-16")
+			each org, i in orgs
+				div(class="w3-col")
+					div(class="w3-quarter") &nbsp;
+					div(class="w3-half")
+						div(class="gear-btn theme-hover-light-gray theme-input w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=org.nickname
+					div(class="w3-quarter") &nbsp;
+		input(type="hidden" name="org_key" value="")
+	script.
+		function submitOrg( org_key ){
+			$("input[name=org_key]").val(org_key);
+			$("#selectorg-form").submit();
+		}

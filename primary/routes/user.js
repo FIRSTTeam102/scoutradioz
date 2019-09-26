@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const utilities = require('../utilities');
 const bcrypt = require('bcryptjs');
-const passport = require('passport');
 
 /*
 0) '/user' redirects to '/user/login'
@@ -42,6 +41,9 @@ router.get('/', async function(req, res){
 //User selects the organization they wish to view the data of / log in to
 router.get('/selectorg', async function(req, res) {
 	
+	//If a user is logged in when reaching this route, then first log user out of org
+	if( req.user ) return res.redirect('/user/switchorg');
+	
 	//Get list of participating organizations.
 	var orgs = await utilities.find("orgs", {}, {});
 	
@@ -53,7 +55,7 @@ router.get('/selectorg', async function(req, res) {
 	if(req.query) var alert = req.query.alert || null;
 	
 	res.render('./user/selectorg', {
-		title: "Select Organization",
+		title: "Please Select an Organization",
 		orgs: orgs,
 		alert: alert
 	});
@@ -392,42 +394,119 @@ router.post('/login/withpassword', async function(req, res){
 });
 
 /**
+ * User page to change your own password.
+ * @url /login/changepassword
+ * @view /login/changepassword
+ *
+ */
+router.get('/changepassword', async function(req, res){
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
+	
+	res.render('./user/changepassword', {
+		title: "Change Password"
+	});
+});
+
+/**
+ * POST: Admin page to change your own password.
+ * @url POST: /login/changepassword
+ * @redirect /
+ */
+router.post('/changepassword', async function(req, res){
+	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
+	
+	var currentPassword = req.body.currentPassword;
+	var p1 = req.body.newPassword1;
+	var p2 = req.body.newPassword2;
+	
+	//make sure forms are filled
+	if( !p1 || !p2 ){
+		return res.redirect("/user/changepassword?alert=Please enter new password.");
+	}
+	if( p1 != p2 ){
+		return res.redirect("/user/changepassword?alert=Both new password forms must be equal.");
+	}
+	
+	var passComparison;
+	
+	//if user's password is set to default, then allow them to change their password
+	if( req.user.password == "default"){
+		passComparison = true;
+	}
+	else{
+		passComparison = await bcrypt.compare(currentPassword, req.user.password);
+	}
+	
+	if( !passComparison ){
+		return res.redirect('/user/changepassword?alert=Current password incorrect.');
+	}
+	
+	//Hash new password
+	const saltRounds = 10;
+	
+	var hash = await bcrypt.hash( p1, saltRounds );
+	
+	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {password: hash}});
+	
+	res.log("changepassword: " + JSON.stringify(writeResult), true);
+	
+	res.redirect('/?alert=Changed password successfully.');
+});
+
+
+/**
  * Simple logout link.
  * @url /user/logout
  * @redirect /
  */
 router.get("/logout", async function(req, res) {
-	
 	//Logout works a bit differently now.
 	//First destroy session, THEN "log in" to default_user of organization.
+	
+	if( !req.user ) return res.redirect('/');
 	
 	var org_key = req.user.org_key;
 	
 	//destroy session
 	req.logout();
 	
-	req.session.destroy(async function (err) {
-		if (err) { return next(err); }
+	//req.session.destroy(async function (err) {
+	//	if (err) { return next(err); }
 		
-		//after current session is destroyed, now re log in to org
-		var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
-		if(!selectedOrg) return res.redirect(500, '/');
-		
-		var defaultUser = await utilities.findOne('users', {"org_key": org_key, name: "default_user"});
-		if(!defaultUser) return res.redirect(500, '/');
-		
-		
-		//Now, log in to defaultUser
-		req.logIn(defaultUser, async function(err){
-				
-			//If error, then log and return an error
-			if(err){ console.error(err); return res.status(500).send({alert: err}) };
+	//after current session is destroyed, now re log in to org
+	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	if(!selectedOrg) return res.redirect(500, '/');
+	
+	var defaultUser = await utilities.findOne('users', {"org_key": org_key, name: "default_user"});
+	if(!defaultUser) return res.redirect(500, '/');
+	
+	
+	//Now, log in to defaultUser
+	req.logIn(defaultUser, async function(err){
 			
-			//now, once default user is logged in, redirect to index
-			res.redirect('/');
-		});
+		//If error, then log and return an error
+		if(err){ console.error(err); return res.status(500).send({alert: err}) };
+		
+		//now, once default user is logged in, redirect to index
+		res.redirect('/');
 	});
+	//});
 });
+
+router.get('/switchorg', async function(req, res){
+	
+	//This will log the user out of their organization.
+	
+	//destroy session
+	req.logout();
+	
+	req.session.destroy(async function (err) {
+		if (err) return console.log(err);
+		
+		//now, redirect to index
+		res.redirect('/');
+	});
+})
 
 //ROUTES FROM LOGIN.JS THAT HAVE NOT BEEN IMPLEMENTED YET
 /*
