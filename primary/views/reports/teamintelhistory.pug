@@ -1,16 +1,16 @@
 extends ../layout
 
 block content
-	h2(class="gear-text-white")= team.key.replace('frc','Team ')
+	h2(class="theme-text")= team.key.replace('frc','Team ')
 	- var year = (new Date()).getFullYear();
 	p
 	h2 #{team.nickname}
 	if (ranking)
-		h4(class="gear-text-white") Currently ranked ##{ranking.rank} </br> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
+		h4(class="theme-text") Currently ranked ##{ranking.rank} </br> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
 	- var country = '';
 	- if (team.country != 'USA') country = team.country;
-	h4(class="gear-text-white" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
-	h4(class="gear-text-white" style="font-style:italic") #{team.name}
+	h4(class="theme-text" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
+	h4(class="theme-text" style="font-style:italic") #{team.name}
 	p
 
 	script.
@@ -52,7 +52,7 @@ block content
 		span Statistics Over Year #{year}
 	div#StatisticsSection(class="w3-container w3-hide")
 		if (aggdata)
-			h2(class="gear-text-white") Historical statistics for #{team.key.replace('frc','team ')}
+			h2(class="theme-text") Historical statistics for #{team.key.replace('frc','team ')}
 			table(class="w3-table")
 				tr
 					th Metric
@@ -90,7 +90,7 @@ block content
 				border-radius: 9px;
 				border-color: #dfe1e9!important;
 			}
-		h2(class="gear-text-white") ALL previous matches
+		h2(class="theme-text") ALL previous matches
 		
 		if (matches && matches.length > 0)		
 			h6 <i>Click team number for match scouting details</i>
@@ -102,13 +102,13 @@ block content
 						case element.type
 							when "textblock"
 								if (match.scoringdata[element.id])
-									h5(class="gear-text-white") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
+									h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 				p(class="theme-spacer")
 				//-hr
 				//-div(class="w3-row")
 					div(class="w3-col s12 m12 l2")
 						a(href=`/reports/matchintel?key=${match.key}`) 
-							div(class="theme-gray gear-hover-white w3-btn w3-block w3-border")
+							div(class="theme-gray theme-hover-white w3-btn w3-block w3-border")
 								- var matchPrefix = "";
 								- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 								- var outcome = "Tie!";
@@ -169,7 +169,7 @@ block content
 				hr
 				div(class="w3-row")
 					div(class="w3-col s12 m2")
-						div(class="w3-dark-grey gear-hover-white w3-btn w3-block w3-border")
+						div(class="w3-dark-grey theme-hover-white w3-btn w3-block w3-border")
 							- var matchPrefix = "";
 							- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 							- var outcome = "Tie!";
@@ -184,7 +184,7 @@ block content
 								- var teamStyleBlue = "";
 								- if (teamkey == team.key) teamStyleBlue = "font-weight:800";
 								a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-									div(class="gear-blue gear-hover-white w3-btn w3-block" style=`${teamStyleBlue}`)
+									div(class="gear-blue theme-hover-white w3-btn w3-block" style=`${teamStyleBlue}`)
 										span= teamkey.substring(3)
 					div(class="w3-col s4 m2")
 						- var divClassBlue = 'w3-dark-grey w3-btn w3-block w3-border';
@@ -208,7 +208,7 @@ block content
 								- var teamStyleRed = "";
 								- if (teamkey == team.key) teamStyleRed = "font-weight:800";
 								a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-									div(class="theme-red gear-hover-white w3-btn w3-block" style=`${teamStyleRed}`)
+									div(class="theme-red theme-hover-white w3-btn w3-block" style=`${teamStyleRed}`)
 										span= teamkey.substring(3)
 					div(class="w3-col s4 m2")
 						- var divClassRed = 'w3-dark-grey w3-btn w3-block w3-border';
@@ -230,7 +230,7 @@ block content
 						case element.type
 							when "textblock"
 								if (match.scoringdata[element.id])
-									h5(class="gear-text-white") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
+									h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 		else
 			h6 No previous matches yet - check back later
 

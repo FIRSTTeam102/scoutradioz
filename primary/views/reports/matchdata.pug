@@ -13,8 +13,8 @@ block content
 	for matchItem in matches
 		- matchMap[matchItem.team_key] = matchItem;
 
-	//- h2(class="gear-text-white") Statistics for teams</br>#{teams.replace(/,/g, ', ').replace(/frc/g, '')}
-	h2(class="gear-text-white") Match data for match ##{match.match_number}
+	//- h2(class="theme-text") Statistics for teams</br>#{teams.replace(/,/g, ', ').replace(/frc/g, '')}
+	h2(class="theme-text") Match data for match ##{match.match_number}
 	h6 <i>Click on a team number for intel on that team</i>
 	h6 <i>Click on a metric to compare all event teams</i>
 	
@@ -23,12 +23,12 @@ block content
 			tr
 				th Metric
 				for team in match.alliances.red.team_keys
-					th(class="w3-right-align gear-text-white")
+					th(class="w3-right-align theme-text")
 						u
 							a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
 				th
 				for team in match.alliances.blue.team_keys
-					th(class="w3-right-align gear-text-white")
+					th(class="w3-right-align theme-text")
 						u
 							a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
 			each item in scoreLayout

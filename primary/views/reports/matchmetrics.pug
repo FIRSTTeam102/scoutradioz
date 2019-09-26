@@ -7,7 +7,7 @@ block content
 		- aggRangeMap[scoreItem.key] = scoreItem;
 
 	- var matchPrefix = ''; if (match.comp_level != 'qm') matchPrefix = match.comp_level;
-	h2(class="gear-text-white") Comparing alliances for match ##{match.match_number}
+	h2(class="theme-text") Comparing alliances for match ##{match.match_number}
 	h6 <i>Click on an alliance to see comparative individual team stats:</i>
 	- var redTeams = match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3);
 	- var redTeamKeys = match.alliances.red.team_keys[0]+','+match.alliances.red.team_keys[1]+','+match.alliances.red.team_keys[2]

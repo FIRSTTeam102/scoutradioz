@@ -2,7 +2,7 @@ extends ../layout
 
 block content
 	if teams.length > 0
-		h3(class="gear-text-white")=title
+		h3(class="theme-text")=title
 		p
 		table(class="w3-content w3-center theme-contains-spacer")
 			th Assignee
@@ -14,7 +14,7 @@ block content
 				if( user.name == team.primary )
 					- color = "gear-text-orange";
 				else
-					- color = "gear-text-white";
+					- color = "theme-text";
 				tr(class=`w3-margin ${color}`)
 					td(class="theme-spacer")
 						h4(class=`${color}`) #{team.primary}
@@ -25,7 +25,7 @@ block content
 									span= team.team_key.substring(3)
 						else
 							a(href=`/scouting/pit?team=${team.team_key}`) 
-								div(class="gear-btn theme-link gear-hover-white w3-btn w3-section")
+								div(class="gear-btn theme-link w3-btn w3-section")
 									span= team.team_key.substring(3)
 					td(class='w3-left-align theme-spacer')
 						h4(class=`${color}`) #{team.nickname}

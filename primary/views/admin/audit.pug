@@ -25,10 +25,10 @@ block content
 				hr
 				h4= row.member
 				each item in row.record
-					- var itemClass = "w3-button gear-hover-white w3-green audit-card"
-					- if (item.char == 'N') itemClass = "w3-button gear-hover-white theme-red audit-card"
-					- if (item.char == 'C') itemClass = "w3-button gear-hover-white w3-yellow audit-card"
-					- if (item.char == 'P') itemClass = "w3-button gear-hover-white w3-purple audit-card"
+					- var itemClass = "w3-button theme-hover-white w3-green audit-card"
+					- if (item.char == 'N') itemClass = "w3-button theme-hover-white theme-red audit-card"
+					- if (item.char == 'C') itemClass = "w3-button theme-hover-white w3-yellow audit-card"
+					- if (item.char == 'P') itemClass = "w3-button theme-hover-white w3-purple audit-card"
 					- if (item.match_team_key)
 						div(class="w3-show-inline-block")
 							a(class="w3-tooltip" href=`/scouting/match?key=${item.match_team_key}`)

@@ -2,7 +2,7 @@ extends ../layout
 
 block content
 	if (teammatch)
-		h2(class="gear-text-white")
+		h2(class="theme-text")
 			a(href=`/reports/teamintel?team=${teammatch.team_key}`)= teammatch.team_key.replace('frc','Team ')
 		p
 		h3 Match ##{teammatch.match_number} - #{teammatch.alliance} alliance 
@@ -13,12 +13,12 @@ block content
 					when "checkbox"
 						- var boolVal = 'Yes';
 						- if (data[element.id] == 0) boolVal = 'No';
-						h4(class="gear-text-white") #{element.label} <strong>#{boolVal}</strong>
+						h4(class="theme-text") #{element.label} <strong>#{boolVal}</strong>
 					when "counter"
 					when "badcounter"
 					when "multiselect"
 					when "textblock"
-						h4(class="gear-text-white") #{element.label}: <strong>#{data[element.id]}</strong>
+						h4(class="theme-text") #{element.label}: <strong>#{data[element.id]}</strong>
 					when "h2"
 						h2 #{element.label}
 					when "h3"
@@ -26,7 +26,7 @@ block content
 					when "spacer"
 						br
 		else
-			h4(class="gear-text-white") 
+			h4(class="theme-text") 
 				i
 					span No match scouting data available for team
 					span=teamKey.substring(3)
@@ -34,7 +34,7 @@ block content
 					span=teammatch.match_number
 					span .
 	else
-		h4(class="gear-text-white") 
+		h4(class="theme-text") 
 			i
 				span No match scouting data available for team 
 				span=teamKey.substring(3)

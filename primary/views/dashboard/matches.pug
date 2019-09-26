@@ -2,7 +2,7 @@ extends ../layout
 
 block content
 	if matches.length > 0
-		h3(class="gear-text-white w3-margin-bottom") Match Scouting
+		h3(class="theme-text w3-margin-bottom") Match Scouting
 		table(class="theme-contains-spacer w3-content" style="")#matchTable
 			tr#title
 				th(onclick="w3.sortHTML('#matchTable','.item', 'td:nth-child(3)')" style="cursor:pointer") Assigned

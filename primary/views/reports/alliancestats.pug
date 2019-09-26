@@ -10,8 +10,8 @@ block content
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
 
-	//- h2(class="gear-text-white") Statistics for teams</br>#{teams.replace(/,/g, ', ').replace(/frc/g, '')}
-	h2(class="gear-text-white") Statistics for alliance teams
+	//- h2(class="theme-text") Statistics for teams</br>#{teams.replace(/,/g, ', ').replace(/frc/g, '')}
+	h2(class="theme-text") Statistics for alliance teams
 	h6 <i>Click on a team number for intel on that team</i>
 	h6 <i>Click on a metric to compare all event teams</i>
 	
@@ -28,7 +28,7 @@ block content
 				tr
 					th Metric (Avg)
 					for team in teamList
-						th(class="w3-right-align gear-text-white")
+						th(class="w3-right-align theme-text")
 							u
 								a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
 				each agg in avgdata
@@ -53,7 +53,7 @@ block content
 				tr
 					th Metric (Max)
 					for team in teamList
-						th(class="w3-right-align gear-text-white")
+						th(class="w3-right-align theme-text")
 							u
 								a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
 				each agg in maxdata

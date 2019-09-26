@@ -8,7 +8,7 @@ extends ../layout
 block content
 	style html{overflow-x: visible;}
 	form#updatematches(name="updatematches" method="post" action="/admin/current/updatematches")
-		button#btnSubmit(type="submit" class="w3-button gear-hover-white theme-submit w3-text-white") Update all matches
+		button#btnSubmit(type="submit" class="w3-button theme-hover-white theme-submit w3-text-white") Update all matches
 	br
 	if locals.matches
 		table(class="w3-table")

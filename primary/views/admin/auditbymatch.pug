@@ -29,7 +29,7 @@ block content
 			div(class="w3-row w3-padding")
 				each match_team in match
 					div(class="w3-third w3-padding")
-						div(class="w3-btn w3-block gear-hover-white")
+						div(class="w3-btn w3-block theme-hover-white")
 							a(href=`/scouting/match?key=${match_team.match_team_key}`)
 								div Team: #{match_team.team_key.substring(3)}
 								div Assigned Scorer: #{match_team.assigned_scorer}

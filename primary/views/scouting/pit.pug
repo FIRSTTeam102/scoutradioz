@@ -18,31 +18,31 @@ block content
 	h3= key.replace('frc','Team #')
 	p
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img(src=`/uploads/responsive/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
 	br
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img(src=`/uploads/responsive/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img(src=`/uploads/responsive/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img(src=`/uploads/responsive/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-	form#imageform(action=`/image/upload?team_key=${key}` method="post" enctype="multipart/form-data" name="imageform")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+	form#imageform(action=`${uploadURL}/?team_key=${key}` method="post" enctype="multipart/form-data" name="imageform")
 		input#teamimage(type="file", name="avatarfield")
 		input#returnurl(type="hidden", name="returnurl", value="")
 		input#imagekey(type="hidden", name="teamkey", value=`${key}`)
 		button#submitimage(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Main Image
 	//- Added stuffs for specific smaller images -//
-	form#imageforma(action=`/image/upload?team_key=${key}a` method="post" enctype="multipart/form-data" name="imageform")
+	form#imageforma(action=`${uploadURL}/?team_key=${key}a` method="post" enctype="multipart/form-data" name="imageform")
 		input#teamimagea(type="file", name="avatarfield")
 		input#returnurla(type="hidden", name="returnurl", value="")
 		input#imagekeya(type="hidden", name="teamkey", value=`${key}a`)
 		button#submitimagea(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #1
 	//- v For image #2 -//
-	form#imageformb(action=`/image/upload?team_key=${key}b` method="post" enctype="multipart/form-data" name="imageform")
+	form#imageformb(action=`${uploadURL}/?team_key=${key}b` method="post" enctype="multipart/form-data" name="imageform")
 		input#teamimageb(type="file", name="avatarfield")
 		input#returnurlb(type="hidden", name="returnurl", value="")
 		input#imagekeyb(type="hidden", name="teamkey", value=`${key}b`)
 		button#submitimageb(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #2
 	//- ...and for #3 -//
-	form#imageformc(action=`/image/upload?team_key=${key}c` method="post" enctype="multipart/form-data" name="imageform")
+	form#imageformc(action=`${uploadURL}/?team_key=${key}c` method="post" enctype="multipart/form-data" name="imageform")
 		input#teamimagec(type="file", name="avatarfield")
 		input#returnurlc(type="hidden", name="returnurl", value="")
 		input#imagekeyc(type="hidden", name="teamkey", value=`${key}c`)

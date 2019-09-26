@@ -2,7 +2,7 @@ extends ../layout
 
 block content
 	if (rankings)
-		h2(class="gear-text-white") Current event rankings
+		h2(class="theme-text") Current event rankings
 		h6 <i>Click on a team to see intel on that team</i>
 		table(class="w3-table")
 			tr
@@ -14,7 +14,7 @@ block content
 				th(class="w3-center theme-spacer") RP
 			each team in rankings
 				tr
-					td(class="gear-text-white w3-center")= team.rank
+					td(class="theme-text w3-center")= team.rank
 					td(class="w3-text-light-gray w3-center")
 						a(href=`/reports/teamintel?team=${team.team_key}`)= team.team_key.substring(3)
 					td(class="w3-text-light-gray w3-center")= team.record.wins+'-'+team.record.losses+'-'+team.record.ties
@@ -22,5 +22,5 @@ block content
 					td(class="w3-text-light-gray w3-center")= team.matches_played
 					td(class="w3-text-light-gray w3-center")= team.extra_stats[0]
 	else
-		h2(class="gear-text-white") <i>There are no rankings in the system yet</i>
+		h2(class="theme-text") <i>There are no rankings in the system yet</i>
 		h6 Please check back later

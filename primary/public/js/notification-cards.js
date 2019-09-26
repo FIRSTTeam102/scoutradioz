@@ -58,7 +58,7 @@ function createNotificationCard( text, type ){
 			for( var i = 0; i < cards.length; i++ ){
 				cards[i].style.opacity = 0;
 			}
-	}, 800);
+	}, 1500);
 	
 	setTimeout( function(){
 		$("#notification-card").remove();

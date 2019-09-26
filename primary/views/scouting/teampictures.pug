@@ -6,7 +6,7 @@ block content
 			 top:50px;
 		}
 	if (teams)
-		h2(class="gear-text-white") Team Info Chart
+		h2(class="theme-text") Team Info Chart
 		h6(onclick="doEasterEgg()") <i>Click on a team to see intel on that team or click on an image to make it bigger</i>
 		table(class="w3-table")
 			tr
@@ -20,7 +20,7 @@ block content
 						td(class="w3-text-light-gray w3-center align")= team.team_number
 					else
 						td(class="w3-text-light-gray w3-center")= team.team_number
-					td(class="gear-text-white w3-center")
+					td(class="theme-text w3-center")
 						if (team.hasPicture)
 							a(href=`/reports/teamintel?team=${team.key}` class="align")= team.nickname
 						else
@@ -34,5 +34,5 @@ block content
 					else
 						td(class="w3-text-light-gray w3-center") #{team.city}
 	else
-		h2(class="gear-text-white") <i>There is no team info in the system yet</i>
+		h2(class="theme-text") <i>There is no team info in the system yet</i>
 		h6 Please check back later

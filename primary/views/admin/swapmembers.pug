@@ -11,16 +11,16 @@ block content
 	p
 	form#swap-form(name="swap-form" method="post" action="")
 		div(class="w3-container w3-padding-16")
-			label(class="w3-quarter gear-label") Scout to swap OUT: 
+			label(class="w3-quarter w3-label") Scout to swap OUT: 
 			select(class="w3-half w3-border-light-grey" type="text" name="swapout")
 				option
 				each scorer, i in scorers
 					option(value=scorer class="w3-bar-item") #{scorer}
 		div(class="w3-container w3-padding-16")
-			label(class="w3-quarter gear-label") User to swap IN: 
+			label(class="w3-quarter w3-label") User to swap IN: 
 			select(class="w3-half w3-border-light-grey" type="text" name="swapin")
 				option
 				each user, i in users
 					option(value=user.name class="w3-bar-item") #{user.name}
 		div(class="w3-padding-16")
-			input(type="submit" class="gear-btn theme-link gear-hover-white w3-btn" value="Submit")
+			input(type="submit" class="gear-btn theme-link w3-btn" value="Submit")

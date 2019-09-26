@@ -9,14 +9,14 @@ block content
 			border-color: #dfe1e9!important;
 		}
 	if (matches && matches.length > 0)
-		h2(class="gear-text-white") Finished Matches
+		h2(class="theme-text") Finished Matches
 		each match in matches
 			include templates/completedMatch
 			p(class="theme-spacer")
 			//-div(class="w3-row")
 				div(class="w3-col s12 m12 l2")
 					a(href=`/reports/matchintel?key=${match.key}`) 
-						div(class="theme-gray gear-hover-white w3-btn w3-block w3-border")
+						div(class="theme-gray theme-hover-white w3-btn w3-block w3-border")
 							- var matchPrefix = "";
 							- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 							- var outcome = "Tie!";
@@ -75,5 +75,5 @@ block content
 						else
 							span &nbsp;	
 	else
-		h2(class="gear-text-white") <i>There are no matches in the system yet</i>
+		h2(class="theme-text") <i>There are no matches in the system yet</i>
 		h6 Please check back later

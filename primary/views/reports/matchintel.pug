@@ -2,16 +2,16 @@ extends ../layout
 
 block content
 	if match.score_breakdown
-		h2(class="gear-text-white") Match #{match.match_number} - Winner: #{match.winning_alliance}
+		h2(class="theme-text") Match #{match.match_number} - Winner: #{match.winning_alliance}
 		- var thisObj = {};
 
-		h4(class="gear-text-white") Blue team: #{match.alliances.blue.score} points
+		h4(class="theme-text") Blue team: #{match.alliances.blue.score} points
 		- var blueTeams = match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3);
-		h4(class="gear-text-white") <i>#{blueTeams}</i>
+		h4(class="theme-text") <i>#{blueTeams}</i>
 		p
-		h4(class="gear-text-white") Red team: #{match.alliances.red.score} points
+		h4(class="theme-text") Red team: #{match.alliances.red.score} points
 		- var redTeams = match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3);
-		h4(class="gear-text-white") <i>#{redTeams}</i>
+		h4(class="theme-text") <i>#{redTeams}</i>
 		if (match.videos)
 			if (match.videos[0])
 				if (match.videos[0].type == "youtube")
@@ -22,7 +22,7 @@ block content
 			div(class="w3-responsive")
 				table(class="w3-table")
 					tr
-						th(class="gear-text-white") Attribute
+						th(class="theme-text") Attribute
 						th(class="gear-text-blue") Blue
 						th(class="gear-text-red") Red
 					- blueObj = match.score_breakdown.blue;

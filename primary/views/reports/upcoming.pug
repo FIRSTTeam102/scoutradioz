@@ -17,16 +17,16 @@ block content
 		h3 No upcoming matches for team number #{team}.
 	else
 		if team
-			h3(class="gear-text-white") Upcoming matches for team #{team}
+			h3(class="theme-text") Upcoming matches for team #{team}
 		else
-			h3(class="gear-text-white") Upcoming matches
+			h3(class="theme-text") Upcoming matches
 		if( teamList && teamList[0] )
 			select#teamSelect(class="gear-btn theme-input w3-btn")
 				option(value="") Team #
 				each team in teamList
 					option(value=team class="w3-bar-item") #{team}
 			a#upcomingMatchesLink(href="/reports/upcoming")
-				div(class="gear-btn w3-btn theme-gray gear-hover-white") View upcoming matches for 
+				div(class="gear-btn w3-btn theme-gray theme-hover-white") View upcoming matches for 
 					span#upcomingMatchesLabel [All Teams]
 		br 
 		br 
@@ -64,7 +64,7 @@ block content
 								span  #{day} @ #{hour}:#{minute}
 						div(class="w3-col s2")
 							a(href=`/reports/matchmetrics?key=${match.key}`)
-								div(class="w3-padding-small w3-right-align w3-small gear-hover-white theme-rounded-br theme-rounded-tr" style="padding-right: 18px!important;")
+								div(class="w3-padding-small w3-right-align w3-small theme-hover-white theme-rounded-br theme-rounded-tr" style="padding-right: 18px!important;")
 									i Compare alliances
 					//-Title for medium screens
 					div(class="w3-col s0 m3 w3-padding-small")
@@ -74,7 +74,7 @@ block content
 							div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
 							div(class="w3-padding")  #{day} @ #{hour}:#{minute}
 							a(href=`/reports/matchmetrics?key=${match.key}`)
-								div(class="w3-padding-16 w3-small gear-hover-white theme-rounded-bottom") 
+								div(class="w3-padding-16 w3-small theme-hover-white theme-rounded-bottom") 
 									i Compare alliances
 					//-Alliances
 					div(class="w3-col s12 m9 w3-padding-small")
@@ -140,24 +140,24 @@ block content
 								each teamNo, j in match.teams
 									- if (j <= 2)
 										- if (team == match.teams[j])
-											a(href=`/reports/teamintel?team=frc${teamNo}` style="font-weight: bold" class="gear-hover-white teamNo w3-padding")
+											a(href=`/reports/teamintel?team=frc${teamNo}` style="font-weight: bold" class="theme-hover-white teamNo w3-padding")
 												span(class="teamNo")=teamNo
-												span(class="rank gear-text-white") &nbsp[#{teamRanks['frc'+teamNo]}]
+												span(class="rank theme-text") &nbsp[#{teamRanks['frc'+teamNo]}]
 										- else
-											a(href=`/reports/teamintel?team=frc${teamNo}` class="gear-hover-white teamNo w3-padding-large")
+											a(href=`/reports/teamintel?team=frc${teamNo}` class="theme-hover-white teamNo w3-padding-large")
 												span(class="teamNo")=teamNo
-												span(class="rank gear-text-white") &nbsp[#{teamRanks['frc'+teamNo]}]
+												span(class="rank theme-text") &nbsp[#{teamRanks['frc'+teamNo]}]
 							div(class="w3-mobile w3-show-block w3-content theme-red w3-text-white" style="min-width: 10px;")
 								each teamNo, j in match.teams
 									- if (j >= 3)
 										- if (team == match.teams[j])
-											a(href=`/reports/teamintel?team=frc${teamNo}` style="font-weight: bold" class="gear-hover-white teamNo w3-padding-large")
+											a(href=`/reports/teamintel?team=frc${teamNo}` style="font-weight: bold" class="theme-hover-white teamNo w3-padding-large")
 												span(class="teamNo")=teamNo
-												span(class="rank gear-text-white") &nbsp[#{teamRanks['frc'+teamNo]}]
+												span(class="rank theme-text") &nbsp[#{teamRanks['frc'+teamNo]}]
 										- else
-											a(href=`/reports/teamintel?team=frc${teamNo}` class="gear-hover-white teamNo w3-padding-large")
+											a(href=`/reports/teamintel?team=frc${teamNo}` class="theme-hover-white teamNo w3-padding-large")
 												span(class="teamNo")=teamNo
-												span(class="rank gear-text-white") &nbsp[#{teamRanks['frc'+teamNo]}]
+												span(class="rank theme-text") &nbsp[#{teamRanks['frc'+teamNo]}]
 						div(class="w3-left w3-padding w3-mobile")
 							a(class="gear-btn theme-link w3-btn" href=`/reports/matchmetrics?key=${match.key}`) Compare alliances
 					div(class="w3-rest")

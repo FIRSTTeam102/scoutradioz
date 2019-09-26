@@ -8,10 +8,10 @@ block content
 
 	h2(class="theme-text-white") Team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
 	if (ranking)
-		h4(class="gear-text-white") Currently ranked ##{ranking.rank} <br> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
+		h4(class="theme-text") Currently ranked ##{ranking.rank} <br> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
 	- var country = '';
 	- if (team.country != 'USA') country = team.country;
-	h4(class="gear-text-white w3-tooltip" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
+	h4(class="theme-text w3-tooltip" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
 		span(class="w3-tooltiptext w3-block" style="font-style:italic") #{team.name}
 	a(href=`/uploads/responsive/${event_year}_${team.key}_lg.jpg`)
 		img(src=`/uploads/responsive/${event_year}_${team.key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
@@ -70,7 +70,7 @@ block content
 					when "spacer"
 						br
 			//- if (changeCount == 0)
-				h4(class="gear-text-white") (no change)
+				h4(class="theme-text") (no change)
 			if (inTable)
 				| </table>
 		else
@@ -83,7 +83,7 @@ block content
 		span Statistics
 	div#StatisticsSection(class="w3-container w3-hide")
 		if (aggdata)
-			h2(class="gear-text-white") Statistics for #{team.key.replace('frc','team ')}
+			h2(class="theme-text") Statistics for #{team.key.replace('frc','team ')}
 			h6 <i>Click on a metric to compare vs. other teams</i>
 			table(class="w3-table")
 				tr
@@ -139,7 +139,7 @@ block content
 				border-radius: 9px;
 				border-color: #dfe1e9!important;
 			}
-		h2(class="gear-text-white") Previous matches
+		h2(class="theme-text") Previous matches
 
 		if (matches && matches.length > 0)		
 			each match in matches
@@ -148,12 +148,12 @@ block content
 						case element.type
 							when "textblock"
 								if (match.scoringdata[element.id])
-									h5(class="gear-text-white") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
+									h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 		
 		if (matches && matches.length > 0)		
 			h6 <i>Click team number for match scouting details</i>
 			h6 <i>Click match button for overall alliance performances</i>
-			h6(class="gear-text-white")
+			h6(class="theme-text")
 				a(class="gear-btn theme-link w3-btn" href="/reports/teamdata?key=" + team.key) Scoring data for all team #{team.key.substring(3)} matches
 			p(class="theme-spacer")
 			
@@ -164,13 +164,13 @@ block content
 						case element.type
 							when "textblock"
 								if (match.scoringdata[element.id])
-									h5(class="gear-text-white") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
+									h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 				p(class="theme-spacer")
 				//-hr
 				//-div(class="w3-row")
 					div(class="w3-col s12 m12 l2")
 						a(href=`/reports/matchintel?key=${match.key}`) 
-							div(class="theme-gray gear-hover-white w3-btn w3-block w3-border")
+							div(class="theme-gray theme-hover-white w3-btn w3-block w3-border")
 								- var matchPrefix = "";
 								- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 								- var outcome = "Tie!";

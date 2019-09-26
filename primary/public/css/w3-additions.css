@@ -118,7 +118,7 @@
 @media (min-width: 601px){
 	.w3-col.m0{display:none;}
 	.w3-col.m-half{width:4.166%;}
-	.gear-label,.w3-label{
+	.w3-label{
 		text-align: right;
 		padding-right: 8px;
 	}
