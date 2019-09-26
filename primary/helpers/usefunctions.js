@@ -34,6 +34,9 @@ functions.userViewVars = function(req, res, next){
 	
 	res.locals.fileRoot = fileRoot;
 	
+	//Set alert local in here so that we don't have to throw this into Every Single Route
+	res.locals.alert = req.query.alert;
+	
 	next();
 }
 

@@ -51,13 +51,9 @@ router.get('/selectorg', async function(req, res) {
 		throw new Error("user.js /login: No organizations exist in 'orgs' collection in database.");
 	}
 	
-	//Prepare an alert. (Used w/ url /?alert=(alert))
-	if(req.query) var alert = req.query.alert || null;
-	
 	res.render('./user/selectorg', {
 		title: "Please Select an Organization",
 		orgs: orgs,
-		alert: alert
 	});
 });
 
@@ -117,13 +113,9 @@ router.get('/login', async function (req, res){
 	
 	//If organization does not exist, send internal error
 	if(!selectedOrg) return res.redirect(500, '/user');
-		
-	//Prepare an alert. (Used w/ url /?alert=(alert))
-	if(req.query) var alert = req.query.alert || null;
 	
 	res.render('./user/logintoorg', {
 		title: `Log In to ${selectedOrg.nickname}`,
-		alert: alert
 	});
 });
 

@@ -314,8 +314,6 @@ router.get('/matches', async function(req, res) {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var alert = req.query.alert ? req.query.alert : null;
-	
 	var event_key = req.event.key;
 	
 	var matches = await utilities.find("matches", {"event_key": event_key}, {sort: {time: 1}});
@@ -323,7 +321,6 @@ router.get('/matches', async function(req, res) {
 	res.render("./manualinput/matches", {
 		title: "Input Match Outcomes",
 		matches: matches,
-		alert: alert
 	});
 });
 

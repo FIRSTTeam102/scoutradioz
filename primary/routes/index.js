@@ -27,10 +27,6 @@ router.get('/home', async function(req, res) {
 	//2019-9-23 JL: Changed post-login index to /home. Uhh this will be 
 	// implemented more thoroughly later...
 	
-	
-	//Prepare an alert. (Used w/ url /?alert=(alert))
-	if(req.query) var alert = req.query.alert || null;
-	
 	var teams = await utilities.find("currentteams", {}, {sort:{team_number: 1}});
 		
 	//If no current teams, then render page without team list.
@@ -38,7 +34,6 @@ router.get('/home', async function(req, res) {
 		res.log("No teams listed yet");
 		return res.render('./index', { 
 			title: 'Home',
-			alert: alert
 		});
 	}
 	
@@ -53,7 +48,6 @@ router.get('/home', async function(req, res) {
 	res.render('./index', { 
 		title: 'Home',
 		teamList: teamNumbers,
-		alert: alert
 	});
 });
 

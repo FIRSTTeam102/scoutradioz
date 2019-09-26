@@ -11,14 +11,9 @@ router.get('/', async function(req, res) {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	//Prepare an alert. (Used w/ url /?alert=(alert))
-	if(req.query)
-		var alert = req.query.alert || null;
-	
 	res.render('./admin/admin', { 
 		title: 'Admin pages',
 		current: req.event.key,
-		alert: alert
 	});
 });
 
