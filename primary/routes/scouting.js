@@ -131,7 +131,7 @@ router.post('/match/submit', async function(req, res) {
 	return res.send({message: "Submitted data successfully.", status: 200});
 });
 
-router.post('/submitmatch', function(req, res) {
+router.post('/submitmatch', async function(req, res) {
 	//LEGACY CODE
 	
 	var thisFuncName = "scouting.submitmatch[post]: ";
@@ -159,7 +159,9 @@ router.post('/submitmatch', function(req, res) {
 router.get('/pit*', async function(req, res) {
 	//Check authentication for scouter level
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
-
+	
+	var uploadURL = process.env.UPLOAD_URL + "/" + process.env.TIER + "/image";
+	
 	//Add event key and pit data to get pit function
 	var event_key = req.event.key;
 	var event_year = req.event.year;
@@ -172,25 +174,21 @@ router.get('/pit*', async function(req, res) {
 		res.redirect("/dashboard");
 		return;
 	}
-
-	// var scoutCol = db.get("scoutinglayout");
-	// var pitCol = db.get('scoutingdata'); //for pitcol.find()
-
+	
 	var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
-
-	//pasted code
+	
 	var pitFind = await utilities.find("scoutingdata", { "event_key" : event_key, "team_key" : teamKey }, {});
 	var pitData = null;
 	if (pitFind && pitFind[0])
 		if (pitFind[0].data)
 			pitData = pitFind[0].data;
-
-	//res.log(layout);
+	
 	res.render("./scouting/pit", {
 		title: "Pit Scouting",
 		layout: layout,
 		pitData: pitData, 
-		key: teamKey
+		key: teamKey,
+		uploadURL: uploadURL
 	});
 });
 
@@ -224,7 +222,7 @@ router.post('/pit/submit', async function(req, res){
 	return res.send({message: "Submitted data successfully.", status: 200});
 });
 
-router.post('/submitpit', function(req, res) {
+router.post('/submitpit', async function(req, res) {
 	//LEGACY CODE
 	var thisFuncName = "scouting.submitpit[post]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -283,7 +281,7 @@ router.get('/teampictures', async function(req, res) {
 	});
 });
 
-router.get('/', function(req, res){
+router.get('/', async function(req, res){
 	
 	//redirect to pits dashboard
 	res.redirect('/dashboard/pits');

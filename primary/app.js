@@ -15,7 +15,6 @@ require('dotenv').config();
 const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
 const utilities = require('./utilities');				//database utilities
 
-//          This is set temporarily
 var isDev = false, debug = false, production = false;
 
 /* Check process arguments.
@@ -56,7 +55,10 @@ const app = express();
 
 //set app's bools to these arguments
 app.isDev = isDev; 
-app.debug = debug; 
+app.debug = debug;
+
+process.env.isDev = isDev;
+process.env.debug = debug;
 
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
@@ -98,13 +100,6 @@ app.use(passport.session());
 app.use(async function(req, res, next){
 	//For logging
 	req.requestTime = Date.now();
-	//For database
-	//rq.db = db;  (was 'req')
-	//rq.db = await getDB(); (was 'req')
-	//For user login
-	//req.passport = passport;
-	
-	//res.locals.s3url = "https://s3.amazonaws.com/scoringapp-bkt/public/";
 	
 	next();
 });

@@ -61,31 +61,17 @@ var upload = multer({
 }).any();
 
 
-router.get('/', async function(req, res) {
-	
-	res.render('imageupload', {
-        avatar_field: process.env.AVATAR_FIELD
-	});
-	
+router.post('/ping', async function(req, res) {
+    
+    res.status(200).send({message:"Pong!"});
+    
 });
 
 router.post('/image*', function (req, res, next) {
     
-    var team_key = "frc102";
+    var team_key = req.query.team_key;
     
     res.log("going to upload");
-    
-    var true_key;
-    
-    switch(team_key.charAt(team_key.length - 1)){
-        case 'a':
-        case 'b':
-        case 'c':
-            true_key = team_key.slice(0, team_key.length - 1);
-            break;
-        default:
-            true_key = team_key;
-    }
     
     var year = 2019;
     
@@ -93,12 +79,9 @@ router.post('/image*', function (req, res, next) {
     
     upload(req, res, function (e) {
         
-        console.log(team_key);
-        console.log("_______________________________________________");
         console.log("req.file=" + JSON.stringify(req.file));
-        console.log("req.files=" + JSON.stringify(req.files));
         
-        res.redirect("/upload");
+        res.status(200).send({message:"We're back!"});
     });
 });
 

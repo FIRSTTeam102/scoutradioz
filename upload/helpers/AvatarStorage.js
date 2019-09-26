@@ -9,7 +9,10 @@ const concat = require('concat-stream');
 const streamifier = require('streamifier');
 
 const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
+const s3 = new AWS.S3({
+	accessKeyId: process.env.AWS_ACCESS_KEY_,
+	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_
+});
 
 //Configure UPLOAD_PATH
 //process.env.AVATAR_STORAGE contains uploads/avatars
@@ -279,9 +282,11 @@ var AvatarStorage = function(options) {
 						ACL: "public-read"
 					}
 					
+					console.log(params);
+					
 					s3.upload(params, function(s3err, data){
 						
-						if(s3err){ console.error(s3err); }
+						if(s3err){ console.log(s3err); }
 						
 						console.log(data);
 					});

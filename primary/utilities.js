@@ -401,10 +401,13 @@ utilities.requestTheBlueAlliance = async function(url){
 	var requestURL = "https://www.thebluealliance.com/api/v3/" + url;
 	
 	//Get TBA key
-	var tbaKey = await getTBAKey();
+	var tbaKey = await utilities.getTBAKey();
 	
 	//Create promise first
 	var thisPromise = new Promise(function(resolve, reject){
+		
+		var Client = require('node-rest-client').Client;
+		var client = new Client();
 		
 		//Inside promise function, perform client request
 		client.get(requestURL, tbaKey, function(tbaData, response){
@@ -425,9 +428,7 @@ utilities.requestTheBlueAlliance = async function(url){
  */
 utilities.getTBAKey = async function(){
 	
-	var passwordsCol = db.get("passwords");
-	
-	var tbaArgsArray = await passwordsCol.find({name: "thebluealliance-args"});
+	var tbaArgsArray = await utilities.find("passwords", {name: "thebluealliance-args"});
 	
 	if(tbaArgsArray && tbaArgsArray[0]){
 		var headers = tbaArgsArray[0].headers;

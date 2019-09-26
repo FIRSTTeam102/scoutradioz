@@ -10,6 +10,8 @@ require('aws-serverless-express/middleware');
 //load .env variables
 require('dotenv').config();
 
+const tier = process.env.TIER || ""
+
 //Create app
 const app = express();
 
@@ -28,13 +30,12 @@ app.use(useragent.express());
 app.use(async function(req, res, next){
 	//For logging
 	req.requestTime = Date.now();
-	//For database
-	//req.db = db;
-	//req.db = await getDB();
-	//For user login
-	//req.passport = passport;
 	
-	//res.locals.s3url = "https://s3.amazonaws.com/scoringapp-bkt/public/";
+	//Set headers to allow cross-site requests
+	res.set({
+		"Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+		"Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS 
+	});
 	
 	next();
 });
@@ -43,12 +44,10 @@ app.use(async function(req, res, next){
 app.use(usefunctions.logger);
 
 //USER ROUTES
-var index = require("./routes/index");
 var upload = require("./routes/upload");
 
 //CONNECT URLS TO ROUTES
-app.use('/', index);
-app.use('/upload', upload);
+app.use(`/${tier}`, upload);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);
