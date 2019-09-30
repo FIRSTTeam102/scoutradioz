@@ -7,7 +7,7 @@
 extends ../layout
 block content
 	style html{overflow-x: visible;}
-	form#updatematches(name="updatematches" method="post" action="/admin/current/updatematches")
+	form#updatematches(name="updatematches" method="post" action="/manage/currentevent/updatematches")
 		button#btnSubmit(type="submit" class="w3-button theme-hover-white theme-submit w3-text-white") Update all matches
 	br
 	if locals.matches
@@ -46,9 +46,9 @@ block content
 					td
 						button(class="w3-button theme-submit" onClick=`updateMatch('${match.key}')`) Update
 	br
-	form#resetmatches(name="resetmatches" method="post" action="/admin/current/resetmatches")
+	form#resetmatches(name="resetmatches" method="post" action="/manage/currentevent/resetmatches")
 		button#btnSubmit(type="submit" class="w3-button theme-red theme-strong w3-text-white") RESET ALL MATCHES
-	form#updatematchdata(name="updatematchdata" method="post" action="/admin/current/updatematch")
+	form#updatematchdata(name="updatematchdata" method="post" action="/manage/currentevent/updatematch")
 		input#matchId(type="hidden", name="matchId")
 	br 
 	script.

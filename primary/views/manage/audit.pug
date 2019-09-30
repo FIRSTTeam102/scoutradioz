@@ -6,16 +6,16 @@
 			record	[Object array]
 				match	Each match; either [N]ot scored, [C]overed, covered by [P]arent; if null, match completed
 	CALLED FROM
-		admindashboard.js	'/admin/scoringaudit'
+		admindashboard.js	'/manage/scoringaudit'
 		
 extends ../layout
 block content
 	h2 Audit trail for match scouting
 	p
-		a(href="/admin/audit/comments") 
+		a(href="/manage/scoutingaudit/comments") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Comments Audit
-		a(href="/admin/audit/bymatch") 
+		a(href="/manage/scoutingaudit/bymatch") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Per-Match Audit
 	div(class="w3-auto")

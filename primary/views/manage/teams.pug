@@ -3,10 +3,10 @@
 	PARAM
 		teams	[Object Array]	from db.teams
 	CALLED FROM
-		externaldata '/admin/data/teams'
+		externaldata '/manage/data/teams'
 extends ../layout
 block content
-	form#updateForEvent(name="updateForEvent" method="get" action="/admin/data/teams")
+	form#updateForEvent(name="updateForEvent" method="get" action="/manage/data/teams")
 		div(class="w3-show-inline-block w3-padding-small")
 			input#seteventid(class="theme-input w3-no-border theme-inline-padding" type="text", name="eventId")
 		div(class="w3-show-inline-block w3-padding-small")

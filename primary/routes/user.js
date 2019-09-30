@@ -29,7 +29,7 @@ const bcrypt = require('bcryptjs');
 		{status:500, alert: "User does not exist in database" }
 		{status:500, alert: "User does not have a password in database" }
 		{status:400, alert" "Incorrect password" }
-		{status:200, redirect_url: "/admin" }
+		{status:200, redirect_url: "/manage" }
 
 */
 
@@ -298,7 +298,7 @@ router.post('/login/withoutpassword', async function(req, res){
 		{status:500, alert: "User does not exist in database" }
 		{status:500, alert: "User does not have a password in database" }
 		{status:400, alert" "Incorrect password" }
-		{status:200, redirect_url: "/admin" }
+		{status:200, redirect_url: "/manage" }
 */
 router.post('/login/withpassword', async function(req, res){
 	
@@ -364,7 +364,7 @@ router.post('/login/withpassword', async function(req, res){
 			
 			//Set redirect url depending on user's access level
 			if(userRole.access_level == process.env.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
-			else if(userRole.access_level == process.env.ACCESS_TEAM_ADMIN) redirectURL = '/admin';
+			else if(userRole.access_level == process.env.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
 			else if(userRole.access_level == process.env.ACCESS_SCOUTER) redirectURL = '/dashboard';
 			else redirectURL = '/';
 			

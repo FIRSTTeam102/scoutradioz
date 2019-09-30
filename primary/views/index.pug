@@ -54,9 +54,12 @@ block content
 			a(href="/reports/allteammetrics")
 				div(class="gear-btn theme-link w3-btn") All Team Metrics
 			//------------Find a way to make this tied to the database's access levels
-			if( user.role_key == "global_admin" || user.role_key == "team_admin" )
+			if( user.role_key == "team_admin" || user.role_key == "global_admin")
+				a(href="/manage")
+					div(class="gear-btn theme-link w3-btn") Org Management
+			if( user.role_key == "global_admin" )
 				a(href="/admin")
-					div(class="gear-btn theme-link w3-btn") Admin Index
+					div(class="gear-btn theme-link w3-btn") Admin
 	script.
 		$(function(){
 			//If user presses back button and teamselect is populated, gotta un-disable stats btn

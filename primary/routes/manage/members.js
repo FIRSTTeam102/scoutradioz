@@ -33,7 +33,7 @@ router.get("/", async function(req, res) {
 		]}} 
 	*/
 	
-	res.render("./admin/members", { 
+	res.render("./manage/members", { 
 		title: "Organization Members",
 		members: orgMembers,
 		config: config,
@@ -165,7 +165,7 @@ router.post("/deletemember", async function(req, res){
 		
 	}
 	
-	res.redirect('/admin/teammembers');
+	res.redirect('/manage/teammembers');
 });
 
 router.get("/present", async function(req, res) {
@@ -174,7 +174,7 @@ router.get("/present", async function(req, res) {
 	
 	var teamMembers = await utilities.find("teammembers", {}, {sort: {"name": 1}});
 	
-	res.render("./admin/present", {
+	res.render("./manage/present", {
 		title: "Assign Who Is Present",
 		"members": teamMembers
 	});

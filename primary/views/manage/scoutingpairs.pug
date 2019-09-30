@@ -3,7 +3,7 @@
 	PARAM
 		assigned(optional)	[Object Array] [{_id, member1, member2 (,member3)}] from db.assigned
 	CALLED FROM
-		scoutingpairs.js	'/admin/scoutingpairs'
+		scoutingpairs.js	'/manage/scoutingpairs'
 	//
 extends ../layout
 block content
@@ -27,7 +27,7 @@ block content
 					each member, i in elec
 						li(class="w3-no-border")
 							button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
-	form#setmemberpair(name="setmemberpair" method="post" action="/admin/scoutingpairs/setscoutingpair")
+	form#setmemberpair(name="setmemberpair" method="post" action="/manage/scoutingpairs/setscoutingpair")
 		input#setmemberpairdata(type="hidden", name="data")
 	button(class="w3-btn w3-block theme-submit" onclick="submitPair()") Submit selected members as a new scouting group
 
@@ -44,21 +44,21 @@ block content
 				- thisButtonLabel = selectedArray.toString();
 				button(onclick=`deletePair("${pairId}")` class="w3-btn theme-red") Delete pair
 				|	#{thisButtonLabel}
-	form(method="post" action="/admin/scoutingpairs/deletescoutingpair" id="deletememberpair")
+	form(method="post" action="/manage/scoutingpairs/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
 	p(class="theme-spacer")
-	div( onclick="promptPass('WARNING: Erases existing SCOUTING data for current event.', '/admin/scoutingpairs/generateteamallocations');")
+	div( onclick="promptPass('WARNING: Erases existing SCOUTING data for current event.', '/manage/scoutingpairs/generateteamallocations');")
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams to PIT SCOUTING members
 	br
-	div( onclick="promptPass('WARNING: Erases existing SCORING data for current event.', '/admin/scoutingpairs/generatematchallocations');")
+	div( onclick="promptPass('WARNING: Erases existing SCORING data for current event.', '/manage/scoutingpairs/generatematchallocations');")
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams@matches to MATCH SCORING members
 	br 
 	br 
-	div( onclick="promptPass('WARNING: Erases MATCH SCORING ASSIGNMENTS for current event.', '/admin/scoutingpairs/clearmatchallocations');")
+	div( onclick="promptPass('WARNING: Erases MATCH SCORING ASSIGNMENTS for current event.', '/manage/scoutingpairs/clearmatchallocations');")
 		button(class="w3-btn theme-red theme-strong" type="submit") Clear all MATCH SCORING assignments
 	p(class="theme-spacer")
 	h2 Team@Match Allocation v2.0
-	form(action="/admin/scoutingpairs/generatematchallocations2" method="post")
+	form(action="/manage/scoutingpairs/generatematchallocations2" method="post")
 		each member in available
 			div(class="w3-container" style="max-width:300px;margin:auto;")
 				div(class="w3-left w3-margin-left")

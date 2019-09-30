@@ -8,7 +8,7 @@
 extends ../layout
 block content
 	style html{overflow-x: visible;}
-	form#updateForYear(name="updateForYear" method="post" action="/admin/data/events")
+	form#updateForYear(name="updateForYear" method="post" action="/manage/data/events")
 		- if (selectedYear == null) selectedYear = (new Date()).getFullYear();
 		if locals.years
 			div(class="w3-show-inline-block w3-padding-small")
@@ -48,16 +48,16 @@ block content
 						button(class="w3-btn theme-submit" onClick=`getMatchesForEvent('${event.key}')`) Matches
 					td
 						button(class="w3-btn theme-submit" onClick=`getTeamsForEvent('${event.key}')`) Teams
-	form#getmatchdata(name="getmatchdata" method="post" action="/admin/data/matches")
+	form#getmatchdata(name="getmatchdata" method="post" action="/manage/data/matches")
 		input#matcheventId(type="hidden", name="eventId")
-	form#getteamdata(name="getteamdata" method="get" action="/admin/data/teams")
+	form#getteamdata(name="getteamdata" method="get" action="/manage/data/teams")
 		input#teamEventId(type="hidden", name="eventId")
 	script.
 		function submitForYear()
 		{
 			var e = document.getElementById("yearSelect");
 			var yearSelect = e.options[e.selectedIndex].value;
-			window.location = "/admin/data/events?year=" + yearSelect;
+			window.location = "/manage/data/events?year=" + yearSelect;
 		}
 		
 		function getMatchesForEvent(eventId)

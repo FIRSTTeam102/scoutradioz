@@ -4,7 +4,7 @@ var utilities = require('../../utilities');
 
 /**
  * Admin page to manually input/edit list of teams at an event (w/o TBA).
- * @url /admin/manualinput/teams
+ * @url /manage/manualinput/teams
  * @views manualinput/teams
  */
 router.get('/teams', async function(req, res){
@@ -22,7 +22,7 @@ router.get('/teams', async function(req, res){
 
 /**
  * POST method to retrieve manually updated list of teams.
- * @url /admin/manualinput/teams
+ * @url /manage/manualinput/teams
  * @redirect /admin
  */
 router.post('/teams', async function(req, res){
@@ -127,7 +127,7 @@ router.post('/teams', async function(req, res){
 router.post('/api/team', async function(req, res){
 	
 	if(!req.body.team_number){
-		res.log("admin/manualinput/api/team error: No team number specified.", true);
+		res.log("manage/manualinput/api/team error: No team number specified.", true);
 		return res.status(400).send("No team number specified.");
 	}
 	
@@ -136,7 +136,7 @@ router.post('/api/team', async function(req, res){
 	
 	//if not a number, return with error 400
 	if(isNaN(team_number)){
-		res.log("admin/manualinput/api/team error: No team number specified.", true);
+		res.log("manage/manualinput/api/team error: No team number specified.", true);
 		return res.status(400).send("Team number was not parseable.");
 	}
 	
@@ -159,7 +159,7 @@ router.get('/matchschedule', async function(req, res){
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var thisFuncName = "[GET] /admin/manualinput/matchschedule => ";
+	var thisFuncName = "[GET] /manage/manualinput/matchschedule => ";
 	
 	var event_key = req.event.key;
 	
@@ -598,7 +598,7 @@ router.post('/matches', async function(req, res){
 	await utilities.insert("currentrankings", sortedRankArray);
 
 	//Redirect to updatematches page with success alert.
-	res.redirect('/admin/manualinput/matches?alert=Updated match successfully.');
+	res.redirect('/manage/manualinput/matches?alert=Updated match successfully.');
 });
 
 module.exports = router;

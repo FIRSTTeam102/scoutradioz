@@ -1,5 +1,5 @@
 var express = require("express");
-const utilities = require('../utilities');
+const utilities = require('../../utilities');
 var router = express.Router();
 
 router.get("/", async function(req, res){

@@ -14,7 +14,7 @@ router.get("/matches", async function(req, res) {
 	// Read matches from DB for specified event
 	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 		
-	res.render("./admin/currentmatches", {
+	res.render("./manage/currentmatches", {
 		title: "Matches",
 		"matches": matches
 	});
@@ -72,7 +72,7 @@ router.post("/resetmatches", async function(req, res) {
 	// reread the data & render
 	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 	
-	res.render("./admin/currentmatches", {
+	res.render("./manage/currentmatches", {
 		title: "Matches",
 		"matches": matches
 	});
@@ -221,7 +221,7 @@ router.post("/updatematch", async function(req, res) {
 	// Reinsert the updated values
 	await utilities.insert("currentaggranges", aggMinMaxArray);
 	// And we're done!
-	res.render("./admin/currentmatches", {
+	res.render("./manage/currentmatches", {
 		title: "Matches",
 		"matches": matches
 	});
@@ -278,7 +278,7 @@ router.post("/updatematches", async function(req, res) {
 		res.log(thisFuncName + "Whoops, there was an error!")
 		res.log(thisFuncName + "data=" + data);
 		
-		res.render('./admin/admin', { 
+		res.render('./manage/admin', { 
 			title: 'Admin pages',
 			current: eventId
 		});
@@ -294,7 +294,7 @@ router.post("/updatematches", async function(req, res) {
 		// Then read it back in order
 		var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 			
-		res.render("./admin/currentmatches", {
+		res.render("./manage/currentmatches", {
 			"matches": matches
 		});
 	}

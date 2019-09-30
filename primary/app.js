@@ -171,18 +171,19 @@ var user = require('./routes/user');
 var dashboard = require("./routes/dashboard");
 var scouting = require("./routes/scouting");
 var reports = require('./routes/reports');
-var allianceselection = require('./routes/allianceselection');
 var notifications = require('./routes/notifications');
 var webhook = require('./routes/webhook');
-//var image = require("./routes/image");
-//ADMIN ROUTES
-var adminindex = require('./routes/admin/adminindex');
-var scoutingaudit = require("./routes/admin/audit");
-var current = require("./routes/admin/current");
-var externaldata = require("./routes/admin/externaldata");
-var scoutingpairs = require('./routes/admin/scoutingpairs');
-var teammembers = require("./routes/admin/teammembers");
-var manualinput = require("./routes/admin/manualinput");
+//ORG MANAGEMENT ROUTES
+var manageindex = require('./routes/manage/indexmgmt');
+var allianceselection = require('./routes/manage/allianceselection');
+var currentevent = require("./routes/manage/currentevent");
+var externaldata = require("./routes/manage/externaldata");
+var manualdata = require("./routes/manage/manualdata");
+var orgmembers = require("./routes/manage/members");
+var scoutingaudit = require("./routes/manage/scoutingaudit");
+var scoutingpairs = require('./routes/manage/scoutingpairs');
+//SCOUTRADIOZ ADMIN ROUTES
+var adminindex = require('./routes/admin/indexadmin');
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
@@ -194,14 +195,15 @@ app.use('/allianceselection', allianceselection);
 app.use('/notifications', notifications);
 app.use('/webhook', webhook);
 
+app.use('/manage', manageindex);
+app.use('/manage/scoutingpairs', scoutingpairs);
+app.use("/manage/members", orgmembers);
+app.use('/manage/data', externaldata);
+app.use('/manage/currentevent', currentevent);
+app.use('/manage/scoutingaudit', scoutingaudit);
+app.use('/manage/manualdata', manualdata);
+
 app.use('/admin', adminindex);
-app.use('/admin/scoutingpairs', scoutingpairs);
-app.use("/admin/teammembers", teammembers);
-app.use('/admin/data', externaldata);
-app.use('/admin/current', current);
-app.use('/admin/audit', scoutingaudit);
-app.use('/admin/manualinput', manualinput);
-//app.use('/image', image);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);

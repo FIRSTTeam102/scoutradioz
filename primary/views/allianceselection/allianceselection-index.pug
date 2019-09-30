@@ -52,7 +52,7 @@ block content
 								td(class=`${valStyle}`)= row[item.key]
 	else
 		p <i>Insufficient data at this time, come back later!</i>
-	form#updateteamvalue(name="updateteamvalue" method="post" action="/allianceselection/updateteamvalue")
+	form#updateteamvalue(name="updateteamvalue" method="post" action="/manage/allianceselection/updateteamvalue")
 		input#updatekey(type="hidden", name="key")
 		input#updatevalue(type="hidden", name="value")
 	script.

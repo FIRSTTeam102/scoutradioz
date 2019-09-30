@@ -4,7 +4,7 @@ const router = express.Router();
 
 /**
  * Admin page to show a list of events by any given year.
- * @url /admin/data/events
+ * @url /manage/data/events
  * @view /events
  */
 router.get("/events", async function(req, res) {
@@ -35,7 +35,7 @@ router.get("/events", async function(req, res) {
 
 	res.log(thisFuncName + "uniqueYears=" + uniqueYears);
 	
-	res.render("./admin/events", {
+	res.render("./manage/events", {
 		title: "Events",
 		"events": events,
 		"years": uniqueYears,
@@ -45,8 +45,8 @@ router.get("/events", async function(req, res) {
 
 /**
  * POST: Admin page to update all events for a given year.
- * @url POST: /admin/data/events
- * @redirect /admin/data/events
+ * @url POST: /manage/data/events
+ * @redirect /manage/data/events
  */
 router.post("/events", async function(req, res) {
 	//Check authentication for team admin level
@@ -78,12 +78,12 @@ router.post("/events", async function(req, res) {
 	//Now insert new events list for year
 	await utilities.insert("events", events);
 	//redirect back to events page
-	res.redirect(`/admin/data/events?year=${year}`);
+	res.redirect(`/manage/data/events?year=${year}`);
 });
 
 /**
  * Admin page to display matches of a specified event id.
- * @url /admin/data/matches
+ * @url /manage/data/matches
  * @view /matches
  */
 router.get("/matches", async function(req, res) {
@@ -102,14 +102,14 @@ router.get("/matches", async function(req, res) {
 	if (!eventId)
 	{
 		res.log(thisFuncName + 'No event specified');
-		res.redirect("/admin/data/events");
+		res.redirect("/manage/data/events");
 	}
 	res.log(thisFuncName + 'eventId=' + eventId);
 
 	// Read matches from DB for specified event
 	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 	
-	res.render("./admin/matches", {
+	res.render("./manage/matches", {
 		title: "Matches",
 		"matches": matches
 	});
@@ -117,9 +117,9 @@ router.get("/matches", async function(req, res) {
 
 /**
  * POST: Admin page to update match information for a given event.
- * @url POST: /admin/data/matches
+ * @url POST: /manage/data/matches
  * @redirect /admin (to handle error)
- * @redirect /admin/data/matches
+ * @redirect /manage/data/matches
  */
 router.post("/matches", async function(req, res) {
 	//Check authentication for team admin level
@@ -157,13 +157,13 @@ router.post("/matches", async function(req, res) {
 	await utilities.insert("matches", matches);
 		
 	//redirect to matches page
-	res.redirect(`/admin/data/matches?eventId=${eventId}`);
+	res.redirect(`/manage/data/matches?eventId=${eventId}`);
 });
 
 
 /**
  * Admin page to display all teams in local database.
- * @url /admin/data/teams
+ * @url /manage/data/teams
  * @view /teams
  */
 router.get("/teams", async function(req, res) {
@@ -183,7 +183,7 @@ router.get("/teams", async function(req, res) {
 		// Read all teams from DB
 		var teams = await utilities.find("teams", {}, {sort: {"key": 1}});
 		//render page w/ all teams			
-		res.render("./admin/teams", {
+		res.render("./manage/teams", {
 			title: "All Teams",
 			"teams": teams,
 			header: "All Teams in Database"
@@ -215,7 +215,7 @@ router.get("/teams", async function(req, res) {
 		});
 		
 		//render page with sorted list of teams
-		res.render("./admin/teams", {
+		res.render("./manage/teams", {
 			title: `Teams in ${req.event.name}`,
 			"teams": teams
 		});

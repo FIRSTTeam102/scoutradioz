@@ -4,11 +4,11 @@
 		locals.matches	?????????
 		matches			[Object Array]	Pulled straight from db.matches.
 	CALLED BY
-		externaldata.js '/admin/current/matches'
+		externaldata.js '/manage/currentevent/matches'
 	//
 extends ..\layout
 block content
-	form#updateForEvent(name="updateForEvent" method="post" action="/admin/data/matches")
+	form#updateForEvent(name="updateForEvent" method="post" action="/manage/data/matches")
 		input#seteventid(type="text", name="eventId")
 		button#btnSubmit(type="submit" class="w3-button w3-orange") Update DB for specified event ID
 	if locals.matches

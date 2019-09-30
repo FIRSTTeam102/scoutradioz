@@ -10,19 +10,19 @@ block content
 	h3(class="theme-text")=title
 	div(class="w3-container w3-section")
 		h4(class="theme-text") Member Management
-		a(href="/admin/audit") 
+		a(href="/manage/scoutingaudit") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Scouting audit
-		a(href="/admin/scoutingpairs") 
+		a(href="/manage/scoutingpairs") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Scouting pairs
-		a(href="/admin/teammembers") 
+		a(href="/manage/teammembers") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Manage Members
-		a(href="/admin/teammembers/present") 
+		a(href="/manage/teammembers/present") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Set who is present at current event
-		a(href="/admin/scoutingpairs/swapmembers") 
+		a(href="/manage/scoutingpairs/swapmembers") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Swap out/in match scouts
 		div(class="w3-container")
@@ -34,22 +34,22 @@ block content
 					span Add Admin
 	div(class="w3-container w3-section")
 		h4(class="theme-text") Current Event - #{current}
-		a(href="/admin/current/matches") 
+		a(href="/manage/currentevent/matches") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span See matches for current event
-		a(href="/allianceselection") 
+		a(href="manage/allianceselection") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Alliance selection data
-		a(href="admin/current/getcurrentteams") 
+		a(href="manage/currentevent/getcurrentteams") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Update list of current teams
 	div(class="w3-container w3-section")
 		h4(class="theme-text") API Data Management
-		a(href="/admin/data/events") 
+		a(href="/manage/data/events") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Load/Update events
 		hr
-		form#setCurrentEvent(name="setCurrentEvent" method="post" action="/admin/setcurrent")
+		form#setCurrentEvent(name="setCurrentEvent" method="post" action="/manage/setcurrent")
 			div(class="w3-padding-small w3-show-inline-block")
 				input#setEvent(class="theme-input w3-no-border theme-inline-padding" placeholder="Event ID" type="text", name="eventId")
 			div(class="w3-padding-small w3-show-inline-block")

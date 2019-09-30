@@ -4,21 +4,21 @@ const router = express.Router();
 
 /**
  * Admin index page. Provides links to all admin functionality.
- * @url /admin/
- * @views /admin/adminindex
+ * @url /manage/
+ * @views /manage/adminindex
  */
 router.get('/', async function(req, res) {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	res.render('./admin/admin', { 
+	res.render('./manage/admin', { 
 		title: 'Admin pages',
 		current: req.event.key,
 	});
 });
 
 /** POST method to set current event id.
- * @url /admin/setcurrent
+ * @url /manage/setcurrent
  * @redirect /admin
  */
 router.post('/setcurrent', async function(req, res) {
@@ -83,7 +83,7 @@ router.post('/setcurrent', async function(req, res) {
 });
 
 /** Page to generate sample data. Might not be necessary anymore?
- * @url /admin/generatedata
+ * @url /manage/generatedata
  * @redirect /
  */
 router.get('/generatedata', async function(req, res) {

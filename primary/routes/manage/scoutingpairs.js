@@ -5,8 +5,8 @@ var utilities = require("../../utilities");
 
 /**
  * Admin page to control and assign pairs of students for scouting.
- * @url /admin/scoutingpairs/
- * @views /admin/scoutingpairs
+ * @url /manage/scoutingpairs/
+ * @views /manage/scoutingpairs
  */
 router.get("/", async function(req, res) {
 	//Check authentication for team admin level
@@ -40,7 +40,7 @@ router.get("/", async function(req, res) {
 	
 	res.log(thisFuncName + "Rendering");
 	
-	res.render("./admin/scoutingpairs", {
+	res.render("./manage/scoutingpairs", {
 		title: "Scouting Pairs",
 		prog: progTeam,
 		mech: mechTeam,
@@ -99,7 +99,7 @@ router.get("/", async function(req, res) {
 						//Renders page through Jade.
 						res.log(thisFuncName + "RENDERING");
 						
-						res.render("./admin/scoutingpairs", {
+						res.render("./manage/scoutingpairs", {
 							title: "Scouting Pairs",
 							prog: progTeam,
 							mech: mechTeam,
@@ -342,7 +342,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 			if (docs.length > 0)
 				eventId = docs[0].event;
 		if (eventId === noEventFound) {
-			return res.render('./admin/admin', { 
+			return res.render('./manage/admin', { 
 				title: 'Admin pages',
 				current: eventId
 			});
@@ -610,7 +610,7 @@ router.post("/clearmatchallocations", async function(req, res) {
 			if (docs.length > 0)
 				eventId = docs[0].event;
 		if (eventId === noEventFound) {
-			return res.render('./admin/admin', { 
+			return res.render('./manage/admin', { 
 				title: 'Admin pages',
 				current: eventId
 			});
@@ -733,7 +733,7 @@ router.get("/swapmembers", async function(req, res) {
 					var users = docs;
 
 					// Go to a Pug to show two lists & a button to do the swap - form with button
-					res.render("./admin/swapmembers", {
+					res.render("./manage/swapmembers", {
 						title: "Swap Match Scouts",
 						scorers: scorers,
 						users: users
@@ -978,7 +978,7 @@ async function generateMatchAllocations(req, res){
 			if (docs.length > 0)
 				eventId = docs[0].event;
 		if (eventId === noEventFound) {
-			return res.render('./admin/admin', { 
+			return res.render('./manage/admin', { 
 				title: 'Admin pages',
 				current: eventId
 			});
@@ -1030,7 +1030,7 @@ async function generateMatchAllocations(req, res){
 					res.log(thisFuncName + "Whoops, there was an error!");
 					res.log(thisFuncName + "matchArray=" + matchArray);
 					
-					res.render('./admin/admin', { 
+					res.render('./manage/admin', { 
 						title: 'Admin pages',
 						current: eventId
 					});

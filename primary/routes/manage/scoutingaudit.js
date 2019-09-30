@@ -4,8 +4,8 @@ var router = express.Router();
 
 /**
  * Scoring audit page.
- * @url /admin/scoringaudit
- * @view /admin/index, /admin/scoringaudit
+ * @url /manage/scoringaudit
+ * @view /manage/index, /manage/scoringaudit
  */
 router.get("/", async function(req, res) {
 	//Check authentication for team admin level
@@ -122,7 +122,7 @@ router.get("/", async function(req, res) {
 		memberArr.push(thisRow);
 	}
 
-	res.render('./admin/audit',{
+	res.render('./manage/audit',{
 		title: "Scouter Audit",
 		audit: memberArr
 	});
@@ -190,7 +190,7 @@ router.get('/bymatch', async function(req, res){
 		}
 	}
 	
-	res.render('./admin/auditbymatch', {
+	res.render('./manage/auditbymatch', {
 		title: "Match Scouting Audit",
 		"audit": audit
 	});
@@ -225,7 +225,7 @@ router.get('/comments', async function(req, res){
 		}
 	}
 	
-	res.render('./admin/auditcomments', {
+	res.render('./manage/auditcomments', {
 		title: "Scouter Comments Audit",
 		"audit": audit
 	});
