@@ -165,7 +165,7 @@ router.post("/deletemember", async function(req, res){
 		
 	}
 	
-	res.redirect('/manage/teammembers');
+	res.redirect('/manage/members');
 });
 
 router.get("/present", async function(req, res) {

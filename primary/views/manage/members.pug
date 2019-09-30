@@ -4,7 +4,7 @@
 	PARAM
 		members		[Object Array]	From db.teammembers
 	CALLED BY
-		teammembers.js '/manage/teammembers/'
+		teammembers.js '/manage/members/'
 	//
 extends ../layout
 block content
@@ -20,7 +20,7 @@ block content
 			div(class="w3-row")
 				div(class="w3-col s12 m0")
 					p(class="theme-spacer")
-				form(id=`deleteMember${member._id}` action="/manage/teammembers/deletemember" method="post")
+				form(id=`deleteMember${member._id}` action="/manage/members/deletemember" method="post")
 					input(type="hidden" name="memberId" value=member._id)
 				div(class="w3-col s5 m1 w3-padding-small")
 					//-2019-09-26 JL: Added str.replace to member.name in case there are apostrophes in the name
@@ -53,7 +53,7 @@ block content
 					div(class="w3-col m2 w3-padding-small")
 						input(type="text" value=member.org_info.years name="years" class="w3-input theme-input w3-no-border theme-inline-padding")
 		div(class="w3-row")
-			form(action="/manage/teammembers/addmember" method="post")
+			form(action="/manage/members/addmember" method="post")
 				div(class="w3-col m2 w3-padding-small")
 					button(type="submit" class="w3-btn theme-submit w3-block") Add
 				div(class="w3-col m3 w3-padding-small")
@@ -83,7 +83,7 @@ block content
 			
 			var memberFormContents = memberForm.serialize();
 			
-			$.post( '/manage/teammembers/updatemember', memberFormContents, function(response){
+			$.post( '/manage/members/updatemember', memberFormContents, function(response){
 				
 				//This is the page-determined response status code
 				switch( response.status ){
