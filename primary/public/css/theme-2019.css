@@ -33,7 +33,13 @@
 .theme-rounded-small-bottom{border-bottom-left-radius:6px;border-bottom-right-radius:6px;}
 
 /* For input elements */
-.theme-input{border-radius:12px;transition:0.2s;}
+.theme-input{
+    border-radius:12px;
+    transition:0.2s;
+    
+    min-height:18px;
+    padding:9px;
+}
 textarea{padding:8px 12px;}
 
 /* 2019 THEME COLORS */

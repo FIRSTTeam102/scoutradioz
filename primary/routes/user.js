@@ -52,7 +52,7 @@ router.get('/selectorg', async function(req, res) {
 	}
 	
 	res.render('./user/selectorg', {
-		title: "Please Select an Organization",
+		title: "Select an Organization",
 		orgs: orgs,
 	});
 });
@@ -399,11 +399,7 @@ router.get('/changepassword', async function(req, res){
 	});
 });
 
-/**
- * POST: Admin page to change your own password.
- * @url POST: /login/changepassword
- * @redirect /
- */
+//Page to change your own password.
 router.post('/changepassword', async function(req, res){
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
@@ -445,12 +441,7 @@ router.post('/changepassword', async function(req, res){
 	res.redirect('/?alert=Changed password successfully.');
 });
 
-
-/**
- * Simple logout link.
- * @url /user/logout
- * @redirect /
- */
+//Log out
 router.get("/logout", async function(req, res) {
 	//Logout works a bit differently now.
 	//First destroy session, THEN "log in" to default_user of organization.
@@ -485,6 +476,7 @@ router.get("/logout", async function(req, res) {
 	//});
 });
 
+//Switch a user's organization
 router.get('/switchorg', async function(req, res){
 	
 	//This will log the user out of their organization.
@@ -517,22 +509,6 @@ router.get('/adduser', async function(req, res){
 		title: "Create Admin User"
 	});
 	
-});
-
-/**
- * User page to change your own password.
- * @url /login/changepassword
- * @view /login/changepassword
- *
-router.get('/changepassword', async function(req, res){
-	
-	if( !require('./checkauthentication')(req, res) ){
-		return res.log('authentication failed for /login/changepassword');
-	}
-	
-	res.render('./login/changepassword', {
-		title: "Change Password"
-	});
 });
 
 /**
@@ -573,75 +549,6 @@ router.post('/resetpassword', async function(req, res){
 	var writeResult = await utilities.update("teammembers", { name: userToReset }, { $set: { password: 'default' } }, {});
 	
 	res.redirect('/?alert=Password successfully changed for user ' + userToReset);
-});
-
-/**
- * POST: Admin page to change your own password.
- * @url POST: /login/changepassword
- * @redirect /
- *
-router.post('/changepassword', async function(req, res){
-	
-	//Grabs both passwords entered
-	var p1 = req.body.passwordOne;
-	var p2 = req.body.passwordTwo;
-	
-	//checks if they were entered or not
-	if( !p1 || !p2 ){
-		return res.render('./login/changepassword', {
-			title: "Change Password",
-			alert: "Both password forms must be entered."
-		});
-	}
-	//checks if they are equal
-	if( p1 != p2 ){
-		return res.render('./login/changepassword', {
-			title: "Change Password",
-			alert: "Both password forms must be equal."
-		});
-	}
-	//just double checks if user is logged in
-	if(!req.user){
-		return console.error("User doesn't exist in /login/changepassword");
-	}
-	
-	console.log(req.user);
-	
-	var member = await utilities.find("teammembers", {name: req.user.name}, {});
-	
-	res.log(`DEBUG - changepassword - member: ${member}`);
-	
-	member = member[0];
-	
-	if(!member){
-		return res.send(500, "user don't exist");
-	}
-	else{
-		
-		res.log(member);
-		res.log(member.password);
-		
-		//Hashes new password
-		const saltRounds = 10;
-		
-		bcrypt.hash(p1, saltRounds, async function(err, hash) {
-			
-			//if error, err out
-			if(err){
-				res.log(err, true);
-				return res.sendStatus(500);
-			}
-			
-			res.log(hash);
-			
-			var writeResult = await utilities.update("teammembers", {name: req.user.name}, {$set: {password: hash}}, {});
-			
-			console.log(writeResult);
-			
-			//redirect to home
-			res.redirect('/?alert=Password changed successfully.');
-		});
-	}
 });
 
 /** 
