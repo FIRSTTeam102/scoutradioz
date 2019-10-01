@@ -1,0 +1,226 @@
+const express = require('express');
+const utilities = require('../../utilities');
+const router = express.Router();
+
+/**
+ * Admin page to show a list of events by any given year.
+ * @url /manage/data/events
+ * @view /events
+ */
+router.get("/events", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
+	var thisFuncName = "externaldata.events[get]: ";
+	res.log(thisFuncName + 'ENTER')
+	
+	var events = {};
+	
+	// Read events from DB for specified year
+	// var eventCol = db.get("events");
+
+    // Get our query value(s)
+    var year = req.query.year;
+	if (!year)
+	{
+		year = (new Date()).getFullYear();
+		res.log(thisFuncName + 'No year specified, defaulting to ' + year);
+	}
+	res.log(thisFuncName + 'Year: ' + year);
+
+	var events = await utilities.find("events", {"year": parseInt(year)},{sort: {"start_date": 1, "end_date": 1, "name": 1}});
+		
+	// Read unique list of years in DB
+	var distinctYears = await utilities.distinct("events", "year");
+	var uniqueYears = distinctYears.sort();
+
+	res.log(thisFuncName + "uniqueYears=" + uniqueYears);
+	
+	res.render("./manage/events", {
+		title: "Events",
+		"events": events,
+		"years": uniqueYears,
+		"selectedYear": year
+	});
+});
+
+/**
+ * POST: Admin page to update all events for a given year.
+ * @url POST: /manage/data/events
+ * @redirect /manage/data/events
+ */
+router.post("/events", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
+	var thisFuncName = "externaldata.events[post]: ";
+	
+	// var eventCol = db.get("events");
+	
+    // Get our form value(s)
+    var year = req.body.year;
+	
+	//Set up TBA url
+	var url = `events/${year}/simple`;
+	res.log(thisFuncName + "url=" + url);
+	
+	//Submit request to TBA
+
+	var eventData = await utilities.requestTheBlueAlliance(url);
+		
+	var events = JSON.parse(eventData);
+	//if request was invalid, redirect to admin page with alert message
+	if(events.length == undefined || events.length == 0){
+		return res.redirect("/admin?alert=Could not get events from TBA for specified year " + year);
+	}
+	
+	//Remove existing events list for year
+	await utilities.remove("events", { "year": parseInt(year) });
+	//Now insert new events list for year
+	await utilities.insert("events", events);
+	//redirect back to events page
+	res.redirect(`/manage/data/events?year=${year}`);
+});
+
+/**
+ * Admin page to display matches of a specified event id.
+ * @url /manage/data/matches
+ * @view /matches
+ */
+router.get("/matches", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
+	var thisFuncName = "externaldata.matches[get]: ";
+	res.log(thisFuncName + 'ENTER')
+	
+	var matches = {};
+	
+	// var matchCol = db.get("matches");
+
+    // Get our query value(s)
+    var eventId = req.query.eventId;
+	if (!eventId)
+	{
+		res.log(thisFuncName + 'No event specified');
+		res.redirect("/manage/data/events");
+	}
+	res.log(thisFuncName + 'eventId=' + eventId);
+
+	// Read matches from DB for specified event
+	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
+	
+	res.render("./manage/matches", {
+		title: "Matches",
+		"matches": matches
+	});
+});
+
+/**
+ * POST: Admin page to update match information for a given event.
+ * @url POST: /manage/data/matches
+ * @redirect /admin (to handle error)
+ * @redirect /manage/data/matches
+ */
+router.post("/matches", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
+	var thisFuncName = "externaldata.matches[post]: ";
+	res.log(thisFuncName + 'ENTER')
+	
+	// var matchCol = db.get("matches");
+	// var eventCol = db.get("events");
+
+    // Get our form value(s)
+    var eventId = req.body.eventId;
+	res.log(thisFuncName + 'eventId=' + eventId);
+	
+	//Set up TBA api request
+	var url = `event/${eventId}/matches`;
+	res.log(thisFuncName + "url=" + url);
+	
+	//Request from TBA
+	var eventData = await utilities.requestTheBlueAlliance(url);
+	var matches = JSON.parse(eventData);
+	res.log(matches);
+
+	//if request was invalid, redirect to admin page with alert message
+	if(matches.length == undefined || matches.length == 0){
+		return res.redirect("/admin?alert=Could not get matches from TBA for specified event " + eventId);
+	}
+	
+	res.log(thisFuncName + 'Found ' + matches.length + ' data for event ' + eventId);
+	
+	// First delete existing match data for the given event
+	await utilities.remove("matches", {"event_key": eventId});
+	// Now, insert the new data
+	await utilities.insert("matches", matches);
+		
+	//redirect to matches page
+	res.redirect(`/manage/data/matches?eventId=${eventId}`);
+});
+
+
+/**
+ * Admin page to display all teams in local database.
+ * @url /manage/data/teams
+ * @view /teams
+ */
+router.get("/teams", async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
+	var thisFuncName = "externaldata.teams[get]: ";
+	res.log(thisFuncName + 'ENTER')
+	
+	// var teamCol = db.get("teams");
+	
+	//return res.send(req.query.eventId);
+	
+	//if no event is specified send page with all teams
+	if(req.query.eventId == "" || req.query.eventId == undefined){
+		
+		// Read all teams from DB
+		var teams = await utilities.find("teams", {}, {sort: {"key": 1}});
+		//render page w/ all teams			
+		res.render("./manage/teams", {
+			title: "All Teams",
+			"teams": teams,
+			header: "All Teams in Database"
+		});
+	}
+	//if event is specified, get list of teams from event
+	else{
+		//get eventId
+		var eventId = req.query.eventId;
+		
+		//prepare api call
+		var url = `event/${eventId}/teams/simple`;
+		
+		//perform api call
+		var teamsData = await utilities.requestTheBlueAlliance(url);
+		var teams = JSON.parse(teamsData);
+		
+		//sort list of teams by number
+		teams.sort(function(a, b) {
+			let aNum = a.team_number;
+			let bNum = b.team_number;
+			if( aNum < bNum ){
+				return -1;
+			}
+			if( aNum > bNum ){
+				return 1;
+			}
+			return 0;
+		});
+		
+		//render page with sorted list of teams
+		res.render("./manage/teams", {
+			title: `Teams in ${req.event.name}`,
+			"teams": teams
+		});
+	}
+});
+
+module.exports = router;

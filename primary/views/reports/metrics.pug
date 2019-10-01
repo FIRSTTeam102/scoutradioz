@@ -1,0 +1,49 @@
+extends ../layout
+
+block content
+	include templates/heatmap
+	- var aggRangeMap = [];
+	for scoreItem in currentAggRanges
+		- aggRangeMap[scoreItem.key] = scoreItem;
+
+	h2(class="theme-text") Statistical summary across ALL teams
+	h6 <i>Click on a metric to compare individual teams</i>
+	
+	if (aggdata)
+		table(class="w3-table")
+			tr
+				th Metric
+				th(class="w3-right-align") Min
+				th(class="w3-right-align") Avg
+				th(class="w3-right-align") Var
+				th(class="w3-right-align") Max
+			each agg in aggdata
+				tr
+					- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+					td(class="w3-text-light-gray w3-small")
+						a(href=`/reports/metricintel?key=${agg.key}`)= result2
+					- var minCol = 'w3-right-align w3-text-white'
+					- if (agg.min == 0) minCol = 'w3-right-align w3-text-gray'
+					if (aggRangeMap[agg.key])
+						td(class=`${minCol}` style=`background-color: rgb(${getValR(aggRangeMap[agg.key].MINmin, aggRangeMap[agg.key].MINmax, agg.min)},${getValG(aggRangeMap[agg.key].MINmin, aggRangeMap[agg.key].MINmax, agg.min)},${getValB(aggRangeMap[agg.key].MINmin, aggRangeMap[agg.key].MINmax, agg.min)})`)= agg.min
+					else
+						td(class=`${minCol}`)= agg.min
+					- var avgCol = 'w3-right-align w3-text-white'
+					- if (agg.avg == 0) avgCol = 'w3-right-align w3-text-gray'
+					if (aggRangeMap[agg.key])
+						td(class=`${avgCol}` style=`background-color: rgb(${getValR(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.avg)},${getValG(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.avg)},${getValB(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.avg)})`)= agg.avg
+					else
+						td(class=`${avgCol}`)= agg.avg
+					- var varCol = 'w3-right-align w3-text-white'
+					- if (agg.var == 0) varCol = 'w3-right-align w3-text-gray'
+					if (aggRangeMap[agg.key])
+						td(class=`${varCol}` style=`background-color: rgb(${getValR(aggRangeMap[agg.key].VARmin, aggRangeMap[agg.key].VARmax, agg.var)},${getValG(aggRangeMap[agg.key].VARmin, aggRangeMap[agg.key].VARmax, agg.var)},${getValB(aggRangeMap[agg.key].VARmin, aggRangeMap[agg.key].VARmax, agg.var)})`)= agg.var
+					else
+						td(class=`${varCol}`)= agg.var
+					- var maxCol = 'w3-right-align w3-text-white'
+					- if (agg.max == 0) maxCol = 'w3-right-align w3-text-gray'
+					if (aggRangeMap[agg.key])
+						td(class=`${maxCol}` style=`background-color: rgb(${getValR(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg.max)},${getValG(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg.max)},${getValB(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg.max)})`)= agg.max
+					else
+						td(class=`${maxCol}`)= agg.max
+

@@ -1,0 +1,44 @@
+//-
+	Admin scoring audit page.
+	PARAM
+		audit	[Object array]
+			member	Member name
+			record	[Object array]
+				match	Each match; either [N]ot scored, [C]overed, covered by [P]arent; if null, match completed
+	CALLED FROM
+		admindashboard.js	'/manage/scoringaudit'
+		
+extends ../layout
+block content
+	h2 Audit trail for match scouting
+	p
+		a(href="/manage/scoutingaudit/comments") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Comments Audit
+		a(href="/manage/scoutingaudit/bymatch") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Per-Match Audit
+	div(class="w3-auto")
+		each row in audit
+			//- console.log(row)
+			if (row.member)
+				hr
+				h4= row.member
+				each item in row.record
+					- var itemClass = "w3-button theme-hover-white w3-green audit-card"
+					- if (item.char == 'N') itemClass = "w3-button theme-hover-white theme-red audit-card"
+					- if (item.char == 'C') itemClass = "w3-button theme-hover-white w3-yellow audit-card"
+					- if (item.char == 'P') itemClass = "w3-button theme-hover-white w3-purple audit-card"
+					- if (item.match_team_key)
+						div(class="w3-show-inline-block")
+							a(class="w3-tooltip" href=`/scouting/match?key=${item.match_team_key}`)
+								- var key = item.match_team_key
+								- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');
+								- if (item.actual_scorer)
+									- titlePortion += ` | Scored by: ${item.actual_scorer}`
+								div(class="w3-tooltiptext w3-block w3-padding" style="width: 160px;margin-left:-80px;margin-bottom:15px;")=titlePortion 
+								div(class=`${itemClass}`)
+									span= item.char
+					- else
+						div(class=`${itemClass}`)
+							span= item.char

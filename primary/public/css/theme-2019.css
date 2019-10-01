@@ -1,0 +1,132 @@
+/* Cool new effects (fade, rounded edges) */
+.w3-btn{
+    border-radius: 12px; /* Border radius rounded by 12 pixels */
+    transition: 0.2s;    /* Fade from color 1 to color 2 in 0.2 secs */
+}
+
+/* For non-btn transition elements */
+.theme-transition{transition:0.2s;}
+
+/* For non-btn rounded corners */
+.theme-rounded-large{border-radius:18px;}
+.theme-rounded{border-radius:12px;}
+.theme-rounded-small{border-radius:6px;}
+
+/* For elements with rounded corners, that don't have all 4 corners rounded */
+.theme-rounded-large-tl{border-top-left-radius:18px;}
+.theme-rounded-large-tr{border-top-right-radius:18px;}
+.theme-rounded-large-bl{border-bottom-left-radius:18px;}
+.theme-rounded-large-br{border-bottom-right-radius:18px;}
+.theme-rounded-large-top{border-top-left-radius:18px;border-top-right-radius:18px;}
+.theme-rounded-large-bottom{border-bottom-left-radius:18px;border-bottom-right-radius:18px;}
+.theme-rounded-tl{border-top-left-radius:12px;}
+.theme-rounded-tr{border-top-right-radius:12px;}
+.theme-rounded-bl{border-bottom-left-radius:12px;}
+.theme-rounded-br{border-bottom-right-radius:12px;}
+.theme-rounded-top{border-top-left-radius:12px;border-top-right-radius:12px;}
+.theme-rounded-bottom{border-bottom-left-radius:12px;border-bottom-right-radius:12px;}
+.theme-rounded-small-tl{border-top-left-radius:6px;}
+.theme-rounded-small-tr{border-top-right-radius:6px;}
+.theme-rounded-small-bl{border-bottom-left-radius:6px;}
+.theme-rounded-small-br{border-bottom-right-radius:6px;}
+.theme-rounded-small-top{border-top-left-radius:6px;border-top-right-radius:6px;}
+.theme-rounded-small-bottom{border-bottom-left-radius:6px;border-bottom-right-radius:6px;}
+
+/* For input elements */
+.theme-input{
+    border-radius:12px;
+    transition:0.2s;
+    
+    min-height:18px;
+    padding:9px;
+}
+textarea{padding:8px 12px;}
+
+/* 2019 THEME COLORS */
+
+/* 2019 background colors */
+.theme-link{color:#ffffff!important;background-color:#cf5615!important}
+.theme-input{color:#fff!important;background-color:#585868!important}
+.theme-light-gray,.theme-light-grey{color:#fff!important;background-color:#8a8a8f!important}
+.theme-gray,.theme-grey{color:#fff!important;background-color:#585868!important}
+.theme-dark-gray,.theme-dark-grey{color:#fff!important;background-color:#2a2a2e!important}
+.theme-red{color:#fff!important;background-color:#be0020!important}
+.theme-submit{color:#fff!important;background-color:hsl(240, 62%, 58%)!important}
+/* 2019 text colors */
+.theme-text{color:#C8C8DC!important;}
+.theme-text-dark{color:#1E1E23!important;}
+.theme-text-gray,.theme-text-grey{color:#757575!important;}
+.theme-text-white{color:#fff!important;}
+.theme-text-black{color:#000!important;}
+/* 2019 hover background colors */
+.theme-link:hover{color:rgb(22, 21, 20)!important;background-color:#f3dfd4!important}
+.theme-hover-white:hover{color:#000!important;background-color:#f3dfd4!important}
+.theme-hover-light-gray:hover,.theme-hover-light-grey:hover{color:#fff!important;background-color:#8a8a8f!important}
+.theme-submit:hover{color:#fff!important;background-color:hsl(240, 60%, 62%)!important}
+.theme-hover-red:hover{color:#fff!important;background-color:#ff6d85!important}
+
+/* For alliance colors */
+.alliance-red{color:#fff!important;background-color:#EC0D00!important}
+.alliance-border-red{border: 1px solid hsl(2, 100%, 88%)!important}
+.alliance-hover-red:hover{color:rgb(43, 16, 16)!important;background-color:rgb(235, 144, 140)!important}
+.alliance-blue{color:#fff!important;background-color:#2623B8!important}
+.alliance-border-blue{border: 1px solid hsl(242, 100%, 89%)!important}
+.alliance-hover-blue:hover{color:rgb(14, 13, 32)!important;background-color:rgb(134, 132, 235)!important}
+
+
+.theme-strong{font-weight: bold}
+
+input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
+
+/* For spacers */
+.theme-spacer{
+    border-collapse: collapse;
+    border-bottom: 2px solid rgba(255,255,255,0.25);
+}
+/* For tables that contain spacers */
+.theme-contains-spacer{
+    border-collapse: collapse;
+}
+
+/* For elements that need to be in-line with input elements, but don't line up */
+.theme-inline-padding {min-height:18px;padding:9px}
+
+/* Screen darkener for page submission */
+.theme-darkener{
+    width: 100%;
+    height: 100%;
+    background-color: rgba(36, 36, 36, 0.5);
+    z-index: 2;
+}
+
+/* 2019 SPACE THEME */
+
+.gear-space{
+    background: linear-gradient(205deg,rgba(0,0,0,0.2) 50%,rgba(240,200,240,.2) 100%),
+        linear-gradient(160deg,rgba(30,30,30,1) 30%,rgba(50,30,60,1) 90%);
+}
+
+/* To avoid white flashes when loading pages */
+html{ background-color: rgb(32, 24, 36); }
+
+.star{
+    position: fixed;
+    background-color: white;
+    padding: 0;
+    margin: 0;
+}
+.star-10{
+    height: 10px;
+    width: 10px;
+    border-radius: 5px;
+}
+.star-5{
+    height: 5px;
+    width: 5px;
+    border-radius: 3px;
+}
+.star-2{
+    height: 2px;
+    width: 2px;
+    border-radius: 1px;
+}

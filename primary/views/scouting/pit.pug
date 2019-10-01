@@ -1,0 +1,94 @@
+//-
+	Pit scouting page. Contains dynamic inputs that are created based on JSOn in the database.
+	PARAM
+		layout			[Object Array] Layout, located in layout collection in db.
+	CALLED FROM
+		scouting.js 	'/pit'
+	INCLUDES
+		templates/formCheckbox
+		templates/formCounterInput
+		templates/formBadcounter
+		templates/dropdown
+		templates/formTextblock
+		templates/categoryHeader
+		templates/formSpacer
+extends ../layout
+block content
+	script(src="/js/pit-client.js")
+	h3= key.replace('frc','Team #')
+	p
+	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
+	br
+	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+	form#imageform(action=`${uploadURL}/?team_key=${key}` method="post" enctype="multipart/form-data" name="imageform")
+		input#teamimage(type="file", name="avatarfield")
+		input#returnurl(type="hidden", name="returnurl", value="")
+		input#imagekey(type="hidden", name="teamkey", value=`${key}`)
+		button#submitimage(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Main Image
+	//- Added stuffs for specific smaller images -//
+	form#imageforma(action=`${uploadURL}/?team_key=${key}a` method="post" enctype="multipart/form-data" name="imageform")
+		input#teamimagea(type="file", name="avatarfield")
+		input#returnurla(type="hidden", name="returnurl", value="")
+		input#imagekeya(type="hidden", name="teamkey", value=`${key}a`)
+		button#submitimagea(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #1
+	//- v For image #2 -//
+	form#imageformb(action=`${uploadURL}/?team_key=${key}b` method="post" enctype="multipart/form-data" name="imageform")
+		input#teamimageb(type="file", name="avatarfield")
+		input#returnurlb(type="hidden", name="returnurl", value="")
+		input#imagekeyb(type="hidden", name="teamkey", value=`${key}b`)
+		button#submitimageb(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #2
+	//- ...and for #3 -//
+	form#imageformc(action=`${uploadURL}/?team_key=${key}c` method="post" enctype="multipart/form-data" name="imageform")
+		input#teamimagec(type="file", name="avatarfield")
+		input#returnurlc(type="hidden", name="returnurl", value="")
+		input#imagekeyc(type="hidden", name="teamkey", value=`${key}c`)
+		button#submitimagec(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #3
+	i FINISH UPLOADING IMAGES ONE AT A TIME BEFORE FILLING IN (OR AFTER SUBMITTING) FORM BELOW
+	p
+	div(class="")
+		form#scoutform(class="" name="scoutform")
+			input#teamkey(type="hidden", name="teamkey", value=`${key}`)
+			div(class="w3-auto")
+				each element in layout
+					- var answer = ""
+					- if (pitData) answer = pitData[element.id]
+					- //console.log("element.id, answer="+element.id+","+answer)
+					
+					case element.type
+						when "checkbox"
+							include templates/formCheckbox
+						when "counter"
+							include templates/formCounterTextInput
+						when "badcounter"
+							include templates/formBadCounter
+						when "multiselect"
+							include templates/formMultiselect
+						when "textblock"
+							include templates/formTextBlock
+						when "h2"
+							include templates/formHeader
+						when "h3"
+							include templates/formSubHeader
+						when "spacer"
+							include templates/formSpacer
+		br 
+		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit") Submit
+		p 
+	| <script>
+	| document.getElementById("returnurl").value = window.location.href;
+	each element in layout
+		case element.type
+			when "checkbox"
+				include templates/scriptCheckbox
+			when "counter"
+			when "badcounter"
+				include templates/scriptCounterInput
+	| </script>
+	style.
+		.w3-check{
+			top: 7.7px!important;
+		}

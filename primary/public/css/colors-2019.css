@@ -1,0 +1,48 @@
+.gear-red,.gear-hover-red:hover{color:#fff!important;background-color:#EC0D00!important}
+.gear-blue,.gear-hover-blue:hover{color:#fff!important;background-color:#2623B8!important}
+.gear-white,.theme-hover-white:hover{color:#1E1E23!important;background-color:#f2f2f8!important}
+.gear-black,.gear-hover-black:hover{color:#fff!important;background-color:#1E1E23!important}
+.gear-orange,.gear-hover-orange:hover{color:#fff!important;background-color:#FF5F0B!important}
+.gear-light-gray,.gear-hover-light-gray:hover{color:#1e1e23!important;background-color:#ddd!important}
+.gear-opacity,.gear-hover-opacity:hover{background-color:rgba(255,255,255,0.2)!important}
+.gear-clear,.gear-clear-hover:hover{background-color:rgba(0,0,0,0)!important}
+.gear-dark-gray, .gear-hover-dark-gray:hover{color:#fff!important;background-color:#4b4b4f!important}
+
+.gear-text-red,.gear-text-hover-red:hover{color:#EC0D00!important}
+.gear-text-blue,.gear-text-hover-blue:hover{color:#2623B8!important}
+.theme-text,.gear-text-hover-white:hover{color:#C8C8DC!important}
+.gear-text-black,.gear-text-hover-black:hover{color:#1E1E23!important}
+.gear-text-orange,.gear-text-hover-orange:hover{color:#FF5F0B!important}
+
+.gear-highlight,.gear-hover-highlight{color:#FF5F0B!important;background-color:#00ff00!important}
+.gear-red,.gear-hover-red:hover{color:#fff!important;background-color:#EC0D00!important}
+.gear-blue,.gear-hover-blue:hover{color:#fff!important;background-color:#2623B8!important}
+.gear-light,.gear-hover-light:hover{color:#1E1E23!important;background-color:#f2f2f8!important}
+.gear-dark,.gear-hover-dark:hover{color:#fff!important;background-color:#1E1E23!important}
+
+.gear-space{
+    background: linear-gradient(205deg,rgba(0,0,0,0.2) 50%,rgba(240,200,240,.2) 100%),
+        linear-gradient(160deg,rgba(30,30,30,1) 30%,rgba(50,30,60,1) 90%)
+}
+
+.star{
+    position: fixed;
+    background-color: white;
+    padding: 0;
+    margin: 0;
+}
+.star-10{
+    height: 10px;
+    width: 10px;
+    border-radius: 5px;
+}
+.star-5{
+    height: 5px;
+    width: 5px;
+    border-radius: 3px;
+}
+.star-2{
+    height: 2px;
+    width: 2px;
+    border-radius: 1px;
+}

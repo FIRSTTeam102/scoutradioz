@@ -1,0 +1,29 @@
+extends ../layout
+block content
+	h2 Audit trail for match scouting comments
+	p
+		a(href="/manage/scoutingaudit") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Per-Scouter Audit
+		a(href="/manage/scoutingaudit/bymatch") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Per-Match Audit
+	div(class="w3-auto")
+		div(class="w3-col theme-spacer")
+			div(class="w3-col m2 w3-padding")
+				strong Scorer
+			div(class="w3-col m4 w3-padding")
+				strong Match Number
+			div(class="w3-col m6 w3-padding")
+				strong Comment
+		each row in audit
+			div(class="w3-col theme-spacer")
+				div(class="w3-col m2 w3-padding")
+					span=row.actual_scorer
+				div(class="w3-col m4 w3-padding")
+					- var key = row.match_team_key
+					- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');
+					a(href=`/scouting/match?key=${key}` class="w3-btn theme-gray theme-hover-white" style="min-width:220px;")
+						span=titlePortion
+				div(class="w3-col m6 w3-padding")
+					span=row.data.otherNotes

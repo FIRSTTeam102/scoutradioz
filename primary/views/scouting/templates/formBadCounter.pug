@@ -1,0 +1,10 @@
+div(class="w3-row")
+	div(class="w3-col s2 m4")
+		button(class="w3-button w3-hover-green w3-green scouting-counter" onclick=`updateCounter_${element.id}(-1)` type="button") -
+	div(class="w3-col s8 m4")
+		label(id=`${element.id}`)
+			center #{element.label}: 0
+	div(class="w3-col s2 m4")
+		button(class="w3-button theme-red scouting-counter" onclick=`updateCounter_${element.id}(1)` type="button") +
+input(id=`${element.id}FormInput` type="hidden" name=`${element.id}` value="0")
+p

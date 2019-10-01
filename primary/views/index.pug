@@ -1,0 +1,127 @@
+//-
+	Index/homepage. Provides links to tournament details. If a user isn't logged in, then includes login links.
+	PARAM
+		res.locals.user		[Object] {name, subteam, assigned, ...} If user is logged in, object exists. If not, null.
+	CALLED FROM
+		index.js	'/'
+	//
+extends layout
+block content
+	h6(class="theme-text") 
+		i Click the top graphic on any page to get back to this home page!
+	p
+	div(class="w3-container w3-section")
+		h4(class="theme-text") Tournament Info
+		
+		a(href="/reports/rankings")
+			div(class="gear-btn theme-link w3-btn")
+				span Current Rankings
+		br 
+		a(href="/reports/finishedmatches")
+			div(class="gear-btn theme-link w3-btn")
+				span Completed Matches [All teams]
+		br 
+		a(href="/reports/allteammetrics")
+			div(class="gear-btn theme-link w3-btn")
+				span Statistics
+	div(class="w3-container w3-section")
+		h4(class="theme-text") Team Info
+		//-teamSelect dropdown for intel and upcoming pages.
+		if( teamList && teamList[0] )
+			label(class="")
+				select#teamSelect(class="gear-btn theme-input w3-btn")
+					option(value="") Team #
+					each team in teamList
+						option(value=team class="w3-bar-item") #{team}
+		a
+			button(class="gear-btn theme-link w3-btn w3-disabled" onclick="redIntel()" id="stats" disabled)
+				span Stats
+		a
+			div(class="gear-btn theme-link w3-btn" onclick="redUpcoming()")
+				span#upcomingMatches Upcoming Matches: All Teams
+	//-If there is no logged-in user, then show a log-in link
+	if( !user || user.name == "default_user" || user.name == "[Dev]")
+		div(class="w3-container w3-section")
+			h4(class="theme-text") User Login
+			a(href="/user/login") 
+				div(class="gear-btn theme-link w3-btn")
+					span Log In
+	else
+		div(class="w3-container w3-section")
+			h4(class="theme-text")=user.name
+			a(href="/dashboard")
+				div(class="gear-btn theme-link w3-btn") Dashboard
+			a(href="/reports/allteammetrics")
+				div(class="gear-btn theme-link w3-btn") All Team Metrics
+			//------------Find a way to make this tied to the database's access levels
+			if( user.role_key == "team_admin" || user.role_key == "global_admin")
+				a(href="/manage")
+					div(class="gear-btn theme-link w3-btn") Org Management
+			if( user.role_key == "global_admin" )
+				a(href="/admin")
+					div(class="gear-btn theme-link w3-btn") Admin
+	script.
+		$(function(){
+			//If user presses back button and teamselect is populated, gotta un-disable stats btn
+			doTeamDropdownChange( $("#teamSelect")[0] );
+		})
+		//Checks if teamSelect/teamNo are filled, and if so, redirect the user to intel.
+		function redIntel(){
+			if( !$("#teamSelect").val() ){
+				if( !!$("#teamNo").val()) {
+					//if teamSelect is filled, proceed to intel url
+					var key = "frc".concat($("#teamNo").val());
+					console.log("/reports/teamintel?team="+key);
+					window.location.href = "/reports/teamintel?team="+key;
+				
+				}else if( !$("#stats").prop("disabled"))
+					//if nothing selected then do alert thang
+					alert("You must specify a team.");
+			}else{
+				//if text input is filled, proceed to intel url
+				var key = "frc".concat($("#teamSelect").val());
+				console.log("/reports/teamintel?team="+key);
+				window.location.href = "/reports/teamintel?team="+key;
+			}
+		}
+		//Checks if teamSelect/teamNo are filled; and if so, redirect user to upcoming page.
+		function redUpcoming(){
+			//if teamselect value is empty then redirect to upcoming matches page for all teams
+			if( !$("#teamSelect").val() ){
+				window.location.href = "/reports/upcoming";
+			}
+			//if a team is selected then redirect to upcoming for that team
+			else{
+				if(!!$("#teamSelect").val){
+					var key = "frc".concat($("#teamSelect").val());
+					window.location.href = "/reports/upcoming?team="+key;
+				}else{
+					var key = "frc".concat($("#teamNo").val());
+					window.location.href = "/reports/upcoming?team="+key;
+				}
+			}
+		}
+		$("#teamSelect").on("change", function(e){
+			setTimeout( doTeamDropdownChange(this), 1);
+		});
+		function doTeamDropdownChange(teamNo){
+			console.log(`Selected team: ${teamNo.value}`);
+			
+			//if a team is selected
+			if( teamNo.value != ""){
+				//enable statistics button
+				$("#stats").addClass("theme-hover-white");
+				$("#stats").removeClass("w3-disabled");
+				$("#stats").prop("disabled", false);
+				//change "upcoming matches" button to team #
+				$("#upcomingMatches").text(`Upcoming Matches: Team ${teamNo.value}`);
+			}
+			//if a team isn't selected
+			else{
+				$("#stats").removeClass("theme-hover-white");
+				$("#stats").addClass("w3-disabled");
+				$("#stats").prop("disabled", true);
+				//change "upcoming matches" button to all teams
+				$("#upcomingMatches").text("Upcoming Matches: All teams");
+			}
+		}

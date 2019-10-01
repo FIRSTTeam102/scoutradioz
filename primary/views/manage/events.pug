@@ -1,0 +1,75 @@
+//-
+	Admin page to display all events of selected year.
+	PARAM
+		years				[Number array] List of game years in db
+		events				[Object array] List of events in db, by key / year
+	CALLED FROM
+		externaldata.js		'/events'
+extends ../layout
+block content
+	style html{overflow-x: visible;}
+	form#updateForYear(name="updateForYear" method="post" action="/manage/data/events")
+		- if (selectedYear == null) selectedYear = (new Date()).getFullYear();
+		if locals.years
+			div(class="w3-show-inline-block w3-padding-small")
+				select#yearSelect(class="theme-input w3-no-border theme-inline-padding" name="selectedYear" onChange="submitForYear()")
+					each year in years
+						- if (year == selectedYear)
+							option(value=year selected)= year
+						- else
+							option(value=year)= year
+		div(class="w3-show-inline-block w3-padding-small")
+			input#setyear(class="theme-input w3-no-border theme-inline-padding" placeholder="Enter year to update" type="text", name="year")
+		div(class="w3-show-inline-block w3-padding-small")
+			button#btnSubmit(class="theme-submit w3-no-border w3-btn" type="submit") Update DB for specified year
+	br 
+	if locals.events
+		table(class="w3-table")
+			tr
+				th Key
+				th Name
+				th Country
+				th State
+				th City
+				th Start
+				th End
+				th Update
+				th 
+			each event in events
+				tr
+					td= event.key
+					td= event.name
+					td= event.country
+					td= event.state_prov
+					td= event.city
+					td= event.start_date
+					td= event.end_date
+					td
+						button(class="w3-btn theme-submit" onClick=`getMatchesForEvent('${event.key}')`) Matches
+					td
+						button(class="w3-btn theme-submit" onClick=`getTeamsForEvent('${event.key}')`) Teams
+	form#getmatchdata(name="getmatchdata" method="post" action="/manage/data/matches")
+		input#matcheventId(type="hidden", name="eventId")
+	form#getteamdata(name="getteamdata" method="get" action="/manage/data/teams")
+		input#teamEventId(type="hidden", name="eventId")
+	script.
+		function submitForYear()
+		{
+			var e = document.getElementById("yearSelect");
+			var yearSelect = e.options[e.selectedIndex].value;
+			window.location = "/manage/data/events?year=" + yearSelect;
+		}
+		
+		function getMatchesForEvent(eventId)
+		{
+			console.log('eventId='+eventId);
+			document.getElementById("matcheventId").value = eventId;
+			document.getElementById("getmatchdata").submit();
+		}
+		
+		function getTeamsForEvent(eventId)
+		{
+			console.log('eventId='+eventId);
+			document.getElementById("teamEventId").value = eventId;
+			document.getElementById("getteamdata").submit();
+		}
