@@ -131,7 +131,7 @@ router.post('/match/submit', async function(req, res) {
 	return res.send({message: "Submitted data successfully.", status: 200});
 });
 
-router.post('/submitmatch', function(req, res) {
+router.post('/submitmatch', async function(req, res) {
 	//LEGACY CODE
 	
 	var thisFuncName = "scouting.submitmatch[post]: ";
@@ -224,7 +224,7 @@ router.post('/pit/submit', async function(req, res){
 	return res.send({message: "Submitted data successfully.", status: 200});
 });
 
-router.post('/submitpit', function(req, res) {
+router.post('/submitpit', async function(req, res) {
 	//LEGACY CODE
 	var thisFuncName = "scouting.submitpit[post]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -283,7 +283,7 @@ router.get('/teampictures', async function(req, res) {
 	});
 });
 
-router.get('/', function(req, res){
+router.get('/', async function(req, res){
 	
 	//redirect to pits dashboard
 	res.redirect('/dashboard/pits');

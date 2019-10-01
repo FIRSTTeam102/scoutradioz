@@ -99,8 +99,8 @@ router.post("/updatematch", async function(req, res) {
 	// var currentAggCol = db.get("currentaggranges");
 
 	// REST client for accessing TBA
-	var client = req.client;
-	var args = req.tbaRequestArgs;
+	// var client = req.client;
+	// var args = req.tbaRequestArgs;
 	
 	var eventId = req.event.key;
 	

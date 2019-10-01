@@ -187,10 +187,10 @@ utilities.distinct = async function(collection, parameters){
 	if(!parameters){
 		var parameters = {};
 	}
-	//If parameters exists and is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.distinct Error: Parameters must be of type object");
-	}
+	// //If parameters exists and is not an object, throw an error. 
+	// if(typeof(parameters) != "object"){
+	// 	throw new Error("Utilities.distinct Error: Parameters must be of type object");
+	// }
 	
 	var db = this.getDB();
 	
@@ -401,15 +401,21 @@ utilities.requestTheBlueAlliance = async function(url){
 	var requestURL = "https://www.thebluealliance.com/api/v3/" + url;
 	
 	//Get TBA key
-	var tbaKey = await getTBAKey();
+	var tbaKey = await utilities.getTBAKey();
 	
 	//Create promise first
 	var thisPromise = new Promise(function(resolve, reject){
 		
+		var Client = require('node-rest-client').Client;
+		var client = new Client();
+		var args = {
+			headers: { "accept": "application/json", "X-TBA-Auth-Key": "iSpbq2JH2g27Jx2CI5yujDsoKYeC8pGuMw94YeK3gXFU6lili7S2ByYZYZOYI3ew" }
+		}
+
 		//Inside promise function, perform client request
 		client.get(requestURL, tbaKey, function(tbaData, response){
 			
-			tbaData = JSON.parse(tbaData);
+			//tbaData = JSON.parse(tbaData);
 			//Inside client callback, resolve promise
 			resolve(tbaData);
 		});
@@ -425,6 +431,8 @@ utilities.requestTheBlueAlliance = async function(url){
  */
 utilities.getTBAKey = async function(){
 	
+	var db = this.getDB();
+
 	var passwordsCol = db.get("passwords");
 	
 	var tbaArgsArray = await passwordsCol.find({name: "thebluealliance-args"});

@@ -36,9 +36,14 @@ router.post('/setcurrent', async function(req, res) {
 	
 	//Remove the previous 'current' data
 	await utilities.remove('current');
-	
+	res.log(thisFuncName + 'Removed current');
+
+	// 2019orore
+	// 2019njbri
+
 	//Now, insert the new data
 	await utilities.insert('current', {"event": eventId});
+	res.log(thisFuncName + 'Inserted current');
 	
 	//Now get teams and rankings from TBA
 	var teamsUrl = `event/${eventId}/teams`;
@@ -46,26 +51,33 @@ router.post('/setcurrent', async function(req, res) {
 	
 	var promiseForTeams = utilities.requestTheBlueAlliance(teamsUrl);
 	var promiseForRankings = utilities.requestTheBlueAlliance(rankingsUrl);
+	res.log(thisFuncName + 'Got promises');
 	
 	//Delete contents of currentTeams
 	await utilities.remove("currentteams");
+	res.log(thisFuncName + 'Renoved currentteams');
 	
 	//Await TBA request for teams
 	var teamsData = await promiseForTeams;
+	res.log(thisFuncName + 'Finished await promiseForTeams');
 	
 	//Now, insert teams into currentTeams
-	if( typeof teamsData == "object" ){
-		await utilities.insert("currentteams", teamsData);
-	}
-	else{
+	// if( typeof teamsData == "object" ){
+	// 	await utilities.insert("currentteams", teamsData);
+	// 	res.log(thisFuncName + 'Finished await currentteams');
+	// }
+	// else{
 		await utilities.insert("currentteams", JSON.parse(teamsData));
-	}
+		res.log(thisFuncName + 'Finished await currentteams #2');
+	// }
 		
 	//Delete contents of currentrankings
 	await utilities.remove("currentrankings");
+	res.log(thisFuncName + 'Finished remove currentrankings');
 	
 	//Await TBA request for rankings
 	var rankingsResponse = await promiseForRankings;
+	var rankingsResponse = JSON.parse(rankingsResponse);
 	
 	res.log(rankingsResponse);
 		

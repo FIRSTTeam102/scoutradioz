@@ -152,7 +152,7 @@ router.get('/allianceselection', async function(req, res){
 	// var scoreLayoutCol = db.get('scoringlayout');
 
 	var rankings = await utilities.find("currentrankings", {}, {});
-	if(e || !rankings[0])
+	if(!rankings[0])
 		return console.error(e || "Couldn't find rankings in allianceselection".red);
 	
 	var alliances = [];
@@ -171,7 +171,7 @@ router.get('/allianceselection', async function(req, res){
 	}
 
 	var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
-	if(e || !scoreLayout[0])
+	if(!scoreLayout[0])
 		return console.error(e || "Couldn't find scoringlayout in allianceselection".red);
 	
 	//initialize aggQuery
@@ -200,7 +200,7 @@ router.get('/allianceselection', async function(req, res){
 	
 	//Aggregate with this query we made
 	var aggArray = await utilities.aggregate("scoringdata", aggQuery);
-	if(e || !aggArray[0])
+	if(!aggArray[0])
 		return console.error(e || "Couldn't find scoringdata in allianceselection".red)
 	
 	// Rewrite data into display-friendly values

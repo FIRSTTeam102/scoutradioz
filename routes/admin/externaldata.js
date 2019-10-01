@@ -31,7 +31,8 @@ router.get("/events", async function(req, res) {
 	var events = await utilities.find("events", {"year": parseInt(year)},{sort: {"start_date": 1, "end_date": 1, "name": 1}});
 		
 	// Read unique list of years in DB
-	var uniqueYears = await utilities.distinct("events", "year").sort();
+	var distinctYears = await utilities.distinct("events", "year");
+	var uniqueYears = distinctYears.sort();
 
 	res.log(thisFuncName + "uniqueYears=" + uniqueYears);
 	
