@@ -3,12 +3,13 @@ const router = express.Router();
 const utilities = require('../utilities');
 
 router.get('/', async function(req, res){
-	
+		
 	//If there is a logged-in user, that means they HAVE selected an org, and 
 	// so then redirect to /home
 	if( req.user ){
 		
-		res.redirect(307, '/home');
+		//added originalUrl to make GET queries to persist (for alert)
+		res.redirect(307, '/home' + req.originalUrl);
 	}
 	//If user has not selected an org (not logged in), send them to pick-org page.
 	else{
