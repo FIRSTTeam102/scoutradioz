@@ -4,6 +4,34 @@
     transition: 0.2s;    /* Fade from color 1 to color 2 in 0.2 secs */
 }
 
+body {
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+canvas, .canvas{
+    z-index: -1;
+    position: fixed;
+    left: 0;
+    top: 0;
+}
+
+select{
+	padding: 1px 0px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: white;
+	border-image: initial;
+}
+
+a:link, a:hover { 
+	text-decoration: none;
+}
+
+a{  
+    color: blue;
+	color: inherit;
+}
+
 /* For non-btn transition elements */
 .theme-transition{transition:0.2s;}
 
