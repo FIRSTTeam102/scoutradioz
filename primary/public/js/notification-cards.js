@@ -14,13 +14,13 @@ function createNotificationCard( text, type ){
 			color = "w3-amber";
 			break;
 		case "good":
-			color = "gear-blue";
+			color = "alliance-blue";
 			break;
 		case "102":
 			color = "theme-link";
 			break;
 		default:
-			color = "gear-white";
+			color = "w3-white";
 			 break;
 	}
 	

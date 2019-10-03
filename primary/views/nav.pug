@@ -12,32 +12,32 @@ div(style="font-size:1.1em;")
 	//-Nav bar should only show if there is a logged-in user.
 	if user
 		if user.name != "default_user"
-			nav(class="w3-bar gear-opacity w3-container theme-text w3-rest" style="position:relative;z-index:2;")
+			nav(class="w3-bar theme-text w3-rest" style="position:relative;z-index:2;")
 				if user.name != "[Dev]"	
-					div#userName(href="#" class="w3-dropdown-mobile gear-clear theme-text w3-text-black-hover w3-mobile w3-left" onclick="w3_open( $('#userBar')[0], this );" style="max-width: 33%;")
+					div#userName(href="#" class="w3-dropdown-mobile theme-text w3-mobile w3-left" onclick="w3_open( $('#userBar')[0], this );" style="max-width: 33%;")
 						div(class="w3-button" style="")=user.name
 				else
 					div(class="w3-bar-item")=user.name
-				button( class="w3-button w3-show-small gear-clear w3-rest w3-right theme-text" style="font-size:1.6em; padding:4px 16px; " onclick="w3_open( $('#navBar')[0], this );" id="navBtn") &#x2261;
+				button( class="w3-button w3-show-small w3-right theme-text" style="font-size:1.6em; padding:4px 16px; " onclick="w3_open( $('#navBar')[0], this );" id="navBtn") &#x2261;
 				div(id="navBar" style="display: none; z-index: 2; position: relative")
-					a(href="/dashboard" class="w3-bar-item w3-button gear-clear w3-mobile") Dashboard
-					a(href="/dashboard/pits" class="w3-bar-item w3-button gear-clear w3-mobile") Pit scouting
-					a(href="/dashboard/matches" class="w3-bar-item w3-button gear-clear w3-mobile") Match scouting
-					a(href="/reports/allteammetrics" class="w3-bar-item w3-button gear-clear w3-mobile") All Team Metrics
-					a(href="/dashboard/allianceselection" class="w3-bar-item w3-button gear-clear w3-mobile") Alliance Selection
+					a(href="/dashboard" class="w3-bar-item w3-button w3-mobile") Dashboard
+					a(href="/dashboard/pits" class="w3-bar-item w3-button w3-mobile") Pit scouting
+					a(href="/dashboard/matches" class="w3-bar-item w3-button w3-mobile") Match scouting
+					a(href="/reports/allteammetrics" class="w3-bar-item w3-button w3-mobile") All Team Metrics
+					a(href="/dashboard/allianceselection" class="w3-bar-item w3-button w3-mobile") Alliance Selection
 					if user.subteam == "support" || user.subteam == "exec"
-						a(href="admin" class="w3-bar-item w3-button gear-clear w3-mobile") Admin Index
-			div#userBar(class="w3-dropdown-content w3-bar-block w3-margin-left" style="position:absolute;top:2.1rem; z-index:99; max-width: 10rem;")
-				a(href="/user/logout" class="w3-bar-item w3-button w3-padding-24") Log out
-				a(href="/user/switchorg" class="w3-bar-item w3-button w3-padding-24") Switch Organization
-				a(href="/user/changepassword" class="w3-bar-item w3-button") Change Password
+						a(href="admin" class="w3-bar-item w3-button w3-mobile") Admin Index
+			div#userBar(class="w3-dropdown-content w3-bar-block" style="position:absolute;top:2.1rem; z-index:99; max-width: 10rem;")
+				a(href="/user/logout" class="w3-bar-item w3-button w3-padding-16") Log out
+				a(href="/user/switchorg" class="w3-bar-item w3-button w3-padding-16") Switch Organization
+				a(href="/user/changepassword" class="w3-bar-item w3-button w3-padding-16") Change Password
 		//-if user.name == default_user
 		else
 			nav(class="w3-bar gear-opacity w3-container theme-text w3-rest" style="position:relative;z-index:2;")
 				div(id="navBar" style="display: none; z-index: 2; position: relative")
-					a(href="/" class="w3-bar-item w3-button gear-clear w3-mobile") Home
+					a(href="/" class="w3-bar-item w3-button w3-mobile") Home
 					div(class="w3-right")
-						a(href="/user/switchorg" class="w3-bar-item w3-button gear-clear w3-mobile") Switch Organization
+						a(href="/user/switchorg" class="w3-bar-item w3-button w3-mobile") Switch Organization
 
 br 
 header(class="w3-center w3-container w3-content w3-padding-8")

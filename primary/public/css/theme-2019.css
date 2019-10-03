@@ -23,14 +23,12 @@ select{
 	border-image: initial;
 }
 
-a:link, a:hover { 
-	text-decoration: none;
-}
+a:link{text-decoration: none;}
 
-a{  
-    color: blue;
-	color: inherit;
-}
+a{color: #b2b2be;}
+footer a:hover{text-decoration: underline;}
+
+nav{background-color: #4d4d53;}
 
 /* For non-btn transition elements */
 .theme-transition{transition:0.2s;}
@@ -111,6 +109,12 @@ input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
     border-collapse: collapse;
     border-bottom: 2px solid rgba(255,255,255,0.25);
 }
+hr{
+	border: 0;
+    border-top: 2px solid rgba(255,255,255,0.25);
+    margin: 20px 0;
+}
+
 /* For tables that contain spacers */
 .theme-contains-spacer{
     border-collapse: collapse;
