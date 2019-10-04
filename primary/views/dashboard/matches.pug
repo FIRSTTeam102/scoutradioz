@@ -3,7 +3,61 @@ extends ../layout
 block content
 	if matches.length > 0
 		h3(class="theme-text w3-margin-bottom") Match Scouting
-		table(class="theme-contains-spacer w3-content" style="")#matchTable
+		div(class="w3-col w3-container")
+			div(class="w3-col m6 l4 w3-padding theme-strong")
+				div(class="w3-col s3") Assigned
+				div(class="w3-col s4") Team
+				div(class="w3-col s5") Team Name
+			div(class="w3-col s0 m6 l4 w3-padding theme-strong")
+				div(class="w3-col s3") Assigned
+				div(class="w3-col s4") Team
+				div(class="w3-col s5") Team Name
+			div(class="w3-col s0 m0 l4 w3-padding theme-strong")
+				div(class="w3-col s3") Assigned
+				div(class="w3-col s4") Team
+				div(class="w3-col s5") Team Name
+		div(class="w3-container")
+			each match, i in matches
+				- if( i % 6 == 0 )
+					- var assignments = [matches[i], matches[i+1], matches[i+2], matches[i+3], matches[i+4], matches[i+5]];
+					
+					- var date = new Date( match.time * 1000 )
+					- if (match.predicted_time) date = new Date( match.predicted_time * 1000 );
+					- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+					- var day = days[date.getDay()];
+					- var hour = date.getHours();
+					- var minute = date.getMinutes();
+					- //makes minute crap 2 digits
+					- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
+					
+					div(class="w3-col m6 l4 w3-padding")
+						hr
+						div(class="w3-col w3-padding")
+							span Match #{match.match_number} <br/> #{day} @ #{hour}:#{minute}
+						each assignment, j in assignments
+							- assignment.alliance = (assignment.alliance == "red") ? "Red" : "Blue";
+							div(class="w3-col" style="height: 55px; display: flex;")
+								//- Assigned scorer
+								div(class="w3-col s3 w3-right-align w3-padding-16")
+									div(style="height: 10px;")
+										span= assignment.assigned_scorer
+								//- Link to team
+								div(class="w3-col s4 w3-padding")
+									if assignment.data
+										a(href=`/scouting/match?key=${assignment.match_team_key}&alliance=${assignment.alliance}`)
+											div(class="w3-btn w3-col theme-gray w3-padding")
+												span= assignment.team_key.substring(3)
+									else
+										- var btnColor = (assignment.alliance == "Red") ? "alliance-red" : "alliance-blue"
+										a(href=`/scouting/match?key=${assignment.match_team_key}&alliance=${assignment.alliance}`) 
+											div(class=`w3-btn w3-col ${btnColor} w3-padding`)
+												span= assignment.team_key.substring(3)
+								//- Team nickname
+								div(class="w3-col s5 w3-left-align" style="margin: auto;")
+									div(class="w3-col" style="margin-top: -5px;")
+										span(style="")= assignment.team_nickname
+			
+		//-table(class="theme-contains-spacer w3-content" style="")#matchTable
 			tr#title
 				th(onclick="w3.sortHTML('#matchTable','.item', 'td:nth-child(3)')" style="cursor:pointer") Assigned
 				th Team
@@ -36,10 +90,6 @@ block content
 							a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`)
 								div(class="gear-btn theme-rounded theme-gray w3-padding w3-section gear-margin-sides")
 									span= match.team_key.substring(3)
-							//-Changed to edit match instead of going to team-match-intel
-							//-a(href=`/reports/teammatchintel?key=${match.match_team_key}`)
-								div(class="gear-btn w3-dark-grey w3-padding w3-section gear-margin-sides")
-									span= match.team_key.substring(3)
 						else
 							- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 							a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
@@ -47,3 +97,4 @@ block content
 									span= match.team_key.substring(3)
 					td(class="w3-left-align")
 						a(href=`/reports/teamintel?team=${match.team_key}`)= match.team_nickname
+		
