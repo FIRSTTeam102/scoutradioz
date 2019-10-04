@@ -3,96 +3,17 @@ const router = express.Router();
 const utilities = require('../utilities');
 const bcrypt = require('bcryptjs');
 
-/*
-0) '/user' redirects to '/user/login'
-1) Page (user/login.pug) shows a dropdown of existing organizations '/user/login'
-2) User selects org from dropdown
-3) User enters org's password ("password" ad "password2" for now)
-4) POST: '/user/login' takes org_key and password
-5) Redirect to '/user/login/select', goes to orgs db and compares password
-6a) if fail, redirect to '/user/login?alert=Incorrect password for organization ___'
-6b) If correct, go to users db and get all users under that organization
-7) Page (user/selectuser.pug) shows a dropdown of users '/user/login/select'
-8) AJAX POST: '/user/login/withoutpassword' takes "name"
-	a) go to users db and search for name. If user doesn't exist, return JSON {status: 500, alert: "User does not exist in database"}
-	b) get user's role; go to roles db and find access_level of that role
-	c) if access_level > process.env.ACCESS_SCOUTER, then return {status: 200, password_needed: true}
-	d) if access_level == process.env.ACCESS_SCOUTER, then return {status: 307, password_needed: false, redirect_url: '/dashboard'}
-	e) if access_level < process.env.ACCESS_SCOUTER, then return {status: 307, password_needed: false, redirect_url: '/'}
-9) Page (user/selectuser.pug) responds to AJAX
-	a) if status == 500 or alert exists, send prompt w/ alert to user
-	b) if password_needed == false, then redirect to redirect_url
-	c) if password_needed == true, then open a password prompt
-10) User enters password and clicks Log In
-	a) Sends AJAX POST to '/user/login/withpassword' and compares password
-	b) Return: 
-		{status:500, alert: "User does not exist in database" }
-		{status:500, alert: "User does not have a password in database" }
-		{status:400, alert" "Incorrect password" }
-		{status:200, redirect_url: "/manage" }
-
-*/
-
 //Redirect to index
 router.get('/', async function(req, res){
 	res.redirect(301, "/");
 });
 
-//User selects the organization they wish to view the data of / log in to
+//no longer used bb
 router.get('/selectorg', async function(req, res) {
 	
-	//If a user is logged in when reaching this route, then first log user out of org
-	if( req.user ) return res.redirect('/user/switchorg');
-	
-	//Get list of participating organizations.
-	var orgs = await utilities.find("orgs", {}, {});
-	
-	if(!orgs || !orgs[0]){
-		throw new Error("user.js /login: No organizations exist in 'orgs' collection in database.");
-	}
-	
-	res.render('./user/selectorg', {
-		title: "Select an Organization",
-		orgs: orgs,
-	});
+	res.redirect(301, '/')
 });
 
-//Sign in to the organization's "default_user"
-router.post('/selectorg', async function(req, res) {
-	
-	var org_key = req.body.org_key;
-	
-	//Make sure that form is filled
-	if(!org_key || org_key == ""){
-		return res.redirect('/user/selectorg?alert=Please select an organization.');
-	}
-	
-	//search for organization in database
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
-	
-	//If organization does not exist, send internal error
-	if(!selectedOrg) return res.redirect(500, '/user');
-	
-	//Now, sign in to organization's default user
-	var defaultUser = await utilities.findOne("users", {org_key: org_key, name: "default_user"});
-	
-	if(!defaultUser){
-		return res.redirect(`/user/selectorg?alert=Error: No default user for organization ${org_key} exists in database.`);
-	}
-	
-	//Now, log in to defaultUser
-	req.logIn(defaultUser, function(err){
-			
-		//If error, then log and return an error
-		if(err){ console.error(err); return res.status(500).send({alert: err}) };
-		
-		//now, once default user is logged in, redirect to index
-		res.redirect('/');
-	});
-});
-
-//1) Page only loads if user is logged in as default user (has selected organization)
-//3) User enters org's password ("password" ad "password2" for now)
 router.get('/login', async function (req, res){
 	
 	//If there is no user logged in, send them to select-org page
@@ -119,18 +40,12 @@ router.get('/login', async function (req, res){
 	});
 });
 
-//4) POST: '/user/login' takes org_key and password
-//5) Redirect to '/user/login/select', goes to orgs db and compares password
 router.post('/login', async function(req, res){
 	
 	//Redirect to /user/login/select via POST (will preserve request body)
 	res.redirect(307, '/user/login/select');
 });
 
-//5) Redirect to '/user/login/select', goes to orgs db and compares password
-//6a) if fail, redirect to '/user/login?alert=Incorrect password for organization ___'
-//6b) If correct, go to users db and get all users under that organization
-//7) Page (user/selectuser.pug) shows a dropdown of users '/user/login/select'
 router.post('/login/select', async function(req, res){
 	//This URL can only be accessed via a POST method, because it requires an organization's password.
 	
@@ -163,7 +78,7 @@ router.post('/login/select', async function(req, res){
 	if(comparison == true){
 		
 		//Get list of users that match the organization name
-		var users = await utilities.find('users', {"org_key": org_key}, {sort: {name: 1}});
+		var users = await utilities.find('users', {"org_key": org_key, name: {$ne: "default_user"}}, {sort: {name: 1}});
 		
 		res.render('./user/selectuser', {
 			title: `Sign In to ${selectedOrg.nickname}`,
@@ -178,12 +93,6 @@ router.post('/login/select', async function(req, res){
 	}
 })
 
-//8) AJAX POST: '/user/login/withoutpassword' takes "name"
-//	a) go to users db and search for name. If user doesn't exist, return JSON {status: 500, alert: "User does not exist in database"}
-//	b) get user's role; go to roles db and find access_level of that role
-//	c) if access_level > process.env.ACCESS_SCOUTER, then return {status: 200, password_needed: true}
-//	d) if access_level == process.env.ACCESS_SCOUTER, then return {status: 307, password_needed: false, redirect_url: '/dashboard'}
-//	e) if access_level < process.env.ACCESS_SCOUTER, then return {status: 307, password_needed: false, redirect_url: '/'}
 router.post('/login/withoutpassword', async function(req, res){
 	
 	var userID = req.body.user;
@@ -291,15 +200,6 @@ router.post('/login/withoutpassword', async function(req, res){
 	}
 });
 
-/*
-10) User enters password and clicks Log In
-	a) Sends AJAX POST to '/user/login/withpassword' and compares password
-	b) Return: 
-		{status:500, alert: "User does not exist in database" }
-		{status:500, alert: "User does not have a password in database" }
-		{status:400, alert" "Incorrect password" }
-		{status:200, redirect_url: "/manage" }
-*/
 router.post('/login/withpassword', async function(req, res){
 	
 	var userID = req.body.user;
@@ -492,25 +392,6 @@ router.get('/switchorg', async function(req, res){
 	});
 })
 
-//ROUTES FROM LOGIN.JS THAT HAVE NOT BEEN IMPLEMENTED YET
-/*
-/*
- * Admin page to add a new admin user.
- * @url /login/adduser
- * @view /login/adduser
- *
-router.get('/adduser', async function(req, res){
-	
-	if( !require('./checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
-	
-	res.render('./login/adduser', { 
-		title: "Create Admin User"
-	});
-	
-});
-
 /**
  * Admin page to reset another user's password.
  * @url /login/resetpassword
@@ -551,71 +432,6 @@ router.post('/resetpassword', async function(req, res){
 	res.redirect('/?alert=Password successfully changed for user ' + userToReset);
 });
 
-/** 
- * POST: Admin page to add an admin user
- * @url POST /login/adduser
- * @redirect none
- * @view /login/adduser
-*
-router.post('/adduser', async function(req, res){
-	if( !require('../checkauthentication')(req, res, 'admin') ){
-		return null;
-	}
-	
-	//set all attributes that will go into the new user
-	var name = req.body.username;
-	var subteam = "support";
-	var className = req.body.className;
-	var years = req.body.years;
-	var present = "true";
-	var txtPassword = req.body.password;
-	
-	//if not all the forms are full, reload page
-	if(name == null || className == null || years == null || txtPassword == null){
-		
-		return res.render('./login/adduser', { 
-			title: "Create Admin User",
-			alert: "You must fill all parameters"
-		});
-	}
-	
-	var userThatExists = await utilities.findOne("teammembers", { "name": name }, {});
-	
-	//if user already exists, reload w/ warning
-	if( userThatExists != null ){
-		return res.render('./login/adduser', { 
-			title: "Create Admin User",
-			alert: "Error: User already exists."
-		});
-	}
-		
-	//hash password
-	const saltRounds = 10;
-	
-	bcrypt.hash(txtPassword, saltRounds, async function(err, hash) {
-		
-		//if error, err out
-		if(err){
-			res.log(err);
-			return res.sendStatus(500);
-		}
-		
-		await utilities.insert("teammembers", {
-			"name": name,
-			"subteam": subteam,
-			"className": className,
-			"years": years,
-			"present": present,
-			"password": hash
-		});
-		
-		//return to page
-		return res.render('./login/adduser', { 
-			title: "Create Admin User",
-			alert: "User" + name + " created successfully."
-		});
-	});
-});
 */
 
 module.exports = router;
