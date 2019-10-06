@@ -18,12 +18,12 @@ block content
 	h3= key.replace('frc','Team #')
 	p
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
+		img(src=`${fileRoot}/uploads/responsive/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
 	br
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img(src=`${fileRoot}uploads/responsive/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img(src=`${fileRoot}/uploads/responsive/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img(src=`${fileRoot}/uploads/responsive/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img(src=`${fileRoot}/uploads/responsive/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
 	form#imageform(action=`${uploadURL}/?team_key=${key}` method="post" enctype="multipart/form-data" name="imageform")
 		input#teamimage(type="file", name="avatarfield")
 		input#returnurl(type="hidden", name="returnurl", value="")

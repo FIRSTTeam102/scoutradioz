@@ -23,30 +23,29 @@ html
 		meta(name="keywords" content="first robotics,frc,first robotics competition,somerville,new jersey,102,team 102,gearheads,gearheads 102,the gearheads,scoring,scoring app,standings,match standings,team 102 scoring app,scouting,gearheads scouting,team 102 scouting")
 		meta(name="theme-color" content="#333")
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
-		link(rel="icon" type="image/png" href=`${fileRoot}favicon.png`)
+		link(rel="icon" type="image/png" href=`${fileRoot}/favicon.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
-		link(rel="stylesheet" href=`${fileRoot}lib/w3.css`)
-		link(rel="stylesheet" href=`${fileRoot}css/theme-2019.css`)
-		link(rel="stylesheet" href=`${fileRoot}css/w3-additions.css`)
+		link(rel="stylesheet" href=`${fileRoot}/lib/w3.css`)
+		link(rel="stylesheet" href=`${fileRoot}/css/theme-2019.css`)
+		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css`)
 		
-		script(src=`${fileRoot}lib/w3.js`)
-		script(src=`${fileRoot}lib/jquery.min.js`)
-		script(src=`${fileRoot}js/notification-cards.js`)
-		script(src=`${fileRoot}js/submit-data.js`)
-		script(src=`${fileRoot}js/easteregg.js`)
+		script(src=`${fileRoot}/lib/w3.js`)
+		script(src=`${fileRoot}/lib/jquery.min.js`)
+		script(src=`${fileRoot}/js/notification-cards.js`)
+		script(src=`${fileRoot}/js/submit-data.js`)
 		if alert
 			script.
 				$(function(){
 					alert("#{alert}");
 				});
-		
+	
 	body(class="theme-text")
 		include nav
-		include main
+		main(class="w3-padding w3-mobile w3-center" style="font-size:1.2em" id="content") 
 			block content
 		include footer
 		div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
-			img(src=`${fileRoot}images/deepspace-mountains.svg` style="width: 2048px; position: fixed; bottom: 0px; left: 0px;")
+			img(src=`${fileRoot}/images/deepspace-mountains.svg` style="width: 2048px; position: fixed; bottom: 0px; left: 0px;")
 			div(class="star star-10" style="top: 500px; left: 30px;")
 			div(class="star star-10" style="top: 200px; left: 300px;")
 			div(class="star star-10" style="top: 50px; left: 1200px;")

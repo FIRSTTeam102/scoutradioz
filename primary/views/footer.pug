@@ -1,5 +1,17 @@
+style.
+	/* This is for the footer. Didn't really want to put it into our stylesheet. */
+	html{ height:100%; }
+	body{ min-height:100%; padding:0; margin:0; position:relative; }
+
+	body::after{ content:''; display:block; height:100px; }
+
+	footer{ 
+		position:absolute; 
+		bottom:0; 
+		width:100%;
+	}
 footer
-	div(class="w3-col theme-dark-gray w3-padding-16 w3-padding")
+	div(class="w3-col theme-dark-gray w3-padding-16 w3-padding" style="position: static; bottom: 0px; opacity: 0.8;")
 		div(class="w3-col s5")
 			span Copyright 2019 
 			a(href="https://team102.org" target="_blank") FIRST&nbsp;Team&nbsp;102

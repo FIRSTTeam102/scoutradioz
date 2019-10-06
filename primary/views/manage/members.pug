@@ -8,18 +8,21 @@
 	//
 extends ../layout
 block content
-	div(class="w3-container")
-		h3=title
+	h3 Organization Members
+	h6
+		i Make sure to click or tap "Update" when you modify each member.
+	div(class="w3-container w3-section")
 		div(class="w3-row")
 			div(class="w3-col m3 w3-padding-small") Actions
-			div(class="w3-col m3 w3-padding-small") Name
+			div(class="w3-col m2 w3-padding-small") Name
 			div(class="w3-col m2 w3-padding-small") Subteam
 			div(class="w3-col m2 w3-padding-small") Class
-			div(class="w3-col m2 w3-padding-small") Years on Team
+			div(class="w3-col m2 w3-padding-small") Role
+			div(class="w3-col m1 w3-padding-small") Years on Team
 		each member in members
 			div(class="w3-row")
 				div(class="w3-col s12 m0")
-					p(class="theme-spacer")
+					hr
 				form(id=`deleteMember${member._id}` action="/manage/members/deletemember" method="post")
 					input(type="hidden" name="memberId" value=member._id)
 				div(class="w3-col s5 m1 w3-padding-small")
@@ -30,7 +33,7 @@ block content
 					input(type="hidden" name="memberId" value=member._id)
 					div(class="w3-col s7 m2 w3-padding-small")
 						button(class="w3-btn theme-submit w3-block" type="submit") Update
-					div(class="w3-col m3 w3-padding-small")
+					div(class="w3-col m2 w3-padding-small")
 						input(type="text" value=member.name name="name" class="w3-input theme-input w3-no-border theme-inline-padding")
 					div(class="w3-col m2 w3-padding-small")
 						select(class="w3-select theme-input w3-no-border" name="subteam_key")
@@ -51,32 +54,46 @@ block content
 								- else
 									option(value=option.class_key)= option.label
 					div(class="w3-col m2 w3-padding-small")
-						input(type="text" value=member.org_info.years name="years" class="w3-input theme-input w3-no-border theme-inline-padding")
+						select(name="role_key" class="w3-select theme-input w3-no-border")
+							each role in roles
+								- if (member.role_key == role.role_key)
+									option(value=role.role_key selected)= role.label
+								- else
+									option(value=role.role_key)= role.label
+					div(class="w3-col m1 w3-padding-small")
+						input(type="number" value=member.org_info.years name="years" class="w3-input theme-input w3-no-border theme-inline-padding")
+		hr
 		div(class="w3-row")
-			form(action="/manage/members/addmember" method="post")
+			form#addMemberForm(action="/manage/members/addmember" method="post")
 				div(class="w3-col m2 w3-padding-small")
 					button(type="submit" class="w3-btn theme-submit w3-block") Add
 				div(class="w3-col m3 w3-padding-small")
-					input(type="text" class="w3-input theme-input w3-block w3-no-border theme-inline-padding" name="name" placeholder="name")
+					input(type="text" class="w3-input theme-input w3-block w3-no-border theme-inline-padding" name="name" placeholder="Name")
 				div(class="w3-col m2 w3-padding-small")
-					select(name="subteam" class="w3-select theme-input w3-no-border")
+					select(name="subteam_key" class="w3-select theme-input w3-no-border")
 						- subteams = config.subteams;
 						each option in subteams
 							option(value=option.subteam_key)= option.label
-				div(class="w3-col m3 w3-padding-small")
-					select(name="className" class="w3-select theme-input w3-no-border")
+				div(class="w3-col m2 w3-padding-small")
+					select(name="class_key" class="w3-select theme-input w3-no-border")
 						- classes = config.classes;
 						each option in classes
 							option(value=option.class_key)= option.label
 				div(class="w3-col m2 w3-padding-small")
-					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="years on team")
+					select(name="role_key" class="w3-select theme-input w3-no-border")
+						each role in roles
+							option(value=role.role_key)= role.label
+				div(class="w3-col m1 w3-padding-small")
+					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="Yrs. on team")
 	script.
+		
 		function confirmDelete(memberName, memberId){
 			if(confirm('Delete member: "' + memberName + '"?')){
 				console.log($("#deleteMemberForm"+ memberId))
 				$("#deleteMember"+ memberId).submit();
 			}
 		}
+		
 		function updateMember( memberId ){
 			
 			var memberForm = $(`#updateMember${memberId}`);
@@ -87,11 +104,16 @@ block content
 				
 				//This is the page-determined response status code
 				switch( response.status ){
-					case 403:
+					case 401:
 						createNotificationCard("Sorry, you are not authorized to edit this user.", "bad");
 						break;
 					case 200:
-						createNotificationCard("Updated member successfully.", )
+						createNotificationCard("Updated member successfully.");
+						break;
 				}
+				
+				setTimeout(function(){
+					window.location.href = window.location.href;
+				}, 1000);
 			})
 		}

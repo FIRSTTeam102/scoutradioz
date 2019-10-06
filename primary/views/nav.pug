@@ -13,11 +13,8 @@ div(style="font-size:1.1em;")
 	if user
 		if user.name != "default_user"
 			nav(class="w3-bar theme-text w3-rest" style="position:relative;z-index:2;")
-				if user.name != "[Dev]"	
-					div#userName(href="#" class="w3-dropdown-mobile theme-text w3-mobile w3-left" onclick="w3_open( $('#userBar')[0], this );" style="max-width: 33%;")
-						div(class="w3-button" style="")=user.name
-				else
-					div(class="w3-bar-item")=user.name
+				div#userName(href="#" class="w3-dropdown-mobile theme-text w3-mobile w3-left" onclick="w3_open( $('#userBar')[0], this );" style="max-width: 33%;")
+					div(class="w3-button")=user.name
 				button( class="w3-button w3-show-small w3-right theme-text" style="font-size:1.6em; padding:4px 16px; " onclick="w3_open( $('#navBar')[0], this );" id="navBtn") &#x2261;
 				div(id="navBar" style="display: none; z-index: 2; position: relative")
 					a(href="/dashboard" class="w3-bar-item w3-button w3-mobile") Dashboard
@@ -33,17 +30,17 @@ div(style="font-size:1.1em;")
 				a(href="/user/changepassword" class="w3-bar-item w3-button w3-padding-16") Change Password
 		//-if user.name == default_user
 		else
-			nav(class="w3-bar gear-opacity w3-container theme-text w3-rest" style="position:relative;z-index:2;")
-				div(id="navBar" style="display: none; z-index: 2; position: relative")
-					a(href="/" class="w3-bar-item w3-button w3-mobile") Home
+			nav(class="w3-bar theme-text w3-rest" style="position:relative;z-index:2;")
+				div(id="navBar" style="z-index: 2; position: relative")
+					a(href="/home" class="w3-bar-item w3-button") Home
 					div(class="w3-right")
 						a(href="/user/switchorg" class="w3-bar-item w3-button w3-mobile") Switch Organization
 
 br 
 header(class="w3-center w3-container w3-content w3-padding-8")
 	div(style="max-width:250px" class="w3-content w3-section")
-		a(href="") 
-			img(src=`${fileRoot}images/deepspace-header-300px.png` class="w3-image")
+		a(href="/home") 
+			img(src=`${fileRoot}/images/deepspace-header-300px.png` class="w3-image")
 	h4(class="theme-text" style="margin:0px;padding:0px;")=eventName
 	br 
 	script.

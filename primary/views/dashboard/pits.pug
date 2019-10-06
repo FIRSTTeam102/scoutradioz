@@ -31,7 +31,7 @@ block content
 						h4(class=`${color}`) #{team.nickname}
 					- if (pics)
 						td(class="theme-spacer")
-							img(src=`/uploads/responsive/${event_year}_${team.team_key}_sm.jpg` alt="" class="w3-image" style="max-height:80px;max-width:50px;")
+							img(src=`${fileRoot}/uploads/responsive/${event_year}_${team.team_key}_sm.jpg` alt="" class="w3-image" style="max-height:80px;max-width:50px;")
 		h6
 			a(class="gear-btn theme-link w3-btn" href=`/dashboard/pits?pics=yes`) Refresh with pictures
 
