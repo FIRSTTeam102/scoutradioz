@@ -1,9 +1,0 @@
-//this is a sample of the .database file that may exist in the document root. Make sure to delete this comment, for JSON cannot have comments.
-{
-	"app": {
-		"url": "localhost:27017"
-	},
-	"default": {
-		"url": "localhost:27017"
-	}
-}

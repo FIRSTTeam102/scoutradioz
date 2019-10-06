@@ -140,7 +140,7 @@ app.use(function(req, res, next){
 		if(!userRole) userRole = {};
 		
 		//Log authentication request
-		res.log(`User ${user.name} (${userRole.access_level}) has requested access to '${req.url}' (${accessLevel})`);
+		res.log(`User ${user.name} (${userRole.access_level}) has requested access to '${req.path}' (${accessLevel})`);
 		
 		//If user has the correct access level, then set isAuthenticated to true
 		if( userRole.access_level >= accessLevel ){
@@ -150,6 +150,9 @@ app.use(function(req, res, next){
 		
 		//Finally, check if isAuthenticated is true, and return a value corresponding to it
 		if( isAuthenticated || app.isDev ){
+			
+			//Add user's role to user obj so we don't have to go searching in db every damn second
+			req.user.role = userRole;
 			
 			return true;
 		}

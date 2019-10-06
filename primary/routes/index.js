@@ -90,9 +90,12 @@ router.post('/selectorg', async function(req, res) {
  * @url /
  * @view /index
  */
-router.get('/home', async function(req, res) {	
-	//2019-9-23 JL: Changed post-login index to /home. Uhh this will be 
-	// implemented more thoroughly later...
+router.get('/home', async function(req, res) {
+	
+	if( !req.user ){
+		res.redirect('/?alert=Please choose an organization.');
+	}
+	
 	
 	var teams = await utilities.find("currentteams", {}, {sort:{team_number: 1}});
 		

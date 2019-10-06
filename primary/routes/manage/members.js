@@ -11,6 +11,8 @@ router.get("/", async function(req, res) {
 	var orgMembers = await utilities.find("users", {org_key: org_key, name: {$ne: "default_user"}}, {sort: {"name": 1}})
 	var org = await utilities.findOne("orgs", {org_key: org_key});
 	
+	var roles = await utilities.find("roles", { access_level: { $lte: req.user.role.access_level }});
+	
 	var config = org.config.members;
 	/*This is the organization's configuration for member information.
 	  Currently, it contains:
@@ -37,6 +39,7 @@ router.get("/", async function(req, res) {
 		title: "Organization Members",
 		members: orgMembers,
 		config: config,
+		roles: roles
 	});
 });
 
@@ -48,9 +51,27 @@ router.post("/addmember", async function(req, res){
 	res.log(thisFuncName + 'ENTER')
 	
 	var name = req.body.name;
-	var subteam = req.body.subteam;
-	var className = req.body.className;
+	var subteam_key = req.body.subteam_key;
+	var class_key = req.body.class_key;
 	var years = req.body.years;
+	var role_key = req.body.role_key;
+	
+	var org_key = req.user.org_key;
+	
+	if(!name || name == ""){
+		return res.send({
+			status: 400, message: "User must have a name."
+		});
+	}
+	
+	var requestedRole = await utilities.findOne("roles", {role_key: role_key});
+	
+	if( !requestedRole ){
+		return res.redirect("/manage/members?alert=Invalid role requested.");
+	}
+	if( requestedRole.access_level > req.user.role.access_level ){
+		return res.redirect("/manage/members?alert=You do not have permission to create a user with that role.");
+	}
 	
 	var memberJson = JSON.stringify(req.body);
 	res.log(`Request to add member ${memberJson}`, true);
@@ -61,7 +82,7 @@ router.post("/addmember", async function(req, res){
 	if (isNaN(parseInt(seniority))) seniority = "0";
 	
 	// Get the first 3 characters, all lower case
-	var classPre = className.toLowerCase().substring(0, 3);
+	var classPre = class_key.toLowerCase().substring(0, 3);
 	switch(classPre) {
 		case "fre":
 			seniority += ".1";
@@ -80,10 +101,26 @@ router.post("/addmember", async function(req, res){
 	}
 	res.log(thisFuncName + 'seniority=' + seniority);
 	
-	// 2018-04-05, M.O'C - Adding "assigned" as "false" so that the field has a value upon insert
-	await utilities.insert("teammembers", {"name": name, "subteam": subteam, "className": className, "years": years, "seniority": seniority, "password": "default", "assigned": "false"});
+	var insertQuery = {
+		org_key: org_key,
+		name: name,
+		role_key: role_key,
+		password: "default",
+		org_info: {
+			subteam_key: subteam_key,
+			class_key: class_key,
+			years: years,
+			seniority: seniority
+		},
+		event_info:{
+			present: false,
+			assigned: false
+		}
+	}
 	
-	res.redirect("./");
+	var writeResult = await utilities.insert("users", insertQuery);
+	
+	res.redirect('/manage/members');
 });
 
 router.post("/updatemember", async function(req, res){
@@ -156,16 +193,23 @@ router.post("/deletemember", async function(req, res){
 		
 		var memberId = req.body.memberId;
 		
+		var member = await utilities.findOne("users", {_id: memberId});
+		var memberRole = await utilities.findOne("roles", {role_key: member.role_key});
+		
 		//log it
 		res.log(`Request to delete member ${memberId} by user ${req.user}`, true);
 		
-		res.log("Going to remove member with id: "+memberId, "white");
-		
-		await utilities.remove("teammembers", {"_id": memberId}, {});
-		
+		if( req.user.role.access_level >= memberRole.access_level ){
+			
+			var writeResult = await utilities.remove('users', {_id: memberId});
+			
+			res.redirect('/manage/members?alert=Removed user successfully.');
+		}
+		else{
+			
+			res.redirect('/manage/members?alert=Unauthorized to delete this user.');
+		}
 	}
-	
-	res.redirect('/manage/members');
 });
 
 router.get("/present", async function(req, res) {

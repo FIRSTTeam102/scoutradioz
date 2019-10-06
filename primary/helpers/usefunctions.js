@@ -23,13 +23,13 @@ functions.userViewVars = function(req, res, next){
 	//If we have set a process tier and S3 bucket name, then set fileRoot to an S3 url
 	if( process.env.TIER && process.env.S3_BUCKET ){
 		
-		fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}/`;
+		fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}`;
 		
 	}
 	//Otherwise set fileRoot as / for local filesystem
 	else{
 		
-		fileRoot = '/'
+		fileRoot = ''
 	}
 	
 	res.locals.fileRoot = fileRoot;
