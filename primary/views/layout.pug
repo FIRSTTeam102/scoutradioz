@@ -26,7 +26,6 @@ html
 		link(rel="icon" type="image/png" href=`${fileRoot}favicon.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
 		link(rel="stylesheet" href=`${fileRoot}lib/w3.css`)
-		link(rel="stylesheet" href=`${fileRoot}css/style-2018.css`)
 		link(rel="stylesheet" href=`${fileRoot}css/theme-2019.css`)
 		link(rel="stylesheet" href=`${fileRoot}css/w3-additions.css`)
 		
@@ -45,6 +44,7 @@ html
 		include nav
 		include main
 			block content
+		include footer
 		div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
 			img(src=`${fileRoot}images/deepspace-mountains.svg` style="width: 2048px; position: fixed; bottom: 0px; left: 0px;")
 			div(class="star star-10" style="top: 500px; left: 30px;")

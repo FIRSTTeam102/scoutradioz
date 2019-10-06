@@ -8,9 +8,10 @@
 	margin: 15px 8px 0px 8px;
 }
 
-.previousmatches-container{ height: 108px; }
-.previousmatches-team{ height: 20px; }
-.previousmatches-team-container{ height: 36px; }
+.gear-margin-sides{
+	margin-left: 8px!important;
+	margin-right: 8px!important;
+}
 
 .scouting-counter{
 	font-weight:bold;
@@ -112,12 +113,10 @@
 
 @media (min-width:993px){
 	.w3-col.l0{display:none;}
-	.w3-col.l-half{width:4.166%;}
 }
 
 @media (min-width: 601px){
 	.w3-col.m0{display:none;}
-	.w3-col.m-half{width:4.166%;}
 	.w3-label{
 		text-align: right;
 		padding-right: 8px;
@@ -128,15 +127,8 @@
 
 @media (max-width: 600px){
 	.w3-col.s0{display:none;}
-	.w3-col.s-half{width:4.166%;}
 	.w3-hide-small{
 		display: none!important;
-	}
-	.gear-resp90,.w3-resp90{
-		width: 90%!important;
-	}
-	.gear-resp50,.w3-resp90{
-		width: 50%!important;
 	}
 	/* Tooltip */
 	.w3-tooltip .w3-tooltiptext{

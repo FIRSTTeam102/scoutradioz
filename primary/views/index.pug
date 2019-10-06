@@ -51,8 +51,6 @@ block content
 			h4(class="theme-text")=user.name
 			a(href="/dashboard")
 				div(class="gear-btn theme-link w3-btn") Dashboard
-			a(href="/reports/allteammetrics")
-				div(class="gear-btn theme-link w3-btn") All Team Metrics
 			//------------Find a way to make this tied to the database's access levels
 			if( user.role_key == "team_admin" || user.role_key == "global_admin")
 				a(href="/manage")

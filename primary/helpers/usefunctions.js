@@ -14,7 +14,7 @@ functions.userViewVars = function(req, res, next){
 		
 	else if(req.app.isDev == true){
 		
-		req.user = {name: '[Dev]', subteam: 'support'};
+		//req.user = {name: '[Dev]', subteam: 'support'};
 		res.locals.user = req.user;
 	}
 	
