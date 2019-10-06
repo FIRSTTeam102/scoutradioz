@@ -81,7 +81,10 @@ router.post('/image*', function (req, res, next) {
         
         console.log("req.file=" + JSON.stringify(req.file));
         
-        res.status(200).send({message:"We're back!"});
+       // upload(req, res, function (e) {
+            
+            res.status(200).send({message:"We're back!"});
+        //});
     });
 });
 

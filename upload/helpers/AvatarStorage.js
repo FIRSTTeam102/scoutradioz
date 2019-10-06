@@ -10,8 +10,8 @@ const streamifier = require('streamifier');
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({
-	accessKeyId: process.env.AWS_ACCESS_KEY_,
-	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_
+	//accessKeyId: process.env.AWS_ACCESS_KEY_,
+	//secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_
 });
 
 //Configure UPLOAD_PATH
@@ -266,12 +266,43 @@ var AvatarStorage = function(options) {
 				else if( that.options.storage == 's3' ){
 					
 					//S3 BATCH SEQUENCE PROCESS
-					console.log("Attempting to upload buffer to S3");
+					//console.log("Attempting to upload buffer to S3");
 					
 					let file_name = path.basename(current.stream.path);
-										
+					
 					//Create S3 key (path after bucket)
 					const key = `${process.env.TIER}/${that.s3UploadPath}/${file_name}`;
+					
+					const contentType = that.options.output;
+					
+					const params = {
+						Bucket: process.env.S3_BUCKET,
+						Key: key,
+						Body: buffer,
+						ContentType: contentType,
+						ACL: "public-read"
+					}
+					
+					var url = s3.getSignedUrl('putObject', params);
+					//console.log('The URL is', url);
+					
+					let startTime = Date.now();
+					
+					//upload to S3
+					s3.upload(params, function(s3err, data){
+						
+						if(s3err){ console.log(s3err); }
+						
+						console.log(JSON.stringify(data) + `; Object has been put after ${Date.now() - startTime} ms`);
+					});
+					
+					
+					s3.waitFor('objectExists', {Bucket: params.Bucket, Key: params.Key}, function(err, data) {
+						if (err) console.log(err, err.stack); // an error occurred
+						else     console.log(data);           // successful response
+					});
+					
+					/*
 					
 					console.log(key);
 					
@@ -293,9 +324,30 @@ var AvatarStorage = function(options) {
 					
 					//Now that we've done the hacky S3 upload, run callback function
 					cb(null);
+					*/
 				}
 			});
-		});	
+		});
+		
+		const key = "hackyhack.txt";
+		
+		const params = {
+			Bucket: process.env.S3_BUCKET,
+			Key: key,
+			Body: "hello",
+			ContentType: "text",
+			ACL: "public-read"
+		}
+		
+		//upload hacky-ass extra thing to S3 to trigger the other uploads
+		s3.upload(params, function(s3err, data){
+			
+			if(s3err){ console.log(s3err); }
+			
+			console.log(data);
+		});
+		
+		cb(null);
 	}
 
 	//multer requires this for handling the uploaded file
