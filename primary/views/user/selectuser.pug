@@ -16,6 +16,19 @@ block content
 			label Password: 
 		div(class="w3-half")
 			input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="password")
+	div#passwordCreationContainer(class="w3-contaner w3-padding-16 w3-hide")
+		h6
+			i Please create a new password.
+		div(class="w3-container w3-padding-16")
+			div(class="w3-quarter w3-label theme-inline-padding")
+				label New Password: 
+			div(class="w3-half")
+				input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="newPassword1")
+		div(class="w3-container w3-padding-16")
+			div(class="w3-quarter w3-label theme-inline-padding")
+				label Confirm: 
+			div(class="w3-half")
+				input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="newPassword2")
 	//-Organization's id and password must be passed back to user so they can send it with their request.
 		The alternative to this is either to AJAX the entire login process (tedious) or use tokens (more tedious).
 		My reasoning that this is okay is because the user already submitted the password literally 100 milliseconds ago...
@@ -29,7 +42,7 @@ block content
 	
 		$("#btnLogin").click(handleSubmit);
 		//If user presses enter in password input, invoke submit handler.
-		$("input[name=password]").keyup(function(e){
+		$("input[name=password],input[name=newPassword2]").keyup(function(e){
 			if(e.keyCode == 13){
 				handleSubmit();
 			}
@@ -41,8 +54,37 @@ block content
 			var org_key = $("input[name=org_key").val();
 			var org_password = $("input[name=org_password").val();
 			
+			//if new-password has been filled, then submit to /user/login/createpassword
+			if( $("input[name=newPassword1]").val() != "" && $("input[name=newPassword2]").val() != "" ){
+				
+				var newPassword1 = $("input[name=newPassword1]").val();
+				var newPassword2 = $("input[name=newPassword2]").val();
+				
+				var data = {user: selectedUser, org_key: org_key, org_password: org_password, newPassword1: newPassword1, newPassword2: newPassword2};
+				
+				if( newPassword1 == newPassword2){
+					
+					$.post('/user/login/createpassword', data).done( function(response){
+						
+						//Possible response information: alert and redirect_url
+						
+						//if alert, then send alert prompt
+						if(response.alert){
+							alert(response.alert);
+						}
+						
+						//if redirect, then redirect
+						if(response.redirect_url){
+							window.location.href = decodeURIComponent(response.redirect_url);
+						}
+					});
+				}
+				else{
+					alert("Both new password forms must be equal.");
+				}
+			}
 			//If password has no input, then submit to /user/login/withoutpassword
-			if( $("input[name=password]").val() == "" ){
+			else if( $("input[name=password]").val() == "" ){
 				
 				var data = {user: selectedUser, org_key: org_key, org_password: org_password};
 				
@@ -53,27 +95,15 @@ block content
 					
 					//if redirect, then redirect
 					if(response.redirect_url){
-						window.location.pathname = response.redirect_url;
+						window.location.href = decodeURIComponent(response.redirect_url);
 					}
-					
+					//if necessary to create password, then show the create-password prompt
+					else if(response.create_password){
+						$("#passwordCreationContainer").removeClass("w3-hide");
+					}
 					//finally, if password is needed, then show password prompt.
-					if(response.password_needed == true){
+					else if(response.password_needed == true){
 						$("#passwordContainer").removeClass("w3-hide");
-					}
-				
-				//If non-200 status code, we must handle response slightly differently (:/)
-				}).fail( function(status){
-					
-					var response = JSON.parse(status.responseText);
-					
-					//if alert, then send alert prompt
-					if(response.alert){
-						alert(response.alert);
-					}
-					
-					//if redirect, then redirect
-					if(response.redirect_url){
-						window.location.pathname = response.redirect_url;
 					}
 				});
 			}
@@ -95,17 +125,7 @@ block content
 					
 					//if redirect, then redirect
 					if(response.redirect_url){
-						window.location.pathname = response.redirect_url;
-					}
-				}).fail( function(status){
-					
-					var response = JSON.parse(status.responseText);
-					
-					//Possible failed response information: alert
-					
-					//if alert, then send alert prompt
-					if(response.alert){
-						alert(response.alert);
+						window.location.href = decodeURIComponent(response.redirect_url);
 					}
 				});
 			}

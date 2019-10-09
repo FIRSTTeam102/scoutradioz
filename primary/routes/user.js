@@ -77,8 +77,28 @@ router.post('/login/select', async function(req, res){
 	//If comparison succeeded, then proceed
 	if(comparison == true){
 		
-		//Get list of users that match the organization name
 		var users = await utilities.find('users', {"org_key": org_key, name: {$ne: "default_user"}}, {sort: {name: 1}});
+		
+		/* In case we want to sort members by class.
+		var sortedUsers = [];
+		
+		console.log(selectedOrg.config.members.classes)
+		
+		var classes = selectedOrg.config.members.classes;
+		
+		for( var thisClass of classes ){
+			
+			sortedUsers.push({name: `----${thisClass.label}----`, _id: "null"});
+			
+			for( var thisUser of users ){
+				
+				if( thisUser.org_info.class_key == thisClass.class_key ){
+					
+					sortedUsers.push(thisUser);
+				}
+			}
+		}
+		*/
 		
 		res.render('./user/selectuser', {
 			title: `Sign In to ${selectedOrg.nickname}`,
@@ -95,20 +115,24 @@ router.post('/login/select', async function(req, res){
 
 router.post('/login/withoutpassword', async function(req, res){
 	
+	//This is where /user/login/selectuser sends a request first
+	
 	var userID = req.body.user;
 	var org_key = req.body.org_key;
 	var org_password = req.body.org_password;
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
-		return res.status(400).send({
+		return res.send({
+			status: 400,
 			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
 		});
 	}
 	
 	//If no user is selected, send an alert message
 	if(!userID || userID == ''){
-		return res.status(400).send({
+		return res.send({
+			status: 400,
 			alert: "Please select a user."
 		});
 	}
@@ -126,7 +150,8 @@ router.post('/login/withoutpassword', async function(req, res){
 	
 	//If password isn't correct for some reason, then cry
 	if(!comparison){
-		return res.status(400).send({
+		return res.send({
+			status: 400,
 			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
 		});
 	}
@@ -136,8 +161,9 @@ router.post('/login/withoutpassword', async function(req, res){
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
-		return res.status(500).send({
-			alert: "Internal server error: Selected user does not exist in database"
+		return res.send({
+			status: 400,
+			alert: "No such user exists"
 		});
 	}
 	
@@ -148,12 +174,23 @@ router.post('/login/withoutpassword', async function(req, res){
 	//If no such role exists, throw an error because there must be one
 	if(!userRole) throw new Error(`user.js /login/withoutpassword: No role exists in DB with key ${role_key}`);
 	
+	//if user's access level is greater than scouter, then a password is required.
 	if(userRole.access_level > process.env.ACCESS_SCOUTER){
 		
-		//if access_level > process.env.ACCESS_SCOUTER, then return saying password is required
-		res.status(200).send({
-			password_needed: true
-		});
+		//if they do not yet have a password, then return saying password creation is required
+		if( user.password == "default" ){
+			res.send({
+				status: 200,
+				create_password: true
+			});
+		}
+		else{
+			//if access_level > process.env.ACCESS_SCOUTER, then return saying password is required
+			res.send({
+				status: 200,
+				password_needed: true
+			});
+		}
 	} 
 	else if(userRole.access_level == process.env.ACCESS_SCOUTER){
 		
@@ -166,10 +203,11 @@ router.post('/login/withoutpassword', async function(req, res){
 			req.logIn(user, function(err){
 			
 				//If error, then log and return an error
-				if(err){ console.error(err); return res.status(500).send({alert: err}) };
+				if(err){ console.error(err); return res.send({status: 500, alert: err}) };
 				
 				//now, return succes with redirect to dashboard
-				res.status(200).send({
+				res.send({
+					status: 200,
 					password_needed: false,
 					redirect_url: '/dashboard'
 				});
@@ -178,7 +216,8 @@ router.post('/login/withoutpassword', async function(req, res){
 		else{
 			
 			//if password is not default, then return with password needed.
-			res.status(200).send({
+			res.send({
+				status: 200,
 				password_needed: true
 			});
 		}
@@ -189,10 +228,11 @@ router.post('/login/withoutpassword', async function(req, res){
 		req.logIn(user, function(err){
 			
 			//If error, then log and return an error
-			if(err){ console.error(err); return res.status(500).send({alert: err}) };
+			if(err){ console.error(err); return res.send({status: 500, alert: err}) };
 			
 			//Now, return with redirect_url: '/'
-			res.status(200).send({
+			res.send({
+				status: 200,
 				password_needed: false,
 				redirect_url: '/'
 			});
@@ -209,14 +249,16 @@ router.post('/login/withpassword', async function(req, res){
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
-		return res.status(400).send({
+		return res.send({
+			status: 400,
 			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
 		});
 	}
 	
 	//If no user is selected, send an alert message
 	if(!userID || userID == ''){
-		return res.status(400).send({
+		return res.send({
+			status: 400,
 			alert: "Please select a user."
 		});
 	}
@@ -232,7 +274,8 @@ router.post('/login/withpassword', async function(req, res){
 	
 	//If password isn't correct for some reason, then cry
 	if(!orgComparison){
-		return res.status(400).send({
+		return res.send({
+			status: 400,
 			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
 		});
 	}
@@ -242,8 +285,9 @@ router.post('/login/withpassword', async function(req, res){
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user || !user.password){
-		return res.status(500).send({
-			alert: "Internal server error: Selected user does not exist in database"
+		return res.send({
+			status: 400,
+			alert: "No such user exists"
 		});
 	}
 	
@@ -256,7 +300,7 @@ router.post('/login/withpassword', async function(req, res){
 		req.logIn(user, async function(err){
 			
 			//If error, then log and return an error
-			if(err){ console.error(err); return res.status(500).send({alert: err}) };
+			if(err){ console.error(err); return res.send({status: 500, alert: err}) };
 			
 			var userRole = await utilities.findOne("roles", {role_key: user.role_key});
 			
@@ -272,17 +316,112 @@ router.post('/login/withpassword', async function(req, res){
 			
 			//otherwise, send success and redirect
 			//*** When we add a global_admin page, we should modify this to add a global_admin page redirect
-			return res.status(200).send({
+			return res.send({
+				status: 200,
 				redirect_url: redirectURL
 			});
 		});
 	}
 	else{
 		//If authentication failed, then send alert
-		return res.status(400).send({
+		return res.send({
+			status: 400,
 			alert: "Incorrect password."
 		});
 	}
+});
+
+router.post('/login/createpassword', async function(req, res) {
+	
+	var userID = req.body.user;
+	var org_key = req.body.org_key;
+	var org_password = req.body.org_password;
+	var p1 = req.body.newPassword1;
+	var p2 = req.body.newPassword2;
+	
+	res.log(`Request to create password: ${JSON.stringify(req.body)}`);
+	
+	//If we don't have organization info, redirect user to login
+	if(!org_key || !org_password){
+		return res.status.send({
+			status: 400,
+			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+		});
+	}
+	
+	//If no user is selected, send an alert message
+	if(!userID || userID == ''){
+		return res.send({
+			status: 400,
+			alert: "Please select a user."
+		});
+	}
+	
+	//Get org that matches request
+	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	if(!selectedOrg) return res.redirect(500, '/user/login');
+	
+	var orgPasswordHash = selectedOrg.default_password;
+	
+	//Compare password to correct hash
+	var orgComparison = await bcrypt.compare( org_password, orgPasswordHash );
+	
+	//If password isn't correct for some reason, then cry
+	if(!orgComparison){
+		return res.send({
+			status: 400,
+			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+		});
+	}
+	
+	//Find user info that matches selected id
+	var user = await utilities.findOne("users", {_id: userID});
+	
+	//if user doesn't exist in database for some reason, then cry
+	if(!user){
+		return res.send({
+			status: 500,
+			alert: "No such user exists"
+		});
+	}
+	
+	if(user.password != "default"){
+		return res.send({
+			password_needed: true,
+			alert: "Password already exists. Please submit your current password."
+		});
+	}
+	
+	//make sure forms are filled
+	if( !p1 || !p2 ){
+		return res.send({
+			alert: "Please fill both password forms."
+		});
+	}
+	if( p1 != p2 ){
+		return res.send({
+			alert: "Both new password forms must be equal."
+		});
+	}
+	
+	//Hash new password
+	const saltRounds = 10;
+	
+	var hash = await bcrypt.hash( p1, saltRounds );
+	
+	var writeResult = await utilities.update("users", {_id: userID}, {$set: {password: hash}});
+	
+	res.log(`${p1} -> ${hash}`);
+	res.log("createpassword: " + JSON.stringify(writeResult, 0, 2));
+	
+	req.logIn(user, function(err){
+		
+		if(err) res.log(err);
+		
+		res.send({
+			redirect_url: "/?alert=Set password successfully."
+		});
+	})
 });
 
 /**
@@ -368,7 +507,7 @@ router.get("/logout", async function(req, res) {
 	req.logIn(defaultUser, async function(err){
 			
 		//If error, then log and return an error
-		if(err){ console.error(err); return res.status(500).send({alert: err}) };
+		if(err){ console.error(err); return res.send({status: 500, alert: err}) };
 		
 		//now, once default user is logged in, redirect to index
 		res.redirect('/');

@@ -120,7 +120,7 @@ router.post("/addmember", async function(req, res){
 	
 	var writeResult = await utilities.insert("users", insertQuery);
 	
-	res.redirect('/manage/members');
+	res.redirect('/manage/members#addMember');
 });
 
 router.post("/updatemember", async function(req, res){
@@ -136,6 +136,7 @@ router.post("/updatemember", async function(req, res){
 	var subteam_key = req.body.subteam_key;
 	var class_key = req.body.class_key;
 	var years = req.body.years;
+	var role_key = req.body.role_key;
 	
 	// recalculate seniority
 	var seniority = years;
@@ -161,28 +162,56 @@ router.post("/updatemember", async function(req, res){
 			seniority += ".0";
 	}
 	
-	//Query to update user in db
-	var updateQuery = {$set: 
-		{name: name,
-		org_info: {
-			subteam_key: subteam_key,
-			class_key: class_key,
-			years: years,
-			seniority: seniority
+	var existingUserPreEdit = await utilities.findOne("users", {_id: memberId});
+	var existingUserRole = await utilities.findOne("roles", {role_key: existingUserPreEdit.role_key});
+	
+	//Check the role of the user they're trying to edit, and see if they are authorized to edit that user
+	if( existingUserRole.access_level > req.user.role.access_level ){
+		
+		res.send({
+			status: 401,
+			message: "You do not have permission to edit that user."
+		})
+	}
+	else{
+		
+		var requestedRole = await utilities.findOne("roles", {role_key: role_key});
+		
+		//Check the role they're trying to give the user, and see if they are authorized to give that role
+		if( !requestedRole || requestedRole.access_level > req.user.role.access_level ){
+			res.send({
+				status: 401,
+				message: "You do not have permission to set a role of this level."
+			});
 		}
-	}};
-	
-	//log it
-	res.log(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
-	
-	var writeResult = await utilities.update("users", {org_key: org_key, _id: memberId}, updateQuery);
-	
-	console.log(writeResult);
-	
-	res.send({
-		status: 200,
-		message: `Updated ${name} successfully.`
-	});
+		else{
+			//Query to update user in db
+			var updateQuery = {
+				$set: {
+					name: name,
+					role_key: role_key,
+					org_info: {
+						subteam_key: subteam_key,
+						class_key: class_key,
+						years: years,
+						seniority: seniority
+					}
+				}
+			};
+			
+			//log it
+			res.log(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
+			
+			var writeResult = await utilities.update("users", {org_key: org_key, _id: memberId}, updateQuery);
+			
+			console.log(writeResult);
+			
+			res.send({
+				status: 200,
+				message: `Updated ${name} successfully.`
+			});
+		}
+	}
 });
 
 router.post("/deletemember", async function(req, res){
@@ -196,14 +225,21 @@ router.post("/deletemember", async function(req, res){
 		var member = await utilities.findOne("users", {_id: memberId});
 		var memberRole = await utilities.findOne("roles", {role_key: member.role_key});
 		
-		//log it
-		res.log(`Request to delete member ${memberId} by user ${req.user}`, true);
+		res.log(`Request to delete member ${memberId} by user ${JSON.stringify(req.user)}`, true);
 		
+		//check for authorization
 		if( req.user.role.access_level >= memberRole.access_level ){
 			
-			var writeResult = await utilities.remove('users', {_id: memberId});
-			
-			res.redirect('/manage/members?alert=Removed user successfully.');
+			//check if someone's trying to delete themselves (Don't do that!)
+			if(req.user._id != memberId){
+				
+				var writeResult = await utilities.remove('users', {_id: memberId});
+				
+				res.redirect('/manage/members?alert=Removed user successfully.');
+			}
+			else{
+				res.redirect('/manage/members?alert=Don\'t delete yourself, you silly goose!');
+			}
 		}
 		else{
 			

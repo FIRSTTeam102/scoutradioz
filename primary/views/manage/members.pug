@@ -64,7 +64,7 @@ block content
 						input(type="number" value=member.org_info.years name="years" class="w3-input theme-input w3-no-border theme-inline-padding")
 		hr
 		div(class="w3-row")
-			form#addMemberForm(action="/manage/members/addmember" method="post")
+			form#addMember(action="/manage/members/addmember" method="post")
 				div(class="w3-col m2 w3-padding-small")
 					button(type="submit" class="w3-btn theme-submit w3-block") Add
 				div(class="w3-col m3 w3-padding-small")
@@ -85,6 +85,8 @@ block content
 							option(value=role.role_key)= role.label
 				div(class="w3-col m1 w3-padding-small")
 					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="Yrs. on team")
+		h6
+			i If you create a Team Admin user, please make sure they log in and create a secure password for themselves. Otherwise, a student could log in as them.
 	script.
 		
 		function confirmDelete(memberName, memberId){
@@ -105,15 +107,15 @@ block content
 				//This is the page-determined response status code
 				switch( response.status ){
 					case 401:
-						createNotificationCard("Sorry, you are not authorized to edit this user.", "bad");
+						createNotificationCard(response.message, "bad");
 						break;
 					case 200:
-						createNotificationCard("Updated member successfully.");
+						createNotificationCard(response.message);
 						break;
 				}
 				
 				setTimeout(function(){
-					window.location.href = window.location.href;
+					//window.location.href = window.location.href;
 				}, 1000);
 			})
 		}
