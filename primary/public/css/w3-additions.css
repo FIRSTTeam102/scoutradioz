@@ -113,7 +113,7 @@
 
 @media (min-width:993px){
 	.w3-col.l0{display:none;}
-	.w3-col.m0{display:inherit!important;}
+	.w3-col.m0{display:inherit;}
 }
 
 @media (min-width: 601px){

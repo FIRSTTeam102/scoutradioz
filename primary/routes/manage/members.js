@@ -14,30 +14,27 @@ router.get("/", async function(req, res) {
 	var roles = await utilities.find("roles", { access_level: { $lte: req.user.role.access_level }});
 	
 	var config = org.config.members;
-	/*This is the organization's configuration for member information.
-	  Currently, it contains:
-	  	{ "members": { 
-			"subteams": [
-				{ "label": "Mechanical", "subteam_key": "mech" },
-				{ "label": "Electrical", "subteam_key": "elec" }, 
-				{ "label": "Programming", "subteam_key": "prog" }, 
-				{ "label": "Drive", "subteam_key": "driv" }
-			], 
-			"classes": [
-				{ "label": "Freshman", "class_key": "freshman" },
-				{ "label": "Sophomore", "class_key": "sophomore" },
-				{ "label": "Junior", "class_key": "junior" }, 
-				{ "label": "Senior", "class_key": "senior" },
-				{ "label": "Alum", "class_key": "alum" }, 
-				{ "label": "Middle School", "class_key": "middleschool" }, 
-				{ "label": "Mentor", "class_key": "mentor" }, 
-				{ "label": "Parent", "class_key": "parent" }
-		]}} 
-	*/
+	
+	
+	var membersByRole = {};
+	
+	for( var thisRole of roles ){
+		
+		membersByRole[ thisRole.label ] = [];
+		
+		for( var thisMember of orgMembers ){
+			
+			if( thisMember.role_key == thisRole.role_key ){
+				
+				membersByRole[ thisRole.label ].push( thisMember );
+			}
+		}
+	}		
 	
 	res.render("./manage/members", { 
 		title: "Organization Members",
-		members: orgMembers,
+		//members: orgMembers,
+		membersByRole: membersByRole,
 		config: config,
 		roles: roles
 	});
