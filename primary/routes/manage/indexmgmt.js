@@ -1,5 +1,6 @@
 const express = require('express');
 const utilities = require('../../utilities');
+const bcrypt = require('bcryptjs')
 const router = express.Router();
 
 /**
@@ -15,8 +16,23 @@ router.get('/', async function(req, res) {
 	
 	res.render('./manage/managedashboard', { 
 		title: `Manage ${org.nickname}`,
+		org: org,
 		current: req.event.key,
 	});
+});
+
+router.post('/setdefaultpassword', async function(req, res) {
+	//Check authentication for team admin level
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
+	var newDefaultPassword = req.body.defaultPassword
+	
+	var hash = await bcrypt.hash(newDefaultPassword, 10);
+	
+	var writeResult = await utilities.update('orgs', {org_key: req.user.org_key}, {$set: {default_password: hash}});
+	
+	res.redirect(`/manage?alert=Successfully changed password to ${newDefaultPassword}.`);
+	
 });
 
 /** POST method to set current event id.

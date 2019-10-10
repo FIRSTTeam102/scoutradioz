@@ -41,6 +41,13 @@ block content
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Update list of current teams
 	div(class="w3-container w3-section")
+		h4 Organization Configuration
+		form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword")
+			div(class="w3-padding-small w3-show-inline-block")
+				input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")
+			div(class="w3-padding-small w3-show-inline-block")
+				button#btnSubmit(class="theme-submit w3-btn" onclick="confirmSetDefaultPassword()") Change default password for #{org.nickname}
+	div(class="w3-container w3-section")
 		h4 API Data Management
 		a(href="/manage/data/events") 
 			div(class="gear-btn theme-link w3-btn w3-section")
@@ -50,3 +57,12 @@ block content
 				input#setEvent(class="theme-input w3-no-border theme-inline-padding" placeholder="Event ID" type="text", name="eventId")
 			div(class="w3-padding-small w3-show-inline-block")
 				button#btnSubmit(class="theme-submit w3-btn" type="submit") Set current event ID
+	script.
+		function confirmSetDefaultPassword(){
+			
+			var newDefaultPassword = $("#defaultPassword").val();
+			
+			if(confirm(`Are you sure you want to change #{org.nickname} password to ${newDefaultPassword}?`)){
+				$("#setDefaultPassword").submit();
+			}
+		}
