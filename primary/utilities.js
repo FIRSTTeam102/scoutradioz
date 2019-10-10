@@ -18,6 +18,15 @@ utilities.getDB = function(){
 	if(!dbRef){
 		var url = this.getDBurl();
 		dbRef = monk(url);
+		
+		dbRef.then(function(result){
+			
+			console.log("Connected!");
+			
+		}).catch(function(err){
+			
+			console.log(err);
+		});
 	}
 	
 	//set return var equal to dbRef
