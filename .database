@@ -1,8 +1,0 @@
-{
-    "app": {
-        "url": "mongodb://AppUser:3eBurmCKUEmq1MH6@scoutradioz-test-01-shard-00-00-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-01-obbqu.mongodb.net:27017,scoutradioz-test-01-shard-00-02-obbqu.mongodb.net:27017/app?ssl=true&replicaSet=Scoutradioz-Test-01-shard-0&authSource=admin&retryWrites=true&w=1"
-    },
-    "default": {
-        "url": "localhost:27017"
-    }
-}
