@@ -87,7 +87,7 @@ textarea{padding:8px 12px;}
 /* 2019 hover background colors */
 .theme-link:hover{color:rgb(22, 21, 20)!important;background-color:#f3dfd4!important}
 .theme-hover-white:hover{color:#000!important;background-color:#f3dfd4!important}
-.theme-hover-light-gray:hover,.theme-hover-light-grey:hover{color:#fff!important;background-color:#8a8a8f!important}
+.theme-hover-light-gray:hover,.theme-hover-light-grey:hover{color:#1E1E23!important;background-color:#b9b9c9!important}
 .theme-submit:hover{color:#fff!important;background-color:hsl(240, 60%, 62%)!important}
 .theme-hover-red:hover{color:#fff!important;background-color:#ff6d85!important}
 

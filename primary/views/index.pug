@@ -10,6 +10,8 @@ block content
 						div(class="theme-hover-light-gray theme-input w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=org.nickname
 					div(class="w3-quarter") &nbsp;
 		input(type="hidden" name="org_key" value="")
+		if redirectURL
+			input(type="hidden" name="redirectURL" value=redirectURL)
 	script.
 		function submitOrg( org_key ){
 			$("input[name=org_key]").val(org_key);

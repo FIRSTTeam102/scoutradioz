@@ -20,9 +20,13 @@ router.get('/', async function(req, res){
 		//Get list of participating organizations.
 		var orgs = await utilities.find("orgs");
 		
+		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
+		var redirectURL = req.query.redirectURL;
+		
 		res.render('./index', {
 			title: "Select an Organization",
 			orgs: orgs,
+			redirectURL: redirectURL
 		});
 	}
 });
@@ -56,33 +60,25 @@ router.post('/selectorg', async function(req, res) {
 	
 	//gotta catch if the person pressed the back button first, then gotta log out before loggin in
 	if( req.user ){
-		
 		//destroy session then log in to default user
 		req.logout();
-					
-		//Now, log in to defaultUser
-		req.logIn(defaultUser, function(err){
-				
-			//If error, then log and return an error
-			if(err){ console.error(err); return res.status(500).send({alert: err}) };
-			
-			//now, once default user is logged in, redirect to index
-			res.log("User is now logged in, redirecting to /home");
-			res.redirect('/home');
-		});
 	}
-	else{
-		//Now, log in to defaultUser
-		req.logIn(defaultUser, function(err){
 				
-			//If error, then log and return an error
-			if(err){ console.error(err); return res.status(500).send({alert: err}) };
+	//Now, log in to defaultUser
+	req.logIn(defaultUser, function(err){
 			
-			//now, once default user is logged in, redirect to index
-			res.log("User is now logged in, redirecting to /home");
+		//If error, then log and return an error
+		if(err){ console.error(err); return res.status(500).send({alert: err}) };
+		
+		//now, once default user is logged in, redirect to index
+		res.log("User is now logged in, redirecting to /home");
+		
+		if( req.body.redirectURL ){
+			res.redirect(req.body.redirectURL);
+		}else{
 			res.redirect('/home');
-		});
-	}
+		}
+	});
 });
 
 /**

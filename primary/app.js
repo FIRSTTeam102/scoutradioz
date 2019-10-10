@@ -101,6 +101,13 @@ app.use(async function(req, res, next){
 	//For logging
 	req.requestTime = Date.now();
 	
+	if(req.user){
+		var userRole = await utilities.findOne("roles", {role_key: req.user.role_key});
+			
+		//Add user's role to user obj so we don't have to go searching in db every damn second
+		req.user.role = userRole;	
+	}
+	
 	next();
 });
 
@@ -134,7 +141,7 @@ app.use(function(req, res, next){
 		if(!user) user = {};
 		
 		//Get information about user's role
-		var userRole = await utilities.findOne("roles", {role_key: user.role_key});
+		var userRole = user.role;
 			
 		//If userRole is undefined, create object to avoid errors
 		if(!userRole) userRole = {};
@@ -151,15 +158,29 @@ app.use(function(req, res, next){
 		//Finally, check if isAuthenticated is true, and return a value corresponding to it
 		if( isAuthenticated || app.isDev ){
 			
-			//Add user's role to user obj so we don't have to go searching in db every damn second
-			req.user.role = userRole;
-			
 			return true;
 		}
-		//If user does not have the correct access level, then redirect and return false
+		//If user does not have the correct access level, then handle redirection and return false
 		else{
 			
-			res.redirect('/?alert=Sorry, you do not have access to this page.');
+			var redirectMessage, redirectURL;
+			
+			switch( accessLevel ){
+				case parseInt(process.env.ACCESS_VIEWER):
+					redirectURL = req.originalUrl;
+					break;
+				case parseInt(process.env.ACCESS_SCOUTER):
+					redirectMessage = "Sorry, you must log in as a scouter to access this page."
+					break;
+				case parseInt(process.env.ACCESS_TEAM_ADMIN):
+				case parseInt(process.env.ACCESS_GLOBAL_ADMIN):
+					redirectMessage = "Sorry, you do not have access to this page."
+					break;
+			}
+			
+			var url = `/?alert=${redirectMessage}&redirectURL=${redirectURL}`;
+			
+			res.redirect(url);
 			
 			return false;
 		}

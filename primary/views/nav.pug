@@ -22,8 +22,10 @@ div(style="font-size:1.1em;")
 					a(href="/dashboard/matches" class="w3-bar-item w3-button w3-mobile") Match scouting
 					a(href="/reports/allteammetrics" class="w3-bar-item w3-button w3-mobile") All Team Metrics
 					a(href="/dashboard/allianceselection" class="w3-bar-item w3-button w3-mobile") Alliance Selection
-					if user.subteam == "support" || user.subteam == "exec"
-						a(href="admin" class="w3-bar-item w3-button w3-mobile") Admin Index
+					if user.role && user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
+						a(href="/manage" class="w3-bar-item w3-button w3-mobile") Management
+					if user.role && user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
+						a(href="/admin" class="w3-bar-item w3-button w3-mobile") Admin
 			div#userBar(class="w3-dropdown-content w3-bar-block" style="position:absolute;top:2.1rem; z-index:99; max-width: 10rem;")
 				a(href="/user/logout" class="w3-bar-item w3-button w3-padding-16") Log out
 				a(href="/user/switchorg" class="w3-bar-item w3-button w3-padding-16") Switch Organization

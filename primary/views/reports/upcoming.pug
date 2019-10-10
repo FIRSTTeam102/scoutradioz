@@ -26,7 +26,7 @@ block content
 				each team in teamList
 					option(value=team class="w3-bar-item") #{team}
 			a#upcomingMatchesLink(href="/reports/upcoming")
-				div(class="gear-btn w3-btn theme-gray theme-hover-white") View upcoming matches for 
+				div(class="gear-btn w3-btn theme-gray theme-hover-light-gray") View upcoming matches for 
 					span#upcomingMatchesLabel [All Teams]
 		br 
 		br 
@@ -64,7 +64,7 @@ block content
 								span  #{day} @ #{hour}:#{minute}
 						div(class="w3-col s2")
 							a(href=`/reports/matchmetrics?key=${match.key}`)
-								div(class="w3-padding-small w3-right-align w3-small theme-hover-white theme-rounded-br theme-rounded-tr" style="padding-right: 18px!important;")
+								div(class="w3-padding-small w3-right-align w3-small theme-hover-light-gray theme-rounded-br theme-rounded-tr" style="padding-right: 18px!important;")
 									i Compare alliances
 					//-Title for medium screens
 					div(class="w3-col s0 m3 w3-padding-small")
@@ -74,7 +74,7 @@ block content
 							div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
 							div(class="w3-padding")  #{day} @ #{hour}:#{minute}
 							a(href=`/reports/matchmetrics?key=${match.key}`)
-								div(class="w3-padding-16 w3-small theme-hover-white theme-rounded-bottom") 
+								div(class="w3-padding-16 w3-small theme-hover-light-gray theme-rounded-bottom") 
 									i Compare alliances
 					//-Alliances
 					div(class="w3-col s12 m9 w3-padding-small")

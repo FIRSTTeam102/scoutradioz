@@ -50,12 +50,11 @@ block content
 		div(class="w3-container w3-section")
 			h4(class="theme-text")=user.name
 			a(href="/dashboard")
-				div(class="gear-btn theme-link w3-btn") Dashboard
-			//------------Find a way to make this tied to the database's access levels
-			if( user.role_key == "team_admin" || user.role_key == "global_admin")
+				div(class="gear-btn theme-link w3-btn") Scouting Dashboard
+			if user.role && user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
 				a(href="/manage")
-					div(class="gear-btn theme-link w3-btn") Org Management
-			if( user.role_key == "global_admin" )
+					div(class="gear-btn theme-link w3-btn") Management
+			if user.role && user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
 				a(href="/admin")
 					div(class="gear-btn theme-link w3-btn") Admin
 	script.
