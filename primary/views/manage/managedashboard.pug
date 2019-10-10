@@ -7,9 +7,9 @@
 	//
 extends ../layout
 block content
-	h3(class="theme-text")=title
+	h3=title
 	div(class="w3-container w3-section")
-		h4(class="theme-text") Member Management
+		h4 Member Management
 		a(href="/manage/scoutingaudit") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Scouting audit
@@ -26,14 +26,11 @@ block content
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Swap out/in match scouts
 		div(class="w3-container")
-			a(href="/login/resetpassword")
+			a(href="/user/resetpassword")
 				div(class="gear-btn theme-link w3-btn w3-section")
 					span  Reset User Password
-			a(href="/login/adduser")
-				div(class="gear-btn theme-link w3-btn w3-section")
-					span Add Admin
 	div(class="w3-container w3-section")
-		h4(class="theme-text") Current Event - #{current}
+		h4 Current Event - #{current}
 		a(href="/manage/currentevent/matches") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span See matches for current event
@@ -44,13 +41,12 @@ block content
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Update list of current teams
 	div(class="w3-container w3-section")
-		h4(class="theme-text") API Data Management
+		h4 API Data Management
 		a(href="/manage/data/events") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Load/Update events
-		hr
 		form#setCurrentEvent(name="setCurrentEvent" method="post" action="/manage/setcurrent")
 			div(class="w3-padding-small w3-show-inline-block")
 				input#setEvent(class="theme-input w3-no-border theme-inline-padding" placeholder="Event ID" type="text", name="eventId")
 			div(class="w3-padding-small w3-show-inline-block")
-				button#btnSubmit(class="theme-submit w3-btn" type="submit") Set current eventId
+				button#btnSubmit(class="theme-submit w3-btn" type="submit") Set current event ID

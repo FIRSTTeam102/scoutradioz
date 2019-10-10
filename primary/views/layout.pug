@@ -19,7 +19,7 @@ html
 		base(href="/")
 		if !title
 			- title = "Untitled Page"
-		title #{title} | Team 102 Scouting App
+		title #{title} | Scoutradioz
 		meta(name="keywords" content="first robotics,frc,first robotics competition,somerville,new jersey,102,team 102,gearheads,gearheads 102,the gearheads,scoring,scoring app,standings,match standings,team 102 scoring app,scouting,gearheads scouting,team 102 scouting")
 		meta(name="theme-color" content="#333")
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
@@ -37,6 +37,37 @@ html
 			script.
 				$(function(){
 					alert("#{alert}");
+					
+					//Remove alert from url queries so it doesn't appear again when the user refreshes
+					var url = window.location.href;
+					
+					if( url.indexOf("&") == -1 ){
+						var queries = [url.split("?")[1]];
+					}
+					else{
+						var queries = url.split("&");
+						queries[0] = queries[0].split("?")[1];
+					}
+					
+					for(var i in queries){
+						if( queries[i].split("=")[0] == "alert"){
+							queries.splice(i, 1);
+						}
+					}
+					
+					url = url.split("?")[0]
+					
+					//add other queries back into url
+					if(queries[0]){
+						
+						url += '?' + queries[0];
+						
+						for(var i = 1; i < queries.length; i++){
+							url += "&" + queries[i];
+						}
+					}
+					
+					window.history.replaceState({}, document.title, url);
 				});
 	
 	body(class="theme-text")
