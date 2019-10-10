@@ -694,50 +694,34 @@ router.get("/swapmembers", async function(req, res) {
 	var matchCol = db.get("matches");
 	var teammembers = db.get("teammembers");
 
-	//
-	// Get the 'current' event from DB
-	//
-	currentCol.find({}, {}, function(e, docs) {
-		var noEventFound = 'No event defined';
-		var eventId = noEventFound;
-		if (docs)
-			if (docs.length > 0)
-				eventId = docs[0].event;
-		if (eventId === noEventFound) {
-			res.render('/adminindex', { 
-				title: 'Admin pages',
-				current: eventId
-			});
+	// for later querying by event_key
+	var event_key = req.event.key;
+
+	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+
+		// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
+		var earliestTimestamp = 9999999999;
+		if (docs && docs[0])
+		{
+			var earliestMatch = docs[0];
+			earliestTimestamp = earliestMatch.time;
 		}
-		// for later querying by event_key
-		var event_key = eventId;
+			
+		// Get the distinct list of scorers from the unresolved matches
+		scoreDataCol.distinct("assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, function (e, docs) {
+			var scorers = docs;
+			res.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 	
-		// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-		matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+			// Get list of all users
+			teammembers.find( {}, {sort:{ "name": 1 }}, function(e, docs){
+				var users = docs;
 
-			// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-			var earliestTimestamp = 9999999999;
-			if (docs && docs[0])
-			{
-				var earliestMatch = docs[0];
-				earliestTimestamp = earliestMatch.time;
-			}
-				
-			// Get the distinct list of scorers from the unresolved matches
-			scoreDataCol.distinct("assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, function (e, docs) {
-				var scorers = docs;
-				res.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
-		
-				// Get list of all users
-				teammembers.find( {}, {sort:{ "name": 1 }}, function(e, docs){
-					var users = docs;
-
-					// Go to a Pug to show two lists & a button to do the swap - form with button
-					res.render("./manage/swapmembers", {
-						title: "Swap Match Scouts",
-						scorers: scorers,
-						users: users
-					});
+				// Go to a Pug to show two lists & a button to do the swap - form with button
+				res.render("./manage/swapmembers", {
+					title: "Swap Match Scouts",
+					scorers: scorers,
+					users: users
 				});
 			});
 		});

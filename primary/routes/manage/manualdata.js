@@ -116,7 +116,7 @@ router.post('/teams', async function(req, res){
 	await utilities.insert("currentteams", teamInfoNoDuplicates);
 	
 	//Redirect with success message.
-	res.redirect('/admin?alert=Input teams successfully.');
+	res.redirect('/manage?alert=Input teams successfully.');
 });
 
 /**

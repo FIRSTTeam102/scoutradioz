@@ -52,7 +52,7 @@ router.get("/getcurrentteams", async function(req, res){
 	//insert teams into currentteams
 	await utilities.insert("currentteams", currentTeams);
 
-	res.redirect('/admin?alert=Updated current teams successfully.');
+	res.redirect('/manage?alert=Updated current teams successfully.');
 })
 
 router.post("/resetmatches", async function(req, res) {

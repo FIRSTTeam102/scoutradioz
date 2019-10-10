@@ -71,7 +71,7 @@ router.post("/events", async function(req, res) {
 	var events = JSON.parse(eventData);
 	//if request was invalid, redirect to admin page with alert message
 	if(events.length == undefined || events.length == 0){
-		return res.redirect("/admin?alert=Could not get events from TBA for specified year " + year);
+		return res.redirect("/manage?alert=Could not get events from TBA for specified year " + year);
 	}
 	
 	//Remove existing events list for year
@@ -147,7 +147,7 @@ router.post("/matches", async function(req, res) {
 
 	//if request was invalid, redirect to admin page with alert message
 	if(matches.length == undefined || matches.length == 0){
-		return res.redirect("/admin?alert=Could not get matches from TBA for specified event " + eventId);
+		return res.redirect("/manage?alert=Could not get matches from TBA for specified event " + eventId);
 	}
 	
 	res.log(thisFuncName + 'Found ' + matches.length + ' data for event ' + eventId);

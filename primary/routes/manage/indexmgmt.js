@@ -11,8 +11,10 @@ router.get('/', async function(req, res) {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	res.render('./manage/admin', { 
-		title: 'Admin pages',
+	var org = await utilities.findOne("orgs", {org_key: req.user.org_key});
+	
+	res.render('./manage/managedashboard', { 
+		title: `Manage ${org.nickname}`,
 		current: req.event.key,
 	});
 });
@@ -86,11 +88,11 @@ router.post('/setcurrent', async function(req, res) {
 		await utilities.insert("currentrankings", rankings);
 		
 		//Finished with teams AND rankings
-		res.redirect(`/admin?alert=Set current event ${eventId} successfuly and got list of teams/rankings for event ${eventId} successfully.`);
+		res.redirect(`/manage?alert=Set current event ${eventId} successfuly and got list of teams/rankings for event ${eventId} successfully.`);
 	}
 	else{
 		//Finished with teams and NO rankings
-		res.redirect(`/admin?alert=Set current event ${eventId} successfully and got list of teams for event ${eventId} successfully. NO RANKINGS HAVE BEEN RETRIEVED.`)
+		res.redirect(`/manage?alert=Set current event ${eventId} successfully and got list of teams for event ${eventId} successfully. NO RANKINGS HAVE BEEN RETRIEVED.`)
 	}
 });
 
