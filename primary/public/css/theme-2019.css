@@ -61,6 +61,8 @@ nav{background-color: #4d4d53;}
 /* For input elements */
 .theme-input{
     border-radius:12px;
+    border: 0;
+    
     transition:0.2s;
     
     min-height:18px;

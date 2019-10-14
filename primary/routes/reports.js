@@ -976,24 +976,9 @@ router.get("/metrics", async function(req, res){
 	// var currentAggCol = db.get("currentaggranges");
 	
 	var event_year = req.event.year;
-
-	//
-	// Get the 'current' event from DB
-	//
-	var currentFind = await utilities.find("current", {}, {});
-	var noEventFound = 'No event defined';
-	var eventId = noEventFound;
-	if (currentFind)
-		if (currentFind.length > 0)
-			eventId = currentFind[0].event;
-	if (eventId === noEventFound) {
-		res.render('/adminindex', { 
-			title: 'Admin pages',
-			current: eventId
-		});
-	}
+	
 	// for later querying by event_key
-	var event_key = eventId;
+	var event_key = req.event.key;
 	res.log(thisFuncName + 'event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will combo ALL teams
@@ -1082,23 +1067,8 @@ router.get("/metricintel*", async function(req, res){
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// var currentAggCol = db.get("currentaggranges");
 	
-	//
-	// Get the 'current' event from DB
-	//
-	var currentFind = await utilities.find("current", {}, {});
-	var noEventFound = 'No event defined';
-	var eventId = noEventFound;
-	if (currentFind)
-		if (currentFind.length > 0)
-			eventId = currentFind[0].event;
-	if (eventId === noEventFound) {
-		res.render('/adminindex', { 
-			title: 'Admin pages',
-			current: eventId
-		});
-	}
 	// for later querying by event_key
-	var event_key = eventId;
+	var event_key = req.event.key;
 	res.log(thisFuncName + 'event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will output ALL teams

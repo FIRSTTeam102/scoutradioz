@@ -201,6 +201,7 @@ var webhook = require('./routes/webhook');
 var manageindex = require('./routes/manage/indexmgmt');
 var allianceselection = require('./routes/manage/allianceselection');
 var currentevent = require("./routes/manage/currentevent");
+var config = require("./routes/manage/orgconfig");
 var externaldata = require("./routes/manage/externaldata");
 var manualdata = require("./routes/manage/manualdata");
 var orgmembers = require("./routes/manage/members");
@@ -220,6 +221,7 @@ app.use('/notifications', notifications);
 app.use('/webhook', webhook);
 
 app.use('/manage', manageindex);
+app.use('/manage/config', config);
 app.use('/manage/scoutingpairs', scoutingpairs);
 app.use("/manage/members", orgmembers);
 app.use('/manage/data', externaldata);

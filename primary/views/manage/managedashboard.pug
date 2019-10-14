@@ -42,6 +42,9 @@ block content
 				span Update list of current teams
 	div(class="w3-container w3-section")
 		h4 Organization Configuration
+		a(href="/manage/config/pitsurvey") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Configure pit survey layout
 		form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword")
 			div(class="w3-padding-small w3-show-inline-block")
 				input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")
