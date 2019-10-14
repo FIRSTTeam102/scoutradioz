@@ -13,7 +13,7 @@ block content
 	p
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
 		- var teamKey = key.split('_')[2]
-		img(src=`/uploads/responsive/${event_year}_${teamKey}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
+		img(src=`${fileRoot}/uploads/responsive/${event_year}_${teamKey}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
 	br
 	h3
 		div(class=`${btnColor} w3-btn`)
