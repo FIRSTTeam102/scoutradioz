@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const mkdirp = require('mkdirp');
 const concat = require('concat-stream');
 const streamifier = require('streamifier');
+const pify = require('pify');
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({
@@ -14,10 +15,12 @@ const s3 = new AWS.S3({
 	//secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_
 });
 
+const isDebug = true;
+
 //Configure UPLOAD_PATH
 //process.env.AVATAR_STORAGE contains uploads/avatars
 const UPLOAD_PATH = path.resolve(__dirname, '..', process.env.AVATAR_STORAGE) + "\\";
-console.log("UPLOAD_PATH = ".cyan + UPLOAD_PATH.cyan);
+console.log("AvatarStorage: UPLOAD_PATH = ".cyan + UPLOAD_PATH.cyan);
 
 const S3_URL = process.env.AVATAR_S3_URL;
 
@@ -26,6 +29,9 @@ var AvatarStorage = function(options) {
 	
 	//this serves as a constructor
 	function AvatarStorage(opts) {
+		var thisFuncName = "AvatarStorage|constructor: ";
+		if (isDebug) console.log(thisFuncName + "ENTER opts=" + opts);
+
 		var baseUrl = process.env.AVATAR_BASE_URL;
 		
 		var allowedStorageSystems = ['local', 'remote'];
@@ -83,19 +89,22 @@ var AvatarStorage = function(options) {
 		//set the S3 upload path
 		this.s3UploadPath = this.options.responsive ? S3_URL + "/responsive" : S3_URL;
 		
-		console.log(`AvatarStorage: Storage option: ${this.options.storage}`);
+		console.log(`${thisFuncName}Storage option: ${this.options.storage}`);
 		
 		if (this.options.storage == 'local') {
 			//if upload path does not exist, create the upload path structure
 			!fs.existsSync(this.uploadPath) && mkdirp.sync(this.uploadPath);
 		}
 		else{
-			console.log("Not local!");
+			console.log(thisFuncName + "Not local!");
 		}
+		if (isDebug) console.log(thisFuncName + "DONE");
 	}
 	
 	//this generates a random cryptographic filename
 	AvatarStorage.prototype._generateRandomFilename = function() {
+		var thisFuncName = "AvatarStorage._generateRandomFilename: ";
+		if (isDebug) console.log(thisFuncName + "ENTER");
 		
 		//create pseudo random bytes
 		var bytes = crypto.pseudoRandomBytes(32);//error here
@@ -104,18 +113,26 @@ var AvatarStorage = function(options) {
 		var checksum = crypto.createHash('MD5').update(bytes).digest('hex');
 		
 		//return as filename the hash with the output extension
+		if (isDebug) console.log(thisFuncName + "DONE - checksum=" + checksum);
 		return checksum + '.' + this.options.output;
 	}
 	
 
 	AvatarStorage.prototype._generateFilename = function(baseFilename) {
+		var thisFuncName = "AvatarStorage._generateFilename: ";
+		if (isDebug) console.log(thisFuncName + "ENTER baseFilename=" + baseFilename);
+
 		var imgFilename = baseFilename + '.' + this.options.output;
+
+		if (isDebug) console.log(thisFuncName + "DONE - imgFilename=" + imgFilename);
 		return imgFilename;
 	}
 
 
 	//this creates a Writable stream for a filepath
 	AvatarStorage.prototype._createOutputStream = function(filepath, cb) {
+		var thisFuncName = "AvatarStorage._createOutputStream: ";
+		if (isDebug) console.log(thisFuncName + "ENTER filepath=" + filepath + ",cb=" + (typeof cb));
 		
 		//create a reference for this to use in local functions
 		var that = this;
@@ -137,15 +154,18 @@ var AvatarStorage = function(options) {
 		});
 		
 		//return the output stream
+		if (isDebug) console.log(thisFuncName + "DONE - output=" + output);
 		return output;
 	}
 
 	//this processes the Jimp image buffer
-	AvatarStorage.prototype._processImage = function(image, baseFilename, cb) {
+	AvatarStorage.prototype._processImage = async function(image, baseFilename, cb) {
+		var thisFuncName = "AvatarStorage._processImage: ";
+		if (isDebug) console.log(thisFuncName + "ENTER image=" + image + ",baseFilename=" + baseFilename + ",cb=" + (typeof cb));
 		
 		//STEP 02
 		
-		console.log("AvatarStorage: Processing image");
+		console.log(thisFuncName + "Processing image");
 		
 		//create a reference for this to use in local functions
 		var that = this;
@@ -158,7 +178,8 @@ var AvatarStorage = function(options) {
 		if (baseFilename) {
 			filename = this._generateFilename(baseFilename);
 		}
-		
+		if (isDebug) console.log(thisFuncName + "filename=" + filename);
+
 		var mime = Jimp.MIME_PNG;
 		
 		//create a clone of the Jimp image
@@ -189,7 +210,7 @@ var AvatarStorage = function(options) {
 			clone = (square == width) ? clone.resize(threshold, Jimp.AUTO) : clone.resize(Jimp.AUTO, threshold);
 		}
 		
-		console.log("threshold="+threshold+", square="+square+", rectangle="+rectangle);
+		console.log(thisFuncName + "threshold="+threshold+", square="+square+", rectangle="+rectangle);
 
 		//crop the image to a square if enabled
 		if (this.options.square) {
@@ -222,7 +243,7 @@ var AvatarStorage = function(options) {
 				
 				//create the complete filepath and create a writable stream for it
 				filepath = filepath[0] + "_" + size + '.' + filepath[1];
-				console.log("filepath=" + filepath)
+				console.log(thisFuncName + "filepath=" + filepath)
 				filepath = path.join(that.uploadPath, filepath);
 				outputStream = that._createOutputStream(filepath, cb);
 				
@@ -253,11 +274,20 @@ var AvatarStorage = function(options) {
 				image: clone
 			});
 		}
-		
+
+		var batchPromises = [];
+
 		//process the batch sequence
-		_.each(batch, function(current) {
+		for (var i = 0; i < batch.length; i++)
+		{
+			var current = batch[i];
+		// _.each(batch, function(current) {
 			//get the buffer of the Jimp image using the output mime type
-			current.image.getBuffer(mime, function(err, buffer) {
+			if (isDebug) console.log(thisFuncName + "current.image=" + current.image);
+
+			var buffer = await current.image.getBufferAsync(mime);
+			
+			//current.image.getBuffer(mime, async function(err, buffer) {
 				
 				if( that.options.storage == 'local' ){
 					//create a read stream from the buffer and pipe it to the output stream
@@ -266,7 +296,7 @@ var AvatarStorage = function(options) {
 				else if( that.options.storage == 's3' ){
 					
 					//S3 BATCH SEQUENCE PROCESS
-					//console.log("Attempting to upload buffer to S3");
+					//if (isDebug) console.log(thisFuncName + "Attempting to upload buffer to S3");
 					
 					let file_name = path.basename(current.stream.path);
 					
@@ -284,23 +314,30 @@ var AvatarStorage = function(options) {
 					}
 					
 					var url = s3.getSignedUrl('putObject', params);
-					//console.log('The URL is', url);
+					//if (isDebug) console.log(thisFuncName + 'The URL is ' + url);
 					
 					let startTime = Date.now();
 					
 					//upload to S3
-					s3.upload(params, function(s3err, data){
-						
-						if(s3err){ console.log(s3err); }
-						
-						console.log(JSON.stringify(data) + `; Object has been put after ${Date.now() - startTime} ms`);
-					});
+					console.log(thisFuncName + "before data{upload}");
+
+					// s3.upload(params, function(s3err, data){
+					// 	if(s3err){ console.log(s3err); }
+					// 	console.log(thisFuncName + "data{upload}=" + JSON.stringify(data) + `; Object has been put after ${Date.now() - startTime} ms`);
+					// });
+
+					// var data = await s3.upload(params).promise();
+					// console.log(thisFuncName + "data{upload}=" + JSON.stringify(data) + `; Object has been put after ${Date.now() - startTime} ms`);
+
+					//console.log(thisFuncName + "data{upload}=" + (typeof data) + `; Object has been put after ${Date.now() - startTime} ms`);
+
+					await doUpload(key, buffer, contentType);
+					console.log(thisFuncName + "after data{upload}");
 					
-					
-					s3.waitFor('objectExists', {Bucket: params.Bucket, Key: params.Key}, function(err, data) {
-						if (err) console.log(err, err.stack); // an error occurred
-						else     console.log(data);           // successful response
-					});
+					// s3.waitFor('objectExists', {Bucket: params.Bucket, Key: params.Key}, function(err, data) {
+					// 	if (err) console.log(err, err.stack); // an error occurred
+					// 	else     console.log(thisFuncName + "data{waitFor}=" + JSON.stringify(data));           // successful response
+					// });
 					
 					/*
 					
@@ -323,35 +360,40 @@ var AvatarStorage = function(options) {
 					});
 					
 					//Now that we've done the hacky S3 upload, run callback function
-					cb(null);
 					*/
+					cb(null);
 				}
-			});
-		});
-		
-		const key = "hackyhack.txt";
-		
-		const params = {
-			Bucket: process.env.S3_BUCKET,
-			Key: key,
-			Body: "hello",
-			ContentType: "text",
-			ACL: "public-read"
+			//});
+		//});
 		}
 		
-		//upload hacky-ass extra thing to S3 to trigger the other uploads
-		s3.upload(params, function(s3err, data){
+		// const key = "hackyhack.txt";
+		
+		// const params = {
+		// 	Bucket: process.env.S3_BUCKET,
+		// 	Key: key,
+		// 	Body: "hello",
+		// 	ContentType: "text",
+		// 	ACL: "public-read"
+		// }
+		
+		// //upload hacky-ass extra thing to S3 to trigger the other uploads
+		// s3.upload(params, function(s3err, data){
 			
-			if(s3err){ console.log(s3err); }
+		// 	if(s3err){ console.log(s3err); }
 			
-			console.log(data);
-		});
+		// 	console.log(thisFuncName + "data{upload2}=" + data);
+		// });
 		
 		cb(null);
+
+		if (isDebug) console.log(thisFuncName + "DONE");
 	}
 
 	//multer requires this for handling the uploaded file
-	AvatarStorage.prototype._handleFile = function(req, file, cb) {
+	AvatarStorage.prototype._handleFile = async function(req, file, cb) {
+		var thisFuncName = "AvatarStorage._handleFile: ";
+		if (isDebug) console.log(thisFuncName + "ENTER req=" + req + ",file=" + file + ",cb=" + (typeof cb));
 		
 		//STEP 01
 		
@@ -375,12 +417,16 @@ var AvatarStorage = function(options) {
 		
 		//write the uploaded file buffer to the fileManipulate stream
 		file.stream.pipe(fileManipulate);
+
+		if (isDebug) console.log(thisFuncName + "DONE");
 	}
 
 	//multer requires this for destroying file
 	AvatarStorage.prototype._removeFile = function(req, file, cb) {
+		var thisFuncName = "AvatarStorage._removeFile: ";
+		if (isDebug) console.log(thisFuncName + "ENTER req=" + req + ",file=" + file + ",cb=" + (typeof cb));
 		
-		console.log("AvatarStorage: Removing file");
+		console.log(thisFuncName + "Removing file");
 		
 		var matches, pathsplit;
 		var filename = file.filename;
@@ -412,11 +458,36 @@ var AvatarStorage = function(options) {
 		_.each(paths, function(_path) {
 			fs.unlink(_path, cb);
 		});
+
+		if (isDebug) console.log(thisFuncName + "DONE");
 	}
 	
 	//create a new instance with the passed options and return it
 	return new AvatarStorage(options);
 };
+
+async function doUpload(key, buffer, contentType) {
+	var thisFuncName = "AvatarStorage.doUpload: ";
+	if (isDebug) console.log(thisFuncName + "ENTER key=" + key + ",buffer=" + (typeof buffer) + ",contentType=" + contentType);
+
+	try {
+		const params = {
+			Bucket: process.env.S3_BUCKET,
+			Key: key,
+			Body: buffer,
+			ContentType: contentType,
+			ACL: "public-read"
+		}
+		var data = await s3.upload(params).promise();
+		console.log(thisFuncName + "data{uploadX}=" + JSON.stringify(data));
+		// var data = await s3.upload(params);
+		// console.log(thisFuncName + "data{uploadX}=" + (typeof data));
+	} catch (err) {
+		console.log('err: ', err);
+	}
+
+	if (isDebug) console.log(thisFuncName + "DONE");
+}
 
 //export the storage engine
 module.exports = AvatarStorage;
