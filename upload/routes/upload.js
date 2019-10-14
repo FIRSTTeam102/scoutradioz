@@ -4,6 +4,7 @@ const router = express.Router();
 //import multer and the AvatarStorage engine
 const _ = require('lodash');
 const pify = require('pify');
+const { promisify } = require('util');
 const multer = require('multer');
 const AvatarStorage = require('../helpers/AvatarStorage');
 
@@ -41,8 +42,9 @@ var limits = {
 
 //file filter to guarantee filetype is image
 var fileFilter = function (req, file, cb) {
-    
-    console.log("Entering file filter");
+    var thisFuncName = "upload/image: ";
+    //if (isDebug) console.log(thisFuncName + "ENTER");
+    console.log(thisFuncName + "Entering file filter");
     
     //supported image file mimetypes
     var allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'];
@@ -54,10 +56,12 @@ var fileFilter = function (req, file, cb) {
         // throw error for invalid files
         cb(new Error('Invalid file type. Only jpg, png and gif image files are allowed.'));
     }
+    if (isDebug) console.log(thisFuncName + "DONE");
 };
 
 //create basic multer function upload
-var upload = pify(multer({
+//var upload = pify(multer({
+var upload = promisify(multer({
     storage: storage,
     limits: limits,
     fileFilter: fileFilter
@@ -83,6 +87,7 @@ router.post('/image*', async function (req, res, next) {
     req.baseFilename = year + "_" + team_key;
     
     try {
+        if (isDebug) console.log(thisFuncName + "await upload()");
         await upload(req, res);
         
         console.log(thisFuncName + "req.file=" + JSON.stringify(req.file));
