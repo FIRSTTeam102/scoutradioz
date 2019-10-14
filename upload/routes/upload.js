@@ -3,8 +3,11 @@ const router = express.Router();
 
 //import multer and the AvatarStorage engine
 const _ = require('lodash');
+const pify = require('pify');
 const multer = require('multer');
 const AvatarStorage = require('../helpers/AvatarStorage');
+
+const isDebug = true;
 
 var storageMethod;
 
@@ -54,11 +57,11 @@ var fileFilter = function (req, file, cb) {
 };
 
 //create basic multer function upload
-var upload = multer({
+var upload = pify(multer({
     storage: storage,
     limits: limits,
     fileFilter: fileFilter
-}).any();
+}).any());
 
 
 router.post('/ping', async function(req, res) {
@@ -67,25 +70,33 @@ router.post('/ping', async function(req, res) {
     
 });
 
-router.post('/image*', function (req, res, next) {
-    
+router.post('/image*', async function (req, res, next) {
+    var thisFuncName = "upload/image: ";
+    if (isDebug) console.log(thisFuncName + "ENTER");
+
     var team_key = req.query.team_key;
     
-    res.log("going to upload");
+    res.log(thisFuncName + "going to upload");
     
     var year = 2019;
     
     req.baseFilename = year + "_" + team_key;
     
-    upload(req, res, function (e) {
+    try {
+        await upload(req, res);
         
-        console.log("req.file=" + JSON.stringify(req.file));
-        
-       // upload(req, res, function (e) {
+        console.log(thisFuncName + "req.file=" + JSON.stringify(req.file));
             
-            res.status(200).send({message:"We're back!"});
+        // upload(req, res, function (e) {
+                
+        if (isDebug) console.log(thisFuncName + "res.status()");
+        res.status(200).send({message:"We're back!"});
         //});
-    });
+    } catch (err) {
+        console.log(err);
+    }
+
+    if (isDebug) console.log(thisFuncName + "DONE");
 });
 
 
