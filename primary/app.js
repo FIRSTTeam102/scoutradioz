@@ -50,6 +50,10 @@ if(production){
 	process.env.NODE_ENV = "production";
 }
 
+if( process.env.debug == "true" ){
+	debug = true;
+}
+
 //Create app
 const app = express();
 
