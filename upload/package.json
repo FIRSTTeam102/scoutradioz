@@ -7,7 +7,7 @@
     "s3BucketName": "scoutradioz-cloudformation",
     "region": "us-east-1",
     "cloudFormationStackName": "ScoutradiozUploadStack",
-    "functionName": "ScoutradiozUploadFunction",
+    "functionName": "UploadFunction",
     "accountId": "243452333432"
   },
   "scripts": {

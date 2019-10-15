@@ -7,7 +7,7 @@
     "s3BucketName": "scoutradioz-cloudformation",
     "region": "us-east-1",
     "cloudFormationStackName": "ScoutradiozPrimaryStack",
-    "functionName": "ScoutradiozPrimaryFunction",
+    "functionName": "PrimaryFunction",
     "accountId": "243452333432",
     "publicS3BucketName": "scoutradioz",
     "publicFolderName": "public",
