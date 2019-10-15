@@ -233,43 +233,36 @@ router.post("/generateteamallocations", async function(req, res) {
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var passCheckSuccess;
-	
-	//override if dev
-	if( req.app.isDev ){
-		generateTeamAllocations(req, res);
+		
+	if( !req.body.password || req.body.password == ""){
+		
+		return res.send({status: 401, alert: "No password entered."});
 	}
-	else{
-			
-		if( !req.body.password || req.body.password == ""){
-			
-			return res.send({status: 401, alert: "No password entered."});
+	
+	var db = req.db;
+	var teammembers = db.get('teammembers');
+	
+	teammembers.find( { name: req.user.name }, {}, function( e, user ){
+		if(e)
+			return console.error(e);
+		if(!user[0]){
+			res.send({status: 500, alert:"Passport error: no user found in db?"});
+			return console.error("no user found? generateteamallocations");
 		}
 		
-		var db = req.db;
-		var teammembers = db.get('teammembers');
-		
-		teammembers.find( { name: req.user.name }, {}, function( e, user ){
+		bcrypt.compare( req.body.password, user[0].password, function(e, out){
 			if(e)
 				return console.error(e);
-			if(!user[0]){
-				res.send({status: 500, alert:"Passport error: no user found in db?"});
-				return console.error("no user found? generateteamallocations");
-			}
+			if(out == true)
+				passCheckSuccess = true;
+			else
+				return res.send({status: 401, alert: "Password incorrect."});
 			
-			bcrypt.compare( req.body.password, user[0].password, function(e, out){
-				if(e)
-					return console.error(e);
-				if(out == true)
-					passCheckSuccess = true;
-				else
-					return res.send({status: 401, alert: "Password incorrect."});
-				
-				if(passCheckSuccess){
-					generateTeamAllocations(req, res);
-				}
-			});
+			if(passCheckSuccess){
+				generateTeamAllocations(req, res);
+			}
 		});
-	}
+	});
 });	
 
 //////////// Match allocating by batches of matches
@@ -640,43 +633,36 @@ router.post("/generatematchallocations", async function(req, res) {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	//override if dev
-	if( req.app.isDev ){
-		generateMatchAllocations(req, res);
-	}
-	else{
+	var passCheckSuccess;
 	
-		var passCheckSuccess;
-		
-		if( !req.body.password || req.body.password == ""){
-			return res.send({status: 401, alert: "No password entered."});
+	if( !req.body.password || req.body.password == ""){
+		return res.send({status: 401, alert: "No password entered."});
+	}
+	
+	var db = req.db;
+	var teammembers = db.get('teammembers');
+	
+	teammembers.find( { name: req.user.name }, {}, function( e, user ){
+		if(e)
+			return console.error(e);
+		if(!user[0]){
+			res.send({status: 500, alert:"Passport error: no user found in db?"});
+			return console.error("no user found? generateteamallocations");
 		}
 		
-		var db = req.db;
-		var teammembers = db.get('teammembers');
-		
-		teammembers.find( { name: req.user.name }, {}, function( e, user ){
+		bcrypt.compare( req.body.password, user[0].password, function(e, out){
 			if(e)
 				return console.error(e);
-			if(!user[0]){
-				res.send({status: 500, alert:"Passport error: no user found in db?"});
-				return console.error("no user found? generateteamallocations");
-			}
+			if(out == true)
+				passCheckSuccess = true;
+			else
+				return res.send({status: 401, alert: "Password incorrect."});
 			
-			bcrypt.compare( req.body.password, user[0].password, function(e, out){
-				if(e)
-					return console.error(e);
-				if(out == true)
-					passCheckSuccess = true;
-				else
-					return res.send({status: 401, alert: "Password incorrect."});
-				
-				if(passCheckSuccess){
-					generateMatchAllocations(req, res);
-				}
-			});
+			if(passCheckSuccess){
+				generateMatchAllocations(req, res);
+			}
 		});
-	}
+	});
 });
 
 router.get("/swapmembers", async function(req, res) {

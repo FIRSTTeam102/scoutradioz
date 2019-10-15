@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const utilities = require('../utilities');
+const logger = require('log4js').getLogger();
 
 /**
  * The "index" page that loads is now a form to select an organization.

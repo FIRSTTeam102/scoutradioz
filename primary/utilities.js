@@ -1,5 +1,6 @@
 const monk = require("monk");
 const fs = require("fs");
+const logger = require('log4js').getLogger();
 
 var utilities = module.exports =  {};
 
@@ -21,11 +22,11 @@ utilities.getDB = function(){
 		
 		dbRef.then(function(result){
 			
-			console.log("Connected!");
+			logger.info("Connected!");
 			
 		}).catch(function(err){
 			
-			console.log(err);
+			logger.error(err);
 		});
 	}
 	
@@ -62,7 +63,7 @@ utilities.getDBurl = function(){
 			//If there is an object inside databases for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				console.log(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for process tier, throw an error.
@@ -78,7 +79,7 @@ utilities.getDBurl = function(){
 			//If default db exists, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				console.log(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for default, throw an error.
@@ -89,7 +90,7 @@ utilities.getDBurl = function(){
 	}
 	//If there is no databases file, then connect to localhost
 	else {
-		console.log("utilities: No databases file found; Defaulting to localhost:27017");
+		logger.warn("utilities: No databases file found; Defaulting to localhost:27017");
 		url = "localhost:27017";
 	}
 	
@@ -126,6 +127,8 @@ utilities.find = async function(collection, parameters, options){
 		throw new Error("Utilities.find Error: Options must be of type object");
 	}
 	
+	logger.trace(`utilities.find: ${collection}, ${JSON.stringify(parameters)}, ${JSON.stringify(options)}`);
+	
 	var db = this.getDB();
 	
 	//Get collection
@@ -133,6 +136,8 @@ utilities.find = async function(collection, parameters, options){
 	//Find in collection with parameters and options
 	var data = [];
 	data = await Col.find(parameters, options);
+	
+	logger.trace(`utilities.find: result: ${data}`);
 	
 	//Return (Promise to get) data
 	return data;
@@ -168,6 +173,8 @@ utilities.findOne = async function(collection, parameters, options){
 		throw new Error("Utilities.find Error: Options must be of type object");
 	}
 	
+	logger.trace(`utilities.findOne: ${collection}, ${JSON.stringify(parameters)}, ${JSON.stringify(options)}`);
+	
 	var db = this.getDB();
 	
 	//Get collection
@@ -176,6 +183,8 @@ utilities.findOne = async function(collection, parameters, options){
 	//Find in collection with parameters and options
 	var data = [];
 	data = await Col.findOne(parameters, options);
+	
+	logger.trace(`utilities.findOne: result: ${data}`);
 	
 	//Return (Promise to get) data
 	return data;
@@ -196,10 +205,8 @@ utilities.distinct = async function(collection, parameters){
 	if(!parameters){
 		var parameters = {};
 	}
-	// //If parameters exists and is not an object, throw an error. 
-	// if(typeof(parameters) != "object"){
-	// 	throw new Error("Utilities.distinct Error: Parameters must be of type object");
-	// }
+	
+	logger.trace(`utilities.distinct: ${collection}, ${JSON.stringify(parameters)}`);
 	
 	var db = this.getDB();
 	
@@ -208,6 +215,8 @@ utilities.distinct = async function(collection, parameters){
 	//Find in collection with parameters and options
 	var data = [];
 	data = await Col.distinct(parameters);
+	
+	logger.trace(`utilities.distinct: result: ${data}`);
 	
 	//Return (Promise to get) data
 	return data;
@@ -233,19 +242,16 @@ utilities.aggregate = async function(collection, parameters) {
 		throw new Error("Utilities.aggregate Error: Parameters must be of type object");
 	}
 	
-	console.log("DEBUG - utilities.js - dbref: " + dbRef);
-	
-	//Get collection
-	console.log("DEBUG - utilities.js - aggregate: " + collection);
+	logger.trace(`utilities.aggregate: ${collection}, ${JSON.stringify(parameters)}`);
 	
 	var db = this.getDB();
-	
-	console.log("DEBUG - utilities.js - aggregate: db=" + db);
 	
 	var Col = db.get(collection);
 	//Find in collection with parameters and options
 	var data = [];
 	data = await Col.aggregate(parameters);
+	
+	logger.trace(`utilities.aggregate: result: ${data}`);
 	
 	//Return (Promise to get) data
 	return data;
@@ -286,6 +292,8 @@ utilities.update = async function(collection, parameters, update, options){
 		throw new Error("Utilities.find Error: Options must be of type object");
 	}
 	
+	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(parameters)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
+	
 	var db = this.getDB();
 	
 	//Get collection
@@ -293,6 +301,8 @@ utilities.update = async function(collection, parameters, update, options){
 	//Remove in collection with parameters
 	var writeResult;
 	writeResult = await Col.update(parameters, update, options);
+	
+	logger.trace(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
 	
 	//return writeResult
 	return writeResult;
@@ -324,6 +334,8 @@ utilities.bulkWrite = async function(collection, operations, parameters){
 	if(typeof(parameters) != "object"){
 		throw new Error("Utilities.find Error: Parameters must be of type object");
 	}
+	
+	logger.trace(`utilities.bulkWrite: ${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(parameters)}`);
 
 	var db = this.getDB();
 	
@@ -332,6 +344,8 @@ utilities.bulkWrite = async function(collection, operations, parameters){
 	//Update in collection with parameters
 	var result;
 	result = await Col.bulkWrite(operations, parameters);
+	
+	logger.trace(`utilities.bulkWrite: writeResult: ${JSON.stringify(writeResult)}`);
 	
 	//return result
 	return result;
@@ -358,6 +372,8 @@ utilities.remove = async function(collection, parameters){
 		throw new Error("Utilities.find Error: Parameters must be of type object");
 	}
 	
+	logger.trace(`utilities.remove: ${collection}, param: ${JSON.stringify(parameters)}`);
+	
 	var db = this.getDB();
 	
 	//Get collection
@@ -365,6 +381,8 @@ utilities.remove = async function(collection, parameters){
 	//Remove in collection with parameters
 	var writeResult;
 	writeResult = await Col.remove(parameters);
+	
+	logger.trace(`utilities.remove: writeResult: ${JSON.stringify(writeResult)}`);
 	
 	//return writeResult
 	return writeResult;
@@ -387,6 +405,8 @@ utilities.insert = async function(collection, elements){
 		throw new Error("Must contain an element or array of elements to insert.");
 	}
 	
+	logger.trace(`utilities.insert: ${collection}, elements: ${JSON.stringify(elements)}`);
+	
 	var db = this.getDB();
 	
 	//Get collection
@@ -394,6 +414,8 @@ utilities.insert = async function(collection, elements){
 	//Insert in collection
 	var writeResult;
 	writeResult = await Col.insert(elements);
+	
+	logger.trace(`utilities.insert: writeResult: ${JSON.stringify(writeResult)}`);
 	
 	//return writeResult
 	return writeResult;
@@ -409,6 +431,8 @@ utilities.requestTheBlueAlliance = async function(url){
 	//Setup our request URL, including specified URL ending parameter
 	var requestURL = "https://www.thebluealliance.com/api/v3/" + url;
 	
+	logger.info(`Sending request to TheBlueAlliance at ${url}`);
+	
 	//Get TBA key
 	var tbaKey = await utilities.getTBAKey();
 	
@@ -420,6 +444,9 @@ utilities.requestTheBlueAlliance = async function(url){
 		
 		//Inside promise function, perform client request
 		client.get(requestURL, tbaKey, function(tbaData, response){
+			
+			logger.debug(`TBA response: ${tbaData.toString().substring(0, 1000)}...`);
+			logger.trace(`Full TBA response: ${tbaData}`);
 			
 			//tbaData = JSON.parse(tbaData);
 			//Inside client callback, resolve promise

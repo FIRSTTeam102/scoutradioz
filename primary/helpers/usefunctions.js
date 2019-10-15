@@ -1,22 +1,15 @@
-//For colorful logging
-require("colors");
-const fs = require('fs');
+const logger = require('log4js').getLogger();
+require('colors');
 
 var functions = module.exports = {};
 
 //View engine locals variables
 functions.userViewVars = function(req, res, next){
 	
-	if(req.app.debug) console.log("DEBUG - usefunctions.js - functions.userViewVars: ENTER");
+	logger.debug("usefunctions.js - functions.userViewVars: ENTER");
 	
 	if(req.user)
 		res.locals.user = req.user;
-		
-	else if(req.app.isDev == true){
-		
-		//req.user = {name: '[Dev]', subteam: 'support'};
-		res.locals.user = req.user;
-	}
 	
 	var fileRoot;
 	
@@ -163,7 +156,6 @@ functions.logger = function(req, res, next){
  */
 functions.renderLogger = function(req, res, next){
 	
-	//Changes res.render
 	res.render = (function(link, param){
 		var cached_function = res.render;
 		
@@ -178,16 +170,29 @@ functions.renderLogger = function(req, res, next){
 			//stores post-render time
 			let renderTime = Date.now() - req.requestTime - beforeRenderTime;
 			
-			//logs if debug
-			this.log("Completed route in "
-				+ (beforeRenderTime).toString().yellow
-				+ " ms; Rendered page in " 
-				+ (renderTime).toString().yellow
-				+ " ms");
+			logger.info(`Completed ${res.req.url} in ${(beforeRenderTime).toString().yellow} ms; Rendered ${link} in ${(renderTime).toString().yellow} ms`);
 			
 			return result;
 		}
 	}());
+	
+	res.redirect = (function(url, status){
+		var cached_function = res.redirect;
+		
+		return function(url, status){
+			
+			//stores pre-render post-request time
+			let completedRouteTime = Date.now() - req.requestTime;
+			
+			//applies render function
+			let result = cached_function.apply(this, arguments);
+			
+			logger.info(`Completed ${res.req.url} in ${(completedRouteTime).toString().yellow} ms; Redirecting to ${(typeof url == 'string' ? url : " ").yellow + (typeof status == 'string' ? status : " ").yellow}`);
+			
+			return result;
+		}
+	}());
+	
 	next();
 }
  
@@ -214,7 +219,9 @@ functions.errorHandler = function(err, req, res, next) {
 	// set locals, only providing error in development
 	res.locals.message = err.message;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
-  
+	
+	logger.error(err.message);
+	
 	// render the error page
 	res.status(err.status || 500);
 	res.render('error');

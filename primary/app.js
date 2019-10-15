@@ -6,63 +6,32 @@ const session = require('express-session');				//session middleware (uses cookie
 const MongoStore = require('connect-mongo')(session);	//Alternative session storage
 const passport = require('passport');					//for user authentication
 const useragent = require('express-useragent');			//for info on connected users
+const log4js = require('log4js');						//for extensive logging functionality
 
 //AWS middleware magic
 require('aws-serverless-express/middleware');
 //load .env variables
 require('dotenv').config();
 
+//logger config
+const logger = log4js.getLogger();
+logger.level = 'debug';
+/*log4js.configure({
+	appenders: { cheese: { type: 'file', filename: 'cheese.log' } },
+	categories: { default: { appenders: ['cheese'], level: 'error' } }
+});*/
+//logger levels: trace, debug, info, warn, error, fatal
+
 const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
 const utilities = require('./utilities');				//database utilities
 
-var isDev = false, debug = false, production = false;
-
-/* Check process arguments.
-	If -dev or --dev, isDev = true.
-	If -debug or --debug, debug = true.
-	If -d or --d, both = true.
-*/
-for(var i in process.argv){
-	switch(process.argv[i]){
-		case "-dev":
-		case "--dev":
-			console.log("Dev");
-			isDev = true;
-			break;
-		case "-d":
-		case "--d":
-			console.log("Dev");
-			isDev = true;
-		case "-debug":
-		case "--debug":
-			console.log("Debug");
-			debug = true;
-			break;
-		case "-production":
-		case "--production":
-			production = true;
-	}
-}
-
 //PUG CACHING (if production IS enabled)
-if(production){
-	console.log("Production");
-	process.env.NODE_ENV = "production";
-}
-
-if( process.env.debug == "true" ){
-	debug = true;
+if(process.env.NODE_ENV == "production"){
+	logger.info("Pug caching will be enabled.");
 }
 
 //Create app
 const app = express();
-
-//set app's bools to these arguments
-app.isDev = isDev; 
-app.debug = debug;
-
-process.env.isDev = isDev;
-process.env.debug = debug;
 
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
@@ -160,7 +129,7 @@ app.use(function(req, res, next){
 		}
 		
 		//Finally, check if isAuthenticated is true, and return a value corresponding to it
-		if( isAuthenticated || app.isDev ){
+		if( isAuthenticated ){
 			
 			return true;
 		}
