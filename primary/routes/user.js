@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const utilities = require('../utilities');
 const bcrypt = require('bcryptjs');
+const logger = require('log4js').getLogger();
 
 //Redirect to index
 router.get('/', async function(req, res){
@@ -177,15 +178,15 @@ router.post('/login/withoutpassword', async function(req, res){
 	//if user's access level is greater than scouter, then a password is required.
 	if(userRole.access_level > process.env.ACCESS_SCOUTER){
 		
-		//if they do not yet have a password, then return saying password creation is required
+		//if user does not have a password but NEEDS a password, then they will need to create one
 		if( user.password == "default" ){
 			res.send({
 				status: 200,
 				create_password: true
 			});
 		}
+		//if user has a non-default password, then they will need to enter it
 		else{
-			//if access_level > process.env.ACCESS_SCOUTER, then return saying password is required
 			res.send({
 				status: 200,
 				password_needed: true
@@ -193,8 +194,6 @@ router.post('/login/withoutpassword', async function(req, res){
 		}
 	} 
 	else if(userRole.access_level == process.env.ACCESS_SCOUTER){
-		
-		//if access_level == process.env.ACCESS_SCOUTER, then proceed with scouter login
 		
 		//First, check if the user has a password that is default
 		if( user.password == "default"){
@@ -312,7 +311,7 @@ router.post('/login/withpassword', async function(req, res){
 			else if(userRole.access_level == process.env.ACCESS_SCOUTER) redirectURL = '/dashboard';
 			else redirectURL = '/';
 			
-			res.log(`User ${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
+			logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
 			
 			//otherwise, send success and redirect
 			//*** When we add a global_admin page, we should modify this to add a global_admin page redirect

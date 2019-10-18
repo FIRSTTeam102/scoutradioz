@@ -29,7 +29,7 @@ router.get("/", async function(req, res) {
 				membersByRole[ thisRole.label ].push( thisMember );
 			}
 		}
-	}		
+	}
 	
 	res.render("./manage/members", { 
 		title: "Organization Members",
@@ -244,6 +244,39 @@ router.post("/deletemember", async function(req, res){
 		}
 	}
 });
+
+router.get('/passwords', async function(req, res){
+	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	
+	var org_key = req.user.org_key;
+	
+	var orgMembers = await utilities.find("users", {org_key: org_key, name: {$ne: "default_user"}}, {sort: {"name": 1}})
+	
+	var roles = await utilities.find("roles", { access_level: { $lte: req.user.role.access_level }});
+	
+	var membersByRole = {};
+	
+	for( var thisRole of roles ){
+		
+		membersByRole[ thisRole.label ] = [];
+		
+		for( var thisMember of orgMembers ){
+			
+			if( thisMember.role_key == thisRole.role_key ){
+				
+				membersByRole[ thisRole.label ].push( thisMember );
+			}
+		}
+	}		
+	
+	res.render("./manage/memberpasswords", { 
+		title: "Organization Members",
+		//members: orgMembers,
+		membersByRole: membersByRole,
+		roles: roles
+	});
+});
+
 
 router.get("/present", async function(req, res) {
 	//Check authentication for team admin level
