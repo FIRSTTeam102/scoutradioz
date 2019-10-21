@@ -3,7 +3,7 @@ const router = express.Router();
 
 //import multer and the AvatarStorage engine
 const _ = require('lodash');
-const pify = require('pify');
+//const pify = require('pify');
 const { promisify } = require('util');
 const multer = require('multer');
 const AvatarStorage = require('../helpers/AvatarStorage');
