@@ -24,6 +24,8 @@ router.get('/', async function(req, res){
 		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 		var redirectURL = req.query.redirectURL;
 		
+		if( redirectURL == "undefined" ) redirectURL = undefined;
+		
 		res.render('./index', {
 			title: "Select an Organization",
 			orgs: orgs,

@@ -210,7 +210,7 @@ var AvatarStorage = function(options) {
 			clone = (square == width) ? clone.resize(threshold, Jimp.AUTO) : clone.resize(Jimp.AUTO, threshold);
 		}
 		
-		console.log(thisFuncName + "threshold="+threshold+", square="+square+", rectangle="+rectangle);
+		console.log(thisFuncName + "threshold="+threshold+", square="+square+", rectangle="+rectangle+", width="+width+", height="+height);
 
 		//crop the image to a square if enabled
 		if (this.options.square) {
