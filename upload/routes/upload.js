@@ -1,107 +1,106 @@
-const express = require('express');
-const router = express.Router();
-
-//import multer and the AvatarStorage engine
+const router = require('express').Router();
 const _ = require('lodash');
-//const pify = require('pify');
 const { promisify } = require('util');
 const multer = require('multer');
+const logger = require('log4js').getLogger();
 const AvatarStorage = require('../helpers/AvatarStorage');
-
-const isDebug = true;
 
 var storageMethod;
 
 if( process.env.UPLOAD_LOCAL == "false" ){
-    
-    storageMethod = "s3";
-    console.log("Images will be uploaded to S3. To upload to local filesystem, set process.env.UPLOAD_LOCAL=true.")
+	
+	storageMethod = "s3";
+	logger.warn("Images will be uploaded to S3. To upload to local filesystem, set process.env.UPLOAD_LOCAL=true.")
 }
 else{
-    
-    storageMethod = "local"
-    console.log("Images will be uploaded to local filesystem. To upload to S3, set process.env.UPLOAD_LOCAL=false." );
+	
+	storageMethod = "local"
+	logger.warn("Images will be uploaded to local filesystem. To upload to S3, set process.env.UPLOAD_LOCAL=false." );
 }
 
 //create AvatarStorage object with our own parameters
 var storage = AvatarStorage({
-    storage: storageMethod,
-    square: false,
-    responsive: true,
-    output: "jpg",
-    greyscale: false,
-    quality: 60,
-    threshold: 500
+	storage: storageMethod,
+	square: false,
+	responsive: true,
+	output: "jpg",
+	greyscale: false,
+	quality: 60,
+	threshold: 500
 });
 
 //create image limits (10MB max)
 var limits = {
-    files: 1, // allow only 1 file per request
-    fileSize: 10 * 1024 * 1024, // 10 MB (max file size)
+	files: 1, // allow only 1 file per request
+	fileSize: 10 * 1024 * 1024, // 10 MB (max file size)
 };
 
 //file filter to guarantee filetype is image
 var fileFilter = function (req, file, cb) {
-    var thisFuncName = "upload/image: ";
-    //if (isDebug) console.log(thisFuncName + "ENTER");
-    console.log(thisFuncName + "Entering file filter");
-    
-    //supported image file mimetypes
-    var allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'];
+	var thisFuncName = "upload/image: ";
+	//logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "Entering file filter");
+	
+	//supported image file mimetypes
+	var allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'];
 
-    if (_.includes(allowedMimes, file.mimetype)) {
-        // allow supported image files
-        cb(null, true);
-    } else {
-        // throw error for invalid files
-        cb(new Error('Invalid file type. Only jpg, png and gif image files are allowed.'));
-    }
-    if (isDebug) console.log(thisFuncName + "DONE");
+	if (_.includes(allowedMimes, file.mimetype)) {
+		// allow supported image files
+		cb(null, true);
+	} else {
+		// throw error for invalid files
+		cb(new Error('Invalid file type. Only jpg, png and gif image files are allowed.'));
+	}
+	logger.debug(thisFuncName + "DONE");
 };
 
 //create basic multer function upload
 //var upload = pify(multer({
 var upload = promisify(multer({
-    storage: storage,
-    limits: limits,
-    fileFilter: fileFilter
+	storage: storage,
+	limits: limits,
+	fileFilter: fileFilter
 }).any());
 
 
+router.get('/ping', async function(req, res) {
+	
+	res.status(200).send("Pong!");
+});
+
 router.post('/ping', async function(req, res) {
-    
-    res.status(200).send({message:"Pong!"});
-    
+	
+	res.status(200).send("Pong!");
 });
 
 router.post('/image*', async function (req, res, next) {
-    var thisFuncName = "upload/image: ";
-    if (isDebug) console.log(thisFuncName + "ENTER");
+	var thisFuncName = "upload/image: ";
+	logger.debug(thisFuncName + "ENTER");
 
-    var team_key = req.query.team_key;
-    
-    res.log(thisFuncName + "going to upload");
-    
-    var year = 2019;
-    
-    req.baseFilename = year + "_" + team_key;
-    
-    try {
-        if (isDebug) console.log(thisFuncName + "await upload()");
-        await upload(req, res);
-        
-        console.log(thisFuncName + "req.file=" + JSON.stringify(req.file));
-            
-        // upload(req, res, function (e) {
-                
-        if (isDebug) console.log(thisFuncName + "res.status()");
-        res.status(200).send({message:"We're back!"});
-        //});
-    } catch (err) {
-        console.log(err);
-    }
+	var team_key = req.query.team_key;
+	
+	res.log(thisFuncName + "going to upload");
+	
+	var year = 2019;
+	
+	req.baseFilename = year + "_" + team_key;
+	
+	try {
+		logger.debug(thisFuncName + "await upload()");
+		
+		await upload(req, res, function(err){
+			
+			logger.debug(thisFuncName + "sending success response");
+			res.sendStatus(200);
+			
+			logger.debug(thisFuncName + "DONE");
+		});
+		
+	} catch (err) {
+		logger.info(err);
+	}
 
-    if (isDebug) console.log(thisFuncName + "DONE");
+	logger.debug(thisFuncName + "DONE");
 });
 
 
