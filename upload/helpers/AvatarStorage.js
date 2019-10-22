@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const mkdirp = require('mkdirp');
 const concat = require('concat-stream');
 const streamifier = require('streamifier');
-const pify = require('pify');
+//const pify = require('pify');
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({
@@ -191,6 +191,7 @@ var AvatarStorage = function(options) {
 		var square = Math.min(width, height);
 		var rectangle = Math.max(width, height);
 		var threshold = this.options.threshold;
+		console.log(thisFuncName + "threshold="+threshold+", square="+square+", rectangle="+rectangle+", width="+width+", height="+height);
 		
 		//resolve the Jimp output mime type
 		switch (this.options.output) {
@@ -210,7 +211,7 @@ var AvatarStorage = function(options) {
 			clone = (square == width) ? clone.resize(threshold, Jimp.AUTO) : clone.resize(Jimp.AUTO, threshold);
 		}
 		
-		console.log(thisFuncName + "threshold="+threshold+", square="+square+", rectangle="+rectangle+", width="+width+", height="+height);
+		//console.log(thisFuncName + "threshold="+threshold+", square="+square+", rectangle="+rectangle+", width="+width+", height="+height);
 
 		//crop the image to a square if enabled
 		if (this.options.square) {
@@ -409,7 +410,12 @@ var AvatarStorage = function(options) {
 		//it returns a promise
 		Jimp.read(imageData)
 			.then(function(image) {
-				//process the Jimp image buffer
+				if (isDebug) {
+                    var width = image.bitmap.width;
+                    var height = image.bitmap.height;
+                    console.log(thisFuncName + "width=" + width + ", height=" + height);
+                }
+ 				//process the Jimp image buffer
 				that._processImage(image, req.baseFilename, cb);
 			})
 			.catch(cb);
