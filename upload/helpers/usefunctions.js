@@ -1,6 +1,5 @@
 //For colorful logging
 require('colors');
-const fs = require('fs');
 
 var functions = module.exports = {};
 

@@ -1,32 +1,43 @@
 const router = require('express').Router();
 const _ = require('lodash');
-const { promisify } = require('util');
 const multer = require('multer');
 const logger = require('log4js').getLogger();
-const AvatarStorage = require('../helpers/AvatarStorage');
+const S3Storage = require('../helpers/S3Storage');
 
-var storageMethod;
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
 
-if( process.env.UPLOAD_LOCAL == "false" ){
+logger.warn("Images will be uploaded to S3.");
+
+var storage = S3Storage({
+    s3: s3,
+    bucket: process.env.S3_BUCKET,
+    contentType: S3Storage.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+		const thisFuncName = 'S3Storage.opts.getKey: ';
+		
+		const team_key = req.query.team_key;
+		const year = req.query.year;
+		
+		const filename = `${year}_${team_key}`;
+		
+		const tier = process.env.TIER;
+		const baseKey = process.env.S3_BASE_KEY;
+		
+		const key = `${tier}/${baseKey}/${filename}`;
+		
+		logger.info(`${thisFuncName} s3 key=${key}`);
+		
+		cb(null, key);
+	},
+	acl: "public-read",
 	
-	storageMethod = "s3";
-	logger.warn("Images will be uploaded to S3. To upload to local filesystem, set process.env.UPLOAD_LOCAL=true.")
-}
-else{
-	
-	storageMethod = "local"
-	logger.warn("Images will be uploaded to local filesystem. To upload to S3, set process.env.UPLOAD_LOCAL=false." );
-}
-
-//create AvatarStorage object with our own parameters
-var storage = AvatarStorage({
-	storage: storageMethod,
 	square: false,
 	responsive: true,
 	output: "jpg",
 	greyscale: false,
 	quality: 60,
-	threshold: 500
+	threshold: 500,
 });
 
 //create image limits (10MB max)
@@ -55,13 +66,11 @@ var fileFilter = function (req, file, cb) {
 };
 
 //create basic multer function upload
-//var upload = pify(multer({
-var upload = promisify(multer({
+var upload = multer({
 	storage: storage,
 	limits: limits,
-	fileFilter: fileFilter
-}).any());
-
+	fileFilter: fileFilter,
+});
 
 router.get('/ping', async function(req, res) {
 	
@@ -73,35 +82,19 @@ router.post('/ping', async function(req, res) {
 	res.status(200).send("Pong!");
 });
 
-router.post('/image*', async function (req, res, next) {
-	var thisFuncName = "upload/image: ";
-	logger.debug(thisFuncName + "ENTER");
-
-	var team_key = req.query.team_key;
+router.post('/image', async (req, res, next) => {
 	
-	res.log(thisFuncName + "going to upload");
+	logger.info('Hi, I\'m a middleware function!');
 	
-	var year = 2019;
-	
-	req.baseFilename = year + "_" + team_key;
-	
-	try {
-		logger.debug(thisFuncName + "await upload()");
-		
-		await upload(req, res, function(err){
-			
-			logger.debug(thisFuncName + "sending success response");
-			res.sendStatus(200);
-			
-			logger.debug(thisFuncName + "DONE");
-		});
-		
-	} catch (err) {
-		logger.info(err);
-	}
-
-	logger.debug(thisFuncName + "DONE");
+	next();
 });
 
+router.post('/image', upload.any(), async (req, res, next) => {
+	
+	logger.info(`upload/image post-upload: req.files=${JSON.stringify(req.files)}`);
+	
+	res.sendStatus(200);
+	
+});
 
 module.exports = router;
