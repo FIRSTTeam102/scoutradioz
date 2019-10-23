@@ -14,13 +14,14 @@ require('aws-serverless-express/middleware');
 require('dotenv').config();
 
 //logger config
+if( process.env.COLORIZE_LOGS != 'true'){
+	log4js.configure({
+		appenders: { out: { type: 'stdout', layout: { type: 'basic' } } },
+		categories: { default: { appenders: ['out'], level: 'info' } }
+	});
+}
 const logger = log4js.getLogger();
 logger.level = 'debug';
-/*log4js.configure({
-	appenders: { cheese: { type: 'file', filename: 'cheese.log' } },
-	categories: { default: { appenders: ['cheese'], level: 'error' } }
-});*/
-//logger levels: trace, debug, info, warn, error, fatal
 
 const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
 const utilities = require('./utilities');				//database utilities

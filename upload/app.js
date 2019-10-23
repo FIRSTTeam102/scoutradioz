@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');				//parses http request information
 const useragent = require('express-useragent');			//for info on connected users
 const log4js = require('log4js');						//for extensive logging functionality
 
-
 const usefunctions = require('./helpers/usefunctions');
 
 //AWS middleware magic
@@ -13,8 +12,17 @@ require('aws-serverless-express/middleware');
 require('dotenv').config();
 
 //logger config
+if( process.env.COLORIZE_LOGS != 'true'){
+	
+	log4js.configure({
+		appenders: { out: { type: 'stdout', layout: { type: 'basic' } } },
+		categories: { default: { appenders: ['out'], level: 'info' } }
+	});
+}
+
 const logger = log4js.getLogger();
 logger.level = 'debug';
+
 
 const tier = process.env.TIER || ""
 
