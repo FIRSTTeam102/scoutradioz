@@ -53,7 +53,7 @@ app.use(session({
 	store: new MongoStore({
 		//Use same URL that utilities uses for database
         url: utilities.getDBurl(),
-        ttl: 3 * 24 * 60 * 60, // = 14 days. Default
+        ttl: 3 * 24 * 60 * 60, // Time-to-live, in seconds.
 		autoRemove: 'interval',
 		autoRemoveInterval: 10, // In minutes. Default
 		touchAfter: 24 * 3600, // time period in seconds for lazy loading session
