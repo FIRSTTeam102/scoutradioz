@@ -2,7 +2,7 @@ if(!$){
 	console.error("notification-cards error: jQuery not enabled");
 }
 
-function createNotificationCard( text, type ){
+function createNotificationCard( text, type, ttl ){
 	
 	var color;
 	
@@ -16,12 +16,14 @@ function createNotificationCard( text, type ){
 		case "good":
 			color = "alliance-blue";
 			break;
-		case "102":
-			color = "theme-link";
-			break;
 		default:
 			color = "w3-white";
 			 break;
+	}
+	
+	//ttl in milliseconts
+	if (!ttl) {
+		var ttl = 1500;
 	}
 	
 	if(!text){
@@ -58,11 +60,11 @@ function createNotificationCard( text, type ){
 			for( var i = 0; i < cards.length; i++ ){
 				cards[i].style.opacity = 0;
 			}
-	}, 1500);
+	}, ttl);
 	
 	setTimeout( function(){
 		$("#notification-card").remove();
-	}, 5000);
+	}, ttl + 5000);
 	
 }
 
