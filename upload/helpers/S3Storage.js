@@ -376,7 +376,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 		processImage(opts, async (err, files) => {		
 			if(err) return cb(err);
 			
-			logger.debug(`${thisFuncName} files=${JSON.stringify(files)}`);
+			logger.debug(`${thisFuncName} files=${JSON.stringify(files).substring(0,200)}`);
 			
 			for(var file of files){
 				

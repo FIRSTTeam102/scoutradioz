@@ -15,20 +15,32 @@ var storage = S3Storage({
     contentType: S3Storage.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
 		const thisFuncName = 'S3Storage.opts.getKey: ';
-		
-		const team_key = req.query.team_key;
+				
+		const fileKey = req.query.key;
 		const year = req.query.year;
 		
-		const filename = `${year}_${team_key}`;
+		if( fileKey && year ){
+			
+			const filename = `${year}_${fileKey}`;
+			
+			const tier = process.env.TIER;
+			const baseKey = process.env.S3_BASE_KEY;
+			
+			const key = `${tier}/${baseKey}/${filename}`;
+			
+			logger.info(`${thisFuncName} s3 key=${key}`);
+			
+			cb(null, key);
+			
+		}
+		//throw if key information is not specified in request
+		else{
+			
+			logger.error(`${thisFuncName} File key and year are not specified.`)
+			
+			cb(new Error("File key and year need to be specified."));
+		}
 		
-		const tier = process.env.TIER;
-		const baseKey = process.env.S3_BASE_KEY;
-		
-		const key = `${tier}/${baseKey}/${filename}`;
-		
-		logger.info(`${thisFuncName} s3 key=${key}`);
-		
-		cb(null, key);
 	},
 	acl: "public-read",
 	
@@ -89,11 +101,23 @@ router.post('/image', async (req, res, next) => {
 	next();
 });
 
-router.post('/image', upload.any(), async (req, res, next) => {
+router.post('/image', upload.single("image"), async (req, res, next) => {
 	
-	logger.info(`upload/image post-upload: req.files=${JSON.stringify(req.files)}`);
+	logger.info(`upload/image post-upload: req.files=${JSON.stringify(req.file)}`);
 	
-	res.sendStatus(200);
+	var locations = [];
+	
+	for(var i in req.file){
+		if(req.file.hasOwnProperty(i)){
+			var file = req.file[i];
+			
+			if(file && file.hasOwnProperty("location")) {
+				locations.push(file.location);
+			}
+		}
+	}
+	
+	res.status(200).send(locations);
 	
 });
 
