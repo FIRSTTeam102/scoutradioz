@@ -72,7 +72,7 @@ var fileFilter = function (req, file, cb) {
 		cb(null, true);
 	} else {
 		// throw error for invalid files
-		cb(new Error('Invalid file type. Only jpg, png and gif image files are allowed.'));
+		cb(new TypeError('Invalid file type. Only jpg, png and gif image files are allowed.'));
 	}
 	logger.debug(thisFuncName + "DONE");
 };
@@ -103,7 +103,7 @@ router.post('/image', async (req, res, next) => {
 
 router.post('/image', upload.single("image"), async (req, res, next) => {
 	
-	logger.info(`upload/image post-upload: req.files=${JSON.stringify(req.file)}`);
+	logger.info(`upload/image post-upload: req.file=${JSON.stringify(req.file)}`);
 	
 	var locations = [];
 	
