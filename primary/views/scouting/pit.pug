@@ -1,17 +1,5 @@
 //-
 	Pit scouting page. Contains dynamic inputs that are created based on JSOn in the database.
-	PARAM
-		layout			[Object Array] Layout, located in layout collection in db.
-	CALLED FROM
-		scouting.js 	'/pit'
-	INCLUDES
-		templates/formCheckbox
-		templates/formCounterInput
-		templates/formBadcounter
-		templates/dropdown
-		templates/formTextblock
-		templates/categoryHeader
-		templates/formSpacer
 extends ../layout
 block content
 	style.
@@ -23,7 +11,7 @@ block content
 			position: absolute;
 			z-index: -1;
 		}
-	script(src="/js/pit-client.js")
+	script(src=`${fileRoot}/js/script-pitscouting.js`)
 	h3= key.replace('frc','Team #')
 	p
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
@@ -33,22 +21,6 @@ block content
 		img#imgA(src=`${fileRoot}/uploads/responsive/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
 		img#imgB(src=`${fileRoot}/uploads/responsive/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
 		img#imgC(src=`${fileRoot}/uploads/responsive/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-	//
-		form#imageform1(action=`${uploadURL}/?team_key=${key}&year=${event_year}` method="post" enctype="multipart/form-data")
-			input#teamimage(type="file", name="avatarfield")
-			button#submitimage(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Main Image
-		//- Added stuffs for specific smaller images -//
-		form#imageforma(action=`${uploadURL}/?team_key=${key}a&year=${event_year}` method="post" enctype="multipart/form-data")
-			input#teamimagea(type="file", name="avatarfield")
-			button#submitimagea(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #1
-		//- v For image #2 -//
-		form#imageformb(action=`${uploadURL}/?team_key=${key}b&year=${event_year}` method="post" enctype="multipart/form-data")
-			input#teamimageb(type="file", name="avatarfield")
-			button#submitimageb(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #2
-		//- ...and for #3 -//
-		form#imageformc(action=`${uploadURL}/?team_key=${key}c&year=${event_year}` method="post" enctype="multipart/form-data")
-			input#teamimagec(type="file", name="avatarfield")
-			button#submitimagec(onclick="window.onbeforeunload = null;", class="w3-btn theme-submit") Upload Small Image #3 
 	form#imageform(action="javascript:void(0)" method="post")
 		//-Image inputs
 		input#imageMain(type="file" class="image-input" key=key name="imageMain")
@@ -68,8 +40,9 @@ block content
 				label#uploadB(for="imageB" class="w3-btn theme-submit") Upload Small #2
 			div(class="w3-padding w3-show-inline-block")
 				label#uploadC(for="imageC" class="w3-btn theme-submit") Upload Small #3
-		//- p#logger is for logging stuff on the phone (temporary till we can figure out the phone bug)
-		p#logger()
+	//div(class="w3-container")
+		input(type="checkbox" name="chkPreprocess" id="chkPreprocess" class="w3-check")
+		label(for="chkPreprocess" class="theme-inline-padding") Pre-process photos to conserve mobile data?
 	p
 	div(class="")
 		form#scoutform(class="" name="scoutform")
@@ -100,120 +73,11 @@ block content
 		br 
 		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit") Submit
 		p 
-	| <script>
-	| document.getElementById("returnurl").value = window.location.href;
-	each element in layout
-		case element.type
-			when "checkbox"
-				include templates/scriptCheckbox
-			when "counter"
-			when "badcounter"
-				include templates/scriptCounterInput
-	| </script>
-	script.
-		
-		//when a file input changes, submit
-		$("input[type=file]").on("change", submitImage);
-		
-		function submitImage(ev){
-			//ev.preventDefault();
-			
-			//var form = $("#imageform")[0];
-			var imageInput = this;
-			var imageInputID = imageInput.id
-			//get the label so we can disable it during upload
-			var button = $(`label[for=${imageInputID}]`);
-			
-			//formulate the url that we send a request to
-			var key = $(imageInput).attr("key");
-			var year = $("input[name=year]").val();
-			var uploadURLBase = $("input[name=uploadURL]").val();
-			
-			var uploadURL = `${uploadURLBase}?key=${key}&year=${year}`;
-			
-			//create FormData object to submit
-			var data = new FormData();
-			
-			//Only upload if there has been a file selected.
-			if (imageInput.files[0]) {
-				
-				//**Append the file to the FormData object under name "image"
-				data.append("image", imageInput.files[0]);
-				
-				console.log("Got data, going to submit to " + uploadURL);
-				console.log(data.get("image"));
-				
-				//$("#logger").append(uploadURL + "\n");
-				
-				$(button).addClass("w3-disabled");
-				
-				createNotificationCard("Uploading photo...")
-				
-				try{
-					//Send an AJAX request
-					$.ajax({
-						type: "POST",
-						enctype: 'multipart/form-data',
-						url: uploadURL,
-						data: data,
-						processData: false, //Tutorial said that it's important to set processData to false
-						contentType: false,
-						cache: false,
-						timeout: 600000,
-						success: function (data) {
-							
-							console.log("SUCCESS : ", data);
-							$(button).removeClass("w3-disabled");
-							
-							createNotificationCard("Photo successfully uploaded.", "good")
-							
-							//Refresh image href.
-							if(typeof data == "array" || typeof data == "object"){
-								switch(imageInputID){
-									case "imageMain":
-										//data[1] should be _md
-										//?Date.now() will force browser to refresh cache
-										$("#imgMain").attr("src", `${data[1]}?${Date.now()}`);
-										break;
-									case "imageA":
-										//data[2] should be _sm
-										$("#imgA").attr("src", `${data[2]}?${Date.now()}`);
-										break;
-									case "imageB":
-										$("#imgB").attr("src", `${data[2]}?${Date.now()}`);
-										break;
-									case "imageC":
-										$("#imgC").attr("src", `${data[2]}?${Date.now()}`);
-										break;
-								}
-							}
-						},
-						error: function (err, textStatus, errorThrown) {
-							
-							console.error(err.responseText || err);
-							$(button).removeClass("w3-disabled");
-							
-							//if error.responseText exists, then log that
-							if (err.responseText){
-								createNotificationCard(err.responseText, "bad", 10000);
-								$("#logger").append(err.responseText+"\n");
-							}
-							//if error.responseText does not exist, then stringify error and log it
-							else{
-								createNotificationCard(JSON.stringify(err), "bad", 10000);
-								$("#logger").append(JSON.stringify(err)+"\n");
-							}
-							//log textStatus and errorThrown
-							$("#logger").append(textStatus+"\n");
-							$("#logger").append(errorThrown+"\n");
-							
-						}
-					});	
-				}
-				catch (l) {
-					
-					createNotificationCard(JSON.stringify(l), "bad", 10000);
-					$("#logger").append("CAUGHT: "+l+"\n");
-				}
-			}
-		}
+	script
+		each element in layout
+			case element.type
+				when "checkbox"
+					include templates/scriptCheckbox
+				when "counter"
+				when "badcounter"
+					include templates/scriptCounterInput
