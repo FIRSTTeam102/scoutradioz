@@ -17,6 +17,10 @@ router.get('/selectorg', async function(req, res) {
 
 router.get('/login', async function (req, res){
 	
+	var thisFuncName = 'user.js:login: ';
+	
+	logger.debug(`${thisFuncName} ENTER`);
+	
 	//If there is no user logged in, send them to select-org page
 	if( !req.user ){
 		return res.redirect('/user/selectorg?alert=Please select an organization to sign in to.');
@@ -29,6 +33,8 @@ router.get('/login', async function (req, res){
 	
 	//Get organization that user has picked
 	var org_key = req.user.org_key;
+	
+	logger.debug(`User's organization: ${org_key}`);
 	
 	//search for organization in database
 	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
@@ -49,6 +55,9 @@ router.post('/login', async function(req, res){
 
 router.post('/login/select', async function(req, res){
 	//This URL can only be accessed via a POST method, because it requires an organization's password.
+	var thisFuncName = 'user.js:login/select[POST]: ';
+	
+	logger.debug(`${thisFuncName} ENTER`);
 	
 	//this can only be accessed if someone has logged in to default_user'
 	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return null;
@@ -116,11 +125,14 @@ router.post('/login/select', async function(req, res){
 
 router.post('/login/withoutpassword', async function(req, res){
 	
-	//This is where /user/login/selectuser sends a request first
+	var thisFuncName = 'user.js:/login/withoutpassword[POST]: ';
 	
+	//This is where /user/login/selectuser sends a request first
 	var userID = req.body.user;
 	var org_key = req.body.org_key;
 	var org_password = req.body.org_password;
+	
+	logger.debug(`${thisFuncName} userID=${userID}`);
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
@@ -168,6 +180,8 @@ router.post('/login/withoutpassword', async function(req, res){
 		});
 	}
 	
+	logger.debug(`${thisFuncName} user: ${JSON.stringify(user)}`);
+	
 	//Get role information from database, and compare to access role for a scouter
 	var role_key = user.role_key;
 	var userRole = await utilities.findOne("roles", {role_key: role_key});
@@ -197,12 +211,17 @@ router.post('/login/withoutpassword', async function(req, res){
 		
 		//First, check if the user has a password that is default
 		if( user.password == "default"){
+			
+			logger.debug(`${thisFuncName} Logging in scouter`);
 		
 			//If password is default, then we may proceed
 			req.logIn(user, function(err){
-			
+				
 				//If error, then log and return an error
 				if(err){ console.error(err); return res.send({status: 500, alert: err}) };
+				
+				logger.debug(`${thisFuncName} Sending success/password_needed: false`)
+				logger.info(`${thisFuncName} ${user.name} has logged in`);
 				
 				//now, return succes with redirect to dashboard
 				res.send({
@@ -214,6 +233,8 @@ router.post('/login/withoutpassword', async function(req, res){
 		}
 		else{
 			
+			logger.debug(`${thisFuncName} Sending password_needed: true`);
+			
 			//if password is not default, then return with password needed.
 			res.send({
 				status: 200,
@@ -223,11 +244,15 @@ router.post('/login/withoutpassword', async function(req, res){
 	}
 	else{
 		
+		logger.debug(`${thisFuncName} Logging in viewer`)
+		
 		//if access_level < process.env.ACCESS_SCOUTER, then log in user
 		req.logIn(user, function(err){
 			
 			//If error, then log and return an error
 			if(err){ console.error(err); return res.send({status: 500, alert: err}) };
+			
+			logger.info(`${thisFuncName} ${user.name} has logged in`);
 			
 			//Now, return with redirect_url: '/'
 			res.send({
@@ -241,10 +266,15 @@ router.post('/login/withoutpassword', async function(req, res){
 
 router.post('/login/withpassword', async function(req, res){
 	
+	var thisFuncName = 'user.js/login/withpassword[POST]: ';
+	
 	var userID = req.body.user;
 	var userPassword = req.body.password;
 	var org_key = req.body.org_key;
 	var org_password = req.body.org_password;
+	
+	logger.debug(`${thisFuncName} userID=${userID}`);
+	logger.debug(`${thisFuncName} password=${userPassword}`);
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
@@ -293,7 +323,11 @@ router.post('/login/withpassword', async function(req, res){
 	//Compare passwords
 	var userComparison = await bcrypt.compare( userPassword, user.password );
 	
+	logger.debug(`${thisFuncName} user=${JSON.stringify(user)}, password comparison:${userComparison}`);
+	
 	if(userComparison){
+		
+		logger.debug(`${thisFuncName} Logging in`);
 		
 		//If comparison succeeded, then log in user
 		req.logIn(user, async function(err){
@@ -322,6 +356,9 @@ router.post('/login/withpassword', async function(req, res){
 		});
 	}
 	else{
+		
+		logger.debug(`${thisFuncName} Login failed`);
+		
 		//If authentication failed, then send alert
 		return res.send({
 			status: 400,
@@ -332,13 +369,15 @@ router.post('/login/withpassword', async function(req, res){
 
 router.post('/login/createpassword', async function(req, res) {
 	
+	var thisFuncName = 'user.js/login/createpassword[POST]: ';
+	
 	var userID = req.body.user;
 	var org_key = req.body.org_key;
 	var org_password = req.body.org_password;
 	var p1 = req.body.newPassword1;
 	var p2 = req.body.newPassword2;
 	
-	res.log(`Request to create password: ${JSON.stringify(req.body)}`);
+	logger.info(`${thisFuncName} Request to create password: ${JSON.stringify(req.body)}`);
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
@@ -410,8 +449,8 @@ router.post('/login/createpassword', async function(req, res) {
 	
 	var writeResult = await utilities.update("users", {_id: userID}, {$set: {password: hash}});
 	
-	res.log(`${p1} -> ${hash}`);
-	res.log("createpassword: " + JSON.stringify(writeResult, 0, 2));
+	logger.debug(`${p1} -> ${hash}`);
+	logger.debug("createpassword: " + JSON.stringify(writeResult, 0, 2));
 	
 	req.logIn(user, function(err){
 		
@@ -474,7 +513,7 @@ router.post('/changepassword', async function(req, res){
 	
 	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {password: hash}});
 	
-	res.log("changepassword: " + JSON.stringify(writeResult), true);
+	logger.debug("changepassword: " + JSON.stringify(writeResult), true);
 	
 	res.redirect('/?alert=Changed password successfully.');
 });

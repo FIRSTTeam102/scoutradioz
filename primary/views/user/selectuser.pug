@@ -39,7 +39,10 @@ block content
 	div(class="w3-padding-16")
 		input#btnLogin(type="submit" class="gear-btn theme-submit w3-btn" value="Login")
 	script.
-	
+		
+		var passwordNeeded = false;
+		var createPasswordNeeded = false;
+		
 		$("#btnLogin").click(handleSubmit);
 		//If user presses enter in password input, invoke submit handler.
 		$("input[name=password],input[name=newPassword2]").keyup(function(e){
@@ -55,7 +58,7 @@ block content
 			var org_password = $("input[name=org_password]").val();
 			
 			//if new-password has been filled, then submit to /user/login/createpassword
-			if( $("input[name=newPassword1]").val() != "" && $("input[name=newPassword2]").val() != "" ){
+			if( createPasswordNeeded && $("input[name=newPassword1]").val() != "" && $("input[name=newPassword2]").val() != "" ){
 				
 				var newPassword1 = $("input[name=newPassword1]").val();
 				var newPassword2 = $("input[name=newPassword2]").val();
@@ -83,32 +86,8 @@ block content
 					alert("Both new password forms must be equal.");
 				}
 			}
-			//If password has no input, then submit to /user/login/withoutpassword
-			else if( $("input[name=password]").val() == "" ){
-				
-				var data = {user: selectedUser, org_key: org_key, org_password: org_password};
-				
-				$.post('/user/login/withoutpassword', data ).done( function(response, status){
-					
-					//Possible response information: alert, password_needed, and redirect_url
-					console.log(response);
-					
-					//if redirect, then redirect
-					if(response.redirect_url){
-						window.location.href = decodeURIComponent(response.redirect_url);
-					}
-					//if necessary to create password, then show the create-password prompt
-					else if(response.create_password){
-						$("#passwordCreationContainer").removeClass("w3-hide");
-					}
-					//finally, if password is needed, then show password prompt.
-					else if(response.password_needed == true){
-						$("#passwordContainer").removeClass("w3-hide");
-					}
-				});
-			}
-			//If password is filled, then submit to /user/login/withpassword
-			else{
+			//If password is needed and has been entered, submit to /withpassword
+			else if (passwordNeeded && $("input[name=password]").val() != "") {
 				
 				var password = $("input[name=password]").val();
 				
@@ -126,6 +105,32 @@ block content
 					//if redirect, then redirect
 					if(response.redirect_url){
 						window.location.href = decodeURIComponent(response.redirect_url);
+					}
+				});
+			}
+			//otherwise, submit to /user/login/withoutpassword
+			else {
+				
+				var data = {user: selectedUser, org_key: org_key, org_password: org_password};
+				
+				$.post('/user/login/withoutpassword', data ).done( function(response, status){
+					
+					//Possible response information: alert, password_needed, and redirect_url
+					console.log(response);
+					
+					//if redirect, then redirect
+					if(response.redirect_url){
+						window.location.href = decodeURIComponent(response.redirect_url);
+					}
+					//if necessary to create password, then show the create-password prompt
+					else if(response.create_password){
+						createPasswordNeeded = true;
+						$("#passwordCreationContainer").removeClass("w3-hide");
+					}
+					//finally, if password is needed, then show password prompt.
+					else if(response.password_needed == true){
+						passwordNeeded = true;
+						$("#passwordContainer").removeClass("w3-hide");
 					}
 				});
 			}
