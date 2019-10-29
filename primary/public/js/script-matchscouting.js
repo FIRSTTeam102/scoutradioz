@@ -11,7 +11,7 @@ $(function(){
 				NotificationCard.error("An error occurred. Please retry.")
 			}
 			else{
-				NotificationCard.show(message, {darken: true, type: "good"});
+				NotificationCard.show(message, {darken: true, type: "good", ttl: 0});
 				
 				setTimeout(() => {
 					window.location.href = '/dashboard';

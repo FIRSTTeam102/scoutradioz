@@ -304,6 +304,11 @@ class FormSubmission{
 			console.log(data);
 			
 			$.post(this.url, data)
+			.always(() => {
+				
+				//Remove submission notification card
+				cardSubmit.remove(0);
+			})
 			.done((response) => {
 				
 				cb(null, response.message);
@@ -312,13 +317,9 @@ class FormSubmission{
 				console.warn("failed");
 				
 				NotificationCard.show("Failed to send data. Attempting to re-submit...", {type: "warn", ttl: 1000});
-				setTimeout(function(){
+				setTimeout(() =>{
 					this.submit(cb);
 				}, 3000);
-			}).always(() => {
-				
-				//Remove submission notification card
-				cardSubmit.remove(0);
 			});
 			
 		}
