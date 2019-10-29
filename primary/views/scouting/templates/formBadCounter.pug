@@ -1,10 +1,20 @@
-div(class="w3-row")
+div(class="w3-auto w3-row w3-padding-small")
 	div(class="w3-col s2 m4")
-		button(class="w3-button w3-hover-green w3-green scouting-counter" onclick=`updateCounter_${element.id}(-1)` type="button") -
+		button(class="w3-btn w3-green scouting-counter" onclick=`updateCounter_${element.id}(1)` type="button") +
 	div(class="w3-col s8 m4")
 		label(id=`${element.id}`)
-			center #{element.label}: 0
+			center #{element.label}: #{answer || 0}
 	div(class="w3-col s2 m4")
-		button(class="w3-button theme-red scouting-counter" onclick=`updateCounter_${element.id}(1)` type="button") +
-input(id=`${element.id}FormInput` type="hidden" name=`${element.id}` value="0")
+		button(class="w3-btn theme-red scouting-counter" onclick=`updateCounter_${element.id}(-1)` type="button") 
+			div(class="minus") -
+input(id=`${element.id}FormInput` type="hidden" name=`${element.id}` value=(answer || 0))
 p
+script.
+	var #{element.id} = #{answer || 0};
+	function updateCounter_#{element.id}(i)
+	{
+		#{element.id} += i;
+		if (#{element.id} < 0) #{element.id} = 0; 
+		document.getElementById("#{element.id}").innerHTML = "#{element.label}: " + #{element.id};
+		document.getElementById("#{element.id}FormInput").value = #{element.id};
+	}

@@ -1,10 +1,6 @@
-|
-| var #{element.id} = false;
-|
-| function updateCheck_#{element.id}()
-| {
-|	#{element.id} = !#{element.id};
-|	console.log(#{element.id});
-|	document.getElementById("#{element.id}FormInput").value = #{element.id};
-|	console.log(document.getElementById("#{element.id}FormInput").value);
-| }
+script.
+	function updateCheck_#{element.id}() {
+		var isChecked = $('##{element.id}').prop("checked");
+		$('##{element.id}FormInput').val(isChecked);
+		console.log(`#{element.id}: ${isChecked}`);
+	}
