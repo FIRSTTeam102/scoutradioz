@@ -2,7 +2,12 @@ extends ../../layout
 block content
 	style.
 		.editor-row{
-			z-index: 2;
+			z-index: 3;
+			position: relative;
+		}
+		.editor-row .editor-contents{
+			z-index: 1;
+			position: relative;
 		}
 		.editor-hr{
 			margin: 8px 4px;
@@ -28,49 +33,50 @@ block content
 			each item, i in pitlayout
 				//p=JSON.stringify(item)
 				div(class="w3-row editor-row" row=i)
-					hr(class="editor-hr")
-					//sort draggy
-					div(id=`sort_${i}` class="w3-col m1 w3-padding-small w3-right-align editor-sort")
-						div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px; cursor: grab;") 
-							span(style="") ≡
-					//type
-					div(id=`type_${i}` class="w3-col m2 w3-padding-small editor-type")
-						select(name=`type_${i}` class="theme-input w3-btn w3-block")
-							if item.type == "h2"
-								option(value="h2" selected) Header
-							else
-								option(value="h2") Header
-							if item.type == "spacer"
-								option(value="spacer" selected) Spacer
-							else
-								option(value="spacer") Spacer
-							if item.type == "textblock"
-								option(value="textblock" selected) Text Block
-							else
-								option(value="textblock") Text Block
-							if item.type == "checkbox"
-								option(value="checkbox" selected) Checkbox
-							else
-								option(value="checkbox") Checkbox
-							if item.type == "multiselect"
-								option(value="multiselect" selected) Multi-select
-							else
-								option(value="multiselect") Multi-select
-					//label
-					div(id=`label_${i}` class="w3-col m4 w3-padding-small editor-label" style=`${item.type == 'spacer' ? 'visibility: hidden;' : ''}`)
-						input(type="text" name=`label_${i}` class="theme-input w3-block" placeholder="Label" value=item.label)
-					//multiselect options
-					div(id=`options_${i}` class="w3-col m4 w3-padding-small editor-multiselect" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
-						if item.options
-							each option, j in item.options
-								div(class="w3-col" style="padding-bottom: 8px;")
-									input(type="text" name=`options_${i}_${j}` class="theme-input w3-block" placeholder="Option" value=option)
-						div(id=`sampleOption_${i}` class="w3-col" style="padding-bottom: 8px; display: none;")
-							input(type="text" name=`option_${i}_${j}` class="theme-input w3-block" placeholder="Option" value=option)
-					//+ button for multiselect
-					div(id=`button_${i}` class="w3-col m1 w3-padding-small editor-button" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
-						div(class="w3-btn theme-input" style="border-radius: 50%; height: 38px; width: 38px;")
-							span(style="font-size: 1.4em; position: relative; top: -2px;") +
+					div(class="editor-contents")
+						hr(class="editor-hr")
+						//sort draggy
+						div(id=`sort_${i}` class="w3-col m1 w3-padding-small w3-right-align editor-sort")
+							div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px; cursor: grab;") 
+								span(style="") ≡
+						//type
+						div(id=`type_${i}` class="w3-col m2 w3-padding-small editor-type")
+							select(name=`type_${i}` class="theme-input w3-btn w3-block")
+								if item.type == "h2"
+									option(value="h2" selected) Header
+								else
+									option(value="h2") Header
+								if item.type == "spacer"
+									option(value="spacer" selected) Spacer
+								else
+									option(value="spacer") Spacer
+								if item.type == "textblock"
+									option(value="textblock" selected) Text Block
+								else
+									option(value="textblock") Text Block
+								if item.type == "checkbox"
+									option(value="checkbox" selected) Checkbox
+								else
+									option(value="checkbox") Checkbox
+								if item.type == "multiselect"
+									option(value="multiselect" selected) Multi-select
+								else
+									option(value="multiselect") Multi-select
+						//label
+						div(id=`label_${i}` class="w3-col m4 w3-padding-small editor-label" style=`${item.type == 'spacer' ? 'visibility: hidden;' : ''}`)
+							input(type="text" name=`label_${i}` class="theme-input w3-block" placeholder="Label" value=item.label)
+						//multiselect options
+						div(id=`options_${i}` class="w3-col m4 w3-padding-small editor-multiselect" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
+							if item.options
+								each option, j in item.options
+									div(class="w3-col" style="padding-bottom: 8px;")
+										input(type="text" name=`options_${i}_${j}` class="theme-input w3-block" placeholder="Option" value=option)
+							div(id=`sampleOption_${i}` class="w3-col" style="padding-bottom: 8px; display: none;")
+								input(type="text" name=`option_${i}_${j}` class="theme-input w3-block" placeholder="Option" value=option)
+						//+ button for multiselect
+						div(id=`button_${i}` class="w3-col m1 w3-padding-small editor-button" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
+							div(class="w3-btn theme-input" style="border-radius: 50%; height: 38px; width: 38px;")
+								span(style="font-size: 1.4em; position: relative; top: -2px;") +
 					
 	script.
 		//set url to add year in request if it doesn't already have it
@@ -80,26 +86,43 @@ block content
 		$(".editor-button div").click(handleAddOptionClick);
 		$(".editor-sort div").on("mousedown", handleSortStart);
 		$(document).on("mousemove", handleMouseMove);
+		$(".editor-row").on("mouseenter", handleHover)
 		
 		var dragOffsetX = -32, dragOffsetY = -24;
 		var currentlyDragging = false, isTicking = false;
 		var dragElement;
+		var currentHoverIdx = 0;
+		
+		function handleHover(evt){
+			
+			var row = $(this);
+			var idx = parseInt(row.attr("row"));
+			
+			if (!isNaN(idx)) {
+				currentHoverIdx = idx;
+			}
+			console.log(currentHoverIdx);
+		}
 		
 		function handleSortStart(evt){
 			
 			var sortBtn = $(this);
-			var row = parseInt( sortBtn.parent().parent().attr("row") );
+			//var row = parseInt( sortBtn.parent().parent().parent().attr("row") );
 			
 			//$(document.body).css("cursor", "grabbing")
 			
-			var rowElement = sortBtn.parent().parent();
-			var newRowElement = rowElement.clone().css("position", "absolute").css("width", "100%").css("z-index", "1")
+			var rowElement = sortBtn.parent().parent().parent();
+			var newRowElement = rowElement.clone().css("position", "absolute").css("width", "100%").css("z-index", "2")
 				.css("top", evt.pageY + dragOffsetY).css("left", evt.pageX + dragOffsetX)
 				.appendTo(document.body);
 			
+			$(newRowElement).children().css("z-index", "4");
+			console.log($(newRowElement).children()[0]);
+			
 			rowElement.css("opacity", 0.5);
 			newRowElement.find("hr").remove();
-			newRowElement.find(".editor-sort div").css("cursor", "grabbing")
+			$(document.body).css("cursor", "grabbing");
+			$(".editor-sort div").css("cursor", "grabbing");
 			
 			dragElement = newRowElement;
 			
@@ -107,16 +130,23 @@ block content
 			
 			$(document).on("mouseup", handleSortEnd);
 			
-			console.log(row);
+			//console.log(row);
 		}
 		
 		function handleSortEnd(){
-			
-			var row = parseInt(dragElement.attr("row"))
-			
-			currentlyDragging = false;
-			dragElement.remove();
-			$(`div[row=${row}]`).css("opacity", 1);
+			if (currentlyDragging) {
+				var row = parseInt(dragElement.attr("row"))
+				
+				currentlyDragging = false;
+				dragElement.remove();
+				$(`div[row=${row}]`).css("opacity", 1);
+				$(document.body).css("cursor", "")
+				$(".editor-sort div").css("cursor", "grab");
+				
+				var rowToInsert = $(`div[row=${currentHoverIdx}]`);
+				
+				console.log(`Going to move row ${row} into row ${currentHoverIdx}`);
+			}
 		}
 		
 		function handleMouseMove(evt){

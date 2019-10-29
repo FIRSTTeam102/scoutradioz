@@ -1,3 +1,5 @@
+'use strict';
+
 if(!$){
 	console.error("scoutradioz.js error: jQuery not enabled");
 }
@@ -42,124 +44,306 @@ function debugToHTML(message) {
 	$(debugLogger).append(newTextElem);
 }
 
-function createNotificationCard( text, type, ttl ){
+class NotificationCard{
 	
-	var color;
+	static containerElement;
+	card;
+	text;
+	opts;
+	onclose = null;
+	onfadeend = null;
+	onfadebegin = null;
 	
-	switch( type ){
-		case "bad": 
-			color = "theme-red";
-			break;
-		case "warn":
-			color = "w3-amber";
-			break;
-		case "good":
-			color = "alliance-blue";
-			break;
-		default:
-			color = "w3-white";
-			 break;
-	}
-	
-	//ttl in milliseconts
-	if (!ttl) {
-		var ttl = 1500;
-	}
-	
-	if(!text){
-		console.error("createNotificationCard: No text parameter sent");
-		return null;
-	}
-	
-	card = document.createElement("div");
-	
-	card.innerText = text;
-	card.classList.add("w3-card");
-	card.classList.add("w3-padding");
-	card.classList.add("w3-border");
-	card.classList.add("w3-center");
-	card.classList.add( color );
-	card.style = "position:fixed; top:50px; transition:opacity 2.5s; opacity:1; z-index:3;";
-	card.id = "notification-card";
-	
-	if(window.innerWidth >= 601){
-		card.classList.add("w3-half");
-		card.style.left = "25%";
-	}else{
-		card.classList.add("w3-container");
-		card.style.width = "100%";
-	}
-	
-	document.body.appendChild(card);
-	
-	
-	setTimeout( function(){
-		var cards = document.querySelectorAll("#notification-card");
+	/**
+	 * @param {String} text Text to display on notification card
+	 * @param {Object} options Options
+	 */
+	constructor(text, options){
 		
-		if(cards.length >= 0)
-			for( var i = 0; i < cards.length; i++ ){
-				cards[i].style.opacity = 0;
-			}
-	}, ttl);
-	
-	setTimeout( function(){
-		$("#notification-card").remove();
-	}, ttl + 5000);
-	
-}
-
-function getFormData($form){
-    var unindexed_array = $form.serializeArray();
-    var indexed_array = {};
-
-    $.map(unindexed_array, function(n, i){
-        indexed_array[n['name']] = n['value'];
-    });
-
-    return indexed_array;
-}
-
-function submitData(url, dataKey, callback, indexOfLS){
-	//console.log(dataKey);
-	var dataString = localStorage.getItem(dataKey);
-	if(!dataString)
-		return console.error("Failed to get data from localStorage");
-	//console.log(dataString);
-	var data = JSON.parse(dataString);
-	//console.log(data);
-	
-	console.log(`url: ${url}`);
-	console.log(`data:`);
-	console.log(data);
-	
-	$.post( url, data, function( res, status ){
-		var cardType;
+		if (!options) options = {};
 		
-		switch( res.status ){
-			case 200:
-				cardType = "good"; break;
-			case 500:
-				cardType = "bad"; break;
+		this.text = text;
+		
+		if (typeof text != "string") {
+			throw new TypeError("NotificationCard: text must be string.");
 		}
-		console.log(res);
+		if (typeof options != "object"){
+			throw new TypeError("NotificationCard: opts must be object.");
+		}
 		
-		createNotificationCard( res.message, cardType );
+		this.opts = this.filterOptions(options)
 		
-		callback(null);
-	}).fail(function(){
-		console.warn("failed");
-		createNotificationCard("Failed to send data. Attempting to re-submit...", "warn");
-		setTimeout(function(){
-			submitData(url, dataKey, callback, indexOfLS);
-		}, 2000);
-	});
+	}
 	
+	/**
+	 * Static method to create and return a new NotificationCard with specified options.
+	 * @param {String} text Text to display on notification card
+	 * @param {Object} opts (optional) Options
+	 * @return {NotificationCard} The new NotificationCard object.
+	 */
+	static show(text, opts){
+		
+		var newCard = new NotificationCard(text, opts);
+		
+		newCard.show();
+		
+		return newCard;
+	}
+	
+	/**
+	 * Shorthand to display an error/bad notification card.
+	 * @param {string} text Text to display.
+	 */
+	static error(text){
+		
+		return NotificationCard.show(text, {type: "error"});
+	}
+	
+	/**
+	 * Shorthand to display a good/success notification card.
+	 * @param {string} text Text to display.
+	 */
+	static good(text){
+		
+		return NotificationCard.show(text, {type: "good"});
+	}
+	
+	/**
+	 * Shorthand to display a warning notification card.
+	 * @param {string} text Text to display.
+	 */
+	static warn(text){
+		
+		return NotificationCard.show(text, {type: "warn"});
+	}
+	
+	/**
+	 * Gets and creates static container element for all notification cards.
+	 */
+	static container(){
+		
+		if (!NotificationCard.containerElement){
+			NotificationCard.containerElement =  $(document.createElement("div"))
+			.addClass("notification-card-container")
+			.appendTo(document.body);
+		}
+		return NotificationCard.containerElement;
+	}
+	
+	show(){
+		
+		var card = $(document.createElement("div"))
+			.addClass("notification-card")
+			.css({
+				"background-color": this.opts.color,
+				"border-bottom-color": this.opts.borderColor,
+				"color": this.opts.textColor,
+			});
+		var text = $(document.createElement("div"))
+			.addClass("notification-card-content")
+			.text(this.text);
+			
+		var exitBtn = $(document.createElement("div"))
+			.addClass("exit");
+			
+		card.append(text);
+		//text.append(exitBtn);
+		
+		NotificationCard.container().append(card);
+		
+		if (this.opts.darken){
+			var darkener = document.createElement("div");
+			$(darkener).addClass("canvas").addClass("theme-darkener");
+			$(NotificationCard.containerElement).append(darkener);
+		}
+
+		
+		this.card = card;
+		
+		console.log(this.opts);
+		console.log("TTL " + this.opts.ttl);
+		
+		
+		if (this.opts.ttl != 0){
+			setTimeout(() => {
+				this.remove();
+			}, this.opts.ttl);
+		}
+		
+		
+		return this;
+	}
+	
+	/**
+	 * 
+	 * @param {Number} time (Optional) Time to remove card (Set to 0 to remove immediately; default 1900ms)
+	 */
+	remove(time){
+		
+		var removeTime = 1900;
+		
+		if (typeof time == "number") {
+			removeTime = time;
+		}
+		
+		if (this.card) {
+			$(this.card).css("opacity", 0);
+			setTimeout(() => {
+				$(this.card).remove();
+			}, removeTime);
+		}
+		
+		return this;
+	}
+	
+	filterOptions(options){
+		
+		var defaultOpts = {
+			type: "normal",
+			ttl: 2000,
+			exitable: false,
+			darken: false,
+		}
+		
+		var opts = defaultOpts;
+		
+		for (var option in opts) {
+			
+			if (options.hasOwnProperty(option)) {	
+				switch(option){
+					case "type":
+						if (typeof options[option] == 'string') opts[option] = options[option];
+						else throw new TypeError("NotificationCard.opts.type must be string.")
+						break;
+					case "ttl":
+						if (typeof options[option] == 'number') opts[option] = options[option];
+						else throw new TypeError("NotificationCard.opts.ttl must be a number.")
+						break;
+					case "exitable":
+						if (typeof options[option] == 'boolean') opts[option] = options[option];
+						else throw new TypeError("NotificationCard.opts.exitable must be a boolean.")
+						break;
+					case "darken":
+						if (typeof options[option] == 'boolean') opts[option] = options[option];
+						else throw new TypeError("NotificationCard.opts.darken must be a boolean.");
+						break;
+					default:
+						throw new ReferenceError("NotificationCard.opts: Unknown option " + option);
+				}
+			}
+		}
+		console.log(opts.type);
+		//sort through type and set opts.color and opts.textColor
+		switch (opts.type) {
+			case "good": 
+			case "success": 
+				opts.color = "rgb(91, 209, 255)";
+				opts.borderColor = "rgb(59, 102, 119)";
+				opts.textColor = "rgb(0,0,0)";
+				break;
+			case "warn": 
+				opts.color = "rgb(230,170,10)";
+				opts.borderColor = "rgb(90,54,0)";
+				opts.textColor = "rgb(0,0,0)";
+				break;
+			case "bad": 
+			case "error": 
+				opts.color = "rgb(160,20,10)";
+				opts.borderColor = "rgb(84,0,0)";
+				opts.textColor = "rgb(255,255,255)";
+				break;
+			default: 
+				opts.color = "rgb(240,245,255)";
+				opts.borderColor = "rgb(50,50,50)";
+				opts.textColor = "rgb(0,0,0)";
+		}
+		
+		return opts;
+	}
 }
 
-function getToSubmit(){
-	return JSON.parse(localStorage.getItem('toSubmit'));
-}
-
-function setToSubmit( array ){
-	localStorage.setItem("toSubmit", JSON.stringify(array) );
+class FormSubmission{
+	
+	/**
+	 * Submission of a form.
+	 * @param {HTMLFormElement} form Form to submit
+	 * @param {String} url POST URL to submit to
+	 * @param {String} key Name of form (any)
+	 */
+	constructor(form, url, key){
+		
+		if (form && url && key) {
+			this.data = this._getFormData(form);
+			this.url = url;
+			this.key = key; //Date.now().toString();
+			
+			this._addToLocalStorage();
+		}
+		else {
+			throw new TypeError("FormSubmission: Form, URL and Key must be entered.")
+		}
+	}
+	
+	/**
+	 * Submit the formsubmission.
+	 * @param {Function} cb Callback function. (err, message)
+	 */
+	submit(cb){
+		
+		var dataString = this._getFromLocalStorage();
+		
+		if(dataString){
+			
+			var data = JSON.parse(dataString);
+			
+			//Create a persistent notification card while the data is submitting.
+			var cardSubmit = new NotificationCard("Submitting...", {ttl: 0}).show();
+			
+			console.log(`Submitting to url: ${this.url}`);
+			console.log(`data:`);
+			console.log(data);
+			
+			$.post(this.url, data)
+			.done((response) => {
+				
+				cb(null, response.message);
+			})
+			.fail(() => {
+				console.warn("failed");
+				
+				NotificationCard.show("Failed to send data. Attempting to re-submit...", {type: "warn", ttl: 1000});
+				setTimeout(function(){
+					this.submit(cb);
+				}, 3000);
+			}).always(() => {
+				
+				//Remove submission notification card
+				cardSubmit.remove(0);
+			});
+			
+		}
+		//if data isn't found
+		else{
+			cb("Failed to retrieve data from LocalStorage")
+		}
+	}
+	
+	_getFromLocalStorage(){
+		return localStorage.getItem(this.key);
+	}
+	
+	_addToLocalStorage(){
+		localStorage.setItem(this.key, JSON.stringify(this.data));
+	}
+	
+	_getFormData(form){
+		var unIndexedData = $(form).serializeArray();
+		var indexedData = {};
+	
+		$.map(unIndexedData, function(n, i){
+			indexedData[n['name']] = n['value'];
+		});
+		
+		return indexedData;
+	}
 }

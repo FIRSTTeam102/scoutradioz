@@ -19,34 +19,27 @@ $(function(){
 	
 	$("#submit").on('click', function(){
 		
-		var formData = getFormData($("#scoutform"));
-		var formDataString = JSON.stringify(formData);
+		var pitForm = $("form[name=scoutform]");
 		
-		//adds data to local storage
-		localStorage.setItem("matchFormData", formDataString); 
+		console.log(pitForm);
 		
-		//data on item to submit
-		var toSubmit = {
-			url: "/scouting/pit/submit",
-			dataKey: "matchFormData",
-			callback: function(){
-				console.log("Callback called from match-client.js");
+		var pitSubmission = new FormSubmission(pitForm, "/scouting/pit/submit", "pitScouting");
+		
+		console.log(pitSubmission);
+		
+		pitSubmission.submit((err, message) => {
+			if (err) {
+				NotificationCard.error("An error occurred. Please retry.")
+			}
+			else{
 				
-				setTimeout(function(){
-					window.location.href="/dashboard";
+				NotificationCard.show(message, {darken: true, type: good});
+				
+				setTimeout(() => {
+					window.location.href = '/dashboard';
 				}, 1000);
 			}
-		};
-		
-		//create screen darkener
-		darkener = document.createElement("div");
-		darkener.classList.add("canvas");
-		darkener.classList.add("theme-darkener");
-		document.body.appendChild(darkener);
-		//create card to say sending data
-		createNotificationCard("Submitting pit data...");
-		
-		submitData(toSubmit.url, toSubmit.dataKey, toSubmit.callback);
+		});
 	});
 	
 	window.onbeforeunload = function() {
@@ -91,7 +84,7 @@ async function submitImage(ev){
 		
 		$(button).addClass("w3-disabled");
 		
-		createNotificationCard("Uploading photo...")
+		var uploadingCard = new NotificationCard("Uploading photo...", {ttl: 0}).show();
 		
 		try{
 			
@@ -110,7 +103,7 @@ async function submitImage(ev){
 					console.log("SUCCESS : ", data);
 					$(button).removeClass("w3-disabled");
 					
-					createNotificationCard("Photo successfully uploaded.", "good");
+					NotificationCard.good("Photo successfully uploaded.")
 					
 					//Refresh image href.
 					if(typeof data == "array" || typeof data == "object"){
@@ -140,12 +133,14 @@ async function submitImage(ev){
 					
 					//if error.responseText exists, then log that
 					if (err.responseText){
-						createNotificationCard(err.responseText, "bad", 10000);
+						uploadingCard.remove(0);
+						NotificationCard.show(err.responseText, {type: "bad", ttl: 10000});
 						//debugToHTML(err.responseText+"\n");
 					}
 					//if error.responseText does not exist, then stringify error and log it
 					else{
-						createNotificationCard(JSON.stringify(err), "bad", 10000);
+						uploadingCard.remove(0);
+						NotificationCard.show(JSON.stringify(err), {type: "bad", ttl: 10000});
 						//debugToHTML(JSON.stringify(err)+"\n");
 					}
 					//log textStatus and errorThrown
@@ -180,8 +175,8 @@ async function submitImage(ev){
 			});	
 		}
 		catch (l) {
-			
-			createNotificationCard(JSON.stringify(l), "bad", 10000);
+			uploadingCard.remove(0);
+			NotificationCard.show(JSON.stringify(l), {type: "bad", ttl: 10000});
 			//debugToHTML("CAUGHT: "+l+"\n");
 		}
 	}
@@ -261,7 +256,7 @@ function getImageData(input){
 				//Only process image if the user checked the checkbox.
 				if (localStorage.getItem("preprocessImages") == "true") {
 					
-					createNotificationCard("Compressing photo...");
+					NotificationCard.show("Compressing photo...");
 					
 					var preJimpReadTime = Date.now();
 					

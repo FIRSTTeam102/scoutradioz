@@ -133,6 +133,44 @@ hr{
     z-index: 2;
 }
 
+/* For notification cards */
+.notification-card-container{
+    position: fixed;
+    z-index: 2;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+}
+
+.notification-card{
+    z-index: 3;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: rgb(255, 179, 179);
+    margin: 16px 0px;
+    padding: 12px 32px;
+    transition: opacity 2s;
+    transition-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    
+    border-bottom-style: solid;
+    border-bottom-width: 4px;
+}
+
+.notification-card .notification-card-content{
+    font-size: 1.2em;
+    text-align: center;
+    word-wrap: break-word;
+    font-family: Verdana, Geneva, sans-serif;
+}
+
+.notification-card .notification-card-exit{
+    width: 20px;
+    height: 20px;
+    margin: 4px;
+    text-align: right;
+}
+
 /* 2019 SPACE THEME */
 
 .gear-space{

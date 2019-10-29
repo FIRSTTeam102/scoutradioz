@@ -2,39 +2,26 @@ $(function(){
 	
 	$("#submit").on('click', function(){
 		
-		//get match form data
-		var formData = getFormData($("#matchform"));
-		var formDataString = JSON.stringify(formData);
+		var matchForm = $("form[name=matchform]");
 		
-		//adds data to local storage
-		localStorage.setItem("matchFormData", formDataString);
+		var matchSubmission = new FormSubmission(matchForm, '/scouting/match/submit', 'matchScouting');
 		
-		console.log(formDataString);
-		console.log(localStorage.matchFormData);
-		
-		//data on item to submit
-		var toSubmit = {
-			url: "/scouting/match/submit",
-			dataKey: "matchFormData",
-			callback: function(){
-				console.log("Callback called from match-client.js");
+		matchSubmission.submit((err, message) => {
+			if (err) {
+				NotificationCard.error("An error occurred. Please retry.")
+			}
+			else{
+				NotificationCard.show(message, {darken: true, type: "good"});
 				
-				
-				setTimeout(function(){
-					window.location.href="/dashboard";
+				setTimeout(() => {
+					window.location.href = '/dashboard';
 				}, 1000);
 			}
+		});
+		
+		window.onbeforeunload = function() {
+			return "Leaving this page will lose match scouting data.";
 		};
-		
-		//create screen darkener
-		darkener = document.createElement("div");
-		darkener.classList.add("canvas");
-		darkener.classList.add("theme-darkener");
-		document.body.appendChild(darkener);
-		//create card to say sending data
-		createNotificationCard("Submitting match data...");
-		
-		submitData(toSubmit.url, toSubmit.dataKey, toSubmit.callback);
 	});
 
 });

@@ -117,10 +117,10 @@ block content
 				//This is the page-determined response status code
 				switch( response.status ){
 					case 401:
-						createNotificationCard(response.message, "bad");
+						NotificationCard.error(response.message);
 						break;
 					case 200:
-						createNotificationCard(response.message);
+						NotificationCard.show(response.message);
 						break;
 				}
 				
