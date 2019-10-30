@@ -1,26 +1,95 @@
 extends layout
 block content
 	div(class="w3-auto")
-		form(action="send" method="post" name="send-form")
-			input(class="w3-input theme-input" type="text" placeholder="Notification content") 
-			button(class="w3-btn gear-btn theme-submit") Send Notification
+		form(action="javascript:void(0)" method="post" name="send-form")
+			input(class="w3-input theme-input" type="text" name="content" placeholder="Notification content") 
+			button(class="w3-btn gear-btn theme-submit" id="btn-sendnotif") Send Notification
 		br 
 		//form(action="subscribe" method="post" name="subscribe-form")
 		button(class="w3-btn gear-btn theme-submit" id="btn-subscribe") Subscribe
 	script.
+	
+		var scriptURL = '/js/service-worker-v3.js';
+		
+		if (navigator.serviceWorker) {
+			navigator.serviceWorker.addEventListener('message', function(event) {
+				console.log('Received a message from service worker: ', event.data);
+				
+				var message = event.data.ifFocused.message;
+				NotificationCard.show(message);
+			});
+		}
+		
+		$("#btn-sendnotif").click(async function(){
+			
+			var formData = $("#send-form").serialize();
+			
+			$.post('/notifications/sendtest', formData);
+		})
+		
+		$("#btn-subscribe").click(async function(){
+			
+			var registration = await registerServiceWorker();
+			
+			console.log(registration);
+			//debugToHTML(registration);
+			
+			try {
+				
+				await askPermission();
+				
+				var pushSubscription = await subscribeUserToPush();
+				
+				sendSubscription(pushSubscription, (err, data) => {
+					if (err){
+						NotificationCard.show("An error occurred: " + err, {type: "bad"});
+					}
+					else {
+						NotificationCard.show("Successfully susbcribed to notifications.", {type: "good"});
+					}
+				});
+			}
+			catch (err){
+				console.error(err);
+				NotificationCard.show("An error occurred: " + err, {type: "bad"});
+			}
+		});
+		
+		function sendSubscription(pushSubscription, cb){
+			
+			const subscription = JSON.stringify(pushSubscription);
+			
+			
+			$.ajax({
+				type: "POST",
+				url: '/notifications/save-subscription/',
+				dataType: 'json',
+				contentType: 'application/json',
+				data: subscription,
+			})
+			.done((data, status, xhr) => {
+				console.log(data);
+				cb(null, data);
+			})
+			.fail((xhr, status, error) => {
+				console.log(error);
+				cb(error);
+			});
+		}
+		
 		function registerServiceWorker() {
 			
 			if (!('serviceWorker' in navigator)) {
 			// Service Worker isn't supported on this browser, disable or hide UI.
-				return;
+				return "No ServiceWorker";
 			}
 			
 			if (!('PushManager' in window)) {
 			// Push isn't supported on this browser, disable or hide UI.
-				return;
+				return "No PushManager";
 			}
 			
-			return navigator.serviceWorker.register('/js/service-worker.js')
+			return navigator.serviceWorker.register(scriptURL)
 			.then(function(registration) {
 				console.log('Service worker successfully registered.');
 				return registration;
@@ -29,15 +98,6 @@ block content
 				console.error('Unable to register service worker.', err);
 			});
 		}
-		$("#btn-subscribe").click(async function(){
-			
-			var registration = await registerServiceWorker();
-			
-			console.log(registration);
-			
-			askPermission();
-			
-		});
 		
 		function askPermission() {
 			return new Promise(function(resolve, reject) {
@@ -56,14 +116,16 @@ block content
 			});
 		}
 		function subscribeUserToPush() {
-			return navigator.serviceWorker.register('/service-worker.js')
+			return navigator.serviceWorker.register(scriptURL)
 			.then(function(registration) {
 				const subscribeOptions = {
 				userVisibleOnly: true,
 				applicationServerKey: urlBase64ToUint8Array(
-					//Generate random key from server? We need to investigate how to generate public and private keys.
-					'ifNOVabQDIztr4A9QewlSXBKhUwwGMzVQuF2Pjt9Jcr3aIlxWEQtJLgQZvzE5sbpV'
-				)
+					'BDc8VHzWNVkZ2C6MWUf30TyXMm-trm86-K9bfl6ejCvbjAwgegokOLfC48e65i0umB0NIzNlNhTgbSC0QTRyEPQ'
+					),
+				//applicationServerKey: urlBase64ToUint8Array(
+				//	'BDc8VHzWNVkZ2C6MWUf30TyXMm-trm86-K9bfl6ejCvbjAwgegokOLfC48e65i0umB0NIzNlNhTgbSC0QTRyEPQ'
+				//)
 				};
 				
 				return registration.pushManager.subscribe(subscribeOptions);
@@ -72,4 +134,18 @@ block content
 				console.log('Received PushSubscription: ', JSON.stringify(pushSubscription));
 				return pushSubscription;
 			});
+		}
+		function urlBase64ToUint8Array(base64String) {
+			const padding = '='.repeat((4 - base64String.length % 4) % 4);
+			const base64 = (base64String + padding)
+			.replace(/-/g, '+')
+			.replace(/_/g, '/');
+
+			const rawData = window.atob(base64);
+			const outputArray = new Uint8Array(rawData.length);
+
+			for (let i = 0; i < rawData.length; ++i) {
+				outputArray[i] = rawData.charCodeAt(i);
+			}
+			return outputArray;
 		}
