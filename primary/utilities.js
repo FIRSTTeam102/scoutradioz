@@ -15,19 +15,26 @@ utilities.getDB = function(){
 	//create db return variable
 	var db;
 	
-	//if cached db reference doesn't exist, create it by connecting to db
-	if(!dbRef){
-		var url = this.getDBurl();
-		dbRef = monk(url);
-		
-		dbRef.then(function(result){
+	try {
+		//if cached db reference doesn't exist, create it by connecting to db
+		if(!dbRef){
+			var url = this.getDBurl();
+			dbRef = monk(url);
 			
-			logger.info("Connected!");
-			
-		}).catch(function(err){
-			
-			logger.error(err);
-		});
+			dbRef.then(function(result){
+				
+				logger.info("Connected!");
+				
+			}).catch(function(err){
+				
+				logger.error(err);
+			});
+		}
+	}
+	catch (err) {
+		//retry if db connection fails
+		logger.error(err);
+		dbRef = utilities.getDB();
 	}
 	
 	//set return var equal to dbRef
