@@ -160,8 +160,8 @@ class NotificationCard{
 		
 		this.card = card;
 		
-		console.log(this.opts);
-		console.log("TTL " + this.opts.ttl);
+		//console.log(this.opts);
+		//console.log("TTL " + this.opts.ttl);
 		
 		
 		if (this.opts.ttl != 0){
@@ -232,7 +232,7 @@ class NotificationCard{
 				}
 			}
 		}
-		console.log(opts.type);
+		//console.log(opts.type);
 		//sort through type and set opts.color and opts.textColor
 		switch (opts.type) {
 			case "good": 
