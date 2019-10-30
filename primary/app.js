@@ -24,14 +24,13 @@ if( process.env.COLORIZE_LOGS != 'true'){
 const logger = log4js.getLogger();
 logger.level = 'debug';
 
-const usefunctions = require("./helpers/usefunctions");	//extra functions for app.use
+//load custom middleware
+const usefunctions = require("./helpers/usefunctions");
+//load database utilities
 const utilities = require('./utilities');				//database utilities
-const authenticate = require('./helpers/authenticate'); //authenticate function middleware
 
 //PUG CACHING (if production IS enabled)
-if(process.env.NODE_ENV == "production"){
-	logger.info("Pug caching will be enabled.");
-}
+if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enabled.");
 
 //Create app
 const app = express();
@@ -93,12 +92,11 @@ app.use(usefunctions.userViewVars);
 //Event stuff
 app.use(usefunctions.getEventInfo);
 //Logging and timestamping
-app.use(usefunctions.logger);
+app.use(usefunctions.requestLogger);
 //adds logging to res.render function
 app.use(usefunctions.renderLogger);
-
-//Authentication function (req.authenticate)
-app.use(authenticate);
+//Authentication middleware (req.authenticate)
+app.use(usefunctions.authenticate);
 
 //USER ROUTES
 var index = require('./routes/index');

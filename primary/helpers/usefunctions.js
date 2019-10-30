@@ -3,6 +3,80 @@ require('colors');
 
 var functions = module.exports = {};
 
+functions.authenticate = function(req, res, next) {
+	
+	var authenticate = async function(accessLevel){
+		
+		var req = this, res = this.res;
+		
+		var isAuthenticated = false;
+		
+		//Parse number from accessLevel
+		accessLevel = parseInt( accessLevel );
+		
+		//Throw if access level is not a valid number (Programming error)
+		if( isNaN(accessLevel) ) throw new Error("req.authenticate: Access level is not a number (Check naming of process.env.ACCESS_X)");
+		
+		var user = req.user;
+		
+		//If user is undefined, create object to avoid errors
+		if(!user) user = {};
+		
+		//Get information about user's role
+		var userRole = user.role;
+			
+		//If userRole is undefined, create object to avoid errors
+		if(!userRole) userRole = {};
+		
+		//Log authentication request
+		logger.info(`User ${user.name} (${userRole.access_level}) has requested access to '${req.path}' (${accessLevel})`);
+		
+		//If user has the correct access level, then set isAuthenticated to true
+		if( userRole.access_level >= accessLevel ){
+			
+			isAuthenticated = true;
+		}
+		
+		//Finally, check if isAuthenticated is true, and return a value corresponding to it
+		if( isAuthenticated ){
+			
+			return true;
+		}
+		//If user does not have the correct access level, then handle redirection and return false
+		else{
+			
+			var redirectMessage, redirectURL;
+			
+			switch( accessLevel ){
+				case parseInt(process.env.ACCESS_VIEWER):
+					redirectURL = req.originalUrl;
+					break;
+				case parseInt(process.env.ACCESS_SCOUTER):
+					redirectMessage = "Sorry, you must log in as a scouter to access this page."
+					break;
+				case parseInt(process.env.ACCESS_TEAM_ADMIN):
+				case parseInt(process.env.ACCESS_GLOBAL_ADMIN):
+					redirectMessage = "Sorry, you do not have access to this page."
+					break;
+			}
+			
+			var url = `/?alert=${redirectMessage}&redirectURL=${redirectURL}`;
+			
+			res.redirect(401, url);
+			
+			return false;
+		}
+	}
+	
+	//write authenticate function to req
+	Object.defineProperty(req, 'authenticate', {
+		value: authenticate,
+		writable: false
+	});
+	
+	next();
+}
+
 //View engine locals variables
 functions.userViewVars = function(req, res, next){
 	
@@ -17,7 +91,6 @@ functions.userViewVars = function(req, res, next){
 	if( process.env.TIER && process.env.S3_BUCKET ){
 		
 		fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}`;
-		
 	}
 	//Otherwise set fileRoot as / for local filesystem
 	else{
@@ -35,9 +108,6 @@ functions.userViewVars = function(req, res, next){
 
 /**
  * Gets event info from local db
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
  */
 functions.getEventInfo = async function(req, res, next) {
 	
@@ -79,12 +149,9 @@ functions.getEventInfo = async function(req, res, next) {
 }
 
 /**
- * logger for res.log
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
+ * Logs requests and user agent
  */
-functions.logger = function(req, res, next){
+functions.requestLogger = function(req, res, next){
 	
 	res.log = function(message, param2, param3){
 		var color, override = false;
@@ -149,10 +216,7 @@ functions.logger = function(req, res, next){
 }
 
 /**
- * Logs when res.render is called
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
+ * Extra logging for res.render and res.redirect
  */
 functions.renderLogger = function(req, res, next){
 	
@@ -198,9 +262,6 @@ functions.renderLogger = function(req, res, next){
  
 /**
  * Handles 404 errors
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
  */
 functions.notFoundHandler = function(req, res, next) {
 	var err = new Error('Not Found');
@@ -209,11 +270,7 @@ functions.notFoundHandler = function(req, res, next) {
 };
 
 /**
- * Handles other errors
- * @param {} err 
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
+ * Handles all errors
  */
 functions.errorHandler = function(err, req, res, next) {
 	// set locals, only providing error in development
