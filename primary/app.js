@@ -2,7 +2,8 @@ const express = require('express');						//main express shiz
 const path = require('path');							//for filesystem
 const favicon = require('serve-favicon');				//serves favicon
 const bodyParser = require('body-parser');				//parses http request information
-const session = require('express-session');				//session middleware (uses cookies)
+const session = require('express-session');				//session middleware
+const cookieParser = require('cookie-parser');			//cookies
 const MongoStore = require('connect-mongo')(session);	//Alternative session storage
 const passport = require('passport');					//for user authentication
 const useragent = require('express-useragent');			//for info on connected users
@@ -41,6 +42,7 @@ app.set('view engine', 'pug');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon(path.join(__dirname, 'public', 'favicon.png')));
 
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -154,7 +156,7 @@ app.use(function(req, res, next){
 			
 			var url = `/?alert=${redirectMessage}&redirectURL=${redirectURL}`;
 			
-			res.redirect(url);
+			res.redirect(401, url);
 			
 			return false;
 		}

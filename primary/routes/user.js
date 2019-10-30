@@ -564,6 +564,10 @@ router.get('/switchorg', async function(req, res){
 	req.session.destroy(async function (err) {
 		if (err) return console.log(err);
 		
+		//clear org_key cookie
+		logger.debug(`Clearing org_key cookie`);
+		res.clearCookie("org_key");
+		
 		//now, redirect to index
 		res.redirect('/');
 	});

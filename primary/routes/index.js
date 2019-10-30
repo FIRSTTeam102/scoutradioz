@@ -16,14 +16,19 @@ router.get('/', async function(req, res){
 		//added originalUrl to make GET queries to persist (for alert)
 		res.redirect(307, '/home' + req.originalUrl);
 	}
+	else if ( req.cookies.org_key ){
+		
+		//redirect to selectorg with the selected org_key to sign in to the org user
+		res.redirect(307, `/selectorg?org_key=${req.cookies.org_key}&redirectURL=${req.originalUrl}`)
+	}
 	else{
 		
 		//Get list of participating organizations.
-		var orgs = await utilities.find("orgs");
+		var orgs = await utilities.find("orgs", {}, {sort: {org_key: 1}});
+		logger.trace(JSON.stringify(orgs));
 		
 		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 		var redirectURL = req.query.redirectURL;
-		
 		if( redirectURL == "undefined" ) redirectURL = undefined;
 		
 		res.render('./index', {
@@ -35,11 +40,14 @@ router.get('/', async function(req, res){
 });
 
 /**
- * POST: User submission to select an organization.
+ * User submission to select an organization.
  */
-router.post('/selectorg', async function(req, res) {
+router.all('/selectorg', async function(req, res) {
 	
-	var org_key = req.body.org_key;
+	const thisFuncName = 'index/selectorg: ';
+	
+	var org_key = req.body.org_key || req.query.org_key;
+	logger.debug(`${thisFuncName} org_key=${org_key}`)
 	
 	//Make sure that form is filled
 	if(!org_key || org_key == ""){
@@ -55,6 +63,7 @@ router.post('/selectorg', async function(req, res) {
 	
 	//Now, sign in to organization's default user
 	var defaultUser = await utilities.findOne("users", {org_key: org_key, name: "default_user"});
+	logger.debug(`${thisFuncName} defaultUser=${JSON.stringify(defaultUser)}`);
 	
 	if(!defaultUser){
 		res.log("No default user")
@@ -65,20 +74,30 @@ router.post('/selectorg', async function(req, res) {
 	if( req.user ){
 		//destroy session then log in to default user
 		req.logout();
+		logger.debug(`${thisFuncName} req.user is defined, so we are logging them out first`);
 	}
 				
 	//Now, log in to defaultUser
 	req.logIn(defaultUser, function(err){
+		
+		logger.debug(`${thisFuncName} defaultUser logged in`)
+		
+		//set org_key cookie to selected organization
+		logger.debug(`${thisFuncName} Setting org_key cookie`)
+		res.cookie("org_key", org_key);
 			
 		//If error, then log and return an error
 		if(err){ console.error(err); return res.status(500).send({alert: err}) };
 		
 		//now, once default user is logged in, redirect to index
-		res.log("User is now logged in, redirecting to /home");
+		logger.debug(`${thisFuncName} User is now logged in, redirecting`);
 		
-		if( req.body.redirectURL ){
-			res.redirect(req.body.redirectURL);
-		}else{
+		if (req.body.redirectURL || req.query.redirectURL) {
+			
+			logger.debug(`${thisFuncName} redirect: ${req.body.redirectURL || req.query.redirectURL}`);
+			res.redirect(req.body.redirectURL || req.query.redirectURL);
+		}
+		else {
 			res.redirect('/home');
 		}
 	});
@@ -91,10 +110,7 @@ router.post('/selectorg', async function(req, res) {
  */
 router.get('/home', async function(req, res) {
 	
-	if( !req.user ){
-		res.redirect('/?alert=Please choose an organization.');
-	}
-	
+	if (!req.user) res.redirect('/');
 	
 	var teams = await utilities.find("currentteams", {}, {sort:{team_number: 1}});
 		
