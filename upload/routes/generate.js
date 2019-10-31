@@ -8,19 +8,19 @@ var imageTemplate, pointerTemplate, headerFont, teamFont;
 router.get('/upcomingmatch', async (req, res, next) => {
 	
 	//all parameters from query
-	var matchNum = req.query.match_number || 0;
-	var setNum = req.query.set_number || 1;
+	var matchNum = verifyNumber(req.query.match_number);
+	var setNum = verifyNumber(req.query.set_number || 1);
 	var compLevel = req.query.comp_level || "";
 	var blue = [
-		req.query.blue1 || '0',
-		req.query.blue2 || '0',
-		req.query.blue3 || '0',
-	]
+		verifyNumber(req.query.blue1),
+		verifyNumber(req.query.blue2),
+		verifyNumber(req.query.blue3),
+	];
 	var red = [
-		req.query.red1 || '0',
-		req.query.red2 || '0',
-		req.query.red3 || '0',
-	]
+		verifyNumber(req.query.red1),
+		verifyNumber(req.query.red2),
+		verifyNumber(req.query.red3),
+	];
 	var assigned = req.query.assigned || "blue1";
 	
 	var headerText;
@@ -129,6 +129,14 @@ router.get('/upcomingmatch', async (req, res, next) => {
 	
 	logger.info(`Completed image in ${Date.now() - startTime} ms`)
 });
+
+function verifyNumber(input) {
+	
+	if ( isNaN (parseInt(input)) ) {
+		input = '0';
+	}
+	return parseInt(input).toString();
+}
 
 async function getJimpResources(){
 	
