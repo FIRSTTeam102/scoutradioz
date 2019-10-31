@@ -5,18 +5,20 @@ self.addEventListener('push', function(event) {
 		console.log('This push event has no data.');
 	}
 	const messageJSON = event.data.json();
-		
+	
 	const promiseChain = isClientFocused()
 	.then((clientIsFocused) => {
-		if (clientIsFocused) {
-			console.log('Don\'t need to show a notification.');
-			
-			//Post message to client window
-			return postMessageToClient(messageJSON);
-		}
 		
 		// Client isn't focused, we need to show a notification.
-		return self.registration.showNotification(messageJSON.title, messageJSON.options);
+		return self.registration.showNotification(messageJSON.title, messageJSON.options)
+		.then(() => {
+			if (clientIsFocused) {
+				console.log('Don\'t need to show a notification.');
+				
+				//Post message to client window
+				return postMessageToClient(messageJSON);
+			}
+		});
 	});
 	
 	event.waitUntil(promiseChain);
