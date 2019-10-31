@@ -36,6 +36,8 @@ block content
 	div(class="w3-hide")
 		input(type="hidden" name="org_key" value=org.org_key)
 		input(type="hidden" name="org_password" value=org_password)
+		if redirectURL
+			input(type="hidden" name="redirectURL" value=redirectURL)
 	div(class="w3-padding-16")
 		input#btnLogin(type="submit" class="gear-btn theme-submit w3-btn" value="Login")
 	script.
@@ -56,6 +58,7 @@ block content
 			var selectedUser = $("select[name=user]").val();
 			var org_key = $("input[name=org_key]").val();
 			var org_password = $("input[name=org_password]").val();
+			var redirectURL = $("input[name=redirectURL").val()
 			
 			//if new-password has been filled, then submit to /user/login/createpassword
 			if( createPasswordNeeded && $("input[name=newPassword1]").val() != "" && $("input[name=newPassword2]").val() != "" ){
@@ -63,7 +66,14 @@ block content
 				var newPassword1 = $("input[name=newPassword1]").val();
 				var newPassword2 = $("input[name=newPassword2]").val();
 				
-				var data = {user: selectedUser, org_key: org_key, org_password: org_password, newPassword1: newPassword1, newPassword2: newPassword2};
+				var data = {
+					user: selectedUser, 
+					org_key: org_key, 
+					org_password: org_password, 
+					newPassword1: newPassword1, 
+					newPassword2: newPassword2,
+					redirectURL: redirectURL,
+				};
 				
 				if( newPassword1 == newPassword2){
 					
@@ -91,7 +101,13 @@ block content
 				
 				var password = $("input[name=password]").val();
 				
-				var data = {user: selectedUser, password: password, org_key: org_key, org_password: org_password};
+				var data = {
+					user: selectedUser, 
+					password: password,
+					org_key: org_key, 
+					org_password: org_password,
+					redirectURL: redirectURL,
+				};
 				
 				$.post('/user/login/withpassword', data).done( function(response, status){
 					
@@ -111,7 +127,12 @@ block content
 			//otherwise, submit to /user/login/withoutpassword
 			else {
 				
-				var data = {user: selectedUser, org_key: org_key, org_password: org_password};
+				var data = {
+					user: selectedUser,
+					org_key: org_key, 
+					org_password: org_password,
+					redirectURL: redirectURL,
+				};
 				
 				$.post('/user/login/withoutpassword', data ).done( function(response, status){
 					

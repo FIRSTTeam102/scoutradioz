@@ -23,7 +23,7 @@ router.get('/login', async function (req, res){
 	
 	//If there is no user logged in, send them to select-org page
 	if( !req.user ){
-		return res.redirect('/user/selectorg?alert=Please select an organization to sign in to.');
+		return res.redirect('/??alert=Please select an organization to sign in to.');
 	}
 	//If the user logged in is NOT default_user, then send them to index.
 	else if( req.user.name != "default_user" ){
@@ -33,17 +33,17 @@ router.get('/login', async function (req, res){
 	
 	//Get organization that user has picked
 	var org_key = req.user.org_key;
-	
 	logger.debug(`User's organization: ${org_key}`);
 	
 	//search for organization in database
 	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
 	
 	//If organization does not exist, send internal error
-	if(!selectedOrg) return res.redirect(500, '/user');
+	if(!selectedOrg) return res.status(500).send("Invalid organization");
 	
-	res.render('./user/logintoorg', {
+	res.render('./user/login', {
 		title: `Log In to ${selectedOrg.nickname}`,
+		redirectURL: req.query.redirectURL
 	});
 });
 
@@ -88,33 +88,13 @@ router.post('/login/select', async function(req, res){
 	if(comparison == true){
 		
 		var users = await utilities.find('users', {"org_key": org_key, name: {$ne: "default_user"}}, {sort: {name: 1}});
-		
-		/* In case we want to sort members by class.
-		var sortedUsers = [];
-		
-		console.log(selectedOrg.config.members.classes)
-		
-		var classes = selectedOrg.config.members.classes;
-		
-		for( var thisClass of classes ){
-			
-			sortedUsers.push({name: `----${thisClass.label}----`, _id: "null"});
-			
-			for( var thisUser of users ){
 				
-				if( thisUser.org_info.class_key == thisClass.class_key ){
-					
-					sortedUsers.push(thisUser);
-				}
-			}
-		}
-		*/
-		
 		res.render('./user/selectuser', {
 			title: `Sign In to ${selectedOrg.nickname}`,
 			org: selectedOrg,
 			users: users,
-			org_password: org_password //Must be passed back to user so they can send org's password back with their request (Avoid dealing with tokens & cookies)
+			org_password: org_password, //Must be passed back to user so they can send org's password back with their request (Avoid dealing with tokens & cookies)
+			redirectURL: req.body.redirectURL,
 		});
 	}
 	//If failed, then redirect with alert
@@ -138,7 +118,7 @@ router.post('/login/withoutpassword', async function(req, res){
 	if(!org_key || !org_password){
 		return res.send({
 			status: 400,
-			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+			redirect_url: "/user/login?alert=Sorry, please re-submit your organization login information."
 		});
 	}
 	
@@ -165,7 +145,7 @@ router.post('/login/withoutpassword', async function(req, res){
 	if(!comparison){
 		return res.send({
 			status: 400,
-			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+			redirect_url: "/user/login?alert=Sorry, please re-submit your organization login information."
 		});
 	}
 	
@@ -223,11 +203,20 @@ router.post('/login/withoutpassword', async function(req, res){
 				logger.debug(`${thisFuncName} Sending success/password_needed: false`)
 				logger.info(`${thisFuncName} ${user.name} has logged in`);
 				
+				var redirectURL;
+				//if redirectURL has been passed from another function then send it back
+				if (req.body.redirectURL) {
+					redirectURL = req.body.redirectURL;
+				}
+				else {
+					redirectURL = '/dashboard';
+				}
+				
 				//now, return succes with redirect to dashboard
 				res.send({
 					status: 200,
 					password_needed: false,
-					redirect_url: '/dashboard'
+					redirect_url: redirectURL,
 				});
 			});
 		}
@@ -333,22 +322,22 @@ router.post('/login/withpassword', async function(req, res){
 		req.logIn(user, async function(err){
 			
 			//If error, then log and return an error
-			if(err){ console.error(err); return res.send({status: 500, alert: err}) };
+			if(err){ logger.error(err); return res.send({status: 500, alert: err}) };
 			
 			var userRole = await utilities.findOne("roles", {role_key: user.role_key});
 			
 			var redirectURL;
 			
 			//Set redirect url depending on user's access level
-			if(userRole.access_level == process.env.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
-			else if(userRole.access_level == process.env.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
-			else if(userRole.access_level == process.env.ACCESS_SCOUTER) redirectURL = '/dashboard';
-			else redirectURL = '/';
+			if (req.body.redirectURL) redirectURL = req.body.redirectURL;
+			else if (userRole.access_level == process.env.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
+			else if (userRole.access_level == process.env.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
+			else if (userRole.access_level == process.env.ACCESS_SCOUTER) redirectURL = '/dashboard';
+			else redirectURL = '/home';
 			
 			logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
 			
-			//otherwise, send success and redirect
-			//*** When we add a global_admin page, we should modify this to add a global_admin page redirect
+			//send success and redirect
 			return res.send({
 				status: 200,
 				redirect_url: redirectURL

@@ -5,9 +5,7 @@ var functions = module.exports = {};
 
 functions.authenticate = function(req, res, next) {
 	
-	var authenticate = async function(accessLevel){
-		
-		var req = this, res = this.res;
+	var authenticate = async function (accessLevel) {
 		
 		var isAuthenticated = false;
 		
@@ -19,53 +17,34 @@ functions.authenticate = function(req, res, next) {
 		
 		var user = req.user;
 		
-		//If user is undefined, create object to avoid errors
-		if(!user) user = {};
-		
-		//Get information about user's role
-		var userRole = user.role;
+		if (user) {
 			
-		//If userRole is undefined, create object to avoid errors
-		if(!userRole) userRole = {};
-		
-		//Log authentication request
-		logger.info(`User ${user.name} (${userRole.access_level}) has requested access to '${req.path}' (${accessLevel})`);
-		
-		//If user has the correct access level, then set isAuthenticated to true
-		if( userRole.access_level >= accessLevel ){
+			var userRole = user.role;
+			logger.info(`User ${user.name} (${userRole.access_level}) has requested access to '${req.originalUrl}' (${accessLevel})`);
 			
-			isAuthenticated = true;
-		}
-		
-		//Finally, check if isAuthenticated is true, and return a value corresponding to it
-		if( isAuthenticated ){
-			
-			return true;
-		}
-		//If user does not have the correct access level, then handle redirection and return false
-		else{
-			
-			var redirectMessage, redirectURL;
-			
-			switch( accessLevel ){
-				case parseInt(process.env.ACCESS_VIEWER):
-					redirectURL = req.originalUrl;
-					break;
-				case parseInt(process.env.ACCESS_SCOUTER):
-					redirectMessage = "Sorry, you must log in as a scouter to access this page."
-					break;
-				case parseInt(process.env.ACCESS_TEAM_ADMIN):
-				case parseInt(process.env.ACCESS_GLOBAL_ADMIN):
-					redirectMessage = "Sorry, you do not have access to this page."
-					break;
+			//If user has the correct access level, then set isAuthenticated to true
+			if( userRole.access_level >= accessLevel ){
+				
+				isAuthenticated = true;
 			}
-			
-			var url = `/?alert=${redirectMessage}&redirectURL=${redirectURL}`;
-			
-			res.redirect(401, url);
-			
-			return false;
+			// If user does not have the correct access level, then handle redirection and return false
+			else{
+				
+				if (req.method == 'GET' && user.name == "default_user") {
+					res.redirect(`/user/login?redirectURL=${req.originalUrl}`);
+				}
+				else {
+					res.sendStatus(401);
+				}
+			}
 		}
+		// If user is undefined, then send them to the index page to select an organization
+		else {
+			
+			res.redirect(`/?redirectURL=${req.originalUrl}`);
+		}
+		
+		return isAuthenticated;
 	}
 	
 	//write authenticate function to req

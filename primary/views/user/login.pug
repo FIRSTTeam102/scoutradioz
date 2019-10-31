@@ -7,5 +7,7 @@ block content
 				label Organization Password: 
 			div(class="w3-half")
 				input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="org_password")
+			if redirectURL
+				input(type="hidden" name="redirectURL" value=redirectURL)
 		div(class="w3-padding-16")
 			input(type="submit" class="gear-btn theme-submit w3-btn" value="Next")
