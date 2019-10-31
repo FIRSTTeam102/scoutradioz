@@ -73,6 +73,7 @@ router.post('/sendtest', async function(req, res){
 				body: "hello!",
 				badge: '/images/radio-badge.png',
 				icon: '/images/icon-192.png',
+				image: 'https://upload.scoutradioz.com/app/generate/upcomingmatch?match_number=24&comp_level=qm&set_number=2&blue1=225&blue2=102&blue3=1676&red1=11&red2=2590&red3=4261&assigned=red3',
 				actions: [
 					{
 						action: 'coffee-action',

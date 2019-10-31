@@ -58,10 +58,12 @@ app.use(async function(req, res, next){
 app.use(usefunctions.logger);
 
 //USER ROUTES
-var upload = require("./routes/upload");
+var upload = require('./routes/upload');
+var generate = require('./routes/generate');
 
 //CONNECT URLS TO ROUTES
 app.use(`/${tier}`, upload);
+app.use(`/${tier}/generate`, generate)
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);
