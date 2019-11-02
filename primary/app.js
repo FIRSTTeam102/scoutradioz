@@ -27,7 +27,7 @@ logger.level = 'debug';
 //load custom middleware
 const usefunctions = require("./helpers/usefunctions");
 //load database utilities
-const utilities = require('./utilities');				//database utilities
+const utilities = require('./utilities');				
 
 //PUG CACHING (if production IS enabled)
 if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enabled.");
@@ -40,7 +40,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(favicon(path.join(__dirname, 'public', 'favicon.png')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon-new.png')));
 
 app.use(cookieParser());
 app.use(bodyParser.json());
