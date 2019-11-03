@@ -5,7 +5,9 @@ const logger = require('log4js').getLogger();
 var utilities = module.exports =  {};
 
 // cached DB reference
-var dbRef;
+var dbRef, url;
+var lastRequestTime;
+var refMaxAge = 20000;
 
 /**
  * Function that first caches, then returns the cached database for the server process.
@@ -15,29 +17,39 @@ utilities.getDB = function(){
 	//create db return variable
 	var db;
 	
-	try {
-		//if cached db reference doesn't exist, create it by connecting to db
-		if(!dbRef){
-			var url = this.getDBurl();
-			dbRef = monk(url);
-			
-			dbRef.then(function(result){
-				
-				logger.info("Connected!");
-				
-			}).catch(function(err){
-				
-				logger.error(err);
-			});
-		}
-	}
-	catch (err) {
-		//retry if db connection fails
-		logger.error(err);
-		dbRef = utilities.getDB();
+	//if dbRef doesn't exist, then create dbRef
+	if (!dbRef || !url) {
+		logger.info('utilities.getDB: Creating db ref');
+		url = this.getDBurl();
+		dbRef = monk(url);
+		dbRef.then(result => {
+			logger.info("Connected!");
+		}).catch(err => {
+			logger.error(JSON.stringify(err));
+		});
 	}
 	
-	//set return var equal to dbRef
+	//if ref has aged past its prime, then close and reopen it
+	if (lastRequestTime && lastRequestTime + refMaxAge < Date.now()) {
+		
+		logger.info('utilities.getDB: Ref has aged too much; Reconnecting');
+		try {
+			dbRef.close();
+			dbRef = monk(url);
+		}
+		catch (err) {
+			logger.error(err);
+			dbRef = monk(url);
+		}
+		dbRef.then(result => {
+			logger.info("Connected!");
+		}).catch(err => {
+			logger.error(JSON.stringify(err));
+		});
+	}
+	
+	//renew lastRequestTime
+	lastRequestTime = Date.now();
 	db = dbRef;
 	
 	//return
@@ -349,13 +361,13 @@ utilities.bulkWrite = async function(collection, operations, parameters){
 	//Get collection
 	var Col = db.get(collection);
 	//Update in collection with parameters
-	var result;
-	result = await Col.bulkWrite(operations, parameters);
+	var writeResult;
+	writeResult = await Col.bulkWrite(operations, parameters);
 	
 	logger.trace(`utilities.bulkWrite: writeResult: ${JSON.stringify(writeResult)}`);
 	
 	//return result
-	return result;
+	return writeResult;
 }
 
 /**
