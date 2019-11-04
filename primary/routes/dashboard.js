@@ -396,7 +396,11 @@ router.get('/matches', async function(req, res) {
 	}
 
 	for(var i in scoreData)
-		scoreData[i].team_nickname = teamKeyMap[scoreData[i].team_key].nickname;
+	{
+		scoreData[i].team_nickname = "None";
+		if (teamKeyMap[scoreData[i].team_key])
+			scoreData[i].team_nickname = teamKeyMap[scoreData[i].team_key].nickname;
+	}
 		//this line has a definition problem ^
 	console.log(thisFuncName + 'scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{

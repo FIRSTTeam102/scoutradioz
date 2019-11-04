@@ -566,14 +566,14 @@ router.get('/switchorg', async function(req, res){
  * Admin page to reset another user's password.
  * @url /login/resetpassword
  * @view /login/resetpassword
- * @db teammembers
+ * @db users
  *
 router.get('/resetpassword', async function(req, res){
 	if( !require('./checkauthentication')(req, res, 'admin') ){
 		return res.log('authentication failed for /login/changepassword');
 	}
 	
-	var users = await utilities.find("teammembers", {}, {sort:{ "name": 1 }});
+	var users = await utilities.find("users", {}, {sort:{ "name": 1 }});
 	
 	res.render('./login/resetpassword', { 
 		members: users,
@@ -597,7 +597,7 @@ router.post('/resetpassword', async function(req, res){
 		return res.redirect('./resetpassword');
 	}
 	
-	var writeResult = await utilities.update("teammembers", { name: userToReset }, { $set: { password: 'default' } }, {});
+	var writeResult = await utilities.update("users", { name: userToReset }, { $set: { password: 'default' } }, {});
 	
 	res.redirect('/?alert=Password successfully changed for user ' + userToReset);
 });

@@ -321,6 +321,7 @@ utilities.update = async function(collection, parameters, update, options){
 	var writeResult;
 	writeResult = await Col.update(parameters, update, options);
 	
+	//console.log(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
 	logger.trace(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
 	
 	//return writeResult

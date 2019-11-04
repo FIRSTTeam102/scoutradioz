@@ -1,9 +1,9 @@
 //-
 	Admin page with checkboxes to view who is attending the current event.
 	PARAM
-		members 	[Object Array]	from db.teammembers
+		members 	[Object Array]	from db.users
 	CALLED BY
-		teammembers.js	'/manage/members/present'
+		members.js	'/manage/members/present'
 	//
 extends ../layout
 block content
@@ -14,7 +14,7 @@ block content
 		each member in members
 			div(class="w3-container" style="max-width:200px;margin:auto;")
 				div(class="w3-left w3-margin-left")
-					- if(member.present == "true")
+					- if(member.event_info.present == true)
 						input(type="checkbox" class="w3-check" name=member._id id=member._id checked="checked")
 					- else
 						input(type="checkbox" class="w3-check" name=member._id id=member._id)

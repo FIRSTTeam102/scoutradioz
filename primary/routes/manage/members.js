@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const utilities = require("../../utilities");
+const monk = require("monk");
 
 //DONE
 router.get("/", async function(req, res) {
@@ -44,7 +45,7 @@ router.post("/addmember", async function(req, res){
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var thisFuncName = "teammembers.addmember[post]: ";
+	var thisFuncName = "members.addmember[post]: ";
 	res.log(thisFuncName + 'ENTER')
 	
 	var name = req.body.name;
@@ -124,7 +125,7 @@ router.post("/updatemember", async function(req, res){
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var thisFuncName = "teammembers.updatemember[post]: ";
+	var thisFuncName = "members.updatemember[post]: ";
 	res.log(thisFuncName + 'ENTER')
 	
 	var org_key = req.user.org_key;
@@ -282,11 +283,12 @@ router.get("/present", async function(req, res) {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var teamMembers = await utilities.find("teammembers", {}, {sort: {"name": 1}});
-	
+	var users = await utilities.find("users", {}, {sort: {"name": 1}});
+	//console.log("members.present: users=" + JSON.stringify(users));
+
 	res.render("./manage/present", {
 		title: "Assign Who Is Present",
-		"members": teamMembers
+		"members": users
 	});
 });
 
@@ -294,18 +296,21 @@ router.post("/updatepresent", async function(req, res){
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	await utilities.update("teammembers", {}, { $set: { "present" : "false" } }, {multi: true});
+	await utilities.update("users", {}, { $set: { "event_info.present" : "false" } }, {multi: true});
 	
 	//Get a list of all present member IDs.
 	var allPresentMembers = [];
-	for(var i in req.body) allPresentMembers.push(i);
+	for(var i in req.body)
+	{
+		allPresentMembers.push(monk.id(i));
+	}
 	
-	res.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
+	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
 	
 	var query = {"_id": {$in: allPresentMembers}};
-	var update = {$set: {"present": "true"}};
+	var update = {$set: {"event_info.present": true}};
 	
-	await utilities.update("teammembers", query, update, {multi: true});
+	await utilities.update("users", query, update, {multi: true, castIds: true});
 	
 	res.redirect("./present");
 });
