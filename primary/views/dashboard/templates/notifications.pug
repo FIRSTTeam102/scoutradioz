@@ -1,0 +1,166 @@
+div(class="w3-auto")
+	if hasNotificationsEnabled
+		input(id="enableNotifications" type="checkbox" class="w3-check" checked)
+	else
+		input(id="enableNotifications" type="checkbox" class="w3-check") 
+	label(class="w3-label" for="enableNotifications")
+		span  Enable push notifications for upcoming matches?
+	script.
+		
+		var scriptURL = '/js/service-worker-v4.js';
+		
+		$("#enableNotifications").click(async function (){
+			var inputElement = this;
+			
+			var isChecked = $(inputElement).prop("checked");
+			
+			//if check is enabled
+			if (isChecked) {
+				
+				//register service worker
+				var registration = await registerServiceWorker();
+				console.log(registration);
+				
+				try {
+					//ask permission
+					await askPermission();
+					
+					var pushSubscription = await subscribeUserToPush();
+					
+					sendSubscription(pushSubscription, (err, data) => {
+						if (err){
+							NotificationCard.show("An error occurred: " + err, {type: "bad"});
+						}
+						else {
+							NotificationCard.show("Successfully enabled notifications for this device.", {type: "good"});
+						}
+					});
+				}
+				catch (err){
+					console.error(err);
+					NotificationCard.show("An error occurred: " + err, {type: "bad"});
+				}
+			}
+			//if check is disabled
+			else {
+				//send request to the server to disable notifications
+				cancelSubscription((err, data) => {
+					if (err){
+						NotificationCard.show("An error occurred: " + err, {type: "bad"});
+					}
+					else {
+						NotificationCard.show("Disabled notifications for this device.", {type: "warn"});
+					}
+				});
+			}
+		})
+		
+		function cancelSubscription(cb){
+			
+			$.ajax({
+				type: "POST",
+				url: '/notifications/disable-subscription/',
+			})
+			.done((data, status, xhr) => {
+				console.log(data);
+				cb(null, data);
+			})
+			.fail((xhr, status, error) => {
+				console.log(error);
+				cb(error);
+			});
+		}
+		
+		function sendSubscription(pushSubscription, cb){
+			
+			const subscription = JSON.stringify(pushSubscription);
+			
+			$.ajax({
+				type: "POST",
+				url: '/notifications/save-subscription/',
+				dataType: 'json',
+				contentType: 'application/json',
+				data: subscription,
+			})
+			.done((data, status, xhr) => {
+				console.log(data);
+				cb(null, data);
+			})
+			.fail((xhr, status, error) => {
+				console.log(error);
+				cb(error);
+			});
+		}
+		
+		function registerServiceWorker() {
+			
+			if (!('serviceWorker' in navigator)) {
+			// Service Worker isn't supported on this browser, disable or hide UI.
+				return "No ServiceWorker";
+			}
+			
+			if (!('PushManager' in window)) {
+			// Push isn't supported on this browser, disable or hide UI.
+				return "No PushManager";
+			}
+			
+			return navigator.serviceWorker.register(scriptURL)
+			.then(function(registration) {
+				console.log('Service worker successfully registered.');
+				return registration;
+			})
+			.catch(function(err) {
+				console.error('Unable to register service worker.', err);
+			});
+		}
+		
+		function askPermission() {
+			return new Promise(function(resolve, reject) {
+				const permissionResult = Notification.requestPermission(function(result) {
+					resolve(result);
+				});
+				
+				if (permissionResult) {
+					permissionResult.then(resolve, reject);
+				}
+			})
+			.then(function(permissionResult) {
+				if (permissionResult !== 'granted') {
+					throw new Error('We weren\'t granted permission.');
+				}
+			});
+		}
+		function subscribeUserToPush() {
+			return navigator.serviceWorker.register(scriptURL)
+			.then(function(registration) {
+				const subscribeOptions = {
+				userVisibleOnly: true,
+				applicationServerKey: urlBase64ToUint8Array(
+					'BDc8VHzWNVkZ2C6MWUf30TyXMm-trm86-K9bfl6ejCvbjAwgegokOLfC48e65i0umB0NIzNlNhTgbSC0QTRyEPQ'
+					),
+				//applicationServerKey: urlBase64ToUint8Array(
+				//	'BDc8VHzWNVkZ2C6MWUf30TyXMm-trm86-K9bfl6ejCvbjAwgegokOLfC48e65i0umB0NIzNlNhTgbSC0QTRyEPQ'
+				//)
+				};
+				
+				return registration.pushManager.subscribe(subscribeOptions);
+			})
+			.then(function(pushSubscription) {
+				console.log('Received PushSubscription: ', JSON.stringify(pushSubscription));
+				return pushSubscription;
+			});
+		}
+		function urlBase64ToUint8Array(base64String) {
+			const padding = '='.repeat((4 - base64String.length % 4) % 4);
+			const base64 = (base64String + padding)
+			.replace(/-/g, '+')
+			.replace(/_/g, '/');
+
+			const rawData = window.atob(base64);
+			const outputArray = new Uint8Array(rawData.length);
+
+			for (let i = 0; i < rawData.length; ++i) {
+				outputArray[i] = rawData.charCodeAt(i);
+			}
+			return outputArray;
+		}

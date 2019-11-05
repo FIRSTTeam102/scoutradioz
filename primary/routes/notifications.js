@@ -33,7 +33,9 @@ router.post('/save-subscription', async function(req, res) {
 	//if user has been updated w/ push subscription, then send a success message
 	if (writeResult.ok){
 		
-		logger.debug(`${thisFuncName} Success`)
+		logger.debug(`${thisFuncName} Success`);
+		
+		res.cookie('enable_notifications', 1);
 		
 		res.setHeader('Content-Type', 'application/json');
 		res.send({data: {success: true}});
@@ -51,6 +53,20 @@ router.post('/save-subscription', async function(req, res) {
 			}
 		});
 	}
+});
+
+router.post('/disable-subscription', async function(req, res) {
+	
+	var thisFuncName = 'notifications/disable-subscription: ';
+	
+	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {push_subscription: {}}});
+	
+	logger.debug(`${thisFuncName} Success`);
+		
+	res.clearCookie('enable_notifications');
+	
+	res.setHeader('Content-Type', 'application/json');
+	res.send({data: {success: true}});
 });
 
 router.post('/sendtest', async function(req, res){
