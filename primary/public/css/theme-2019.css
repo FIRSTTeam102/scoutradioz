@@ -26,7 +26,7 @@ select{
 a:link{text-decoration: none;}
 
 a{color: inherit;}
-footer a:hover{text-decoration: underline;}
+a:hover.text-link{text-decoration: underline;}
 
 nav{background-color: #4d4d53;}
 
