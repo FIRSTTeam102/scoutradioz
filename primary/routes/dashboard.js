@@ -1,6 +1,6 @@
-var express = require('express');
+const router = require('express').Router();
+const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
-var router = express.Router();
 
 router.all('/*', async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
@@ -17,16 +17,11 @@ router.all('/*', async (req, res, next) => {
 router.get('/', async function(req, res) {
 	
 	var thisFuncName = "dashboard.{root}[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
-	
-	// var scoutDataCol = db.get("scoutingdata");
-	// var pairsDataCol = db.get("scoutingpairs");
-	// var scoreDataCol = db.get("scoringdata");
-	// var matchCol = db.get("matches");
-	
+		
 	// for later querying by event_key
 	var eventId = req.event.key;
 
@@ -40,12 +35,12 @@ router.get('/', async function(req, res) {
 		
 	// if no assignments, send off to unassigned
 	if (assignedTeams.length == 0) {
-		res.log(thisFuncName + "User '" + thisUserName + "' has no assigned teams");
+		logger.debug(thisFuncName + "User '" + thisUserName + "' has no assigned teams");
 		res.redirect('./dashboard/unassigned');
 		return;
 	}
 	for (var assignedIdx = 0; assignedIdx < assignedTeams.length; assignedIdx++)
-		res.log(thisFuncName + "assignedTeam[" + assignedIdx + "]=" + assignedTeams[assignedIdx].team_key + "; data=" + assignedTeams[assignedIdx].data);
+		logger.debug(thisFuncName + "assignedTeam[" + assignedIdx + "]=" + assignedTeams[assignedIdx].team_key + "; data=" + assignedTeams[assignedIdx].data);
 
 	// Get their scouting team
 	var pairsData = await utilities.find("scoutingpairs", {
@@ -77,7 +72,7 @@ router.get('/', async function(req, res) {
 		
 	//logs backup teams to console
 	for (var backupIdx = 0; backupIdx < backupTeams.length; backupIdx++)
-		res.log(thisFuncName + "backupTeam[" + backupIdx + "]=" + backupTeams[backupIdx].team_key);
+		logger.debug(thisFuncName + "backupTeam[" + backupIdx + "]=" + backupTeams[backupIdx].team_key);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matchDocs = await utilities.find("matches", {
@@ -97,7 +92,7 @@ router.get('/', async function(req, res) {
 	var matchLookup = {};
 	if (matchDocs)
 		for (var matchIdx = 0; matchIdx < matchDocs.length; matchIdx++) {
-			//res.log(thisFuncName + 'associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
+			//logger.debug(thisFuncName + 'associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
 			matchLookup[matchDocs[matchIdx].key] = matchDocs[matchIdx];
 		}
 		
@@ -105,10 +100,10 @@ router.get('/', async function(req, res) {
 	var scoringMatches = await utilities.find("scoringdata", {"event_key": eventId, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} });
 
 	for (var matchesIdx = 0; matchesIdx < scoringMatches.length; matchesIdx++)
-		res.log(thisFuncName + "scoringMatch[" + matchesIdx + "]: num,team=" + scoringMatches[matchesIdx].match_number + "," + scoringMatches[matchesIdx].team_key);
+		logger.debug(thisFuncName + "scoringMatch[" + matchesIdx + "]: num,team=" + scoringMatches[matchesIdx].match_number + "," + scoringMatches[matchesIdx].team_key);
 
 	for (var scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
-		//res.log(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
+		//logger.debug(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
 		scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
 	}
 	
@@ -129,7 +124,7 @@ router.get('/', async function(req, res) {
 router.get('/unassigned', async function(req, res) {
 	
 	var thisFuncName = "dashboard.unassigned[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	res.render('./dashboard/unassigned',{
 		title: 'Unassigned'
@@ -167,7 +162,7 @@ router.get('/allianceselection', async function(req, res){
 		
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-		//res.log(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 	}
 
@@ -217,7 +212,7 @@ router.get('/allianceselection', async function(req, res){
 		}
 		if(!rankMap[thisAgg._id] || !rankMap[thisAgg._id].value){
 			//return res.redirect("/?alert=Make sure that team rankings have been pulled from TheBlueAlliance");
-			res.log(`Gonna crash w/ id ${thisAgg._id}`);
+			logger.debug(`Gonna crash w/ id ${thisAgg._id}`);
 		}
 		if(rankMap[thisAgg._id]){
 			thisAgg['rank'] = rankMap[thisAgg._id].rank;
@@ -264,7 +259,7 @@ router.get('/allianceselection', async function(req, res){
 	// read in the current agg ranges
 	var currentAggRanges = await utilities.find("currentaggranges", {}, {});
 
-	//res.log(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
+	//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
 	res.render('./dashboard/allianceselection', {
 		title: "Alliance Selection",
 		rankings: rankings,
@@ -279,7 +274,7 @@ router.get('/allianceselection', async function(req, res){
 router.get('/pits', async function(req, res) {
 	
 	var thisFuncName = "dashboard.pits[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 
 	// var scoutDataCol = db.get("scoutingdata");
 	// var currentTeamsCol = db.get('currentteams');
@@ -312,14 +307,14 @@ router.get('/pits', async function(req, res) {
 	var teamKeyMap = {};
 	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++)
 	{
-		//res.log(thisFuncName + 'teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
+		//logger.debug(thisFuncName + 'teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
 	// Add data to 'teams' data
 	for (var teamIdx = 0; teamIdx < teams.length; teamIdx++)
 	{
-		//res.log(thisFuncName + 'teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
+		//logger.debug(thisFuncName + 'teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
 		teams[teamIdx].nickname = teamKeyMap[teams[teamIdx].team_key].nickname;
 	}
 	//Add a call to the database for populating menus in pit scouting
@@ -334,7 +329,7 @@ router.get('/pits', async function(req, res) {
 router.get('/matches', async function(req, res) {
 	
 	var thisFuncName = "dashboard.matches[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 
 	// var scoreDataCol = db.get("scoringdata");
 	// var matchCol = db.get("matches");
@@ -359,11 +354,11 @@ router.get('/matches', async function(req, res) {
 	var matchLookup = {};
 	if (matches)
 		for (var matchIdx = 0; matchIdx < matches.length; matchIdx++) {
-			//res.log(thisFuncName + 'associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
+			//logger.debug(thisFuncName + 'associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
 			matchLookup[matches[matchIdx].key] = matches[matchIdx];
 		}
 
-	res.log(thisFuncName + 'earliestTimestamp=' + earliestTimestamp);
+	logger.debug(thisFuncName + 'earliestTimestamp=' + earliestTimestamp);
 
 	// Get all the UNRESOLVED matches
 	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, { limit: 60, sort: {"time": 1, "alliance": 1, "team_key": 1} });
@@ -371,14 +366,14 @@ router.get('/matches', async function(req, res) {
 	if(!scoreData)
 		return console.error("mongo error at dashboard/matches");
 
-	res.log(thisFuncName + 'scoreData.length=' + scoreData.length);
+	logger.debug(thisFuncName + 'scoreData.length=' + scoreData.length);
 
 	for (var scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
-		//res.log(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
+		//logger.debug(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
 		scoreData[scoreIdx].predicted_time = matchLookup[scoreData[scoreIdx].match_key].predicted_time;
 	}
 	
-	res.log(thisFuncName + 'DEBUG getting nicknames next?');
+	logger.debug(thisFuncName + 'DEBUG getting nicknames next?');
 
 	// read in team list for data
 	var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
@@ -388,7 +383,7 @@ router.get('/matches', async function(req, res) {
 	var teamKeyMap = {};
 	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++)
 	{
-		//res.log(thisFuncName + 'teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
+		//logger.debug(thisFuncName + 'teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
