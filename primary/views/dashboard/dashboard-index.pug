@@ -36,7 +36,7 @@ block content
 			br 
 			each match in scoringMatches
 				- match.alliance = (match.alliance == "red") ? "Red" : "Blue";
-				- var btnColor = (match.alliance == "Red") ? "theme-red" : "gear-blue"
+				- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 				
 				- //gets date crap
 				- var date = new Date( match.time * 1000 )

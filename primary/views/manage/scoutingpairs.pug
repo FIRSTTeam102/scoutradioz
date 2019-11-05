@@ -63,7 +63,7 @@ block content
 			div(class="w3-container" style="max-width:300px;margin:auto;")
 				div(class="w3-left w3-margin-left")
 					input(type="checkbox" class="w3-check" name=member.name id=member.name)
-					label(class="w3-text-white" for=member.name) &nbsp;#{member.name} (#{member.subteam})
+					label(class="w3-text-white" for=member.name) &nbsp;#{member.name} (#{member.org_info.subteam_key})
 					br
 		- var defaultBlockSize = 5;
 		p

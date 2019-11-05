@@ -90,10 +90,10 @@ router.get('/', async function(req, res) {
 
 	// 2018-04-05, M.O'C - Adding 'predicted time' to a map for later enriching of 'scoreData' results
 	var matchLookup = {};
-	if (docs)
-		for (var matchIdx = 0; matchIdx < docs.length; matchIdx++) {
+	if (matchDocs)
+		for (var matchIdx = 0; matchIdx < matchDocs.length; matchIdx++) {
 			//res.log(thisFuncName + 'associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
-			matchLookup[docs[matchIdx].key] = docs[matchIdx];
+			matchLookup[matchDocs[matchIdx].key] = matchDocs[matchIdx];
 		}
 		
 	// Get all the UNRESOLVED matches where they're set to score
