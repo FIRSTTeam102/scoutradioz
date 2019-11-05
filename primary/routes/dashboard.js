@@ -2,14 +2,19 @@ var express = require('express');
 const utilities = require('../utilities');
 var router = express.Router();
 
+router.all('/*', async (req, res, next) => {
+	//Require scouter-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_SCOUTER)) {
+		next();
+	}
+})
+
 /**
  * Scouter's dashboard page. Provides a scouter's assigned teams for scouting and assigned matches for scoring
  * @url /dashboard
  * @view dashboard/dashboard-index
  */
 router.get('/', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var thisFuncName = "dashboard.{root}[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -122,8 +127,6 @@ router.get('/', async function(req, res) {
  * @view dashboard/unassigned
  */
 router.get('/unassigned', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var thisFuncName = "dashboard.unassigned[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -139,8 +142,6 @@ router.get('/unassigned', async function(req, res) {
  * @view dashboard/allianceselection
  */
 router.get('/allianceselection', async function(req, res){
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var event_key = req.event.key;
 	var event_year = req.event.year;
@@ -276,8 +277,6 @@ router.get('/allianceselection', async function(req, res){
 });
 
 router.get('/pits', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var thisFuncName = "dashboard.pits[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -333,8 +332,6 @@ router.get('/pits', async function(req, res) {
 });
 
 router.get('/matches', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var thisFuncName = "dashboard.matches[get]: ";
 	res.log(thisFuncName + 'ENTER');
