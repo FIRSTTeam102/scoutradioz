@@ -3,7 +3,10 @@ const router = express.Router();
 
 router.get('/', async function(req, res) {
 	
-	res.redirect('/manage');
+	//res.redirect('/manage');
+	res.render('./admin/admindashboard', { 
+		title: `Administration`
+	});
 	
 });
 

@@ -11,15 +11,32 @@ router.get('/', async function(req, res) {
 });
 
 router.post('/', async function(req, res) {
+	var thisFuncName = "webhook root: ";
 	
+	//Log message so we can see on the server side when we enter this
+	console.log(thisFuncName + "ENTER");
+    
 	//We can eventually add a verification mechanism to check the SHA1 checksum (headers.x-tba-checksum)
 	var headers = req.headers;
 	
-	console.log(JSON.stringify(req.body));
-	
-	var message = req.body;
+    //console.log(thisFuncName + "req=" + JSON.stringify(req));
+    // for (var key in req)
+    //     if (key != 'socket' && key != 'connection' && key != 'client' && key != 'res' && key != 'sessionStore')
+    //         console.log(thisFuncName + "req."+key+"=" + JSON.stringify(req[key]));
+	console.log(thisFuncName + "req.body=" + JSON.stringify(req.body));
+	console.log(thisFuncName + "req._readableState=" + JSON.stringify(req._readableState));
+    
+    var data = new Buffer.from(req._readableState.buffer.head.data);
+    var dataString = data + '';
+	console.log(thisFuncName + "data=" + data);
+    console.log(thisFuncName + "dataString=" + dataString);
+    var dataObj = JSON.parse(dataString);
+    console.log(thisFuncName + "dataObj.secret=" + dataObj.secret);
+
+	var message = dataObj;
 	var messageType = message.message_type;
 	var messageData = message.message_data;
+    console.log(thisFuncName + "messageType=" + messageType);
 	
 	//Delegate data handling to separate functions.
 	switch(messageType){

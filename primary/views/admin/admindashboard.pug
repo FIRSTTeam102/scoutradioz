@@ -1,0 +1,38 @@
+//-
+	Admin index. Provides links to various administative pages.
+	PARAM
+		current		[String] Current event key.
+	CALLED FROM
+		adminindex.js	'/'
+	//
+extends ../layout
+block content
+	h3=title
+	div(class="w3-container w3-section")
+		h4 Placeholders
+		a(href="/admin/dngn1") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Use Case 1
+		a(href="/admin/dngn2") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Use Case 2
+		a(href="/admin/dngn3") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Use Case 3
+	div(class="w3-container w3-section")
+		h4 Testing functions - CAREFUL
+
+		form#posttowebhook(name="posttowebhook" method="post" action="/webhook" enctype="text/plain")
+			input#posttowebhookdata(type="hidden", name='{"secret": 1337, "trash": "' value='"}')
+		button(class="w3-btn w3-block theme-submit" onclick="submitHook()") Submit webhook
+
+	script.
+		function submitHook()
+		{
+			//console.log(selectedArray.toString());
+			//document.getElementById("selectedString").innerHTML = selectedArray.toString();
+
+			//document.getElementById("posttowebhookdata").value = JSON.stringify(selectedDict);
+			
+			document.getElementById("posttowebhook").submit();
+		}
