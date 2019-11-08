@@ -23,18 +23,29 @@ router.post('/', async function(req, res) {
     // for (var key in req)
     //     if (key != 'socket' && key != 'connection' && key != 'client' && key != 'res' && key != 'sessionStore')
     //         console.log(thisFuncName + "req."+key+"=" + JSON.stringify(req[key]));
-	console.log(thisFuncName + "req.body=" + JSON.stringify(req.body));
-	console.log(thisFuncName + "req._readableState=" + JSON.stringify(req._readableState));
-    
-    var data = new Buffer.from(req._readableState.buffer.head.data);
-    var dataString = data + '';
-	console.log(thisFuncName + "data=" + data);
-    console.log(thisFuncName + "dataString=" + dataString);
-    var dataObj = JSON.parse(dataString);
-    console.log(thisFuncName + "dataObj.secret=" + dataObj.secret);
+    var message = null;
+    console.log(thisFuncName + "req.body=" + JSON.stringify(req.body));
+    if (req.body)
+        if (req.body.message_type)
+            message = req.body;
+    // Still undefined? Try hacky way
+    if (!message) {
+        console.log(thisFuncName + "req._readableState=" + JSON.stringify(req._readableState));
+        if (req._readableState)
+            if (req._readableState.buffer)        
+                if (req._readableState.buffer.head)        
+                    if (req._readableState.buffer.head.data) {
+                        var data = new Buffer.from(req._readableState.buffer.head.data);
+                        var dataString = data + '';
+                        console.log(thisFuncName + "data=" + data);
+                        //console.log(thisFuncName + "dataString=" + dataString);
+                        var datagram = JSON.parse(dataString);
+                        if (datagram.message_type)
+                            message = datagram;                        
+                    }
+    }
 
-	var message = dataObj;
-	var messageType = message.message_type;
+    var messageType = message.message_type;
 	var messageData = message.message_data;
     console.log(thisFuncName + "messageType=" + messageType);
 	

@@ -23,8 +23,8 @@ block content
 		h4 Testing functions - CAREFUL
 
 		form#posttowebhook(name="posttowebhook" method="post" action="/webhook" enctype="text/plain")
-			input#posttowebhookdata(type="hidden", name='{"secret": 1337, "trash": "' value='"}')
-		button(class="w3-btn w3-block theme-submit" onclick="submitHook()") Submit webhook
+			input#posttowebhookdata(type="hidden", name='{"message_type": "admin_test", "trash": "' value='"}')
+		button(class="gear-btn w3-btn w3-section theme-submit" onclick="submitHook()") Submit webhook
 
 	script.
 		function submitHook()
