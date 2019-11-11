@@ -51,6 +51,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 //Session
+console.log("app.js: app.use(session({... - START");
 app.use(session({
     secret: 'marcus night',
     saveUninitialized: false, // don't create session until something stored

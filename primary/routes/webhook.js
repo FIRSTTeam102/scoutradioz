@@ -38,12 +38,16 @@ router.get('/', async function(req, res) {
 });
 
 router.post('/', async function(req, res) {
+	var thisFuncName = "webhook root: ";
 	
-	logger.info(JSON.stringify(req.body));
-		
+	logger.debug(thisFuncName + "ENTER");
+    
 	var message = req.body;
-	var messageType = message.message_type;
+
+    var messageType = message.message_type;
 	var messageData = message.message_data;
+	
+    logger.debug(thisFuncName + "messageType=" + messageType);
 	
 	//Delegate data handling to separate functions.
 	switch(messageType){

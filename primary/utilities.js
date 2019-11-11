@@ -42,6 +42,9 @@ utilities.getDB = function(){
 			dbRef = monk(url);
 		}
 		dbRef.then(result => {
+			//renew lastRequestTime
+			lastRequestTime = Date.now();
+			db = dbRef;
 			logger.info("Connected!");
 		}).catch(err => {
 			logger.error(JSON.stringify(err));
@@ -82,7 +85,7 @@ utilities.getDBurl = function(){
 			//If there is an object inside databases for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				logger.info(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`utilities.getDBurl [1]: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for process tier, throw an error.
@@ -98,7 +101,7 @@ utilities.getDBurl = function(){
 			//If default db exists, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				logger.info(`utilities.getDBurl: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`utilities.getDBurl [2]: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for default, throw an error.
