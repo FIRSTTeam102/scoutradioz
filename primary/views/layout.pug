@@ -38,27 +38,39 @@ html
 		if alert && alert != "undefined"
 			script.
 				$(function(){
+					var alertType = '#{alertType}';
 					//alert("#{alert}");
-					NotificationCard.show("#{alert}", {ttl: 0, exitable: true});
+					NotificationCard.show('#{alert}', {
+						ttl: 0, 
+						exitable: true, 
+						type: alertType
+					});
 					
-					//Remove alert from url queries so it doesn't appear again when the user refreshes
+					//Remove alert and type from url queries so it doesn't appear again when the user refreshes
 					var url = window.location.href;
 					
-					if( url.indexOf("&") == -1 ){
-						var queries = [url.split("?")[1]];
+					if( url.indexOf('&') == -1 ){
+						var queries = [url.split('?')[1]];
 					}
 					else{
-						var queries = url.split("&");
-						queries[0] = queries[0].split("?")[1];
+						var queries = url.split('&');
+						queries[0] = queries[0].split('?')[1];
 					}
 					
-					for(var i in queries){
-						if( queries[i].split("=")[0] == "alert"){
+					//splice alert and type from queries array
+					for(var i = 0; i < queries.length; i++){
+						console.log(queries[i].split('='));
+						if( queries[i].split('=')[0] == 'alert'){
 							queries.splice(i, 1);
+							i--;
+						}
+						else if (queries[i].split('=')[0] == 'type') {
+							queries.splice(i, 1);
+							i--;
 						}
 					}
 					
-					url = url.split("?")[0]
+					url = url.split('?')[0]
 					
 					//add other queries back into url
 					if(queries[0]){
@@ -66,7 +78,7 @@ html
 						url += '?' + queries[0];
 						
 						for(var i = 1; i < queries.length; i++){
-							url += "&" + queries[i];
+							url += '&' + queries[i];
 						}
 					}
 					
