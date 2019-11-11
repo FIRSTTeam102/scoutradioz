@@ -103,8 +103,9 @@ router.get('/', async function(req, res) {
 		logger.debug(thisFuncName + "scoringMatch[" + matchesIdx + "]: num,team=" + scoringMatches[matchesIdx].match_number + "," + scoringMatches[matchesIdx].team_key);
 
 	for (var scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
-		//logger.debug(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
-		scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
+		//res.log(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
+		if (scoringMatches[scoreIdx] && scoringMatches[scoreIdx] && matchLookup[scoringMatches[scoreIdx].match_key])
+			scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
 	}
 	
 	res.render('./dashboard/dashboard-index',{
@@ -369,8 +370,9 @@ router.get('/matches', async function(req, res) {
 	logger.debug(thisFuncName + 'scoreData.length=' + scoreData.length);
 
 	for (var scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
-		//logger.debug(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
-		scoreData[scoreIdx].predicted_time = matchLookup[scoreData[scoreIdx].match_key].predicted_time;
+		//res.log(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
+		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key])
+			scoreData[scoreIdx].predicted_time = matchLookup[scoreData[scoreIdx].match_key].predicted_time;
 	}
 	
 	logger.debug(thisFuncName + 'DEBUG getting nicknames next?');

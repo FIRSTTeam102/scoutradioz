@@ -1,5 +1,3 @@
-'use strict';
-
 if(!$){
 	console.error("scoutradioz.js error: jQuery not enabled");
 }
