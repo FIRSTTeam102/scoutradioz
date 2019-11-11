@@ -26,7 +26,7 @@ select{
 a:link{text-decoration: none;}
 
 a{color: inherit;}
-footer a:hover{text-decoration: underline;}
+a:hover.text-link{text-decoration: underline;}
 
 nav{background-color: #4d4d53;}
 
@@ -149,7 +149,6 @@ hr{
     box-sizing: border-box;
     background-color: rgb(255, 179, 179);
     margin: 16px 0px;
-    padding: 12px 32px;
     transition: opacity 2s;
     transition-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
     
@@ -162,13 +161,22 @@ hr{
     text-align: center;
     word-wrap: break-word;
     font-family: Verdana, Geneva, sans-serif;
+    
+    padding: 12px 32px;
 }
 
 .notification-card .notification-card-exit{
-    width: 20px;
-    height: 20px;
-    margin: 4px;
-    text-align: right;
+    font-size: 1.2em;
+    text-align: center;
+    font-family: monospace;
+    transform: scaleX(1.3);
+    
+    float: right;
+    padding: 12px 24px;
+}
+
+.notification-card .notification-card-exit:hover{
+    cursor: pointer;
 }
 
 /* 2019 SPACE THEME */

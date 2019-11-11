@@ -35,6 +35,10 @@ if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enable
 //Create app
 const app = express();
 
+//Route webhook express app first, to reduce load and to have custom body-parser config
+const webhook = require('./routes/webhook');
+app.use('/webhook', webhook);
+
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -106,7 +110,6 @@ var dashboard = require("./routes/dashboard");
 var scouting = require("./routes/scouting");
 var reports = require('./routes/reports');
 var notifications = require('./routes/notifications');
-var webhook = require('./routes/webhook');
 //ORG MANAGEMENT ROUTES
 var manageindex = require('./routes/manage/indexmgmt');
 var allianceselection = require('./routes/manage/allianceselection');
@@ -128,7 +131,6 @@ app.use("/dashboard", dashboard);
 app.use('/reports', reports);
 app.use('/allianceselection', allianceselection);
 app.use('/notifications', notifications);
-app.use('/webhook', webhook);
 
 app.use('/manage', manageindex);
 app.use('/manage/config', config);

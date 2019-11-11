@@ -26,17 +26,20 @@ html
 		link(rel="icon" type="image/png" href=`${fileRoot}/favicon.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/w3.css`)
-		link(rel="stylesheet" href=`${fileRoot}/css/theme-2019.css?v=1`)
+		link(rel="stylesheet" href=`${fileRoot}/css/theme-2019.css?v=2`)
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=1`)
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		script(src=`${fileRoot}/lib/jquery.min.js`)
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
-		script(src=`${fileRoot}/js/scoutradioz.js?v=5`)
+		script(src=`${fileRoot}/js/scoutradioz.js?v=2`)
+		script(src=`${fileRoot}/js/FormSubmission.js`)
+		script(src=`${fileRoot}/js/NotificationCard.js`)
 		if alert && alert != "undefined"
 			script.
 				$(function(){
-					alert("#{alert}");
+					//alert("#{alert}");
+					NotificationCard.show("#{alert}", {ttl: 0, exitable: true});
 					
 					//Remove alert from url queries so it doesn't appear again when the user refreshes
 					var url = window.location.href;
