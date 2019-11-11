@@ -33,10 +33,13 @@ html
 		script(src=`${fileRoot}/lib/jquery.min.js`)
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
 		script(src=`${fileRoot}/js/scoutradioz.js?v=2`)
+		script(src=`${fileRoot}/js/FormSubmission.js`)
+		script(src=`${fileRoot}/js/NotificationCard.js`)
 		if alert && alert != "undefined"
 			script.
 				$(function(){
-					alert("#{alert}");
+					//alert("#{alert}");
+					NotificationCard.show("#{alert}", {ttl: 0, exitable: true});
 					
 					//Remove alert from url queries so it doesn't appear again when the user refreshes
 					var url = window.location.href;
