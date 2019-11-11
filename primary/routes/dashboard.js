@@ -149,7 +149,7 @@ router.get('/allianceselection', async function(req, res){
 
 	var rankings = await utilities.find("currentrankings", {}, {});
 	if(!rankings[0])
-		return console.error(e || "Couldn't find rankings in allianceselection".red);
+		return logger.error(e || "Couldn't find rankings in allianceselection".red);
 	
 	var alliances = [];
 	for(var i = 0; i < 8; i++){
@@ -168,7 +168,7 @@ router.get('/allianceselection', async function(req, res){
 
 	var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
 	if(!scoreLayout[0])
-		return console.error(e || "Couldn't find scoringlayout in allianceselection".red);
+		return logger.error(e || "Couldn't find scoringlayout in allianceselection".red);
 	
 	//initialize aggQuery
 	var aggQuery = [];
@@ -197,7 +197,7 @@ router.get('/allianceselection', async function(req, res){
 	//Aggregate with this query we made
 	var aggArray = await utilities.aggregate("scoringdata", aggQuery);
 	if(!aggArray[0])
-		return console.error(e || "Couldn't find scoringdata in allianceselection".red)
+		return logger.error(e || "Couldn't find scoringdata in allianceselection".red)
 	
 	// Rewrite data into display-friendly values
 	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
@@ -254,7 +254,7 @@ router.get('/allianceselection', async function(req, res){
 		}
 	});
 	
-	console.log(sortedTeams);
+	logger.debug(sortedTeams);
 
 	// read in the current agg ranges
 	var currentAggRanges = await utilities.find("currentaggranges", {}, {});
@@ -364,7 +364,7 @@ router.get('/matches', async function(req, res) {
 	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, { limit: 60, sort: {"time": 1, "alliance": 1, "team_key": 1} });
 
 	if(!scoreData)
-		return console.error("mongo error at dashboard/matches");
+		return logger.error("mongo error at dashboard/matches");
 
 	logger.debug(thisFuncName + 'scoreData.length=' + scoreData.length);
 
@@ -394,7 +394,7 @@ router.get('/matches', async function(req, res) {
 			scoreData[i].team_nickname = teamKeyMap[scoreData[i].team_key].nickname;
 	}
 		//this line has a definition problem ^
-	console.log(thisFuncName + 'scoreData.length=' + scoreData.length);
+	logger.debug(thisFuncName + 'scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
 		title: "Match Scouting",
 		matches: scoreData
