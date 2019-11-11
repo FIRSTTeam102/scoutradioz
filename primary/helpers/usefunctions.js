@@ -57,12 +57,11 @@ functions.authenticate = function(req, res, next) {
 }
 
 //View engine locals variables
-functions.userViewVars = function(req, res, next){
+functions.setViewVariables = function(req, res, next){
 	
 	logger.debug("usefunctions.js - functions.userViewVars: ENTER");
 	
-	if(req.user)
-		res.locals.user = req.user;
+	if(req.user) res.locals.user = req.user;
 	
 	var fileRoot;
 	
@@ -74,13 +73,14 @@ functions.userViewVars = function(req, res, next){
 	//Otherwise set fileRoot as / for local filesystem
 	else{
 		
-		fileRoot = ''
+		fileRoot = '';
 	}
 	
 	res.locals.fileRoot = fileRoot;
 	
 	//Set alert local in here so that we don't have to throw this into Every Single Route
 	res.locals.alert = req.query.alert;
+	res.locals.alertType = req.query.type;
 	
 	next();
 }
@@ -151,9 +151,6 @@ functions.requestLogger = function(req, res, next){
 				console.log(message);
 		}
 	}
-		
-	//Sets variables accessible to any page from req (request) object
-	//req.requestTime = Date.now(); req.requestTime IS NOW SET INSIDE APP.JS
 	
 	//formatted request time for logging
 	let d = new Date(req.requestTime),
