@@ -64,9 +64,9 @@ utilities.getDB = function(){
  * If databases does not exist, it defaults to localhost.
  */
 utilities.getDBurl = function(){	
-	
+	const thisFuncName = 'utilities.getDBurl: ';
 	//check if we have a db file
-	var hasDotDatabase = fs.existsSync("databases.json");
+	const hasDotDatabase = fs.existsSync("databases.json");
 	var url;
 	
 	if(hasDotDatabase) {
@@ -85,12 +85,12 @@ utilities.getDBurl = function(){
 			//If there is an object inside databases for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				logger.info(`utilities.getDBurl [1]: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`${thisFuncName} Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for process tier, throw an error.
 			else{
-				throw new Error(`utilities.getDBurl: No database specified for process tier ${thisProcessTier} in databases`);
+				throw new Error(`${thisFuncName} No database specified for process tier ${thisProcessTier} in databases`);
 			}
 		}
 		//If there is no process tier, then connect to specified default db
@@ -101,19 +101,19 @@ utilities.getDBurl = function(){
 			//If default db exists, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				logger.info(`utilities.getDBurl [2]: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`${thisFuncName}: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for default, throw an error.
 			else{
-				throw new Error(`utilities.getDBurl: No default database URL specified in databases`);
+				throw new Error(`${thisFuncName}: No default database URL specified in databases`);
 			}
 		}
 	}
 	//If there is no databases file, then connect to localhost
 	else {
 		logger.warn("utilities: No databases file found; Defaulting to localhost:27017");
-		url = "localhost:27017";
+		url = "mongodb://localhost:27017/app";
 	}
 	
 	return url;
@@ -446,7 +446,7 @@ utilities.insert = async function(collection, elements){
 
 /**
  * Asynchronous request to TheBlueAlliance. Requires a URL ending to execute correctly.
- * @param {string} url ENDING of URL, after "https://.../api/v3/"
+ * @param {string} url ENDING of URL, after "https://.../api/v3/" DO NOT INCLUDE A / AT THE START
  * @return {Promise} Promise; Resolves when client receives a request from TBA
  */
 utilities.requestTheBlueAlliance = async function(url){
