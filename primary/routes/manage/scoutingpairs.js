@@ -224,7 +224,7 @@ router.post("/deletescoutingpair", async function(req, res) {
 
 	/*
 	var scoutCol = db.get("scoutingpairs");
-	scoutCol.find({"_id": data}, {}, function(e, docs){
+	//scoutCol.find({"_id": data}, {}, function(e, docs){
 		
 		if(e){ //if error, log to console
 			console.log(thisFuncName + e);
@@ -355,7 +355,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 	// Get the 'current' event from DB
 	//
 	/*
-	currentCol.find({}, {}, function(e, docs) {
+	//currentCol.find({}, {}, function(e, docs) {
 		var noEventFound = 'No event defined';
 		var eventId = noEventFound;
 		if (docs)
@@ -381,7 +381,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 	// Need map of team IDs to scouts (scoutingdata)
 	//
 	/*
-	scoutDataCol.find({"event_key": event_key}, function(e, docs) {
+	//scoutDataCol.find({"event_key": event_key}, function(e, docs) {
 		if(e){ //if error, log to console
 			console.log(thisFuncName + e);
 		}
@@ -401,7 +401,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
 	/*
-	memberCol.find({$or: [{"name": {$in: availableArray}}, {"assigned": "true"}]}, { sort: {"seniority": 1, "subteam": 1, "name": 1} }, function(e, docs) {
+	//memberCol.find({$or: [{"name": {$in: availableArray}}, {"assigned": "true"}]}, { sort: {"seniority": 1, "subteam": 1, "name": 1} }, function(e, docs) {
 		if(e){ //if error, log to console
 			console.log(thisFuncName + e);
 		}
@@ -516,16 +516,18 @@ router.post("/generatematchallocations2", async function(req, res) {
 				if (teamScoutMap[thisTeamKey] == null) {
 					// Who is assigned to this team?
 					var thisScoutData = scoutDataByTeam[thisTeamKey];
-					var thisPossibleAssignee = thisScoutData[thisRole];
-					//console.log(thisFuncName + ">> Comparing: " + thisTeamKey + ", for role " + thisRole + " is " + thisPossibleAssignee);
-					
-					// Are they available?
-					if (thisPossibleAssignee != null && scoutAvailableMap[thisPossibleAssignee] != null) {
-						// Assign them!
-						//console.log(thisFuncName + "** Assigning " + thisPossibleAssignee + " to " + thisTeamKey);
-						teamScoutMap[thisTeamKey] = thisPossibleAssignee;
-						// Take assignee out of available
-						delete scoutAvailableMap[thisPossibleAssignee];
+					if (thisScoutData) {
+						var thisPossibleAssignee = thisScoutData[thisRole];
+						//console.log(thisFuncName + ">> Comparing: " + thisTeamKey + ", for role " + thisRole + " is " + thisPossibleAssignee);
+						
+						// Are they available?
+						if (thisPossibleAssignee != null && scoutAvailableMap[thisPossibleAssignee] != null) {
+							// Assign them!
+							//console.log(thisFuncName + "** Assigning " + thisPossibleAssignee + " to " + thisTeamKey);
+							teamScoutMap[thisTeamKey] = thisPossibleAssignee;
+							// Take assignee out of available
+							delete scoutAvailableMap[thisPossibleAssignee];
+						}
 					}
 				}
 			}
@@ -591,26 +593,27 @@ router.post("/clearmatchallocations", async function(req, res) {
 		return res.send({status: 401, alert: "No password entered."});
 	}
 	
-	var db = req.db;
-	var teammembers = db.get('teammembers');
+	// var db = req.db;
+	// var teammembers = db.get('teammembers');
 
-	teammembers.find( { name: req.user.name }, {}, function( e, user ){
+	var user = await utilities.find("users", { name: req.user.name }, {});
+	// teammembers.find( { name: req.user.name }, {}, function( e, user ){
+	// 	if(e)
+	// 		return console.error(e);
+	if(!user[0]){
+		res.send({status: 500, alert:"Passport error: no user found in db?"});
+		return console.error("no user found? generateteamallocations");
+	}
+		
+	bcrypt.compare( req.body.password, user[0].password, async function(e, out){
 		if(e)
 			return console.error(e);
-		if(!user[0]){
-			res.send({status: 500, alert:"Passport error: no user found in db?"});
-			return console.error("no user found? generateteamallocations");
-		}
+		if(out == true)
+			passCheckSuccess = true;
+		else
+			return res.send({status: 401, alert: "Password incorrect."});
 		
-		bcrypt.compare( req.body.password, user[0].password, function(e, out){
-			if(e)
-				return console.error(e);
-			if(out == true)
-				passCheckSuccess = true;
-			else
-				return res.send({status: 401, alert: "Password incorrect."});
-			
-			if(passCheckSuccess){
+		if(passCheckSuccess){
 /* Begin regular code ----------------------------------------------------------- */
 	
 	var thisFuncName = "scoutingpairs.clearMATCHallocations[post]: ";
@@ -622,48 +625,47 @@ router.post("/clearmatchallocations", async function(req, res) {
 	// Log message so we can see on the server side when we enter this
 	console.log(thisFuncName + "ENTER");
 	
-	var db = req.db;
-	var currentCol = db.get("current");
-	var scoreDataCol = db.get("scoringdata");
+	// var db = req.db;
+	// var currentCol = db.get("current");
+	// var scoreDataCol = db.get("scoringdata");
 
-	if(db._state == 'closed'){ //If database does not exist, send error
-		return res.render('./error',{
-			message: "Database error: Offline",
-			error: {status: "If the database is running, try restarting the Node server."}
-		});
-	}
+	// if(db._state == 'closed'){ //If database does not exist, send error
+	// 	return res.render('./error',{
+	// 		message: "Database error: Offline",
+	// 		error: {status: "If the database is running, try restarting the Node server."}
+	// 	});
+	// }
 
 	//
 	// Get the 'current' event from DB
 	//
-	currentCol.find({}, {}, function(e, docs) {
-		var noEventFound = 'No event defined';
-		var eventId = noEventFound;
-		if (docs)
-			if (docs.length > 0)
-				eventId = docs[0].event;
-		if (eventId === noEventFound) {
-			return res.render('./manage/admin', { 
-				title: 'Admin pages',
-				current: eventId
-			});
-		}
-		var event_key = eventId;
+	// currentCol.find({}, {}, function(e, docs) {
+	// 	var noEventFound = 'No event defined';
+	// 	var eventId = noEventFound;
+	// 	if (docs)
+	// 		if (docs.length > 0)
+	// 			eventId = docs[0].event;
+	// 	if (eventId === noEventFound) {
+	// 		return res.render('./manage/admin', { 
+	// 			title: 'Admin pages',
+	// 			current: eventId
+	// 		});
+	// 	}
+	// 	var event_key = eventId;
+	var event_key = req.event.key;
 
-		// 2019-01-23, M.O'C: See YEARFIX comment above
-		var year = parseInt(event_key.substring(0,4));
-		
-		//
-		// Remove 'assigned_scorer' from all matching scoringdata elements
-		//
-		scoreDataCol.bulkWrite([{updateMany:{filter:{ "event_key": eventId }, update:{ $unset: { "assigned_scorer" : "" } }}}], function(e, docs){
-			return res.send({status: 200, alert: "Cleared existing match scouting assignments successfully."});
-		});
-	});
+	// 2019-01-23, M.O'C: See YEARFIX comment above
+	var year = parseInt(event_key.substring(0,4));
+	
+	//
+	// Remove 'assigned_scorer' from all matching scoringdata elements
+	//
+	await utilities.bulkWrite("scoringdata", [{updateMany:{filter:{ "event_key": eventId }, update:{ $unset: { "assigned_scorer" : "" } }}}]);
+
+	return res.send({status: 200, alert: "Cleared existing match scouting assignments successfully."});
 		
 /* End regular code ----------------------------------------------------------- */
-			}
-		});
+		}
 	});
 });
 
@@ -714,43 +716,43 @@ router.get("/swapmembers", async function(req, res) {
 	// Log message so we can see on the server side when we enter this
 	console.log(thisFuncName + "ENTER");
 
-	var db = req.db;
-	var currentCol = db.get("current");
-	var scoreDataCol = db.get("scoringdata");
-	var matchCol = db.get("matches");
-	var teammembers = db.get("teammembers");
+	// var db = req.db;
+	// var currentCol = db.get("current");
+	// var scoreDataCol = db.get("scoringdata");
+	// var matchCol = db.get("matches");
+	// var teammembers = db.get("teammembers");
 
 	// for later querying by event_key
-	var event_key = req.event.key;
+	var eventId = req.event.key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
+	// matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
 
-		// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-		var earliestTimestamp = 9999999999;
-		if (docs && docs[0])
-		{
-			var earliestMatch = docs[0];
-			earliestTimestamp = earliestMatch.time;
-		}
-			
-		// Get the distinct list of scorers from the unresolved matches
-		scoreDataCol.distinct("assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, function (e, docs) {
-			var scorers = docs;
-			console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
-	
-			// Get list of all users
-			teammembers.find( {}, {sort:{ "name": 1 }}, function(e, docs){
-				var users = docs;
+	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
+	var earliestTimestamp = 9999999999;
+	if (matchDocs && matchDocs[0])
+	{
+		var earliestMatch = matchDocs[0];
+		earliestTimestamp = earliestMatch.time;
+	}
+		
+	// Get the distinct list of scorers from the unresolved matches
+	var scorers = utilities.distinct("scoringdata", "assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }});
+	//scoreDataCol.distinct("assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, function (e, docs) {
+	var scorers = docs;
+	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 
-				// Go to a Pug to show two lists & a button to do the swap - form with button
-				res.render("./manage/swapmembers", {
-					title: "Swap Match Scouts",
-					scorers: scorers,
-					users: users
-				});
-			});
-		});
+	// Get list of all users
+	var users = await utilities.find("users", {}, {sort:{ "name": 1 }});
+	// teammembers.find( {}, {sort:{ "name": 1 }}, function(e, docs){
+	// 	var users = docs;
+
+	// Go to a Pug to show two lists & a button to do the swap - form with button
+	res.render("./manage/swapmembers", {
+		title: "Swap Match Scouts",
+		scorers: scorers,
+		users: users
 	});
 });
 
@@ -768,48 +770,46 @@ router.post("/swapmembers", async function(req, res) {
 	var swapin = req.body.swapin;
 	console.log(thisFuncName + 'swap out ' + swapin + ', swap in ' + swapout);
 
-	var db = req.db;
-	var currentCol = db.get("current");
-	var scoreDataCol = db.get("scoringdata");
-	var matchCol = db.get("matches");
+	// var db = req.db;
+	// var currentCol = db.get("current");
+	// var scoreDataCol = db.get("scoringdata");
+	// var matchCol = db.get("matches");
 	
 	//
 	// Get the 'current' event from DB
-	//
-	currentCol.find({}, {}, function(e, docs) {
-		var noEventFound = 'No event defined';
-		var eventId = noEventFound;
-		if (docs)
-			if (docs.length > 0)
-				eventId = docs[0].event;
-		if (eventId === noEventFound) {
-			res.render('/adminindex', { 
-				title: 'Admin pages',
-				current: eventId
-			});
-		}
-		// for later querying by event_key
-		var event_key = eventId;
+	//	
+	// currentCol.find({}, {}, function(e, docs) {
+	// 	var noEventFound = 'No event defined';
+	// 	var eventId = noEventFound;
+	// 	if (docs)
+	// 		if (docs.length > 0)
+	// 			eventId = docs[0].event;
+	// 	if (eventId === noEventFound) {
+	// 		res.render('/adminindex', { 
+	// 			title: 'Admin pages',
+	// 			current: eventId
+	// 		});
+	// 	}
+	// for later querying by event_key
+	var eventId = req.event.key;
 
-		// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-		matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
+	// matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
 
-			// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-			var earliestTimestamp = 9999999999;
-			if (docs && docs[0])
-			{
-				var earliestMatch = docs[0];
-				earliestTimestamp = earliestMatch.time;
-			}
-				
-			// Do the updateMany - change instances of swapout to swapin
-			scoreDataCol.bulkWrite([{updateMany:{filter: { assigned_scorer: swapout, event_key: eventId, "time": { $gte: earliestTimestamp } }, 
-				update:{ $set: { assigned_scorer: swapin } }}}], function(e, docs){
+	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
+	var earliestTimestamp = 9999999999;
+	if (matchDocs && matchDocs[0])
+	{
+		var earliestMatch = matchDocs[0];
+		earliestTimestamp = earliestMatch.time;
+	}
+		
+	// Do the updateMany - change instances of swapout to swapin
+	await utilities.bulkWrite("scoringdata", [{updateMany:{filter: { assigned_scorer: swapout, event_key: eventId, "time": { $gte: earliestTimestamp } }, 
+		update:{ $set: { assigned_scorer: swapin } }}}]);
 
-				res.redirect("/dashboard/matches");
-			});
-		});
-	});
+	res.redirect("/dashboard/matches");
 });
 
 async function generateMatchAllocations(req, res){

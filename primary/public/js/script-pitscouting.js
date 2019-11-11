@@ -22,9 +22,12 @@ $(function(){
 		var pitForm = $("form[name=scoutform]");
 		
 		console.log(pitForm);
+		//debugToHTML(pitForm);
 		
 		var pitSubmission = new FormSubmission(pitForm, "/scouting/pit/submit", "pitScouting");
 		
+		//debugToHTML(pitSubmission);
+
 		console.log(pitSubmission);
 		
 		pitSubmission.submit((err, message) => {

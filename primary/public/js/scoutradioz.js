@@ -1,5 +1,3 @@
-'use strict';
-
 if(!$){
 	console.error("scoutradioz.js error: jQuery not enabled");
 }
@@ -44,8 +42,12 @@ function debugToHTML(message) {
 	$(debugLogger).append(newTextElem);
 }
 
+
+var containerElement;
+
 class NotificationCard{
 	
+	/*
 	static containerElement;
 	card;
 	text;
@@ -53,7 +55,8 @@ class NotificationCard{
 	onclose = null;
 	onfadeend = null;
 	onfadebegin = null;
-	
+	*/
+
 	/**
 	 * @param {String} text Text to display on notification card
 	 * @param {Object} options Options
@@ -122,12 +125,12 @@ class NotificationCard{
 	 */
 	static container(){
 		
-		if (!NotificationCard.containerElement){
-			NotificationCard.containerElement =  $(document.createElement("div"))
+		if (!containerElement){
+			containerElement =  $(document.createElement("div"))
 			.addClass("notification-card-container")
 			.appendTo(document.body);
 		}
-		return NotificationCard.containerElement;
+		return containerElement;
 	}
 	
 	show(){
