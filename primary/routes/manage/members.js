@@ -1,11 +1,16 @@
 const router = require("express").Router();
-const utilities = require("../../utilities");
 const monk = require("monk");
+const logger = require('log4js').getLogger();
+const utilities = require("../../utilities");
 
-//DONE
+router.all('/*', async function (req, res, next) {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
+
 router.get("/", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var org_key = req.user.org_key;
 	
@@ -42,8 +47,6 @@ router.get("/", async function(req, res) {
 });
 
 router.post("/addmember", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "members.addmember[post]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -122,8 +125,6 @@ router.post("/addmember", async function(req, res){
 });
 
 router.post("/updatemember", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "members.updatemember[post]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -213,8 +214,6 @@ router.post("/updatemember", async function(req, res){
 });
 
 router.post("/deletemember", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	if(req.body.memberId){
 		
@@ -247,7 +246,6 @@ router.post("/deletemember", async function(req, res){
 });
 
 router.get('/passwords', async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var org_key = req.user.org_key;
 	
@@ -278,10 +276,40 @@ router.get('/passwords', async function(req, res){
 	});
 });
 
+router.post('/resetpassword', async function (req, res) {
+	const thisFuncName = 'manage/members/resetpassword[POST]: ';
+	
+	const memberId = req.body.memberId;
+	
+	try {
+		//get info on requested member
+		const member = await utilities.findOne('users', {_id: memberId});
+		logger.info(`${thisFuncName} Request to reset password of ${member.name} by ${req.user.name}`);
+		const memberRole = await utilities.findOne('roles', {role_key: member.role_key});
+		
+		//check if user is authorized to edit the selected member
+		if (memberRole.access_level <= req.user.role.access_level) {
+			
+			const writeResult = await utilities.update('users', 
+				{_id: memberId}, {$set: {'password': 'default'}});
+				
+			logger.info(`${thisFuncName} Reset password of ${member.name} successfully.`);
+			res.send({status: 200, message: "Reset password successfully."});
+		}
+		//if unauthorized, return unauthorized message
+		else {
+			logger.info(`${thisFuncName} User ${req.user.name} unauthorized to edit ${member.name}`);
+			res.send({status: 401, message: "Unauthorized to edit this user."});
+		}
+	}
+	//catch-all for any other errors
+	catch (err) {
+		logger.error(err);
+		res.send({status: 500, message: err.toString()});
+	}
+})
 
 router.get("/present", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var users = await utilities.find("users", {}, {sort: {"name": 1}});
 	//console.log("members.present: users=" + JSON.stringify(users));
@@ -293,8 +321,6 @@ router.get("/present", async function(req, res) {
 });
 
 router.post("/updatepresent", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	await utilities.update("users", {}, { $set: { "event_info.present" : "false" } }, {multi: true});
 	
