@@ -39,8 +39,9 @@ html
 			script.
 				$(function(){
 					var alertType = '#{alertType}';
+					var alert = `#{alert.replace(/'/, '\'')}`;
 					//alert("#{alert}");
-					NotificationCard.show('#{alert}', {
+					NotificationCard.show(alert, {
 						ttl: 0, 
 						exitable: true, 
 						type: alertType
