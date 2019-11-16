@@ -2,15 +2,20 @@ var express = require("express");
 var router = express.Router();
 var utilities = require('../utilities');
 
+router.all('/*', async (req, res, next) => {
+	//Require viewer-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_VIEWER)) {
+		next();
+	}
+})
+
 router.get("/", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	// TODO - we should probaby make an index for reports?
 	res.redirect('/?alert=No index page for /reports/');
 });
 
 router.get("/rankings", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.rankings[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -26,7 +31,6 @@ router.get("/rankings", async function(req, res){
 });
 
 router.get("/finishedmatches", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.finishedmatches[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -45,7 +49,6 @@ router.get("/finishedmatches", async function(req, res){
 });
 
 router.get("/upcoming", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	//check if the page queried a specific team for upcoming
 	if(!req.query || !req.query.team)
@@ -133,7 +136,6 @@ router.get("/upcoming", async function(req, res){
 });
 
 router.get("/teamintel", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.teamintel*[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -305,7 +307,6 @@ router.get("/teamintel", async function(req, res){
 });
 
 router.get("/teamintelhistory", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.teamintelhistory*[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -445,7 +446,6 @@ router.get("/teamintelhistory", async function(req, res){
 });
 
 router.get("/matchintel*", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.matchintel*[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -476,7 +476,6 @@ router.get("/matchintel*", async function(req, res){
 });
 
 router.get("/teammatchintel*", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.teammatchintel*[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -541,7 +540,6 @@ router.get("/teammatchintel*", async function(req, res){
 });
 
 router.get("/alliancestats", async function(req, res) {
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.alliancestats[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -636,7 +634,6 @@ router.get("/alliancestats", async function(req, res) {
 });
 
 router.get("/teamdata", async function(req, res) {
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.teamdata[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -692,7 +689,6 @@ router.get("/teamdata", async function(req, res) {
 });
 
 router.get("/matchdata", async function(req, res) {
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.matchdata[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -748,7 +744,6 @@ router.get("/matchdata", async function(req, res) {
 });
 
 router.get("/matchmetrics", async function(req, res) {
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.matchmetrics[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -861,7 +856,6 @@ router.get("/matchmetrics", async function(req, res) {
 });
 
 router.get("/metricsranked", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.metricsranked[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -965,7 +959,6 @@ router.get("/metricsranked", async function(req, res){
 });
 
 router.get("/metrics", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.metrics[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -1050,7 +1043,6 @@ router.get("/metrics", async function(req, res){
 });
 
 router.get("/metricintel*", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.metric*[get]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -1133,7 +1125,6 @@ router.get("/metricintel*", async function(req, res){
  * Metrics view
  */
 router.get("/allteammetrics", async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return;
 	
 	var thisFuncName = "reports.allteammetrics[get]: ";
 	res.log(thisFuncName + 'ENTER');
