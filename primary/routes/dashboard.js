@@ -143,133 +143,136 @@ router.get('/allianceselection', async function(req, res){
 	var event_year = req.event.year;
 	
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
-	// var currentAggCol = db.get("currentaggranges");
-	// var rankCol = db.get("currentrankings");
-	// var scoreDataCol = db.get('scoringdata');
-	// var scoreLayoutCol = db.get('scoringlayout');
-
-	var rankings = await utilities.find("currentrankings", {}, {});
-	if(!rankings[0])
-		return logger.error(e || "Couldn't find rankings in allianceselection".red);
-	
-	var alliances = [];
-	for(var i = 0; i < 8; i++){
-		alliances[i] = {
-			team1: rankings[i].team_key,
-			team2: undefined,
-			team3: undefined
-		}
-	}
+	// 2019-11-11 JL: Put everything inside a try/catch block with error conditionals throwing
+	try {
 		
-	var rankMap = {};
-	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
-		rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
-	}
-
-	var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
-	if(!scoreLayout[0])
-		return logger.error(e || "Couldn't find scoringlayout in allianceselection".red);
-	
-	//initialize aggQuery
-	var aggQuery = [];
-	//add $match > event_key
-	aggQuery.push({ $match : { "event_key": event_key } });
-	//initialize groupClause
-	var groupClause = {};
-	//group teams for 1 row per team
-	groupClause["_id"] = "$team_key";
-	
-	//iterate through scoringlayout
-	for (var scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
-		//pull this layout element from score layout
-		var thisLayout = scoreLayout[scoreIdx];
-		thisLayout.key = thisLayout.id;
-		scoreLayout[scoreIdx] = thisLayout;
-		//if it is a valid data type, add this layout's ID to groupClause
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-			groupClause[thisLayout.id] = {$avg: "$data." + thisLayout.id};
-	}
-	//add $group > groupClause (Layout w/ data)
-	aggQuery.push({ $group: groupClause });
-	//add $sort > sort request
-	aggQuery.push({ $sort: { rank: 1 } });
-	
-	//Aggregate with this query we made
-	var aggArray = await utilities.aggregate("scoringdata", aggQuery);
-	if(!aggArray[0])
-		return logger.error(e || "Couldn't find scoringdata in allianceselection".red)
-	
-	// Rewrite data into display-friendly values
-	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
-		//get thisAgg
-		var thisAgg = aggArray[aggIdx];
-		for (var scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
-			var thisLayout = scoreLayout[scoreIdx];
-			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-				var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
-				thisAgg[thisLayout.id] = roundedVal;
+		var rankings = await utilities.find("currentrankings", {}, {});
+		if(!rankings[0])
+			throw "Couldn't find rankings in allianceselection";
+		
+		var alliances = [];
+		for(var i = 0; i < 8; i++){
+			alliances[i] = {
+				team1: rankings[i].team_key,
+				team2: undefined,
+				team3: undefined
 			}
 		}
-		if(!rankMap[thisAgg._id] || !rankMap[thisAgg._id].value){
-			//return res.redirect("/?alert=Make sure that team rankings have been pulled from TheBlueAlliance");
-			logger.debug(`Gonna crash w/ id ${thisAgg._id}`);
+			
+		var rankMap = {};
+		for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+			//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+			rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 		}
-		if(rankMap[thisAgg._id]){
-			thisAgg['rank'] = rankMap[thisAgg._id].rank;
-			thisAgg['value'] = rankMap[thisAgg._id].value;
-			aggArray[aggIdx] = thisAgg;
-		}
-	}
-	//quick sort by rank
-	aggArray.sort(function(a,b){
-		let aNum = a.rank;
-		let bNum = b.rank;
-		if( aNum < bNum ){
-			return -1;
-		}
-		if( aNum > bNum ){
-			return 1;
-		}
-	});
 	
-	var sortedTeams = [];
-	for(var i = 8; i < rankings.length; i++){
-		sortedTeams[i - 8] = {
-			rank: rankings[i].rank,
-			team_key: rankings[i].team_key
-		};
-	}
-	sortedTeams.sort(function(a,b){
-		if(a && b){
-			let aNum = parseInt(a.team_key.substring(3));
-			let bNum = parseInt(b.team_key.substring(3));
+		var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
+		if(!scoreLayout[0])
+			throw "Couldn't find scoringlayout in allianceselection";
+		
+		//initialize aggQuery
+		var aggQuery = [];
+		//add $match > event_key
+		aggQuery.push({ $match : { "event_key": event_key } });
+		//initialize groupClause
+		var groupClause = {};
+		//group teams for 1 row per team
+		groupClause["_id"] = "$team_key";
+		
+		//iterate through scoringlayout
+		for (var scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
+			//pull this layout element from score layout
+			var thisLayout = scoreLayout[scoreIdx];
+			thisLayout.key = thisLayout.id;
+			scoreLayout[scoreIdx] = thisLayout;
+			//if it is a valid data type, add this layout's ID to groupClause
+			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+				groupClause[thisLayout.id] = {$avg: "$data." + thisLayout.id};
+		}
+		//add $group > groupClause (Layout w/ data)
+		aggQuery.push({ $group: groupClause });
+		//add $sort > sort request
+		aggQuery.push({ $sort: { rank: 1 } });
+		
+		//Aggregate with this query we made
+		var aggArray = await utilities.aggregate("scoringdata", aggQuery);
+		if(!aggArray[0])
+			throw "Couldn't find scoringdata in allianceselection"
+		
+		// Rewrite data into display-friendly values
+		for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+			//get thisAgg
+			var thisAgg = aggArray[aggIdx];
+			for (var scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
+				var thisLayout = scoreLayout[scoreIdx];
+				if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+					var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
+					thisAgg[thisLayout.id] = roundedVal;
+				}
+			}
+			if(!rankMap[thisAgg._id] || !rankMap[thisAgg._id].value){
+				//return res.redirect("/?alert=Make sure that team rankings have been pulled from TheBlueAlliance");
+				logger.debug(`Gonna crash w/ id ${thisAgg._id}`);
+			}
+			if(rankMap[thisAgg._id]){
+				thisAgg['rank'] = rankMap[thisAgg._id].rank;
+				thisAgg['value'] = rankMap[thisAgg._id].value;
+				aggArray[aggIdx] = thisAgg;
+			}
+		}
+		//quick sort by rank
+		aggArray.sort(function(a,b){
+			let aNum = a.rank;
+			let bNum = b.rank;
 			if( aNum < bNum ){
 				return -1;
 			}
 			if( aNum > bNum ){
 				return 1;
 			}
-		}else{
-			return 1;
+		});
+		
+		var sortedTeams = [];
+		for(var i = 8; i < rankings.length; i++){
+			sortedTeams[i - 8] = {
+				rank: rankings[i].rank,
+				team_key: rankings[i].team_key
+			};
 		}
-	});
+		sortedTeams.sort(function(a,b){
+			if(a && b){
+				let aNum = parseInt(a.team_key.substring(3));
+				let bNum = parseInt(b.team_key.substring(3));
+				if( aNum < bNum ){
+					return -1;
+				}
+				if( aNum > bNum ){
+					return 1;
+				}
+			}else{
+				return 1;
+			}
+		});
+		
+		logger.debug(sortedTeams);
 	
-	logger.debug(sortedTeams);
-
-	// read in the current agg ranges
-	var currentAggRanges = await utilities.find("currentaggranges", {}, {});
-
-	//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
-	res.render('./dashboard/allianceselection', {
-		title: "Alliance Selection",
-		rankings: rankings,
-		alliances: alliances,
-		aggdata: aggArray,
-		currentAggRanges: currentAggRanges,
-		layout: scoreLayout,
-		sortedTeams: sortedTeams
-	});
+		// read in the current agg ranges
+		var currentAggRanges = await utilities.find("currentaggranges", {}, {});
+	
+		//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
+		res.render('./dashboard/allianceselection', {
+			title: "Alliance Selection",
+			rankings: rankings,
+			alliances: alliances,
+			aggdata: aggArray,
+			currentAggRanges: currentAggRanges,
+			layout: scoreLayout,
+			sortedTeams: sortedTeams
+		});
+	}
+	catch (err) {
+		logger.error(err);
+		res.redirect(`/?alert=${err.message || err}&type=error`);
+	}
 });
 
 router.get('/pits', async function(req, res) {
