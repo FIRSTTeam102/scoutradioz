@@ -2,9 +2,14 @@ const express = require('express');
 const utilities = require('../../utilities');
 const router = express.Router();
 
+router.all('/*', async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
+
 router.get("/matches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 
 	var thisFuncName = "current.matches[get]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -21,8 +26,6 @@ router.get("/matches", async function(req, res) {
 });
 
 router.get("/getcurrentteams", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	// //get TBA key from db
 	// var passwordsFind = await utilities.find("passwords", { name:"thebluealliance-args" });
@@ -56,8 +59,6 @@ router.get("/getcurrentteams", async function(req, res){
 })
 
 router.post("/resetmatches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "current.resetmatches[post]: ";
 	res.log(thisFuncName + 'ENTER');
@@ -79,8 +80,6 @@ router.post("/resetmatches", async function(req, res) {
 });
 
 router.post("/updatematch", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "current.updatematch[post]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -228,8 +227,6 @@ router.post("/updatematch", async function(req, res) {
 });
 
 router.post("/updatematches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "current.updatematches[post]: ";
 	res.log(thisFuncName + 'ENTER')

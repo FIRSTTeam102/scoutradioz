@@ -3,14 +3,19 @@ const utilities = require('../../utilities');
 const tba_utils = require('../../tba_utils');
 const router = express.Router();
 
+router.all('/*', async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
+
 /**
  * Admin page to show a list of events by any given year.
  * @url /manage/data/events
  * @view /events
  */
 router.get("/events", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.events[get]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -51,8 +56,6 @@ router.get("/events", async function(req, res) {
  * @redirect /manage/data/events
  */
 router.post("/events", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.events[post]: ";
 	
@@ -89,8 +92,6 @@ router.post("/events", async function(req, res) {
  * @view /matches
  */
 router.get("/matches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.matches[get]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -124,8 +125,6 @@ router.get("/matches", async function(req, res) {
  * @redirect /manage/data/matches
  */
 router.post("/matches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.matches[post]: ";
 	res.log(thisFuncName + 'ENTER')
@@ -169,8 +168,6 @@ router.post("/matches", async function(req, res) {
  * @view /teams
  */
 router.get("/teams", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "externaldata.teams[get]: ";
 	res.log(thisFuncName + 'ENTER')

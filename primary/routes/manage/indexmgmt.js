@@ -3,14 +3,19 @@ const utilities = require('../../utilities');
 const bcrypt = require('bcryptjs')
 const router = express.Router();
 
+router.all('/*', async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
+
 /**
  * Admin index page. Provides links to all admin functionality.
  * @url /manage/
  * @views /manage/adminindex
  */
 router.get('/', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var org = await utilities.findOne("orgs", {org_key: req.user.org_key});
 	
@@ -22,8 +27,6 @@ router.get('/', async function(req, res) {
 });
 
 router.post('/setdefaultpassword', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var newDefaultPassword = req.body.defaultPassword
 	
@@ -40,8 +43,6 @@ router.post('/setdefaultpassword', async function(req, res) {
  * @redirect /admin
  */
 router.post('/setcurrent', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "adminindex.setcurrent[post]: ";
 	var eventId = req.body.eventId;
@@ -117,8 +118,6 @@ router.post('/setcurrent', async function(req, res) {
  * @redirect /
  */
 router.get('/generatedata', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "adminindex.generatedata[get]: ";
 	res.log(thisFuncName + 'ENTER');

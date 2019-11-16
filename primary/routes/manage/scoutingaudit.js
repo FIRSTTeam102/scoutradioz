@@ -2,14 +2,19 @@ const express = require('express');
 const utilities = require("../../utilities");
 var router = express.Router();
 
+router.all('/*', async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
+
 /**
  * Scoring audit page.
  * @url /manage/scoringaudit
  * @view /manage/index, /manage/scoringaudit
  */
 router.get("/", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "audit.root[GET]:";
 	res.log(`${thisFuncName} enter`);
@@ -129,8 +134,6 @@ router.get("/", async function(req, res) {
 });
 
 router.get('/bymatch', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var audit = {};
 	var eventId = req.event.key;
@@ -197,8 +200,6 @@ router.get('/bymatch', async function(req, res){
 })
 
 router.get('/comments', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var eventId = req.event.key;
 	
