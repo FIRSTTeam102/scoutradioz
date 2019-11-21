@@ -49,7 +49,7 @@ router.get("/", async function(req, res) {
 router.post("/addmember", async function(req, res){
 	
 	var thisFuncName = "members.addmember[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var name = req.body.name;
 	var subteam_key = req.body.subteam_key;
@@ -75,7 +75,7 @@ router.post("/addmember", async function(req, res){
 	}
 	
 	var memberJson = JSON.stringify(req.body);
-	res.log(`Request to add member ${memberJson}`, true);
+	logger.debug(`Request to add member ${memberJson}`, true);
 
 	// calculate seniority
 	var seniority = years;
@@ -100,7 +100,7 @@ router.post("/addmember", async function(req, res){
 		default:
 			seniority += ".0";
 	}
-	res.log(thisFuncName + 'seniority=' + seniority);
+	logger.debug(thisFuncName + 'seniority=' + seniority);
 	
 	var insertQuery = {
 		org_key: org_key,
@@ -128,7 +128,7 @@ router.post("/addmember", async function(req, res){
 router.post("/updatemember", async function(req, res){
 	
 	var thisFuncName = "members.updatemember[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var org_key = req.user.org_key;
 	var memberId = req.body.memberId;
@@ -200,7 +200,7 @@ router.post("/updatemember", async function(req, res){
 			};
 			
 			//log it
-			res.log(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
+			logger.debug(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
 			
 			var writeResult = await utilities.update("users", {org_key: org_key, _id: memberId}, updateQuery);
 			
@@ -224,7 +224,7 @@ router.post("/deletemember", async function(req, res){
 		var member = await utilities.findOne("users", {_id: memberId, org_key: orgKey});
 		var memberRole = await utilities.findOne("roles", {role_key: member.role_key});
 		
-		res.log(`Request to delete member ${memberId} by user ${JSON.stringify(req.user)}`, true);
+		logger.debug(`Request to delete member ${memberId} by user ${JSON.stringify(req.user)}`, true);
 		
 		//check for authorization
 		if( req.user.role.access_level >= memberRole.access_level ){

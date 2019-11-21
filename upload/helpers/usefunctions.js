@@ -4,7 +4,7 @@ require('colors');
 var functions = module.exports = {};
 
 /**
- * logger for res.log
+ * logger for logger.debug
  * @param {*} req 
  * @param {*} res 
  * @param {*} next 

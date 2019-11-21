@@ -1,13 +1,13 @@
-var express = require("express");
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
-var router = express.Router();
 
 router.get("/", async function(req, res){
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "allianceselection{root}[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -18,17 +18,17 @@ router.get("/", async function(req, res){
 	// for later querying by event_key
 	var event_key = req.event.key;
 	var event_year = req.event.year;
-	res.log(thisFuncName + 'event_key=' + event_key);
+	logger.debug(thisFuncName + 'event_key=' + event_key);
 	
 	// get the current rankings
 	var rankings = await utilities.find("currentrankings", {}, {});
 
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-		//res.log(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 	}
-	//res.log(thisFuncName + 'rankMap=' + JSON.stringify(rankMap));
+	//logger.debug(thisFuncName + 'rankMap=' + JSON.stringify(rankMap));
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
 	// db.scoringdata.aggregate( [ 
@@ -55,11 +55,11 @@ router.get("/", async function(req, res){
 	}
 	aggQuery.push({ $group: groupClause });
 	aggQuery.push({ $sort: { _id: 1 } });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggArray = await utilities.aggregate("scoringdata", aggQuery);
 			
-	res.log(rankMap);
+	logger.debug(`${thisFuncName} rankMap=${JSON.stringify(rankMap)}`);
 	
 	// Rewrite data into display-friendly values
 	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
@@ -77,7 +77,7 @@ router.get("/", async function(req, res){
 			aggArray[aggIdx] = thisAgg;
 		}
 	}
-	//res.log(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
+	//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
 
 	// read in the current agg ranges
 	var currentAggRanges = await utilities.find("currentaggranges", {}, {});
@@ -95,7 +95,7 @@ router.post("/updateteamvalue", async function(req, res){
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "allianceselection.updateteamvalue[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 
 	// var db = rq.db;    was req
 	

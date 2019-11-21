@@ -1,6 +1,6 @@
-var express = require("express");
-var router = express.Router();
-var utilities = require('../utilities');
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
+const utilities = require('../utilities');
 
 router.all('/*', async (req, res, next) => {
 	//Require viewer-level authentication for every method in this route.
@@ -18,7 +18,7 @@ router.get("/", async function(req, res){
 router.get("/rankings", async function(req, res){
 	
 	var thisFuncName = "reports.rankings[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 
 	var rankings = await utilities.find("currentrankings", {}, {sort:{rank: 1}});
 	if (!rankings)
@@ -33,15 +33,15 @@ router.get("/rankings", async function(req, res){
 router.get("/finishedmatches", async function(req, res){
 	
 	var thisFuncName = "reports.finishedmatches[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
-	res.log(thisFuncName + 'event_key=' + event_key);
+	logger.debug(thisFuncName + 'event_key=' + event_key);
 
 	// Match history info
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : event_key}, {sort: {time: -1}});
-	//res.log(thisFuncName + 'matches=' + JSON.stringify(matches));
+	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 	res.render("./reports/finishedmatches", {
 		title: "Matches",
 		matches: matches
@@ -98,7 +98,7 @@ router.get("/upcoming", async function(req, res){
 		var matches = await utilities.find("matches", query, {sort: {time: 1}});
 		// TODO what was 'e'?			
 		// if(e)
-		// 	return res.log(e);
+		// 	return logger.debug(e);
 		//if no results, send empty array for view to deal with
 		if(!matches)
 			return res.render('./reports/upcoming', { title:"Upcoming", matches: [] });
@@ -117,7 +117,7 @@ router.get("/upcoming", async function(req, res){
 		var matches = await utilities.find("matches", {event_key: req.event.key, "alliances.blue.score": -1}, {sort: {time: 1}});
 		// TODO what was 'e'?
 		// if(e)
-		// 	return res.log(e);
+		// 	return logger.debug(e);
 		//if no results, send empty array for view to deal with
 		if(!matches)
 			return res.render('./reports/upcoming', { 
@@ -138,14 +138,14 @@ router.get("/upcoming", async function(req, res){
 router.get("/teamintel", async function(req, res){
 	
 	var thisFuncName = "reports.teamintel*[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	var teamKey = req.query.team;
 	if (!teamKey) {
 		res.redirect("/?alert=No team specified in Reports page.");
 		return;
 	}
-	res.log(thisFuncName + 'teamKey=' + teamKey);
+	logger.debug(thisFuncName + 'teamKey=' + teamKey);
 	
 	// var rankCol = db.get("currentrankings");
 	// var teamsCol = db.get('currentteams');
@@ -159,7 +159,7 @@ router.get("/teamintel", async function(req, res){
 	
 	var event_key = req.event.key;
 	var event_year = req.event.year;
-	res.log(event_year);
+	logger.debug(event_year);
 	
 	// Team details
 	var teamFind = await utilities.find("currentteams", { "key" : teamKey }, {});
@@ -191,24 +191,24 @@ router.get("/teamintel", async function(req, res){
 		if (pitFind[0].data1)
 			pitData1 = pitFind[0].data1;
 	}
-	//res.log(thisFuncName + 'pitData=' + JSON.stringify(pitData));
+	//logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
 
 	// Pit data layout
 	var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
-	//res.log(thisFuncName + 'layout=' + JSON.stringify(layout));
+	//logger.debug(thisFuncName + 'layout=' + JSON.stringify(layout));
 	
 	// Pull in individual scouting data for this team, for this event, to enhance the match data
-	res.log(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey + ',event_key=' + event_key);
+	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey + ',event_key=' + event_key);
 	var aggFind = await utilities.find("scoringdata", {"team_key": teamKey, "event_key": event_key}, {});
 	// Build a map of match_key->data
 	var matchDataMap = {};
 	if (aggFind && aggFind.length > 0) {
 		for (var mDMidx = 0; mDMidx < aggFind.length; mDMidx++) {
 			var thisTeamMatch = aggFind[mDMidx];
-			//res.log(thisFuncName + 'Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
+			//logger.debug(thisFuncName + 'Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
 			if (thisTeamMatch.data)
 			{
-				//res.log(thisFuncName + 'Adding data to map');
+				//logger.debug(thisFuncName + 'Adding data to map');
 				matchDataMap[thisTeamMatch.match_key] = thisTeamMatch.data;
 			}
 		}
@@ -218,16 +218,16 @@ router.get("/teamintel", async function(req, res){
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : event_key, $or: [{"alliances.blue.team_keys": teamKey}, {"alliances.red.team_keys": teamKey}]}, {sort: {time: -1}});
 	if (matches && matches.length > 0) {
 		for (var matchesIdx = 0; matchesIdx < matches.length; matchesIdx++) {
-			//res.log(thisFuncName + 'For match ' + matches[matchesIdx].key);
+			//logger.debug(thisFuncName + 'For match ' + matches[matchesIdx].key);
 			var thisScoreData = matchDataMap[matches[matchesIdx].key];
 			if (thisScoreData)
 			{
-				//res.log(thisFuncName + 'Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
+				//logger.debug(thisFuncName + 'Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
 				matches[matchesIdx].scoringdata = thisScoreData;
 			}
 		}
 	}
-	//res.log(thisFuncName + 'matches=' + JSON.stringify(matches));
+	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
@@ -247,7 +247,7 @@ router.get("/teamintel", async function(req, res){
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
 		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-			//res.log(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -255,13 +255,13 @@ router.get("/teamintel", async function(req, res){
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggFind = await utilities.aggregate("scoringdata", aggQuery);
 	var aggresult = {};
 	if (aggFind && aggFind[0])
 		aggresult = aggFind[0];
-	//res.log(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -281,10 +281,10 @@ router.get("/teamintel", async function(req, res){
 			aggTable.push(aggRow);
 		}
 	}
-	//res.log(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	//logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 
-	//res.log(thisFuncName + 'pitData=' + JSON.stringify(pitData));
-	//res.log(thisFuncName + 'pitData1=' + JSON.stringify(pitData1));
+	//logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
+	//logger.debug(thisFuncName + 'pitData1=' + JSON.stringify(pitData1));
 
 	// read in the current agg ranges
 	currentAggFind = await utilities.find("currentaggranges", {}, {});
@@ -309,14 +309,14 @@ router.get("/teamintel", async function(req, res){
 router.get("/teamintelhistory", async function(req, res){
 	
 	var thisFuncName = "reports.teamintelhistory*[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	var teamKey = req.query.team;
 	if (!teamKey) {
 		res.redirect("/?alert=No team specified in Reports page.");
 		return;
 	}
-	res.log(thisFuncName + 'teamKey=' + teamKey);
+	logger.debug(thisFuncName + 'teamKey=' + teamKey);
 	
 	// need the current year to see data
 	var year = (new Date()).getFullYear();
@@ -344,20 +344,20 @@ router.get("/teamintelhistory", async function(req, res){
 		});
 	}
 	var team = teamsFind[0];
-	//res.log(thisFuncName + 'team=' + JSON.stringify(team));
+	//logger.debug(thisFuncName + 'team=' + JSON.stringify(team));
 
 	// Pull in ALL individual scouting data for this team, for this event, to enhance the match data
-	res.log(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey);
+	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey);
 	var aggFind = await utilities.find("scoringdata", {"team_key": teamKey, "year": year}, {});
 	// Build a map of match_key->data
 	var matchDataMap = {};
 	if (aggFind && aggFind.length > 0) {
 		for (var mDMidx = 0; mDMidx < aggFind.length; mDMidx++) {
 			var thisTeamMatch = aggFind[mDMidx];
-			//res.log(thisFuncName + 'Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
+			//logger.debug(thisFuncName + 'Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
 			if (thisTeamMatch.data)
 			{
-				//res.log(thisFuncName + 'Adding data to map');
+				//logger.debug(thisFuncName + 'Adding data to map');
 				matchDataMap[thisTeamMatch.match_key] = thisTeamMatch.data;
 			}
 		}
@@ -368,16 +368,16 @@ router.get("/teamintelhistory", async function(req, res){
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "time": { $gt: yearInt}, $or: [{"alliances.blue.team_keys": teamKey}, {"alliances.red.team_keys": teamKey}]}, {sort: {time: -1}});
 	if (matches && matches.length > 0) {
 		for (var matchesIdx = 0; matchesIdx < matches.length; matchesIdx++) {
-			//res.log(thisFuncName + 'For match ' + matches[matchesIdx].key);
+			//logger.debug(thisFuncName + 'For match ' + matches[matchesIdx].key);
 			var thisScoreData = matchDataMap[matches[matchesIdx].key];
 			if (thisScoreData)
 			{
-				//res.log(thisFuncName + 'Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
+				//logger.debug(thisFuncName + 'Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
 				matches[matchesIdx].scoringdata = thisScoreData;
 			}
 		}
 	}
-	//res.log(thisFuncName + 'matches=' + JSON.stringify(matches));
+	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
@@ -397,7 +397,7 @@ router.get("/teamintelhistory", async function(req, res){
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
 		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-			//res.log(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -405,13 +405,13 @@ router.get("/teamintelhistory", async function(req, res){
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggFind = await utilities.aggregate("scoringdata", aggQuery);
 	var aggresult = {};
 	if (aggFind && aggFind[0])
 		aggresult = aggFind[0];
-	//res.log(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -431,10 +431,10 @@ router.get("/teamintelhistory", async function(req, res){
 			aggTable.push(aggRow);
 		}
 	}
-	//res.log(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	//logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 
-	//res.log(thisFuncName + 'pitData=' + JSON.stringify(pitData));
-	//res.log(thisFuncName + 'pitData1=' + JSON.stringify(pitData1));
+	//logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
+	//logger.debug(thisFuncName + 'pitData1=' + JSON.stringify(pitData1));
 
 	res.render("./reports/teamintelhistory", {
 		title: "Intel History: Team " + teamKey.substring(3),
@@ -448,14 +448,14 @@ router.get("/teamintelhistory", async function(req, res){
 router.get("/matchintel*", async function(req, res){
 	
 	var thisFuncName = "reports.matchintel*[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	var matchKey = req.query.key;
 	if (!matchKey) {
 		res.redirect("/?alert=No match key specified in Match Intel page.");
 		return;
 	}
-	res.log(thisFuncName + 'matchKey=' + matchKey);
+	logger.debug(thisFuncName + 'matchKey=' + matchKey);
 	
 	// var matchCol = db.get('matches');
 	//var teamsCol = db.get('teams');
@@ -468,7 +468,7 @@ router.get("/matchintel*", async function(req, res){
 	if (matchFind && matchFind[0])
 		match = matchFind[0];
 	
-	//res.log(thisFuncName + 'match=' + JSON.stringify(match));
+	//logger.debug(thisFuncName + 'match=' + JSON.stringify(match));
 	res.render("./reports/matchintel", {
 		title: "Intel: Match "+matchKey.substring(matchKey.indexOf('qm')+2),
 		match: match
@@ -478,14 +478,14 @@ router.get("/matchintel*", async function(req, res){
 router.get("/teammatchintel*", async function(req, res){
 	
 	var thisFuncName = "reports.teammatchintel*[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	var match_team_key = req.query.key;
 	if (!match_team_key) {
 		res.redirect("/?alert=No team-match key specified in Team Match Intel page.");
 		return;
 	}
-	res.log(thisFuncName + 'teamMatchKey=' + match_team_key);
+	logger.debug(thisFuncName + 'teamMatchKey=' + match_team_key);
 	
 	// var scoringDataCol = db.get('scoringdata');
 	//var teamsCol = db.get('teams');
@@ -529,7 +529,7 @@ router.get("/teammatchintel*", async function(req, res){
 	}
 	
 	
-	//res.log(thisFuncName + 'teammatch=' + JSON.stringify(teammatch));
+	//logger.debug(thisFuncName + 'teammatch=' + JSON.stringify(teammatch));
 	res.render("./reports/teammatchintel", {
 		title: `Intel: ${matchType} ${matchNum} Team ${teamNum}`,
 		layout: layout,
@@ -542,7 +542,7 @@ router.get("/teammatchintel*", async function(req, res){
 router.get("/alliancestats", async function(req, res) {
 	
 	var thisFuncName = "reports.alliancestats[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -559,7 +559,7 @@ router.get("/alliancestats", async function(req, res) {
 	}
 	var teams = req.query.teams;
 	var teamList = req.query.teams.split(',');
-	res.log(thisFuncName + 'teamList=' + JSON.stringify(teamList));
+	logger.debug(thisFuncName + 'teamList=' + JSON.stringify(teamList));
 
 	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	var aggQuery = [];
@@ -577,19 +577,19 @@ router.get("/alliancestats", async function(req, res) {
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggR = await utilities.aggregate("scoringdata", aggQuery);
 	var aggresult = {};
 	if (aggR)
 		aggresult = aggR;
-	res.log(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Build a map of the result rows by team key
 	var aggRowsByTeam = {};
 	for (var resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
 		aggRowsByTeam[ aggresult[resultIdx]["_id"] ] = aggresult[resultIdx];
-	res.log( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
+	logger.debug( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
 
 	// Unspool N rows of aggregate results into tabular form
 	var avgTable = [];
@@ -614,8 +614,8 @@ router.get("/alliancestats", async function(req, res) {
 			maxTable.push(maxRow);
 		}
 	}
-	res.log(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
-	res.log(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
+	logger.debug(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
+	logger.debug(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
 
 	// read in the current agg ranges
 	var currentAggR = await utilities.find("currentaggranges", {}, {});
@@ -636,7 +636,7 @@ router.get("/alliancestats", async function(req, res) {
 router.get("/teamdata", async function(req, res) {
 	
 	var thisFuncName = "reports.teamdata[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 
 	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -650,7 +650,7 @@ router.get("/teamdata", async function(req, res) {
 	if( !teamKey ){
 		return res.redirect("/?alert=Must specify team key for reports/teamdata");
 	}
-	res.log(`${thisFuncName} teamKey: ${teamKey}`);
+	logger.debug(`${thisFuncName} teamKey: ${teamKey}`);
 
 	// get the specified team object
 	var teamFind = await utilities.find("currentteams", {"key": teamKey}, {});
@@ -658,7 +658,7 @@ router.get("/teamdata", async function(req, res) {
 	if (teamFind && teamFind[0])
 		team = teamFind[0];
 		
-	res.log(`${thisFuncName} team: ${JSON.stringify(team)}`);
+	logger.debug(`${thisFuncName} team: ${JSON.stringify(team)}`);
 
 	// get the scoring data for the matches
 	var scoringFind = await utilities.find("scoringdata", {"team_key": teamKey, "year": event_year, "event_key": event_key}, {sort: {"match_number": -1}});
@@ -666,12 +666,12 @@ router.get("/teamdata", async function(req, res) {
 	if (scoringFind)
 		matches = scoringFind;
 
-	res.log(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 
-	res.log(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});
@@ -691,7 +691,7 @@ router.get("/teamdata", async function(req, res) {
 router.get("/matchdata", async function(req, res) {
 	
 	var thisFuncName = "reports.matchdata[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -705,7 +705,7 @@ router.get("/matchdata", async function(req, res) {
 	if( !matchKey ){
 		return res.redirect("/?alert=Must specify match key for reports/matchdata");
 	}
-	res.log(`${thisFuncName} matchKey: ${matchKey}`);
+	logger.debug(`${thisFuncName} matchKey: ${matchKey}`);
 
 	// get the specified match object
 	var matchFind = await utilities.find("matches", {"key": matchKey}, {});
@@ -713,7 +713,7 @@ router.get("/matchdata", async function(req, res) {
 	if (matchFind && matchFind[0])
 		match = matchFind[0];
 		
-	res.log(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.debug(`${thisFuncName} match: ${JSON.stringify(match)}`);
 
 	// get the scoring data for the match
 	var scoringFind = await utilities.find("scoringdata", {"match_key": matchKey}, {});
@@ -721,12 +721,12 @@ router.get("/matchdata", async function(req, res) {
 	if (scoringFind)
 		matches = scoringFind;
 
-	res.log(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 
-	res.log(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});
@@ -746,7 +746,7 @@ router.get("/matchdata", async function(req, res) {
 router.get("/matchmetrics", async function(req, res) {
 	
 	var thisFuncName = "reports.matchmetrics[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -762,7 +762,7 @@ router.get("/matchmetrics", async function(req, res) {
 	if( !matchKey ){
 		return res.redirect("/?alert=Must specify match key for reports/matchmetrics");
 	}
-	res.log(`${thisFuncName} matchKey: ${matchKey}`);
+	logger.debug(`${thisFuncName} matchKey: ${matchKey}`);
 
 	// get the specified match object
 	var matchFind = await utilities.find("matches", {"key": matchKey}, {});
@@ -770,7 +770,7 @@ router.get("/matchmetrics", async function(req, res) {
 	if (matchFind && matchFind[0])
 		match = matchFind[0];
 		
-	res.log(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.debug(`${thisFuncName} match: ${JSON.stringify(match)}`);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
 	// db.scoringdata.aggregate( [ 
@@ -794,13 +794,13 @@ router.get("/matchmetrics", async function(req, res) {
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 	}
 	aggQuery.push({ $group: groupClause });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggR = await utilities.aggregate("scoringdata", aggQuery);
 	var aggresult = {};
 	if (aggR && aggR[0])
 		aggresult = aggR[0];
-	//res.log(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -820,13 +820,13 @@ router.get("/matchmetrics", async function(req, res) {
 	aggQuery.push({ $match : { "team_key": {$in: blueAllianceArray}, "event_key": event_key } });
 	// reuse prior groupClause
 	aggQuery.push({ $group: groupClause });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggR2 = await utilities.aggregate("scoringdata", aggQuery);
 	aggresult = {};
 	if (aggR2 && aggR2[0])
 		aggresult = aggR2[0];
-	//res.log(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	// Utilize pointer to aggTable to line up data
@@ -839,7 +839,7 @@ router.get("/matchmetrics", async function(req, res) {
 		}
 	}
 
-	res.log(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});
@@ -858,7 +858,7 @@ router.get("/matchmetrics", async function(req, res) {
 router.get("/metricsranked", async function(req, res){
 	
 	var thisFuncName = "reports.metricsranked[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -870,7 +870,7 @@ router.get("/metricsranked", async function(req, res){
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
-	res.log(thisFuncName + 'event_key=' + event_key);
+	logger.debug(thisFuncName + 'event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will combo ALL teams
 	// db.scoringdata.aggregate( [ 
@@ -891,7 +891,7 @@ router.get("/metricsranked", async function(req, res){
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
 		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-			//res.log(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			//groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			//groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -899,7 +899,7 @@ router.get("/metricsranked", async function(req, res){
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggR = await utilities.aggregate("scoringdata", aggQuery);
 	var aggData = [];
@@ -907,7 +907,7 @@ router.get("/metricsranked", async function(req, res){
 	if (aggR)
 		aggData = aggR;
 		//aggresult = docs[0];
-	//res.log(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool rows of aggregate results into tabular form - update values as higher values found
 	var aggTable = [];
@@ -943,7 +943,7 @@ router.get("/metricsranked", async function(req, res){
 			aggTable.push(aggRow);
 		}
 	}
-	res.log(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 	
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});
@@ -961,7 +961,7 @@ router.get("/metricsranked", async function(req, res){
 router.get("/metrics", async function(req, res){
 	
 	var thisFuncName = "reports.metrics[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -972,7 +972,7 @@ router.get("/metrics", async function(req, res){
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
-	res.log(thisFuncName + 'event_key=' + event_key);
+	logger.debug(thisFuncName + 'event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will combo ALL teams
 	// db.scoringdata.aggregate( [ 
@@ -993,7 +993,7 @@ router.get("/metrics", async function(req, res){
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
 		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-			//res.log(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -1001,13 +1001,13 @@ router.get("/metrics", async function(req, res){
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggR = await utilities.aggregate("scoringdata", aggQuery);
 	var aggresult = {};
 	if (aggR && aggR[0])
 		aggresult = aggR[0];
-	//res.log(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -1027,7 +1027,7 @@ router.get("/metrics", async function(req, res){
 			aggTable.push(aggRow);
 		}
 	}
-	//res.log(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	//logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 	
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});
@@ -1045,14 +1045,14 @@ router.get("/metrics", async function(req, res){
 router.get("/metricintel*", async function(req, res){
 	
 	var thisFuncName = "reports.metric*[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	var metricKey = req.query.key;
 	if (!metricKey) {
 		res.redirect("/?alert=No metric key specified in Metric Intel page.");
 		return;
 	}
-	res.log(thisFuncName + 'metricKey=' + metricKey);
+	logger.debug(thisFuncName + 'metricKey=' + metricKey);
 	
 	// var aggCol = db.get('scoringdata');
 	// var currentCol = db.get("current");
@@ -1061,7 +1061,7 @@ router.get("/metricintel*", async function(req, res){
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
-	res.log(thisFuncName + 'event_key=' + event_key);
+	logger.debug(thisFuncName + 'event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will output ALL teams
 	// db.scoringdata.aggregate( [ 
@@ -1088,7 +1088,7 @@ router.get("/metricintel*", async function(req, res){
 	sortClause[sortKey] = -1;
 
 	aggQuery.push({ $group: groupClause }, { $sort: sortClause });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggdata = await utilities.aggregate("scoringdata", aggQuery);
 
@@ -1105,7 +1105,7 @@ router.get("/metricintel*", async function(req, res){
 		}
 	}
 	
-	//res.log(thisFuncName + 'aggdata=' + JSON.stringify(aggdata));
+	//logger.debug(thisFuncName + 'aggdata=' + JSON.stringify(aggdata));
 	
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});
@@ -1127,7 +1127,7 @@ router.get("/metricintel*", async function(req, res){
 router.get("/allteammetrics", async function(req, res){
 	
 	var thisFuncName = "reports.allteammetrics[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -1138,7 +1138,7 @@ router.get("/allteammetrics", async function(req, res){
 	// for later querying by event_key
 	var event_key = req.event.key;
 	var event_year = req.event.year;
-	res.log(thisFuncName + 'event_key=' + event_key);
+	logger.debug(thisFuncName + 'event_key=' + event_key);
 	
 	// get the current rankings
 	var rankFind = await utilities.find("currentrankings", {}, {});
@@ -1147,10 +1147,10 @@ router.get("/allteammetrics", async function(req, res){
 		rankings = rankFind;
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-		//res.log(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 	}
-	//res.log(thisFuncName + 'rankMap=' + JSON.stringify(rankMap));
+	//logger.debug(thisFuncName + 'rankMap=' + JSON.stringify(rankMap));
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
 	// db.scoringdata.aggregate( [ 
@@ -1180,14 +1180,14 @@ router.get("/allteammetrics", async function(req, res){
 	}
 	aggQuery.push({ $group: groupClause });
 	aggQuery.push({ $sort: { _id: 1 } });
-	//res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggR = await utilities.aggregate("scoringdata", aggQuery);
 	var aggArray = [];
 	if (aggR)
 		aggArray = aggR;
 		
-	//res.log(thisFuncName + 'rankMap=' + rankMap);
+	//logger.debug(thisFuncName + 'rankMap=' + rankMap);
 	
 	// Rewrite data into display-friendly values
 	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
@@ -1207,7 +1207,7 @@ router.get("/allteammetrics", async function(req, res){
 			aggArray[aggIdx] = thisAgg;
 		}
 	}
-	//res.log(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
+	//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
 
 	// read in the current agg ranges
 	var currentAggFind = await utilities.find("currentaggranges", {}, {});

@@ -1,6 +1,6 @@
-var express = require('express');
-var router = express.Router();
-var utilities = require('../../utilities');
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
+const utilities = require('../../utilities');
 
 router.all('/*', async (req, res, next) => {
 	//Require GLOBAL-admin-level authentication for every method in this route.
@@ -32,7 +32,7 @@ router.get('/teams', async function(req, res){
  */
 router.post('/teams', async function(req, res){
 	
-	res.log(req.body);
+	logger.debug(req.body);
 	
 	var teamNumbersArray = [];
 	var teamInfoArray = [];
@@ -63,14 +63,14 @@ router.post('/teams', async function(req, res){
 		teamInfoArray[i] = await tbaPromiseArray[i];
 	}
 	
-	res.log(`Done with TBA call in ${Date.now() - startTime} ms`);
+	logger.debug(`Done with TBA call in ${Date.now() - startTime} ms`);
 	
 	//Go through teamInfoArray and splice out any item that contains errors
 	for(var i = 0; i < teamInfoArray.length; i++){
 		var thisTeamInfo = teamInfoArray[i];
 		//if obj contains error, remove it
 		if(thisTeamInfo.Errors){
-			res.log("Going to remove: " + JSON.stringify(thisTeamInfo));
+			logger.debug("Going to remove: " + JSON.stringify(thisTeamInfo));
 			teamInfoArray.splice(i, 1);
 			i--;
 		}
@@ -87,8 +87,8 @@ router.post('/teams', async function(req, res){
 		
 		let didFindDuplicate = false;
 		
-		res.log("================");
-		res.log("CHECKING TEAM " + thisTeamNum);
+		logger.debug("================");
+		logger.debug("CHECKING TEAM " + thisTeamNum);
 		
 		for(var j = 0; j < teamInfoNoDuplicates.length; j++){
 			
@@ -96,18 +96,18 @@ router.post('/teams', async function(req, res){
 			var thatTeamInfo = teamInfoArray[j];
 			var thatTeamNum = thatTeamInfo.team_number;
 			
-			res.log("CMP: " + thatTeamNum);
+			logger.debug("CMP: " + thatTeamNum);
 			
 			//if duplicat exists, set true
 			if(thisTeamNum == thatTeamNum){
 				didFindDuplicate = true;
-				res.log("MATCH: Removing duplicate " + thisTeamNum + " from team list", true);
+				logger.debug("MATCH: Removing duplicate " + thisTeamNum + " from team list", true);
 			}
 		}
 		//Add to new array if no duplicates exist.
 		if(!didFindDuplicate){
 			teamInfoNoDuplicates.push(thisTeamInfo);
-			res.log("PUSHING " + thisTeamNum);
+			logger.debug("PUSHING " + thisTeamNum);
 		}
 	}
 	
@@ -130,7 +130,7 @@ router.post('/teams', async function(req, res){
 router.post('/api/team', async function(req, res){
 	
 	if(!req.body.team_number){
-		res.log("manage/manualinput/api/team error: No team number specified.", true);
+		logger.debug("manage/manualinput/api/team error: No team number specified.", true);
 		return res.status(400).send("No team number specified.");
 	}
 	
@@ -139,7 +139,7 @@ router.post('/api/team', async function(req, res){
 	
 	//if not a number, return with error 400
 	if(isNaN(team_number)){
-		res.log("manage/manualinput/api/team error: No team number specified.", true);
+		logger.debug("manage/manualinput/api/team error: No team number specified.", true);
 		return res.status(400).send("Team number was not parseable.");
 	}
 	
@@ -150,7 +150,7 @@ router.post('/api/team', async function(req, res){
 	
 	res.status(200).send(teamInfoResponse);
 	
-	res.log(teamInfoResponse);
+	logger.debug(teamInfoResponse);
 });
 
 /**
@@ -164,7 +164,7 @@ router.get('/matchschedule', async function(req, res){
 	
 	var event_key = req.event.key;
 	
-	res.log(`${thisFuncName} Getting matches`);
+	logger.debug(`${thisFuncName} Getting matches`);
 	
 	var matches = await utilities.find("matches", {"event_key": event_key});
 	
@@ -232,7 +232,7 @@ router.post('/matchschedule', async function(req, res){
 		}
 	}
 	
-	res.log(matchArray);
+	logger.debug(matchArray);
 	
 	//We now have an array, comprised of every user match input, separated by each match.
 	//We need to rearrange the data to fit our database needs.
@@ -250,7 +250,7 @@ router.post('/matchschedule', async function(req, res){
 		}
 	}
 	
-	res.log(matchArrayFiltered);
+	logger.debug(matchArrayFiltered);
 	
 	//Now, we can rearrange our data.
 	var matchArrayFormatted = [];
@@ -293,7 +293,7 @@ router.post('/matchschedule', async function(req, res){
 		}
 	}
 	
-	res.log(matchArrayFormatted);
+	logger.debug(matchArrayFormatted);
 	
 	//Remove matches from db
 	await utilities.remove("matches", {"event_key": event_key});
@@ -393,7 +393,7 @@ router.post('/matches', async function(req, res){
 	await utilities.insert("matches", matches);
 	
 	var endTime = Date.now();
-	res.log(`Done in ${endTime - startTime} ms`);
+	logger.debug(`Done in ${endTime - startTime} ms`);
 	
 	//// Recalculate rankings
 	/*

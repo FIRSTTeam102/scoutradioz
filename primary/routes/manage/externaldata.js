@@ -1,7 +1,7 @@
-const express = require('express');
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
 const tba_utils = require('../../tba_utils');
-const router = express.Router();
 
 router.all('/*', async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
@@ -18,7 +18,7 @@ router.all('/*', async (req, res, next) => {
 router.get("/events", async function(req, res) {
 	
 	var thisFuncName = "externaldata.events[get]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var events = {};
 	
@@ -30,9 +30,9 @@ router.get("/events", async function(req, res) {
 	if (!year)
 	{
 		year = (new Date()).getFullYear();
-		res.log(thisFuncName + 'No year specified, defaulting to ' + year);
+		logger.debug(thisFuncName + 'No year specified, defaulting to ' + year);
 	}
-	res.log(thisFuncName + 'Year: ' + year);
+	logger.debug(thisFuncName + 'Year: ' + year);
 
 	var events = await utilities.find("events", {"year": parseInt(year)},{sort: {"start_date": 1, "end_date": 1, "name": 1}});
 		
@@ -40,7 +40,7 @@ router.get("/events", async function(req, res) {
 	var distinctYears = await utilities.distinct("events", "year");
 	var uniqueYears = distinctYears.sort();
 
-	res.log(thisFuncName + "uniqueYears=" + uniqueYears);
+	logger.debug(thisFuncName + "uniqueYears=" + uniqueYears);
 	
 	res.render("./manage/events", {
 		title: "Events",
@@ -66,7 +66,7 @@ router.post("/events", async function(req, res) {
 	
 	//Set up TBA url
 	var url = `events/${year}/simple`;
-	res.log(thisFuncName + "url=" + url);
+	logger.debug(thisFuncName + "url=" + url);
 	
 	//Submit request to TBA
 
@@ -94,7 +94,7 @@ router.post("/events", async function(req, res) {
 router.get("/matches", async function(req, res) {
 	
 	var thisFuncName = "externaldata.matches[get]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var matches = {};
 	
@@ -104,10 +104,10 @@ router.get("/matches", async function(req, res) {
     var eventId = req.query.eventId;
 	if (!eventId)
 	{
-		res.log(thisFuncName + 'No event specified');
+		logger.debug(thisFuncName + 'No event specified');
 		res.redirect("/manage/data/events");
 	}
-	res.log(thisFuncName + 'eventId=' + eventId);
+	logger.debug(thisFuncName + 'eventId=' + eventId);
 
 	// Read matches from DB for specified event
 	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
@@ -127,30 +127,30 @@ router.get("/matches", async function(req, res) {
 router.post("/matches", async function(req, res) {
 	
 	var thisFuncName = "externaldata.matches[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	// var matchCol = db.get("matches");
 	// var eventCol = db.get("events");
 
     // Get our form value(s)
     var eventId = req.body.eventId;
-	res.log(thisFuncName + 'eventId=' + eventId);
+	logger.debug(thisFuncName + 'eventId=' + eventId);
 	
 	//Set up TBA api request
 	var url = `event/${eventId}/matches`;
-	res.log(thisFuncName + "url=" + url);
+	logger.debug(thisFuncName + "url=" + url);
 	
 	//Request from TBA
 	var eventData = await utilities.requestTheBlueAlliance(url);
 	var matches = JSON.parse(eventData);
-	res.log(matches);
+	logger.debug(`${thisFuncName} matches= ${JSON.stringify(matches)}`);
 
 	//if request was invalid, redirect to admin page with alert message
 	if(matches.length == undefined || matches.length == 0){
 		return res.redirect("/manage?alert=Could not get matches from TBA for specified event " + eventId);
 	}
 	
-	res.log(thisFuncName + 'Found ' + matches.length + ' data for event ' + eventId);
+	logger.debug(thisFuncName + 'Found ' + matches.length + ' data for event ' + eventId);
 	
 	// First delete existing match data for the given event
 	await utilities.remove("matches", {"event_key": eventId});
@@ -170,7 +170,7 @@ router.post("/matches", async function(req, res) {
 router.get("/teams", async function(req, res) {
 	
 	var thisFuncName = "externaldata.teams[get]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	// var teamCol = db.get("teams");
 	

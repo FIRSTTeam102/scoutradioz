@@ -443,7 +443,7 @@ router.post('/login/createpassword', async function(req, res) {
 	
 	req.logIn(user, function(err){
 		
-		if(err) res.log(err);
+		if(err) logger.error(err);
 		
 		res.send({
 			redirect_url: "/?alert=Set password successfully."
@@ -570,7 +570,7 @@ router.get('/switchorg', async function(req, res){
  *
 router.get('/resetpassword', async function(req, res){
 	if( !require('./checkauthentication')(req, res, 'admin') ){
-		return res.log('authentication failed for /login/changepassword');
+		return logger.debug('authentication failed for /login/changepassword');
 	}
 	
 	var users = await utilities.find("users", {}, {sort:{ "name": 1 }});
@@ -588,7 +588,7 @@ router.get('/resetpassword', async function(req, res){
  *
 router.post('/resetpassword', async function(req, res){
 	if( !require('./checkauthentication')(req, res, 'admin') ){
-		return res.log('authentication failed for /login/resetpassword');
+		return logger.debug('authentication failed for /login/resetpassword');
 	}
 	
 	var userToReset = req.body.username;
