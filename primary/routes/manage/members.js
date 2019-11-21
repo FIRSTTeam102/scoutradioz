@@ -14,7 +14,7 @@ router.get("/", async function(req, res) {
 	
 	var org_key = req.user.org_key;
 	
-	var orgMembers = await utilities.find("users", {org_key: org_key, name: {$ne: "default_user"}}, {sort: {"name": 1}})
+	var orgMembers = await utilities.find("users", {org_key: org_key, visible: true}, {sort: {"name": 1}})
 	var org = await utilities.findOne("orgs", {org_key: org_key});
 	
 	var roles = await utilities.find("roles", { access_level: { $lte: req.user.role.access_level }});
@@ -116,7 +116,8 @@ router.post("/addmember", async function(req, res){
 		event_info:{
 			present: false,
 			assigned: false
-		}
+		},
+		visible: true,
 	}
 	
 	var writeResult = await utilities.insert("users", insertQuery);
@@ -218,8 +219,9 @@ router.post("/deletemember", async function(req, res){
 	if(req.body.memberId){
 		
 		var memberId = req.body.memberId;
+		var orgKey = req.user.org_key;
 		
-		var member = await utilities.findOne("users", {_id: memberId});
+		var member = await utilities.findOne("users", {_id: memberId, org_key: orgKey});
 		var memberRole = await utilities.findOne("roles", {role_key: member.role_key});
 		
 		res.log(`Request to delete member ${memberId} by user ${JSON.stringify(req.user)}`, true);
@@ -247,9 +249,9 @@ router.post("/deletemember", async function(req, res){
 
 router.get('/passwords', async function(req, res){
 	
-	var org_key = req.user.org_key;
+	var orgKey = req.user.org_key;
 	
-	var orgMembers = await utilities.find("users", {org_key: org_key, name: {$ne: "default_user"}}, {sort: {"name": 1}})
+	var orgMembers = await utilities.find("users", {org_key: orgKey, visible: true}, {sort: {"name": 1}})
 	
 	var roles = await utilities.find("roles", { access_level: { $lte: req.user.role.access_level }});
 	
@@ -311,8 +313,11 @@ router.post('/resetpassword', async function (req, res) {
 
 router.get("/present", async function(req, res) {
 	
-	var users = await utilities.find("users", {}, {sort: {"name": 1}});
-	//console.log("members.present: users=" + JSON.stringify(users));
+	//2019-11-20 JL: updated to only work with members of the right organization.
+	const orgKey = req.user.org_key;
+	
+	var users = await utilities.find("users", {org_key: orgKey, visible: true}, {sort: {"name": 1}});
+	logger.trace("members.present: users=" + JSON.stringify(users));
 
 	res.render("./manage/present", {
 		title: "Assign Who Is Present",
@@ -322,7 +327,10 @@ router.get("/present", async function(req, res) {
 
 router.post("/updatepresent", async function(req, res){
 	
-	await utilities.update("users", {}, { $set: { "event_info.present" : "false" } }, {multi: true});
+	//2019-11-20 JL: updated to only work with members of the right organization.
+	const orgKey = req.user.org_key;
+	
+	await utilities.update("users", {org_key: orgKey}, { $set: { "event_info.present" : "false" } }, {multi: true});
 	
 	//Get a list of all present member IDs.
 	var allPresentMembers = [];
@@ -333,7 +341,7 @@ router.post("/updatepresent", async function(req, res){
 	
 	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
 	
-	var query = {"_id": {$in: allPresentMembers}};
+	var query = {"_id": {$in: allPresentMembers}, org_key: orgKey};
 	var update = {$set: {"event_info.present": true}};
 	
 	await utilities.update("users", query, update, {multi: true, castIds: true});
