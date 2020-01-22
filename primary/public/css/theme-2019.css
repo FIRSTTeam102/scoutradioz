@@ -1,28 +1,4 @@
 
-.theme-rounded-large{border-radius:18px;}
-.theme-rounded{border-radius:12px;}
-.theme-rounded-small{border-radius:6px;}
-
-/* For elements with rounded corners, that don't have all 4 corners rounded */
-.theme-rounded-large-tl{border-top-left-radius:18px;}
-.theme-rounded-large-tr{border-top-right-radius:18px;}
-.theme-rounded-large-bl{border-bottom-left-radius:18px;}
-.theme-rounded-large-br{border-bottom-right-radius:18px;}
-.theme-rounded-large-top{border-top-left-radius:18px;border-top-right-radius:18px;}
-.theme-rounded-large-bottom{border-bottom-left-radius:18px;border-bottom-right-radius:18px;}
-.theme-rounded-tl{border-top-left-radius:12px;}
-.theme-rounded-tr{border-top-right-radius:12px;}
-.theme-rounded-bl{border-bottom-left-radius:12px;}
-.theme-rounded-br{border-bottom-right-radius:12px;}
-.theme-rounded-top{border-top-left-radius:12px;border-top-right-radius:12px;}
-.theme-rounded-bottom{border-bottom-left-radius:12px;border-bottom-right-radius:12px;}
-.theme-rounded-small-tl{border-top-left-radius:6px;}
-.theme-rounded-small-tr{border-top-right-radius:6px;}
-.theme-rounded-small-bl{border-bottom-left-radius:6px;}
-.theme-rounded-small-br{border-bottom-right-radius:6px;}
-.theme-rounded-small-top{border-top-left-radius:6px;border-top-right-radius:6px;}
-.theme-rounded-small-bottom{border-bottom-left-radius:6px;border-bottom-right-radius:6px;}
-
 /* For input elements */
 .theme-input{
 	border-radius:12px;

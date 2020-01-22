@@ -4,13 +4,13 @@ div(class="w3-row")
 	- if (match.winning_alliance == 'blue') 
 		- outcome = "Blue won";
 	//-div(class="w3-col s12 m0")
-		div(class="theme-rounded theme-dim w3-padding w3-border")
+		div(class="rounded theme-dim w3-padding w3-border")
 			- var matchPrefix = "";
 			- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 			span #{matchPrefix.toUpperCase()} Match #{match.match_number}: 
 			span #{outcome}
 	//-Title for small screens
-	div(class="w3-col s12 m0 theme-rounded theme-dim w3-border")
+	div(class="w3-col s12 m0 rounded theme-dim w3-border")
 		div(class="w3-col s12 w3-padding")
 			div(class="")
 				- var matchPrefix = "";
@@ -19,27 +19,27 @@ div(class="w3-row")
 				span #{outcome}
 		div(class="w3-col s6")
 			a(href=`/reports/matchdata?key=${match.key}`)
-				div(class="w3-padding w3-small w3-border-right w3-border-top w3-border-gray theme-hover-white theme-rounded-bl")
+				div(class="w3-padding w3-small w3-border-right w3-border-top w3-border-gray theme-hover-white rounded-bl")
 					i Scout data
 		div(class="w3-col s6")
 			a(href=`/reports/matchintel?key=${match.key}`)
-				div(class="w3-padding w3-small w3-border-top w3-border-gray theme-hover-white theme-rounded-br")
+				div(class="w3-padding w3-small w3-border-top w3-border-gray theme-hover-white rounded-br")
 					i FIRST data
 	div(class="w3-col s12 m0 w3-tiny") &nbsp;
 	//-Title for medium screens
 	div(class="w3-col s0 m3 w3-padding-small")
-		div(class="w3-col theme-rounded theme-dim w3-border")
+		div(class="w3-col rounded theme-dim w3-border")
 			- var matchPrefix = "";
 			- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 			div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
 			div(class="w3-padding") #{outcome}
 			div(class="w3-col m6")
 				a(href=`/reports/matchdata?key=${match.key}`)
-					div(class="w3-padding-16 w3-small w3-border-right w3-border-top w3-border-gray theme-hover-white theme-rounded-bl") 
+					div(class="w3-padding-16 w3-small w3-border-right w3-border-top w3-border-gray theme-hover-white rounded-bl") 
 						i Scout data
 			div(class="w3-col m6")
 				a(href=`/reports/matchintel?key=${match.key}`)
-					div(class="w3-padding-16 w3-small w3-border-top w3-border-gray theme-hover-white theme-rounded-br") 
+					div(class="w3-padding-16 w3-small w3-border-top w3-border-gray theme-hover-white rounded-br") 
 						i FIRST data
 	//-Alliance container
 	div(class="w3-col s12 m9 w3-padding-small")
@@ -52,12 +52,12 @@ div(class="w3-row")
 		- else redContainerColor = "w3-white", redBorder = "thick-border"
 		//-The Blue alliance
 		div(class="w3-col s6 w3-padding-small")
-			div(class=`w3-col theme-rounded-small w3-border ${blueContainerColor} ${blueBorder}`)
+			div(class=`w3-col rounded-small w3-border ${blueContainerColor} ${blueBorder}`)
 				//-teams
-				div(class="w3-col s7 m6 l8 alliance-blue theme-rounded-small-tl theme-rounded-small-bl")
+				div(class="w3-col s7 m6 l8 alliance-blue rounded-small-tl rounded-small-bl")
 					//- not doing this with a loop because border needs to be specified
 					a(href=`/reports/teammatchintel?key=${match.key}_${blue1}`)
-						div(class="w3-padding alliance-hover-blue theme-rounded-small-tl")
+						div(class="w3-padding alliance-hover-blue rounded-small-tl")
 							if team && team.key == blue1
 								strong=blue1.substring(3)
 							else
@@ -69,14 +69,14 @@ div(class="w3-row")
 							else
 								span=blue2.substring(3)
 					a(href=`/reports/teammatchintel?key=${match.key}_${blue3}`)
-						div(class="w3-padding alliance-hover-blue theme-rounded-small-bl")
+						div(class="w3-padding alliance-hover-blue rounded-small-bl")
 							if team && team.key == blue3
 								strong=blue3.substring(3)
 							else
 								span=blue3.substring(3)
 				//-breakdown
-				div(class="w3-col s5 m6 l4 theme-rounded-small tr theme-rounded-small br")
-					div(class="w3-padding theme-rounded-small-tr")
+				div(class="w3-col s5 m6 l4 rounded-small tr rounded-small br")
+					div(class="w3-padding rounded-small-tr")
 						span Score:
 					div
 						span=match.alliances.blue.score
@@ -92,11 +92,11 @@ div(class="w3-row")
 									div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;") Docked Habitat Zone
 		//-The Red Alliance
 		div(class="w3-col s6 w3-padding-small")
-			div(class=`w3-col theme-rounded-small w3-border ${redContainerColor} ${redBorder}`)
-				div(class="w3-col s7 m6 l8 alliance-red theme-rounded-small-tl theme-rounded-small-bl")
+			div(class=`w3-col rounded-small w3-border ${redContainerColor} ${redBorder}`)
+				div(class="w3-col s7 m6 l8 alliance-red rounded-small-tl rounded-small-bl")
 					//- not doing this with a loop because border needs to be specified
 					a(href=`/reports/teammatchintel?key=${match.key}_${red1}`)
-						div(class="w3-padding alliance-hover-red theme-rounded-small-tl")
+						div(class="w3-padding alliance-hover-red rounded-small-tl")
 							if team && team.key == red1
 								strong=red1.substring(3)
 							else
@@ -108,13 +108,13 @@ div(class="w3-row")
 							else
 								span=red2.substring(3)
 					a(href=`/reports/teammatchintel?key=${match.key}_${red3}`)
-						div(class="w3-padding alliance-hover-red theme-rounded-small-bl")
+						div(class="w3-padding alliance-hover-red rounded-small-bl")
 							if team && team.key == red3
 								strong=red3.substring(3)
 							else
 								span=red3.substring(3)
-				div(class="w3-col s5 m6 l4 theme-rounded-small tr theme-rounded-small br")
-					div(class="w3-padding theme-rounded-small-tr")
+				div(class="w3-col s5 m6 l4 rounded-small tr rounded-small br")
+					div(class="w3-padding rounded-small-tr")
 						span Score:
 					div
 						span=match.alliances.red.score

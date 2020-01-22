@@ -88,12 +88,12 @@ block content
 					td(class="w3-mobile")
 						if match.data
 							a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`)
-								div(class="gear-btn theme-rounded theme-dim w3-padding w3-section w3-margin-left w3-margin-right")
+								div(class="gear-btn rounded theme-dim w3-padding w3-section w3-margin-left w3-margin-right")
 									span= match.team_key.substring(3)
 						else
 							- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 							a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
-								div(class=`gear-btn theme-rounded ${btnColor} w3-padding w3-section w3-margin-left w3-margin-right`)
+								div(class=`gear-btn rounded ${btnColor} w3-padding w3-section w3-margin-left w3-margin-right`)
 									span= match.team_key.substring(3)
 					td(class="w3-left-align")
 						a(href=`/reports/teamintel?team=${match.team_key}`)= match.team_nickname
