@@ -4,13 +4,13 @@ div(class="w3-row")
 	- if (match.winning_alliance == 'blue') 
 		- outcome = "Blue won";
 	//-div(class="w3-col s12 m0")
-		div(class="theme-rounded theme-gray w3-padding w3-border")
+		div(class="theme-rounded theme-dim w3-padding w3-border")
 			- var matchPrefix = "";
 			- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 			span #{matchPrefix.toUpperCase()} Match #{match.match_number}: 
 			span #{outcome}
 	//-Title for small screens
-	div(class="w3-col s12 m0 theme-rounded theme-gray w3-border")
+	div(class="w3-col s12 m0 theme-rounded theme-dim w3-border")
 		div(class="w3-col s12 w3-padding")
 			div(class="")
 				- var matchPrefix = "";
@@ -28,7 +28,7 @@ div(class="w3-row")
 	div(class="w3-col s12 m0 w3-tiny") &nbsp;
 	//-Title for medium screens
 	div(class="w3-col s0 m3 w3-padding-small")
-		div(class="w3-col theme-rounded theme-gray w3-border")
+		div(class="w3-col theme-rounded theme-dim w3-border")
 			- var matchPrefix = "";
 			- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 			div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
@@ -47,7 +47,7 @@ div(class="w3-row")
 		- var blue = match.alliances.blue.team_keys, red = match.alliances.red.team_keys;
 		- var blue1 = blue[0], blue2 = blue[1], blue3 = blue[2];
 		- var red1 = red[0], red2 = red[1], red3 = red[2];
-		- var blueContainerColor = "theme-gray", redContainerColor = "theme-gray", blueBorder = "", redBorder = "";
+		- var blueContainerColor = "theme-dim", redContainerColor = "theme-dim", blueBorder = "", redBorder = "";
 		- if (match.winning_alliance == 'blue') blueContainerColor = "w3-white", blueBorder = "thick-border";
 		- else redContainerColor = "w3-white", redBorder = "thick-border"
 		//-The Blue alliance

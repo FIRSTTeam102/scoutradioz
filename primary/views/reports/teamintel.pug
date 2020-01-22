@@ -170,7 +170,7 @@ block content
 				//-div(class="w3-row")
 					div(class="w3-col s12 m12 l2")
 						a(href=`/reports/matchintel?key=${match.key}`) 
-							div(class="theme-gray theme-hover-white w3-btn w3-block w3-border")
+							div(class="theme-dim theme-hover-white w3-btn w3-block w3-border")
 								- var matchPrefix = "";
 								- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 								- var outcome = "Tie!";
@@ -189,7 +189,7 @@ block content
 					div(class="w3-col s4 m2")
 						- var divClassBlue = 'w3-btn w3-block w3-border previousmatches-container ';
 						- if (match.winning_alliance == 'blue') divClassBlue += 'w3-white';
-						- else divClassBlue += 'theme-gray';
+						- else divClassBlue += 'theme-dim';
 						div(class=`${divClassBlue}`)
 							if (match.alliances.blue.score > -1)
 								span Score:
@@ -214,7 +214,7 @@ block content
 					div(class="w3-col s4 m2 l2")
 						- var divClassRed = 'w3-btn w3-block w3-border previousmatches-container ';
 						- if (match.winning_alliance == 'red') divClassRed += 'w3-white';
-						- else divClassRed += 'theme-gray';
+						- else divClassRed += 'theme-dim';
 						div(class=`${divClassRed}`)
 							if (match.alliances.red.score > -1)
 								span Score:

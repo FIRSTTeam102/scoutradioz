@@ -20,7 +20,7 @@ block content
 			- //make minute 2 digits
 			- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
 			div(class="w3-container")
-				div(class="w3-btn w3-block theme-gray")
+				div(class="w3-btn w3-block theme-dim")
 					- var matchPrefix = "";
 					- var comp_level = match[0].match_key.split("_")[1].substring(0,2)
 					- if (comp_level != 'qm') matchPrefix = "" + comp_level + "" + match.match_number + " ";

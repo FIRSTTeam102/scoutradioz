@@ -27,7 +27,7 @@ block content
 		.alliance-team[available=true]{
 			cursor: pointer;
 		}
-		.theme-gray{
+		.theme-dim{
 			border-radius: 0;
 			transition: 0s;
 		}
@@ -38,7 +38,7 @@ block content
 			div(class="w3-btn gear-btn w3-cyan" id="undo") Undo Last Action
 		div(class="w3-col s12 m6 l3 w3-padding-small")
 			div(class="w3-left")
-				div(id="undo" class="w3-btn theme-light-gray") Undo
+				div(id="undo" class="w3-btn theme-submit") Undo
 		div(class="w3-col s0 m6 l9") 
 			span &nbsp;
 		p(class="w3-hide-small") &nbsp;
@@ -47,7 +47,7 @@ block content
 				each alliance, i in alliances
 					- var allianceNum = i + 1;
 					div(class="w3-padding-small w3-col s12 m6 l3")
-						div(class="theme-gray w3-padding-large w3-col")
+						div(class="theme-dim w3-padding-large w3-col")
 							div(class="w3-col s0 m12") Alliance #{allianceNum}
 							div(class="w3-col s2 m0") 
 								p(class="w3-large") #{allianceNum}
@@ -68,7 +68,7 @@ block content
 				div(class="w3-col")
 					each team, i in sortedTeams
 						div(class="w3-col s4 m2 l1 w3-padding-small")
-							div(id=team.team_key available="true" class="theme-gray alliance-team w3-border w3-border-white")
+							div(id=team.team_key available="true" class="theme-dim alliance-team w3-border w3-border-white")
 								span=team.team_key.substring(3)
 		p(class="theme-spacer") &nbsp;
 		
