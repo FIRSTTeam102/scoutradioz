@@ -12,11 +12,11 @@ block content
 			each team in assignedTeams
 				if team.data
 					a(href=`/scouting/pit?team=${team.team_key}`) 
-						div(class="gear-btn w3-dark-grey w3-btn w3-section gear-margin-sides")
+						div(class="gear-btn w3-dark-grey w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 				else
 					a(href=`/scouting/pit?team=${team.team_key}`) 
-						div(class="gear-btn theme-link w3-btn w3-section gear-margin-sides")
+						div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 			p(class="theme-spacer")
 		if backupTeams.length > 0
@@ -24,11 +24,11 @@ block content
 			each team in backupTeams
 				if team.data
 					a(href=`/scouting/pit?team=${team.team_key}`) 
-						div(class="gear-btn w3-dark-grey w3-btn w3-section gear-margin-sides")
+						div(class="gear-btn w3-dark-grey w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 				else
 					a(href=`/scouting/pit?team=${team.team_key}`) 
-						div(class="gear-btn theme-link w3-btn w3-section gear-margin-sides")
+						div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 			p(class="theme-spacer")
 		if scoringMatches.length > 0
@@ -51,17 +51,17 @@ block content
 				h4 Match #{match.match_number} <br/> #{day} @ #{hour}:#{minute} 
 					if match.data
 						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
-							div(class="gear-btn theme-gray w3-btn w3-section gear-margin-sides")
+							div(class="gear-btn theme-dim w3-btn w3-section w3-margin-left w3-margin-right")
 								span= match.team_key.substring(3)
 					else
 						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
-							div(class=`gear-btn ${btnColor} theme-hover-white w3-btn w3-section gear-margin-sides`)
+							div(class=`gear-btn ${btnColor} theme-hover-white w3-btn w3-section w3-margin-left w3-margin-right`)
 								span= match.team_key.substring(3)
 			p(class="theme-spacer")
 		div(class="w3-container w3-padding-16")
 			a(href="/dashboard/pits") 
-				div(class="gear-btn theme-link w3-btn w3-section gear-margin-sides")
+				div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 					span One-off Pit Scouting
 			a(href="/dashboard/matches") 
-				div(class="gear-btn theme-link w3-btn w3-section gear-margin-sides")
+				div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 					span One-off Match Scouting
