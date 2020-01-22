@@ -1,4 +1,36 @@
-.w3-btn{box-shadow: none!important;}
+body {
+	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.strong{font-weight: bold}
+
+canvas, .canvas{
+	z-index: -1;
+	position: fixed;
+	left: 0;
+	top: 0;
+}
+
+select{
+	padding: 1px 0px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: white;
+	border-image: initial;
+}
+
+a:link{text-decoration: none;}
+
+a{color: inherit;}
+a:hover.text-link{text-decoration: underline;}
+
+
+/* For rounded corners */
+.w3-btn{
+	border-radius: 12px; /* Border radius rounded by 12 pixels */
+	transition: 0.2s;	/* Fade from color 1 to color 2 in 0.2 secs */
+	box-shadow: none!important;
+}
 
 .w3-no-border{border:none!important}
 .w3-no-focus,.w3-no-outline:focus {outline:0;}
@@ -6,11 +38,6 @@
 .gear-btn{ 
 	min-width:100px; 
 	margin: 15px 8px 0px 8px;
-}
-
-.gear-margin-sides{
-	margin-left: 8px!important;
-	margin-right: 8px!important;
 }
 
 .scouting-counter{
