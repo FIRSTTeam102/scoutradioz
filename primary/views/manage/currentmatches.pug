@@ -47,7 +47,7 @@ block content
 						button(class="w3-button theme-submit" onClick=`updateMatch('${match.key}')`) Update
 	br
 	form#resetmatches(name="resetmatches" method="post" action="/manage/currentevent/resetmatches")
-		button#btnSubmit(type="submit" class="w3-button theme-red theme-strong w3-text-white") RESET ALL MATCHES
+		button#btnSubmit(type="submit" class="w3-button theme-red strong w3-text-white") RESET ALL MATCHES
 	form#updatematchdata(name="updatematchdata" method="post" action="/manage/currentevent/updatematch")
 		input#matchId(type="hidden", name="matchId")
 	br 
