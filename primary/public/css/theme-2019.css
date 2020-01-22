@@ -1,19 +1,8 @@
 
-/* For input elements */
-.theme-input{
-	border-radius:12px;
-	border: 0;
-	
-	transition:0.2s;
-	
-	min-height:18px;
-	padding:9px;
-}
-textarea{padding:8px 12px;}
-
 /* 2020 THEME COLORS */
 :root{
 	/* FRC's season colors */
+	/* These define the raw color values for FRC's color palette. */
 	--frc-orange: #FAB74F;
 	--frc-yellow: #FFF041;
 	--frc-cyan: #00C0DD;
@@ -22,7 +11,8 @@ textarea{padding:8px 12px;}
 	--frc-black: #000000;
 	
 	/* 2020 theme colors */
-	--primary: var(--frc-orange);
+	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
+	--primary: calc(var(--frc-orange) + #222);
 	--secondary: var(--frc-blue);
 	--trim: var(--frc-cyan);
 	--highlight: var(--frc-yellow);
@@ -32,8 +22,25 @@ textarea{padding:8px 12px;}
 	--black: var(--frc-black);
 	
 	--background: #333;
-	--header: var(--trim)
+	--header: var(--trim);
+	
+	/* MMenu customization */
+	--mm-color-background: #444;
+	--mm-color-background-emphasis: #666; /* Selected menu item. */
+	--mm-color-background-highlight: #555; /* Submenu dropdown. */ 
+	--mm-color-border: #aaa;
+	--mm-color-button: #eee;
+	--mm-color-text: #eee;
+	--mm-color-text-dimmed: #ccc;
+	
+	/* MBurger (animated hamburger logo) customization */
+	--mb-animate-timeout: 0s;
+	--mb-button-size: 45px;
+	--mb-bar-width: 0.6;
+	--mb-bar-height: 3px;
+	--mb-bar-spacing: 8px;
 }
+
 
 html, #page{
 	background-color: var(--background);
@@ -66,26 +73,7 @@ html, #page{
 .alliance-border-blue{border: 1px solid hsl(242, 100%, 89%)!important}
 .alliance-hover-blue:hover{color:rgb(14, 13, 32)!important;background-color:rgb(134, 132, 235)!important}
 
-/* MMenu customization */
-.mm-menu {
-	--mm-color-background: #444;
-	--mm-color-background-emphasis: #666; /* Selected menu item. */
-	--mm-color-background-highlight: #555; /* Submenu dropdown. */ 
-	--mm-color-border: #aaa;
-	--mm-color-button: #eee;
-	--mm-color-text: #eee;
-	--mm-color-text-dimmed: #ccc;
-}
-
-/* MBurger animated burger menu customization */
-:root{
-	--mb-animate-timeout: 0s;
-	--mb-button-size: 45px;
-	--mb-bar-width: 0.6;
-	--mb-bar-height: 3px;
-	--mb-bar-spacing: 8px;
-}
-
+/* Header and Nav Menu */
 .mburger{
 	background-color: var(--header);
 	color: black;
@@ -104,8 +92,6 @@ html, #page{
 	background-color: var(--header);
 }
 
-
-
 input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
 
 /* For spacers */
@@ -118,6 +104,18 @@ hr{
 	border-top: 2px solid rgba(255,255,255,0.25);
 	margin: 20px 0;
 }
+
+/* For input elements */
+.theme-input{
+	border-radius:12px;
+	border: 0;
+	
+	transition:0.2s;
+	
+	min-height:18px;
+	padding:9px;
+}
+textarea{padding:8px 12px;}
 
 /* For tables that contain spacers */
 .theme-contains-spacer{
