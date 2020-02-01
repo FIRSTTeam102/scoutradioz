@@ -32,16 +32,21 @@ block content
 		form(name="pitlayout" method="post")
 			each item, i in pitlayout
 				//p=JSON.stringify(item)
-				div(class="w3-row editor-row" row=i)
+				div(id=`row_${i}` class="w3-row editor-row" row=i)
 					div(class="editor-contents")
 						hr(class="editor-hr")
+						//row remove
+						div(id=`removerow_${i}` class="w3-col m1 w3-padding-small w3-right-align editor-button")
+							div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px;") 
+								span(style="") -
 						//sort draggy
-						div(id=`sort_${i}` class="w3-col m1 w3-padding-small w3-right-align editor-sort")
+						div(id=`sort_${i}` class="w3-col m1 w3-padding-small editor-sort")
 							div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px; cursor: grab;") 
 								span(style="") ≡
 						//type
 						div(id=`type_${i}` class="w3-col m2 w3-padding-small editor-type")
-							select(name=`type_${i}` class="theme-input w3-btn w3-block")
+							- //   onchange=`handleTypeChange(${i})`
+							select(name=`type_${i}` class="theme-input w3-btn w3-block" row=i)
 								if item.type == "h2"
 									option(value="h2" selected) Header
 								else
@@ -66,16 +71,26 @@ block content
 						div(id=`label_${i}` class="w3-col m4 w3-padding-small editor-label" style=`${item.type == 'spacer' ? 'visibility: hidden;' : ''}`)
 							input(type="text" name=`label_${i}` class="theme-input w3-block" placeholder="Label" value=item.label)
 						//multiselect options
-						div(id=`options_${i}` class="w3-col m4 w3-padding-small editor-multiselect" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
+						div(id=`options_${i}` class="w3-col m3 w3-padding-small editor-multiselect" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
 							if item.options
 								each option, j in item.options
-									div(class="w3-col" style="padding-bottom: 8px;")
+									div(class="w3-col" style="padding-bottom: 8px;" id=`optionsid_${i}_${j}`)
 										input(type="text" name=`options_${i}_${j}` class="theme-input w3-block" placeholder="Option" value=option)
+									div(id=`removebutton_${i}_${j}` class="w3-col m1 w3-padding-small w3-right-align editor-button")
+										div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px;" row=i item=j) 
+											span(style="") -
+									//
+										div(id=`removebutton_${i}_${j}` class="w3-padding-small editor-button" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
+											div(class="w3-btn theme-input" style="border-radius: 50%; height: 38px; width: 38px;" row=i item=j)
+												span(style="font-size: 1.4em; position: relative; top: -2px;") -
 							div(id=`sampleOption_${i}` class="w3-col" style="padding-bottom: 8px; display: none;")
 								input(type="text" name=`option_${i}_${j}` class="theme-input w3-block" placeholder="Option" value=option)
+							div(id=`sampleRemoveButton_${i}` class="w3-col m1 w3-padding-small w3-right-align editor-button" style=`display: none; ${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
+								div(id=`sampleRemoveDiv_${i}` class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px;" row=i item=j)
+									span(style="") -
 						//+ button for multiselect
 						div(id=`button_${i}` class="w3-col m1 w3-padding-small editor-button" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
-							div(class="w3-btn theme-input" style="border-radius: 50%; height: 38px; width: 38px;")
+							div(class="w3-btn theme-input" style="border-radius: 50%; height: 38px; width: 38px;" row=i)
 								span(style="font-size: 1.4em; position: relative; top: -2px;") +
 					
 	script.
@@ -83,6 +98,7 @@ block content
 		window.history.replaceState({}, document.title, window.location.href.split("?")[0] + "?year=#{year}");
 		
 		$(".editor-type select").change(handleTypeChange);
+		//$(".editor-type select").change();
 		$(".editor-button div").click(handleAddOptionClick);
 		$(".editor-sort div").on("mousedown", handleSortStart);
 		$(document).on("mousemove", handleMouseMove);
@@ -94,6 +110,7 @@ block content
 		var currentHoverIdx = 0;
 		
 		function handleHover(evt){
+			var thisFuncName = "handleHover(): ";
 			
 			var row = $(this);
 			var idx = parseInt(row.attr("row"));
@@ -101,10 +118,11 @@ block content
 			if (!isNaN(idx)) {
 				currentHoverIdx = idx;
 			}
-			console.log(currentHoverIdx);
+			console.log(thisFuncName + "currentHoverIdx=" + currentHoverIdx);
 		}
 		
 		function handleSortStart(evt){
+			var thisFuncName = "handleSortStart(): ";
 			
 			var sortBtn = $(this);
 			//var row = parseInt( sortBtn.parent().parent().parent().attr("row") );
@@ -117,7 +135,8 @@ block content
 				.appendTo(document.body);
 			
 			$(newRowElement).children().css("z-index", "4");
-			console.log($(newRowElement).children()[0]);
+			console.log(thisFuncName + "$(newRowElement)=" + $(newRowElement));
+			console.log(thisFuncName + "$(newRowElement).children()[0]=" + $(newRowElement).children()[0]);
 			
 			rowElement.css("opacity", 0.5);
 			newRowElement.find("hr").remove();
@@ -134,6 +153,7 @@ block content
 		}
 		
 		function handleSortEnd(){
+			var thisFuncName = "handleSortEnd(): ";
 			if (currentlyDragging) {
 				var row = parseInt(dragElement.attr("row"))
 				
@@ -145,11 +165,16 @@ block content
 				
 				var rowToInsert = $(`div[row=${currentHoverIdx}]`);
 				
-				console.log(`Going to move row ${row} into row ${currentHoverIdx}`);
+				console.log(thisFuncName + `Going to move row ${row} into row ${currentHoverIdx}`);
+
+				var movingDiv = document.getElementById(`row_${row}`);
+				var insertBeforeDiv = document.getElementById(`row_${currentHoverIdx}`);
+				insertBeforeDiv.parentNode.insertBefore(movingDiv, insertBeforeDiv); // div.nextSibling;
 			}
 		}
 		
 		function handleMouseMove(evt){
+			var thisFuncName = "handleMouseMove(): ";
 			
 			if(currentlyDragging){
 				
@@ -159,14 +184,20 @@ block content
 		}
 		
 		function handleTypeChange(e){
+			var thisFuncName = "handleTypeChange(): ";
+			//console.log(thisFuncName + "e=" + JSON.stringify(e));
 			
 			var select = $(this);
+			var row = select.attr("row");
 			var type = select.val();
-			var row = parseInt( select.parent().parent().attr("row") );
+			console.log(thisFuncName + "type=" + type);
+			//console.log(thisFuncName + "select.parent()=" + JSON.stringify(select.parent().parent()));
+			//var row = parseInt( select.parent().parent().attr("row") );
 			
-			console.log($(`options_${row}`))
-			console.log(`options_${row}`)
-			console.log(select.parent())
+			console.log(thisFuncName + "row=" + row);
+			console.log(thisFuncName + "$(options_...)=" + $(`options_${row}`));
+			console.log(thisFuncName + "options_...=" + `options_${row}`);
+			//console.log(thisFuncName + "select.parent()=" + select.parent());
 			
 			if( type == "multiselect" ){
 				
@@ -186,22 +217,43 @@ block content
 				$(`#label_${row}`).css("visibility", "visible");
 			}
 			
-			console.log($(this).val());
+			console.log(thisFuncName + "$(this).val()=" + $(this).val());
 		}
 		
 		function handleAddOptionClick(){
+			var thisFuncName = "handleAddOptionClick(): ";
 			
 			var button = $(this);
-			var row = parseInt( button.parent().parent().attr("row") );
-			var numExistingOptions = $(`#options_${row}`).children().length - 1;
-			
-			console.log(numExistingOptions)
-			
-			var sampleOption = $(`#sampleOption_${row}`);
-			
-			var newOption = sampleOption.clone().appendTo( $(`#options_${row}`) ).show();
-			
-			$(newOption.children()[0]).attr("name", `option_${row}_${numExistingOptions}`);
-			
-			console.log(button);
+			// console.log(thisFuncName + "this=" + JSON.stringify(this));
+			// var html = button.html();
+			// console.log(thisFuncName + "html=" + html);
+			var row = button.attr("row");
+			console.log(thisFuncName + "row=" + row);
+			var item = button.attr("item");
+			console.log(thisFuncName + "item=" + item);
+			if (!item) {
+				// var id = button.attr("id");
+				// console.log(thisFuncName + "id=" + id);
+				//var row = parseInt( button.parent().parent().attr("row") );
+				var numExistingOptions = $(`#options_${row}`).children().length - 1;
+				
+				console.log(numExistingOptions)
+				
+				var sampleOption = $(`#sampleOption_${row}`);
+				var newOption = sampleOption.clone().appendTo( $(`#options_${row}`) ).show();
+				$(newOption.children()[0]).attr("name", `option_${row}_${numExistingOptions}`);
+
+				var sampleRemoveButton = $(`#sampleRemoveButton_${row}`);
+				var newRemoveButton = sampleRemoveButton.clone().appendTo( $(`#options_${row}`) ).show();
+				$(newRemoveButton.children()[0]).attr("row", 1000);
+				newRemoveButton.click(handleAddOptionClick);
+				$(newRemoveButton.children()[0]).attr("name", `removebutton_${row}_${numExistingOptions}`);
+
+				console.log(thisFuncName + "button=" + button);
+			} else {
+				var removeOption = document.getElementById(`optionsid_${row}_${item}`);
+				removeOption.parentNode.removeChild(removeOption);
+				var removeButton = document.getElementById(`removebutton_${row}_${item}`);
+				removeButton.parentNode.removeChild(removeButton);
+			}
 		}
