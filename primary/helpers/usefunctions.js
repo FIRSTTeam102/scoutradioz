@@ -1,4 +1,6 @@
 const logger = require('log4js').getLogger();
+const utilities = require("../utilities");
+
 require('colors');
 
 var functions = module.exports = {};
@@ -57,11 +59,15 @@ functions.authenticate = function(req, res, next) {
 }
 
 //View engine locals variables
-functions.setViewVariables = function(req, res, next){
+functions.setViewVariables = async function(req, res, next){
 	
 	logger.debug("usefunctions.js - functions.userViewVars: ENTER");
 	
-	if(req.user) res.locals.user = req.user;
+	if(req.user) {
+		const org = await utilities.findOne('orgs', {org_key: req.user.org_key});
+		req.user.org = org;
+		res.locals.user = req.user;
+	} 
 	
 	var fileRoot;
 	
@@ -95,8 +101,6 @@ functions.getEventInfo = async function(req, res, next) {
 		key: "undefined",
 		name: "undefined"
 	};
-	
-	var utilities = require("../utilities");
 	
 	var current = await utilities.find("current", {}, {});
 	
