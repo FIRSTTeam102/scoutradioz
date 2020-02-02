@@ -12,7 +12,7 @@
 	
 	/* 2020 theme colors */
 	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
-	--primary: calc(var(--frc-orange) + #222);
+	--primary: var(--frc-orange);
 	--secondary: var(--frc-blue);
 	--trim: var(--frc-cyan);
 	--highlight: var(--frc-yellow);
