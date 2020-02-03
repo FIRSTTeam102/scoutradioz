@@ -1,6 +1,13 @@
-const express = require('express');
-const utilities = require("../../utilities");
-var router = express.Router();
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
+const utilities = require('../../utilities');
+
+router.all('/*', async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
 
 /**
  * Scoring audit page.
@@ -8,11 +15,9 @@ var router = express.Router();
  * @view /manage/index, /manage/scoringaudit
  */
 router.get("/", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "audit.root[GET]:";
-	res.log(`${thisFuncName} enter`);
+	logger.debug(`${thisFuncName} enter`);
 	
 	var eventId = req.event.key;
 	
@@ -26,7 +31,7 @@ router.get("/", async function(req, res) {
 		earliestTimestamp = earliestMatch.time;
 	}
 	
-	res.log("Scoring audit: earliestTimestamp=" + earliestTimestamp);
+	logger.debug("Scoring audit: earliestTimestamp=" + earliestTimestamp);
 	
 	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"assigned_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
 	
@@ -67,7 +72,7 @@ router.get("/", async function(req, res) {
 				else
 					// 2019-03-16 JL: App crashed due to actual_scorer being undefined
 					if (scoreData[scoreIdx].actual_scorer == undefined){
-						res.log(`${thisFuncName} actual_scorer undefined`);
+						logger.debug(`${thisFuncName} actual_scorer undefined`);
 						auditElementChar = "N";
 					}
 					// 2018-03-22, M.O'C: Adding parent option
@@ -99,7 +104,7 @@ router.get("/", async function(req, res) {
 				else
 					// 2019-03-16 JL: App crashed due to actual_scorer being undefined
 					if (scoreData[scoreIdx].actual_scorer == undefined){
-						res.log(`${thisFuncName} actual_scorer undefined`);
+						logger.debug(`${thisFuncName} actual_scorer undefined`);
 						thisMemberArr.push("N");
 					}
 					// 2018-03-22, M.O'C: Adding parent option
@@ -129,8 +134,6 @@ router.get("/", async function(req, res) {
 });
 
 router.get('/bymatch', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var audit = {};
 	var eventId = req.event.key;
@@ -146,7 +149,7 @@ router.get('/bymatch', async function(req, res){
 		earliestTimestamp = earliestMatch.time;
 	}
 	
-	res.log("Per-match audit: earliestTimestamp=" + earliestTimestamp);
+	logger.debug("Per-match audit: earliestTimestamp=" + earliestTimestamp);
 	
 	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1, "alliance": 1, "team_key": 1} });
 	
@@ -197,8 +200,6 @@ router.get('/bymatch', async function(req, res){
 })
 
 router.get('/comments', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var eventId = req.event.key;
 	
@@ -213,7 +214,7 @@ router.get('/comments', async function(req, res){
 		earliestTimestamp = earliestMatch.time;
 	}
 	
-	res.log("Comments audit: earliestTimestamp=" + earliestTimestamp);
+	logger.debug("Comments audit: earliestTimestamp=" + earliestTimestamp);
 		
 	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"actual_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
 	

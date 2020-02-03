@@ -4,15 +4,15 @@ block content
 	if matches.length > 0
 		h3(class="theme-text w3-margin-bottom") Match Scouting
 		div(class="w3-col w3-container")
-			div(class="w3-col m6 l4 w3-padding theme-strong")
+			div(class="w3-col m6 l4 w3-padding strong")
 				div(class="w3-col s3") Assigned
 				div(class="w3-col s4") Team
 				div(class="w3-col s5") Team Name
-			div(class="w3-col s0 m6 l4 w3-padding theme-strong")
+			div(class="w3-col s0 m6 l4 w3-padding strong")
 				div(class="w3-col s3") Assigned
 				div(class="w3-col s4") Team
 				div(class="w3-col s5") Team Name
-			div(class="w3-col s0 m0 l4 w3-padding theme-strong")
+			div(class="w3-col s0 m0 l4 w3-padding strong")
 				div(class="w3-col s3") Assigned
 				div(class="w3-col s4") Team
 				div(class="w3-col s5") Team Name
@@ -45,7 +45,7 @@ block content
 								div(class="w3-col s4 w3-padding")
 									if assignment.data
 										a(href=`/scouting/match?key=${assignment.match_team_key}&alliance=${assignment.alliance}`)
-											div(class="w3-btn w3-col theme-gray w3-padding")
+											div(class="w3-btn w3-col theme-dim w3-padding")
 												span= assignment.team_key.substring(3)
 									else
 										- var btnColor = (assignment.alliance == "Red") ? "alliance-red" : "alliance-blue"
@@ -88,12 +88,12 @@ block content
 					td(class="w3-mobile")
 						if match.data
 							a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`)
-								div(class="gear-btn theme-rounded theme-gray w3-padding w3-section gear-margin-sides")
+								div(class="gear-btn rounded theme-dim w3-padding w3-section w3-margin-left w3-margin-right")
 									span= match.team_key.substring(3)
 						else
 							- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 							a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
-								div(class=`gear-btn theme-rounded ${btnColor} w3-padding w3-section gear-margin-sides`)
+								div(class=`gear-btn rounded ${btnColor} w3-padding w3-section w3-margin-left w3-margin-right`)
 									span= match.team_key.substring(3)
 					td(class="w3-left-align")
 						a(href=`/reports/teamintel?team=${match.team_key}`)= match.team_nickname

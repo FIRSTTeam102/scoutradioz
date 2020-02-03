@@ -1,4 +1,60 @@
-.w3-btn{box-shadow: none!important;}
+body {
+	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.strong{font-weight: bold}
+
+canvas, .canvas{
+	z-index: -1;
+	position: fixed;
+	left: 0;
+	top: 0;
+}
+
+select{
+	padding: 1px 0px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: white;
+	border-image: initial;
+}
+
+a:link{text-decoration: none;}
+
+a{color: inherit;}
+a:hover.text-link{text-decoration: underline;}
+
+/* For rounded corners */
+.w3-btn{
+	border-radius: 12px; /* Border radius rounded by 12 pixels */
+	transition: 0.2s;	/* Fade from color 1 to color 2 in 0.2 secs */
+	box-shadow: none!important;
+}
+
+.rounded-large{border-radius:18px;}
+.rounded{border-radius:12px;}
+.rounded-small{border-radius:6px;}
+
+/* For elements with rounded corners, that don't have all 4 corners rounded */
+.rounded-large-tl{border-top-left-radius:18px;}
+.rounded-large-tr{border-top-right-radius:18px;}
+.rounded-large-bl{border-bottom-left-radius:18px;}
+.rounded-large-br{border-bottom-right-radius:18px;}
+.rounded-large-top{border-top-left-radius:18px;border-top-right-radius:18px;}
+.rounded-large-bottom{border-bottom-left-radius:18px;border-bottom-right-radius:18px;}
+.rounded-tl{border-top-left-radius:12px;}
+.rounded-tr{border-top-right-radius:12px;}
+.rounded-bl{border-bottom-left-radius:12px;}
+.rounded-br{border-bottom-right-radius:12px;}
+.rounded-top{border-top-left-radius:12px;border-top-right-radius:12px;}
+.rounded-bottom{border-bottom-left-radius:12px;border-bottom-right-radius:12px;}
+.rounded-small-tl{border-top-left-radius:6px;}
+.rounded-small-tr{border-top-right-radius:6px;}
+.rounded-small-bl{border-bottom-left-radius:6px;}
+.rounded-small-br{border-bottom-right-radius:6px;}
+.rounded-small-top{border-top-left-radius:6px;border-top-right-radius:6px;}
+.rounded-small-bottom{border-bottom-left-radius:6px;border-bottom-right-radius:6px;}
+
 
 .w3-no-border{border:none!important}
 .w3-no-focus,.w3-no-outline:focus {outline:0;}
@@ -6,11 +62,6 @@
 .gear-btn{ 
 	min-width:100px; 
 	margin: 15px 8px 0px 8px;
-}
-
-.gear-margin-sides{
-	margin-left: 8px!important;
-	margin-right: 8px!important;
 }
 
 .scouting-counter{

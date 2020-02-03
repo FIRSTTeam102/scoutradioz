@@ -26,7 +26,7 @@ block content
 				each team in teamList
 					option(value=team class="w3-bar-item") #{team}
 			a#upcomingMatchesLink(href="/reports/upcoming")
-				div(class="gear-btn w3-btn theme-gray theme-hover-light-gray") View upcoming matches for 
+				div(class="gear-btn w3-btn theme-dim theme-hover-light-gray") View upcoming matches for 
 					span#upcomingMatchesLabel [All Teams]
 		br 
 		br 
@@ -55,7 +55,7 @@ block content
 				
 				div(class="w3-row")
 					//-Title for small screens
-					div(class="w3-col s12 m0 theme-rounded theme-gray w3-border")
+					div(class="w3-col s12 m0 rounded theme-dim w3-border")
 						div(class="w3-col s10 w3-padding")
 							div(class="")
 								- var matchPrefix = "";
@@ -64,17 +64,17 @@ block content
 								span  #{day} @ #{hour}:#{minute}
 						div(class="w3-col s2")
 							a(href=`/reports/matchmetrics?key=${match.key}`)
-								div(class="w3-padding-small w3-right-align w3-small theme-hover-light-gray theme-rounded-br theme-rounded-tr" style="padding-right: 18px!important;")
+								div(class="w3-padding-small w3-right-align w3-small theme-hover-light-gray rounded-br rounded-tr" style="padding-right: 18px!important;")
 									i Compare alliances
 					//-Title for medium screens
 					div(class="w3-col s0 m3 w3-padding-small")
-						div(class="theme-rounded theme-gray w3-border")
+						div(class="rounded theme-dim w3-border")
 							- var matchPrefix = "";
 							- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 							div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
 							div(class="w3-padding")  #{day} @ #{hour}:#{minute}
 							a(href=`/reports/matchmetrics?key=${match.key}`)
-								div(class="w3-padding-16 w3-small theme-hover-light-gray theme-rounded-bottom") 
+								div(class="w3-padding-16 w3-small theme-hover-light-gray rounded-bottom") 
 									i Compare alliances
 					//-Alliances
 					div(class="w3-col s12 m9 w3-padding-small")
@@ -84,14 +84,14 @@ block content
 							- var blue1 = blue[0], blue2 = blue[1], blue3 = blue[2];
 							- var red1 = red[0], red2 = red[1], red3 = red[2];
 							//- set classes for alliance window
-							- var blueClass = "alliance-blue alliance-border-blue theme-rounded-small";
-							- var redClass = "alliance-red alliance-border-red theme-rounded-small";
+							- var blueClass = "alliance-blue alliance-border-blue rounded-small";
+							- var redClass = "alliance-red alliance-border-red rounded-small";
 							- if( isBlue ) blueClass += " thick-border";
 							- else if( isRed ) redClass += " thick-border";
 							div(class=blueClass)
 								//- not doing this with a loop because border needs to be specified
 								a(href=`/reports/teamintel?team=${blue1}`)
-									div(class="w3-padding alliance-hover-blue theme-rounded-small-top")
+									div(class="w3-padding alliance-hover-blue rounded-small-top")
 										span(class="w3-left w3-small theme-text upcoming-rank") 
 											i(class="w3-left") Rank #{teamRanks[blue1]}
 										span=blue1.substring(3)
@@ -101,7 +101,7 @@ block content
 											i(class="w3-left") Rank #{teamRanks[blue2]}
 										span=blue2.substring(3)
 								a(href=`/reports/teamintel?team=${blue3}`)
-									div(class="w3-padding alliance-hover-blue theme-rounded-small-bottom")
+									div(class="w3-padding alliance-hover-blue rounded-small-bottom")
 										span(class="w3-left w3-small theme-text upcoming-rank") 
 											i(class="w3-left") Rank #{teamRanks[blue3]}
 										span=blue3.substring(3)
@@ -109,7 +109,7 @@ block content
 							div(class=redClass)
 								//- not doing this with a loop because border needs to be specified
 								a(href=`/reports/teamintel?team=${red1}`)
-									div(class="w3-padding alliance-hover-red theme-rounded-small-top")
+									div(class="w3-padding alliance-hover-red rounded-small-top")
 										span(class="w3-left w3-small theme-text upcoming-rank") 
 											i(class="w3-left") Rank #{teamRanks[red1]}
 										span=match.alliances.red.team_keys[0].substring(3)
@@ -119,14 +119,14 @@ block content
 											i(class="w3-left") Rank #{teamRanks[red2]}
 										span=match.alliances.red.team_keys[1].substring(3)
 								a(href=`/reports/teamintel?team=${red3}`)
-									div(class="w3-padding alliance-hover-red theme-rounded-small-bottom")
+									div(class="w3-padding alliance-hover-red rounded-small-bottom")
 										span(class="w3-left w3-small theme-text upcoming-rank") 
 											i(class="w3-left") Rank #{teamRanks[red3]}
 										span=match.alliances.red.team_keys[2].substring(3)
 				p(class="theme-spacer")
 				
 				//-div(class="w3-container w3-padding")
-					div(class="w3-mobile w3-left theme-gray")
+					div(class="w3-mobile w3-left theme-dim")
 						div(class="w3-mobile w3-left")
 							div(class="w3-mobile" style="height:60px")
 								div(class="w3-margin-right" style="position: relative; display: inline-block; top: 18px; left: 12px;")

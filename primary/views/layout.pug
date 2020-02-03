@@ -26,11 +26,15 @@ html
 		link(rel="icon" type="image/png" href=`${fileRoot}/favicon.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/w3.css`)
+		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mmenu.css`)
+		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mburger.css`)
 		link(rel="stylesheet" href=`${fileRoot}/css/theme-2019.css?v=2`)
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=1`)
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		script(src=`${fileRoot}/lib/jquery.min.js`)
+		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
+		script(src=`${fileRoot}/lib/mmenu/mburger.js`)
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
 		script(src=`${fileRoot}/js/scoutradioz.js?v=2`)
 		script(src=`${fileRoot}/js/FormSubmission.js`)
@@ -38,27 +42,40 @@ html
 		if alert && alert != "undefined"
 			script.
 				$(function(){
+					var alertType = '#{alertType}';
+					var alert = `#{alert.replace(/'/, '\'')}`;
 					//alert("#{alert}");
-					NotificationCard.show("#{alert}", {ttl: 0, exitable: true});
+					NotificationCard.show(alert, {
+						ttl: 0, 
+						exitable: true, 
+						type: alertType
+					});
 					
-					//Remove alert from url queries so it doesn't appear again when the user refreshes
+					//Remove alert and type from url queries so it doesn't appear again when the user refreshes
 					var url = window.location.href;
 					
-					if( url.indexOf("&") == -1 ){
-						var queries = [url.split("?")[1]];
+					if( url.indexOf('&') == -1 ){
+						var queries = [url.split('?')[1]];
 					}
 					else{
-						var queries = url.split("&");
-						queries[0] = queries[0].split("?")[1];
+						var queries = url.split('&');
+						queries[0] = queries[0].split('?')[1];
 					}
 					
-					for(var i in queries){
-						if( queries[i].split("=")[0] == "alert"){
+					//splice alert and type from queries array
+					for(var i = 0; i < queries.length; i++){
+						console.log(queries[i].split('='));
+						if( queries[i].split('=')[0] == 'alert'){
 							queries.splice(i, 1);
+							i--;
+						}
+						else if (queries[i].split('=')[0] == 'type') {
+							queries.splice(i, 1);
+							i--;
 						}
 					}
 					
-					url = url.split("?")[0]
+					url = url.split('?')[0]
 					
 					//add other queries back into url
 					if(queries[0]){
@@ -66,7 +83,7 @@ html
 						url += '?' + queries[0];
 						
 						for(var i = 1; i < queries.length; i++){
-							url += "&" + queries[i];
+							url += '&' + queries[i];
 						}
 					}
 					
@@ -74,27 +91,11 @@ html
 				});
 	
 	body(class="theme-text")
-		include nav
-		main(class="w3-padding w3-mobile w3-center" style="font-size:1.2em" id="content") 
-			block content
-		include footer
-		div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
-			img(src=`${fileRoot}/images/deepspace-mountains.svg` style="width: 2048px; position: fixed; bottom: 0px; left: 0px;")
-			div(class="star star-10" style="top: 500px; left: 30px;")
-			div(class="star star-10" style="top: 200px; left: 300px;")
-			div(class="star star-10" style="top: 50px; left: 1200px;")
-			div(class="star star-10" style="top: 300px; left: 1800px;")
-			div(class="star star-10" style="top: 900px; left: 800px;")
-			div(class="star star-5" style="top: 400px; left: 700px;")
-			div(class="star star-5" style="top: 600px; left: 350px;")
-			div(class="star star-5" style="top: 700px; left: 1100px;")
-			div(class="star star-5" style="top: 100px; left: 500px;")
-			div(class="star star-5" style="top: 600px; left: 1700px;")
-			div(class="star star-5" style="top: 200px; left: 1400px;")
-			div(class="star star-5" style="top: 500px; left: 1400px;")
-			div(class="star star-2" style="top: 800px; left: 1000px;")
-			div(class="star star-2" style="top: 200px; left: 1100px;")
-			div(class="star star-2" style="top: 800px; left: 1000px;")
-			div(class="star star-2" style="top: 700px; left: 1600px;")
-			div(class="star star-2" style="top: 100px; left: 200px;")
-			div(class="star star-2" style="top: 300px; left: 400px;")
+		//div(class="menu-blank")
+		div(id="page" style="font-size:1.1em")
+			include newnav
+			main(class="w3-padding w3-mobile w3-center" id="content") 
+				block content
+			//Footer not included becasue it modifies the body's styling.
+			//-include footer
+			//div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")

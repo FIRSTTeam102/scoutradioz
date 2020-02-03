@@ -1,6 +1,13 @@
-var express = require('express');
-var router = express.Router();
-var utilities = require('../../utilities');
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
+const utilities = require('../../utilities');
+
+router.all('/*', async (req, res, next) => {
+	//Require GLOBAL-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
+		next();
+	}
+})
 
 /**
  * Admin page to manually input/edit list of teams at an event (w/o TBA).
@@ -8,8 +15,6 @@ var utilities = require('../../utilities');
  * @views manualinput/teams
  */
 router.get('/teams', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	//Get list of currentteams
 	var teamsArray = await utilities.find("currentteams", {}, {sort: {"team_number": 1}});
@@ -26,10 +31,8 @@ router.get('/teams', async function(req, res){
  * @redirect /admin
  */
 router.post('/teams', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	res.log(req.body);
+	logger.debug(req.body);
 	
 	var teamNumbersArray = [];
 	var teamInfoArray = [];
@@ -60,14 +63,14 @@ router.post('/teams', async function(req, res){
 		teamInfoArray[i] = await tbaPromiseArray[i];
 	}
 	
-	res.log(`Done with TBA call in ${Date.now() - startTime} ms`);
+	logger.debug(`Done with TBA call in ${Date.now() - startTime} ms`);
 	
 	//Go through teamInfoArray and splice out any item that contains errors
 	for(var i = 0; i < teamInfoArray.length; i++){
 		var thisTeamInfo = teamInfoArray[i];
 		//if obj contains error, remove it
 		if(thisTeamInfo.Errors){
-			res.log("Going to remove: " + JSON.stringify(thisTeamInfo));
+			logger.debug("Going to remove: " + JSON.stringify(thisTeamInfo));
 			teamInfoArray.splice(i, 1);
 			i--;
 		}
@@ -84,8 +87,8 @@ router.post('/teams', async function(req, res){
 		
 		let didFindDuplicate = false;
 		
-		res.log("================");
-		res.log("CHECKING TEAM " + thisTeamNum);
+		logger.debug("================");
+		logger.debug("CHECKING TEAM " + thisTeamNum);
 		
 		for(var j = 0; j < teamInfoNoDuplicates.length; j++){
 			
@@ -93,18 +96,18 @@ router.post('/teams', async function(req, res){
 			var thatTeamInfo = teamInfoArray[j];
 			var thatTeamNum = thatTeamInfo.team_number;
 			
-			res.log("CMP: " + thatTeamNum);
+			logger.debug("CMP: " + thatTeamNum);
 			
 			//if duplicat exists, set true
 			if(thisTeamNum == thatTeamNum){
 				didFindDuplicate = true;
-				res.log("MATCH: Removing duplicate " + thisTeamNum + " from team list", true);
+				logger.debug("MATCH: Removing duplicate " + thisTeamNum + " from team list", true);
 			}
 		}
 		//Add to new array if no duplicates exist.
 		if(!didFindDuplicate){
 			teamInfoNoDuplicates.push(thisTeamInfo);
-			res.log("PUSHING " + thisTeamNum);
+			logger.debug("PUSHING " + thisTeamNum);
 		}
 	}
 	
@@ -127,7 +130,7 @@ router.post('/teams', async function(req, res){
 router.post('/api/team', async function(req, res){
 	
 	if(!req.body.team_number){
-		res.log("manage/manualinput/api/team error: No team number specified.", true);
+		logger.debug("manage/manualinput/api/team error: No team number specified.", true);
 		return res.status(400).send("No team number specified.");
 	}
 	
@@ -136,7 +139,7 @@ router.post('/api/team', async function(req, res){
 	
 	//if not a number, return with error 400
 	if(isNaN(team_number)){
-		res.log("manage/manualinput/api/team error: No team number specified.", true);
+		logger.debug("manage/manualinput/api/team error: No team number specified.", true);
 		return res.status(400).send("Team number was not parseable.");
 	}
 	
@@ -147,7 +150,7 @@ router.post('/api/team', async function(req, res){
 	
 	res.status(200).send(teamInfoResponse);
 	
-	res.log(teamInfoResponse);
+	logger.debug(teamInfoResponse);
 });
 
 /**
@@ -156,14 +159,12 @@ router.post('/api/team', async function(req, res){
  * @views manualinput/matchschedule
  */
 router.get('/matchschedule', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "[GET] /manage/manualinput/matchschedule => ";
 	
 	var event_key = req.event.key;
 	
-	res.log(`${thisFuncName} Getting matches`);
+	logger.debug(`${thisFuncName} Getting matches`);
 	
 	var matches = await utilities.find("matches", {"event_key": event_key});
 	
@@ -174,8 +175,6 @@ router.get('/matchschedule', async function(req, res){
 });
 
 router.post('/matchschedule', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	/*
 		"actual_time": "",
@@ -233,7 +232,7 @@ router.post('/matchschedule', async function(req, res){
 		}
 	}
 	
-	res.log(matchArray);
+	logger.debug(matchArray);
 	
 	//We now have an array, comprised of every user match input, separated by each match.
 	//We need to rearrange the data to fit our database needs.
@@ -251,7 +250,7 @@ router.post('/matchschedule', async function(req, res){
 		}
 	}
 	
-	res.log(matchArrayFiltered);
+	logger.debug(matchArrayFiltered);
 	
 	//Now, we can rearrange our data.
 	var matchArrayFormatted = [];
@@ -294,7 +293,7 @@ router.post('/matchschedule', async function(req, res){
 		}
 	}
 	
-	res.log(matchArrayFormatted);
+	logger.debug(matchArrayFormatted);
 	
 	//Remove matches from db
 	await utilities.remove("matches", {"event_key": event_key});
@@ -311,8 +310,6 @@ router.post('/matchschedule', async function(req, res){
  * @views manualinput/matches
  */
 router.get('/matches', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var event_key = req.event.key;
 	
@@ -328,8 +325,6 @@ router.get('/matches', async function(req, res) {
  * 
  */
 router.post('/matches', async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;	
 	
 	var event_key = req.event.key;
 	
@@ -398,7 +393,7 @@ router.post('/matches', async function(req, res){
 	await utilities.insert("matches", matches);
 	
 	var endTime = Date.now();
-	res.log(`Done in ${endTime - startTime} ms`);
+	logger.debug(`Done in ${endTime - startTime} ms`);
 	
 	//// Recalculate rankings
 	/*

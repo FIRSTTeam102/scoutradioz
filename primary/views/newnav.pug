@@ -1,0 +1,118 @@
+div(id="headerhar" class="w3-card header")
+	a(id="burger")
+		button(class="mburger mburger--squeeze")
+			b 
+			b 
+			b 
+	div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
+		span(style="display:inline-block;height:100%;vertical-align:middle;")
+		img(src=`${fileRoot}/images/logo-black-sm.png` class="header-logo")
+	div(class="w3-right w3-show-inline-block" style="height: 45px;")
+		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-full-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
+div(id="headerlogo" class="w3-padding w3-center")
+	a(href="/home")
+		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
+	h3=eventName
+div(style="display: none;" id="menuParent")
+	nav(id="menu")
+		//- NOTE: If you add a (class="selected") to an "li" element, it will be highlighted by the mmenu extension. 
+			We can make that procedural sometime in the future.
+		ul
+			li
+				a(href="/home") Home
+			li 
+				a(href="/dashboard") Dashboard
+			//-BELOW: This is for when we have multiple different dashboard types
+			//li
+				span Dashboard
+				ul 
+					li
+						a(href="/dashboard") Scouting
+					li
+						a(href="#") Drive Team
+					li
+						a(href="#") Pit Crew
+			li 
+				span Scouting
+				ul 
+					li 
+						a(href="/dashboard/pits") Pit Scouting
+					li 
+						a(href="/dashboard/matches") Match Scouting
+			if user 
+				if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
+					li
+						a(href="/manage") Manage #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
+						ul 
+							li 
+								span Members
+								ul 
+									li 
+										a(href="/manage/members") Member List
+									li 
+										a(href="/manage/scoutingaudit") Scouting Audit
+									li 
+										a(href="/manage/scoutingpairs") Scouting Pairs
+									li 
+										a(href="/manage/scoutingpairs/swapmembers") Swap in/out match scouts
+									li 
+										a(href="/manage/members/present") Set Present
+									li 
+										a(href="/manage/user/resetpassword") Reset User Password
+							li 
+								span Current Event 
+								ul 
+									li 	
+										a(href="/manage/currentevent/matches") Matches 
+									li 
+										a(href="/manage/allianceselection") Alliance Selection Data
+									li 
+										a(href="/manage/currentevent/getcurrentteams") Update List of Current Teams
+				if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
+					li 
+						a(href="/admin") Admin
+div(id="")
+- console.log(user)
+script.
+	$(() => {
+		
+		const options = {
+			slidingSubmenus: false,
+			navbar: {
+				title: `#{(user.name != 'default_user' ? (user.name + ' - ') : '') + user.org.nickname}`,
+			},
+			offCanvas: {
+				clone: true,
+			},
+			extensions: {
+				//"(max-width: 400px)": ["fullscreen"],
+				"all": ["border-full"],
+			}
+		}
+		const configuration = {
+			// configuration
+			offCanvas: {
+				page: {
+					selector: "#page",
+				},
+			},
+		};
+		
+		var offCanvasMenu = new Mmenu('#menu', options, configuration);
+		var offCanvasAPI = offCanvasMenu.API;
+		
+		
+		$("#burger").click(() => {
+			toggleMenu();
+		})
+		
+		function toggleMenu(){
+			
+			if (offCanvasMenu.vars.opened == true){
+				offCanvasAPI.close();
+			}
+			else {
+				offCanvasAPI.open();
+			}
+		}
+	})

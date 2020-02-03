@@ -1,7 +1,14 @@
-const express = require('express');
-const utilities = require('../../utilities');
 const bcrypt = require('bcryptjs')
-const router = express.Router();
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
+const utilities = require('../../utilities');
+
+router.all('/*', async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
 
 /**
  * Admin index page. Provides links to all admin functionality.
@@ -9,8 +16,6 @@ const router = express.Router();
  * @views /manage/adminindex
  */
 router.get('/', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var org = await utilities.findOne("orgs", {org_key: req.user.org_key});
 	
@@ -22,8 +27,6 @@ router.get('/', async function(req, res) {
 });
 
 router.post('/setdefaultpassword', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var newDefaultPassword = req.body.defaultPassword
 	
@@ -40,23 +43,21 @@ router.post('/setdefaultpassword', async function(req, res) {
  * @redirect /admin
  */
 router.post('/setcurrent', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "adminindex.setcurrent[post]: ";
 	var eventId = req.body.eventId;
-	res.log(thisFuncName + 'ENTER eventId=' + eventId);
+	logger.debug(thisFuncName + 'ENTER eventId=' + eventId);
 	
 	//Remove the previous 'current' data
 	await utilities.remove('current');
-	res.log(thisFuncName + 'Removed current');
+	logger.debug(thisFuncName + 'Removed current');
 
 	// 2019orore
 	// 2019njbri
 
 	//Now, insert the new data
 	await utilities.insert('current', {"event": eventId});
-	res.log(thisFuncName + 'Inserted current');
+	logger.debug(thisFuncName + 'Inserted current');
 	
 	//Now get teams and rankings from TBA
 	var teamsUrl = `event/${eventId}/teams`;
@@ -64,35 +65,35 @@ router.post('/setcurrent', async function(req, res) {
 	
 	var promiseForTeams = utilities.requestTheBlueAlliance(teamsUrl);
 	var promiseForRankings = utilities.requestTheBlueAlliance(rankingsUrl);
-	res.log(thisFuncName + 'Got promises');
+	logger.debug(thisFuncName + 'Got promises');
 	
 	//Delete contents of currentTeams
 	await utilities.remove("currentteams");
-	res.log(thisFuncName + 'Renoved currentteams');
+	logger.debug(thisFuncName + 'Renoved currentteams');
 	
 	//Await TBA request for teams
 	var teamsData = await promiseForTeams;
-	res.log(thisFuncName + 'Finished await promiseForTeams');
+	logger.debug(thisFuncName + 'Finished await promiseForTeams');
 	
 	//Now, insert teams into currentTeams
 	// if( typeof teamsData == "object" ){
 	// 	await utilities.insert("currentteams", teamsData);
-	// 	res.log(thisFuncName + 'Finished await currentteams');
+	// 	logger.debug(thisFuncName + 'Finished await currentteams');
 	// }
 	// else{
 		await utilities.insert("currentteams", JSON.parse(teamsData));
-		res.log(thisFuncName + 'Finished await currentteams #2');
+		logger.debug(thisFuncName + 'Finished await currentteams #2');
 	// }
 		
 	//Delete contents of currentrankings
 	await utilities.remove("currentrankings");
-	res.log(thisFuncName + 'Finished remove currentrankings');
+	logger.debug(thisFuncName + 'Finished remove currentrankings');
 	
 	//Await TBA request for rankings
 	var rankingsResponse = await promiseForRankings;
 	var rankingsResponse = JSON.parse(rankingsResponse);
 	
-	res.log(rankingsResponse);
+	logger.debug(`${thisFuncName} rankingsResponse= ${JSON.stringify(rankingsResponse)}`);
 		
 	if (rankingsResponse && rankingsResponse != "null" 
 		&& rankingsResponse.rankings && rankingsResponse.rankings != "null") {
@@ -117,11 +118,9 @@ router.post('/setcurrent', async function(req, res) {
  * @redirect /
  */
 router.get('/generatedata', async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "adminindex.generatedata[get]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
 	var eventId = req.event.key;
@@ -142,7 +141,7 @@ router.get('/generatedata', async function(req, res) {
 	var scoringMatches = await utilities.find("scoringdata", {"event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1} });
 	if (scoringMatches)
 	{
-		res.log(thisFuncName + 'scoringMatches.length=' + scoringMatches.length);
+		logger.debug(thisFuncName + 'scoringMatches.length=' + scoringMatches.length);
 		
 		for (var scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
 			var thisTeamNum = parseInt(scoringMatches[scoreIdx].team_key.substring(3));
@@ -156,7 +155,7 @@ router.get('/generatedata', async function(req, res) {
 			thisV2 = Math.pow(kFac, (9 - thisV2)/9)/(kFac-1) - (1/(kFac-1)); thisV2 = Math.round(thisV2*1000)/1000;
 			thisV3 = Math.pow(kFac, (9 - thisV3)/9)/(kFac-1) - (1/(kFac-1)); thisV3 = Math.round(thisV3*1000)/1000;
 			thisV4 = Math.pow(kFac, (9 - thisV4)/9)/(kFac-1) - (1/(kFac-1)); thisV4 = Math.round(thisV4*1000)/1000;
-			res.log(thisFuncName + 'score[' + scoreIdx + ']: teamMatchKey=' + scoringMatches[scoreIdx].match_team_key + '... teamKey=' + scoringMatches[scoreIdx].team_key
+			logger.debug(thisFuncName + 'score[' + scoreIdx + ']: teamMatchKey=' + scoringMatches[scoreIdx].match_team_key + '... teamKey=' + scoringMatches[scoreIdx].team_key
 				+ ": v1,v2,v3,v4 = " + thisV1 + ", " + thisV2 + ", " + thisV3 + ", " + thisV4);
 
 			// object to be populated
@@ -261,7 +260,7 @@ router.get('/generatedata', async function(req, res) {
 			var notes = 'Autogenerated ' + thisV1 + ', ' + thisV2 + ', ' + thisV3 + ', ' + thisV4;
 			data.otherNotes = notes;
 			
-			res.log(thisFuncName + "data=" + JSON.stringify(data));
+			logger.debug(thisFuncName + "data=" + JSON.stringify(data));
 			
 			// write to database
 			await utilities.update("scoringdata", {"match_team_key": scoringMatches[scoreIdx].match_team_key}, {$set: {"data": data}});
@@ -270,7 +269,7 @@ router.get('/generatedata', async function(req, res) {
 	}
 	else
 	{
-		res.log(thisFuncName + 'ERROR scoringMatches is null!!');
+		logger.debug(thisFuncName + 'ERROR scoringMatches is null!!');
 		res.redirect('/');
 	}
 });

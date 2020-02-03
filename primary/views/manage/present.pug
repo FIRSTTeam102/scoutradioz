@@ -11,8 +11,18 @@ block content
 		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") Uncheck All
 		button(class="theme-submit w3-btn gear-btn" onclick="check()") Check All
 	form(action="/manage/members/updatepresent" method="post")
-		each member in members
-			div(class="w3-container" style="max-width:200px;margin:auto;")
+		div(class="w3-section")
+			each member in members
+				div(class="w3-row")
+					div(class="w3-padding-small")
+						- if(member.event_info.present == true)
+							input(type="checkbox" class="w3-check" name=member._id id=member._id checked="checked")
+						- else
+							input(type="checkbox" class="w3-check" name=member._id id=member._id)
+						div(class="w3-show-inline-block w3-left-align" style="min-width: 160px;")
+							label(class="w3-text-white" for=member._id) &nbsp;#{member.name}
+						br 
+		//-	div(class="w3-container" style="max-width:200px;margin:auto;")
 				div(class="w3-left w3-margin-left")
 					- if(member.event_info.present == true)
 						input(type="checkbox" class="w3-check" name=member._id id=member._id checked="checked")

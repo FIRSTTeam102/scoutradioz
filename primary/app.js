@@ -93,7 +93,7 @@ app.use(async function(req, res, next){
 });
 
 //sets view engine vars for user
-app.use(usefunctions.userViewVars);
+app.use(usefunctions.setViewVariables);
 //Event stuff
 app.use(usefunctions.getEventInfo);
 //Logging and timestamping

@@ -1,15 +1,20 @@
 const router = require("express").Router();
-const utilities = require("../../utilities");
 const monk = require("monk");
+const logger = require('log4js').getLogger();
+const utilities = require("../../utilities");
 
-//DONE
+router.all('/*', async function (req, res, next) {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
+
 router.get("/", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var org_key = req.user.org_key;
 	
-	var orgMembers = await utilities.find("users", {org_key: org_key, name: {$ne: "default_user"}}, {sort: {"name": 1}})
+	var orgMembers = await utilities.find("users", {org_key: org_key, visible: true}, {sort: {"name": 1}})
 	var org = await utilities.findOne("orgs", {org_key: org_key});
 	
 	var roles = await utilities.find("roles", { access_level: { $lte: req.user.role.access_level }});
@@ -42,11 +47,9 @@ router.get("/", async function(req, res) {
 });
 
 router.post("/addmember", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "members.addmember[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var name = req.body.name;
 	var subteam_key = req.body.subteam_key;
@@ -72,7 +75,7 @@ router.post("/addmember", async function(req, res){
 	}
 	
 	var memberJson = JSON.stringify(req.body);
-	res.log(`Request to add member ${memberJson}`, true);
+	logger.debug(`Request to add member ${memberJson}`, true);
 
 	// calculate seniority
 	var seniority = years;
@@ -97,7 +100,7 @@ router.post("/addmember", async function(req, res){
 		default:
 			seniority += ".0";
 	}
-	res.log(thisFuncName + 'seniority=' + seniority);
+	logger.debug(thisFuncName + 'seniority=' + seniority);
 	
 	var insertQuery = {
 		org_key: org_key,
@@ -113,7 +116,8 @@ router.post("/addmember", async function(req, res){
 		event_info:{
 			present: false,
 			assigned: false
-		}
+		},
+		visible: true,
 	}
 	
 	var writeResult = await utilities.insert("users", insertQuery);
@@ -122,11 +126,9 @@ router.post("/addmember", async function(req, res){
 });
 
 router.post("/updatemember", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "members.updatemember[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var org_key = req.user.org_key;
 	var memberId = req.body.memberId;
@@ -198,7 +200,7 @@ router.post("/updatemember", async function(req, res){
 			};
 			
 			//log it
-			res.log(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
+			logger.debug(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
 			
 			var writeResult = await utilities.update("users", {org_key: org_key, _id: memberId}, updateQuery);
 			
@@ -213,17 +215,16 @@ router.post("/updatemember", async function(req, res){
 });
 
 router.post("/deletemember", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	if(req.body.memberId){
 		
 		var memberId = req.body.memberId;
+		var orgKey = req.user.org_key;
 		
-		var member = await utilities.findOne("users", {_id: memberId});
+		var member = await utilities.findOne("users", {_id: memberId, org_key: orgKey});
 		var memberRole = await utilities.findOne("roles", {role_key: member.role_key});
 		
-		res.log(`Request to delete member ${memberId} by user ${JSON.stringify(req.user)}`, true);
+		logger.debug(`Request to delete member ${memberId} by user ${JSON.stringify(req.user)}`, true);
 		
 		//check for authorization
 		if( req.user.role.access_level >= memberRole.access_level ){
@@ -247,11 +248,10 @@ router.post("/deletemember", async function(req, res){
 });
 
 router.get('/passwords', async function(req, res){
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var org_key = req.user.org_key;
+	var orgKey = req.user.org_key;
 	
-	var orgMembers = await utilities.find("users", {org_key: org_key, name: {$ne: "default_user"}}, {sort: {"name": 1}})
+	var orgMembers = await utilities.find("users", {org_key: orgKey, visible: true}, {sort: {"name": 1}})
 	
 	var roles = await utilities.find("roles", { access_level: { $lte: req.user.role.access_level }});
 	
@@ -278,13 +278,46 @@ router.get('/passwords', async function(req, res){
 	});
 });
 
+router.post('/resetpassword', async function (req, res) {
+	const thisFuncName = 'manage/members/resetpassword[POST]: ';
+	
+	const memberId = req.body.memberId;
+	
+	try {
+		//get info on requested member
+		const member = await utilities.findOne('users', {_id: memberId});
+		logger.info(`${thisFuncName} Request to reset password of ${member.name} by ${req.user.name}`);
+		const memberRole = await utilities.findOne('roles', {role_key: member.role_key});
+		
+		//check if user is authorized to edit the selected member
+		if (memberRole.access_level <= req.user.role.access_level) {
+			
+			const writeResult = await utilities.update('users', 
+				{_id: memberId}, {$set: {'password': 'default'}});
+				
+			logger.info(`${thisFuncName} Reset password of ${member.name} successfully.`);
+			res.send({status: 200, message: "Reset password successfully."});
+		}
+		//if unauthorized, return unauthorized message
+		else {
+			logger.info(`${thisFuncName} User ${req.user.name} unauthorized to edit ${member.name}`);
+			res.send({status: 401, message: "Unauthorized to edit this user."});
+		}
+	}
+	//catch-all for any other errors
+	catch (err) {
+		logger.error(err);
+		res.send({status: 500, message: err.toString()});
+	}
+})
 
 router.get("/present", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var users = await utilities.find("users", {}, {sort: {"name": 1}});
-	//console.log("members.present: users=" + JSON.stringify(users));
+	//2019-11-20 JL: updated to only work with members of the right organization.
+	const orgKey = req.user.org_key;
+	
+	var users = await utilities.find("users", {org_key: orgKey, visible: true}, {sort: {"name": 1}});
+	logger.trace("members.present: users=" + JSON.stringify(users));
 
 	res.render("./manage/present", {
 		title: "Assign Who Is Present",
@@ -293,10 +326,11 @@ router.get("/present", async function(req, res) {
 });
 
 router.post("/updatepresent", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
-	await utilities.update("users", {}, { $set: { "event_info.present" : "false" } }, {multi: true});
+	//2019-11-20 JL: updated to only work with members of the right organization.
+	const orgKey = req.user.org_key;
+	
+	await utilities.update("users", {org_key: orgKey}, { $set: { "event_info.present" : "false" } }, {multi: true});
 	
 	//Get a list of all present member IDs.
 	var allPresentMembers = [];
@@ -307,7 +341,7 @@ router.post("/updatepresent", async function(req, res){
 	
 	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
 	
-	var query = {"_id": {$in: allPresentMembers}};
+	var query = {"_id": {$in: allPresentMembers}, org_key: orgKey};
 	var update = {$set: {"event_info.present": true}};
 	
 	await utilities.update("users", query, update, {multi: true, castIds: true});

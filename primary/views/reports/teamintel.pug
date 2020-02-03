@@ -30,7 +30,7 @@ block content
 		a(class="theme-link w3-btn" href=`/reports/teamintelhistory?team=${team.key}`) All data for Team #{team.key.substring(3)} from this year
 	br 
 
-	button#PitScoutingButton(onClick="toggle('PitScoutingSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom theme-rounded-small") 
+	button#PitScoutingButton(onClick="toggle('PitScoutingSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 		span(class="w3-left") &#9660;&nbsp;
 		span Show 
 		span Pit Scouting
@@ -77,7 +77,7 @@ block content
 			h6 No pit scouting data yet - check back later
 
 	p
-	button#StatisticsButton(onClick="toggle('StatisticsSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom theme-rounded-small") 
+	button#StatisticsButton(onClick="toggle('StatisticsSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 		span(class="w3-left") &#9660;&nbsp;
 		span Show 
 		span Statistics
@@ -127,7 +127,7 @@ block content
 
 
 	p
-	button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom theme-rounded-small") 
+	button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 		span(class="w3-left") &#9660;&nbsp;
 		span Show 
 		span Previous Matches
@@ -170,7 +170,7 @@ block content
 				//-div(class="w3-row")
 					div(class="w3-col s12 m12 l2")
 						a(href=`/reports/matchintel?key=${match.key}`) 
-							div(class="theme-gray theme-hover-white w3-btn w3-block w3-border")
+							div(class="theme-dim theme-hover-white w3-btn w3-block w3-border")
 								- var matchPrefix = "";
 								- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 								- var outcome = "Tie!";
@@ -189,7 +189,7 @@ block content
 					div(class="w3-col s4 m2")
 						- var divClassBlue = 'w3-btn w3-block w3-border previousmatches-container ';
 						- if (match.winning_alliance == 'blue') divClassBlue += 'w3-white';
-						- else divClassBlue += 'theme-gray';
+						- else divClassBlue += 'theme-dim';
 						div(class=`${divClassBlue}`)
 							if (match.alliances.blue.score > -1)
 								span Score:
@@ -214,7 +214,7 @@ block content
 					div(class="w3-col s4 m2 l2")
 						- var divClassRed = 'w3-btn w3-block w3-border previousmatches-container ';
 						- if (match.winning_alliance == 'red') divClassRed += 'w3-white';
-						- else divClassRed += 'theme-gray';
+						- else divClassRed += 'theme-dim';
 						div(class=`${divClassRed}`)
 							if (match.alliances.red.score > -1)
 								span Score:

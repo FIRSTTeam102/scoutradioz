@@ -3,60 +3,13 @@ require('colors');
 
 var functions = module.exports = {};
 
-//View engine locals variables
-functions.userViewVars = function(req, res, next){
-	
-	if(req.app.debug) console.log("DEBUG - usefunctions.js - functions.userViewVars: ENTER");
-	
-	if(req.user)
-		res.locals.user = req.user;
-	
-	var fileRoot;
-	
-	//If we have set a process tier and S3 bucket name, then set fileRoot to an S3 url
-	if( process.env.TIER && process.env.S3_BUCKET ){
-		
-		fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}/`;
-		
-	}
-	//Otherwise set fileRoot as / for local filesystem
-	else{
-		
-		fileRoot = '/'
-	}
-	
-	res.locals.fileRoot = fileRoot;
-	
-	next();
-}
-
 /**
- * logger for res.log
+ * logger for logger.debug
  * @param {*} req 
  * @param {*} res 
  * @param {*} next 
  */
 functions.logger = function(req, res, next){
-	
-	res.log = function(message, param2, param3){
-		var color, override = false;
-		if(typeof(param2) == "boolean")
-			override = param2;
-		if(typeof(param2) == "string")
-			color = param2;
-		if(typeof(param3) == "boolean")
-			override = param3;
-		if(typeof(param3) == "string")
-			color = param3;
-		
-		//res.debug is set to app.debug inside app.js
-		if(req.app.debug || override){
-			if(typeof(message) == "string" && color != undefined)
-				console.log(message);
-			else
-				console.log(message);
-		}
-	}
 		
 	//Sets variables accessible to any page from req (request) object
 	//req.requestTime = Date.now(); req.requestTime IS NOW SET INSIDE APP.JS
@@ -97,42 +50,6 @@ functions.logger = function(req, res, next){
 		+ " at "
 		+ formattedReqTime);
 	
-	next();
-}
-
-/**
- * Logs when res.render is called
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
- */
-functions.renderLogger = function(req, res, next){
-	
-	//Changes res.render
-	res.render = (function(link, param){
-		var cached_function = res.render;
-		
-		return function(link, param){
-			
-			//stores pre-render post-request time
-			let beforeRenderTime = Date.now() - req.requestTime;
-			
-			//applies render function
-			let result = cached_function.apply(this, arguments);
-			
-			//stores post-render time
-			let renderTime = Date.now() - req.requestTime - beforeRenderTime;
-			
-			//logs if debug
-			this.log("Completed route in "
-				+ (beforeRenderTime).toString().yellow
-				+ " ms; Rendered page in " 
-				+ (renderTime).toString().yellow
-				+ " ms");
-			
-			return result;
-		}
-	}());
 	next();
 }
  

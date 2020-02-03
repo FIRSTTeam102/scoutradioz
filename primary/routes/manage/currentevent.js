@@ -1,13 +1,18 @@
-const express = require('express');
+const router = require("express").Router();
+const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
-const router = express.Router();
+
+router.all('/*', async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
 
 router.get("/matches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 
 	var thisFuncName = "current.matches[get]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var eventId = req.event.key;
 		
@@ -21,8 +26,6 @@ router.get("/matches", async function(req, res) {
 });
 
 router.get("/getcurrentteams", async function(req, res){
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	// //get TBA key from db
 	// var passwordsFind = await utilities.find("passwords", { name:"thebluealliance-args" });
@@ -56,11 +59,9 @@ router.get("/getcurrentteams", async function(req, res){
 })
 
 router.post("/resetmatches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "current.resetmatches[post]: ";
-	res.log(thisFuncName + 'ENTER');
+	logger.debug(thisFuncName + 'ENTER');
 	
 	// var matchCol = db.get("matches");
 	
@@ -79,11 +80,9 @@ router.post("/resetmatches", async function(req, res) {
 });
 
 router.post("/updatematch", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "current.updatematch[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	var matchId = req.body.matchId;
 
@@ -112,18 +111,18 @@ router.post("/updatematch", async function(req, res) {
 	await utilities.remove("currentrankings", {});
 	// Reload the rankings from TBA
 	var rankingUrl = "event/" + eventId + "/rankings";
-	res.log(thisFuncName + "rankingUrl=" + rankingUrl);
+	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
 
 	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankinfo = JSON.parse(rankData);
 	var rankArr = [];
 	if (rankinfo)
 		rankArr = rankinfo.rankings;
-	//res.log(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	//logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
-		//res.log(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankArr[rankIdx].team_key] = rankArr[rankIdx];
 	}
 
@@ -135,7 +134,7 @@ router.post("/updatematch", async function(req, res) {
 
 	// Reload the match data from TBA
 	var url = "match/" + matchId;
-	res.log(thisFuncName + "url=" + url);
+	logger.debug(thisFuncName + "url=" + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
 	var match = JSON.parse(matchData);
 	// stick it in an array so the insert will work later
@@ -150,7 +149,7 @@ router.post("/updatematch", async function(req, res) {
 	//
 	// 2019-03-21, M.O'C: Adding in recalculation of aggregation data
 	//
-	res.log(thisFuncName + 'About to start in on updating min/maxes of agg data');
+	logger.debug(thisFuncName + 'About to start in on updating min/maxes of agg data');
 	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 		
 	var aggQuery = [];
@@ -173,7 +172,7 @@ router.post("/updatematch", async function(req, res) {
 	}
 	aggQuery.push({ $group: groupClause });
 	aggQuery.push({ $sort: { _id: 1 } });
-	res.log(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	// Run the aggregation!
 	var aggArray = await utilities.aggregate("scoringdata", aggQuery);
@@ -209,7 +208,7 @@ router.post("/updatematch", async function(req, res) {
 			thisMinMax['VARmin'] = VARmin; thisMinMax['VARmax'] = VARmax;
 			thisMinMax['MAXmin'] = MAXmin; thisMinMax['MAXmax'] = MAXmax;
 
-			res.log(thisFuncName + 'thisMinMax=' + JSON.stringify(thisMinMax));
+			logger.debug(thisFuncName + 'thisMinMax=' + JSON.stringify(thisMinMax));
 
 			aggMinMaxArray.push(thisMinMax);
 		}
@@ -228,11 +227,9 @@ router.post("/updatematch", async function(req, res) {
 });
 
 router.post("/updatematches", async function(req, res) {
-	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "current.updatematches[post]: ";
-	res.log(thisFuncName + 'ENTER')
+	logger.debug(thisFuncName + 'ENTER')
 	
 	// var matchCol = db.get("matches");
 	// var rankCol = db.get("currentrankings");
@@ -255,28 +252,28 @@ router.post("/updatematches", async function(req, res) {
 	await utilities.remove("currentrankings", {});
 	// Reload the rankings from TBA
 	var rankingUrl = "event/" + eventId + "/rankings";
-	res.log(thisFuncName + "rankingUrl=" + rankingUrl);
+	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
 
 	var rankingData = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankinfo = JSON.parse(rankingData);
 	var rankArr = [];
 	if (rankinfo)
 		rankArr = rankinfo.rankings;
-	//res.log(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	//logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
 	// Insert into DB
 	await utilities.insert("currentrankings", rankArr);
 
 	// Get matches data from TBA
 	var url = "event/" + eventId + "/matches";
-	res.log(thisFuncName + "url=" + url);
+	logger.debug(thisFuncName + "url=" + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
 	var array = JSON.parse(matchData);
 	var arrayLength = array.length;
 	if (arrayLength == null)
 	{
-		res.log(thisFuncName + "Whoops, there was an error!")
-		res.log(thisFuncName + "data=" + data);
+		logger.debug(thisFuncName + "Whoops, there was an error!")
+		logger.debug(thisFuncName + "data=" + data);
 		
 		res.render('./manage/admin', { 
 			title: 'Admin pages',
@@ -285,7 +282,7 @@ router.post("/updatematches", async function(req, res) {
 	}
 	else
 	{
-		res.log(thisFuncName + 'Found ' + arrayLength + ' data for event ' + eventId);
+		logger.debug(thisFuncName + 'Found ' + arrayLength + ' data for event ' + eventId);
 		
 		// First delete existing match data for the given event
 		await utilities.remove("matches", {"event_key": eventId});

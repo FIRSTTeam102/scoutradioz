@@ -1,4 +1,6 @@
 const logger = require('log4js').getLogger();
+const utilities = require("../utilities");
+
 require('colors');
 
 var functions = module.exports = {};
@@ -57,12 +59,15 @@ functions.authenticate = function(req, res, next) {
 }
 
 //View engine locals variables
-functions.userViewVars = function(req, res, next){
+functions.setViewVariables = async function(req, res, next){
 	
 	logger.debug("usefunctions.js - functions.userViewVars: ENTER");
 	
-	if(req.user)
+	if(req.user) {
+		const org = await utilities.findOne('orgs', {org_key: req.user.org_key});
+		req.user.org = org;
 		res.locals.user = req.user;
+	} 
 	
 	var fileRoot;
 	
@@ -74,13 +79,14 @@ functions.userViewVars = function(req, res, next){
 	//Otherwise set fileRoot as / for local filesystem
 	else{
 		
-		fileRoot = ''
+		fileRoot = '';
 	}
 	
 	res.locals.fileRoot = fileRoot;
 	
 	//Set alert local in here so that we don't have to throw this into Every Single Route
 	res.locals.alert = req.query.alert;
+	res.locals.alertType = req.query.type;
 	
 	next();
 }
@@ -95,8 +101,6 @@ functions.getEventInfo = async function(req, res, next) {
 		key: "undefined",
 		name: "undefined"
 	};
-	
-	var utilities = require("../utilities");
 	
 	var current = await utilities.find("current", {}, {});
 	
@@ -131,29 +135,6 @@ functions.getEventInfo = async function(req, res, next) {
  * Logs requests and user agent
  */
 functions.requestLogger = function(req, res, next){
-	
-	res.log = function(message, param2, param3){
-		var color, override = false;
-		if(typeof(param2) == "boolean")
-			override = param2;
-		if(typeof(param2) == "string")
-			color = param2;
-		if(typeof(param3) == "boolean")
-			override = param3;
-		if(typeof(param3) == "string")
-			color = param3;
-		
-		//res.debug is set to app.debug inside app.js
-		if(req.app.debug || override){
-			if(typeof(message) == "string" && color != undefined)
-				console.log(message[color]);
-			else
-				console.log(message);
-		}
-	}
-		
-	//Sets variables accessible to any page from req (request) object
-	//req.requestTime = Date.now(); req.requestTime IS NOW SET INSIDE APP.JS
 	
 	//formatted request time for logging
 	let d = new Date(req.requestTime),

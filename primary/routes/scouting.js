@@ -2,9 +2,14 @@ const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
 
+router.all('/*', async (req, res, next) => {
+	//Require scouter-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+})
+
 router.get('/match*', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var thisFuncName = "scouting.match*[get]: ";
 	logger.debug(thisFuncName + 'ENTER');
@@ -59,14 +64,7 @@ router.get('/match*', async function(req, res) {
 });
 
 router.post('/match/submit', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
-	/** We need to do this eventually for security. Commented out of fear that scouters may be logged out while scouting (by accident)
-	//auth
-	if(!require('./checkauthentication')(req, res))
-		return null;usefunct
-	*/
 	var thisFuncName = "scouting.match[post]: ";
 	logger.debug(thisFuncName + 'ENTER');
 	
@@ -132,8 +130,6 @@ router.post('/match/submit', async function(req, res) {
 });
 
 router.get('/pit*', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var uploadURL = process.env.UPLOAD_URL + "/" + process.env.TIER + "/image";
 	
@@ -168,8 +164,6 @@ router.get('/pit*', async function(req, res) {
 });
 
 router.post('/pit/submit', async function(req, res){
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var thisFuncName = "scouting.submitpit[post]: ";
 	logger.debug(thisFuncName + 'ENTER');
@@ -199,8 +193,6 @@ router.post('/pit/submit', async function(req, res){
 
 //For \views\scouting\teampictures.pug
 router.get('/teampictures', async function(req, res) {
-	//Check authentication for scouter level
-	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 
 	var thisFuncName = "scouting.teampictures[get]: ";
 

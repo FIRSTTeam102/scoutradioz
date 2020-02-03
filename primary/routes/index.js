@@ -50,7 +50,7 @@ router.all('/selectorg', async function(req, res) {
 	
 	//Make sure that form is filled
 	if(!org_key || org_key == ""){
-		res.log("Form isn't filled, redir. and telling to select an org.");
+		logger.debug("Form isn't filled, redir. and telling to select an org.");
 		return res.redirect('/?alert=Please select an organization.');
 	}
 	
@@ -65,7 +65,7 @@ router.all('/selectorg', async function(req, res) {
 	logger.debug(`${thisFuncName} defaultUser=${JSON.stringify(defaultUser)}`);
 	
 	if(!defaultUser){
-		res.log("No default user")
+		logger.debug("No default user")
 		return res.redirect(`/?alert=Error: No default user for organization ${org_key} exists in database.`);
 	}
 	
@@ -115,7 +115,7 @@ router.get('/home', async function(req, res) {
 		
 	//If no current teams, then render page without team list.
 	if(!teams || !teams[0]){
-		res.log("No teams listed yet");
+		logger.debug("No teams listed yet");
 		return res.render('./home', { 
 			title: 'Home',
 		});
