@@ -73,13 +73,21 @@ div(style="display: none;" id="menuParent")
 						a(href="/admin") Admin
 div(id="")
 - console.log(user)
+- var navbarTitle;
+if user
+	if user.name != 'default_user'
+		- navbarTitle = user.name + ' - ' + user.org.nickname;
+	else if user.org
+		- navbarTitle = user.org.nickname;
+else 
+	- navbarTitle = 'Menu';
 script.
 	$(() => {
 		
 		const options = {
 			slidingSubmenus: false,
 			navbar: {
-				title: `#{(user.name != 'default_user' ? (user.name + ' - ') : '') + user.org.nickname}`,
+				title: `#{navbarTitle}`,
 			},
 			offCanvas: {
 				clone: true,
