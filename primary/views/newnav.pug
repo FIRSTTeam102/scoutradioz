@@ -82,43 +82,93 @@ else
 script.
 	$(() => {
 		
-		const options = {
-			slidingSubmenus: false,
-			navbar: {
-				title: `#{navbarTitle}`,
-			},
-			offCanvas: {
-				clone: true,
-			},
-			extensions: {
-				//"(max-width: 400px)": ["fullscreen"],
-				"all": ["border-full"],
-			}
-		}
-		const configuration = {
-			// configuration
-			offCanvas: {
-				page: {
-					selector: "#page",
+		const offCanvasMenu = new Mmenu('#menu', 
+			{
+				slidingSubmenus: false,
+				navbar: {
+					title: `#{navbarTitle}`,
 				},
-			},
-		};
+				offCanvas: {
+					clone: true,
+				},
+				extensions: {
+					//"(max-width: 400px)": ["fullscreen"],
+					"all": ["border-full"],
+				}
+			}, {
+				offCanvas: {
+					page: {
+						selector: "#page",
+					},
+				},
+			});
 		
-		var offCanvasMenu = new Mmenu('#menu', options, configuration);
-		var offCanvasAPI = offCanvasMenu.API;
-		
+		const offCanvasAPI = offCanvasMenu.API;
+		const bgImgContainer = $('.bg-image-container')[0];
 		
 		$("#burger").click(() => {
-			toggleMenu();
+			openMenu();
 		})
 		
-		function toggleMenu(){
-			
-			if (offCanvasMenu.vars.opened == true){
-				offCanvasAPI.close();
-			}
-			else {
+		//Hammer.js - Native-like touch interfaces
+		var hammertime = new Hammer(document.body, {});
+		//Swipe right to open menu
+		hammertime.on('swiperight', function(ev) {
+			console.log("newnav - Hammer SwipeRight has occurred");
+			openMenu();
+		});
+		//Swipe left to close menu
+		hammertime.on('swipeleft', function(ev) {
+			console.log("newnav - Hammer SwipeLeft has occurred");
+			closeMenu();
+		});
+		
+		function openMenu(){
+			//Open menu
+			if (offCanvasMenu.vars.opened == false) {
+				//Set bg-img to window height to avoid size jumping
+				if (bgImgContainer) bgImgContainer.style.height = `${window.innerHeight}px`;
 				offCanvasAPI.open();
 			}
 		}
+		
+		function closeMenu(){
+			//Close menu
+			if (offCanvasMenu.vars.opened == true) {
+				//Run handler before closing menu
+				setTimeout(handleMenuClose, 400);
+				offCanvasAPI.close();
+			}
+		}
+		
+		//Pre-close handler
+		function handleMenuClose(){
+			//reset img container values to default
+			if (bgImgContainer) {
+				bgImgContainer.style.height = "";
+				bgImgContainer.style.top = "";
+			}
+		}
+		
+		//Inject pre-close handler on 'mm-slideout' click
+		$('.mm-slideout').click(() => {
+			if (offCanvasMenu.vars.opened == true) {
+				setTimeout(handleMenuClose, 400);
+			}
+		})
+		
+		//Scroll handler - Modifies background-image position
+		var scTicking = false;
+		$(window).on('scroll', e => {
+			if (!scTicking) {
+				scTicking = true;
+				requestAnimationFrame(() => {
+					//if menu is opened when scrolling, move img container to match scroll position
+					if (offCanvasMenu.vars.opened == true) {
+						if (bgImgContainer) bgImgContainer.style.top = `${window.scrollY}px`;
+					}
+					scTicking = false;
+				})
+			}
+		});
 	})

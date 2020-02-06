@@ -17,17 +17,27 @@ doctype html
 html
 	head
 		style.
-			html, #page{
+			html{
 				background-color: var(--background);
 				/*background-image: url("/images/infinite-recharge-trim-blur.png");
 				background-repeat: no-repeat;
 				background-position: left bottom;
-				background-attachment: fixed;*/
+				background-attachment: fixed;
+				/**/
 			}
 			.bg-image{
-				position: fixed;
-				min-height: 100%;
-				filter: blur(8px);
+				min-width: calc(100% + 20px);
+				
+				min-height: calc(100% + 20px);
+				margin: -10px;
+				position: relative;
+				top: 0px;
+				
+				-webkit-filter: blur(5px);
+				-moz-filter: blur(5px);
+				-o-filter: blur(5px);
+				-ms-filter: blur(5px);
+				filter: blur(5px);
 			}
 			.bg-image-container{
 				position: fixed;
@@ -35,7 +45,8 @@ html
 				left: 0px;
 				z-index: -1;
 				overflow: hidden;
-				min-height: 100%;
+				height: 100%;
+				width: 100%;
 			}
 		base(href="/")
 		if !title
@@ -53,6 +64,7 @@ html
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=1`)
 		
 		script(src=`${fileRoot}/lib/w3.js`)
+		script(src=`${fileRoot}/lib/hammer.min.js`)
 		script(src=`${fileRoot}/lib/jquery.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
 		script(src=`${fileRoot}/lib/mmenu/mburger.js`)
