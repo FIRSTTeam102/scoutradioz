@@ -3,16 +3,17 @@
 :root{
 	/* FRC's season colors */
 	/* These define the raw color values for FRC's color palette. */
-	--frc-orange: #FAB74F;
+	--frc-orange: rgb(255, 127, 0);
 	--frc-yellow: #FFF041;
 	--frc-cyan: #00C0DD;
 	--frc-blue: #005CB8;
+	--frc-blue2: #0D90F0;
 	--frc-darkblue: #003A5D;
 	--frc-black: #000000;
 	
 	/* 2020 theme colors */
 	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
-	--primary: var(--frc-orange);
+	--primary: var(--frc-blue2);
 	--secondary: var(--frc-blue);
 	--trim: var(--frc-cyan);
 	--highlight: var(--frc-yellow);
@@ -21,7 +22,9 @@
 	--dark: var(--frc-darkblue);
 	--black: var(--frc-black);
 	
-	--background: #333;
+	/* --background: #333; */
+	/* Coordinate "background" with the image as defined in the 'layout.pug'! */
+	--background: #8BB5E2;
 	--header: var(--trim);
 	
 	/* MMenu customization */
@@ -41,10 +44,15 @@
 	--mb-bar-spacing: 8px;
 }
 
-
+/*
 html, #page{
 	background-color: var(--background);
+	background-image: url("/images/infinite-recharge-trim.png");
+	background-repeat: no-repeat;
+	background-position: left bottom;
+	background-attachment: fixed;
 }
+*/
 
 /* 2019 background colors */
 .theme-link{color: var(--black)!important; background-color: var(--primary)!important}
@@ -55,12 +63,20 @@ html, #page{
 /* 2019 text colors */
 .theme-text{color:#C8C8DC!important;}
 .theme-text-dark{color:#1E1E23!important;}
+/*
+.theme-text{color:#C8C8DC!important;}
+.theme-text-dark{color:#1E1E23!important;}
 .theme-text-gray,.theme-text-grey{color:#757575!important;}
 .theme-text-white{color:#fff!important;}
-.theme-text-black{color:#000!important;}
+*/
+.theme-text{color:#000!important;}
+.theme-text-dark{color:#111!important;}
+.theme-text-gray,.theme-text-grey{color:#222!important;}
+.theme-text-white{color:#000!important;}
+.theme-text-black{color:#111!important;}
 /* 2019 hover background colors */
-.theme-link:hover{color:rgb(22, 21, 20)!important;background-color:#f3dfd4!important}
-.theme-hover-white:hover{color:#000!important;background-color:#f3dfd4!important}
+.theme-link:hover{color:rgb(22, 21, 20)!important;background-color:#b2e3f7!important}
+.theme-hover-white:hover{color:#000!important;background-color:#b2e3f7!important}
 .theme-hover-light-gray:hover,.theme-hover-light-grey:hover{color:#1E1E23!important;background-color:#b9b9c9!important}
 .theme-submit:hover{color:var(--dark)!important;background-color:var(--light)!important}
 .theme-hover-red:hover{color:#fff!important;background-color:#ff6d85!important}
@@ -97,11 +113,11 @@ input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
 /* For spacers */
 .theme-spacer{
 	border-collapse: collapse;
-	border-bottom: 2px solid rgba(255,255,255,0.25);
+	border-bottom: 2px solid rgba(0,0,0,0.25);
 }
 hr{
 	border: 0;
-	border-top: 2px solid rgba(255,255,255,0.25);
+	border-top: 2px solid rgba(0,0,0,0.25);
 	margin: 20px 0;
 }
 
@@ -178,3 +194,11 @@ textarea{padding:8px 12px;}
 .notification-card .notification-card-exit:hover{
 	cursor: pointer;
 }
+
+/*
+body {
+	background-image: url("/images/deepspace-mountains.svg");
+	background-repeat: no-repeat;
+	background-position: bottom;
+}
+*/
