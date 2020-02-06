@@ -19,10 +19,23 @@ html
 		style.
 			html, #page{
 				background-color: var(--background);
-				background-image: url("/images/infinite-recharge-trim-blur.png");
+				/*background-image: url("/images/infinite-recharge-trim-blur.png");
 				background-repeat: no-repeat;
 				background-position: left bottom;
-				background-attachment: fixed;
+				background-attachment: fixed;*/
+			}
+			.bg-image{
+				position: fixed;
+				min-height: 100%;
+				filter: blur(8px);
+			}
+			.bg-image-container{
+				position: fixed;
+				top: 0px;
+				left: 0px;
+				z-index: -1;
+				overflow: hidden;
+				min-height: 100%;
 			}
 		base(href="/")
 		if !title
@@ -107,3 +120,5 @@ html
 			//Footer not included becasue it modifies the body's styling.
 			//-include footer
 			//div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
+			div(class="bg-image-container")
+				img(class="bg-image" src=`${fileRoot}/images/infinite-recharge-wide-lc.png`)
