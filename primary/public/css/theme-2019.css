@@ -10,6 +10,7 @@
 	--frc-blue2: #0D90F0;
 	--frc-darkblue: #003A5D;
 	--frc-black: #000000;
+	--frc-darkgrey: #444444;
 	
 	/* 2020 theme colors */
 	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
@@ -19,7 +20,8 @@
 	--highlight: var(--frc-yellow);
 	--white: #fff;
 	--light: #eee;
-	--dark: var(--frc-darkblue);
+	/* --dark: var(--frc-darkblue); */
+	--dark: var(--frc-darkgrey);
 	--black: var(--frc-black);
 	
 	/* --background: #333; */
