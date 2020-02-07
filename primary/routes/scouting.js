@@ -4,7 +4,7 @@ const utilities = require('../utilities');
 
 router.all('/*', async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+	if (await req.authenticate (process.env.ACCESS_SCOUTER)) {
 		next();
 	}
 })
