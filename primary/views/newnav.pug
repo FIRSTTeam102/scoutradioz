@@ -104,7 +104,7 @@ script.
 			});
 		
 		const offCanvasAPI = offCanvasMenu.API;
-		const bgImgContainer = $('.bg-image-container')[0];
+		//const bgImgContainer = $('.bg-image-container')[0];
 		
 		$("#burger").click(() => {
 			openMenu();
@@ -127,7 +127,7 @@ script.
 			//Open menu
 			if (offCanvasMenu.vars.opened == false) {
 				//Set bg-img to window height to avoid size jumping
-				if (bgImgContainer) bgImgContainer.style.height = `${window.innerHeight}px`;
+			//	if (bgImgContainer) bgImgContainer.style.height = `${window.innerHeight}px`;
 				offCanvasAPI.open();
 			}
 		}
@@ -144,10 +144,10 @@ script.
 		//Pre-close handler
 		function handleMenuClose(){
 			//reset img container values to default
-			if (bgImgContainer) {
-				bgImgContainer.style.height = "";
-				bgImgContainer.style.top = "";
-			}
+		//	if (bgImgContainer) {
+		//		bgImgContainer.style.height = "";
+		//		bgImgContainer.style.top = "";
+		//	}
 		}
 		
 		//Inject pre-close handler on 'mm-slideout' click
@@ -165,7 +165,7 @@ script.
 				requestAnimationFrame(() => {
 					//if menu is opened when scrolling, move img container to match scroll position
 					if (offCanvasMenu.vars.opened == true) {
-						if (bgImgContainer) bgImgContainer.style.top = `${window.scrollY}px`;
+			//			if (bgImgContainer) bgImgContainer.style.top = `${window.scrollY}px`;
 					}
 					scTicking = false;
 				})

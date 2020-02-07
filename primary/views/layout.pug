@@ -17,15 +17,17 @@ doctype html
 html
 	head
 		style.
-			html{
+			html, #page{
 				background-color: var(--background);
-				/*background-image: url("/images/infinite-recharge-trim-blur.png");
+				background-image: url('#{fileRoot}/images/infinite-recharge-wide-lc-preblurred.png');
+				background-size: cover;
 				background-repeat: no-repeat;
-				background-position: left bottom;
 				background-attachment: fixed;
+				/*background-position: left bottom;
+				
 				/**/
 			}
-			.bg-image{
+			/*.bg-image{
 				min-width: calc(100% + 20px);
 				
 				min-height: calc(100% + 20px);
@@ -47,7 +49,7 @@ html
 				overflow: hidden;
 				height: 100%;
 				width: 100%;
-			}
+			}*/
 		base(href="/")
 		if !title
 			- title = "Untitled Page"
@@ -132,5 +134,5 @@ html
 			//Footer not included becasue it modifies the body's styling.
 			//-include footer
 			//div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
-			div(class="bg-image-container")
+			//-div(class="bg-image-container")
 				img(class="bg-image" src=`${fileRoot}/images/infinite-recharge-wide-lc.png`)
