@@ -60,9 +60,9 @@ html, #page{
 .theme-dim,.theme-grey{color:var(--white)!important;background-color:var(--dark)!important}
 .theme-submit{color:var(--black)!important;background-color:var(--trim)!important}
 .theme-red{color:#fff!important;background-color:#be0020!important}
-/* 2019 text colors */
+/* 2019 text colors 
 .theme-text{color:#C8C8DC!important;}
-.theme-text-dark{color:#1E1E23!important;}
+.theme-text-dark{color:#1E1E23!important;} */
 /*
 .theme-text{color:#C8C8DC!important;}
 .theme-text-dark{color:#1E1E23!important;}
