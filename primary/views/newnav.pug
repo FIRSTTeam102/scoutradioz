@@ -32,14 +32,30 @@ div(style="display: none;" id="menuParent")
 						a(href="#") Drive Team
 					li
 						a(href="#") Pit Crew
-			li 
-				span Scouting
-				ul 
+			if user
+				if user.name != 'default_user'
 					li 
-						a(href="/dashboard/pits") Pit Scouting
+						span #{user.name}
+						ul 
+							li 
+								a(href='/user/logout') Log Out
+							li 
+								a(href='/user/changepassword') Change Password
+				if user.role.access_level >= process.env.ACCESS_VIEWER
+					if user.org 
+						li 
+							span #{user.org.nickname}
+							ul 
+								li 
+									a(href='/user/switchorg') Change Organization
+				if user.role.access_level >= process.env.ACCESS_SCOUTER 
 					li 
-						a(href="/dashboard/matches") Match Scouting
-			if user 
+						span Scouting
+						ul 
+							li 
+								a(href="/dashboard/pits") Pit Scouting
+							li 
+								a(href="/dashboard/matches") Match Scouting
 				if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
 					li
 						a(href="/manage") Manage #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}

@@ -32,7 +32,7 @@
 	/* MMenu customization */
 	--mm-color-background: #444;
 	--mm-color-background-emphasis: #666; /* Selected menu item. */
-	--mm-color-background-highlight: #555; /* Submenu dropdown. */ 
+	--mm-color-background-highlight: #77777777; /* Submenu dropdown. */ 
 	--mm-color-border: #aaa;
 	--mm-color-button: #eee;
 	--mm-color-text: #eee;
