@@ -1,20 +1,37 @@
-div(id="headerhar" class="w3-card header")
-	a(id="burger")
-		button(class="mburger mburger--squeeze")
-			b 
-			b 
-			b 
-	div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
-		span(style="display:inline-block;height:100%;vertical-align:middle;")
-		img(src=`${fileRoot}/images/logo-black-sm.png` class="header-logo")
-	div(class="w3-right w3-show-inline-block" style="height: 45px;")
-		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-full-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
+div(style="overflow-x: hidden;")
+	div(id="headerbar" class="w3-card header")
+		a(id="burger")
+			button(class="mburger mburger--squeeze")
+				b 
+				b 
+				b 
+		div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
+			span(style="display:inline-block;height:100%;vertical-align:middle;")
+			img(src=`${fileRoot}/images/logo-black-sm.png` class="header-logo")
+		div(class="w3-right w3-show-inline-block" style="height: 45px;")
+			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-full-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
 div(id="headerlogo" class="w3-padding w3-center")
 	a(href="/home")
 		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
 	h3=eventName
+style.
+	.slidein-menu{
+		height: 100%;
+		position: fixed;
+		z-index: 2;
+		top: 0px;
+		left: 0px;
+		
+		width: 80vw;
+		min-width: 140px;
+		max-width: 440px;
+		
+		box-shadow: 0px 0px 15px #000;
+		
+		display: none;
+	}
 div(style="display: none;" id="menuParent")
-	nav(id="menu")
+	nav(id="menu" class="slidein-menu")
 		//- NOTE: If you add a (class="selected") to an "li" element, it will be highlighted by the mmenu extension. 
 			We can make that procedural sometime in the future.
 		ul
@@ -95,89 +112,4 @@ if user
 		- navbarTitle = user.org.nickname;
 else 
 	- navbarTitle = 'Menu';
-script.
-	$(() => {
-		
-		const offCanvasMenu = new Mmenu('#menu', 
-			{
-				slidingSubmenus: false,
-				navbar: {
-					title: `#{navbarTitle}`,
-				},
-				offCanvas: {
-					clone: true,
-				},
-				extensions: {
-					//"(max-width: 400px)": ["fullscreen"],
-					"all": ["border-full"],
-				}
-			}, {
-				offCanvas: {
-					page: {
-						selector: "#page",
-					},
-				},
-			});
-		
-		const offCanvasAPI = offCanvasMenu.API;
-		
-		$("#burger").click(() => {
-			openMenu();
-		})
-		
-		//Hammer.js - Native-like touch interfaces
-		var hammertime = new Hammer(document.body, {});
-		//Swipe right to open menu
-		hammertime.on('swiperight', function(ev) {
-			console.log("newnav - Hammer SwipeRight has occurred");
-			openMenu();
-		});
-		//Swipe left to close menu
-		hammertime.on('swipeleft', function(ev) {
-			console.log("newnav - Hammer SwipeLeft has occurred");
-			closeMenu();
-		});
-		
-		function openMenu(){
-			//Open menu
-			if (offCanvasMenu.vars.opened == false) {
-				offCanvasAPI.open();
-			}
-		}
-		
-		function closeMenu(){
-			//Close menu
-			if (offCanvasMenu.vars.opened == true) {
-				//Run handler before closing menu
-				setTimeout(handleMenuClose, 400);
-				offCanvasAPI.close();
-			}
-		}
-		
-		//Pre-close handler
-		function handleMenuClose(){
-
-		}
-		
-		//Inject pre-close handler on 'mm-slideout' click
-		$('.mm-slideout').click(() => {
-			if (offCanvasMenu.vars.opened == true) {
-				setTimeout(handleMenuClose, 400);
-			}
-		})
-		
-		//Scroll handler - Modifies background-image position
-		var scTicking = false;
-		$(window).on('scroll', e => {
-			if (!scTicking) {
-				scTicking = true;
-				requestAnimationFrame(() => {
-					//if menu is opened when scrolling, move img container to match scroll position
-					if (offCanvasMenu.vars.opened == true) {
-						
-					}
-					scTicking = false;
-				})
-			}
-		});
-	})
+script var navbarTitle = `#{navbarTitle}`;
