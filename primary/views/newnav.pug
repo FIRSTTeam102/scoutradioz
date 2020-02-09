@@ -30,6 +30,17 @@ style.
 		
 		display: none;
 	}
+	.slidein-overlay{
+		opacity: 0;
+		background-color: #53555a60;
+		z-index: 1;
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		top: 0px;
+		left: 0px;
+	}
+div(style="display: none;" class="slidein-overlay" id="overlay")
 div(style="display: none;" id="menuParent")
 	nav(id="menu" class="slidein-menu")
 		//- NOTE: If you add a (class="selected") to an "li" element, it will be highlighted by the mmenu extension. 

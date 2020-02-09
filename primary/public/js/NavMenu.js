@@ -24,9 +24,19 @@ class NavigationBar{
 		
 		this.menuElem = $("#menu");
 		this.barElem = $("#headerbar");
+		this.overlayElem = $("#overlay");
 		
 		if (navbarTitle) this.title = navbarTitle;
 		else this.title = "Menu"
+		/*
+		const pathname = window.location.pathname;
+		const aElems = $("#menu a");
+		for (var i = 0; i < aElems.length; i++) {
+			var elem = aElems[i];
+			if ($(elem).attr('href') == pathname) {
+				$(elem).parent().addClass("selected");
+			}
+		}*/
 		
 		this.menu = new Mmenu('#menu',
 		{
@@ -35,6 +45,10 @@ class NavigationBar{
 				title: this.title,
 			},
 			offCanvas: false,
+			setSelected: {
+				current: 'detect',
+			},
+			counters: true,
 			extensions: {
 				//"(max-width: 400px)": ["fullscreen"],
 				"all": ["border-full"],
@@ -121,7 +135,6 @@ class NavigationBar{
 		
 		hammertime.on('panend', (ev) => {
 			console.log('Hammertime panend');
-			this.panning = false;
 			
 			//Add fast transition timings
 			this.menuElem.css({
@@ -138,26 +151,35 @@ class NavigationBar{
 			console.log(`menuWidth: ${menuWidth} percOpened: ${percentageOpened}`);
 			setTimeout(() => {
 				
-				//if greater than threshold, open menu
+				//if greater than threshold
 				if (percentageOpened > 0.5) {
-					this.menuOpen();
+					//only move if already paning
+					if (this.panning) {
+						this.menuOpen();
+					}
 				}
-				//if lower than threshold, close menu
+				//if lower than threshold
 				else {
-					this.menuClose();
+					//only move if panning
+					if (this.panning) {
+						this.menuClose();
+					}
 				}
+				
+				this.panning = false;
+				
 			}, this.opts.openingInterval);
 		});
 		
 		hammertime.on('pan', (ev) => {
 			//If menu is open, then enable panning
-			if (this.opened) {
+			if (this.opened && !this.moving) {
 				this.panning = true;
 			}
 			//If user has panned enough to the right, start panning
 			if (ev.deltaX > this.opts.panThreshold) {
 				
-				if (!this.opened && !this.panning) {
+				if (!this.opened && !this.moving && !this.panning) {
 					//Run pre-open sequence
 					this.preMenuOpen();
 					//Override timings to be fast
@@ -200,7 +222,7 @@ class NavigationBar{
 				}
 			}
 			//if regular panning is now enabled
-			if (this.panning) {
+			if (this.panning && !this.moving) {
 				//Only animate menu bar if an animation frame is not pending
 				if (!this.pendingAnimationFrame) {
 					//menuWidth to calculate percentageOpened
@@ -241,6 +263,11 @@ class NavigationBar{
 			transform: `translate3d(${positions.bar}, 0, 0)`,
 			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
+		this.overlayElem.css({
+			display: 'block',
+			opacity: 0,
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
 	}
 	
 	menuOpen(){
@@ -256,6 +283,9 @@ class NavigationBar{
 			});
 			this.barElem.css({
 				transform: `translate3d(${positions.bar}, 0, 0)`,
+			});
+			this.overlayElem.css({
+				opacity: 1,
 			});
 		});
 		
@@ -278,10 +308,13 @@ class NavigationBar{
 		console.log('preMenuClose');
 		
 		this.menuElem.css({
-			transition: `${this.opts.slowTransitionTime}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
 		this.barElem.css({
-			transition: `${this.opts.slowTransitionTime}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
+		this.overlayElem.css({
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
 	}
 	
@@ -298,6 +331,9 @@ class NavigationBar{
 			});
 			this.barElem.css({
 				transform: `translate3d(${positions.bar}, 0, 0)`,
+			});
+			this.overlayElem.css({
+				opacity: 0,
 			});
 		});
 		
@@ -324,6 +360,10 @@ class NavigationBar{
 		this.barElem.css({
 			transform: '',
 			transition: '',
+		});
+		this.overlayElem.css({
+			opacity: '',
+			display: 'none',
 		});
 	}
 	
