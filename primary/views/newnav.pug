@@ -76,6 +76,9 @@ div(style="display: none;" id="menuParent")
 							ul 
 								li 
 									a(href='/user/switchorg') Change Organization
+								if user.name == 'default_user'
+									li 
+										a(href='/user/login') Log In
 				if user.role.access_level >= process.env.ACCESS_SCOUTER 
 					li 
 						span Scouting
