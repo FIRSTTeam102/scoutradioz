@@ -16,7 +16,6 @@
 doctype html
 html
 	head
-		style html{	background-image: url('#{fileRoot}/images/infinite-recharge-wide-lc-preblurred-2.png');	}
 		base(href="/")
 		if !title
 			- title = "Untitled Page"
@@ -31,6 +30,7 @@ html
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mburger.css`)
 		link(rel="stylesheet" href=`${fileRoot}/css/theme-2019.css?v=3`)
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=2`)
+		style html{	background-image: url('#{fileRoot}/images/backgrounds/infinite-recharge-blur.png');	}
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		script(src=`${fileRoot}/lib/hammer.min.js`)

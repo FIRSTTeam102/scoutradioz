@@ -7,7 +7,7 @@ div(style="overflow-x: hidden;")
 				b 
 		div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
 			span(style="display:inline-block;height:100%;vertical-align:middle;")
-			img(src=`${fileRoot}/images/logo-black-sm.png` class="header-logo")
+			img(src=`${fileRoot}/images/brand-logos/scoutradioz-black-sm.png` class="header-logo")
 		div(class="w3-right w3-show-inline-block" style="height: 45px;")
 			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-full-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
 div(id="headerlogo" class="w3-padding w3-center")
@@ -39,6 +39,24 @@ style.
 		height: 100%;
 		top: 0px;
 		left: 0px;
+	}
+	.slidein-brand{
+		padding: 16px;
+	}
+	.slidein-brand img{
+		max-height: 32px;
+		max-width: 32px;
+	}
+	.slidein-brand .w3-tooltiptext{
+		background-color: #eee;
+		color: #000;
+		padding: 8px;
+		max-width: 100%;
+		left: 0;
+		margin-left: 0;
+	}
+	.slidein-brand .w3-tooltiptext::after{
+		border-color: #eee transparent transparent transparent;
 	}
 div(style="display: none;" class="slidein-overlay" id="overlay")
 div(style="display: none;" id="menuParent")
@@ -131,6 +149,7 @@ script var navMenuTitle = `#{navMenuTitle}`;
 //-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
 script.
 	var footerContents = [
-		`<div class="w3-col"><span>Copyright 2019 </span><a href='https://team102.org' target='_blank'> FIRST Team 102.</a></div>`,
-		`<div class="w3-col">Powered by <a href="https://thebluealliance.com" target="_blank" class="text-link"> The&nbsp;Blue&nbsp;Alliance.</span>`,	
-	];
+		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/monochrome-badge.png" alt=""><span class="w3-tooltiptext">Copyright 2019 FIRST Team 102 and Robotics Fund Inc.</span></img></a>`,
+		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/tba-logo.png" alt=""><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
+		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/FIRST-logo-white.png" alt=""><span class="w3-tooltiptext">Proud to be a participant of FIRST Robotics Competition.</span></img></a>`,
+		];

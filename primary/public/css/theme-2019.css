@@ -26,7 +26,7 @@
 	
 	/* --background: #333; */
 	/* Coordinate "background" with the image as defined in the 'layout.pug'! */
-	--background: #8BB5E2;
+	--background: #9cd3f7;
 	--header: var(--trim);
 	
 	/* MMenu customization */
@@ -48,7 +48,7 @@
 
 html{
 	/*Background-image URL is overriden in layout.pug with S3 url*/
-	background-image: url('/images/infinite-recharge-wide-lc-preblurred-2.png');
+	background-image: url('/images/backgrounds/infinite-recharge-blur.png');
 	background-color: var(--background);
 	background-size: cover;
 	background-repeat: no-repeat;
@@ -209,11 +209,3 @@ textarea{padding:8px 12px;}
 .notification-card .notification-card-exit:hover{
 	cursor: pointer;
 }
-
-/*
-body {
-	background-image: url("/images/deepspace-mountains.svg");
-	background-repeat: no-repeat;
-	background-position: bottom;
-}
-*/

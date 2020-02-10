@@ -148,8 +148,8 @@ async function handleUpcomingMatch( data ){
 					title: `${titleIdentifier} will start soon`,
 					options: {
 						body: `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`,
-						badge: '/images/monochrome-badge.png',
-						icon: '/images/FIRST-logo.png',
+						badge: '/images/brand-logos/monochrome-badge.png',
+						icon: '/images/brand-logos/FIRST-logo.png',
 						image: imageHref,
 						actions: [
 							{
