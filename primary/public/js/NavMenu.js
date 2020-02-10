@@ -26,8 +26,10 @@ class NavigationBar{
 		this.barElem = $("#headerbar");
 		this.overlayElem = $("#overlay");
 		
-		if (navbarTitle) this.title = navbarTitle;
+		if (navMenuTitle) this.title = navMenuTitle;
 		else this.title = "Menu"
+		if (footerContents) this.footerContents = footerContents;
+		else this.footerContents = [];
 		/*
 		const pathname = window.location.pathname;
 		const aElems = $("#menu a");
@@ -53,6 +55,12 @@ class NavigationBar{
 				//"(max-width: 400px)": ["fullscreen"],
 				"all": ["border-full"],
 			},
+			navbars: [
+			   {
+				  position: "bottom",
+				  content: this.footerContents,
+			   }
+			],
 		}, { });
 		
 		this.api = this.menu.API;
@@ -184,7 +192,7 @@ class NavigationBar{
 					this.preMenuOpen();
 					//Override timings to be fast
 					this.menuElem.css({
-						display: 'block',
+						display: 'flex',
 						transition: `${this.opts.fastTransitionTime}ms ${this.opts.fastTransition}`,
 					});
 					this.barElem.css({
@@ -236,7 +244,7 @@ class NavigationBar{
 					requestAnimationFrame(() => {
 						this.pendingAnimationFrame = false;
 						this.menuElem.css({
-							display: 'block',
+							display: 'flex',
 							transform: `translate3d(${positions.menu}, 0, 0)`,
 						});
 						this.barElem.css({
@@ -255,7 +263,7 @@ class NavigationBar{
 		const positions = this.calculateTransformPosition(0);
 		
 		this.menuElem.css({
-			display: 'block',
+			display: 'flex',
 			transform: `translate3d(${positions.menu}, 0, 0)`,
 			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
@@ -264,7 +272,7 @@ class NavigationBar{
 			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
 		this.overlayElem.css({
-			display: 'block',
+			display: 'flex',
 			opacity: 0,
 			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});

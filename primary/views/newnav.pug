@@ -16,12 +16,12 @@ div(id="headerlogo" class="w3-padding w3-center")
 	h3=eventName
 style.
 	.slidein-menu{
-		height: 100%;
 		position: fixed;
 		z-index: 2;
+		/*height: 100%;
 		top: 0px;
 		left: 0px;
-		
+		*/
 		width: 80vw;
 		min-width: 140px;
 		max-width: 440px;
@@ -118,12 +118,19 @@ div(style="display: none;" id="menuParent")
 				if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
 					li 
 						a(href="/admin") Admin
-- var navbarTitle;
+			
+- var navMenuTitle;
 if user
 	if user.name != 'default_user'
-		- navbarTitle = user.name + ' - ' + user.org.nickname;
+		- navMenuTitle = user.name + ' - ' + user.org.nickname;
 	else if user.org
-		- navbarTitle = user.org.nickname;
+		- navMenuTitle = user.org.nickname;
 else 
-	- navbarTitle = 'Menu';
-script var navbarTitle = `#{navbarTitle}`;
+	- navMenuTitle = 'Menu';
+script var navMenuTitle = `#{navMenuTitle}`;
+//-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
+script.
+	var footerContents = [
+		`<div class="w3-col"><span>Copyright 2019 </span><a href='https://team102.org' target='_blank'> FIRST Team 102.</a></div>`,
+		`<div class="w3-col">Powered by <a href="https://thebluealliance.com" target="_blank" class="text-link"> The&nbsp;Blue&nbsp;Alliance.</span>`,	
+	];
