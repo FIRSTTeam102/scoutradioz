@@ -20,7 +20,11 @@ router.get("/rankings", async function(req, res){
 	var thisFuncName = "reports.rankings[get]: ";
 	logger.debug(thisFuncName + 'ENTER');
 
-	var rankings = await utilities.find("currentrankings", {}, {sort:{rank: 1}});
+	var event_key = req.event.key;
+
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// var rankings = await utilities.find("currentrankings", {}, {sort:{rank: 1}});
+	var rankings = await utilities.find("rankings", {"event_key": event_key}, {sort:{rank: 1}});
 	if (!rankings)
 		rankings = [];
 
@@ -50,6 +54,8 @@ router.get("/finishedmatches", async function(req, res){
 
 router.get("/upcoming", async function(req, res){
 	
+	var event_key = req.event.key;
+
 	//check if the page queried a specific team for upcoming
 	if(!req.query || !req.query.team)
 		var teamKey = 'all';
@@ -60,7 +66,17 @@ router.get("/upcoming", async function(req, res){
 	var teamRanks = {};
 	
 	//get list of teams for this event
-	var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	//var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
+	var thisEventData = await utilities.find("events", {"key": event_key});
+	var thisEvent = thisEventData[0];
+	var teams = [];
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
+	{
+		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		teams = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+	}
+
 	//get list of just team numbers
 	var teamNumbers = [];
 	for(var i in teams){
@@ -68,7 +84,9 @@ router.get("/upcoming", async function(req, res){
 	}
 	
 	//get rankings for this event
-	var rankings = await utilities.find("currentrankings", {}, {sort: {rank: 1}});
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// var rankings = await utilities.find("currentrankings", {}, {sort:{rank: 1}});
+	var rankings = await utilities.find("rankings", {"event_key": event_key}, {sort:{rank: 1}});
 	if(rankings)
 		for(var i = 0; i < rankings.length; i++){
 			var rankObj = rankings[i];
@@ -159,10 +177,13 @@ router.get("/teamintel", async function(req, res){
 	
 	var event_key = req.event.key;
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	logger.debug(event_year);
 	
 	// Team details
-	var teamFind = await utilities.find("currentteams", { "key" : teamKey }, {});
+	// 2020-02-09, M.O'C: Adjusted "currentteams" to "teams"
+	var teamFind = await utilities.find("teams", { "key" : teamKey }, {});
+	
 	// if(e)
 	// 	return console.error(e);
 	if(!teamFind[0]){
@@ -176,7 +197,10 @@ router.get("/teamintel", async function(req, res){
 	var team = teamFind[0];
 
 	// Extract the current team ranking, etc.
-	var rankFind = await utilities.find("currentrankings", {team_key: teamKey}, {sort: {rank: 1}});
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// var rankFind = await utilities.find("currentrankings", {team_key: teamKey}, {sort: {rank: 1}});
+	var rankFind = await utilities.find("rankings", {"event_key": event_key, "team_key": teamKey}, {sort:{rank: 1}});
+
 	var ranking = null;
 	if (rankFind && rankFind.length > 0)
 		ranking = rankFind[0];
@@ -287,7 +311,9 @@ router.get("/teamintel", async function(req, res){
 	//logger.debug(thisFuncName + 'pitData1=' + JSON.stringify(pitData1));
 
 	// read in the current agg ranges
-	currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
@@ -553,6 +579,7 @@ router.get("/alliancestats", async function(req, res) {
 	
 	var event_year = req.event.year;
 	var event_key = req.event.key;
+	var org_key = req.user.org_key;
 
 	if( !req.query.teams ){
 		return res.redirect("/?alert=Must specify comma-separated list of teams for reports/alliancestats");
@@ -618,7 +645,9 @@ router.get("/alliancestats", async function(req, res) {
 	logger.debug(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
 
 	// read in the current agg ranges
-	var currentAggR = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggR = await utilities.find("currentaggranges", {}, {});
+	var currentAggR = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggR)
 		currentAggRanges = currentAggR;
@@ -646,6 +675,7 @@ router.get("/teamdata", async function(req, res) {
 	var event_year = req.event.year;
 	var event_key = req.event.key;
 	var teamKey = req.query.key;
+	var org_key = req.user.org_key;
 
 	if( !teamKey ){
 		return res.redirect("/?alert=Must specify team key for reports/teamdata");
@@ -653,7 +683,9 @@ router.get("/teamdata", async function(req, res) {
 	logger.debug(`${thisFuncName} teamKey: ${teamKey}`);
 
 	// get the specified team object
-	var teamFind = await utilities.find("currentteams", {"key": teamKey}, {});
+	// 2020-02-09, M.O'C: Adjusted "currentteams" to "teams"
+	var teamFind = await utilities.find("teams", {"key": teamKey}, {});
+
 	var team = {};
 	if (teamFind && teamFind[0])
 		team = teamFind[0];
@@ -674,7 +706,9 @@ router.get("/teamdata", async function(req, res) {
 	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
-	var currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
@@ -701,6 +735,7 @@ router.get("/matchdata", async function(req, res) {
 	var event_year = req.event.year;
 	var event_key = req.event.key;
 	var matchKey = req.query.key;
+	var org_key = req.user.org_key;
 
 	if( !matchKey ){
 		return res.redirect("/?alert=Must specify match key for reports/matchdata");
@@ -729,7 +764,9 @@ router.get("/matchdata", async function(req, res) {
 	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
-	var currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
@@ -758,6 +795,7 @@ router.get("/matchmetrics", async function(req, res) {
 	var event_year = req.event.year;
 	var event_key = req.event.key;
 	var matchKey = req.query.key;
+	var org_key = req.user.key;
 	
 	if( !matchKey ){
 		return res.redirect("/?alert=Must specify match key for reports/matchmetrics");
@@ -842,7 +880,9 @@ router.get("/matchmetrics", async function(req, res) {
 	logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 
 	// read in the current agg ranges
-	var currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
@@ -867,6 +907,7 @@ router.get("/metricsranked", async function(req, res){
 	// var currentAggCol = db.get("currentaggranges");
 	
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -946,7 +987,9 @@ router.get("/metricsranked", async function(req, res){
 	logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 	
 	// read in the current agg ranges
-	var currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
@@ -969,6 +1012,7 @@ router.get("/metrics", async function(req, res){
 	// var currentAggCol = db.get("currentaggranges");
 	
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -1030,7 +1074,9 @@ router.get("/metrics", async function(req, res){
 	//logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 	
 	// read in the current agg ranges
-	var currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
@@ -1061,6 +1107,7 @@ router.get("/metricintel*", async function(req, res){
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
+	var org_key = req.user.org_key;
 	logger.debug(thisFuncName + 'event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will output ALL teams
@@ -1108,7 +1155,9 @@ router.get("/metricintel*", async function(req, res){
 	//logger.debug(thisFuncName + 'aggdata=' + JSON.stringify(aggdata));
 	
 	// read in the current agg ranges
-	var currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
@@ -1138,10 +1187,14 @@ router.get("/allteammetrics", async function(req, res){
 	// for later querying by event_key
 	var event_key = req.event.key;
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	logger.debug(thisFuncName + 'event_key=' + event_key);
 	
 	// get the current rankings
-	var rankFind = await utilities.find("currentrankings", {}, {});
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// var rankFind = await utilities.find("currentrankings", {}, {});
+	var rankFind = await utilities.find("rankings", {"event_key": event_key}, {});
+	
 	var rankings = [];
 	if (rankFind)
 		rankings = rankFind;
@@ -1210,7 +1263,9 @@ router.get("/allteammetrics", async function(req, res){
 	//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
 
 	// read in the current agg ranges
-	var currentAggFind = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggFind = await utilities.find("currentaggranges", {}, {});
+	var currentAggFind = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;

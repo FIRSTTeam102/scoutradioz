@@ -26,7 +26,28 @@ router.get("/matches", async function(req, res) {
 });
 
 router.get("/getcurrentteams", async function(req, res){
-	
+
+	var thisFuncName = "currentevent.getcurrentteams[get]: ";
+	logger.debug(thisFuncName + 'ENTER');
+
+	// 2020-02-09, M.O'C: Refactoring to just update the team_keys for the current event
+	var event_key = req.event.key;
+
+	// Get the current event
+	//var thisEventData = await utilities.find("events", {"key": event_key});
+	//var thisEvent = thisEventData[0];
+
+	// Refresh the teams list from TBA
+	var eventTeamsUrl = `event/${event_key}/teams/keys`;
+	var thisTeamKeysData = await utilities.requestTheBlueAlliance(eventTeamsUrl);
+	var thisTeamKeys = JSON.parse(thisTeamKeysData);
+	await utilities.update( "events", {"key": event_key}, {$set: {"team_keys": thisTeamKeys}} );
+
+	res.redirect('/manage?alert=Updated team keys for the current event successfully.');
+
+	///////////////// OLD DEPRECATED CODE
+
+	/*
 	// //get TBA key from db
 	// var passwordsFind = await utilities.find("passwords", { name:"thebluealliance-args" });
 	// if(!passwordsFind[0]){
@@ -56,6 +77,7 @@ router.get("/getcurrentteams", async function(req, res){
 	await utilities.insert("currentteams", currentTeams);
 
 	res.redirect('/manage?alert=Updated current teams successfully.');
+	*/
 })
 
 router.post("/resetmatches", async function(req, res) {
@@ -88,6 +110,7 @@ router.post("/updatematch", async function(req, res) {
 
 	var event_year = req.event.year;
 	var event_key = req.event.key;
+	var org_key = req.user.org_key;
 
 	// var matchCol = db.get("matches");
 	// var rankCol = db.get("currentrankings");
@@ -107,8 +130,6 @@ router.post("/updatematch", async function(req, res) {
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
 
-	// Delete the current rankings
-	await utilities.remove("currentrankings", {});
 	// Reload the rankings from TBA
 	var rankingUrl = "event/" + eventId + "/rankings";
 	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
@@ -116,9 +137,17 @@ router.post("/updatematch", async function(req, res) {
 	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankinfo = JSON.parse(rankData);
 	var rankArr = [];
-	if (rankinfo)
-		rankArr = rankinfo.rankings;
-	//logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0)
+	{
+		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
+		var thisRankings = rankinfo.rankings;
+		for (var i in thisRankings) {
+			var thisRank = thisRankings[i];
+			thisRank['event_key'] = eventId;
+			rankArr.push(thisRank);
+		}
+	}
+	logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
@@ -126,9 +155,14 @@ router.post("/updatematch", async function(req, res) {
 		rankMap[rankArr[rankIdx].team_key] = rankArr[rankIdx];
 	}
 
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// Delete the current rankings
+	//await utilities.remove("currentrankings", {});
+	await utilities.remove("rankings", {"event_key": event_key});
 	// Insert into DB
-	await utilities.insert("currentrankings", rankArr);
-	
+	//await utilities.insert("currentrankings", rankArr);
+	await utilities.insert("rankings", rankArr);
+
 	// Delete the matching match record
 	await utilities.remove("matches", {"key": matchId});
 
@@ -185,6 +219,10 @@ router.post("/updatematch", async function(req, res) {
 		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
 		{
 			var thisMinMax = {};
+			// 2020-02-08, M.O'C: Tweaking agg ranges
+			// This data element is specifically for this organization & a specific event
+			thisMinMax['org_key'] = org_key;
+			thisMinMax['event_key'] = event_key;
 
 			// initialize ranges
 			var MINmin = 999999; var MINmax = 0; var AVGmin = 999999; var AVGmax = 0; var VARmin = 999999; var VARmax = 0; var MAXmin = 999999; var MAXmax = 0;
@@ -215,10 +253,14 @@ router.post("/updatematch", async function(req, res) {
 	}
 	console.log(thisFuncName + 'aggMinMaxArray=' + JSON.stringify(aggMinMaxArray));
 
+	// 2020-02-08, M.O'C: Tweaking agg ranges
 	// Delete the current agg ranges
-	await utilities.remove("currentaggranges", {});
+	// await utilities.remove("currentaggranges", {});
+	await utilities.remove("aggranges", {"org_key": org_key, "event_key": event_key});
 	// Reinsert the updated values
-	await utilities.insert("currentaggranges", aggMinMaxArray);
+	// await utilities.insert("currentaggranges", aggMinMaxArray);
+	await utilities.insert("aggranges", aggMinMaxArray);
+
 	// And we're done!
 	res.render("./manage/currentmatches", {
 		title: "Matches",
@@ -248,8 +290,6 @@ router.post("/updatematches", async function(req, res) {
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
 
-	// Delete the current rankings
-	await utilities.remove("currentrankings", {});
 	// Reload the rankings from TBA
 	var rankingUrl = "event/" + eventId + "/rankings";
 	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
@@ -257,12 +297,25 @@ router.post("/updatematches", async function(req, res) {
 	var rankingData = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankinfo = JSON.parse(rankingData);
 	var rankArr = [];
-	if (rankinfo)
-		rankArr = rankinfo.rankings;
-	//logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0)
+	{
+		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
+		var thisRankings = rankinfo.rankings;
+		for (var i in thisRankings) {
+			var thisRank = thisRankings[i];
+			thisRank['event_key'] = eventId;
+			rankArr.push(thisRank);
+		}
+	}
+	logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// Delete the current rankings
+	//await utilities.remove("currentrankings", {});
+	await utilities.remove("rankings", {"event_key": event_key});
 	// Insert into DB
-	await utilities.insert("currentrankings", rankArr);
+	//await utilities.insert("currentrankings", rankArr);
+	await utilities.insert("rankings", rankArr);
 
 	// Get matches data from TBA
 	var url = "event/" + eventId + "/matches";

@@ -581,16 +581,20 @@ router.post('/matches', async function(req, res){
 	// sort the rankings
 	var sortedRankArray = rankArray.sort(compareRankings);
 	// add in the rank values
+	// 2020-02-08, M.O'C: And add in the event_key
 	for (var i in sortedRankArray) {
 		sortedRankArray[i].rank = parseInt(i) + 1;
+		sortedRankArray[i].event_key = event_key;
 	}
 	console.log("DEBUG: sortedRankArray=" + JSON.stringify(sortedRankArray));
 
-	//Remove rankings
-	await utilities.remove("currentrankings", {});
-
-	//Now, insert updated rankings
-	await utilities.insert("currentrankings", sortedRankArray);
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// Delete the current rankings
+	//await utilities.remove("currentrankings", {});
+	await utilities.remove("rankings", {"event_key": event_key});
+	// Insert into DB
+	//await utilities.insert("currentrankings", sortedRankArray);
+	await utilities.insert("rankings", sortedRankArray);
 
 	//Redirect to updatematches page with success alert.
 	res.redirect('/manage/manualinput/matches?alert=Updated match successfully.');

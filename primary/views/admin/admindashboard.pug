@@ -9,16 +9,22 @@ extends ../layout
 block content
 	h3=title
 	div(class="w3-container w3-section")
-		h4 Placeholders
-		a(href="/admin/resynceventsandteams") 
+		a(href="/admin/resyncteams") 
 			div(class="gear-btn theme-link w3-btn w3-section")
-				span Resync events and teams
+				span Resync teams
+		form(action="/admin/resyncevents" method="GET")
+			input(type="text" name="year" value="2020")
+			input(type="text" name="start" value="m")
+			input(type="text" name="end" value="n")
+			input(type="submit" value="Submit")
 		a(href="/admin/dngn2") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Use Case 2
 		a(href="/admin/dngn3") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Use Case 3
+
+
 	div(class="w3-container w3-section")
 		h4 Testing functions - CAREFUL
 

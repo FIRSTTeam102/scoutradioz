@@ -18,10 +18,13 @@ router.get("/", async function(req, res){
 	// for later querying by event_key
 	var event_key = req.event.key;
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	logger.debug(thisFuncName + 'event_key=' + event_key);
 	
 	// get the current rankings
-	var rankings = await utilities.find("currentrankings", {}, {});
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	//var rankings = await utilities.find("currentrankings", {}, {});
+	var rankings = await utilities.find("rankings", {"event_key": event_key}, {});
 
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
@@ -80,7 +83,9 @@ router.get("/", async function(req, res){
 	//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
 
 	// read in the current agg ranges
-	var currentAggRanges = await utilities.find("currentaggranges", {}, {});
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// var currentAggRanges = await utilities.find("currentaggranges", {}, {});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 
 	res.render("./allianceselection/allianceselection-index", {
 		title: "Alliance Selection",
@@ -111,7 +116,8 @@ router.post("/updateteamvalue", async function(req, res){
 	var teamKey = req.body.key;
 	var value = req.body.value;
 
-	await utilities.update("currentrankings", {"team_key": teamKey}, {$set: {"value": value}});
+	// 2020-02-08, M.O'C: Disabling this for now; later, move this data into a different collection (and update other related calls)
+	//await utilities.update("currentrankings", {"team_key": teamKey}, {$set: {"value": value}});
 
 	res.redirect("./");
 });

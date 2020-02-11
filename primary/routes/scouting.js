@@ -201,9 +201,19 @@ router.get('/teampictures', async function(req, res) {
 	// var teamCol = db.get("currentteams");
 	
 	var event_year = req.event.year;
+	var event_key = req.event.key;
 
-	var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
-
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	//var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
+	var thisEventData = await utilities.find("events", {"key": event_key});
+	var thisEvent = thisEventData[0];
+	var teams = [];
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
+	{
+		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		teams = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+	}
+	
 	var fs = require("fs");
 	var path = require("path");
 	var UPLOAD_PATH = path.resolve(__dirname, '..', process.env.AVATAR_STORAGE) + "\\";

@@ -969,13 +969,13 @@ async function generateMatchAllocations(req, res){
 	//All code below is legacy.
 	return;
 			
-	var db = req.db;
-	var currentCol = db.get("current");
-	var scoutPairCol = db.get("scoutingpairs");
-	var memberCol = db.get("teammembers");
-	var scoutDataCol = db.get("scoutingdata");
-	var scoreDataCol = db.get("scoringdata");
-	var matchDataCol = db.get("matches");
+	// var db = req.db;
+	// var currentCol = db.get("current");
+	// var scoutPairCol = db.get("scoutingpairs");
+	// var memberCol = db.get("teammembers");
+	// var scoutDataCol = db.get("scoutingdata");
+	// var scoreDataCol = db.get("scoringdata");
+	// var matchDataCol = db.get("matches");
 
 	// nodeclient
 	var Client = require('node-rest-client').Client;
@@ -1238,7 +1238,17 @@ async function generateTeamAllocations(req, res){
 	// 	var teammembers = docs;
 	var teammembersLen = teammembers.length;
 
-	var teamArray = await utilities.find("currentteams", {}, {});
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	//var teamArray = await utilities.find("currentteams", {}, {});
+	var thisEventData = await utilities.find("events", {"key": event_key});
+	var thisEvent = thisEventData[0];
+	var teamArray = [];
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
+	{
+		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		teamArray = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+	}
+	
 	// currentTeamsCol.find({},{}, function(e, teamArray){
 		
 	// 	//

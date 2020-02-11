@@ -49,16 +49,27 @@ router.post('/setcurrent', async function(req, res) {
 	logger.debug(thisFuncName + 'ENTER eventId=' + eventId);
 	
 	//Remove the previous 'current' data
-	await utilities.remove('current');
-	logger.debug(thisFuncName + 'Removed current');
+	// 2020-02-08, M.O'C - moving "current event" info into 'orgs'
+	//await utilities.remove('current');
+	//logger.debug(thisFuncName + 'Removed current');
 
 	// 2019orore
 	// 2019njbri
 
 	//Now, insert the new data
-	await utilities.insert('current', {"event": eventId});
-	logger.debug(thisFuncName + 'Inserted current');
+	// 2020-02-08, M.O'C - moving "current event" info into 'orgs'
+	//await utilities.insert('current', {"event": eventId});
+	if (req && req.user && req.user.org_key) {
+		var thisOrgKey = req.user.org_key;
+		await utilities.update( "orgs", {"org_key": thisOrgKey}, {$set: {"event_key": eventId}} );
+		logger.debug(thisFuncName + 'Inserted current');
+	}
 	
+	res.redirect(`/manage?alert=Set current event ${eventId} successfuly.`);
+
+	// 2020-02-08, M.O'C: Disconnect 'set current' from getting rankings & teams
+
+	/*
 	//Now get teams and rankings from TBA
 	var teamsUrl = `event/${eventId}/teams`;
 	var rankingsUrl = `event/${eventId}/rankings`;
@@ -66,7 +77,7 @@ router.post('/setcurrent', async function(req, res) {
 	var promiseForTeams = utilities.requestTheBlueAlliance(teamsUrl);
 	var promiseForRankings = utilities.requestTheBlueAlliance(rankingsUrl);
 	logger.debug(thisFuncName + 'Got promises');
-	
+
 	//Delete contents of currentTeams
 	await utilities.remove("currentteams");
 	logger.debug(thisFuncName + 'Renoved currentteams');
@@ -111,6 +122,8 @@ router.post('/setcurrent', async function(req, res) {
 		//Finished with teams and NO rankings
 		res.redirect(`/manage?alert=Set current event ${eventId} successfully and got list of teams for event ${eventId} successfully. NO RANKINGS HAVE BEEN RETRIEVED.`)
 	}
+	*/
+
 });
 
 /** Page to generate sample data. Might not be necessary anymore?

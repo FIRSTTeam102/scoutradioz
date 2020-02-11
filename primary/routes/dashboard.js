@@ -141,12 +141,15 @@ router.get('/allianceselection', async function(req, res){
 	
 	var event_key = req.event.key;
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// 2019-11-11 JL: Put everything inside a try/catch block with error conditionals throwing
 	try {
 		
-		var rankings = await utilities.find("currentrankings", {}, {});
+		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+		//var rankings = await utilities.find("currentrankings", {}, {});
+		var rankings = await utilities.find("rankings", {"event_key": event_key}, {});
 		if(!rankings[0])
 			throw "Couldn't find rankings in allianceselection";
 		
@@ -256,7 +259,9 @@ router.get('/allianceselection', async function(req, res){
 		logger.debug(sortedTeams);
 	
 		// read in the current agg ranges
-		var currentAggRanges = await utilities.find("currentaggranges", {}, {});
+		// 2020-02-08, M.O'C: Tweaking agg ranges
+		// var currentAggRanges = await utilities.find("currentaggranges", {}, {});
+		var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	
 		//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
 		res.render('./dashboard/allianceselection', {
@@ -305,8 +310,18 @@ router.get('/pits', async function(req, res) {
 	});
 	
 	// read in team list for data
-	var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
-		
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	//var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
+	var thisEventData = await utilities.find("events", {"key": event_key});
+	var thisEvent = thisEventData[0];
+	var teamArray = [];
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
+	{
+
+		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		teamArray = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+	}
+
 	// Build map of team_key -> team data
 	var teamKeyMap = {};
 	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++)
@@ -381,7 +396,17 @@ router.get('/matches', async function(req, res) {
 	logger.debug(thisFuncName + 'DEBUG getting nicknames next?');
 
 	// read in team list for data
-	var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	//var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
+	var thisEventData = await utilities.find("events", {"key": eventId});
+	var thisEvent = thisEventData[0];
+	var teamArray = [];
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
+	{
+
+		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		teamArray = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+	}
 	//teamsCol.find({},{ sort: {team_number: 1} }, function(e, docs) {
 		
 	// Build map of team_key -> team data
