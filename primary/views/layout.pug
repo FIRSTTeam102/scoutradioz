@@ -16,40 +16,6 @@
 doctype html
 html
 	head
-		style.
-			html, #page{
-				background-color: var(--background);
-				background-image: url('#{fileRoot}/images/infinite-recharge-wide-lc-preblurred-2.png');
-				background-size: cover;
-				background-repeat: no-repeat;
-				background-attachment: fixed;
-				/*background-position: left bottom;
-				
-				/**/
-			}
-			/*.bg-image{
-				min-width: calc(100% + 20px);
-				
-				min-height: calc(100% + 20px);
-				margin: -10px;
-				position: relative;
-				top: 0px;
-				
-				-webkit-filter: blur(5px);
-				-moz-filter: blur(5px);
-				-o-filter: blur(5px);
-				-ms-filter: blur(5px);
-				filter: blur(5px);
-			}
-			.bg-image-container{
-				position: fixed;
-				top: 0px;
-				left: 0px;
-				z-index: -1;
-				overflow: hidden;
-				height: 100%;
-				width: 100%;
-			}*/
 		base(href="/")
 		if !title
 			- title = "Untitled Page"
@@ -64,16 +30,18 @@ html
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mburger.css`)
 		link(rel="stylesheet" href=`${fileRoot}/css/theme-2019.css?v=3`)
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=2`)
+		style html{	background-image: url('#{fileRoot}/images/backgrounds/infinite-recharge-blur.png');	}
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		script(src=`${fileRoot}/lib/hammer.min.js`)
 		script(src=`${fileRoot}/lib/jquery.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
-		script(src=`${fileRoot}/lib/mmenu/mburger.js`)
+		script(src=`${fileRoot}/lib/mmenu/mburger.js` type='module')
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
 		script(src=`${fileRoot}/js/scoutradioz.js?v=2`)
 		script(src=`${fileRoot}/js/FormSubmission.js`)
 		script(src=`${fileRoot}/js/NotificationCard.js`)
+		script(src=`${fileRoot}/js/NavMenu.js?v`)
 		if alert && alert != "undefined"
 			script.
 				$(function(){
@@ -133,6 +101,3 @@ html
 				block content
 			//Footer not included becasue it modifies the body's styling.
 			//-include footer
-			//div(class="gear-space" style="position: fixed; top: 0px; left: 0px; height: 100%; width: 100%; z-index: -1;")
-			//-div(class="bg-image-container")
-				img(class="bg-image" src=`${fileRoot}/images/infinite-recharge-wide-lc.png`)

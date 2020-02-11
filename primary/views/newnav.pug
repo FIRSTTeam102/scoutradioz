@@ -1,20 +1,66 @@
-div(id="headerhar" class="w3-card header")
-	a(id="burger")
-		button(class="mburger mburger--squeeze")
-			b 
-			b 
-			b 
-	div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
-		span(style="display:inline-block;height:100%;vertical-align:middle;")
-		img(src=`${fileRoot}/images/logo-black-sm.png` class="header-logo")
-	div(class="w3-right w3-show-inline-block" style="height: 45px;")
-		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-full-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
+div(style="overflow-x: hidden;")
+	div(id="headerbar" class="w3-card header")
+		a(id="burger")
+			button(class="mburger mburger--squeeze")
+				b 
+				b 
+				b 
+		div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
+			span(style="display:inline-block;height:100%;vertical-align:middle;")
+			img(src=`${fileRoot}/images/brand-logos/scoutradioz-black-sm.png` class="header-logo")
+		div(class="w3-right w3-show-inline-block" style="height: 45px;")
+			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-full-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
 div(id="headerlogo" class="w3-padding w3-center")
 	a(href="/home")
 		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
 	h3=eventName
+style.
+	.slidein-menu{
+		position: fixed;
+		z-index: 2;
+		/*height: 100%;
+		top: 0px;
+		left: 0px;
+		*/
+		width: 80vw;
+		min-width: 140px;
+		max-width: 440px;
+		
+		box-shadow: 0px 0px 15px #000;
+		
+		display: none;
+	}
+	.slidein-overlay{
+		opacity: 0;
+		background-color: #53555a60;
+		z-index: 1;
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		top: 0px;
+		left: 0px;
+	}
+	.slidein-brand{
+		padding: 16px;
+	}
+	.slidein-brand img{
+		max-height: 32px;
+		max-width: 32px;
+	}
+	.slidein-brand .w3-tooltiptext{
+		background-color: #eee;
+		color: #000;
+		padding: 8px;
+		max-width: 100%;
+		left: 0;
+		margin-left: 0;
+	}
+	.slidein-brand .w3-tooltiptext::after{
+		border-color: #eee transparent transparent transparent;
+	}
+div(style="display: none;" class="slidein-overlay" id="overlay")
 div(style="display: none;" id="menuParent")
-	nav(id="menu")
+	nav(id="menu" class="slidein-menu")
 		//- NOTE: If you add a (class="selected") to an "li" element, it will be highlighted by the mmenu extension. 
 			We can make that procedural sometime in the future.
 		ul
@@ -32,14 +78,33 @@ div(style="display: none;" id="menuParent")
 						a(href="#") Drive Team
 					li
 						a(href="#") Pit Crew
-			li 
-				span Scouting
-				ul 
+			if user
+				if user.name != 'default_user'
 					li 
-						a(href="/dashboard/pits") Pit Scouting
+						span #{user.name}
+						ul 
+							li 
+								a(href='/user/logout') Log Out
+							li 
+								a(href='/user/changepassword') Change Password
+				if user.role.access_level >= process.env.ACCESS_VIEWER
+					if user.org 
+						li 
+							span #{user.org.nickname}
+							ul 
+								li 
+									a(href='/user/switchorg') Change Organization
+								if user.name == 'default_user'
+									li 
+										a(href='/user/login') Log In
+				if user.role.access_level >= process.env.ACCESS_SCOUTER 
 					li 
-						a(href="/dashboard/matches") Match Scouting
-			if user 
+						span Scouting
+						ul 
+							li 
+								a(href="/dashboard/pits") Pit Scouting
+							li 
+								a(href="/dashboard/matches") Match Scouting
 				if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
 					li
 						a(href="/manage") Manage #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
@@ -71,104 +136,20 @@ div(style="display: none;" id="menuParent")
 				if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
 					li 
 						a(href="/admin") Admin
-- var navbarTitle;
+			
+- var navMenuTitle;
 if user
 	if user.name != 'default_user'
-		- navbarTitle = user.name + ' - ' + user.org.nickname;
+		- navMenuTitle = user.name + ' - ' + user.org.nickname;
 	else if user.org
-		- navbarTitle = user.org.nickname;
+		- navMenuTitle = user.org.nickname;
 else 
-	- navbarTitle = 'Menu';
+	- navMenuTitle = 'Menu';
+script var navMenuTitle = `#{navMenuTitle}`;
+//-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
 script.
-	$(() => {
-		
-		const offCanvasMenu = new Mmenu('#menu', 
-			{
-				slidingSubmenus: false,
-				navbar: {
-					title: `#{navbarTitle}`,
-				},
-				offCanvas: {
-					clone: true,
-				},
-				extensions: {
-					//"(max-width: 400px)": ["fullscreen"],
-					"all": ["border-full"],
-				}
-			}, {
-				offCanvas: {
-					page: {
-						selector: "#page",
-					},
-				},
-			});
-		
-		const offCanvasAPI = offCanvasMenu.API;
-		//const bgImgContainer = $('.bg-image-container')[0];
-		
-		$("#burger").click(() => {
-			openMenu();
-		})
-		
-		//Hammer.js - Native-like touch interfaces
-		var hammertime = new Hammer(document.body, {});
-		//Swipe right to open menu
-		hammertime.on('swiperight', function(ev) {
-			console.log("newnav - Hammer SwipeRight has occurred");
-			openMenu();
-		});
-		//Swipe left to close menu
-		hammertime.on('swipeleft', function(ev) {
-			console.log("newnav - Hammer SwipeLeft has occurred");
-			closeMenu();
-		});
-		
-		function openMenu(){
-			//Open menu
-			if (offCanvasMenu.vars.opened == false) {
-				//Set bg-img to window height to avoid size jumping
-			//	if (bgImgContainer) bgImgContainer.style.height = `${window.innerHeight}px`;
-				offCanvasAPI.open();
-			}
-		}
-		
-		function closeMenu(){
-			//Close menu
-			if (offCanvasMenu.vars.opened == true) {
-				//Run handler before closing menu
-				setTimeout(handleMenuClose, 400);
-				offCanvasAPI.close();
-			}
-		}
-		
-		//Pre-close handler
-		function handleMenuClose(){
-			//reset img container values to default
-		//	if (bgImgContainer) {
-		//		bgImgContainer.style.height = "";
-		//		bgImgContainer.style.top = "";
-		//	}
-		}
-		
-		//Inject pre-close handler on 'mm-slideout' click
-		$('.mm-slideout').click(() => {
-			if (offCanvasMenu.vars.opened == true) {
-				setTimeout(handleMenuClose, 400);
-			}
-		})
-		
-		//Scroll handler - Modifies background-image position
-		var scTicking = false;
-		$(window).on('scroll', e => {
-			if (!scTicking) {
-				scTicking = true;
-				requestAnimationFrame(() => {
-					//if menu is opened when scrolling, move img container to match scroll position
-					if (offCanvasMenu.vars.opened == true) {
-			//			if (bgImgContainer) bgImgContainer.style.top = `${window.scrollY}px`;
-					}
-					scTicking = false;
-				})
-			}
-		});
-	})
+	var footerContents = [
+		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/monochrome-badge.png" alt=""><span class="w3-tooltiptext">Copyright 2019 FIRST Team 102 and Robotics Fund Inc.</span></img></a>`,
+		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/tba-logo.png" alt=""><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
+		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/FIRST-logo-white.png" alt=""><span class="w3-tooltiptext">Proud to be a participant of FIRST Robotics Competition.</span></img></a>`,
+		];
