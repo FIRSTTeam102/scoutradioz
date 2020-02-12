@@ -137,7 +137,8 @@ router.get('/generatedata', async function(req, res) {
 	
 	// for later querying by event_key
 	var eventId = req.event.key;
-	
+	var org_key = req.user.org_key;
+
 	//  Async/await this  //////////////////////
 	
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
@@ -151,7 +152,8 @@ router.get('/generatedata', async function(req, res) {
 	}
 		
 	// Get all the scoring data for RESOLVED matches
-	var scoringMatches = await utilities.find("scoringdata", {"event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1} });
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1} });
 	if (scoringMatches)
 	{
 		logger.debug(thisFuncName + 'scoringMatches.length=' + scoringMatches.length);
@@ -276,7 +278,8 @@ router.get('/generatedata', async function(req, res) {
 			logger.debug(thisFuncName + "data=" + JSON.stringify(data));
 			
 			// write to database
-			await utilities.update("scoringdata", {"match_team_key": scoringMatches[scoreIdx].match_team_key}, {$set: {"data": data}});
+			// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+			await utilities.update("matchscouting", {"match_team_key": scoringMatches[scoreIdx].match_team_key}, {$set: {"data": data}});
 		}
 		res.redirect('/');
 	}

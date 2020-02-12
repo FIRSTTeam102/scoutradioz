@@ -184,10 +184,12 @@ router.post("/updatematch", async function(req, res) {
 	// 2019-03-21, M.O'C: Adding in recalculation of aggregation data
 	//
 	logger.debug(thisFuncName + 'About to start in on updating min/maxes of agg data');
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-		
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+			
 	var aggQuery = [];
-	aggQuery.push({ $match : { "event_key": event_key } });
+	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
 	// group teams for 1 row per team
 	groupClause["_id"] = "$team_key";
@@ -209,7 +211,8 @@ router.post("/updatematch", async function(req, res) {
 	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	// Run the aggregation!
-	var aggArray = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggArray = await utilities.aggregate("matchscouting", aggQuery);
 			
 	var aggMinMaxArray = [];
 

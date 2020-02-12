@@ -382,6 +382,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 		//var event_key = eventId;
 		*/
 	var event_key = req.event.key;	
+	var org_key = req.user.org_key;
 
 	// 2019-01-23, M.O'C: See YEARFIX comment above
 	var year = parseInt(event_key.substring(0,4));
@@ -398,7 +399,8 @@ router.post("/generatematchallocations2", async function(req, res) {
 		}
 		//var scoutDataArray = docs;
 		*/
-	var scoutDataArray = await utilities.find("scoutingdata", {"event_key": event_key});
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	var scoutDataArray = await utilities.find("pitscouting", {"org_key": org_key, "event_key": event_key});
 	
 	// Build teamID->primary/secondar/tertiary lookup
 	var scoutDataByTeam = {};
@@ -443,7 +445,8 @@ router.post("/generatematchallocations2", async function(req, res) {
 
 	// Clear 'assigned_scorer', 'data' from all unresolved team@matches ('data' is just in case)
 	//scoreDataCol.bulkWrite([{updateMany:{filter:{ "event_key": eventId, "time": { $gte: earliestTimestamp } }, update:{ $unset: { "assigned_scorer" : "", "data": "" } }}}], function(e, docs){
-	await utilities.bulkWrite("scoringdata", [{updateMany:{filter:{ "event_key": event_key, "time": { $gte: earliestTimestamp } }, update:{ $unset: { "assigned_scorer" : "", "data": "" } }}}]);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	await utilities.bulkWrite("matchscouting", [{updateMany:{filter:{ "org_key": org_key, "event_key": event_key, "time": { $gte: earliestTimestamp } }, update:{ $unset: { "assigned_scorer" : "", "data": "" } }}}]);
 
 	// Get list of matches from latest unresolved onward
 	//scoreDataCol.find({"event_key": eventId, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} }, function (e, docs) {
@@ -571,7 +574,8 @@ router.post("/generatematchallocations2", async function(req, res) {
 				var thisMatchTeamKey = thisMatchKey + "_" + property;
 				var thisScout = teamScoutMap[property];
 
-				var thisPromise = utilities.update("scoringdata", { "match_team_key" : thisMatchTeamKey }, { $set: { "assigned_scorer" : thisScout }} );
+				// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+				var thisPromise = utilities.update("matchscouting", { "org_key": org_key, "match_team_key" : thisMatchTeamKey }, { $set: { "assigned_scorer" : thisScout }} );
 				assignmentPromisesArray.push(thisPromise);
 				// scoreDataCol.update(
 				// 	{ "match_team_key" : thisMatchTeamKey },
@@ -626,6 +630,7 @@ router.post("/clearmatchallocations", async function(req, res) {
 /* Begin regular code ----------------------------------------------------------- */
 	
 	var thisFuncName = "scoutingpairs.clearMATCHallocations[post]: ";
+	var org_key = req.user.org_key;
 
 	// used when writing data to DB, for later querying by year
 	// 2019-01-23, M.O'C: See YEARFIX comment above
@@ -669,7 +674,8 @@ router.post("/clearmatchallocations", async function(req, res) {
 	//
 	// Remove 'assigned_scorer' from all matching scoringdata elements
 	//
-	await utilities.bulkWrite("scoringdata", [{updateMany:{filter:{ "event_key": eventId }, update:{ $unset: { "assigned_scorer" : "" } }}}]);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	await utilities.bulkWrite("matchscouting", [{updateMany:{filter:{ "org_key": org_key, "event_key": eventId }, update:{ $unset: { "assigned_scorer" : "" } }}}]);
 
 	return res.send({status: 200, alert: "Cleared existing match scouting assignments successfully."});
 		
@@ -729,6 +735,7 @@ router.get("/swapmembers", async function(req, res) {
 
 	// for later querying by event_key
 	var eventId = req.event.key;
+	var org_key = req.user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
@@ -743,7 +750,8 @@ router.get("/swapmembers", async function(req, res) {
 	}
 		
 	// Get the distinct list of scorers from the unresolved matches
-	var scorers = utilities.distinct("scoringdata", "assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scorers = await utilities.distinct("matchscouting", "assigned_scorer", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }});
 	//scoreDataCol.distinct("assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, function (e, docs) {
 	var scorers = docs;
 	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
@@ -795,6 +803,7 @@ router.post("/swapmembers", async function(req, res) {
 	// 	}
 	// for later querying by event_key
 	var eventId = req.event.key;
+	var org_key = req.user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
@@ -809,7 +818,8 @@ router.post("/swapmembers", async function(req, res) {
 	}
 		
 	// Do the updateMany - change instances of swapout to swapin
-	await utilities.bulkWrite("scoringdata", [{updateMany:{filter: { assigned_scorer: swapout, event_key: eventId, "time": { $gte: earliestTimestamp } }, 
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	await utilities.bulkWrite("matchscouting", [{updateMany:{filter: { assigned_scorer: swapout, org_key: org_key, event_key: eventId, "time": { $gte: earliestTimestamp } }, 
 		update:{ $set: { assigned_scorer: swapin } }}}]);
 
 	res.redirect("/dashboard/matches");
@@ -831,6 +841,8 @@ async function generateMatchAllocations(req, res){
 	logger.debug(thisFuncName + "ENTER");
 	
 	var event_key = req.event.key;
+	var org_key = req.user.org_key;
+
 	// 2019-01-23, M.O'C: See YEARFIX comment above
 	var year = parseInt(event_key.substring(0,4));
 	
@@ -848,7 +860,8 @@ async function generateMatchAllocations(req, res){
 	logger.debug(thisFuncName + "Requesting scoutingdata and matches");
 	
 	// Need map of team IDs to scouts (scoutingdata)
-	var scoutDataArrayPromise = utilities.find("scoutingdata", {"event_key": event_key});
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	var scoutDataArrayPromise = utilities.find("pitscouting", {"org_key": org_key, "event_key": event_key});
 	// 2019-06-19 JL: Changing TBA request to DB request for matches, for off-season events.
 	var matchesPromise = utilities.find("matches", {"event_key": event_key, "comp_level": "qm"}, { sort: {"time": 1}} );
 	
@@ -886,6 +899,7 @@ async function generateMatchAllocations(req, res){
 				
 				thisScoreData["year"] = year;
 				thisScoreData["event_key"] = event_key;
+				thisScoreData["org_key"] = org_key;
 				thisScoreData["match_key"] = thisMatch.key;
 				thisScoreData["match_number"] = thisMatch.match_number;
 				// time is the best 'chronological order' sort field
@@ -956,11 +970,13 @@ async function generateMatchAllocations(req, res){
 	
 	logger.debug(thisFuncName + "Removing old scoreData elements");
 	// Delete ALL the old elements first for the 'current' event
-	await utilities.remove("scoringdata", {"event_key": event_key});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	await utilities.remove("matchscouting", {"org_key": org_key, "event_key": event_key});
 	
 	logger.debug(thisFuncName + "Inserting new scoreData elements");
 	// Insert the new data - w00t!
-	await utilities.insert("scoringdata", scoringDataArray);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	await utilities.insert("matchscouting", scoringDataArray);
 	
 	logger.debug(thisFuncName + "Done!");
 	// Done!
@@ -1189,6 +1205,7 @@ async function generateTeamAllocations(req, res){
 	
 	var event_key = req.event.key;
 	var year = req.event.year;
+	var org_key = req.user.org_key;
 	
 	//
 	// Get the current set of already-assigned pairs; make a map of {"id": {"prim", "seco", "tert"}}
@@ -1274,6 +1291,7 @@ async function generateTeamAllocations(req, res){
 		// general info
 		thisAssignment["year"] = year;
 		thisAssignment["event_key"] = event_key;
+		thisAssignment["org_key"] = org_key;
 		// unique per team
 		thisAssignment["team_key"] = thisTbaTeam.key;
 		
@@ -1303,10 +1321,12 @@ async function generateTeamAllocations(req, res){
 		logger.debug(thisFuncName + "team,primary,secondary,tertiary=" + teamassignments[i].team_key + " ~> " + teamassignments[i].primary + "," + teamassignments[i].secondary + ","  + teamassignments[i].tertiary);
 	
 	// Delete ALL the old elements first for the 'current' event
-	await utilities.remove("scoutingdata", {"event_key": event_key});
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	await utilities.remove("pitscouting", {"org_key": org_key, "event_key": event_key});
 	// scoutDataCol.remove({"event_key": event_key}, function(e, docs) {
 	// 	// Insert the new data
-	await utilities.insert("scoutingdata", teamassignments);
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	await utilities.insert("pitscouting", teamassignments);
 	// scoutDataCol.insert(teamassignments, function(e, docs) {
 	// 	//res.redirect("./");	
 	return res.send({status: 200, alert: "Generated team allocations successfully."});

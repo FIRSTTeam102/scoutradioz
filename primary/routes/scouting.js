@@ -22,6 +22,7 @@ router.get('/match*', async function(req, res) {
 	var thisUserName = thisUser.name;
 	var match_team_key = req.query.key;
 	var alliance = req.query.alliance;
+	var org_key = req.user.org_key;
 	
 	logger.debug(`${thisFuncName}- match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName}`);
 	
@@ -31,7 +32,8 @@ router.get('/match*', async function(req, res) {
 	}
 	
 	//check if there is already data for this match
-	var scoringdata = await utilities.find("scoringdata", {"year" : event_year, "match_team_key": match_team_key}, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scoringdata = await utilities.find("matchscouting", {"org_key": org_key, "year" : event_year, "match_team_key": match_team_key}, {sort: {"order": 1}});
 		
 	//scouting answers for this match are initialized as null for visibility
 	var answers = null;
@@ -51,7 +53,9 @@ router.get('/match*', async function(req, res) {
 	}
 	
 	//load layout
-	var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var layout = await utilities.find("layout", {org_key: org_key, year: parseInt(event_year), form_type: "matchscouting"}, {sort: {"order": 1}})
 
 	//render page
 	res.render("./scouting/match", {
@@ -79,7 +83,10 @@ router.post('/match/submit', async function(req, res) {
 	if(!matchData)
 		return res.send({status: 500, message: "No data was sent to /scouting/match/submit."});
 	
+	var event_year = req.event.year;
 	var match_team_key = matchData.match_team_key;
+	var org_key = req.user.org_key;
+
 	logger.debug(thisFuncName + "match_key=" + match_team_key + " ~ thisUserName=" + thisUserName);
 	delete matchData.match_key;
 	logger.debug(thisFuncName + "matchData(pre-modified)=" + JSON.stringify(matchData));
@@ -90,7 +97,9 @@ router.post('/match/submit', async function(req, res) {
 	// var scoreCol = db.get("scoringlayout");
 	// var matchCol = db.get('scoringdata');
 
-	var layout = await utilities.find("scoringlayout", {}, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var layout = await utilities.find("layout", {org_key: org_key, year: parseInt(event_year), form_type: "matchscouting"}, {sort: {"order": 1}})
 
 	var layoutTypeById = {};
 	//logger.debug(thisFuncName + "layout=" + JSON.stringify(layout));
@@ -124,7 +133,8 @@ router.post('/match/submit', async function(req, res) {
 	logger.debug(thisFuncName + "matchData(UPDATED)=" + JSON.stringify(matchData));
 
 	// Post modified data to DB
-	await utilities.update("scoringdata", { "match_team_key" : match_team_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName, useragent: req.shortagent } });
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	await utilities.update("matchscouting", { "org_key": org_key, "match_team_key" : match_team_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName, useragent: req.shortagent } });
 
 	return res.send({message: "Submitted data successfully.", status: 200});
 });
@@ -136,6 +146,7 @@ router.get('/pit*', async function(req, res) {
 	//Add event key and pit data to get pit function
 	var event_key = req.event.key;
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	
 	var thisFuncName = "scouting.pit*[get]: ";
 	logger.debug(thisFuncName + 'ENTER');
@@ -146,9 +157,12 @@ router.get('/pit*', async function(req, res) {
 		return;
 	}
 	
-	var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
+	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
+	var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "pitscouting"}, {sort: {"order": 1}})
 	
-	var pitFind = await utilities.find("scoutingdata", { "event_key" : event_key, "team_key" : teamKey }, {});
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	var pitFind = await utilities.find("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, {});
 	var pitData = null;
 	if (pitFind && pitFind[0])
 		if (pitFind[0].data)
@@ -183,10 +197,12 @@ router.post('/pit/submit', async function(req, res){
     // var pitCol = db.get('scoutingdata');
 
 	var event_key = req.event.key;
+	var org_key = req.user.org_key;
 
 	//res.redirect("/dashboard");
 
-	await utilities.update("scoutingdata", { "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName, useragent: req.shortagent } });
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	await utilities.update("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName, useragent: req.shortagent } });
 
 	return res.send({message: "Submitted data successfully.", status: 200});
 });

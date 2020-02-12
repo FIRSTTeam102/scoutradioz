@@ -21,12 +21,15 @@ router.get('/', async function(req, res) {
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
-		
+	var org_key = req.user.org_key;
+
 	// for later querying by event_key
 	var eventId = req.event.key;
 
 	// Check to see if the logged in user is one of the scouting/scoring assignees
-	var assignedTeams = await utilities.find("scoutingdata", {
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	var assignedTeams = await utilities.find("pitscouting", {
+		"org_key": org_key, 
 		"event_key": eventId, 
 		"primary": thisUserName
 	}, {
@@ -61,7 +64,9 @@ router.get('/', async function(req, res) {
 		thisPairLabel = thisPairLabel + ", " + thisPair.member3;
 			
 	//Get teams where they're backup (if any) from scout data collection
-	var backupTeams = await utilities.find("scoutingdata", {
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	var backupTeams = await utilities.find("pitscouting", {
+		"org_key": org_key, 
 		"event_key": eventId,
 		$or:
 			[{"secondary": thisUserName},
@@ -97,7 +102,8 @@ router.get('/', async function(req, res) {
 		}
 		
 	// Get all the UNRESOLVED matches where they're set to score
-	var scoringMatches = await utilities.find("scoringdata", {"event_key": eventId, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} });
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} });
 
 	for (var matchesIdx = 0; matchesIdx < scoringMatches.length; matchesIdx++)
 		logger.debug(thisFuncName + "scoringMatch[" + matchesIdx + "]: num,team=" + scoringMatches[matchesIdx].match_number + "," + scoringMatches[matchesIdx].team_key);
@@ -168,14 +174,17 @@ router.get('/allianceselection', async function(req, res){
 			rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 		}
 	
-		var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
+		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+		//var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
+		var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+		
 		if(!scoreLayout[0])
 			throw "Couldn't find scoringlayout in allianceselection";
 		
 		//initialize aggQuery
 		var aggQuery = [];
 		//add $match > event_key
-		aggQuery.push({ $match : { "event_key": event_key } });
+		aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
 		//initialize groupClause
 		var groupClause = {};
 		//group teams for 1 row per team
@@ -197,7 +206,8 @@ router.get('/allianceselection', async function(req, res){
 		aggQuery.push({ $sort: { rank: 1 } });
 		
 		//Aggregate with this query we made
-		var aggArray = await utilities.aggregate("scoringdata", aggQuery);
+		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+		var aggArray = await utilities.aggregate("matchscouting", aggQuery);
 		if(!aggArray[0])
 			throw "Couldn't find scoringdata in allianceselection"
 		
@@ -293,8 +303,10 @@ router.get('/pits', async function(req, res) {
 
 	// for later querying by event_key
 	var event_key = req.event.key;
+	var org_key = req.user.org_key;
 
-	var teams = await utilities.find("scoutingdata", {"event_key": event_key}, { });
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	var teams = await utilities.find("pitscouting", {"org_key": org_key, "event_key": event_key}, { });
 		
 	//sort teams list by number
 	teams.sort(function(a, b) {
@@ -357,6 +369,7 @@ router.get('/matches', async function(req, res) {
 
 	// for later querying by event_key
 	var eventId = req.event.key;
+	var org_key = req.user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matches = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
@@ -380,7 +393,8 @@ router.get('/matches', async function(req, res) {
 	logger.debug(thisFuncName + 'earliestTimestamp=' + earliestTimestamp);
 
 	// Get all the UNRESOLVED matches
-	var scoreData = await utilities.find("scoringdata", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, { limit: 60, sort: {"time": 1, "alliance": 1, "team_key": 1} });
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }}, { limit: 60, sort: {"time": 1, "alliance": 1, "team_key": 1} });
 
 	if(!scoreData)
 		return logger.error("mongo error at dashboard/matches");

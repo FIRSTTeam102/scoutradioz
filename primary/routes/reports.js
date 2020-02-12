@@ -206,7 +206,8 @@ router.get("/teamintel", async function(req, res){
 		ranking = rankFind[0];
 
 	// Pit scouting info
-	var pitFind = await utilities.find("scoutingdata", { "event_key" : event_key, "team_key" : teamKey }, {});
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	var pitFind = await utilities.find("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, {});
 	var pitData = null;
 	var pitData1 = null;
 	if (pitFind && pitFind[0]) {
@@ -218,12 +219,16 @@ router.get("/teamintel", async function(req, res){
 	//logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
 
 	// Pit data layout
-	var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
+	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
+	var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "pitscouting"}, {sort: {"order": 1}})
+	
 	//logger.debug(thisFuncName + 'layout=' + JSON.stringify(layout));
 	
 	// Pull in individual scouting data for this team, for this event, to enhance the match data
 	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey + ',event_key=' + event_key);
-	var aggFind = await utilities.find("scoringdata", {"team_key": teamKey, "event_key": event_key}, {});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggFind = await utilities.find("matchscouting", {"org_key": org_key, "team_key": teamKey, "event_key": event_key}, {});
 	// Build a map of match_key->data
 	var matchDataMap = {};
 	if (aggFind && aggFind.length > 0) {
@@ -261,10 +266,14 @@ router.get("/teamintel", async function(req, res){
 	// "teleScaleAVG": {$avg: "$data.teleScale"},
 	// "teleScaleMAX": {$max: "$data.teleScale"}
 	//  } }
-	// ] );						
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// ] );	
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "event_key": event_key, "team_key": teamKey } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key, "team_key": teamKey } });
 	var groupClause = {};
 	groupClause["_id"] = "$team_key";
 
@@ -281,7 +290,8 @@ router.get("/teamintel", async function(req, res){
 	aggQuery.push({ $group: groupClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggFind = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggFind = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggFind && aggFind[0])
 		aggresult = aggFind[0];
@@ -356,6 +366,7 @@ router.get("/teamintelhistory", async function(req, res){
 	// var scoreCol = db.get("scoringlayout");
 
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	
 	// Team details
 	var teamsFind = await utilities.find("teams", { "key" : teamKey }, {});
@@ -374,7 +385,8 @@ router.get("/teamintelhistory", async function(req, res){
 
 	// Pull in ALL individual scouting data for this team, for this event, to enhance the match data
 	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey);
-	var aggFind = await utilities.find("scoringdata", {"team_key": teamKey, "year": year}, {});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggFind = await utilities.find("matchscouting", {"org_key": org_key, "team_key": teamKey, "year": year}, {});
 	// Build a map of match_key->data
 	var matchDataMap = {};
 	if (aggFind && aggFind.length > 0) {
@@ -413,10 +425,14 @@ router.get("/teamintelhistory", async function(req, res){
 	// "teleScaleAVG": {$avg: "$data.teleScale"},
 	// "teleScaleMAX": {$max: "$data.teleScale"}
 	//  } }
-	// ] );						
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// ] );
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "team_key": teamKey, "year": year } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "team_key": teamKey, "year": year } });
 	var groupClause = {};
 	groupClause["_id"] = "$team_key";
 
@@ -433,7 +449,8 @@ router.get("/teamintelhistory", async function(req, res){
 	aggQuery.push({ $group: groupClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggFind = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggFind = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggFind && aggFind[0])
 		aggresult = aggFind[0];
@@ -520,11 +537,15 @@ router.get("/teammatchintel*", async function(req, res){
 	// var scoringLayoutCol = db.get("scoringlayout");
 
 	var event_year = req.event.year;
+	var org_key = req.user.org_key;
 	
 	// Match data layout
-	var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 
-	var scoringDataFind = await utilities.find("scoringdata", {"match_team_key": match_team_key}, {});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scoringDataFind = await utilities.find("matchscouting", {"org_key": org_key, "match_team_key": match_team_key}, {});
 	var data = null;
 	var teammatch = null;
 	if (scoringDataFind && scoringDataFind[0]) {
@@ -588,9 +609,12 @@ router.get("/alliancestats", async function(req, res) {
 	var teamList = req.query.teams.split(',');
 	logger.debug(thisFuncName + 'teamList=' + JSON.stringify(teamList));
 
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+
 	var aggQuery = [];
-	aggQuery.push({ $match : { "team_key": {$in: teamList}, "event_key": event_key } });
+	aggQuery.push({ $match : { "team_key": {$in: teamList}, "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
 	// group by individual teams
 	groupClause["_id"] = "$team_key";
@@ -606,7 +630,8 @@ router.get("/alliancestats", async function(req, res) {
 	aggQuery.push({ $group: groupClause });
 	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggR = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR)
 		aggresult = aggR;
@@ -693,7 +718,8 @@ router.get("/teamdata", async function(req, res) {
 	logger.debug(`${thisFuncName} team: ${JSON.stringify(team)}`);
 
 	// get the scoring data for the matches
-	var scoringFind = await utilities.find("scoringdata", {"team_key": teamKey, "year": event_year, "event_key": event_key}, {sort: {"match_number": -1}});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scoringFind = await utilities.find("matchscouting", {"team_key": teamKey, "year": event_year, "org_key": org_key, "event_key": event_key}, {sort: {"match_number": -1}});
 	var matches = [];
 	if (scoringFind)
 		matches = scoringFind;
@@ -701,7 +727,9 @@ router.get("/teamdata", async function(req, res) {
 	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
-	var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 
 	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -751,7 +779,8 @@ router.get("/matchdata", async function(req, res) {
 	logger.debug(`${thisFuncName} match: ${JSON.stringify(match)}`);
 
 	// get the scoring data for the match
-	var scoringFind = await utilities.find("scoringdata", {"match_key": matchKey}, {});
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var scoringFind = await utilities.find("matchscouting", {"org_key": org_key, "match_key": matchKey}, {});
 	var matches = [];
 	if (scoringFind)
 		matches = scoringFind;
@@ -759,7 +788,9 @@ router.get("/matchdata", async function(req, res) {
 	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
-	var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 
 	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -795,7 +826,7 @@ router.get("/matchmetrics", async function(req, res) {
 	var event_year = req.event.year;
 	var event_key = req.event.key;
 	var matchKey = req.query.key;
-	var org_key = req.user.key;
+	var org_key = req.user.org_key;
 	
 	if( !matchKey ){
 		return res.redirect("/?alert=Must specify match key for reports/matchmetrics");
@@ -818,10 +849,14 @@ router.get("/matchmetrics", async function(req, res) {
 	// "teleScaleAVG": {$avg: "$data.teleScale"},
 	//  } }
 	// ] );
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+
 	var aggQuery = [];
 	var redAllianceArray = match.alliances.red.team_keys;
-	aggQuery.push({ $match : { "team_key": {$in: redAllianceArray}, "event_key": event_key } });
+	aggQuery.push({ $match : { "team_key": {$in: redAllianceArray}, "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
 	// group teams for 1 row per event (we're doing this twice, once for red & once for blue)
 	groupClause["_id"] = "$event_key";
@@ -834,7 +869,8 @@ router.get("/matchmetrics", async function(req, res) {
 	aggQuery.push({ $group: groupClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggR = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR && aggR[0])
 		aggresult = aggR[0];
@@ -855,12 +891,13 @@ router.get("/matchmetrics", async function(req, res) {
 	// repeat aggregation for blue alliance
 	aggQuery = [];
 	var blueAllianceArray = match.alliances.blue.team_keys;
-	aggQuery.push({ $match : { "team_key": {$in: blueAllianceArray}, "event_key": event_key } });
+	aggQuery.push({ $match : { "team_key": {$in: blueAllianceArray}, "org_key": org_key, "event_key": event_key } });
 	// reuse prior groupClause
 	aggQuery.push({ $group: groupClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggR2 = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR2 = await utilities.aggregate("matchscouting", aggQuery);
 	aggresult = {};
 	if (aggR2 && aggR2[0])
 		aggresult = aggR2[0];
@@ -921,10 +958,14 @@ router.get("/metricsranked", async function(req, res){
 	// "teleScaleAVG": {$avg: "$data.teleScale"},
 	// "teleScaleMAX": {$max: "$data.teleScale"}
 	//  } }
-	// ] );						
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// ] );
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "event_key": event_key } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
 	// group teams for 1 row per team
 	groupClause["_id"] = "$team_key";
@@ -942,7 +983,8 @@ router.get("/metricsranked", async function(req, res){
 	aggQuery.push({ $group: groupClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggR = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggData = [];
 	//var aggresult = {};
 	if (aggR)
@@ -1026,10 +1068,14 @@ router.get("/metrics", async function(req, res){
 	// "teleScaleAVG": {$avg: "$data.teleScale"},
 	// "teleScaleMAX": {$max: "$data.teleScale"}
 	//  } }
-	// ] );						
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// ] );
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "event_key": event_key } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
 	// group on event for single row
 	groupClause["_id"] = "$event_key";
@@ -1047,7 +1093,8 @@ router.get("/metrics", async function(req, res){
 	aggQuery.push({ $group: groupClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggR = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR && aggR[0])
 		aggresult = aggR[0];
@@ -1120,7 +1167,7 @@ router.get("/metricintel*", async function(req, res){
 	//  } }
 	// ] );						
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "event_key": event_key } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
 	// group on team for multiple rows
 	groupClause["_id"] = "$team_key";
@@ -1137,7 +1184,8 @@ router.get("/metricintel*", async function(req, res){
 	aggQuery.push({ $group: groupClause }, { $sort: sortClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggdata = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggdata = await utilities.aggregate("matchscouting", aggQuery);
 
 	if (aggdata) {
 		for (var aggIdx in aggdata) {
@@ -1212,11 +1260,14 @@ router.get("/allteammetrics", async function(req, res){
 	// "autoScaleAVG": {$avg: "$data.autoScale"},
 	// "teleScaleAVG": {$avg: "$data.teleScale"},
 	//  } }
-	// ] );						
-	var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	// ] );
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 		
 	var aggQuery = [];
-	aggQuery.push({ $match : { "event_key": event_key } });
+	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
 	// group teams for 1 row per team
 	groupClause["_id"] = "$team_key";
@@ -1235,7 +1286,8 @@ router.get("/allteammetrics", async function(req, res){
 	aggQuery.push({ $sort: { _id: 1 } });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
-	var aggR = await utilities.aggregate("scoringdata", aggQuery);
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggArray = [];
 	if (aggR)
 		aggArray = aggR;
