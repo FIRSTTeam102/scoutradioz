@@ -114,9 +114,11 @@ router.get('/home', async function(req, res) {
 	
 	if (!req.user) res.redirect('/');
 
+	/* 2020-2-12 JL: Moved "get list of teams" code into usefunctions.js for every route to use
+	
 	// for later querying by event_key
 	var event_key = req.event.key;
-
+	
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
 	//var teams = await utilities.find("currentteams", {}, {sort:{team_number: 1}});
 	var thisEventData = await utilities.find("events", {"key": event_key});
@@ -143,12 +145,18 @@ router.get('/home', async function(req, res) {
 	for(var i in teams){
 		teamNumbers[i] = teams[i].team_number;
 	}
-	
+	*/
 	//Render page w/ team list
 	res.render('./home', { 
 		title: 'Home',
-		teamList: teamNumbers,
+		//teamList: teamNumbers,
 	});
+});
+
+router.get('/throwanerror', async function(req, res){
+	
+	console.log(foo);
+	
 });
 
 module.exports = router;

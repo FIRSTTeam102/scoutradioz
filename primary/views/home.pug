@@ -27,12 +27,12 @@ block content
 	div(class="w3-container w3-section")
 		h4(class="theme-text") Team Info
 		//-teamSelect dropdown for intel and upcoming pages.
-		if( teamList && teamList[0] )
+		if teams && teams[0]
 			label(class="")
 				select#teamSelect(class="gear-btn theme-input w3-btn")
 					option(value="") Team #
-					each team in teamList
-						option(value=team class="w3-bar-item") #{team}
+					each team in teams
+						option(value=team.team_number class="w3-bar-item") #{team.team_number}
 		a
 			button(class="gear-btn theme-link w3-btn w3-disabled" onclick="redIntel()" id="stats" disabled)
 				span Stats

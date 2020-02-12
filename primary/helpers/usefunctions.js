@@ -59,6 +59,7 @@ functions.authenticate = function(req, res, next) {
 }
 
 //View engine locals variables
+//IMPORTANT: Must be called LAST, because it may rely on other usefunctions data
 functions.setViewVariables = async function(req, res, next){
 	
 	logger.debug("usefunctions.js - functions.userViewVars: ENTER");
@@ -96,10 +97,12 @@ functions.setViewVariables = async function(req, res, next){
  */
 functions.getEventInfo = async function(req, res, next) {
 	
-	//req.passport = passport;
+	//Define req.event
 	req.event = {
 		key: "undefined",
-		name: "undefined"
+		name: "undefined",
+		year: "undefined",
+		teams: null,
 	};
 	
 	//var current = await utilities.find("current", {}, {});
@@ -107,7 +110,7 @@ functions.getEventInfo = async function(req, res, next) {
 	var thisOrg;
 	if (req && req.user && req.user.org_key) {
 		var thisOrgKey = req.user.org_key;
-		var thisOrg = await utilities.find("orgs", {"org_key": thisOrgKey}, {});
+		var thisOrg = await utilities.findOne("orgs", {"org_key": thisOrgKey}, {});
 	}
 
 	//sets locals to no event defined just in case we don't find thing and we can just do next();
@@ -116,22 +119,31 @@ functions.getEventInfo = async function(req, res, next) {
 	res.locals.eventName = eventId;
 	
 	//if exist
-	if (thisOrg && thisOrg[0]){
+	if (thisOrg) {
 		
-		eventId = thisOrg[0].event_key;
-		eventYear = parseInt(eventId)
+		eventId = thisOrg.event_key;
+		eventYear = parseInt(eventId);
 		//set event key
 		req.event.key = eventId;
 		req.event.year = eventYear;
 		res.locals.event_key = req.event.key;
 		res.locals.event_year = req.event.year;
 		
-		var currentEvent = await utilities.find("events", {key: eventId}, {});
+		var currentEvent = await utilities.findOne("events", {key: eventId}, {});
 		
-		//set tournament thing to event name
-		if(currentEvent && currentEvent[0]){
-			res.locals.eventName = currentEvent[0].name;
-			req.event.name = currentEvent[0].name;
+		if (currentEvent) {
+			//Set current event info to req.event and res.locals
+			res.locals.eventName = currentEvent.name;
+			req.event.name = currentEvent.name;
+			
+			//If a list of teams exists, find team info in teams db.
+			if (currentEvent.team_keys && currentEvent.team_keys.length > 0) {
+				
+				var teams = await utilities.find("teams", {"key": {$in: currentEvent.team_keys}}, {sort: {team_number: 1}});
+				//Set teams list to req.event.teams
+				req.teams = teams;
+				res.locals.teams = teams;
+			}
 		}
 	}
 	next();

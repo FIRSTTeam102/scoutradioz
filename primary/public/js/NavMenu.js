@@ -42,7 +42,7 @@ class NavigationBar{
 		
 		this.menu = new Mmenu('#menu',
 		{
-			slidingSubmenus: false,
+			//slidingSubmenus: false,
 			navbar: {
 				title: this.title,
 			},
