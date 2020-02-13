@@ -38,11 +38,12 @@ router.get('/', async function(req, res) {
 });
 
 router.post('/', async function(req, res) {
-	var thisFuncName = "webhook root: ";
+	var thisFuncName = "webhook.[root/post]: ";
 	
 	logger.debug(thisFuncName + "ENTER");
     
 	var message = req.body;
+	logger.debug(thisFuncName + "message=" + JSON.stringify(message));
 
     var messageType = message.message_type;
 	var messageData = message.message_data;
@@ -76,10 +77,14 @@ router.post('/', async function(req, res) {
 });
 
 //TBA push handlers
-async function handleUpcomingMatch( data ){
+async function handleUpcomingMatch( data ) {
+	var thisFuncName = 'webhook.handleUpcomingMatch(): ';
+	logger.debug(thisFuncName + "ENTER");
+
+
+
+	// push notifications
 	if (process.env.disablePushNotifications == 'true') return;
-	
-	const thisFuncName = 'webhook/handleUpcomingMatch: ';
 	
 	logger.debug(`${thisFuncName} Configuring web-push`);
 	const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
@@ -175,29 +180,41 @@ async function handleUpcomingMatch( data ){
 	}
 }
 
-async function handleMatchScore( data ){
+async function handleMatchScore( data ) {
+	var thisFuncName = "webhook.handleMatchScore(): ";
+	logger.debug(thisFuncName + "ENTER");
 	
 }
 
-async function handleStartingCompLevel( data ){
+async function handleStartingCompLevel( data ) {
+	var thisFuncName = "webhook.handleStartingCompLevel(): ";
+	logger.debug(thisFuncName + "ENTER");
 	
 }
 
-async function handleAllianceSelection( data ){
+async function handleAllianceSelection( data ) {
+	var thisFuncName = "webhook.handleAllianceSelection(): ";
+	logger.debug(thisFuncName + "ENTER");
 	
 }
 
-async function handleScheduleUpdated( data ){
+async function handleScheduleUpdated( data ) {
+	var thisFuncName = "webhook.handleScheduleUpdated(): ";
+	logger.debug(thisFuncName + "ENTER");
 	
 }
 
-async function handleAwardsPosted( data ){
+async function handleAwardsPosted( data ) {
+	var thisFuncName = "webhook.handleAwardsPosted(): ";
+	logger.debug(thisFuncName + "ENTER");
 	
 }
 
 //Push notification functions
 
-async function sendPushMessage (subscription, dataToSend) {
+async function sendPushMessage(subscription, dataToSend) {
+	var thisFuncName = "webhook.sendPushMessage(): ";
+	logger.debug(thisFuncName + "ENTER");
 	
 	logger.debug(`Attempting to send push message: ${dataToSend}`);
 	
