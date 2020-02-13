@@ -39,7 +39,7 @@ block content
 			li(class="w3-no-border")
 				- var selectedArray = [];
 				- var pairId;
-				- for (var key in pair) if (key != "_id") selectedArray.push(" "+pair[key]);
+				- for (var key in pair) if (key != "_id" && key != "org_key") selectedArray.push(" "+pair[key]);
 				- for (var key in pair) if (key == "_id") pairId=pair[key];
 				- thisButtonLabel = selectedArray.toString();
 				button(onclick=`deletePair("${pairId}")` class="w3-btn theme-red") Delete pair
