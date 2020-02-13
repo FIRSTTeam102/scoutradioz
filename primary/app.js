@@ -92,8 +92,6 @@ app.use(async function(req, res, next){
 	next();
 });
 
-//sets view engine vars for user
-app.use(usefunctions.setViewVariables);
 //Event stuff
 app.use(usefunctions.getEventInfo);
 //Logging and timestamping
@@ -102,6 +100,9 @@ app.use(usefunctions.requestLogger);
 app.use(usefunctions.renderLogger);
 //Authentication middleware (req.authenticate)
 app.use(usefunctions.authenticate);
+//sets view engine vars for user
+//IMPORTANT: Must be called last, because it may rely on other useFunctions data
+app.use(usefunctions.setViewVariables);
 
 //USER ROUTES
 var index = require('./routes/index');

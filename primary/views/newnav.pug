@@ -9,7 +9,7 @@ div(style="overflow-x: hidden;")
 			span(style="display:inline-block;height:100%;vertical-align:middle;")
 			img(src=`${fileRoot}/images/brand-logos/scoutradioz-black-sm.png` class="header-logo")
 		div(class="w3-right w3-show-inline-block" style="height: 45px;")
-			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-full-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
+			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-one-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
 div(id="headerlogo" class="w3-padding w3-center")
 	a(href="/home")
 		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
@@ -18,10 +18,7 @@ style.
 	.slidein-menu{
 		position: fixed;
 		z-index: 2;
-		/*height: 100%;
-		top: 0px;
-		left: 0px;
-		*/
+		
 		width: 80vw;
 		min-width: 140px;
 		max-width: 440px;
@@ -66,8 +63,6 @@ div(style="display: none;" id="menuParent")
 		ul
 			li
 				a(href="/home") Home
-			li 
-				a(href="/dashboard") Dashboard
 			//-BELOW: This is for when we have multiple different dashboard types
 			//li
 				span Dashboard
@@ -78,8 +73,84 @@ div(style="display: none;" id="menuParent")
 						a(href="#") Drive Team
 					li
 						a(href="#") Pit Crew
+			//- Below: Shows up to anyone who has selected an organization
 			if user
+				//- Reports pages for current event
+				li 
+					span Info on #{eventName}
+					ul 
+						if teams && teams[0]
+							li
+								span Teams
+								ul 
+									each team in teams
+										li
+											span #{team.team_number}: #{team.nickname}
+											ul 
+												li 
+													a(href=`/reports/upcoming?team=${team.key}`) Upcoming Matches
+												li 
+													a(href=`/reports/teamintel?team=${team.key}`) Team Statistics
+												li 
+													a(href=`/reports/upcoming?team=${team.key}`) Complete Statistics for #{new Date().getFullYear()}
+						li 
+							a(href="/reports/rankings") Current Rankings
+						li 
+							a(href="/reports/upcoming") Upcoming Matches
+						li 
+							a(href="/reports/finishedmatches") Completed Matches
+						li 
+							a(href="/reports/allteammetrics") Stats for All Teams
+				//- Below: Shows up to anyone who has "logged in"
 				if user.name != 'default_user'
+					//- Below: If user has VIEWER ACCESS (and is "logged in")
+					if user.role.access_level >= process.env.ACCESS_VIEWER
+						//No logged-in viewer-level pages yet
+					//- Below: If user has SCOUTER access
+					if user.role.access_level >= process.env.ACCESS_SCOUTER 
+						li 
+							a(href="/dashboard") Dashboard
+						li 
+							span Scouting
+							ul 
+								li 
+									a(href="/dashboard/pits") Pit Scouting
+								li 
+									a(href="/dashboard/matches") Match Scouting
+					//- Below: If user has TEAM ADMIN access
+					if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
+						li
+							a(href="/manage") Manage #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
+							ul 
+								li 
+									span Members
+									ul 
+										li 
+											a(href="/manage/members") Member List
+										li 
+											a(href="/manage/scoutingaudit") Scouting Audit
+										li 
+											a(href="/manage/scoutingpairs") Scouting Pairs
+										li 
+											a(href="/manage/scoutingpairs/swapmembers") Swap in/out match scouts
+										li 
+											a(href="/manage/members/present") Set Present
+										li 
+											a(href="/manage/user/resetpassword") Reset User Password
+								li 
+									span Current Event 
+									ul 
+										li 	
+											a(href="/manage/currentevent/matches") Matches 
+										li 
+											a(href="/manage/allianceselection") Alliance Selection Data
+										li 
+											a(href="/manage/currentevent/getcurrentteams") Update List of Current Teams
+					//- Below: If user has GLOBAL ADMIN access
+					if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
+						li 
+							a(href="/admin") Admin
+					//- Below: (Logged-in users): User-specific links (e.g. logout/change password)
 					li 
 						span #{user.name}
 						ul 
@@ -87,55 +158,16 @@ div(style="display: none;" id="menuParent")
 								a(href='/user/logout') Log Out
 							li 
 								a(href='/user/changepassword') Change Password
-				if user.role.access_level >= process.env.ACCESS_VIEWER
-					if user.org 
-						li 
-							span #{user.org.nickname}
-							ul 
+				//- Below: (Anyone who selected an org) Org-related links (e.g. Switch Org/log in)
+				if user.org 
+					li 
+						span #{user.org.nickname}
+						ul 
+							li 
+								a(href='/user/switchorg') Change Organization
+							if user.name == 'default_user'
 								li 
-									a(href='/user/switchorg') Change Organization
-								if user.name == 'default_user'
-									li 
-										a(href='/user/login') Log In
-				if user.role.access_level >= process.env.ACCESS_SCOUTER 
-					li 
-						span Scouting
-						ul 
-							li 
-								a(href="/dashboard/pits") Pit Scouting
-							li 
-								a(href="/dashboard/matches") Match Scouting
-				if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
-					li
-						a(href="/manage") Manage #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
-						ul 
-							li 
-								span Members
-								ul 
-									li 
-										a(href="/manage/members") Member List
-									li 
-										a(href="/manage/scoutingaudit") Scouting Audit
-									li 
-										a(href="/manage/scoutingpairs") Scouting Pairs
-									li 
-										a(href="/manage/scoutingpairs/swapmembers") Swap in/out match scouts
-									li 
-										a(href="/manage/members/present") Set Present
-									li 
-										a(href="/manage/user/resetpassword") Reset User Password
-							li 
-								span Current Event 
-								ul 
-									li 	
-										a(href="/manage/currentevent/matches") Matches 
-									li 
-										a(href="/manage/allianceselection") Alliance Selection Data
-									li 
-										a(href="/manage/currentevent/getcurrentteams") Update List of Current Teams
-				if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
-					li 
-						a(href="/admin") Admin
+									a(href='/user/login') Log In
 			
 - var navMenuTitle;
 if user
@@ -149,7 +181,7 @@ script var navMenuTitle = `#{navMenuTitle}`;
 //-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
 script.
 	var footerContents = [
-		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/monochrome-badge.png" alt=""><span class="w3-tooltiptext">Copyright 2019 FIRST Team 102 and Robotics Fund Inc.</span></img></a>`,
+		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/monochrome-badge.png" alt=""><span class="w3-tooltiptext">Copyright 2020 FIRST Team 102 and Robotics Fund Inc.</span></img></a>`,
 		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/tba-logo.png" alt=""><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
-		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/FIRST-logo-white.png" alt=""><span class="w3-tooltiptext">Proud to be a participant of FIRST Robotics Competition.</span></img></a>`,
+		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/FIRST-logo-white.png" alt=""><span class="w3-tooltiptext">We are proud to be participants of FIRST Robotics Competition!</span></img></a>`,
 		];

@@ -54,6 +54,7 @@ router.get("/finishedmatches", async function(req, res){
 
 router.get("/upcoming", async function(req, res){
 	
+	const thisFuncName = "reports.upcoming[GET]: ";
 	var event_key = req.event.key;
 
 	//check if the page queried a specific team for upcoming
