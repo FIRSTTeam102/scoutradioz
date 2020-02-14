@@ -46,7 +46,8 @@ router.get('/', async function(req, res) {
 		logger.debug(thisFuncName + "assignedTeam[" + assignedIdx + "]=" + assignedTeams[assignedIdx].team_key + "; data=" + assignedTeams[assignedIdx].data);
 
 	// Get their scouting team
-	var pairsData = await utilities.find("scoutingpairs", {
+	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
+	var pairsData = await utilities.find("scoutingpairs", { "org_key": org_key, 
 		$or:
 			[{"member1": thisUserName},
 			{"member2": thisUserName},

@@ -19,6 +19,7 @@ router.get("/", async function(req, res) {
 	
 	var thisFuncName = "scoutingpairs root: ";
 	var startTime = Date.now();
+	var org_key = req.user.org_key;
 	
 	//Log message so we can see on the server side when we enter this
 	logger.debug(thisFuncName + "ENTER");
@@ -34,7 +35,8 @@ router.get("/", async function(req, res) {
 	logger.debug(thisFuncName + "Requesting scouting pairs from db");
 	
 	//Get all already-assigned pairs
-	var assignedPromise = utilities.find("scoutingpairs");
+	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
+	var assignedPromise = utilities.find("scoutingpairs", {"org_key": org_key});
 	
 	logger.debug(thisFuncName + "Awaiting all db requests");
 	
@@ -157,11 +159,14 @@ router.post('/setscoutingpair', async function(req, res) {
 
     // Get our form values. These rely on the "name" attributes of form elements (e.g., named 'data' in the form)
     var data = req.body.data;
+	var org_key = req.user.org_key;
     //logger.debug(thisFuncName + data);
 	
 	// The javascript Object was JSON.stringify() on the client end; we need to re-hydrate it with JSON.parse()
 	var selectedMembers = JSON.parse(data);
-	logger.debug(selectedMembers);
+	// 2020-02-12, M.O'C - Adding 'org_key'
+	selectedMembers['org_key'] = org_key;
+	logger.debug(thisFuncName + "selectedMembers=" + JSON.stringify(selectedMembers));
 	//var insertArray = [];
 	//insertArray["pair"] = selectedMembers;
 
@@ -231,8 +236,10 @@ router.post("/deletescoutingpair", async function(req, res) {
 	*/
 	
 	var data = req.body.data;
+	var org_key = req.user.org_key;
 	
-	var thisPairArray = await utilities.find("scoutingpairs", {"_id": data});
+	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
+	var thisPairArray = await utilities.find("scoutingpairs", {"org_key": org_key, "_id": data});
 	var thisPair = {};
 	if (thisPairArray.length > 0)
 		thisPair = thisPairArray[0];
@@ -262,7 +269,8 @@ router.post("/deletescoutingpair", async function(req, res) {
 	await utilities.bulkWrite("users", [{updateMany:{filter:{ "name": {$in: nameList }}, update:{ $set: { "event_info.assigned" : false } }}}]);
 
 	//teamCol.bulkWrite([{updateMany:{filter:{ "name": {$in: nameList }}, update:{ $set: { "assigned" : "false" } }}}], function(e, docs){
-	await utilities.remove("scoutingpairs", {"_id": data});
+	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
+	await utilities.remove("scoutingpairs", {"org_key": org_key, "_id": data});
 	//scoutCol.remove({"_id": data}, function(e, docs) {
 	logger.debug(thisFuncName + "REDIRECT");
 	res.redirect("./");	
@@ -1210,7 +1218,8 @@ async function generateTeamAllocations(req, res){
 	//
 	// Get the current set of already-assigned pairs; make a map of {"id": {"prim", "seco", "tert"}}
 	//
-	var scoutingpairs = await utilities.find("scoutingpairs", {});
+	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
+	var scoutingpairs = await utilities.find("scoutingpairs", {"org_key": org_key});
 	// scoutPairCol.find({}, {}, function (e, docs) {
 	// 	if(e){ //if error, log to console
 	// 		logger.debug(thisFuncName + e);
