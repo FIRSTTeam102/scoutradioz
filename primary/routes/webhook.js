@@ -54,22 +54,22 @@ router.post('/', async function(req, res) {
 	switch(messageType){
 		
 		case "upcoming_match":
-			handleUpcomingMatch( messageData );
+			await handleUpcomingMatch( messageData );
 			break;
 		case "match_score":
-			handleMatchScore( messageData );
+			await handleMatchScore( messageData );
 			break;
 		case "starting_comp_level":
-			handleStartingCompLevel( messageData );
+			await handleStartingCompLevel( messageData );
 			break;
 		case "alliance_selection":
-			handleAllianceSelection( messageData );
+			await handleAllianceSelection( messageData );
 			break;
 		case "schedule_updated":
-			handleScheduleUpdated( messageData );
+			await handleScheduleUpdated( messageData );
 			break;
 		case "awards_posted":
-			handleAwardsPosted( messageData );
+			await handleAwardsPosted( messageData );
 			break;
 	}
 	
@@ -79,9 +79,14 @@ router.post('/', async function(req, res) {
 //TBA push handlers
 async function handleUpcomingMatch( data ) {
 	var thisFuncName = 'webhook.handleUpcomingMatch(): ';
-	logger.debug(thisFuncName + "ENTER");
 
+	var match_key = data.match_key;
+	var event_key = match_key.split('_')[0];
+	var event_year = event_key.substring(0, 4);
+	logger.debug(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
 
+	// Synchronize the rankings (just in case)
+	await syncRankings(event_key);
 
 	// push notifications
 	if (process.env.disablePushNotifications == 'true') return;
@@ -184,6 +189,43 @@ async function handleMatchScore( data ) {
 	var thisFuncName = "webhook.handleMatchScore(): ";
 	logger.debug(thisFuncName + "ENTER");
 	
+	var match_key = data.match.key;
+	var event_key = match_key.split('_')[0];
+	var event_year = event_key.substring(0, 4);
+	logger.debug(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
+
+	// 2020-02-13, M.O'C: Handle possible bugs in webhook push data?
+	// Setting winning_alliance
+	if (!data.match.winning_alliance) {
+		var winning_alliance = "";
+		if (data.match.alliances.blue.score > data.match.alliances.red.score)
+			winning_alliance = "blue";
+		if (data.match.alliances.blue.score < data.match.alliances.red.score)
+			winning_alliance = "red";
+		data.match.winning_alliance = winning_alliance;
+	}
+	// Renaming the 'teams' attribute
+	if (!data.match.alliances.blue.team_keys) {
+		var blue_team_keys = data.match.alliances.blue.teams;
+		data.match.alliances.blue.team_keys = blue_team_keys;
+	}
+	if (!data.match.alliances.red.team_keys) {
+		var red_team_keys = data.match.alliances.red.teams;
+		data.match.alliances.red.team_keys = red_team_keys;
+	}
+	// Setting actual_time
+	if (!data.match.actual_time) {
+		var actual_time = data.match.time;
+		data.match.actual_time = actual_time;
+	}
+
+	// Delete the matching match record
+	await utilities.remove("matches", {"key": match_key});
+	// Insert the match data
+	await utilities.insert("matches", data.match);
+	
+	// Synchronize the rankings
+	await syncRankings(event_key);
 }
 
 async function handleStartingCompLevel( data ) {
@@ -208,6 +250,39 @@ async function handleAwardsPosted( data ) {
 	var thisFuncName = "webhook.handleAwardsPosted(): ";
 	logger.debug(thisFuncName + "ENTER");
 	
+}
+
+// Pull down rankings for event event_key
+async function syncRankings(event_key) {
+	var thisFuncName = "webhook.syncRankings(): ";
+	logger.debug(thisFuncName + "ENTER");
+
+	// Reload the rankings from TBA
+	var rankingUrl = "event/" + event_key + "/rankings";
+	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
+
+	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
+	var rankinfo = JSON.parse(rankData);
+	var rankArr = [];
+	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0)
+	{
+		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
+		var thisRankings = rankinfo.rankings;
+		for (var i in thisRankings) {
+			var thisRank = thisRankings[i];
+			thisRank['event_key'] = event_key;
+			rankArr.push(thisRank);
+		}
+	}
+	logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// Delete the current rankings
+	//await utilities.remove("currentrankings", {});
+	await utilities.remove("rankings", {"event_key": event_key});
+	// Insert into DB
+	//await utilities.insert("currentrankings", rankArr);
+	await utilities.insert("rankings", rankArr);
 }
 
 //Push notification functions
