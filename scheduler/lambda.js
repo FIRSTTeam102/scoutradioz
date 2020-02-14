@@ -20,6 +20,38 @@ exports.handler = async (event, context, cb) => {
 	console.log(event);
 	console.log(context);
 	
+	/* Sample event.request
+	event.request = {
+		url: 'https://scoutradioz.com/foo/bar'
+		type: 'GET',
+		args: {
+			key1: "value1",
+			key2: "value2"
+		}
+	};
+	*/
+	if (event.request) {
+		var request = event.request;
+		//Filter/validate request object
+		if (typeof request.url != "string") throw "request.url must be a string";
+		if (typeof request.type != "string") throw "request.type must be a string";
+		request.type = request.type.toLowerCase();
+		if (request.type != 'get' && request.type != 'post') throw "request.type must be either GET or POST"
+		if (!request.args) request.args = {};
+		if (typeof request.args != "object") throw "request.args must be of type object";
+		
+		var response;
+		
+		if (request.type == 'get') {
+			response = await sendGetRequest(request.url, request.args);
+		}
+		else if (request.type == 'post') {
+			response = await sendPostRequest(request.url, request.args);
+		}
+		
+		console.log(response);
+	}
+	
 	if (event.nextTask) {
 		var input;
 		if (event.nextInput) {
@@ -132,8 +164,38 @@ function sendGetRequest(requestURL, parameters) {
 		//Inside promise function, perform client request
 		client.get(requestURL, parameters, function(data, response){
 			
-			logger.debug(`Response: ${data.toString().substring(0, 1000)}...`);
-			logger.trace(`Full response: ${data}`);
+			var str;
+			if (data.toString() == "[object Object]") str = JSON.stringify(data);
+			else str = data.toString();
+			
+			logger.debug(`Response: ${str.substring(0, 1000)}...`);
+			logger.trace(`Full response: ${str}`);
+			
+			resolve(data);
+		});
+	});
+	
+	//Resolve promise
+	return thisPromise;
+}
+
+function sendPostRequest(requestURL, parameters) {
+	
+	//Create promise first
+	var thisPromise = new Promise(function(resolve, reject){
+		
+		var Client = require('node-rest-client').Client;
+		var client = new Client();
+		
+		//Inside promise function, perform client request
+		client.post(requestURL, parameters, function(data, response){
+			
+			var str;
+			if (data.toString() == "[object Object]") str = JSON.stringify(data);
+			else str = data.toString();
+			
+			logger.debug(`Response: ${str.toString().substring(0, 1000)}...`);
+			logger.trace(`Full response: ${str}`);
 			
 			resolve(data);
 		});
