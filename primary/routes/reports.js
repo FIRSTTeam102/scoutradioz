@@ -45,6 +45,7 @@ router.get("/finishedmatches", async function(req, res){
 
 	// Match history info
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : event_key}, {sort: {time: -1}});
+
 	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 	res.render("./reports/finishedmatches", {
 		title: "Matches",
