@@ -468,8 +468,11 @@ utilities.requestTheBlueAlliance = async function(url){
 		//Inside promise function, perform client request
 		client.get(requestURL, tbaKey, function(tbaData, response){
 			
-			logger.debug(`TBA response: ${tbaData.toString().substring(0, 1000)}...`);
-			logger.trace(`Full TBA response: ${tbaData}`);
+			//If newline characters are not deleted, then CloudWatch logs get spammed
+			let str = tbaData.toString().replace(/\n/g, "");
+			
+			logger.debug(`TBA response: ${str.substring(0, 1000)}...`);
+			logger.trace(`Full TBA response: ${str}`);
 			
 			//tbaData = JSON.parse(tbaData);
 			//Inside client callback, resolve promise
