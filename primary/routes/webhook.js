@@ -40,10 +40,8 @@ router.get('/', async function(req, res) {
 router.post('/', async function(req, res) {
 	var thisFuncName = "webhook.[root/post]: ";
 	
-	logger.debug(thisFuncName + "ENTER");
-    
 	var message = req.body;
-	logger.debug(thisFuncName + "message=" + JSON.stringify(message));
+	logger.debug(thisFuncName + "ENTER message=" + JSON.stringify(message));
 
     var messageType = message.message_type;
 	var messageData = message.message_data;
@@ -71,10 +69,14 @@ router.post('/', async function(req, res) {
 		case "awards_posted":
 			await handleAwardsPosted( messageData );
 			break;
+		default:
+			logger.info(thisFuncName + "unknown messageType-" + messageType + ",messageData=" + JSON.stringify(messageData));
 	}
 	
 	res.status(200).send("thanks!");
 });
+
+////////// Type handlers
 
 //TBA push handlers
 async function handleUpcomingMatch( data ) {
@@ -187,7 +189,7 @@ async function handleUpcomingMatch( data ) {
 
 async function handleMatchScore( data ) {
 	var thisFuncName = "webhook.handleMatchScore(): ";
-	logger.debug(thisFuncName + "ENTER");
+	//logger.debug(thisFuncName + "ENTER");
 	
 	var match_key = data.match.key;
 	var event_key = match_key.split('_')[0];
@@ -230,27 +232,59 @@ async function handleMatchScore( data ) {
 
 async function handleStartingCompLevel( data ) {
 	var thisFuncName = "webhook.handleStartingCompLevel(): ";
-	logger.debug(thisFuncName + "ENTER");
+	logger.debug(thisFuncName + "ENTER (sync rankings only) data=" + JSON.stringify(data));
 	
+	// Synchronize the rankings
+	await syncRankings(event_key);
 }
 
 async function handleAllianceSelection( data ) {
 	var thisFuncName = "webhook.handleAllianceSelection(): ";
-	logger.debug(thisFuncName + "ENTER");
+	logger.debug(thisFuncName + "ENTER DNGN data=" + JSON.stringify(data));
 	
 }
 
 async function handleScheduleUpdated( data ) {
 	var thisFuncName = "webhook.handleScheduleUpdated(): ";
-	logger.debug(thisFuncName + "ENTER");
-	
+	//logger.debug(thisFuncName + "data=" + JSON.stringify(data));
+	/*
+{
+    "event_name": "FIM District East Kentwood Event",
+    "first_match_time": 1553871600,
+    "event_key": "2019miken"
+}	
+	*/
+	//return;
+
+	var event_key = data.event_key;
+	var event_year = event_key.substring(0, 4);
+	logger.debug(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key);
+
+	// Reload the matches
+	var url = "event/" + event_key + "/matches";
+	logger.debug(thisFuncName + "url=" + url);
+	var matchData = await utilities.requestTheBlueAlliance(url);
+	var array = JSON.parse(matchData);
+	if (array && array.length && array.length > 0) {
+		var arrayLength = array.length;
+
+		// First delete existing match data for the given event
+		await utilities.remove("matches", {"event_key": event_key});
+		// Now, insert the new data
+		await utilities.insert("matches", array);
+	}
+
+	// Synchronize the rankings (just in case)
+	await syncRankings(event_key);
 }
 
 async function handleAwardsPosted( data ) {
 	var thisFuncName = "webhook.handleAwardsPosted(): ";
-	logger.debug(thisFuncName + "ENTER");
+	logger.debug(thisFuncName + "ENTER DNGN data=" + JSON.stringify(data));
 	
 }
+
+////////// Helper functions
 
 // Pull down rankings for event event_key
 async function syncRankings(event_key) {
@@ -285,8 +319,7 @@ async function syncRankings(event_key) {
 	await utilities.insert("rankings", rankArr);
 }
 
-//Push notification functions
-
+// Push notification function
 async function sendPushMessage(subscription, dataToSend) {
 	var thisFuncName = "webhook.sendPushMessage(): ";
 	logger.debug(thisFuncName + "ENTER");
