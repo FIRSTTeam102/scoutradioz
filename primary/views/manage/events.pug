@@ -18,9 +18,9 @@ block content
 							option(value=year selected)= year
 						- else
 							option(value=year)= year
-		div(class="w3-show-inline-block w3-padding-small")
+		//div(class="w3-show-inline-block w3-padding-small")
 			input#setyear(class="theme-input w3-no-border theme-inline-padding" placeholder="Enter year to update" type="text", name="year")
-		div(class="w3-show-inline-block w3-padding-small")
+		//div(class="w3-show-inline-block w3-padding-small")
 			button#btnSubmit(class="theme-submit w3-no-border w3-btn" type="submit") Update DB for specified year
 	br 
 	if locals.events

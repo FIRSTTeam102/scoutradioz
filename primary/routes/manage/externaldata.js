@@ -57,6 +57,10 @@ router.get("/events", async function(req, res) {
  */
 router.post("/events", async function(req, res) {
 	
+	//Event data synchronization is now updated automatically
+	res.send(410);
+	
+	/*
 	var thisFuncName = "externaldata.events[post]: ";
 	
 	// var eventCol = db.get("events");
@@ -84,6 +88,7 @@ router.post("/events", async function(req, res) {
 	await utilities.insert("events", events);
 	//redirect back to events page
 	res.redirect(`/manage/data/events?year=${year}`);
+	*/
 });
 
 /**
