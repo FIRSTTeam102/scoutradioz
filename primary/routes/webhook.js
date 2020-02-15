@@ -14,13 +14,20 @@ const options = {
 	extended: false,
 	verify: function(req, res, buf, encoding) {
 		
-		const secret = 'BHNtFFA2F_9RzeU4PjOXkeCpIrIcZ3J0L0SYA6uWPkLuFwSw_AOJnpJPBzumbbv2SULKjxzT73cVfAn4cyyvIYQ';
-		const hash = crypto.createHmac('sha1', secret)
-		.update(buf)
-		.digest('hex');
+		const secret = "f9e6d7f814f949ee9fbcc690692c5701";
 		
-		logger.info(`X-TBA-Checksum: ${req.header('X-TBA-Checksum')}`);
-		console.log(`Our hash: ${hash}`);		
+		//Generate hash to compare with TBA's hmac hash.
+		const hash = crypto.createHmac('sha256', secret)
+			.update(buf)
+			.digest('hex');
+		const hmac = req.header('X-TBA-HMAC');
+		
+		//Log both hashes
+		logger.info(`X-TBA-HMAC: ${hmac}`);
+		console.log(`Our hash: ${hash}`);
+		
+		//If comparison failed, then we need to throw an error to stop code
+		if (hash != hmac) throw "X-TBA-HMAC not verified.";
     }
 };
 webhook.use(bodyParser.json(options));
