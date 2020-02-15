@@ -32,7 +32,7 @@ Resources:
   SchedulerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://scoutradioz-cloudformation/0293f8117e32dc824ff2c1eb80a07b14
+      CodeUri: s3://scoutradioz-cloudformation/0a342c84e6a6d99b0d83dd9b334cb65f
       Handler: lambda.handler
       MemorySize: 1024
       Role:

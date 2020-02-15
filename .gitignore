@@ -1,5 +1,5 @@
 lambda-invoke-response.json
-packaged-sam.yaml
+package.yaml
 databases.json
 node_modules
 primary/public/uploads/responsive
