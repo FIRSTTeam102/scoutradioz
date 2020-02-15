@@ -83,7 +83,7 @@ router.all('/selectorg', async function(req, res) {
 		
 		//set org_key cookie to selected organization
 		logger.debug(`${thisFuncName} Setting org_key cookie`)
-		res.cookie("org_key", org_key);
+		res.cookie("org_key", org_key, {maxAge: 30E9});
 			
 		//If error, then log and return an error
 		if(err){ console.error(err); return res.status(500).send({alert: err}) };
