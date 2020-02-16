@@ -1266,8 +1266,41 @@ router.get("/allteammetrics", async function(req, res){
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
-		
+	var scorelayoutDB = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	
+	// 2020-02-15, M.O'C: Leverage column selection cookies - pull in the cookies
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var savedCols = {};
+	var noneSelected = true;
+	var colCookie = req.cookies[cookie_key];
+	//colCookie = "a,b,ccc,d";
+	if (colCookie) {
+		logger.debug(thisFuncName + "colCookie=" + colCookie);
+		noneSelected = false;
+		var savedColArray = colCookie.split(",");
+		for (var i in savedColArray)
+			savedCols[savedColArray[i]] = savedColArray[i];
+	}
+	//logger.debug(thisFuncName + "noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
+
+	// Use the cookies (if defined) to slim down the layout array
+	var scorelayout = [];
+	if (noneSelected)
+		scorelayout = scorelayoutDB;
+	else {
+		// Weed out unselected columns
+		for (var i in scorelayoutDB) {
+			var thisLayout = scorelayoutDB[i];
+			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+				if (savedCols[thisLayout.id]) 
+					scorelayout.push(thisLayout);
+			}
+			else
+				scorelayout.push(thisLayout);
+		}
+	}
+
+	// Build the aggregation data
 	var aggQuery = [];
 	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
@@ -1278,6 +1311,7 @@ router.get("/allteammetrics", async function(req, res){
 		var thisLayout = scorelayout[scoreIdx];
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
+		// 2020-02-15, M.O'C: Leverage column selection cookies
 		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
 		{
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -1330,6 +1364,86 @@ router.get("/allteammetrics", async function(req, res){
 		currentAggRanges: currentAggRanges,
 		layout: scorelayout
 	});
+});
+
+//// Choosing & setting scoring selections
+
+router.get("/choosecolumns", async function(req, res) {
+	var thisFuncName = "reports.choosecolumns[get]: ";
+	logger.debug(thisFuncName + 'ENTER');
+	
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+
+	// read in the list of form options
+	var matchlayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//logger.debug(thisFuncName + "matchlayout=" + JSON.stringify(matchlayout))
+
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var savedCols = {};
+	var colCookie = req.cookies[cookie_key];
+	//colCookie = "a,b,ccc,d";
+	if (colCookie) {
+		var savedColArray = colCookie.split(",");
+		for (var i in savedColArray)
+			savedCols[savedColArray[i]] = savedColArray[i];
+	}
+	logger.debug(thisFuncName + "savedCols=" + JSON.stringify(savedCols))
+
+	if (req.cookies[cookie_key]) {
+		logger.debug(thisFuncName + "req.cookies[cookie_key]=" + JSON.stringify(req.cookies[cookie_key]))
+	}
+
+	res.render("./reports/choosecolumns", {
+		title: "Choose Report Columns",
+		layout: matchlayout,
+		savedCols: savedCols
+	});
+});
+
+router.post("/choosecolumns", async function(req, res){
+	var thisFuncName = "reports.choosecolumns[post]: ";
+	logger.debug(thisFuncName + 'ENTER');
+	
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+	var cookie_key = org_key + "_" + event_year + "_cols";
+
+	logger.debug(thisFuncName + "req.body=" + JSON.stringify(req.body));
+	var first = true;
+	var columnCookie = '';
+	for (var i in req.body) {
+		if (first)
+			first = false;
+		else
+			columnCookie += ','; 
+		columnCookie += i;
+	}
+
+	res.cookie(cookie_key, columnCookie, {maxAge: 30E9});
+
+	/*
+	//2019-11-20 JL: updated to only work with members of the right organization.
+	const orgKey = req.user.org_key;
+	
+	await utilities.update("users", {org_key: orgKey}, { $set: { "event_info.present" : "false" } }, {multi: true});
+	
+	//Get a list of all present member IDs.
+	var allPresentMembers = [];
+	for(var i in req.body)
+	{
+		allPresentMembers.push(monk.id(i));
+	}
+	
+	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
+	
+	var query = {"_id": {$in: allPresentMembers}, org_key: orgKey};
+	var update = {$set: {"event_info.present": true}};
+	
+	await utilities.update("users", query, update, {multi: true, castIds: true});
+	*/
+	
+	res.redirect("../home");
 });
 
 module.exports = router;

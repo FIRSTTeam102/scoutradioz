@@ -101,6 +101,8 @@ div(style="display: none;" id="menuParent")
 							a(href="/reports/finishedmatches") Completed Matches
 						li 
 							a(href="/reports/allteammetrics") Stats for All Teams
+				li
+					a(href=`/reports/choosecolumns`) Configure report columns
 				//- Below: Shows up to anyone who has "logged in"
 				if user.name != 'default_user'
 					//- Below: If user has VIEWER ACCESS (and is "logged in")
