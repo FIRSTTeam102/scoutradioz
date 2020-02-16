@@ -490,12 +490,12 @@ utilities.requestTheBlueAlliance = async function(url){
  */
 utilities.getTBAKey = async function(){
 	
-	var tbaArgsArray = await utilities.find("passwords", {name: "thebluealliance-args"});
+	var tbaArgs = await utilities.findOne("passwords", {name: "tba-api-headers"});
 	
-	if(tbaArgsArray && tbaArgsArray[0]){
-		var headers = tbaArgsArray[0].headers;
-		var tbaArgs = {"headers": headers};
-		return tbaArgs;
+	if(tbaArgs){
+		var headers = tbaArgs.headers;
+		var key = {"headers": headers};
+		return key;
 	}
 	else{
 		//**********CONSIDER ANOTHER OPTION FOR HANDLING "CAN'T FIND REQUEST ARGS"
