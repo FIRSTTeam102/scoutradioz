@@ -853,7 +853,7 @@ router.get("/matchmetrics", async function(req, res) {
 	if (matchFind && matchFind[0])
 		match = matchFind[0];
 		
-	logger.debug(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.trace(`${thisFuncName} match: ${JSON.stringify(match)}`);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
 	// db.scoringdata.aggregate( [ 

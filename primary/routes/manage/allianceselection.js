@@ -67,7 +67,7 @@ router.get("/", async function(req, res){
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggArray = await utilities.aggregate("matchscouting", aggQuery);
 			
-	logger.debug(`${thisFuncName} rankMap=${JSON.stringify(rankMap)}`);
+	logger.trace(`${thisFuncName} rankMap=${JSON.stringify(rankMap)}`);
 	
 	// Rewrite data into display-friendly values
 	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
