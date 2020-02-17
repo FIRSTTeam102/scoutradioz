@@ -210,4 +210,71 @@ router.get('/resyncteams', async function(req, res) {
 	*/
 });
 
+router.get('/recalcderived', async function(req, res) {
+	// Function to recalculate all derived data for the current team & current event
+	var thisFuncName = "indexadmin.recalcderived[get]: ";
+
+	var event_year = req.event.year;
+	var event_key = req.event.key;
+	var org_key = req.user.org_key;
+
+	logger.debug(thisFuncName + "ENTER org_key=" + org_key + ",event_key=" + event_key);
+
+	// read in the 'derived' metrics from the matchscouting layout
+	var matchLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, {sort: {"order": 1}})
+	// logger.debug(thisFuncName + "matchLayout[0]" + JSON.stringify(matchLayout[0]));
+	// for (var z in matchLayout[0].operands)
+	// 	logger.debug(thisFuncName + "operands[" + z + "]=" + matchLayout[0].operands[z]);
+
+	// read in existing match scouting data
+	var scored = await utilities.find("matchscouting", {"org_key": org_key, "event_key": event_key, "data": {$exists: true} }, { sort: {"time": 1} });
+	// logger.debug(thisFuncName + "scored[0].data=" + JSON.stringify(scored[0].data));
+	// logger.debug(thisFuncName + "scored[0].data[matchLayout[0].operands[2]]=" + JSON.stringify(scored[0].data[matchLayout[0].operands[2]]));
+
+	// cycle through each scored match & [re]calculate derived metrics - push into new array 'updatedScored'
+	var updatedScored = [];
+	var debugCountdown = 0;
+	for (var i in scored) {
+		var thisScored = scored[i];
+		// should be redundant with the "$exists: true" in the DB find query, BUT... just in case...
+		if (thisScored.data) {
+			// logger.debug(thisFuncName + "thisScored.match_team_key=" + thisScored.match_team_key);
+
+			for (var j in matchLayout) {
+				var thisItem = matchLayout[j];
+
+				var derivedMetric = NaN;
+				switch (thisItem.operator) {
+					case "sum":
+						// add up the operands
+						var sum = 0;
+						for (var metricId in thisItem.operands)
+							sum += thisScored.data[thisItem.operands[metricId]];
+						derivedMetric = sum;
+						break;
+				}
+				thisScored.data[thisItem.id] = derivedMetric;
+			}
+		}
+
+		// if (debugCountdown == 0) {
+		// 	logger.debug(thisFuncName + "thisScored=" + JSON.stringify(thisScored.data));
+		// 	debugCountdown = 20;
+		// }
+		// debugCountdown -= 1;
+
+		updatedScored.push(thisScored);
+	}
+
+	// Delete the old scored data
+	await utilities.remove("matchscouting", {"org_key": org_key, "event_key": event_key, "data": {$exists: true} });
+
+	// Insert the revised scored data
+	await utilities.insert("matchscouting", updatedScored);
+
+	res.render('./admin/admindashboard', { 
+		title: `Administration`
+	});
+});
+
 module.exports = router;
