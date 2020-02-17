@@ -1,0 +1,87 @@
+//-
+	Nav - Contains logo w/ link to index; and navbar at the top for logged in users, with useful links.
+		Includes one-off cookie message.
+	INCLUDED BY
+		layout
+	//
+//- div#cookieMessage(class="w3-block theme-input theme-text" style="position: fixed; bottom: 0; display: none;")
+	div(class="w3-show-block w3-mobile w3-left" style="font-size: 14px; padding: 9px 8px 2px 9px;") 
+		button#hideCookieMessage(class="w3-button w3-left" style="margin: 0; position: relative; top:-9px; right: 0px;") x
+		span(class="w3-padding") Cookies are used in this scouting application. By using this site, you agree to our use of cookies.
+div(style="font-size:1.1em;")
+	//-Nav bar should only show if there is a logged-in user.
+	if user
+		if user.name != "default_user"
+			nav(class="w3-bar theme-text w3-rest" style="position:relative;z-index:2;")
+				div#userName(href="#" class="w3-dropdown-mobile theme-text w3-mobile w3-left" onclick="w3_open( $('#userBar')[0], this );" style="max-width: 33%;")
+					div(class="w3-button")=user.name
+				button( class="w3-button w3-show-small w3-right theme-text" style="font-size:1.6em; padding:4px 16px; " onclick="w3_open( $('#navBar')[0], this );" id="navBtn") &#x2261;
+				div(id="navBar" style="display: none; z-index: 2; position: relative")
+					a(href="/dashboard" class="w3-bar-item w3-button w3-mobile") Dashboard
+					a(href="/dashboard/pits" class="w3-bar-item w3-button w3-mobile") Pit scouting
+					a(href="/dashboard/matches" class="w3-bar-item w3-button w3-mobile") Match scouting
+					a(href="/reports/allteammetrics" class="w3-bar-item w3-button w3-mobile") All Team Metrics
+					a(href="/dashboard/allianceselection" class="w3-bar-item w3-button w3-mobile") Alliance Selection
+					if user.role && user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
+						a(href="/manage" class="w3-bar-item w3-button w3-mobile") Management
+					if user.role && user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
+						a(href="/admin" class="w3-bar-item w3-button w3-mobile") Admin
+			div#userBar(class="w3-dropdown-content w3-bar-block" style="position:absolute;top:2.1rem; z-index:99; max-width: 10rem;")
+				a(href="/user/logout" class="w3-bar-item w3-button w3-padding-16") Log out
+				a(href="/user/switchorg" class="w3-bar-item w3-button w3-padding-16") Switch Organization
+				a(href="/user/changepassword" class="w3-bar-item w3-button w3-padding-16") Change Password
+		//-if user.name == default_user
+		else
+			nav(class="w3-bar theme-text w3-rest" style="position:relative;z-index:2;")
+				div(id="navBar" style="z-index: 2; position: relative")
+					a(href="/home" class="w3-bar-item w3-button") Home
+					div(class="w3-right")
+						a(href="/user/switchorg" class="w3-bar-item w3-button w3-mobile") Switch Organization
+
+br 
+header(class="w3-center w3-container w3-content w3-padding-8")
+	div(style="max-width:250px" class="w3-content w3-section")
+		a(href="/home") 
+			img(src=`${fileRoot}/images/headers/deepspace-white.png` class="w3-image")
+	h4(class="theme-text" style="margin:0px;padding:0px;")=eventName
+	br 
+	script.
+		function w3_open(elem, toggle) {
+			var d = document.createElement("div");
+			d.classList.add("canvas");
+			d.id = "closeNav";
+			d.style.width = window.innerWidth+"px";
+			d.style.height = window.innerHeight+"px";
+			d.style.zIndex = 1;
+			document.body.append(d);
+			
+			elem.style.display = "block";
+			toggle.onclick = function(){w3_close(elem, toggle)};
+			d.onclick = function(){w3_close(elem, toggle)};;
+		}
+		function w3_close(elem, toggle) {
+			elem.style.display = "none";
+			toggle.onclick = function(){w3_open(elem, toggle)};
+			$("#closeNav").remove();
+		}
+		$("#userName").hover(function(){
+			if(window.innerWidth > 600){
+				w3_open( $('#userBar')[0], $("#userName")[0] );
+			}
+		}, function(){});
+		
+		$("#userBar").hover(function(){}, function(){	
+			if(window.innerWidth > 600){
+				w3_close( $('#userBar')[0], $("#userName")[0] );
+			}
+		});
+
+		if(!localStorage.getItem("didShowCookieMessage")){
+			//$("nav").css("top", "40px");
+			$("#cookieMessage").show();
+		}
+		$("#hideCookieMessage").click(function(){
+			//$("nav").css("top", "0px");
+			$("#cookieMessage").hide();
+			localStorage.setItem("didShowCookieMessage", true);
+		});

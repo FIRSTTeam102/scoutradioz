@@ -6,7 +6,7 @@ block content
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
 
-	h2(class="theme-text-white") Team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
+	h2 Team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
 	if (ranking)
 		h4(class="theme-text") Currently ranked ##{ranking.rank} <br> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
 	- var country = '';
@@ -59,14 +59,14 @@ block content
 						- changeCount = 0;
 						br 
 						div(class="theme-spacer")
-						h2(class="theme-text-white") #{element.label}
+						h2 #{element.label}
 					when "h3"
 						//- if (changeCount == 0)
 							h4(class="") <i>(no change)</i>
 						- changeCount = 0;
 						br 
 						div(class="theme-spacer")
-						h3(class="theme-text-white") #{element.label}
+						h3 #{element.label}
 					when "spacer"
 						br
 			//- if (changeCount == 0)

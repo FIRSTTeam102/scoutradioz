@@ -1,87 +1,187 @@
-//-
-	Nav - Contains logo w/ link to index; and navbar at the top for logged in users, with useful links.
-		Includes one-off cookie message.
-	INCLUDED BY
-		layout
-	//
-//- div#cookieMessage(class="w3-block theme-input theme-text" style="position: fixed; bottom: 0; display: none;")
-	div(class="w3-show-block w3-mobile w3-left" style="font-size: 14px; padding: 9px 8px 2px 9px;") 
-		button#hideCookieMessage(class="w3-button w3-left" style="margin: 0; position: relative; top:-9px; right: 0px;") x
-		span(class="w3-padding") Cookies are used in this scouting application. By using this site, you agree to our use of cookies.
-div(style="font-size:1.1em;")
-	//-Nav bar should only show if there is a logged-in user.
-	if user
-		if user.name != "default_user"
-			nav(class="w3-bar theme-text w3-rest" style="position:relative;z-index:2;")
-				div#userName(href="#" class="w3-dropdown-mobile theme-text w3-mobile w3-left" onclick="w3_open( $('#userBar')[0], this );" style="max-width: 33%;")
-					div(class="w3-button")=user.name
-				button( class="w3-button w3-show-small w3-right theme-text" style="font-size:1.6em; padding:4px 16px; " onclick="w3_open( $('#navBar')[0], this );" id="navBtn") &#x2261;
-				div(id="navBar" style="display: none; z-index: 2; position: relative")
-					a(href="/dashboard" class="w3-bar-item w3-button w3-mobile") Dashboard
-					a(href="/dashboard/pits" class="w3-bar-item w3-button w3-mobile") Pit scouting
-					a(href="/dashboard/matches" class="w3-bar-item w3-button w3-mobile") Match scouting
-					a(href="/reports/allteammetrics" class="w3-bar-item w3-button w3-mobile") All Team Metrics
-					a(href="/dashboard/allianceselection" class="w3-bar-item w3-button w3-mobile") Alliance Selection
-					if user.role && user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
-						a(href="/manage" class="w3-bar-item w3-button w3-mobile") Management
-					if user.role && user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
-						a(href="/admin" class="w3-bar-item w3-button w3-mobile") Admin
-			div#userBar(class="w3-dropdown-content w3-bar-block" style="position:absolute;top:2.1rem; z-index:99; max-width: 10rem;")
-				a(href="/user/logout" class="w3-bar-item w3-button w3-padding-16") Log out
-				a(href="/user/switchorg" class="w3-bar-item w3-button w3-padding-16") Switch Organization
-				a(href="/user/changepassword" class="w3-bar-item w3-button w3-padding-16") Change Password
-		//-if user.name == default_user
-		else
-			nav(class="w3-bar theme-text w3-rest" style="position:relative;z-index:2;")
-				div(id="navBar" style="z-index: 2; position: relative")
-					a(href="/home" class="w3-bar-item w3-button") Home
-					div(class="w3-right")
-						a(href="/user/switchorg" class="w3-bar-item w3-button w3-mobile") Switch Organization
-
-br 
-header(class="w3-center w3-container w3-content w3-padding-8")
-	div(style="max-width:250px" class="w3-content w3-section")
-		a(href="/home") 
-			img(src=`${fileRoot}/images/headers/deepspace-white.png` class="w3-image")
-	h4(class="theme-text" style="margin:0px;padding:0px;")=eventName
-	br 
-	script.
-		function w3_open(elem, toggle) {
-			var d = document.createElement("div");
-			d.classList.add("canvas");
-			d.id = "closeNav";
-			d.style.width = window.innerWidth+"px";
-			d.style.height = window.innerHeight+"px";
-			d.style.zIndex = 1;
-			document.body.append(d);
-			
-			elem.style.display = "block";
-			toggle.onclick = function(){w3_close(elem, toggle)};
-			d.onclick = function(){w3_close(elem, toggle)};;
-		}
-		function w3_close(elem, toggle) {
-			elem.style.display = "none";
-			toggle.onclick = function(){w3_open(elem, toggle)};
-			$("#closeNav").remove();
-		}
-		$("#userName").hover(function(){
-			if(window.innerWidth > 600){
-				w3_open( $('#userBar')[0], $("#userName")[0] );
-			}
-		}, function(){});
+div(style="overflow-x: hidden;")
+	div(id="headerbar" class="w3-card header")
+		a(id="burger")
+			button(class="mburger mburger--squeeze")
+				b 
+				b 
+				b 
+		div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
+			span(style="display:inline-block;height:100%;vertical-align:middle;")
+			img(src=`${fileRoot}/images/brand-logos/scoutradioz-black-sm.png` class="header-logo")
+		div(class="w3-right w3-show-inline-block" style="height: 45px;")
+			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-one-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
+div(id="headerlogo" class="w3-padding w3-center")
+	a(href="/home")
+		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
+	h3=eventName
+style.
+	.slidein-menu{
+		position: fixed;
+		z-index: 2;
 		
-		$("#userBar").hover(function(){}, function(){	
-			if(window.innerWidth > 600){
-				w3_close( $('#userBar')[0], $("#userName")[0] );
-			}
-		});
-
-		if(!localStorage.getItem("didShowCookieMessage")){
-			//$("nav").css("top", "40px");
-			$("#cookieMessage").show();
-		}
-		$("#hideCookieMessage").click(function(){
-			//$("nav").css("top", "0px");
-			$("#cookieMessage").hide();
-			localStorage.setItem("didShowCookieMessage", true);
-		});
+		width: 80vw;
+		min-width: 140px;
+		max-width: 440px;
+		
+		box-shadow: 0px 0px 15px #000;
+		
+		display: none;
+	}
+	.slidein-overlay{
+		opacity: 0;
+		background-color: #53555a60;
+		z-index: 1;
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		top: 0px;
+		left: 0px;
+	}
+	.slidein-brand{
+		padding: 16px;
+	}
+	.slidein-brand img{
+		max-height: 32px;
+		max-width: 32px;
+	}
+	.slidein-brand .w3-tooltiptext{
+		background-color: #eee;
+		color: #000;
+		padding: 8px;
+		max-width: 100%;
+		left: 0;
+		margin-left: 0;
+	}
+	.slidein-brand .w3-tooltiptext::after{
+		border-color: #eee transparent transparent transparent;
+	}
+div(style="display: none;" class="slidein-overlay" id="overlay")
+div(style="display: none;" id="menuParent")
+	nav(id="menu" class="slidein-menu")
+		//- NOTE: If you add a (class="selected") to an "li" element, it will be highlighted by the mmenu extension. 
+			We can make that procedural sometime in the future.
+		ul
+			li
+				a(href="/home") Home
+			//-BELOW: This is for when we have multiple different dashboard types
+			//li
+				span Dashboard
+				ul 
+					li
+						a(href="/dashboard") Scouting
+					li
+						a(href="#") Drive Team
+					li
+						a(href="#") Pit Crew
+			//- Below: Shows up to anyone who has selected an organization
+			if user
+				//- Reports pages for current event
+				li 
+					span Info on #{eventName}
+					ul 
+						if teams && teams[0]
+							li
+								span Teams
+								ul 
+									each team in teams
+										li
+											span #{team.team_number}: #{team.nickname}
+											ul 
+												li 
+													a(href=`/reports/upcoming?team=${team.key}`) Upcoming Matches
+												li 
+													a(href=`/reports/teamintel?team=${team.key}`) Team Statistics
+												li 
+													a(href=`/reports/teamintelhistory?team=${team.key}`) Complete Statistics for #{new Date().getFullYear()}
+						li 
+							a(href="/reports/rankings") Current Rankings
+						li 
+							a(href="/reports/upcoming") Upcoming Matches
+						li 
+							a(href="/reports/finishedmatches") Completed Matches
+						li 
+							a(href="/reports/allteammetrics") Stats for All Teams
+				//- Below: Shows up to anyone who has "logged in"
+				if user.name != 'default_user'
+					//- Below: If user has VIEWER ACCESS (and is "logged in")
+					if user.role.access_level >= process.env.ACCESS_VIEWER
+						//No logged-in viewer-level pages yet
+					//- Below: If user has SCOUTER access
+					if user.role.access_level >= process.env.ACCESS_SCOUTER 
+						li 
+							a(href="/dashboard") Dashboard
+						li 
+							span Scouting
+							ul 
+								li 
+									a(href="/dashboard/pits") Pit Scouting
+								li 
+									a(href="/dashboard/matches") Match Scouting
+					//- Below: If user has TEAM ADMIN access
+					if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
+						li
+							a(href="/manage") Manage #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
+							ul 
+								li 
+									span Members
+									ul 
+										li 
+											a(href="/manage/members") Member List
+										li 
+											a(href="/manage/scoutingaudit") Scouting Audit
+										li 
+											a(href="/manage/scoutingpairs") Scouting Pairs
+										li 
+											a(href="/manage/scoutingpairs/swapmembers") Swap in/out match scouts
+										li 
+											a(href="/manage/members/present") Set Present
+										li 
+											a(href="/manage/user/resetpassword") Reset User Password
+								li 
+									span Current Event 
+									ul 
+										li 	
+											a(href="/manage/currentevent/matches") Matches 
+										li 
+											a(href="/manage/allianceselection") Alliance Selection Data
+										li 
+											a(href="/manage/currentevent/getcurrentteams") Update List of Current Teams
+					//- Below: If user has GLOBAL ADMIN access
+					if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
+						li 
+							a(href="/admin") Admin
+					//- Below: (Logged-in users): User-specific links (e.g. logout/change password)
+					li 
+						span #{user.name}
+						ul 
+							li 
+								a(href='/user/logout') Log Out
+							li 
+								a(href='/user/changepassword') Change Password
+				//- Below: (Anyone who selected an org) Org-related links (e.g. Switch Org/log in)
+				if user.org 
+					li 
+						span #{user.org.nickname}
+						ul 
+							li 
+								a(href='/user/switchorg') Change Organization
+							if user.name == 'default_user'
+								li 
+									a(href='/user/login') Log In
+			
+- var navMenuTitle;
+if user
+	if user.name != 'default_user'
+		- navMenuTitle = user.name + ' - ' + user.org.nickname;
+	else if user.org
+		- navMenuTitle = user.org.nickname;
+else 
+	- navMenuTitle = 'Menu';
+script var navMenuTitle = `#{navMenuTitle}`;
+//-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
+script.
+	var footerContents = [
+		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/monochrome-badge.png" alt=""><span class="w3-tooltiptext">Copyright 2020 FIRST Team 102 and Robotics Fund Inc.</span></img></a>`,
+		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/tba-logo.png" alt=""><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
+		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/FIRST-logo-white.png" alt=""><span class="w3-tooltiptext">We are proud to be participants of FIRST Robotics Competition!</span></img></a>`,
+		];
