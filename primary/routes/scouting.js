@@ -131,7 +131,28 @@ router.post('/match/submit', async function(req, res) {
 			matchData[property] = newVal;
 		}
 	}
-	logger.debug(thisFuncName + "matchData(UPDATED)=" + JSON.stringify(matchData));
+	logger.debug(thisFuncName + "matchData(UPDATED:1)=" + JSON.stringify(matchData));
+
+	// Calculate derived metrics
+	// read in the 'derived' metrics from the matchscouting layout, use to process data
+	var derivedLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, {sort: {"order": 1}})
+
+	for (var j in derivedLayout) {
+		var thisItem = derivedLayout[j];
+
+		var derivedMetric = NaN;
+		switch (thisItem.operator) {
+			case "sum":
+				// add up the operands
+				var sum = 0;
+				for (var metricId in thisItem.operands)
+					sum += matchData[thisItem.operands[metricId]];
+				derivedMetric = sum;
+				break;
+		}
+		matchData[thisItem.id] = derivedMetric;
+	}
+	logger.debug(thisFuncName + "matchData(UPDATED:2)=" + JSON.stringify(matchData));
 
 	// Post modified data to DB
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
