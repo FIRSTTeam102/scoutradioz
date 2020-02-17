@@ -18,7 +18,7 @@ router.all('/*', async (req, res, next) => {
 router.get('/', async function(req, res) {
 	
 	var thisFuncName = "dashboard.{root}[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
@@ -133,7 +133,7 @@ router.get('/', async function(req, res) {
 router.get('/unassigned', async function(req, res) {
 	
 	var thisFuncName = "dashboard.unassigned[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	res.render('./dashboard/unassigned',{
 		title: 'Unassigned'
@@ -297,7 +297,7 @@ router.get('/allianceselection', async function(req, res){
 router.get('/pits', async function(req, res) {
 	
 	var thisFuncName = "dashboard.pits[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// var scoutDataCol = db.get("scoutingdata");
 	// var currentTeamsCol = db.get('currentteams');
@@ -364,7 +364,7 @@ router.get('/pits', async function(req, res) {
 router.get('/matches', async function(req, res) {
 	
 	var thisFuncName = "dashboard.matches[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// var scoreDataCol = db.get("scoringdata");
 	// var matchCol = db.get("matches");

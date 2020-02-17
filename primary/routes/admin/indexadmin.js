@@ -218,7 +218,7 @@ router.get('/recalcderived', async function(req, res) {
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
 
-	logger.debug(thisFuncName + "ENTER org_key=" + org_key + ",event_key=" + event_key);
+	logger.info(thisFuncName + "ENTER org_key=" + org_key + ",event_key=" + event_key);
 
 	// read in the 'derived' metrics from the matchscouting layout
 	var matchLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, {sort: {"order": 1}})

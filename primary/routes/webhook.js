@@ -48,12 +48,12 @@ router.post('/', async function(req, res) {
 	var thisFuncName = "webhook.[root/post]: ";
 	
 	var message = req.body;
-	logger.debug(thisFuncName + "ENTER message=" + JSON.stringify(message));
+	logger.info(thisFuncName + "ENTER message=" + JSON.stringify(message));
 
     var messageType = message.message_type;
 	var messageData = message.message_data;
 	
-    logger.debug(thisFuncName + "messageType=" + messageType);
+    logger.info(thisFuncName + "messageType=" + messageType);
 	
 	//Delegate data handling to separate functions.
 	switch(messageType){
@@ -92,7 +92,7 @@ async function handleUpcomingMatch( data ) {
 	var match_key = data.match_key;
 	var event_key = match_key.split('_')[0];
 	var event_year = event_key.substring(0, 4);
-	logger.debug(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
+	logger.info(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
 
 	// Synchronize the rankings (just in case)
 	await syncRankings(event_key);
@@ -201,7 +201,7 @@ async function handleMatchScore( data ) {
 	var match_key = data.match.key;
 	var event_key = match_key.split('_')[0];
 	var event_year = event_key.substring(0, 4);
-	logger.debug(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
+	logger.info(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
 
 	// 2020-02-13, M.O'C: Handle possible bugs in webhook push data?
 	// Setting winning_alliance
@@ -239,7 +239,7 @@ async function handleMatchScore( data ) {
 
 async function handleStartingCompLevel( data ) {
 	var thisFuncName = "webhook.handleStartingCompLevel(): ";
-	logger.debug(thisFuncName + "ENTER (sync rankings only) data=" + JSON.stringify(data));
+	logger.info(thisFuncName + "ENTER (sync rankings only) data=" + JSON.stringify(data));
 	
 	// Synchronize the rankings
 	await syncRankings(event_key);
@@ -247,7 +247,7 @@ async function handleStartingCompLevel( data ) {
 
 async function handleAllianceSelection( data ) {
 	var thisFuncName = "webhook.handleAllianceSelection(): ";
-	logger.debug(thisFuncName + "ENTER DNGN data=" + JSON.stringify(data));
+	logger.info(thisFuncName + "ENTER DNGN data=" + JSON.stringify(data));
 	
 }
 
@@ -265,7 +265,7 @@ async function handleScheduleUpdated( data ) {
 
 	var event_key = data.event_key;
 	var event_year = event_key.substring(0, 4);
-	logger.debug(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key);
+	logger.info(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key);
 
 	// Reload the matches
 	var url = "event/" + event_key + "/matches";
@@ -287,7 +287,7 @@ async function handleScheduleUpdated( data ) {
 
 async function handleAwardsPosted( data ) {
 	var thisFuncName = "webhook.handleAwardsPosted(): ";
-	logger.debug(thisFuncName + "ENTER DNGN data=" + JSON.stringify(data));
+	logger.info(thisFuncName + "ENTER DNGN data=" + JSON.stringify(data));
 	
 }
 
@@ -296,11 +296,11 @@ async function handleAwardsPosted( data ) {
 // Pull down rankings for event event_key
 async function syncRankings(event_key) {
 	var thisFuncName = "webhook.syncRankings(): ";
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 
 	// Reload the rankings from TBA
 	var rankingUrl = "event/" + event_key + "/rankings";
-	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
+	logger.info(thisFuncName + "rankingUrl=" + rankingUrl);
 
 	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankinfo = JSON.parse(rankData);
@@ -329,7 +329,7 @@ async function syncRankings(event_key) {
 // Push notification function
 async function sendPushMessage(subscription, dataToSend) {
 	var thisFuncName = "webhook.sendPushMessage(): ";
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 	
 	logger.debug(`Attempting to send push message: ${dataToSend}`);
 	

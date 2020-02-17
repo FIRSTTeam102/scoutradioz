@@ -19,7 +19,7 @@ router.get("/", async function(req, res){
 router.get("/rankings", async function(req, res){
 	
 	var thisFuncName = "reports.rankings[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	var event_key = req.event.key;
 
@@ -38,7 +38,7 @@ router.get("/rankings", async function(req, res){
 router.get("/finishedmatches", async function(req, res){
 	
 	var thisFuncName = "reports.finishedmatches[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -159,7 +159,7 @@ router.get("/upcoming", async function(req, res){
 router.get("/teamintel", async function(req, res){
 	
 	var thisFuncName = "reports.teamintel*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var teamKey = req.query.team;
 	if (!teamKey) {
@@ -351,7 +351,7 @@ router.get("/teamintel", async function(req, res){
 router.get("/teamintelhistory", async function(req, res){
 	
 	var thisFuncName = "reports.teamintelhistory*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var teamKey = req.query.team;
 	if (!teamKey) {
@@ -499,7 +499,7 @@ router.get("/teamintelhistory", async function(req, res){
 router.get("/matchintel*", async function(req, res){
 	
 	var thisFuncName = "reports.matchintel*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var matchKey = req.query.key;
 	if (!matchKey) {
@@ -529,7 +529,7 @@ router.get("/matchintel*", async function(req, res){
 router.get("/teammatchintel*", async function(req, res){
 	
 	var thisFuncName = "reports.teammatchintel*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var match_team_key = req.query.key;
 	if (!match_team_key) {
@@ -598,7 +598,7 @@ router.get("/teammatchintel*", async function(req, res){
 router.get("/alliancestats", async function(req, res) {
 	
 	var thisFuncName = "reports.alliancestats[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -700,7 +700,7 @@ router.get("/alliancestats", async function(req, res) {
 router.get("/teamdata", async function(req, res) {
 	
 	var thisFuncName = "reports.teamdata[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -764,7 +764,7 @@ router.get("/teamdata", async function(req, res) {
 router.get("/matchdata", async function(req, res) {
 	
 	var thisFuncName = "reports.matchdata[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -826,7 +826,7 @@ router.get("/matchdata", async function(req, res) {
 router.get("/matchmetrics", async function(req, res) {
 	
 	var thisFuncName = "reports.matchmetrics[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -950,7 +950,7 @@ router.get("/matchmetrics", async function(req, res) {
 router.get("/metricsranked", async function(req, res){
 	
 	var thisFuncName = "reports.metricsranked[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -1063,7 +1063,7 @@ router.get("/metricsranked", async function(req, res){
 router.get("/metrics", async function(req, res){
 	
 	var thisFuncName = "reports.metrics[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -1157,7 +1157,7 @@ router.get("/metrics", async function(req, res){
 router.get("/metricintel*", async function(req, res){
 	
 	var thisFuncName = "reports.metric*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var metricKey = req.query.key;
 	if (!metricKey) {
@@ -1243,7 +1243,7 @@ router.get("/metricintel*", async function(req, res){
 router.get("/allteammetrics", async function(req, res){
 	
 	var thisFuncName = "reports.allteammetrics[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -1390,7 +1390,7 @@ router.get("/allteammetrics", async function(req, res){
 
 router.get("/choosecolumns", async function(req, res) {
 	var thisFuncName = "reports.choosecolumns[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var event_year = req.event.year;
 	var org_key = req.user.org_key;
@@ -1402,6 +1402,11 @@ router.get("/choosecolumns", async function(req, res) {
 	var cookie_key = org_key + "_" + event_year + "_cols";
 	var savedCols = {};
 	var colCookie = req.cookies[cookie_key];
+
+	if (req.cookies[cookie_key]) {
+		logger.trace(thisFuncName + "req.cookies[cookie_key]=" + JSON.stringify(req.cookies[cookie_key]))
+	}
+
 	//colCookie = "a,b,ccc,d";
 	if (colCookie) {
 		var savedColArray = colCookie.split(",");
@@ -1409,10 +1414,6 @@ router.get("/choosecolumns", async function(req, res) {
 			savedCols[savedColArray[i]] = savedColArray[i];
 	}
 	logger.debug(thisFuncName + "savedCols=" + JSON.stringify(savedCols))
-
-	if (req.cookies[cookie_key]) {
-		logger.debug(thisFuncName + "req.cookies[cookie_key]=" + JSON.stringify(req.cookies[cookie_key]))
-	}
 
 	res.render("./reports/choosecolumns", {
 		title: "Choose Report Columns",
@@ -1424,13 +1425,13 @@ router.get("/choosecolumns", async function(req, res) {
 
 router.post("/choosecolumns", async function(req, res){
 	var thisFuncName = "reports.choosecolumns[post]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var event_year = req.event.year;
 	var org_key = req.user.org_key;
 	var cookie_key = org_key + "_" + event_year + "_cols";
 
-	logger.debug(thisFuncName + "req.body=" + JSON.stringify(req.body));
+	logger.trace(thisFuncName + "req.body=" + JSON.stringify(req.body));
 	var first = true;
 	var columnCookie = '';
 	for (var i in req.body) {
@@ -1440,6 +1441,7 @@ router.post("/choosecolumns", async function(req, res){
 			columnCookie += ','; 
 		columnCookie += i;
 	}
+	logger.debug(thisFuncName + "columnCookie=" + columnCookie);
 
 	res.cookie(cookie_key, columnCookie, {maxAge: 30E9});
 

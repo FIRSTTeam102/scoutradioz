@@ -8,7 +8,7 @@ router.get("/", async function(req, res){
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "allianceselection{root}[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -107,7 +107,7 @@ router.post("/updateteamvalue", async function(req, res){
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "allianceselection.updateteamvalue[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 
 	// var db = rq.db;    was req
 	

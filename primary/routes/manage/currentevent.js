@@ -13,7 +13,7 @@ router.all('/*', async (req, res, next) => {
 router.get("/matches", async function(req, res) {
 
 	var thisFuncName = "current.matches[get]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var eventId = req.event.key;
 		
@@ -29,7 +29,7 @@ router.get("/matches", async function(req, res) {
 router.get("/getcurrentteams", async function(req, res){
 
 	var thisFuncName = "currentevent.getcurrentteams[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// 2020-02-09, M.O'C: Refactoring to just update the team_keys for the current event
 	var event_key = req.event.key;
@@ -84,7 +84,7 @@ router.get("/getcurrentteams", async function(req, res){
 router.post("/resetmatches", async function(req, res) {
 	
 	var thisFuncName = "current.resetmatches[post]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var matchCol = db.get("matches");
 	
@@ -105,7 +105,7 @@ router.post("/resetmatches", async function(req, res) {
 router.post("/updatematch", async function(req, res) {
 	
 	var thisFuncName = "current.updatematch[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var matchId = req.body.matchId;
 
@@ -148,7 +148,7 @@ router.post("/updatematch", async function(req, res) {
 			rankArr.push(thisRank);
 		}
 	}
-	logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	//logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
@@ -209,7 +209,7 @@ router.post("/updatematch", async function(req, res) {
 	}
 	aggQuery.push({ $group: groupClause });
 	aggQuery.push({ $sort: { _id: 1 } });
-	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	// Run the aggregation!
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -275,7 +275,7 @@ router.post("/updatematch", async function(req, res) {
 router.post("/updatematches", async function(req, res) {
 	
 	var thisFuncName = "current.updatematches[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	// var matchCol = db.get("matches");
 	// var rankCol = db.get("currentrankings");

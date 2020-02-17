@@ -110,7 +110,7 @@ router.all('/selectorg', async function(req, res) {
 router.get('/home', async function(req, res) {
 
 	var thisFuncName = "index.home[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	if (!req.user) res.redirect('/');
 

@@ -13,7 +13,7 @@ router.all('/*', async (req, res, next) => {
 router.get('/match*', async function(req, res) {
 	
 	var thisFuncName = "scouting.match*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var scoringLayoutCol = db.get("scoringlayout");
 	// var scoringDataCol = db.get("scoringdata");
@@ -71,7 +71,7 @@ router.get('/match*', async function(req, res) {
 router.post('/match/submit', async function(req, res) {
 	
 	var thisFuncName = "scouting.match[post]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	if(req.user && req.user.name){
 		var thisUser = req.user;
@@ -171,7 +171,7 @@ router.get('/pit*', async function(req, res) {
 	var org_key = req.user.org_key;
 	
 	var thisFuncName = "scouting.pit*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	var teamKey = req.query.team;
 	if (!teamKey) {
@@ -202,7 +202,7 @@ router.get('/pit*', async function(req, res) {
 router.post('/pit/submit', async function(req, res){
 	
 	var thisFuncName = "scouting.submitpit[post]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
@@ -234,7 +234,7 @@ router.get('/teampictures', async function(req, res) {
 
 	var thisFuncName = "scouting.teampictures[get]: ";
 
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var teamCol = db.get("currentteams");
 	

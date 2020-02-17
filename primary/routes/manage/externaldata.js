@@ -18,7 +18,7 @@ router.all('/*', async (req, res, next) => {
 router.get("/events", async function(req, res) {
 	
 	var thisFuncName = "externaldata.events[get]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var events = {};
 	
@@ -99,7 +99,7 @@ router.post("/events", async function(req, res) {
 router.get("/matches", async function(req, res) {
 	
 	var thisFuncName = "externaldata.matches[get]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var matches = {};
 	
@@ -132,7 +132,7 @@ router.get("/matches", async function(req, res) {
 router.post("/matches", async function(req, res) {
 	
 	var thisFuncName = "externaldata.matches[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	// var matchCol = db.get("matches");
 	// var eventCol = db.get("events");
@@ -175,7 +175,7 @@ router.post("/matches", async function(req, res) {
 router.get("/teams", async function(req, res) {
 	
 	var thisFuncName = "externaldata.teams[get]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	// var teamCol = db.get("teams");
 	
