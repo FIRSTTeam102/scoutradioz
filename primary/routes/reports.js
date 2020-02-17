@@ -57,6 +57,8 @@ router.get("/finishedmatches", async function(req, res){
 router.get("/upcoming", async function(req, res){
 	
 	const thisFuncName = "reports.upcoming[GET]: ";
+	logger.info(thisFuncName + "ENTER");
+
 	var event_key = req.event.key;
 
 	//check if the page queried a specific team for upcoming
@@ -637,20 +639,20 @@ router.get("/alliancestats", async function(req, res) {
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR)
 		aggresult = aggR;
-	logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	logger.trace(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Build a map of the result rows by team key
 	var aggRowsByTeam = {};
 	for (var resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
 		aggRowsByTeam[ aggresult[resultIdx]["_id"] ] = aggresult[resultIdx];
-	logger.debug( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
+	logger.trace( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
 
 	// Unspool N rows of aggregate results into tabular form
 	var avgTable = [];
@@ -676,8 +678,8 @@ router.get("/alliancestats", async function(req, res) {
 			maxTable.push(maxRow);
 		}
 	}
-	logger.debug(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
-	logger.debug(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
+	logger.trace(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
+	logger.trace(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -734,14 +736,14 @@ router.get("/teamdata", async function(req, res) {
 	if (scoringFind)
 		matches = scoringFind;
 
-	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 
-	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -787,7 +789,7 @@ router.get("/matchdata", async function(req, res) {
 	if (matchFind && matchFind[0])
 		match = matchFind[0];
 		
-	logger.debug(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.trace(`${thisFuncName} match: ${JSON.stringify(match)}`);
 
 	// get the scoring data for the match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -796,14 +798,14 @@ router.get("/matchdata", async function(req, res) {
 	if (scoringFind)
 		matches = scoringFind;
 
-	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 
-	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -929,7 +931,7 @@ router.get("/matchmetrics", async function(req, res) {
 		}
 	}
 
-	logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	logger.trace(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
