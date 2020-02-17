@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
+const matchDataHelper = require ('../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
@@ -17,7 +18,7 @@ router.all('/*', async (req, res, next) => {
 router.get('/', async function(req, res) {
 	
 	var thisFuncName = "dashboard.{root}[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
@@ -132,7 +133,7 @@ router.get('/', async function(req, res) {
 router.get('/unassigned', async function(req, res) {
 	
 	var thisFuncName = "dashboard.unassigned[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	res.render('./dashboard/unassigned',{
 		title: 'Unassigned'
@@ -198,7 +199,8 @@ router.get('/allianceselection', async function(req, res){
 			thisLayout.key = thisLayout.id;
 			scoreLayout[scoreIdx] = thisLayout;
 			//if it is a valid data type, add this layout's ID to groupClause
-			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+			if (matchDataHelper.isQuantifiableType(thisLayout.type))
 				groupClause[thisLayout.id] = {$avg: "$data." + thisLayout.id};
 		}
 		//add $group > groupClause (Layout w/ data)
@@ -218,7 +220,8 @@ router.get('/allianceselection', async function(req, res){
 			var thisAgg = aggArray[aggIdx];
 			for (var scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
 				var thisLayout = scoreLayout[scoreIdx];
-				if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+				//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 					var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
 					thisAgg[thisLayout.id] = roundedVal;
 				}
@@ -294,7 +297,7 @@ router.get('/allianceselection', async function(req, res){
 router.get('/pits', async function(req, res) {
 	
 	var thisFuncName = "dashboard.pits[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// var scoutDataCol = db.get("scoutingdata");
 	// var currentTeamsCol = db.get('currentteams');
@@ -361,7 +364,7 @@ router.get('/pits', async function(req, res) {
 router.get('/matches', async function(req, res) {
 	
 	var thisFuncName = "dashboard.matches[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// var scoreDataCol = db.get("scoringdata");
 	// var matchCol = db.get("matches");

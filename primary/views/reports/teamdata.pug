@@ -20,7 +20,8 @@ block content
 				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')") Match
 				- var colIdx = 2;
 				for item in layout
-					if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+					-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+					if (matchDataHelper.isQuantifiableType(item.type))
 						- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
 						th(class="w3-right-align" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
 						- colIdx++
@@ -30,7 +31,8 @@ block content
 						td(class="w3-center")
 							a(href="/reports/matchdata?key=" + row.match_key)= row.match_number
 						for item in layout
-							if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+							-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+							if (matchDataHelper.isQuantifiableType(item.type))
 								- var valStyle = 'w3-right-align w3-text-white'
 								- if (row.data[item.id] == 0) valStyle = 'w3-right-align w3-text-gray'
 								if (aggRangeMap[item.id])

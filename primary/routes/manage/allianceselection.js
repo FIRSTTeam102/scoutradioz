@@ -1,13 +1,14 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
+const matchDataHelper = require ('../../helpers/matchdatahelper');
 
 router.get("/", async function(req, res){
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "allianceselection{root}[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -55,7 +56,8 @@ router.get("/", async function(req, res){
 		var thisLayout = scorelayout[scoreIdx];
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		if (matchDataHelper.isQuantifiableType(thisLayout.type))
 			groupClause[thisLayout.id] = {$avg: "$data." + thisLayout.id};
 	}
 	aggQuery.push({ $group: groupClause });
@@ -65,14 +67,15 @@ router.get("/", async function(req, res){
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggArray = await utilities.aggregate("matchscouting", aggQuery);
 			
-	logger.debug(`${thisFuncName} rankMap=${JSON.stringify(rankMap)}`);
+	logger.trace(`${thisFuncName} rankMap=${JSON.stringify(rankMap)}`);
 	
 	// Rewrite data into display-friendly values
 	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
 		var thisAgg = aggArray[aggIdx];
 		for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			var thisLayout = scorelayout[scoreIdx];
-			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
 				thisAgg[thisLayout.id] = roundedVal;
 			}
@@ -94,7 +97,8 @@ router.get("/", async function(req, res){
 		title: "Alliance Selection",
 		aggdata: aggArray,
 		currentAggRanges: currentAggRanges,
-		layout: scorelayout
+		layout: scorelayout,
+		matchDataHelper: matchDataHelper
 	});
 });
 
@@ -103,7 +107,7 @@ router.post("/updateteamvalue", async function(req, res){
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
 	var thisFuncName = "allianceselection.updateteamvalue[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 
 	// var db = rq.db;    was req
 	

@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
+const matchDataHelper = require ('../../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
@@ -12,7 +13,7 @@ router.all('/*', async (req, res, next) => {
 router.get("/matches", async function(req, res) {
 
 	var thisFuncName = "current.matches[get]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var eventId = req.event.key;
 		
@@ -28,7 +29,7 @@ router.get("/matches", async function(req, res) {
 router.get("/getcurrentteams", async function(req, res){
 
 	var thisFuncName = "currentevent.getcurrentteams[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// 2020-02-09, M.O'C: Refactoring to just update the team_keys for the current event
 	var event_key = req.event.key;
@@ -83,7 +84,7 @@ router.get("/getcurrentteams", async function(req, res){
 router.post("/resetmatches", async function(req, res) {
 	
 	var thisFuncName = "current.resetmatches[post]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var matchCol = db.get("matches");
 	
@@ -104,7 +105,7 @@ router.post("/resetmatches", async function(req, res) {
 router.post("/updatematch", async function(req, res) {
 	
 	var thisFuncName = "current.updatematch[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var matchId = req.body.matchId;
 
@@ -147,7 +148,7 @@ router.post("/updatematch", async function(req, res) {
 			rankArr.push(thisRank);
 		}
 	}
-	logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	//logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
@@ -198,8 +199,8 @@ router.post("/updatematch", async function(req, res) {
 		var thisLayout = scorelayout[scoreIdx];
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -208,7 +209,7 @@ router.post("/updatematch", async function(req, res) {
 	}
 	aggQuery.push({ $group: groupClause });
 	aggQuery.push({ $sort: { _id: 1 } });
-	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	// Run the aggregation!
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -219,8 +220,8 @@ router.post("/updatematch", async function(req, res) {
 	// Cycle through & build a map of min/max values per scoring type per aggregation
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var thisMinMax = {};
 			// 2020-02-08, M.O'C: Tweaking agg ranges
 			// This data element is specifically for this organization & a specific event
@@ -274,7 +275,7 @@ router.post("/updatematch", async function(req, res) {
 router.post("/updatematches", async function(req, res) {
 	
 	var thisFuncName = "current.updatematches[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	// var matchCol = db.get("matches");
 	// var rankCol = db.get("currentrankings");

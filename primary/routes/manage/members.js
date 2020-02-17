@@ -49,7 +49,7 @@ router.get("/", async function(req, res) {
 router.post("/addmember", async function(req, res){
 	
 	var thisFuncName = "members.addmember[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var name = req.body.name;
 	var subteam_key = req.body.subteam_key;
@@ -128,7 +128,7 @@ router.post("/addmember", async function(req, res){
 router.post("/updatemember", async function(req, res){
 	
 	var thisFuncName = "members.updatemember[post]: ";
-	logger.debug(thisFuncName + 'ENTER')
+	logger.info(thisFuncName + 'ENTER')
 	
 	var org_key = req.user.org_key;
 	var memberId = req.body.memberId;

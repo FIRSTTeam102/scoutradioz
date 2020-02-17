@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
+const matchDataHelper = require ('../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require viewer-level authentication for every method in this route.
@@ -18,7 +19,7 @@ router.get("/", async function(req, res){
 router.get("/rankings", async function(req, res){
 	
 	var thisFuncName = "reports.rankings[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	var event_key = req.event.key;
 
@@ -37,7 +38,7 @@ router.get("/rankings", async function(req, res){
 router.get("/finishedmatches", async function(req, res){
 	
 	var thisFuncName = "reports.finishedmatches[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -56,6 +57,8 @@ router.get("/finishedmatches", async function(req, res){
 router.get("/upcoming", async function(req, res){
 	
 	const thisFuncName = "reports.upcoming[GET]: ";
+	logger.info(thisFuncName + "ENTER");
+
 	var event_key = req.event.key;
 
 	//check if the page queried a specific team for upcoming
@@ -158,7 +161,7 @@ router.get("/upcoming", async function(req, res){
 router.get("/teamintel", async function(req, res){
 	
 	var thisFuncName = "reports.teamintel*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var teamKey = req.query.team;
 	if (!teamKey) {
@@ -281,7 +284,8 @@ router.get("/teamintel", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -303,7 +307,8 @@ router.get("/teamintel", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -340,14 +345,15 @@ router.get("/teamintel", async function(req, res){
 		scorelayout: scorelayout,
 		aggdata: aggTable,
 		currentAggRanges: currentAggRanges,
-		matches: matches
+		matches: matches,
+		matchDataHelper: matchDataHelper
 	});
 });
 
 router.get("/teamintelhistory", async function(req, res){
 	
 	var thisFuncName = "reports.teamintelhistory*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var teamKey = req.query.team;
 	if (!teamKey) {
@@ -440,7 +446,8 @@ router.get("/teamintelhistory", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -462,7 +469,8 @@ router.get("/teamintelhistory", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -493,7 +501,7 @@ router.get("/teamintelhistory", async function(req, res){
 router.get("/matchintel*", async function(req, res){
 	
 	var thisFuncName = "reports.matchintel*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var matchKey = req.query.key;
 	if (!matchKey) {
@@ -523,7 +531,7 @@ router.get("/matchintel*", async function(req, res){
 router.get("/teammatchintel*", async function(req, res){
 	
 	var thisFuncName = "reports.teammatchintel*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var match_team_key = req.query.key;
 	if (!match_team_key) {
@@ -584,14 +592,15 @@ router.get("/teammatchintel*", async function(req, res){
 		layout: layout,
 		data: data,
 		teammatch: teammatch,
-		teamKey: match_team_key.split("_")[2]
+		teamKey: match_team_key.split("_")[2],
+		matchDataHelper: matchDataHelper
 	});
 });
 
 router.get("/alliancestats", async function(req, res) {
 	
 	var thisFuncName = "reports.alliancestats[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -623,27 +632,27 @@ router.get("/alliancestats", async function(req, res) {
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR)
 		aggresult = aggR;
-	logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	logger.trace(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
 
 	// Build a map of the result rows by team key
 	var aggRowsByTeam = {};
 	for (var resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
 		aggRowsByTeam[ aggresult[resultIdx]["_id"] ] = aggresult[resultIdx];
-	logger.debug( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
+	logger.trace( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
 
 	// Unspool N rows of aggregate results into tabular form
 	var avgTable = [];
@@ -651,7 +660,8 @@ router.get("/alliancestats", async function(req, res) {
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var avgRow = {};
 			var maxRow = {};
 			avgRow['key'] = thisLayout.id;
@@ -668,8 +678,8 @@ router.get("/alliancestats", async function(req, res) {
 			maxTable.push(maxRow);
 		}
 	}
-	logger.debug(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
-	logger.debug(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
+	logger.trace(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
+	logger.trace(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -692,7 +702,7 @@ router.get("/alliancestats", async function(req, res) {
 router.get("/teamdata", async function(req, res) {
 	
 	var thisFuncName = "reports.teamdata[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -726,14 +736,14 @@ router.get("/teamdata", async function(req, res) {
 	if (scoringFind)
 		matches = scoringFind;
 
-	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 
-	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -748,14 +758,15 @@ router.get("/teamdata", async function(req, res) {
 		layout: scoreLayout,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
-		team: team
+		team: team,
+		matchDataHelper: matchDataHelper
 	});
 });
 
 router.get("/matchdata", async function(req, res) {
 	
 	var thisFuncName = "reports.matchdata[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var scoringCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -778,7 +789,7 @@ router.get("/matchdata", async function(req, res) {
 	if (matchFind && matchFind[0])
 		match = matchFind[0];
 		
-	logger.debug(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.trace(`${thisFuncName} match: ${JSON.stringify(match)}`);
 
 	// get the scoring data for the match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -787,14 +798,14 @@ router.get("/matchdata", async function(req, res) {
 	if (scoringFind)
 		matches = scoringFind;
 
-	logger.debug(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 
-	logger.debug(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -809,14 +820,15 @@ router.get("/matchdata", async function(req, res) {
 		scoreLayout: scoreLayout,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
-		match: match
+		match: match,
+		matchDataHelper: matchDataHelper
 	});
 });
 
 router.get("/matchmetrics", async function(req, res) {
 	
 	var thisFuncName = "reports.matchmetrics[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoringLayoutCol = db.get("scoringlayout");
@@ -841,7 +853,7 @@ router.get("/matchmetrics", async function(req, res) {
 	if (matchFind && matchFind[0])
 		match = matchFind[0];
 		
-	logger.debug(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.trace(`${thisFuncName} match: ${JSON.stringify(match)}`);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
 	// db.scoringdata.aggregate( [ 
@@ -865,7 +877,8 @@ router.get("/matchmetrics", async function(req, res) {
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		if (matchDataHelper.isQuantifiableType(thisLayout.type))
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 	}
 	aggQuery.push({ $group: groupClause });
@@ -882,7 +895,8 @@ router.get("/matchmetrics", async function(req, res) {
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			aggRow['red'] = (Math.round(aggresult[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
@@ -910,13 +924,14 @@ router.get("/matchmetrics", async function(req, res) {
 	var aggTablePointer = 0;
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			aggTable[aggTablePointer].blue = (Math.round(aggresult[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
 			aggTablePointer++;
 		}
 	}
 
-	logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	logger.trace(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -937,7 +952,7 @@ router.get("/matchmetrics", async function(req, res) {
 router.get("/metricsranked", async function(req, res){
 	
 	var thisFuncName = "reports.metricsranked[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -974,7 +989,8 @@ router.get("/metricsranked", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			//groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -998,7 +1014,8 @@ router.get("/metricsranked", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			aggRow['team'] = 'frcNone';
@@ -1048,7 +1065,7 @@ router.get("/metricsranked", async function(req, res){
 router.get("/metrics", async function(req, res){
 	
 	var thisFuncName = "reports.metrics[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -1084,7 +1101,8 @@ router.get("/metrics", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -1106,7 +1124,8 @@ router.get("/metrics", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -1140,7 +1159,7 @@ router.get("/metrics", async function(req, res){
 router.get("/metricintel*", async function(req, res){
 	
 	var thisFuncName = "reports.metric*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var metricKey = req.query.key;
 	if (!metricKey) {
@@ -1226,7 +1245,7 @@ router.get("/metricintel*", async function(req, res){
 router.get("/allteammetrics", async function(req, res){
 	
 	var thisFuncName = "reports.allteammetrics[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var aggCol = db.get('scoringdata');
 	// var scoreCol = db.get("scoringlayout");
@@ -1266,8 +1285,42 @@ router.get("/allteammetrics", async function(req, res){
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
-		
+	var scorelayoutDB = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	
+	// 2020-02-15, M.O'C: Leverage column selection cookies - pull in the cookies
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var savedCols = {};
+	var noneSelected = true;
+	var colCookie = req.cookies[cookie_key];
+	//colCookie = "a,b,ccc,d";
+	if (colCookie) {
+		logger.debug(thisFuncName + "colCookie=" + colCookie);
+		noneSelected = false;
+		var savedColArray = colCookie.split(",");
+		for (var i in savedColArray)
+			savedCols[savedColArray[i]] = savedColArray[i];
+	}
+	//logger.debug(thisFuncName + "noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
+
+	// Use the cookies (if defined) to slim down the layout array
+	var scorelayout = [];
+	if (noneSelected)
+		scorelayout = scorelayoutDB;
+	else {
+		// Weed out unselected columns
+		for (var i in scorelayoutDB) {
+			var thisLayout = scorelayoutDB[i];
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+				if (savedCols[thisLayout.id]) 
+					scorelayout.push(thisLayout);
+			}
+			else
+				scorelayout.push(thisLayout);
+		}
+	}
+
+	// Build the aggregation data
 	var aggQuery = [];
 	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
 	var groupClause = {};
@@ -1278,8 +1331,9 @@ router.get("/allteammetrics", async function(req, res){
 		var thisLayout = scorelayout[scoreIdx];
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		// 2020-02-15, M.O'C: Leverage column selection cookies
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
 		}
@@ -1301,7 +1355,8 @@ router.get("/allteammetrics", async function(req, res){
 		var thisAgg = aggArray[aggIdx];
 		for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			var thisLayout = scorelayout[scoreIdx];
-			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				var roundedValAvg = (Math.round(thisAgg[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
 				var roundedValMax = (Math.round(thisAgg[thisLayout.id + "MAX"] * 10)/10).toFixed(1);
 				thisAgg[thisLayout.id + "AVG"] = roundedValAvg;
@@ -1328,8 +1383,92 @@ router.get("/allteammetrics", async function(req, res){
 		title: "Alliance Selection",
 		aggdata: aggArray,
 		currentAggRanges: currentAggRanges,
-		layout: scorelayout
+		layout: scorelayout,
+		matchDataHelper: matchDataHelper
 	});
+});
+
+//// Choosing & setting scoring selections
+
+router.get("/choosecolumns", async function(req, res) {
+	var thisFuncName = "reports.choosecolumns[get]: ";
+	logger.info(thisFuncName + 'ENTER');
+	
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+
+	// read in the list of form options
+	var matchlayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//logger.debug(thisFuncName + "matchlayout=" + JSON.stringify(matchlayout))
+
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var savedCols = {};
+	var colCookie = req.cookies[cookie_key];
+
+	if (req.cookies[cookie_key]) {
+		logger.trace(thisFuncName + "req.cookies[cookie_key]=" + JSON.stringify(req.cookies[cookie_key]))
+	}
+
+	//colCookie = "a,b,ccc,d";
+	if (colCookie) {
+		var savedColArray = colCookie.split(",");
+		for (var i in savedColArray)
+			savedCols[savedColArray[i]] = savedColArray[i];
+	}
+	logger.debug(thisFuncName + "savedCols=" + JSON.stringify(savedCols))
+
+	res.render("./reports/choosecolumns", {
+		title: "Choose Report Columns",
+		layout: matchlayout,
+		savedCols: savedCols,
+		matchDataHelper: matchDataHelper
+	});
+});
+
+router.post("/choosecolumns", async function(req, res){
+	var thisFuncName = "reports.choosecolumns[post]: ";
+	logger.info(thisFuncName + 'ENTER');
+	
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+	var cookie_key = org_key + "_" + event_year + "_cols";
+
+	logger.trace(thisFuncName + "req.body=" + JSON.stringify(req.body));
+	var first = true;
+	var columnCookie = '';
+	for (var i in req.body) {
+		if (first)
+			first = false;
+		else
+			columnCookie += ','; 
+		columnCookie += i;
+	}
+	logger.debug(thisFuncName + "columnCookie=" + columnCookie);
+
+	res.cookie(cookie_key, columnCookie, {maxAge: 30E9});
+
+	/*
+	//2019-11-20 JL: updated to only work with members of the right organization.
+	const orgKey = req.user.org_key;
+	
+	await utilities.update("users", {org_key: orgKey}, { $set: { "event_info.present" : "false" } }, {multi: true});
+	
+	//Get a list of all present member IDs.
+	var allPresentMembers = [];
+	for(var i in req.body)
+	{
+		allPresentMembers.push(monk.id(i));
+	}
+	
+	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
+	
+	var query = {"_id": {$in: allPresentMembers}, org_key: orgKey};
+	var update = {$set: {"event_info.present": true}};
+	
+	await utilities.update("users", query, update, {multi: true, castIds: true});
+	*/
+	
+	res.redirect("../home");
 });
 
 module.exports = router;

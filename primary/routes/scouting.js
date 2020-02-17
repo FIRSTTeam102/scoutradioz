@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
+const matchDataHelper = require ('../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
@@ -12,7 +13,7 @@ router.all('/*', async (req, res, next) => {
 router.get('/match*', async function(req, res) {
 	
 	var thisFuncName = "scouting.match*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var scoringLayoutCol = db.get("scoringlayout");
 	// var scoringDataCol = db.get("scoringdata");
@@ -70,7 +71,7 @@ router.get('/match*', async function(req, res) {
 router.post('/match/submit', async function(req, res) {
 	
 	var thisFuncName = "scouting.match[post]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	if(req.user && req.user.name){
 		var thisUser = req.user;
@@ -130,7 +131,28 @@ router.post('/match/submit', async function(req, res) {
 			matchData[property] = newVal;
 		}
 	}
-	logger.debug(thisFuncName + "matchData(UPDATED)=" + JSON.stringify(matchData));
+	logger.debug(thisFuncName + "matchData(UPDATED:1)=" + JSON.stringify(matchData));
+
+	// Calculate derived metrics
+	// read in the 'derived' metrics from the matchscouting layout, use to process data
+	var derivedLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, {sort: {"order": 1}})
+
+	for (var j in derivedLayout) {
+		var thisItem = derivedLayout[j];
+
+		var derivedMetric = NaN;
+		switch (thisItem.operator) {
+			case "sum":
+				// add up the operands
+				var sum = 0;
+				for (var metricId in thisItem.operands)
+					sum += matchData[thisItem.operands[metricId]];
+				derivedMetric = sum;
+				break;
+		}
+		matchData[thisItem.id] = derivedMetric;
+	}
+	logger.debug(thisFuncName + "matchData(UPDATED:2)=" + JSON.stringify(matchData));
 
 	// Post modified data to DB
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -149,7 +171,7 @@ router.get('/pit*', async function(req, res) {
 	var org_key = req.user.org_key;
 	
 	var thisFuncName = "scouting.pit*[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 
 	var teamKey = req.query.team;
 	if (!teamKey) {
@@ -180,7 +202,7 @@ router.get('/pit*', async function(req, res) {
 router.post('/pit/submit', async function(req, res){
 	
 	var thisFuncName = "scouting.submitpit[post]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
@@ -212,7 +234,7 @@ router.get('/teampictures', async function(req, res) {
 
 	var thisFuncName = "scouting.teampictures[get]: ";
 
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// var teamCol = db.get("currentteams");
 	

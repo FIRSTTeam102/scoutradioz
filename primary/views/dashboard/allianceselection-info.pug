@@ -14,7 +14,8 @@ if (aggdata)
 			//th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')") Rank
 			- var colIdx = 4;
 			for item in layout
-				if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+				-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+				if (matchDataHelper.isQuantifiableType(item.type))
 					- var text = item.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
 					th(class="w3-right-align" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
 					- colIdx++
@@ -23,7 +24,8 @@ if (aggdata)
 			th 
 			th 
 			for item in layout
-				if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+				-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+				if (matchDataHelper.isQuantifiableType(item.type))
 					th(class="w3-small" style="font-weight: 100") 
 						span(class="w3-left" style="margin-top: 3px;") Max 
 						span(class="w3-right w3-medium") Avg
@@ -39,7 +41,8 @@ if (aggdata)
 					td(class="w3-center")= row._id.substring(3)
 				td(class="w3-right-align")= row.rank
 				for item in layout
-					if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+					-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+					if (matchDataHelper.isQuantifiableType(item.type))
 						- var valStyle = 'w3-right-align'
 						- if (row[item.key] == 0) valStyle = 'w3-right-align theme-text-gray'
 						//- td(class=`${valStyle}`)= row[item.key]

@@ -22,7 +22,7 @@ router.get("/", async function(req, res) {
 	var org_key = req.user.org_key;
 	
 	//Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 	logger.debug(thisFuncName + "Requesting all members from db");
 	
 	//Get all "present but not assigned" members
@@ -143,7 +143,7 @@ router.post('/setscoutingpair', async function(req, res) {
 	var thisFuncName = "setscoutingpair: ";
 	
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 
 	// Set our internal DB variable
 	/*
@@ -223,7 +223,7 @@ router.post("/deletescoutingpair", async function(req, res) {
 	var thisFuncName = "deletescoutingpair: ";
 	
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 	
 	/*
 	var db = req.db;
@@ -335,7 +335,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 	}
 	
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 
 	var availableArray = [];
 	logger.debug(thisFuncName + '*** Tagged as available:');
@@ -645,7 +645,7 @@ router.post("/clearmatchallocations", async function(req, res) {
 	//var year = (new Date()).getFullYear();
 							
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 	
 	// var db = req.db;
 	// var currentCol = db.get("current");
@@ -733,7 +733,7 @@ router.get("/swapmembers", async function(req, res) {
 	var thisFuncName = "scoutingpairs.swapmembers[get]: ";
 	
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 
 	// var db = req.db;
 	// var currentCol = db.get("current");
@@ -782,12 +782,12 @@ router.post("/swapmembers", async function(req, res) {
 	var thisFuncName = "scoutingpairs.swapmembers[post]: ";
 	
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 	
 	// Extract 'from' & 'to' from req
 	var swapout = req.body.swapout;
 	var swapin = req.body.swapin;
-	logger.debug(thisFuncName + 'swap out ' + swapin + ', swap in ' + swapout);
+	logger.info(thisFuncName + 'swap out ' + swapin + ', swap in ' + swapout);
 
 	// var db = req.db;
 	// var currentCol = db.get("current");
@@ -846,7 +846,7 @@ async function generateMatchAllocations(req, res){
 	//var year = (new Date()).getFullYear();
 							
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 	
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
@@ -1190,7 +1190,7 @@ async function generateTeamAllocations(req, res){
 	//var year = (new Date()).getFullYear();
 							
 	// Log message so we can see on the server side when we enter this
-	logger.debug(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER");
 	
 	// var db = req.db;
 	// var currentCol = db.get("current");

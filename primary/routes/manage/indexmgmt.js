@@ -46,7 +46,7 @@ router.post('/setcurrent', async function(req, res) {
 	
 	var thisFuncName = "adminindex.setcurrent[post]: ";
 	var eventId = req.body.eventId;
-	logger.debug(thisFuncName + 'ENTER eventId=' + eventId);
+	logger.info(thisFuncName + 'ENTER eventId=' + eventId);
 	
 	//Remove the previous 'current' data
 	// 2020-02-08, M.O'C - moving "current event" info into 'orgs'
@@ -133,7 +133,7 @@ router.post('/setcurrent', async function(req, res) {
 router.get('/generatedata', async function(req, res) {
 	
 	var thisFuncName = "adminindex.generatedata[get]: ";
-	logger.debug(thisFuncName + 'ENTER');
+	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
 	var eventId = req.event.key;
