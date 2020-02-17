@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
+const matchDataHelper = require ('../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
@@ -198,7 +199,8 @@ router.get('/allianceselection', async function(req, res){
 			thisLayout.key = thisLayout.id;
 			scoreLayout[scoreIdx] = thisLayout;
 			//if it is a valid data type, add this layout's ID to groupClause
-			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+			if (matchDataHelper.isQuantifiableType(thisLayout.type))
 				groupClause[thisLayout.id] = {$avg: "$data." + thisLayout.id};
 		}
 		//add $group > groupClause (Layout w/ data)
@@ -218,7 +220,8 @@ router.get('/allianceselection', async function(req, res){
 			var thisAgg = aggArray[aggIdx];
 			for (var scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
 				var thisLayout = scoreLayout[scoreIdx];
-				if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+				//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 					var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
 					thisAgg[thisLayout.id] = roundedVal;
 				}

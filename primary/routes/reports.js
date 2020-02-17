@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
+const matchDataHelper = require ('../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require viewer-level authentication for every method in this route.
@@ -281,7 +282,8 @@ router.get("/teamintel", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -303,7 +305,8 @@ router.get("/teamintel", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -340,7 +343,8 @@ router.get("/teamintel", async function(req, res){
 		scorelayout: scorelayout,
 		aggdata: aggTable,
 		currentAggRanges: currentAggRanges,
-		matches: matches
+		matches: matches,
+		matchDataHelper: matchDataHelper
 	});
 });
 
@@ -440,7 +444,8 @@ router.get("/teamintelhistory", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -462,7 +467,8 @@ router.get("/teamintelhistory", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -584,7 +590,8 @@ router.get("/teammatchintel*", async function(req, res){
 		layout: layout,
 		data: data,
 		teammatch: teammatch,
-		teamKey: match_team_key.split("_")[2]
+		teamKey: match_team_key.split("_")[2],
+		matchDataHelper: matchDataHelper
 	});
 });
 
@@ -623,8 +630,8 @@ router.get("/alliancestats", async function(req, res) {
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
 		}
@@ -651,7 +658,8 @@ router.get("/alliancestats", async function(req, res) {
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var avgRow = {};
 			var maxRow = {};
 			avgRow['key'] = thisLayout.id;
@@ -748,7 +756,8 @@ router.get("/teamdata", async function(req, res) {
 		layout: scoreLayout,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
-		team: team
+		team: team,
+		matchDataHelper: matchDataHelper
 	});
 });
 
@@ -809,7 +818,8 @@ router.get("/matchdata", async function(req, res) {
 		scoreLayout: scoreLayout,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
-		match: match
+		match: match,
+		matchDataHelper: matchDataHelper
 	});
 });
 
@@ -865,7 +875,8 @@ router.get("/matchmetrics", async function(req, res) {
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		if (matchDataHelper.isQuantifiableType(thisLayout.type))
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 	}
 	aggQuery.push({ $group: groupClause });
@@ -882,7 +893,8 @@ router.get("/matchmetrics", async function(req, res) {
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			aggRow['red'] = (Math.round(aggresult[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
@@ -910,7 +922,8 @@ router.get("/matchmetrics", async function(req, res) {
 	var aggTablePointer = 0;
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			aggTable[aggTablePointer].blue = (Math.round(aggresult[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
 			aggTablePointer++;
 		}
@@ -974,7 +987,8 @@ router.get("/metricsranked", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			//groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -998,7 +1012,8 @@ router.get("/metricsranked", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			aggRow['team'] = 'frcNone';
@@ -1084,7 +1099,8 @@ router.get("/metrics", async function(req, res){
 
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
@@ -1106,7 +1122,8 @@ router.get("/metrics", async function(req, res){
 	var aggTable = [];
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -1291,7 +1308,8 @@ router.get("/allteammetrics", async function(req, res){
 		// Weed out unselected columns
 		for (var i in scorelayoutDB) {
 			var thisLayout = scorelayoutDB[i];
-			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				if (savedCols[thisLayout.id]) 
 					scorelayout.push(thisLayout);
 			}
@@ -1312,8 +1330,8 @@ router.get("/allteammetrics", async function(req, res){
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
 		// 2020-02-15, M.O'C: Leverage column selection cookies
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
 		}
@@ -1335,7 +1353,8 @@ router.get("/allteammetrics", async function(req, res){
 		var thisAgg = aggArray[aggIdx];
 		for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			var thisLayout = scorelayout[scoreIdx];
-			if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				var roundedValAvg = (Math.round(thisAgg[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
 				var roundedValMax = (Math.round(thisAgg[thisLayout.id + "MAX"] * 10)/10).toFixed(1);
 				thisAgg[thisLayout.id + "AVG"] = roundedValAvg;
@@ -1362,7 +1381,8 @@ router.get("/allteammetrics", async function(req, res){
 		title: "Alliance Selection",
 		aggdata: aggArray,
 		currentAggRanges: currentAggRanges,
-		layout: scorelayout
+		layout: scorelayout,
+		matchDataHelper: matchDataHelper
 	});
 });
 
@@ -1397,7 +1417,8 @@ router.get("/choosecolumns", async function(req, res) {
 	res.render("./reports/choosecolumns", {
 		title: "Choose Report Columns",
 		layout: matchlayout,
-		savedCols: savedCols
+		savedCols: savedCols,
+		matchDataHelper: matchDataHelper
 	});
 });
 

@@ -19,7 +19,8 @@ block content
 				//- console.log("choosecolumns.pug: item=" + JSON.stringify(item))
 				div(class="w3-row")
 					div(class="w3-padding-small")
-						- if (item.type == 'counter' || item.type == 'badcounter' || item.type == 'checkbox')
+						//- if (item.type == 'counter' || item.type == 'badcounter' || item.type == 'checkbox')
+						- if (matchDataHelper.isQuantifiableType(item.type))
 							- if (savedCols[item.id])
 								input(type="checkbox" class="w3-check" name=item.id id=item.id checked="checked")
 							- else

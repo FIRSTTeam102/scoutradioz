@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
+const matchDataHelper = require ('../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.

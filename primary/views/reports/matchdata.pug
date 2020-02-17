@@ -36,6 +36,7 @@ block content
 					when "checkbox"
 					when "counter"
 					when "badcounter"
+					when "derived"
 						tr
 							- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
 							-// var abbrSplit = result2.split(" "); var abbr = ""; for (abbrIdx = 0; abbrIdx < abbrSplit.length; abbrIdx++) abbr = abbr + abbrSplit[abbrIdx].charAt(0); result2 = abbr;

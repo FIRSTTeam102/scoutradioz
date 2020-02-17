@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
+const matchDataHelper = require ('../../helpers/matchdatahelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
@@ -198,8 +199,8 @@ router.post("/updatematch", async function(req, res) {
 		var thisLayout = scorelayout[scoreIdx];
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -219,8 +220,8 @@ router.post("/updatematch", async function(req, res) {
 	// Cycle through & build a map of min/max values per scoring type per aggregation
 	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		var thisLayout = scorelayout[scoreIdx];
-		if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		{
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var thisMinMax = {};
 			// 2020-02-08, M.O'C: Tweaking agg ranges
 			// This data element is specifically for this organization & a specific event
