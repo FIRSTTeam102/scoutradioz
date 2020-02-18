@@ -499,6 +499,7 @@ utilities.getTBAKey = async function(){
 	}
 	else{
 		//**********CONSIDER ANOTHER OPTION FOR HANDLING "CAN'T FIND REQUEST ARGS"
+		logger.warn("utilities.getTBAKey: Could not find tba-api-headers in database");
 		return null;
 	}
 }
