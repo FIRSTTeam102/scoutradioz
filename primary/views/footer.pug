@@ -1,9 +1,10 @@
 style.
 	/* This is for the footer. Didn't really want to put it into our stylesheet. */
+	
 	html{ height:100%; }
 	body{ min-height:100%; padding:0; margin:0; position:relative; }
 
-	body::after{ content:''; display:block; height:100px; }
+	body::after{ content:''; display:block; height:160px; }
 
 	footer{ 
 		position:absolute; 
@@ -15,13 +16,25 @@ style.
 	footer a{
 		color: #b2b2be;
 	}
+	
+	.footer-brand-logo{
+		display: inline-block;
+		width: 24px;
+		text-align: center;
+	}
 footer
-	div(class="w3-col w3-dark-gray w3-padding-16 w3-padding" style="position: static; bottom: 0px; opacity: 0.8;")
-		div(class="w3-col s5")
-			span Copyright 2019 
-			a(href="https://team102.org" target="_blank") FIRST&nbsp;Team&nbsp;102
-			span  and Robotics&nbsp;Fund&nbsp;Inc.
-		div(class="w3-col s1") &nbsp;
-		div(class="w3-col s6 w3-right-align")
-			span Powered by 
-			a(href="https://thebluealliance.com" target="_blank" class="text-link") The&nbsp;Blue&nbsp;Alliance.
+	div(class="footer w3-col theme-text-white w3-padding-16 w3-padding" style="position: static; bottom: 0px;")
+		div(class="w3-auto")
+			div 
+				div Scoutradioz is powered by:
+				ul 
+					li(class="w3-margin-top") 
+						a(href="https://thebluealliance.com" target="_blank" class="text-link") 
+							div(class="footer-brand-logo")
+								img(src=`${fileRoot}/images/brand-logos/tba-logo.png` alt="" style="max-width:12px;")
+							span The&nbsp;Blue&nbsp;Alliance
+					li(class="w3-margin-top")
+						a(href="https://aws.amazon.com" target="_blank" class="text-link")
+							div(class="footer-brand-logo")
+								img(src=`${fileRoot}/images/brand-logos/aws-logo.png` alt="" style="max-width:16px;")
+							span Amazon&nbsp;Web&nbsp;Services

@@ -28,6 +28,7 @@
 	/* Coordinate "background" with the image as defined in the 'layout.pug'! */
 	--background: #9cd3f7;
 	--header: var(--trim);
+	--footer: var(--dark);
 	
 	/* MMenu customization */
 	--mm-color-background: #444;
@@ -87,7 +88,7 @@ html{
 .theme-text{color:#000!important;}
 .theme-text-dark{color:#111!important;}
 .theme-text-gray,.theme-text-grey{color:#222!important;}
-.theme-text-white{color:#000!important;}
+.theme-text-white{color:#eee!important;}
 .theme-text-black{color:#111!important;}
 /* 2019 hover background colors */
 .theme-link:hover{color:rgb(22, 21, 20)!important;background-color:var(--white)!important}
@@ -121,6 +122,9 @@ html{
 
 .header{
 	background-color: var(--header);
+}
+.footer{
+	background-color: var(--footer);
 }
 
 input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
