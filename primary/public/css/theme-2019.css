@@ -10,7 +10,12 @@
 	--frc-blue2: #0D90F0;
 	--frc-darkblue: #003A5D;
 	--frc-black: #000000;
-	--frc-darkgrey: #444444;
+	
+	/* universal colors */
+	--white: #fff;
+	--light: #eee;
+	--dark: #444;
+	--black: #000;
 	
 	/* 2020 theme colors */
 	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
@@ -18,15 +23,15 @@
 	--secondary: var(--frc-darkblue);
 	--trim: var(--frc-cyan);
 	--highlight: var(--frc-yellow);
-	--white: #fff;
-	--light: #eee;
-	/* --dark: var(--frc-darkblue); */
-	--dark: var(--frc-darkgrey);
-	--black: var(--frc-black);
+	
+	--text-primary: var(--white);
+	--text-secondary: var(--light); /* Currently unused */
+	--button-primary: var(--frc-blue2);
+	--button-secondary: var(--frc-yellow);
 	
 	/* --background: #333; */
 	/* Coordinate "background" with the image as defined in the 'layout.pug'! */
-	--background: #9cd3f7;
+	--background: #000;
 	--header: var(--trim);
 	--footer: var(--dark);
 	
@@ -47,15 +52,30 @@
 	--mb-bar-spacing: 8px;
 }
 
-html{
-	/*Background-image URL is overriden in layout.pug with S3 url*/
-	background-image: url('/images/backgrounds/infinite-recharge-blur.png');
-	background-color: var(--background);
-	background-size: cover;
-	background-repeat: no-repeat;
-	background-attachment: fixed;
+
+.background{
+	background: radial-gradient(circle farthest-corner at bottom,
+	rgba(29,107,137,0.5) 0%, rgba(0,0,0,0) 100%),
+	linear-gradient(45deg, rgba(0,20,50,0.8) 0%, rgba(0,0,0,0) 100%);
 }
-/*"Dynamic" height for background image size*/
+body{
+	background: radial-gradient(circle 900px at bottom, 
+	rgba(29,107,137,1) 0%, rgba(0,0,0,0) 100%);
+	}
+html{
+	background-color: var(--background);
+}
+#page{
+	/*Background-image URL is overriden in layout.pug with S3 url*/
+	background-image: url('/images/backgrounds/city.png');
+	background-size: auto 240px;
+	background-position-y: bottom;
+	background-position-x: left;
+	background-repeat: repeat-x;
+	background-attachment: inherit;
+}
+@media(max-width: 600px){#page{background-position-x:-50px;background-size: auto 160px;}}
+/*"Dynamic" height for background image size*//*
 @media(max-height: 2000px){html{background-size: auto 2080px;}}
 @media(max-height: 1800px){html{background-size: auto 1880px;}}
 @media(max-height: 1600px){html{background-size: auto 1680px;}}
@@ -68,28 +88,22 @@ html{
 @media(max-height: 600px){html{background-size: auto 680px;}}
 @media(max-height: 500px){html{background-size: auto 580px;}}
 @media(max-height: 400px){html{background-size: auto 480px;}}
-@media(min-width: 901px){html{background-size: cover;}}
+@media(min-width: 901px){html{background-size: cover;}}*/
 
 /* 2019 background colors */
-.theme-link{color: var(--black)!important; background-color: var(--primary)!important}
-.theme-input{color: var(--white)!important; background-color: var(--secondary)!important}
-.theme-dim,.theme-grey{color:var(--white)!important;background-color:var(--dark)!important}
-.theme-submit{color:var(--black)!important;background-color:var(--trim)!important}
+.theme-link{color: var(--black)!important; background-color: var(--button-primary)!important}
+.theme-input{color: var(--text-primary)!important; background-color: var(--secondary)!important}
+.theme-dim,.theme-grey{color:var(--text-primary)!important;background-color:var(--dark)!important}
+.theme-submit{color:var(--black)!important;background-color:var(--button-secondary)!important}
 .theme-red{color:#fff!important;background-color:#be0020!important}
-/* 2019 text colors 
-.theme-text{color:#C8C8DC!important;}
-.theme-text-dark{color:#1E1E23!important;} */
-/*
-.theme-text{color:#C8C8DC!important;}
+
+.theme-text{color:var(--text-primary)!important;}
+.theme-text-secondary{color:var(--text-secondary!important;)}
 .theme-text-dark{color:#1E1E23!important;}
-.theme-text-gray,.theme-text-grey{color:#757575!important;}
-.theme-text-white{color:#fff!important;}
-*/
-.theme-text{color:#000!important;}
-.theme-text-dark{color:#111!important;}
 .theme-text-gray,.theme-text-grey{color:#222!important;}
 .theme-text-white{color:#eee!important;}
 .theme-text-black{color:#111!important;}
+
 /* 2019 hover background colors */
 .theme-link:hover{color:rgb(22, 21, 20)!important;background-color:var(--white)!important}
 .theme-hover-white:hover{color:#000!important;background-color:var(--white)!important}
