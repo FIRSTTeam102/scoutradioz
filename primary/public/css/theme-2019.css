@@ -78,7 +78,7 @@ html{
 }
 #page{
 	/*Background-image URL is overriden in layout.pug with S3 url*/
-	background-image: url('/images/backgrounds/city.png');
+	background-image: url('/images/backgrounds/city-light.png');
 	background-size: auto 240px;
 	background-position-y: bottom;
 	background-position-x: left;
@@ -90,7 +90,7 @@ html{
 #page::after{
 	content: "";
 	display: block;
-	height: 100px;
+	height: 200px;
 }
 @media(max-width: 600px){
 	.background{
@@ -102,6 +102,9 @@ html{
 	#page{
 		background-position-x: -50px;
 		background-size: auto 160px;
+	}
+	#page::after{
+		height: 140px;
 	}
 }
 /*"Dynamic" height for background image size*//*
