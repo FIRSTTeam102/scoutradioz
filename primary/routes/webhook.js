@@ -62,6 +62,8 @@ router.post('/', async function(req, res) {
 			await handleUpcomingMatch( messageData );
 			break;
 		case "match_score":
+		// 2020-02-20, adding 'match_video' - appears to be the same data as 'match_score'
+		case "match_video":
 			await handleMatchScore( messageData );
 			break;
 		case "starting_comp_level":
