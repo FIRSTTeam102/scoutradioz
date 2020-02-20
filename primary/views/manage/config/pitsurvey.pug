@@ -36,13 +36,14 @@ block content
 					div(class="editor-contents")
 						hr(class="editor-hr")
 						//row remove
-						div(id=`removerow_${i}` class="w3-col m1 w3-padding-small w3-right-align editor-button")
-							div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px;") 
-								span(style="") -
-						//sort draggy
-						div(id=`sort_${i}` class="w3-col m1 w3-padding-small w3-right-align editor-sort")
-							div(class="w3-btn theme-dim theme-input" style="width: 38px; height: 38px; cursor: grab;") 
-								span(style="") ≡
+						div(class="w3-col m1")
+							div(id=`removerow_${i}` class="w3-col s6 w3-padding-small w3-right-align editor-button")
+								div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px;") 
+									span(style="") -
+							//sort draggy
+							div(id=`sort_${i}` class="w3-col s6 w3-padding-small w3-right-align editor-sort")
+								div(class="w3-btn theme-dim theme-input" style="width: 38px; height: 38px; cursor: grab;") 
+									span(style="") ≡
 						//type
 						div(id=`type_${i}` class="w3-col m2 w3-padding-small editor-type")
 							- //   onchange=`handleTypeChange(${i})`
@@ -51,6 +52,10 @@ block content
 									option(value="h2" selected) Header
 								else
 									option(value="h2") Header
+								if item.type == "h3"
+									option(value="h3" selected) Subheader
+								else
+									option(value="h3") Subheader
 								if item.type == "spacer"
 									option(value="spacer" selected) Spacer
 								else
@@ -67,16 +72,28 @@ block content
 									option(value="multiselect" selected) Multi-select
 								else
 									option(value="multiselect") Multi-select
+								if item.type == "counter"
+									option(value="counter" selected) Counter
+								else
+									option(value="counter") Counter
+								if item.type == "badcounter"
+									option(value="badcounter" selected) Bad Counter
+								else
+									option(value="badcounter") Bad Counter
+								if item.type == "derived"
+									option(value="derived" selected) Derived
+								else
+									option(value="derived") Derived
 						//label
-						div(id=`label_${i}` class="w3-col m4 w3-padding-small editor-label" style=`${item.type == 'spacer' ? 'visibility: hidden;' : ''}`)
+						div(id=`label_${i}` class="w3-col m5 w3-padding-small editor-label" style=`${item.type == 'spacer' ? 'visibility: hidden;' : ''}`)
 							input(type="text" name=`label_${i}` class="theme-input w3-block" placeholder="Label" value=item.label)
 						//multiselect options
 						div(id=`options_${i}` class="w3-col m3 w3-padding-small editor-multiselect" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
 							if item.options
 								each option, j in item.options
-									div(class="w3-col" style="padding-bottom: 8px;" id=`optionsid_${i}_${j}`)
+									div(class="w3-col s11 w3-padding-small" style="padding-bottom: 8px;" id=`optionsid_${i}_${j}`)
 										input(type="text" name=`options_${i}_${j}` class="theme-input w3-block" placeholder="Option" value=option)
-									div(id=`removebutton_${i}_${j}` class="w3-col m1 w3-padding-small w3-right-align editor-button")
+									div(id=`removebutton_${i}_${j}` class="w3-col s1 w3-padding-small w3-right-align editor-button")
 										div(class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px;" row=i item=j) 
 											span(style="") -
 									//
@@ -89,7 +106,7 @@ block content
 								div(id=`sampleRemoveDiv_${i}` class="w3-btn theme-gray theme-input" style="width: 38px; height: 38px;" row=i item=j)
 									span(style="") -
 						//+ button for multiselect
-						div(id=`button_${i}` class="w3-col m1 w3-padding-small editor-button" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
+						div(id=`button_${i}` class="w3-col m1 w3-padding-small w3-left-align editor-button" style=`${item.type == 'multiselect' ? '' : 'visibility: hidden;'}`)
 							div(class="w3-btn theme-input" style="border-radius: 50%; height: 38px; width: 38px;" row=i)
 								span(style="font-size: 1.4em; position: relative; top: -2px;") +
 					
