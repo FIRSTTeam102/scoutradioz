@@ -761,7 +761,7 @@ router.get("/swapmembers", async function(req, res) {
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var scorers = await utilities.distinct("matchscouting", "assigned_scorer", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }});
 	//scoreDataCol.distinct("assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, function (e, docs) {
-	var scorers = docs;
+	//var scorers = docs;
 	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 
 	// Get list of all users
