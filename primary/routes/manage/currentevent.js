@@ -187,6 +187,14 @@ router.post("/updatematch", async function(req, res) {
 	logger.debug(thisFuncName + 'About to start in on updating min/maxes of agg data');
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+
+	// call out to aggrange recalculator
+	await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
+
+	////////////////////////////////////////////
+	// need org_key, event_year, event_key
+
+	/*
 	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 			
 	var aggQuery = [];
@@ -255,7 +263,7 @@ router.post("/updatematch", async function(req, res) {
 			aggMinMaxArray.push(thisMinMax);
 		}
 	}
-	console.log(thisFuncName + 'aggMinMaxArray=' + JSON.stringify(aggMinMaxArray));
+	logger.trace(thisFuncName + 'aggMinMaxArray=' + JSON.stringify(aggMinMaxArray));
 
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	// Delete the current agg ranges
@@ -264,6 +272,10 @@ router.post("/updatematch", async function(req, res) {
 	// Reinsert the updated values
 	// await utilities.insert("currentaggranges", aggMinMaxArray);
 	await utilities.insert("aggranges", aggMinMaxArray);
+	*/
+
+	// ...aggregation over
+	////////////////////////////////////////////
 
 	// And we're done!
 	res.render("./manage/currentmatches", {
@@ -289,7 +301,9 @@ router.post("/updatematches", async function(req, res) {
 	
 	var matchId = req.body.matchId;
 	var eventId = req.event.key;
-	
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+
 	// While we're here - Get the latest ranking (& OPR data...? maybe not?)
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
@@ -348,6 +362,9 @@ router.post("/updatematches", async function(req, res) {
 		// Then read it back in order
 		var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 			
+		// call out to aggrange recalculator
+		await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, eventId);
+
 		res.render("./manage/currentmatches", {
 			"matches": matches
 		});
