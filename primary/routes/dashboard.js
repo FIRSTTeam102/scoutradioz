@@ -285,7 +285,8 @@ router.get('/allianceselection', async function(req, res){
 			aggdata: aggArray,
 			currentAggRanges: currentAggRanges,
 			layout: scoreLayout,
-			sortedTeams: sortedTeams
+			sortedTeams: sortedTeams,
+			matchDataHelper: matchDataHelper
 		});
 	}
 	catch (err) {
