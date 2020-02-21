@@ -21,12 +21,13 @@ block content
 					div(class="w3-padding-small")
 						//- if (item.type == 'counter' || item.type == 'badcounter' || item.type == 'checkbox')
 						- if (matchDataHelper.isQuantifiableType(item.type))
+							- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
 							- if (savedCols[item.id])
 								input(type="checkbox" class="w3-check" name=item.id id=item.id checked="checked")
 							- else
 								input(type="checkbox" class="w3-check" name=item.id id=item.id)
 							div(class="w3-show-inline-block w3-left-align" style="min-width: 320px;")
-								label(class="theme-text-dark" for=item.id) &nbsp;#{item.id}
+								label(class="theme-text" for=item.id) &nbsp;#{result2}
 							br 
 		//-	div(class="w3-container" style="max-width:200px;margin:auto;")
 				div(class="w3-left w3-margin-left")
