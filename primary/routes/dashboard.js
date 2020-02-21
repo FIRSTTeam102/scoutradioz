@@ -146,6 +146,8 @@ router.get('/unassigned', async function(req, res) {
  * @view dashboard/allianceselection
  */
 router.get('/allianceselection', async function(req, res){
+	var thisFuncName = "dashboard.allianceselection[get]: ";
+	logger.info(thisFuncName + 'ENTER');
 	
 	var event_key = req.event.key;
 	var event_year = req.event.year;
@@ -228,7 +230,7 @@ router.get('/allianceselection', async function(req, res){
 			}
 			if(!rankMap[thisAgg._id] || !rankMap[thisAgg._id].value){
 				//return res.redirect("/?alert=Make sure that team rankings have been pulled from TheBlueAlliance");
-				logger.debug(`Gonna crash w/ id ${thisAgg._id}`);
+				logger.trace(`${thisFuncName}Gonna crash w/ id ${thisAgg._id}`);
 			}
 			if(rankMap[thisAgg._id]){
 				thisAgg['rank'] = rankMap[thisAgg._id].rank;
@@ -270,7 +272,7 @@ router.get('/allianceselection', async function(req, res){
 			}
 		});
 		
-		logger.debug(sortedTeams);
+		logger.trace(thisFuncName + sortedTeams);
 	
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges

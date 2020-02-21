@@ -12,7 +12,7 @@ router.all('/*', async (req, res, next) => {
 
 router.get("/matches", async function(req, res) {
 
-	var thisFuncName = "current.matches[get]: ";
+	var thisFuncName = "currentevent.matches[get]: ";
 	logger.info(thisFuncName + 'ENTER')
 	
 	var eventId = req.event.key;
@@ -83,7 +83,7 @@ router.get("/getcurrentteams", async function(req, res){
 
 router.post("/resetmatches", async function(req, res) {
 	
-	var thisFuncName = "current.resetmatches[post]: ";
+	var thisFuncName = "currentevent.resetmatches[post]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
 	// var matchCol = db.get("matches");
@@ -104,7 +104,7 @@ router.post("/resetmatches", async function(req, res) {
 
 router.post("/updatematch", async function(req, res) {
 	
-	var thisFuncName = "current.updatematch[post]: ";
+	var thisFuncName = "currentevent.updatematch[post]: ";
 	logger.info(thisFuncName + 'ENTER')
 	
 	var matchId = req.body.matchId;
@@ -274,7 +274,7 @@ router.post("/updatematch", async function(req, res) {
 
 router.post("/updatematches", async function(req, res) {
 	
-	var thisFuncName = "current.updatematches[post]: ";
+	var thisFuncName = "currentevent.updatematches[post]: ";
 	logger.info(thisFuncName + 'ENTER')
 	
 	// var matchCol = db.get("matches");
@@ -311,12 +311,12 @@ router.post("/updatematches", async function(req, res) {
 			rankArr.push(thisRank);
 		}
 	}
-	logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	logger.trace(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	// Delete the current rankings
 	//await utilities.remove("currentrankings", {});
-	await utilities.remove("rankings", {"event_key": event_key});
+	await utilities.remove("rankings", {"event_key": eventId});
 	// Insert into DB
 	//await utilities.insert("currentrankings", rankArr);
 	await utilities.insert("rankings", rankArr);
