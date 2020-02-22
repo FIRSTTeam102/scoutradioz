@@ -275,7 +275,10 @@ router.get("/teamintel", async function(req, res){
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key, "team_key": teamKey } });
@@ -437,7 +440,10 @@ router.get("/teamintelhistory", async function(req, res){
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "team_key": teamKey, "year": year } });
@@ -552,7 +558,10 @@ router.get("/teammatchintel*", async function(req, res){
 	// Match data layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var layout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var scoringDataFind = await utilities.find("matchscouting", {"org_key": org_key, "match_team_key": match_team_key}, {});
@@ -622,7 +631,10 @@ router.get("/alliancestats", async function(req, res) {
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "team_key": {$in: teamList}, "org_key": org_key, "event_key": event_key } });
@@ -741,7 +753,10 @@ router.get("/teamdata", async function(req, res) {
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -803,7 +818,10 @@ router.get("/matchdata", async function(req, res) {
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scoreLayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -866,7 +884,10 @@ router.get("/matchmetrics", async function(req, res) {
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	var aggQuery = [];
 	var redAllianceArray = match.alliances.red.team_keys;
@@ -979,7 +1000,10 @@ router.get("/metricsranked", async function(req, res){
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
@@ -1091,7 +1115,10 @@ router.get("/metrics", async function(req, res){
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
@@ -1285,13 +1312,18 @@ router.get("/allteammetrics", async function(req, res){
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var scorelayoutDB = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
-	
+
+	// Variables ahead of modifying match scoring layout for cookies
 	// 2020-02-15, M.O'C: Leverage column selection cookies - pull in the cookies
 	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = req.cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	/*
+	var scorelayout = [];
+	var scorelayoutDB = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	
 	var savedCols = {};
 	var noneSelected = true;
-	var colCookie = req.cookies[cookie_key];
 	//colCookie = "a,b,ccc,d";
 	if (colCookie) {
 		logger.debug(thisFuncName + "colCookie=" + colCookie);
@@ -1303,7 +1335,6 @@ router.get("/allteammetrics", async function(req, res){
 	//logger.debug(thisFuncName + "noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
 
 	// Use the cookies (if defined) to slim down the layout array
-	var scorelayout = [];
 	if (noneSelected)
 		scorelayout = scorelayoutDB;
 	else {
@@ -1319,6 +1350,7 @@ router.get("/allteammetrics", async function(req, res){
 				scorelayout.push(thisLayout);
 		}
 	}
+	*/
 
 	// Build the aggregation data
 	var aggQuery = [];

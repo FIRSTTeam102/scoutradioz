@@ -10,7 +10,58 @@ functions.isQuantifiableType = function(type) {
 }
 
 //
-// Needs: org_key, event_year, event_year
+// Needs:    org_key, event_year [number!], colCookie [comma-separated list of metric IDs]
+// Returns:  "matchscouting" layout modified(reduced) by the list from colCookie
+// 
+functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, colCookie) {
+	var thisFuncName = "matchdatahelper.getModifiedMatchScoutingLayout: ";
+    logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
+    
+    // create the return array
+    var scorelayout = [];
+
+    // read in the layout as stored in the DB
+	var scorelayoutDB = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+
+    // Process the cookies & (if selections defined) prepare to reduce
+	var savedCols = {};
+	var noneSelected = true;
+	//colCookie = "a,b,ccc,d";
+	if (colCookie) {
+		logger.debug(thisFuncName + "colCookie=" + colCookie);
+		noneSelected = false;
+		var savedColArray = colCookie.split(",");
+		for (var i in savedColArray)
+			savedCols[savedColArray[i]] = savedColArray[i];
+	}
+	//logger.debug(thisFuncName + "noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
+
+	// Use the cookies (if defined) to slim down the layout array
+	if (noneSelected)
+		scorelayout = scorelayoutDB;
+	else {
+		// Weed out unselected columns
+		for (var i in scorelayoutDB) {
+			var thisLayout = scorelayoutDB[i];
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (this.isQuantifiableType(thisLayout.type)) {
+				if (savedCols[thisLayout.id]) 
+					scorelayout.push(thisLayout);
+			}
+			else
+				scorelayout.push(thisLayout);
+		}
+    }
+    
+    var retLength = -1;
+    if (scorelayout)
+        retLength = scorelayout.length;
+	logger.info(thisFuncName + 'EXIT returning ' + retLength);
+    return scorelayout;
+}
+
+//
+// Needs: org_key, event_year [number!], event_key
 // Does:  recalculates aggregated data ranges for that org & event and stores in DB
 // 
 functions.calculateAndStoreAggRanges = async function(org_key, event_year, event_key) {
