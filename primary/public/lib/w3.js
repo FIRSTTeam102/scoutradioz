@@ -1,4 +1,4 @@
-/* W3.JS 1.03 December 2017 by w3schools.com */
+/* W3.JS 1.04 April 2019 by w3schools.com */
 "use strict";
 var w3 = {};
 w3.hide = function (sel) {
@@ -137,15 +137,15 @@ w3.filterHTML = function(id, sel, filter) {
   var a, b, c, i, ii, iii, hit;
   a = w3.getElements(id);
   for (i = 0; i < a.length; i++) {
-    b = w3.getElements(sel);
+    b = a[i].querySelectorAll(sel);
     for (ii = 0; ii < b.length; ii++) {
       hit = 0;
-      if (b[ii].innerHTML.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
+      if (b[ii].innerText.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
         hit = 1;
       }
       c = b[ii].getElementsByTagName("*");
       for (iii = 0; iii < c.length; iii++) {
-        if (c[iii].innerHTML.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
+        if (c[iii].innerText.toUpperCase().indexOf(filter.toUpperCase()) > -1) {
           hit = 1;
         }
       }
@@ -170,12 +170,14 @@ w3.sortHTML = function(id, sel, sortvalue) {
         for (ii = 0; ii < (b.length - 1); ii++) {
           bytt = 0;
           if (sortvalue) {
-            v1 = b[ii].querySelector(sortvalue).innerHTML.toLowerCase();
-            v2 = b[ii + 1].querySelector(sortvalue).innerHTML.toLowerCase();
+            v1 = b[ii].querySelector(sortvalue).innerText;
+            v2 = b[ii + 1].querySelector(sortvalue).innerText;
           } else {
-            v1 = b[ii].innerHTML.toLowerCase();
-            v2 = b[ii + 1].innerHTML.toLowerCase();
+            v1 = b[ii].innerText;
+            v2 = b[ii + 1].innerText;
           }
+          v1 = v1.toLowerCase();
+          v2 = v2.toLowerCase();
           if ((j == 0 && (v1 > v2)) || (j == 1 && (v1 < v2))) {
             bytt = 1;
             break;
