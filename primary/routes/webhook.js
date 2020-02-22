@@ -4,6 +4,7 @@ const express = require('express');
 const logger = require('log4js').getLogger();
 const webpush = require('web-push');
 const utilities = require('../utilities');
+const matchDataHelper = require ('../helpers/matchdatahelper');
 
 //Create Express app for webhooks
 const webhook = module.exports = express();
@@ -93,106 +94,123 @@ async function handleUpcomingMatch( data ) {
 
 	var match_key = data.match_key;
 	var event_key = match_key.split('_')[0];
-	var event_year = event_key.substring(0, 4);
+	var event_year = parseInt(event_key.substring(0, 4));
 	logger.info(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
 
 	// Synchronize the rankings (just in case)
 	await syncRankings(event_key);
 
 	// push notifications
-	if (process.env.disablePushNotifications == 'true') return;
+	if (process.env.disablePushNotifications != 'true') {
 	
-	logger.debug(`${thisFuncName} Configuring web-push`);
-	const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
-	webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
-	
-	const teamKeys = data.team_keys;
-	const matchNumberKey = data.match_key.split('_')[1];
-	logger.debug(`${thisFuncName} matchNumberKey: ${matchNumberKey}, teamKeys: ${JSON.stringify(teamKeys)}`);
-	
-	for (var teamKey of teamKeys) {
-		//find assignee of this team key
-		const alliance = 'red';
-		const assigneeID = '5d9cd6951c4f783330139549';
-		const user = await utilities.findOne('users', {_id: assigneeID});
+		logger.debug(`${thisFuncName} Configuring web-push`);
+		const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
+		webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
 		
-		logger.info(`${thisFuncName} Asignee: ${JSON.stringify(user)}`);
+		const teamKeys = data.team_keys;
+		const matchNumberKey = data.match_key.split('_')[1];
+		logger.debug(`${thisFuncName} matchNumberKey: ${matchNumberKey}, teamKeys: ${JSON.stringify(teamKeys)}`);
 		
-		//if user is found in the db, proceed
-		if (user) {
-			//if user has a push subscription, then send to that subscription
-			if (user.push_subscription) {
-				const pushSubscription = user.push_subscription;
-				
-				var titleIdentifier;
-				var matchNumber, compLevel;
-				var setNumber = '';
-				
-				//comp_level isn't available in upcoming_match notification, so we have to find it ourselves
-				if (matchNumberKey.substring(0, 2) == 'qm') {
-					compLevel = 'qm';
-					matchNumber = matchNumberKey.substring(2);
-					titleIdentifier = `Match ${matchNumber}`;
+		for (var teamKey of teamKeys) {
+			//find assignee of this team key
+			const alliance = 'red';
+			const assigneeID = '5d9cd6951c4f783330139549';
+			const user = await utilities.findOne('users', {_id: assigneeID});
+			
+			logger.info(`${thisFuncName} Asignee: ${JSON.stringify(user)}`);
+			
+			//if user is found in the db, proceed
+			if (user) {
+				//if user has a push subscription, then send to that subscription
+				if (user.push_subscription) {
+					const pushSubscription = user.push_subscription;
+					
+					var titleIdentifier;
+					var matchNumber, compLevel;
+					var setNumber = '';
+					
+					//comp_level isn't available in upcoming_match notification, so we have to find it ourselves
+					if (matchNumberKey.substring(0, 2) == 'qm') {
+						compLevel = 'qm';
+						matchNumber = matchNumberKey.substring(2);
+						titleIdentifier = `Match ${matchNumber}`;
+					}
+					else if (matchNumberKey.substring(0, 2) == 'qf') {
+						compLevel = 'qf';
+						setNumber = matchNumberKey.substring(2, 3);
+						matchNumber = matchNumberKey.substring(4);
+						titleIdentifier = `Quarterfinal ${setNumber} Match ${matchNumber}`;
+					}
+					else if (matchNumberKey.substring(0, 2) == 'sf') {
+						compLevel = 'sf';
+						setNumber = matchNumberKey.substring(2, 3);
+						matchNumber = matchNumberKey.substring(4);
+						titleIdentifier = `Semifinal ${setNumber} Match ${matchNumber}`;
+					}
+					else if (matchNumberKey.substring(0, 1) == 'f') {
+						compLevel = 'f';
+						matchNumber = matchNumberKey.substring(3);
+						titleIdentifier = `Final Match ${matchNumber}`;
+					} 
+					else {
+						throw new Error(`${thisFuncName} Unexpected matchKey comp_level identifier`);
+					}
+					
+					var imageHref = 'https://upload.scoutradioz.com/app/generate/upcomingmatch?'
+						+ `match_number=${matchNumber}&comp_level=${compLevel}&set_number=${setNumber}`
+						+ `&blue1=${teamKeys[0].substring(3)}`
+						+ `&blue2=${teamKeys[1].substring(3)}`
+						+ `&blue3=${teamKeys[2].substring(3)}`
+						+ `&red1=${teamKeys[3].substring(3)}`
+						+ `&red2=${teamKeys[4].substring(3)}`
+						+ `&red3=${teamKeys[5].substring(3)}`
+						+ `&assigned=red1`;
+					
+					const notificationContent = JSON.stringify({
+						title: `${titleIdentifier} will start soon`,
+						options: {
+							body: `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`,
+							badge: '/images/brand-logos/monochrome-badge.png',
+							icon: '/images/brand-logos/FIRST-logo.png',
+							image: imageHref,
+							actions: [
+								{
+									action: 'scout-match',
+									title: 'Scout Match',
+									//icon: '',
+								}
+							]
+						},
+						ifFocused: {
+							message: "Don't forget! This is a reminder!"
+						},
+					});
+					// https://web-push-book.gauntface.com/demos/notification-examples/ 
+					
+					await sendPushMessage(pushSubscription, notificationContent);
 				}
-				else if (matchNumberKey.substring(0, 2) == 'qf') {
-					compLevel = 'qf';
-					setNumber = matchNumberKey.substring(2, 3);
-					matchNumber = matchNumberKey.substring(4);
-					titleIdentifier = `Quarterfinal ${setNumber} Match ${matchNumber}`;
-				}
-				else if (matchNumberKey.substring(0, 2) == 'sf') {
-					compLevel = 'sf';
-					setNumber = matchNumberKey.substring(2, 3);
-					matchNumber = matchNumberKey.substring(4);
-					titleIdentifier = `Semifinal ${setNumber} Match ${matchNumber}`;
-				}
-				else if (matchNumberKey.substring(0, 1) == 'f') {
-					compLevel = 'f';
-					matchNumber = matchNumberKey.substring(3);
-					titleIdentifier = `Final Match ${matchNumber}`;
-				} 
 				else {
-					throw new Error(`${thisFuncName} Unexpected matchKey comp_level identifier`);
+					logger.debug(`${thisFuncName} Push subscription not available for ${req.user.name}`);
+			
 				}
-				
-				var imageHref = 'https://upload.scoutradioz.com/app/generate/upcomingmatch?'
-					+ `match_number=${matchNumber}&comp_level=${compLevel}&set_number=${setNumber}`
-					+ `&blue1=${teamKeys[0].substring(3)}`
-					+ `&blue2=${teamKeys[1].substring(3)}`
-					+ `&blue3=${teamKeys[2].substring(3)}`
-					+ `&red1=${teamKeys[3].substring(3)}`
-					+ `&red2=${teamKeys[4].substring(3)}`
-					+ `&red3=${teamKeys[5].substring(3)}`
-					+ `&assigned=red1`;
-				
-				const notificationContent = JSON.stringify({
-					title: `${titleIdentifier} will start soon`,
-					options: {
-						body: `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`,
-						badge: '/images/brand-logos/monochrome-badge.png',
-						icon: '/images/brand-logos/FIRST-logo.png',
-						image: imageHref,
-						actions: [
-							{
-								action: 'scout-match',
-								title: 'Scout Match',
-								//icon: '',
-							}
-						]
-					},
-					ifFocused: {
-						message: "Don't forget! This is a reminder!"
-					},
-				});
-				// https://web-push-book.gauntface.com/demos/notification-examples/ 
-				
-				await sendPushMessage(pushSubscription, notificationContent);
-			}
-			else {
-				logger.debug(`${thisFuncName} Push subscription not available for ${req.user.name}`);
-		
 			}
 		}
+	}
+
+	// If any teams are "at" this event, (re)run the aggrange calculator for each one
+	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
+	var orgsAtEvent = await utilities.find("orgs", {event_key: event_key});
+	if (orgsAtEvent && orgsAtEvent.length > 0) {
+		// For each org, run the agg ranges stuff
+		//var aggRangePromises = [];
+		for (var i in orgsAtEvent) {
+			var thisOrg = orgsAtEvent[i];
+			await matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
+			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			//aggRangePromises.push(thisPromise);
+		}
+		// wait for all the updates to finish
+		//Promise.all(aggRangePromises);
 	}
 }
 
@@ -202,7 +220,7 @@ async function handleMatchScore( data ) {
 	
 	var match_key = data.match.key;
 	var event_key = match_key.split('_')[0];
-	var event_year = event_key.substring(0, 4);
+	var event_year = parseInt(event_key.substring(0, 4));
 	logger.info(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
 
 	// 2020-02-13, M.O'C: Handle possible bugs in webhook push data?
@@ -237,6 +255,22 @@ async function handleMatchScore( data ) {
 	
 	// Synchronize the rankings
 	await syncRankings(event_key);
+
+	// If any teams are "at" this event, (re)run the aggrange calculator for each one
+	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
+	var orgsAtEvent = await utilities.find("orgs", {event_key: event_key});
+	if (orgsAtEvent && orgsAtEvent.length > 0) {
+		// For each org, run the agg ranges stuff
+		//var aggRangePromises = [];
+		for (var i in orgsAtEvent) {
+			var thisOrg = orgsAtEvent[i];
+			await matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
+			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			//aggRangePromises.push(thisPromise);
+		}
+		// wait for all the updates to finish
+		//Promise.all(aggRangePromises);
+	}
 }
 
 async function handleStartingCompLevel( data ) {
@@ -266,7 +300,7 @@ async function handleScheduleUpdated( data ) {
 	//return;
 
 	var event_key = data.event_key;
-	var event_year = event_key.substring(0, 4);
+	var event_year = parseInt(event_key.substring(0, 4));
 	logger.info(thisFuncName + "ENTER event_year=" + event_year + ",event_key=" + event_key);
 
 	// Reload the matches
@@ -317,7 +351,7 @@ async function syncRankings(event_key) {
 			rankArr.push(thisRank);
 		}
 	}
-	logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	logger.trace(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
 
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	// Delete the current rankings

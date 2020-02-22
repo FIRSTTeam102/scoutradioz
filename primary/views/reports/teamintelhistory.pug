@@ -2,7 +2,8 @@ extends ../layout
 
 block content
 	h2(class="theme-text")= team.key.replace('frc','Team ')
-	- var year = (new Date()).getFullYear();
+	-// 2020-02-21, M.O'C: Switch to passing the year in from the route
+	-// var year = (new Date()).getFullYear();
 	p
 	h2 #{team.nickname}
 	if (ranking)
@@ -95,7 +96,11 @@ block content
 		if (matches && matches.length > 0)		
 			h6 <i>Click team number for match scouting details</i>
 			h6 <i>Click match button for overall alliance performances</i>
+			- var thisEventKey = '';
 			each match in matches
+				if (match.event_key != thisEventKey)
+					- thisEventKey = match.event_key;
+					h4(class="theme-text") #{thisEventKey}
 				include templates/completedMatch
 				if (match.scoringdata && user)
 					each element in scorelayout

@@ -180,8 +180,11 @@ router.get('/allianceselection', async function(req, res){
 	
 		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 		//var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
-		var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
-		
+		//var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+		var cookie_key = org_key + "_" + event_year + "_cols";
+		var colCookie = req.cookies[cookie_key];
+		var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+			
 		if(!scoreLayout[0])
 			throw "Couldn't find scoringlayout in allianceselection";
 		

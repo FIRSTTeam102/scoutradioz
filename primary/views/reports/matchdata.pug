@@ -43,7 +43,7 @@ block content
 							td(class="w3-text-light-gray w3-small")
 								a(href=`/reports/metricintel?key=${item.id}`)= result2
 							for team in match.alliances.red.team_keys
-								if (matchMap[team].data)
+								if (matchMap[team] && matchMap[team].data)
 									- var valueCol = 'w3-right-align w3-text-white'
 									- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
 									if (aggRangeMap[item.id])
@@ -54,7 +54,7 @@ block content
 									td
 							td
 							for team in match.alliances.blue.team_keys
-								if (matchMap[team].data)
+								if (matchMap[team] && matchMap[team].data)
 									- var valueCol = 'w3-right-align w3-text-white'
 									- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
 									if (aggRangeMap[item.id])
