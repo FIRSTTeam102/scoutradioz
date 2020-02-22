@@ -169,10 +169,6 @@ pre{
 	word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
 
-@media (min-width:993px){
-	.w3-col.l0{display:none;}
-	.w3-col.m0{display:inherit;}
-}
 
 @media (min-width: 601px){
 	.w3-col.m0{display:none;}
@@ -182,6 +178,11 @@ pre{
 	}
 	.w3-show-small{display:none!important}
 	#navBar{ display: inline!important; }
+}
+
+@media (min-width:993px){
+	.w3-col.l0{display:none;}
+	.w3-col.m0{display:inherit;}
 }
 
 @media (max-width: 600px){
