@@ -169,6 +169,10 @@ pre{
 	word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
 
+@media (min-width:993px){
+	.w3-col.l0{display:none;}
+	.w3-col.m0{display:inherit;}
+}
 
 @media (min-width: 601px){
 	.w3-col.m0{display:none;}
@@ -181,8 +185,10 @@ pre{
 }
 
 @media (min-width:993px){
-	.w3-col.l0{display:none;}
-	.w3-col.m0{display:inherit;}
+	.w3-col.m0.l1,.w3-col.m0.l2,.w3-col.m0.l3,
+	.w3-col.m0.l4,.w3-col.m0.l5,.w3-col.m0.l6,
+	.w3-col.m0.l7,.w3-col.m0.l8,.w3-col.m0.l9,
+	.w3-col.m0.l10,.w3-col.m0.l11,.w3-col.m0.l12{display:inherit;}
 }
 
 @media (max-width: 600px){
