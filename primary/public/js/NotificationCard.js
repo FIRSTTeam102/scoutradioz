@@ -103,7 +103,7 @@ class NotificationCard{
 	static container(){
 		
 		var containerElement = $("#notificationcard-container");
-		
+		//If container element does not already exist, then create one with necessary properties
 		if ( !containerElement[0] ){
 			containerElement =  $(document.createElement("div"))
 			.addClass("notification-card-container")
@@ -117,7 +117,7 @@ class NotificationCard{
 	 * Display the card.
 	 */
 	show(){
-		
+		//Create card element
 		var card = $(document.createElement("div"))
 			.addClass("notification-card")
 			.css({
@@ -125,12 +125,13 @@ class NotificationCard{
 				"border-bottom-color": this.opts.borderColor,
 				"color": this.opts.textColor,
 			});
+		//Create text element
 		var text = $(document.createElement("div"))
 			.addClass("notification-card-content")
 			.text(this.text);
-		
+		//Add exit button if exitable option is enabled
 		if (this.opts.exitable) {
-			
+			//Create exit button
 			var exitBtn = $(document.createElement("div"))
 				.addClass("notification-card-exit")
 				.css({})
@@ -143,14 +144,14 @@ class NotificationCard{
 						$(this.darkener).remove();
 					}
 				});
+			//Add exit button to card
 			card.append(exitBtn);
 		}
-			
+		//Add text to card
 		card.append(text);
-		//text.append(exitBtn);
-		
+		//Add card to container element
 		NotificationCard.container().append(card);
-		
+		//If screen-darken is enabled, then create darkener & add to container element
 		if (this.opts.darken){
 			this.darkener = $(document.createElement("div"))
 			.addClass("canvas")
@@ -159,7 +160,7 @@ class NotificationCard{
 		}
 		
 		this.card = card;		
-		
+		//If card has a nonzero time-to-live, then set timeout for fade-out
 		if (this.opts.ttl != 0){
 			setTimeout(() => {
 				this.remove(1900);

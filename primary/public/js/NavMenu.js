@@ -17,44 +17,37 @@ class NavigationBar{
 			fastTransition: "cubic-bezier(0.45, 0.05, 0.55, 0.95)",
 			panThreshold: 30,
 		}
+		//Options
 		this.opened = false;
 		this.moving = false;
 		this.panning = false;
 		this.pendingAnimationFrame = false;
-		
+		//Related DOM elements
 		this.menuElem = $("#menu");
 		this.barElem = $("#headerbar");
 		this.overlayElem = $("#overlay");
-		
+		//Take menu title & footer branding variables from inline script in nav.pug
 		if (navMenuTitle) this.title = navMenuTitle;
 		else this.title = "Menu"
 		if (footerContents) this.footerContents = footerContents;
 		else this.footerContents = [];
-		/*
-		const pathname = window.location.pathname;
-		const aElems = $("#menu a");
-		for (var i = 0; i < aElems.length; i++) {
-			var elem = aElems[i];
-			if ($(elem).attr('href') == pathname) {
-				$(elem).parent().addClass("selected");
-			}
-		}*/
 		
+		//Create Mmenu object
 		this.menu = new Mmenu('#menu',
 		{
-			//slidingSubmenus: false,
+			//navbar title
 			navbar: {
 				title: this.title,
 			},
+			//ON-canvas menu (We're handling all the sliding stuff)
 			offCanvas: false,
-			setSelected: {
-				current: 'detect',
-			},
+			//Number counters on subpanels
 			counters: true,
+			//Changes border-lines to fill the whole panel
 			extensions: {
-				//"(max-width: 400px)": ["fullscreen"],
 				"all": ["border-full"],
 			},
+			//Branding on bottom of menu (footerContents is set in nav.pug)
 			navbars: [
 			   {
 				  position: "bottom",
@@ -75,8 +68,8 @@ class NavigationBar{
 		//Our main toggle boi
 		$("#burger").click(() => {
 			
-			console.log("Burger has been clicked");
-			
+			//console.log("Burger has been clicked");
+			//If menu is fully closed
 			if (!this.opened && !this.moving) {
 				//Run pre-opening sequence
 				this.preMenuOpen();
@@ -85,6 +78,7 @@ class NavigationBar{
 					this.menuOpen();
 				}, this.opts.openingInterval);
 			}
+			//If menu is fully opened
 			else if (!this.moving) {
 				//run pre-closing sequence
 				this.preMenuClose();
@@ -97,7 +91,7 @@ class NavigationBar{
 		
 		//When page is clicked, close menu
 		$("#page").click(() => {
-			
+			//If menu is fully opened
 			if (this.opened && !this.moving) {
 				//run pre-closing sequence
 				this.preMenuClose();
@@ -256,21 +250,23 @@ class NavigationBar{
 		});
 		*/
 	}
-
+	
 	preMenuOpen(){
-		console.log('preMenuOpen');
-		
+		//console.log('preMenuOpen');
+		//Get fully-closed positions
 		const positions = this.calculateTransformPosition(0);
-		
+		//Menu element: Make visible, place off-canvas way to the left, set transition time
 		this.menuElem.css({
 			display: 'flex',
 			transform: `translate3d(${positions.menu}, 0, 0)`,
 			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
+		//Bar element: Set transition time
 		this.barElem.css({
 			transform: `translate3d(${positions.bar}, 0, 0)`,
 			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
+		//Overlay: Make visible, 0 opacity, set transition time
 		this.overlayElem.css({
 			display: 'flex',
 			opacity: 0,
@@ -279,19 +275,22 @@ class NavigationBar{
 	}
 	
 	menuOpen(){
-		console.log('menuOpen');
+		//console.log('menuOpen');
 		
 		this.moving = true;
-		
+		//Get fully-opened positions
 		const positions = this.calculateTransformPosition(1);
 		
 		requestAnimationFrame(() => {
+			//Menu element: Ending position
 			this.menuElem.css({
 				transform: `translate3d(${positions.menu}, 0, 0)`,
 			});
+			//Bar element: Ending position
 			this.barElem.css({
 				transform: `translate3d(${positions.bar}, 0, 0)`,
 			});
+			//Overlay element: Full opacity
 			this.overlayElem.css({
 				opacity: 1,
 			});
@@ -299,22 +298,22 @@ class NavigationBar{
 		
 		//Add class for mburger to animate opening
 		$("#burger").addClass("mm-wrapper_opened");
-		
+		//Call postMenuOpen after full opening interval
 		setTimeout(() => {
 			this.postMenuOpen();
 		}, this.opts.slowTransitionTime);
 	}
 	
 	postMenuOpen(){
-		console.log('postMenuOpen');
-		
+		//console.log('postMenuOpen');
+		//Menu is now fully open
 		this.opened = true;
 		this.moving = false;
 	}
 	
 	preMenuClose(){
-		console.log('preMenuClose');
-		
+		//console.log('preMenuClose');
+		//Set transition for all elements
 		this.menuElem.css({
 			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
 		});
@@ -330,16 +329,19 @@ class NavigationBar{
 		console.log('menuClose');
 		
 		this.moving = true;
-		
+		//Get final positions
 		const positions = this.calculateTransformPosition(0);
 		
 		requestAnimationFrame(() => {
+			//Menu element: Ending position
 			this.menuElem.css({
 				transform: `translate3d(${positions.menu}, 0, 0)`,
 			});
+			//Bar element: Ending position
 			this.barElem.css({
 				transform: `translate3d(${positions.bar}, 0, 0)`,
 			});
+			//Overlay: element: Fully transparent
 			this.overlayElem.css({
 				opacity: 0,
 			});
@@ -347,28 +349,29 @@ class NavigationBar{
 		
 		//Remove class for mburger to animate closing
 		$("#burger").removeClass("mm-wrapper_opened");
-		
-		
+		//Call postMenuClose after full closing interval
 		setTimeout(() => {
 			this.postMenuClose();
 		}, this.opts.slowTransitionTime);
 	}
 	
 	postMenuClose(){
-		console.log('postMenuClose');
+		//console.log('postMenuClose');
 		
 		this.opened = false;
 		this.moving = false;
-		
+		//Menu element: Reset transition and position, and set display:none
 		this.menuElem.css({
 			display: 'none',
 			transform: '',
 			transition: '',
 		});
+		//Bar element: Reset transform and position
 		this.barElem.css({
 			transform: '',
 			transition: '',
 		});
+		//Overlay element: Reset transform and position
 		this.overlayElem.css({
 			opacity: '',
 			display: 'none',
