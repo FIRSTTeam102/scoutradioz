@@ -1,0 +1,14 @@
+div(class="w3-col w3-padding" id=`TeamRow_${row_number}`)
+	div(class="w3-col m3 l2") 
+		div(class="gear-label theme-inline-padding")
+			label Team Number: 
+	div(class="w3-col m3 l2")
+		if team
+			input(class="w3-input theme-input w3-no-border theme-inline-padding TeamNumberInput" value=team.team_number name=`TeamNumberInput_${row_number}` id=`TeamNumberInput_${row_number}` type="text")
+		else
+			input(class="w3-input theme-input w3-no-border theme-inline-padding TeamNumberInput" name=`TeamNumberInput_${row_number}` id=`TeamNumberInput_${row_number}` type="text")
+	div(class="w3-rest w3-margin-left")
+		if team 
+			p(class="theme-inline-padding w3-rest w3-left-align TeamInfo" id=`TeamInfo_${row_number}`) #{team.nickname} from #{team.city}, #{team.state_prov}, #{team.country}: #{team.name}
+		else
+			p(class="theme-inline-padding w3-rest w3-left-align TeamInfo" id=`TeamInfo_${row_number}`) &nbsp;

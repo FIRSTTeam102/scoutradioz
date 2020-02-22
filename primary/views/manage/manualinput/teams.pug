@@ -1,0 +1,211 @@
+extends ../../layout
+block content
+	style.
+		.TeamInfo{
+			margin: 0px 16px;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			transition: 1s;
+			border-radius: 12px;
+			border: 2px solid rgba(0,0,0,0);
+		}
+		.TeamInfo.error{
+			border: 2px solid red;
+		}
+		.TeamInfo.success{
+			border: 2px solid #1cc61c;
+		}
+		.TeamAddRow{
+			border-radius:50%;
+			width:48px;
+			height:48px;
+			background-color: #213fdd;
+		}
+		.TeamAddRow:hover{
+			background-color: #4060ff;
+		}
+		.TeamAddRow span{
+			position:relative;
+			top:4px;
+		}
+	h4 Manual Input for Teams at #{eventName}
+	br 
+	h6
+		i Type a team number into each box. To remove a team, erase the contents of the text box.
+	//-Table that is lazyloaded as it is filled
+	form(id="ManualInputTeams" action="/manage/manualinput/teams" method="post")
+		div(class="w3-section w3-auto" id="TeamsTable")
+			- for(var i = 0; i < teams.length; i++)
+				- let team = teams[i];
+				- let row_number = i;
+				include templates/teaminput
+			//-For next two empty ones, row number has to be i+1 (either 1 or teams.length+1)
+			- let row_number = i + 1;
+			include templates/teaminput
+			- row_number++;
+			include templates/teaminput
+			- row_number++;
+			div(class="w3-col w3-padding" id=`TeamAddOne_${row_number}`)
+				div(class="w3-col m3 l2") &nbsp;
+				div(class="w3-col m3 l2 w3-margin-top")
+					div(class="w3-left")
+						div(class="w3-btn TeamAddRow" onclick="addNewTeamRow()") 
+							span(class="w3-xlarge") +
+		div(class="w3-section w3-auto")
+			button(class="w3-btn theme-submit" type="submit") Submit
+	//-Model that is copied through JS into TeamsTable
+	div(class="w3-hide" id="TeamsTableModel")
+		div(class="w3-col w3-padding" id="TeamRow_Model")
+			div(class="w3-col m3 l2") 
+				div(class="gear-label theme-inline-padding")
+					label Team Number: 
+			div(class="w3-col m3 l2")
+				input(class="w3-input theme-input w3-no-border theme-inline-padding TeamNumberInput" name="TeamNumberInput_Model" id="TeamNumberInput_Model" type="text")
+			div(class="w3-rest w3-margin-left")
+				p(class="theme-inline-padding w3-rest w3-left-align TeamInfo" id="TeamInfo_Model")
+		div(class="w3-col w3-padding" id="TeamAddOne_Model")
+			div(class="w3-col m3 l2") &nbsp;
+			div(class="w3-col m3 l2 w3-margin-top")
+				div(class="w3-left")
+					div(class="w3-btn TeamAddRow") 
+						span(class="w3-xlarge") +
+	//Current row that the user can input a team for.
+	script var currentTeamRow = #{row_number - 1};
+	script.
+		
+		$(".TeamNumberInput").on("change", onChangeTeamNumberInput);
+		
+		function onChangeTeamNumberInput(){
+			
+			var url = '/manage/manualdata/api/team';
+			var data = {"team_number": this.value}
+			//thisTeamRow is the number after the underscore of each id (TeamNumberInput_1, TeamInfo_12, etc)
+			var thisTeamRow = parseInt(this.id.split("_")[1]);
+			
+			console.log(this.value);
+			
+			$.post(url, data, function(response, status){
+				
+				//if 400 error, then there was an invalid request (invalid team num requested)
+				if(response.status == 400){
+					console.log("400 error: " + response);
+				}
+				//if request is successful, proceed
+				if(status == "success"){
+					console.log(response);
+					
+					//Team info element
+					var teamInfo = $(`#TeamInfo_${thisTeamRow}`);
+					
+					//if there are errors, this means there is no team specified
+					if(response.Errors){
+						//Remove success border class from team info
+						teamInfo.removeClass("success");
+						//Add border class to team info
+						teamInfo.addClass("error");
+						//Insert text info
+						teamInfo.text(response.Errors[0].team_id);
+					}
+					else{
+						//If response is a string, then parse it into an object
+						if (typeof response == 'string') {
+							response = JSON.parse(response);
+						}
+						
+						//Remove error border class from team info
+						teamInfo.removeClass("error");
+						//Add success border class to team info
+						teamInfo.addClass("success");
+						//insert text
+						teamInfo.text(`${response.nickname} from ${response.city}, ${response.state_prov}, ${response.country}: ${response.name}`);
+						//after 1 seconds. remove success border class
+						setTimeout(function(){
+							teamInfo.removeClass("success");
+						}, 1001);
+					}
+				}
+			}).fail(function(e){
+				console.log(e);
+				
+				//Team info element
+				var teamInfo = $(`#TeamInfo_${thisTeamRow}`);
+				//Remove success border class from team info
+				teamInfo.removeClass("success");
+				//Add border class to team info
+				teamInfo.addClass("error");
+				//Insert text info
+				teamInfo.text(e.responseText);
+			});
+			
+			//if this is the last or second to last row, call function to add new team row.
+			//We will add a new row whether there is an error or not, to make sure tab works.
+			//This will be executed WITHOUT waiting for the response.
+			if(thisTeamRow == currentTeamRow || thisTeamRow == currentTeamRow - 1){
+				addNewTeamRow();
+			}
+		}
+		
+		function addNewTeamRow(){
+			//iterate currentTeamRow
+			currentTeamRow++;
+			//Remove add button
+			$(`#TeamAddOne_${currentTeamRow}`).remove();
+			$(`#TeamAddOne_${currentTeamRow + 1}`).remove();
+			//Create new row
+			var newTeamRow = $("#TeamRow_Model").clone();
+			newTeamRow.attr("id", `TeamRow_${currentTeamRow}`);
+			//Grab model input to change ID and name
+			var newTeamInput = newTeamRow.find(".TeamNumberInput");
+			newTeamInput.attr("id", `TeamNumberInput_${currentTeamRow}`);
+			newTeamInput.attr("name", `TeamNumberInput_${currentTeamRow}`);
+			//Grab model info to change ID
+			var newTeamInfo = newTeamRow.find(".TeamInfo");
+			newTeamInfo.attr("id", `TeamInfo_${currentTeamRow}`);
+			//add row to table
+			$("#TeamsTable").append(newTeamRow);
+			//focus
+			setTimeout(function(){
+				$(`TeamNumberInput_${currentTeamRow}`).focus();
+			}, 50);
+			//add event listener
+			newTeamInput.on("change", onChangeTeamNumberInput);
+			
+			//add button
+			var newTeamAddOne = $("#TeamAddOne_Model").clone();
+			//set id to one higher than current team row
+			newTeamAddOne.attr("id", `TeamAddOne_${currentTeamRow + 1}`);
+			//add onclick handler
+			newTeamAddOne.click(function(){
+				//remove self
+				$(this).remove();
+				addNewTeamRow();
+			});
+			//append to teamstable
+			$("#TeamsTable").append(newTeamAddOne);
+		}
+		
+		var keyStop = {
+			8: ":not(input:text, textarea, input:file, input:password)", // stop backspace = back
+			13: "input:text, input:password", // stop enter = submit 
+			end: null
+		};
+		
+		//Prevent submit on enter
+		$(document).bind("keydown", function(event){
+			var selector = keyStop[event.which];
+		
+			if(selector !== undefined && $(event.target).is(selector)) {
+				event.preventDefault(); //stop submit event
+				
+				//trigger onchange event manually
+				var element = event.target;
+				if ("createEvent" in document) {
+					var evt = document.createEvent("HTMLEvents");
+					evt.initEvent("change", false, true);
+					element.dispatchEvent(evt);
+				}
+				else
+					element.fireEvent("onchange");
+			}
+			return true;
+		});

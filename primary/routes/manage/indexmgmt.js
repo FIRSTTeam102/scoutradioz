@@ -132,6 +132,8 @@ router.post('/setcurrent', async function(req, res) {
  */
 router.get('/generatedata', async function(req, res) {
 	
+	return res.send("Legacy code! Don't break the site!");
+	
 	var thisFuncName = "adminindex.generatedata[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	

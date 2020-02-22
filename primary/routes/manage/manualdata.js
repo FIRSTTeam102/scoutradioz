@@ -16,10 +16,12 @@ router.all('/*', async (req, res, next) => {
  */
 router.get('/teams', async function(req, res){
 	
+	//return res.send("Code hasn't been updated to 2020 data structure! Sorry!");
+	
 	//Get list of currentteams
 	var teamsArray = await utilities.find("currentteams", {}, {sort: {"team_number": 1}});
 	
-	res.render('./manualinput/teams', {
+	res.render('./manage/manualinput/teams', {
 		title: "Edit List of Teams",
 		teams: teamsArray
 	});
@@ -31,6 +33,8 @@ router.get('/teams', async function(req, res){
  * @redirect /admin
  */
 router.post('/teams', async function(req, res){
+	
+	return res.send("Legacy code! Don't break the site!");
 	
 	logger.debug(req.body);
 	
@@ -168,7 +172,7 @@ router.get('/matchschedule', async function(req, res){
 	
 	var matches = await utilities.find("matches", {"event_key": event_key});
 	
-	res.render('./manualinput/matchschedule', {
+	res.render('./manage/manualinput/matchschedule', {
 		title: "Enter Match Schedule",
 		matches: matches
 	});
@@ -315,7 +319,7 @@ router.get('/matches', async function(req, res) {
 	
 	var matches = await utilities.find("matches", {"event_key": event_key}, {sort: {time: 1}});
 	
-	res.render("./manualinput/matches", {
+	res.render("./manage/manualinput/matches", {
 		title: "Input Match Outcomes",
 		matches: matches,
 	});
