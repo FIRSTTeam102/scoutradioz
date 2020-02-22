@@ -185,7 +185,7 @@ router.get("/teams", async function(req, res) {
 	if(req.query.eventId == "" || req.query.eventId == undefined){
 		
 		// Read all teams from DB
-		var teams = await utilities.find("teams", {}, {sort: {"key": 1}});
+		var teams = await utilities.find("teams", {}, {sort: {"team_number": 1}});
 		//render page w/ all teams			
 		res.render("./manage/teams", {
 			title: "All Teams",
