@@ -3,7 +3,7 @@
 :root{
 	/* FRC's season colors */
 	/* These define the raw color values for FRC's color palette. */
-	--frc-orange: rgb(255, 127, 0);
+	--frc-orange: #FAB74F;
 	--frc-yellow: #FFF041;
 	--frc-cyan: #00C0DD;
 	--frc-blue: #005CB8;
@@ -14,19 +14,21 @@
 	/* universal colors */
 	--white: #fff;
 	--light: #eee;
-	--dark: #444;
+	--grey: #888;
+	--dark: #454b4e;
 	--black: #000;
+	/*--gearheads-orange: #ff7f00;*/
 	
 	/* 2020 theme colors */
 	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
-	--primary: var(--frc-blue2);
-	--secondary: var(--frc-darkblue);
+	--primary: var(--frc-orange);
+	--secondary: var(--frc-blue);
 	--trim: var(--frc-cyan);
 	--highlight: var(--frc-yellow);
 	
 	--text-primary: var(--white);
 	--text-secondary: var(--light); /* Currently unused */
-	--button-primary: var(--frc-blue2);
+	--button-primary: var(--frc-orange);
 	--button-secondary: var(--frc-yellow);
 	
 	/* --background: #333; */
@@ -67,7 +69,7 @@
 body{
 	--bottom-gradient-radius: 900px;
 	background: radial-gradient(circle var(--bottom-gradient-radius) at bottom, 
-	rgba(29,107,137,1) 0%, rgba(0,0,0,0) 100%);
+	rgb(44, 134, 170) 0%, rgba(29,107,137,1) 10%, rgba(0,0,0,0) 100%);
 	
 	display: flex;
 	/*flex-direction: column;*/
@@ -179,11 +181,11 @@ input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
 /* For spacers */
 .theme-spacer{
 	border-collapse: collapse;
-	border-bottom: 2px solid rgba(0,0,0,0.25);
+	border-bottom: 2px solid rgba(255, 255, 255, 0.25);
 }
 hr{
 	border: 0;
-	border-top: 2px solid rgba(0,0,0,0.25);
+	border-top: 2px solid rgba(255, 255, 255, 0.25);
 	margin: 20px 0;
 }
 
