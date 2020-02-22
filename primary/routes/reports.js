@@ -560,10 +560,10 @@ router.get("/teammatchintel*", async function(req, res){
 	// Match data layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	//var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
-	var cookie_key = org_key + "_" + event_year + "_cols";
-	var colCookie = req.cookies[cookie_key];
-	var layout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	// var cookie_key = org_key + "_" + event_year + "_cols";
+	// var colCookie = req.cookies[cookie_key];
+	// var layout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var scoringDataFind = await utilities.find("matchscouting", {"org_key": org_key, "match_team_key": match_team_key}, {});
