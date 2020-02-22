@@ -365,8 +365,9 @@ router.get("/teamintelhistory", async function(req, res){
 	}
 	logger.debug(thisFuncName + 'teamKey=' + teamKey);
 	
-	// need the current year to see data
-	var year = (new Date()).getFullYear();
+	// 2020-02-21, M.O'C: Fixed to be event year
+	//var year = (new Date()).getFullYear();
+	var year = req.event.year;
 	// need timestamp at 00:00 on Jan 1 for match querying - looking for matches where time > Jan 1. {year}
 	var yearString = year + '-01-01T00:00:00';
 	var yearInt = new Date(yearString).getTime() / 1000;
@@ -500,7 +501,8 @@ router.get("/teamintelhistory", async function(req, res){
 		team: team,
 		scorelayout: scorelayout,
 		aggdata: aggTable,
-		matches: matches
+		matches: matches,
+		year: year
 	});
 });
 
