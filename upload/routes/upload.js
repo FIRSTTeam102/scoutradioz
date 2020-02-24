@@ -3,6 +3,7 @@ const _ = require('lodash');
 const multer = require('multer');
 const logger = require('log4js').getLogger();
 const S3Storage = require('../helpers/S3Storage');
+const crypto = require('crypto');
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
@@ -13,9 +14,41 @@ var storage = S3Storage({
     s3: s3,
     bucket: process.env.S3_BUCKET,
     contentType: S3Storage.AUTO_CONTENT_TYPE,
-    key: function (req, file, cb) {
+	
+	key: function (req, file, cb) {
 		const thisFuncName = 'S3Storage.opts.getKey: ';
-				
+		
+		//const bytes = crypto.pseudoRandomBytes(32);
+		//const checksum = crypto.createHash('MD5').update(bytes).digest('hex');
+		
+		const fileKey = req.query.key;
+		const year = req.query.year;
+		const orgKey = req.query.org_key;
+		
+		console.log(req.query)
+		
+		if( fileKey && year && orgKey ){
+			
+			const filename = `${year}_${fileKey}`;
+			
+			const tier = process.env.TIER;
+			const baseKey = process.env.S3_BASE_KEY;
+			
+			const key = `${tier}/${baseKey}/${orgKey}/${filename}`;
+			
+			logger.info(`${thisFuncName} s3 key=${key}`);
+			
+			cb(null, key);
+			
+		}
+		//throw if key information is not specified in request
+		else{
+			
+			logger.error(`${thisFuncName} File key and year are not specified.`)
+			
+			cb(new Error("File key, year, and org key need to be specified."));
+		}
+		/*				
 		const fileKey = req.query.key;
 		const year = req.query.year;
 		
@@ -39,9 +72,8 @@ var storage = S3Storage({
 			logger.error(`${thisFuncName} File key and year are not specified.`)
 			
 			cb(new Error("File key and year need to be specified."));
-		}
-		
-	},
+		}*/	
+	},	
 	acl: "public-read",
 	
 	square: false,
@@ -115,6 +147,11 @@ router.post('/image', upload.single("image"), async (req, res, next) => {
 				locations.push(file.location);
 			}
 		}
+	}
+	
+	if (req.file[0]) {
+		var mainFile = req.file[0];
+		
 	}
 	
 	res.status(200).send(locations);

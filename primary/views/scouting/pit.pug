@@ -11,16 +11,16 @@ block content
 			position: absolute;
 			z-index: -1;
 		}
-	script(src=`${fileRoot}/js/script-pitscouting.js?v=7`)
+	script(src=`${fileRoot}/js/script-pitscouting.js?v=8`)
 	h3= key.replace('frc','Team #')
 	p
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img#imgMain(src=`${fileRoot}/uploads/responsive/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
+		img#imgMain(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
 	br
 	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img#imgA(src=`${fileRoot}/uploads/responsive/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img#imgB(src=`${fileRoot}/uploads/responsive/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img#imgC(src=`${fileRoot}/uploads/responsive/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img#imgA(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img#imgB(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+		img#imgC(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
 	form#imageform(action="javascript:void(0)" method="post")
 		//-Image inputs
 		input#imageMain(type="file" class="image-input" key=key name="imageMain")
@@ -30,6 +30,7 @@ block content
 		//-Hidden inputs that contain uploadURL (upload.scoutradioz.com/app/image) and event year
 		input(type="hidden" name="uploadURL" value=uploadURL)
 		input(type="hidden" name="year" value=event_year)
+		input(type="hidden" name="org_key" value=user.org_key)
 		//-The buttons are actually labels for each image input
 		div(class="w3-container w3-padding")
 			label#uploadMain(for="imageMain" class="w3-btn theme-submit") Upload Main Photo

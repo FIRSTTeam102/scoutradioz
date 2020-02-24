@@ -27,8 +27,8 @@ block content
 							a(href=`/reports/teamintel?team=${team.key}`)= team.nickname
 					td
 						if (team.hasPicture)
-							a(href=`${fileRoot}/uploads/responsive/${event_year}_${team.key}_lg.jpg`)
-								img(src=`${fileRoot}/uploads/responsive/${event_year}_${team.key}_sm.jpg` alt="[No image available]" class="w3-content" style="max-height:350px;")
+							a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_lg.jpg`)
+								img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_sm.jpg` alt="[No image available]" class="w3-content" style="max-height:350px;")
 					if (team.hasPicture)
 						td(class="w3-text-light-gray w3-center align") #{team.city}
 					else

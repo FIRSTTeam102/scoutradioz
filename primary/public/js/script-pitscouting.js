@@ -61,9 +61,10 @@ async function submitImage(ev){
 	//formulate the url that we send a request to
 	var key = $(imageInput).attr("key");
 	var year = $("input[name=year]").val();
+	var orgKey = $("input[name=org_key]").val();
 	var uploadURLBase = $("input[name=uploadURL]").val();
 	
-	var uploadURL = `${uploadURLBase}?key=${key}&year=${year}`;
+	var uploadURL = `${uploadURLBase}?key=${key}&year=${year}&org_key=${orgKey}`;
 	
 	//create FormData object to submit
 	var data = new FormData();
@@ -106,6 +107,7 @@ async function submitImage(ev){
 					console.log("SUCCESS : ", data);
 					$(button).removeClass("w3-disabled");
 					
+					uploadingCard.remove(0);
 					NotificationCard.good("Photo successfully uploaded.")
 					
 					//Refresh image href.
