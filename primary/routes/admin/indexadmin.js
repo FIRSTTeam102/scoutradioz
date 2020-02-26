@@ -232,6 +232,7 @@ router.get('/recalcderived', async function(req, res) {
 	// logger.debug(thisFuncName + "scored[0].data[matchLayout[0].operands[2]]=" + JSON.stringify(scored[0].data[matchLayout[0].operands[2]]));
 
 	// cycle through each scored match & [re]calculate derived metrics - push into new array 'updatedScored'
+	// [SEE ALSO SCOUTING.JS]
 	var updatedScored = [];
 	var debugCountdown = 0;
 	for (var i in scored) {
