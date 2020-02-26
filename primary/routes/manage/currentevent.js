@@ -96,10 +96,7 @@ router.post("/resetmatches", async function(req, res) {
 	// reread the data & render
 	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 	
-	res.render("./manage/currentmatches", {
-		title: "Matches",
-		"matches": matches
-	});
+	res.redirect('/manage/currentevent/matches?alert=Reset matches successfully.');
 });
 
 router.post("/updatematch", async function(req, res) {
@@ -112,19 +109,7 @@ router.post("/updatematch", async function(req, res) {
 	var event_year = req.event.year;
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
-
-	// var matchCol = db.get("matches");
-	// var rankCol = db.get("currentrankings");
-	// // 2019-03-21, M.O'C: Adding in aggregation of scoring data to generate & save min/max ranges for all scoring attributes
-	// var scoreCol = db.get("scoringlayout");
-	// var aggCol = db.get('scoringdata');
-	// // And INTRODUCING... The 'currentaggranges' collection
-	// var currentAggCol = db.get("currentaggranges");
-
-	// REST client for accessing TBA
-	// var client = req.client;
-	// var args = req.tbaRequestArgs;
-	
+		
 	var eventId = req.event.key;
 	
 	// While we're here - Get the latest ranking (& OPR data...? maybe not?)
@@ -346,10 +331,7 @@ router.post("/updatematches", async function(req, res) {
 		logger.debug(thisFuncName + "Whoops, there was an error!")
 		logger.debug(thisFuncName + "data=" + data);
 		
-		res.render('./manage/admin', { 
-			title: 'Admin pages',
-			current: eventId
-		});
+		res.redirect('/manage/currentevent/matches?alert=An error occurred. arrayLength==null.&alertType=error');
 	}
 	else
 	{
@@ -360,14 +342,12 @@ router.post("/updatematches", async function(req, res) {
 		// Now, insert the new data
 		await utilities.insert("matches", array);
 		// Then read it back in order
-		var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
+		//var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 			
 		// call out to aggrange recalculator
 		await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, eventId);
-
-		res.render("./manage/currentmatches", {
-			"matches": matches
-		});
+		
+		res.redirect('/manage/currentevent/matches');
 	}
 });
 
