@@ -112,45 +112,17 @@ router.get('/home', async function(req, res) {
 	var thisFuncName = "index.home[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	if (!req.user) res.redirect('/');
-
-	/* 2020-2-12 JL: Moved "get list of teams" code into usefunctions.js for every route to use
-	
-	// for later querying by event_key
-	var event_key = req.event.key;
-	
-	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	//var teams = await utilities.find("currentteams", {}, {sort:{team_number: 1}});
-	var thisEventData = await utilities.find("events", {"key": event_key});
-	var thisEvent = thisEventData[0];
-	var teams = [];
-	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
-	{
-
-		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
-		teams = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+	if (req.body.redirectURL || req.query.redirectURL) {
+			
+		logger.debug(`${thisFuncName} redirect: ${req.body.redirectURL || req.query.redirectURL}`);
+		res.redirect(req.body.redirectURL || req.query.redirectURL);
 	}
-		
-	//If no current teams, then render page without team list.
-	if(!teams || !teams[0]){
-		logger.debug("No teams listed yet");
-		return res.render('./home', { 
+	else if (!req.user) res.redirect('/');
+	else {
+		res.render('./home', { 
 			title: 'Home',
 		});
 	}
-	
-	//get list of just team numbers
-	var teamNumbers = [];
-	
-	for(var i in teams){
-		teamNumbers[i] = teams[i].team_number;
-	}
-	*/
-	//Render page w/ team list
-	res.render('./home', { 
-		title: 'Home',
-		//teamList: teamNumbers,
-	});
 });
 
 router.get('/throwanerror', async function(req, res){
