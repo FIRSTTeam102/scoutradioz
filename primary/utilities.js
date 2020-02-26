@@ -457,7 +457,8 @@ utilities.requestTheBlueAlliance = async function(url){
 	logger.info(`Sending request to TheBlueAlliance at ${url}`);
 	
 	//Get TBA key
-	var tbaKey = await utilities.getTBAKey();
+	var headers = await utilities.getTBAKey();
+	headers.t = Date.now();
 	
 	//Create promise first
 	var thisPromise = new Promise(function(resolve, reject){
@@ -466,7 +467,7 @@ utilities.requestTheBlueAlliance = async function(url){
 		var client = new Client();
 		
 		//Inside promise function, perform client request
-		client.get(requestURL, tbaKey, function(tbaData, response){
+		client.get(requestURL, headers, function(tbaData, response){
 			
 			//If newline characters are not deleted, then CloudWatch logs get spammed
 			let str = tbaData.toString().replace(/\n/g, "");
