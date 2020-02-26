@@ -35,10 +35,6 @@ if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enable
 //Create app
 const app = express();
 
-//Route webhook express app first, to reduce load and to have custom body-parser config
-const webhook = require('./routes/webhook');
-app.use('/webhook', webhook);
-
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -52,6 +48,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 //Session
 console.log("app.js: app.use(session({... - START");
+//var sessionDb = utilities.getDB();
 app.use(session({
     secret: 'marcus night',
     saveUninitialized: false, // don't create session until something stored
@@ -59,7 +56,8 @@ app.use(session({
 	
 	store: new MongoStore({
 		//Use same URL that utilities uses for database
-        url: utilities.getDBurl(),
+		url: utilities.getDBurl(),
+		//client: sessionDb,
         ttl: 3 * 24 * 60 * 60, // Time-to-live, in seconds.
 		autoRemove: 'interval',
 		autoRemoveInterval: 10, // In minutes. Default
@@ -103,6 +101,10 @@ app.use(usefunctions.authenticate);
 //sets view engine vars for user
 //IMPORTANT: Must be called last, because it may rely on other useFunctions data
 app.use(usefunctions.setViewVariables);
+
+//Route webhook express app first, to reduce load and to have custom body-parser config
+const webhook = require('./routes/webhook');
+app.use('/webhook', webhook);
 
 //USER ROUTES
 var index = require('./routes/index');

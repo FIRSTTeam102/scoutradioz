@@ -133,7 +133,7 @@ router.post('/match/submit', async function(req, res) {
 	}
 	logger.debug(thisFuncName + "matchData(UPDATED:1)=" + JSON.stringify(matchData));
 
-	// Calculate derived metrics
+	// Calculate derived metrics [SEE ALSO INDEXADMIN.JS]
 	// read in the 'derived' metrics from the matchscouting layout, use to process data
 	var derivedLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, {sort: {"order": 1}})
 
