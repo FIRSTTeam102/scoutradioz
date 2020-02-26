@@ -276,7 +276,7 @@ async function handleMatchScore( data ) {
 async function handleStartingCompLevel( data ) {
 	var thisFuncName = "webhook.handleStartingCompLevel(): ";
 	logger.info(thisFuncName + "ENTER (sync rankings only) data=" + JSON.stringify(data));
-	var event_key = data.event_key;
+	var event_key = data.event_key; // <-- Comment this out & send 'starting_comp_level' webhooks from TBA to cause errors
 	
 	// Synchronize the rankings
 	await syncRankings(event_key);
