@@ -452,13 +452,12 @@ utilities.insert = async function(collection, elements){
 utilities.requestTheBlueAlliance = async function(url){
 	
 	//Setup our request URL, including specified URL ending parameter
-	var requestURL = "https://www.thebluealliance.com/api/v3/" + url;
+	var requestURL = "https://www.thebluealliance.com/api/v3/" + url + `?t=${Date.now()}`;
 	
 	logger.info(`Sending request to TheBlueAlliance at ${url}`);
 	
 	//Get TBA key
 	var headers = await utilities.getTBAKey();
-	headers.t = Date.now();
 	
 	//Create promise first
 	var thisPromise = new Promise(function(resolve, reject){
