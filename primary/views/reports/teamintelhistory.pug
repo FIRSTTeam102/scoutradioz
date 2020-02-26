@@ -1,242 +1,93 @@
 extends ../layout
 
 block content
-	h2(class="theme-text")= team.key.replace('frc','Team ')
-	-// 2020-02-21, M.O'C: Switch to passing the year in from the route
-	-// var year = (new Date()).getFullYear();
-	p
-	h2 #{team.nickname}
-	if (ranking)
-		h4(class="theme-text") Currently ranked ##{ranking.rank} </br> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
-	- var country = '';
-	- if (team.country != 'USA') country = team.country;
-	h4(class="theme-text" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
-	h4(class="theme-text" style="font-style:italic") #{team.name}
-	p
-
-	script.
-		/*
-			function showHide(id) {
-				var x = document.getElementById(id + 'Section');
+	div(class="w3-auto")
+		h2 Team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
+		if (ranking)
+			h4 Currently ranked ##{ranking.rank} <br/> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
+		- var country = '';
+		- if (team.country != 'USA') country = team.country;
+		h4(class="theme-text" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
+		h4(class="theme-text" style="font-style:italic") #{team.name}
+		p
+		script.
+			function toggle(sectionId, elem){
+				//hide/show
+				var x = document.getElementById(sectionId);
 				if (x.className.indexOf("w3-show") == -1)
 					x.className += " w3-show";
 				else
 					x.className = x.className.replace(" w3-show", "");
-					
-				var y = document.getElementById(id + 'Button');
-				if (y.textContent.indexOf("▼ Show") == -1)
-					y.textContent = y.textContent.replace("▲ Hide", "▼ Show");
+				
+				//change text thingy
+				var caret = elem.firstElementChild;//is span w/ caret
+				var text = caret.nextElementSibling; //is main text
+				
+				text.innerText = (caret.innerText[0] == "▼") ? "Hide " : "Show ";
+				caret.innerText = (caret.innerText[0] == "▼") ? "▲\xa0" : "▼\xa0";
+				
+			}
+		div(class="w3-padding-small")
+			button#StatisticsButton(onClick="toggle('StatisticsSection', this)" class="w3-block w3-btn w3-left-align w3-border-gray w3-border-bottom rounded-small") 
+				span(class="w3-left") &#9660;&nbsp;
+				span Show 
+				span Statistics Over Year #{year}
+			div#StatisticsSection(class="w3-container w3-hide")
+				if (aggdata)
+					h2(class="theme-text") Historical statistics for #{team.key.replace('frc','team ')}
+					table(class="w3-table")
+						tr
+							th Metric
+							th(class="w3-right-align") Min
+							th(class="w3-right-align") Avg
+							th(class="w3-right-align") Var
+							th(class="w3-right-align") Max
+						each agg in aggdata
+							tr
+								- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+								td(class="w3-text-light-gray w3-small")= result2
+								- var minCol = 'w3-right-align w3-text-white'
+								- if (agg.min == 0) minCol = 'w3-right-align w3-text-gray'
+								td(class=`${minCol}`)= agg.min
+								- var avgCol = 'w3-right-align w3-text-white'
+								- if (agg.avg == 0) avgCol = 'w3-right-align w3-text-gray'
+								td(class=`${avgCol}`)= agg.avg
+								- var varCol = 'w3-right-align w3-text-white'
+								- if (agg.var == 0) varCol = 'w3-right-align w3-text-gray'
+								td(class=`${varCol}`)= agg.var
+								- var maxCol = 'w3-right-align w3-text-white'
+								- if (agg.max == 0) maxCol = 'w3-right-align w3-text-gray'
+								td(class=`${maxCol}`)= agg.max
+		div(class="w3-padding-small")
+			button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" class="w3-block w3-btn w3-left-align w3-border-gray w3-border-bottom rounded-small") 
+				span(class="w3-left") &#9660;&nbsp;
+				span Show 
+				span All Matches From Year #{year}
+			div#PreviousMatchesSection(class="w3-container w3-hide")
+				style.
+					.thick-border{
+						border-width: 3px!important;
+						margin-top: -2px;
+						border-radius: 9px;
+						border-color: #dfe1e9!important;
+					}
+				h2(class="theme-text") ALL previous matches
+				
+				if (matches && matches.length > 0)		
+					h6 <i>Click team number for match scouting details</i>
+					h6 <i>Click match button for overall alliance performances</i>
+					- var thisEventKey = '';
+					each match in matches
+						if (match.event_key != thisEventKey)
+							- thisEventKey = match.event_key;
+							h4(class="theme-text") #{thisEventKey}
+						include templates/completedMatch
+						if (match.scoringdata && user)
+							each element in scorelayout
+								case element.type
+									when "textblock"
+										if (match.scoringdata[element.id])
+											h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
+						hr 
 				else
-					y.textContent = y.textContent.replace("▼ Show", "▲ Hide");
-			}
-		*/
-		function toggle(sectionId, elem){
-			//hide/show
-			var x = document.getElementById(sectionId);
-			if (x.className.indexOf("w3-show") == -1)
-				x.className += " w3-show";
-			else
-				x.className = x.className.replace(" w3-show", "");
-			
-			//change text thingy
-			var caret = elem.firstElementChild;//is span w/ caret
-			var text = caret.nextElementSibling; //is main text
-			
-			text.innerText = (caret.innerText[0] == "▼") ? "Hide " : "Show ";
-			caret.innerText = (caret.innerText[0] == "▼") ? "▲\xa0" : "▼\xa0";
-			
-		}
-		
-	button#StatisticsButton(onClick="toggle('StatisticsSection', this)" class="w3-block w3-btn  w3-left-align w3-border-gray w3-border-bottom w3-large") 
-		span(class="w3-left") &#9660;&nbsp;
-		span Show 
-		span Statistics Over Year #{year}
-	div#StatisticsSection(class="w3-container w3-hide")
-		if (aggdata)
-			h2(class="theme-text") Historical statistics for #{team.key.replace('frc','team ')}
-			table(class="w3-table")
-				tr
-					th Metric
-					th(class="w3-right-align") Min
-					th(class="w3-right-align") Avg
-					th(class="w3-right-align") Var
-					th(class="w3-right-align") Max
-				each agg in aggdata
-					tr
-						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-						td(class="w3-text-light-gray w3-small")= result2
-						- var minCol = 'w3-right-align w3-text-white'
-						- if (agg.min == 0) minCol = 'w3-right-align w3-text-gray'
-						td(class=`${minCol}`)= agg.min
-						- var avgCol = 'w3-right-align w3-text-white'
-						- if (agg.avg == 0) avgCol = 'w3-right-align w3-text-gray'
-						td(class=`${avgCol}`)= agg.avg
-						- var varCol = 'w3-right-align w3-text-white'
-						- if (agg.var == 0) varCol = 'w3-right-align w3-text-gray'
-						td(class=`${varCol}`)= agg.var
-						- var maxCol = 'w3-right-align w3-text-white'
-						- if (agg.max == 0) maxCol = 'w3-right-align w3-text-gray'
-						td(class=`${maxCol}`)= agg.max
-
-	p
-	button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" class="w3-block w3-btn w3-left-align w3-border-gray w3-border-bottom") 
-		span(class="w3-left") &#9660;&nbsp;
-		span Show 
-		span All Matches From Year #{year}
-	div#PreviousMatchesSection(class="w3-container w3-hide")
-		style.
-			.thick-border{
-				border-width: 3px!important;
-				margin-top: -2px;
-				border-radius: 9px;
-				border-color: #dfe1e9!important;
-			}
-		h2(class="theme-text") ALL previous matches
-		
-		if (matches && matches.length > 0)		
-			h6 <i>Click team number for match scouting details</i>
-			h6 <i>Click match button for overall alliance performances</i>
-			- var thisEventKey = '';
-			each match in matches
-				if (match.event_key != thisEventKey)
-					- thisEventKey = match.event_key;
-					h4(class="theme-text") #{thisEventKey}
-				include templates/completedMatch
-				if (match.scoringdata && user)
-					each element in scorelayout
-						case element.type
-							when "textblock"
-								if (match.scoringdata[element.id])
-									h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
-				p(class="theme-spacer")
-				//-hr
-				//-div(class="w3-row")
-					div(class="w3-col s12 m12 l2")
-						a(href=`/reports/matchintel?key=${match.key}`) 
-							div(class="theme-dim theme-hover-white w3-btn w3-block w3-border")
-								- var matchPrefix = "";
-								- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-								- var outcome = "Tie!";
-								- if (match.winning_alliance == 'red') outcome = "Red won";
-								- if (match.winning_alliance == 'blue') outcome = "Blue won";
-								span #{match.event_key.substring(4).toUpperCase()} #{matchPrefix.toUpperCase()}Match #{match.match_number}: #{outcome}
-					div(class="w3-col s12 m12 l1") &nbsp;
-					div(class="w3-col s8 m3 l2")
-						div(class="w3-col w3-border alliance-blue previousmatches-container")
-							each teamkey in match.alliances.blue.team_keys
-								- var teamStyleBlue = "height: 36px;";
-								- if (teamkey == team.key) teamStyleBlue += "font-weight:800;";
-								a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-									div(class="w3-btn w3-block previousmatches-team-container alliance-hover-blue" style=`${teamStyleBlue}`)
-										span(class="previousmatches-team")= teamkey.substring(3)
-					div(class="w3-col s4 m2")
-						- var divClassBlue = 'w3-btn w3-block w3-border previousmatches-container ';
-						- if (match.winning_alliance == 'blue') divClassBlue += 'w3-white';
-						- else divClassBlue += 'theme-dim';
-						div(class=`${divClassBlue}`)
-							if (match.alliances.blue.score > -1)
-								span Score:
-								br
-								span= match.alliances.blue.score
-								br
-								- var blueRPs = ''
-								- if (match.score_breakdown.blue.completeRocketRankingPoint) blueRPs = 'CR '
-								- if (match.score_breakdown.blue.habDockingRankingPoint) blueRPs += 'HD'
-								span= blueRPs
-							else
-								span &nbsp;
-					div(class="w3-col m2 l1") &nbsp;
-					div(class="w3-col s8 m3 l2")
-						div(class="w3-col w3-border alliance-red previousmatches-container")
-							each teamkey in match.alliances.red.team_keys
-								- var teamStyleRed = "height: 36px;";
-								- if (teamkey == team.key) teamStyleRed += "font-weight:800";
-								a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-									div(class="w3-btn w3-block previousmatches-team-container alliance-hover-red" style=`${teamStyleRed}`)
-										span(class="previousmatches-team")= teamkey.substring(3)
-					div(class="w3-col s4 m2 l2")
-						- var divClassRed = 'w3-btn w3-block w3-border previousmatches-container ';
-						- if (match.winning_alliance == 'red') divClassRed += 'w3-white';
-						- else divClassRed += 'theme-dim';
-						div(class=`${divClassRed}`)
-							if (match.alliances.red.score > -1)
-								span Score:
-								br
-								span= match.alliances.red.score
-								br
-								- var redRPs = ''
-								- if (match.score_breakdown.red.completeRocketRankingPoint) redRPs = 'CR '
-								- if (match.score_breakdown.red.habDockingRankingPoint) redRPs += 'HD'
-								span= redRPs
-							else
-								span &nbsp;
-			//-each match in matches
-				hr
-				div(class="w3-row")
-					div(class="w3-col s12 m2")
-						div(class="w3-dark-grey theme-hover-white w3-btn w3-block w3-border")
-							- var matchPrefix = "";
-							- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-							- var outcome = "Tie!";
-							- if (match.winning_alliance == 'red') outcome = "Red won";
-							- if (match.winning_alliance == 'blue') outcome = "Blue won";
-							a(href=`/reports/matchintel?key=${match.key}`) 
-								span #{match.event_key.substring(4).toUpperCase()} #{matchPrefix.toUpperCase()}Match #{match.match_number}: #{outcome}
-					div(class="w3-col m1") &nbsp;
-					div(class="w3-col s8 m2")
-						div(class="w3-col w3-border")
-							each teamkey in match.alliances.blue.team_keys
-								- var teamStyleBlue = "";
-								- if (teamkey == team.key) teamStyleBlue = "font-weight:800";
-								a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-									div(class="gear-blue theme-hover-white w3-btn w3-block" style=`${teamStyleBlue}`)
-										span= teamkey.substring(3)
-					div(class="w3-col s4 m2")
-						- var divClassBlue = 'w3-dark-grey w3-btn w3-block w3-border';
-						- if (match.winning_alliance == 'blue') divClassBlue = 'w3-white w3-btn w3-block w3-border';
-						div(class=`${divClassBlue}` style="height:110px")
-							if (match.alliances.blue.score > -1)
-								span Score:
-								br
-								span= match.alliances.blue.score
-								br
-								- var blueRPs = ''
-								- if (match.score_breakdown.blue.completeRocketRankingPoint) blueRPs = 'CR '
-								- if (match.score_breakdown.blue.habDockingRankingPoint) blueRPs += 'HD'
-								span= blueRPs
-							else
-								span &nbsp;
-					div(class="w3-col m1") &nbsp;
-					div(class="w3-col s8 m2")
-						div(class="w3-col w3-border")
-							each teamkey in match.alliances.red.team_keys
-								- var teamStyleRed = "";
-								- if (teamkey == team.key) teamStyleRed = "font-weight:800";
-								a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-									div(class="theme-red theme-hover-white w3-btn w3-block" style=`${teamStyleRed}`)
-										span= teamkey.substring(3)
-					div(class="w3-col s4 m2")
-						- var divClassRed = 'w3-dark-grey w3-btn w3-block w3-border';
-						- if (match.winning_alliance == 'red') divClassRed = 'w3-white w3-btn w3-block w3-border';
-						div(class=`${divClassRed}` style="height:110px")
-							if (match.alliances.red.score > -1)
-								span Score:
-								br
-								span= match.alliances.red.score
-								br
-								- var redRPs = ''
-								- if (match.score_breakdown.red.completeRocketRankingPoint) redRPs = 'CR '
-								- if (match.score_breakdown.red.habDockingRankingPoint) redRPs += 'HD'
-								span= redRPs
-							else
-								span &nbsp;
-				if (match.scoringdata)
-					each element in scorelayout
-						case element.type
-							when "textblock"
-								if (match.scoringdata[element.id])
-									h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
-		else
-			h6 No previous matches yet - check back later
-
-					
+					h6 No previous matches yet - check back later					

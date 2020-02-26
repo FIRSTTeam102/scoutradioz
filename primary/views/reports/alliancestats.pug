@@ -5,6 +5,10 @@ block content
 		html{
 			overflow: visible;
 		}
+		#content{
+			/*Reduce page's padding*/
+			padding: 4px 8px!important;
+		}
 	include templates/heatmap
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
@@ -22,7 +26,7 @@ block content
 	label(for="showMax")  Maximums 
 	p
 
-	div#avgSect
+	div#avgSect(class="w3-auto")
 		if (avgdata)
 			table(class="w3-table")
 				tr
@@ -47,7 +51,7 @@ block content
 								td(class=`${valueCol}`)= agg[team]
 			p
 
-	div#maxSect
+	div#maxSect(class="w3-auto")
 		if (maxdata)
 			table(class="w3-table")
 				tr

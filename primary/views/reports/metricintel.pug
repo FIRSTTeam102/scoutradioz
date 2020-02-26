@@ -12,43 +12,44 @@ block content
 	h6 <i>Click on a team number to jump to that team's intel page</i>
 	
 	if (aggdata)
-		div(style="float: left")
-			table(class="w3-table")
-				tr
-					th(class="w3-right-align") <i>R</i>
-				each agg, i in aggdata
+		div(class="w3-auto w3-content")
+			div(class="w3-show-inline-block")
+				table(class="w3-table")
 					tr
-						td(class="w3-right-align")= i+1
-		div(style="float: right")
-			table(class="w3-table" id="metricTable")
-				tr
-					th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") Team
-					th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')")  Min
-					th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')")  Avg
-					th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(4)')")  Var
-					th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(5)')")  Max
-				each agg, i in aggdata
+						th(class="w3-right-align") <i>R</i>
+					each agg, i in aggdata
+						tr
+							td(class="w3-right-align")= i+1
+			div(class="w3-show-inline-block")
+				table(class="w3-table" id="metricTable")
 					tr
-						td(class="w3-text-light-gray w3-center")
-							a(href=`/reports/teamintel?team=${agg._id}`)= agg._id.substring(3)
-						- var minCol = 'w3-right-align w3-text-white'
-						- if (agg[key+"MIN"] == 0) minCol = 'w3-right-align w3-text-gray'
-						- var avgCol = 'w3-right-align w3-text-white'
-						- if (agg[key+"AVG"] == 0) avgCol = 'w3-right-align w3-text-gray'
-						- var varCol = 'w3-right-align w3-text-white'
-						- if (agg[key+"VAR"] == 0) varCol = 'w3-right-align w3-text-gray'
-						- var maxCol = 'w3-right-align w3-text-white'
-						- if (agg[key+"MAX"] == 0) maxCol = 'w3-right-align w3-text-gray'
-						if (aggRangeMap[key])
-							td(class=`${minCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].MINmin, aggRangeMap[key].MINmax, agg[key+"MIN"])},${getValG(aggRangeMap[key].MINmin, aggRangeMap[key].MINmax, agg[key+"MIN"])},${getValB(aggRangeMap[key].MINmin, aggRangeMap[key].MINmax, agg[key+"MIN"])})`)= agg[key+"MIN"]
-							td(class=`${avgCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].AVGmin, aggRangeMap[key].AVGmax, agg[key+"AVG"])},${getValG(aggRangeMap[key].AVGmin, aggRangeMap[key].AVGmax, agg[key+"AVG"])},${getValB(aggRangeMap[key].AVGmin, aggRangeMap[key].AVGmax, agg[key+"AVG"])})`)= agg[key+"AVG"]
-							td(class=`${avgCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].VARmin, aggRangeMap[key].VARmax, agg[key+"VAR"])},${getValG(aggRangeMap[key].VARmin, aggRangeMap[key].VARmax, agg[key+"VAR"])},${getValB(aggRangeMap[key].VARmin, aggRangeMap[key].VARmax, agg[key+"VAR"])})`)= agg[key+"VAR"]
-							td(class=`${maxCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].MAXmin, aggRangeMap[key].MAXmax, agg[key+"MAX"])},${getValG(aggRangeMap[key].MAXmin, aggRangeMap[key].MAXmax, agg[key+"MAX"])},${getValB(aggRangeMap[key].MAXmin, aggRangeMap[key].MAXmax, agg[key+"MAX"])})`)= agg[key+"MAX"]
-						else
-							td(class=`${minCol}`)= agg[key+"MIN"]
-							td(class=`${avgCol}`)= agg[key+"AVG"]
-							td(class=`${avgCol}`)= agg[key+"VAR"]
-							td(class=`${maxCol}`)= agg[key+"MAX"]
+						th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") Team
+						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')")  Min
+						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')")  Avg
+						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(4)')")  Var
+						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(5)')")  Max
+					each agg, i in aggdata
+						tr
+							td(class="w3-text-light-gray w3-center")
+								a(href=`/reports/teamintel?team=${agg._id}`)= agg._id.substring(3)
+							- var minCol = 'w3-right-align w3-text-white'
+							- if (agg[key+"MIN"] == 0) minCol = 'w3-right-align w3-text-gray'
+							- var avgCol = 'w3-right-align w3-text-white'
+							- if (agg[key+"AVG"] == 0) avgCol = 'w3-right-align w3-text-gray'
+							- var varCol = 'w3-right-align w3-text-white'
+							- if (agg[key+"VAR"] == 0) varCol = 'w3-right-align w3-text-gray'
+							- var maxCol = 'w3-right-align w3-text-white'
+							- if (agg[key+"MAX"] == 0) maxCol = 'w3-right-align w3-text-gray'
+							if (aggRangeMap[key])
+								td(class=`${minCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].MINmin, aggRangeMap[key].MINmax, agg[key+"MIN"])},${getValG(aggRangeMap[key].MINmin, aggRangeMap[key].MINmax, agg[key+"MIN"])},${getValB(aggRangeMap[key].MINmin, aggRangeMap[key].MINmax, agg[key+"MIN"])})`)= agg[key+"MIN"]
+								td(class=`${avgCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].AVGmin, aggRangeMap[key].AVGmax, agg[key+"AVG"])},${getValG(aggRangeMap[key].AVGmin, aggRangeMap[key].AVGmax, agg[key+"AVG"])},${getValB(aggRangeMap[key].AVGmin, aggRangeMap[key].AVGmax, agg[key+"AVG"])})`)= agg[key+"AVG"]
+								td(class=`${avgCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].VARmin, aggRangeMap[key].VARmax, agg[key+"VAR"])},${getValG(aggRangeMap[key].VARmin, aggRangeMap[key].VARmax, agg[key+"VAR"])},${getValB(aggRangeMap[key].VARmin, aggRangeMap[key].VARmax, agg[key+"VAR"])})`)= agg[key+"VAR"]
+								td(class=`${maxCol}` style=`background-color: rgb(${getValR(aggRangeMap[key].MAXmin, aggRangeMap[key].MAXmax, agg[key+"MAX"])},${getValG(aggRangeMap[key].MAXmin, aggRangeMap[key].MAXmax, agg[key+"MAX"])},${getValB(aggRangeMap[key].MAXmin, aggRangeMap[key].MAXmax, agg[key+"MAX"])})`)= agg[key+"MAX"]
+							else
+								td(class=`${minCol}`)= agg[key+"MIN"]
+								td(class=`${avgCol}`)= agg[key+"AVG"]
+								td(class=`${avgCol}`)= agg[key+"VAR"]
+								td(class=`${maxCol}`)= agg[key+"MAX"]
 	script.
 		$('th').click(function(){
 			var table = $(this).parents('table').eq(0)

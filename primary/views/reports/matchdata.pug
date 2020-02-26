@@ -5,6 +5,12 @@ block content
 		html{
 			overflow: visible;
 		}
+		@media(max-width: 600px){
+			#content{
+				/*Reduce page's padding*/
+				padding: 4px 8px!important;
+			}
+		}
 	include templates/heatmap
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
@@ -19,51 +25,52 @@ block content
 	h6 <i>Click on a metric to compare all event teams</i>
 	
 	if (matches)
-		table(class="w3-table")
-			tr
-				th Metric
-				for team in match.alliances.red.team_keys
-					th(class="w3-right-align theme-text")
-						u
-							a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
-				th
-				for team in match.alliances.blue.team_keys
-					th(class="w3-right-align theme-text")
-						u
-							a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
-			each item in scoreLayout
-				case item.type
-					when "checkbox"
-					when "counter"
-					when "badcounter"
-					when "derived"
-						tr
-							- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-							-// var abbrSplit = result2.split(" "); var abbr = ""; for (abbrIdx = 0; abbrIdx < abbrSplit.length; abbrIdx++) abbr = abbr + abbrSplit[abbrIdx].charAt(0); result2 = abbr;
-							td(class="w3-text-light-gray w3-small")
-								a(href=`/reports/metricintel?key=${item.id}`)= result2
-							for team in match.alliances.red.team_keys
-								if (matchMap[team] && matchMap[team].data)
-									- var valueCol = 'w3-right-align w3-text-white'
-									- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
-									if (aggRangeMap[item.id])
-										td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= matchMap[team].data[item.id]
-									else
-										td(class=`${valueCol}`)= matchMap[team].data[item.id]
-								else
+		div(class="w3-auto w3-content")
+			table(class="w3-table w3-mobile" style="width: 80%;")
+					tr
+						th(class="w3-right-align" style="width: 25%") Metric
+						for team in match.alliances.red.team_keys
+							th(class="w3-right-align theme-text")
+								u
+									a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
+						th
+						for team in match.alliances.blue.team_keys
+							th(class="w3-right-align theme-text")
+								u
+									a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
+					each item in scoreLayout
+						case item.type
+							when "checkbox"
+							when "counter"
+							when "badcounter"
+							when "derived"
+								tr
+									- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+									//- var abbrSplit = result2.split(" "); var abbr = ""; for (abbrIdx = 0; abbrIdx < abbrSplit.length; abbrIdx++) abbr = abbr + abbrSplit[abbrIdx].charAt(0); result2 = abbr;
+									td(class="w3-text-light-gray w3-small w3-right-align")
+										a(href=`/reports/metricintel?key=${item.id}`)= result2
+									for team in match.alliances.red.team_keys
+										if (matchMap[team] && matchMap[team].data)
+											- var valueCol = 'w3-right-align w3-text-white'
+											- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
+											if (aggRangeMap[item.id])
+												td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= matchMap[team].data[item.id]
+											else
+												td(class=`${valueCol}`)= matchMap[team].data[item.id]
+										else
+											td
 									td
-							td
-							for team in match.alliances.blue.team_keys
-								if (matchMap[team] && matchMap[team].data)
-									- var valueCol = 'w3-right-align w3-text-white'
-									- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
-									if (aggRangeMap[item.id])
-										td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= matchMap[team].data[item.id]
-									else
-										td(class=`${valueCol}`)= matchMap[team].data[item.id]
-								else
-									td
-		p
-		a(class="gear-btn theme-link w3-btn" href=('/reports/matchmetrics?key=' + match.key)) <b>Comparative metrics for these alliances</b>
-
-	a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') <b>Overall ranked event data</b>
+									for team in match.alliances.blue.team_keys
+										if (matchMap[team] && matchMap[team].data)
+											- var valueCol = 'w3-right-align w3-text-white'
+											- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
+											if (aggRangeMap[item.id])
+												td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= matchMap[team].data[item.id]
+											else
+												td(class=`${valueCol}`)= matchMap[team].data[item.id]
+										else
+											td
+			div(class="w3-col s0 m4") &nbsp;
+		p(class="w3-col")
+			a(class="gear-btn theme-link w3-btn" href=('/reports/matchmetrics?key=' + match.key)) <b>Comparative metrics for these alliances</b>
+			a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') <b>Overall ranked event data</b>
