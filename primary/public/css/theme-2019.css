@@ -36,6 +36,7 @@
 	--background: #000;
 	--header: var(--trim);
 	--footer: var(--black);
+	--placeholder-color: #bbb;
 	
 	/* MMenu customization */
 	--mm-color-background: #444;
@@ -110,20 +111,6 @@ html{
 		height: 140px;
 	}
 }
-/*"Dynamic" height for background image size*//*
-@media(max-height: 2000px){html{background-size: auto 2080px;}}
-@media(max-height: 1800px){html{background-size: auto 1880px;}}
-@media(max-height: 1600px){html{background-size: auto 1680px;}}
-@media(max-height: 1400px){html{background-size: auto 1480px;}}
-@media(max-height: 1200px){html{background-size: auto 1280px;}}
-@media(max-height: 1000px){html{background-size: auto 1080px;}}
-@media(max-height: 900px){html{background-size: auto 980px;}}
-@media(max-height: 800px){html{background-size: auto 880px;}}
-@media(max-height: 700px){html{background-size: auto 780px;}}
-@media(max-height: 600px){html{background-size: auto 680px;}}
-@media(max-height: 500px){html{background-size: auto 580px;}}
-@media(max-height: 400px){html{background-size: auto 480px;}}
-@media(min-width: 901px){html{background-size: cover;}}*/
 
 /* 2019 background colors */
 .theme-link{color: var(--black)!important; background-color: var(--button-primary)!important}
@@ -153,6 +140,14 @@ html{
 .alliance-blue{color:#fff!important;background-color:#2623B8!important}
 .alliance-border-blue{border: 1px solid hsl(242, 100%, 89%)!important}
 .alliance-hover-blue:hover{color:rgb(14, 13, 32)!important;background-color:rgb(134, 132, 235)!important}
+
+/*Make theme-input placeholder color lighter*/
+.theme-input::-webkit-input-placeholder {color:var(--placeholder-color);}
+.theme-input:-moz-placeholder {color:var(--placeholder-color);opacity:1;}
+.theme-input::-moz-placeholder {color:var(--placeholder-color);opacity:  1;}
+.theme-input:-ms-input-placeholder {color:var(--placeholder-color);}
+.theme-input::-ms-input-placeholder {color:var(--placeholder-color);}
+.theme-input::placeholder {color:var(--placeholder-color);}
 
 /* Header and Nav Menu */
 .mburger{
