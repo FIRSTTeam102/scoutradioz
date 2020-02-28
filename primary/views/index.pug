@@ -7,7 +7,13 @@ block content
 				div(class="w3-col")
 					div(class="w3-quarter") &nbsp;
 					div(class="w3-half w3-padding")
-						div(class="theme-hover-light-gray theme-submit w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=org.nickname
+						- var orglabel = org.nickname;
+						if (org.team_number)
+							- orglabel = org.team_number + ' - ' + org.nickname;
+						div(class="theme-hover-light-gray theme-submit w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=orglabel
+						if (org.event_label)
+							- var eventLabel = '@ ' + org.event_label;
+							p=eventLabel
 					div(class="w3-quarter") &nbsp;
 		input(type="hidden" name="org_key" value="")
 		if redirectURL
