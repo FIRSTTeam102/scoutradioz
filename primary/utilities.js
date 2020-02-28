@@ -215,9 +215,10 @@ utilities.findOne = async function(collection, parameters, options){
 /**
  * Asynchronous "distinct" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
+ * @param {String} field Which field to distinct.
  * @param {Object} parameters Query parameters.
  */
-utilities.distinct = async function(collection, parameters){
+utilities.distinct = async function(collection, field, parameters){
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
@@ -236,7 +237,7 @@ utilities.distinct = async function(collection, parameters){
 	var Col = db.get(collection);
 	//Find in collection with parameters and options
 	var data = [];
-	data = await Col.distinct(parameters);
+	data = await Col.distinct(field, parameters);
 	
 	logger.trace(`utilities.distinct: result: ${data}`);
 	
