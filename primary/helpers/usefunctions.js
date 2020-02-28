@@ -133,7 +133,7 @@ functions.getEventInfo = async function(req, res, next) {
 		
 		if (currentEvent) {
 			//Set current event info to req.event and res.locals
-			res.locals.eventName = currentEvent.name;
+			res.locals.eventName = currentEvent.year + " " + currentEvent.name;
 			req.event.name = currentEvent.name;
 			
 			//If a list of teams exists, find team info in teams db.

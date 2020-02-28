@@ -1,0 +1,34 @@
+{ "year" : 2020, "order" : "0990", "type" : "spacer", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "1000", "type" : "h2", "label" : "Construction", "id" : "labelConstruction", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "1010", "type" : "textblock", "label" : "Describe the drive train", "id" : "constructionDriveTrain", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "1020", "type" : "textblock", "label" : "Robot weight (minimum and maximum if possible)", "id" : "constructionWeight", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "1990", "type" : "spacer", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "2000", "type" : "h2", "label" : "Control Method", "id" : "labelControlMethod", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "2010", "type" : "multiselect", "label" : "Single driver or dual (e.g., driver + operator)", "options" : [ "Single driver", "Dual" ], "id" : "controlSingleOrDual", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "2020", "type" : "multiselect", "label" : "Type of controls", "options" : [ "Joystick(s)", "Game controller(s)", "Other" ], "id" : "controlType", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "2030", "type" : "textblock", "label" : "Details of control methods", "id" : "controlDetails", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "2990", "type" : "spacer", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "3000", "type" : "h2", "label" : "Autonomous", "id" : "labelAutonomous", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "3010", "type" : "checkbox", "label" : "Can they cross the line", "id" : "autoCrossLine", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "3020", "type" : "multiselect", "label" : "How many can they score", "options" : [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10+" ], "id" : "autoScoreTotal", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "3030", "type" : "textblock", "label" : "Which positions can they start from", "id" : "autoStartPositions", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "3990", "type" : "spacer", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "4000", "type" : "h2", "label" : "Scoring", "id" : "labelScoring", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "4010", "type" : "multiselect", "label" : "How many power cells can you carry", "options" : [ "0", "1", "2", "3", "4", "5" ], "id" : "scoringCarry", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "4020", "type" : "checkbox", "label" : "Can the robot score in lower", "id" : "scoreLower", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "4030", "type" : "checkbox", "label" : "Can the robot score in high outer", "id" : "scoreHighOuter", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "4040", "type" : "checkbox", "label" : "Can the robot reliably score in inner", "id" : "scoreHighInner", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "4050", "type" : "textblock", "label" : "Preferred scoring positions in teleop", "id" : "scorePreferredTeleop", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "4990", "type" : "spacer", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "5000", "type" : "h2", "label" : "Control Panel", "id" : "labelControlPanel", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "5010", "type" : "checkbox", "label" : "Can the robot do rotation", "id" : "panelRotation", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "5020", "type" : "checkbox", "label" : "Can the robot do position", "id" : "panelRotation", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "5990", "type" : "spacer", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "6000", "type" : "h2", "label" : "Climb", "id" : "labelClimb", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "6010", "type" : "checkbox", "label" : "Can the robot climb", "id" : "climbCapable", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "6020", "type" : "textblock", "label" : "Where do you need to be on the bar", "id" : "climbBarPosition", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "6030", "type" : "multiselect", "label" : "How many seconds does it take to climb", "options" : [ "0-5", "6-10", "11-15", "16-20", "21-25", "26-30" ], "id" : "climbDuration", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "6040", "type" : "checkbox", "label" : "Can you move on the bar", "id" : "climbMoveOnBar", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "6990", "type" : "spacer", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "7000", "type" : "h2", "label" : "Strategy", "id" : "labelStrategy", "form_type" : "pitscouting", "org_key" : "frc102" }
+{ "year" : 2020, "order" : "7010", "type" : "textblock", "label" : "What is your preferred strategy", "id" : "stratPreferred", "form_type" : "pitscouting", "org_key" : "frc102" }

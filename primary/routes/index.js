@@ -23,9 +23,29 @@ router.get('/', async function(req, res){
 	else{
 		
 		//Get list of participating organizations.
-		var orgs = await utilities.find("orgs", {}, {sort: {org_key: 1}});
+		var orgs = await utilities.find("orgs", {}, {sort: {team_number: 1, org_key: 1}});
 		logger.trace(JSON.stringify(orgs));
 		
+		// Get all events - only get key, year, & name
+		var events = await utilities.find("events", {}, ["key", "year", "name", {sort: {event_key: 1}}]);
+		logger.trace(JSON.stringify(events));
+
+		// Create a map of year+name by key
+		var eventMap = {};
+		for (var i in events) {
+			var thisEvent = events[i];
+			eventMap[thisEvent.key] = thisEvent.year + " " + thisEvent.name;
+			logger.debug(thisEvent.year + " " + thisEvent.name);
+		}
+
+		var enrichedOrgs = [];
+		// Enrich the organizations
+		for (var j in orgs) {
+			if (orgs[j].event_key)
+				if (eventMap[orgs[j].event_key])
+					orgs[j].event_label = eventMap[orgs[j].event_key];
+		}
+
 		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 		var redirectURL = req.query.redirectURL;
 		if( redirectURL == "undefined" ) redirectURL = undefined;

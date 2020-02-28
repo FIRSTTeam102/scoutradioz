@@ -732,18 +732,18 @@ router.get("/swapmembers", async function(req, res) {
 	
 	var thisFuncName = "scoutingpairs.swapmembers[get]: ";
 	
+	// for later querying by event_key
+	var eventId = req.event.key;
+	var org_key = req.user.org_key;
+
 	// Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER eventId=" + eventId + ",org_key=" + org_key);
 
 	// var db = req.db;
 	// var currentCol = db.get("current");
 	// var scoreDataCol = db.get("scoringdata");
 	// var matchCol = db.get("matches");
 	// var teammembers = db.get("teammembers");
-
-	// for later querying by event_key
-	var eventId = req.event.key;
-	var org_key = req.user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
