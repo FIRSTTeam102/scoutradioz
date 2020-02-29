@@ -17,12 +17,12 @@ router.all('/*', async (req, res, next) => {
  */
 router.get("/", async function(req, res) {
 	
-	var thisFuncName = "scoutingpairs root: ";
+	var thisFuncName = "scoutingpairs.scoutingpairs(root): ";
 	var startTime = Date.now();
 	var org_key = req.user.org_key;
 	
 	//Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER org_key=" + org_key);
 	logger.debug(thisFuncName + "Requesting all members from db");
 	
 	//Get all "present but not assigned" members
@@ -38,7 +38,7 @@ router.get("/", async function(req, res) {
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
 	var assignedPromise = utilities.find("scoutingpairs", {"org_key": org_key});
 	
-	logger.debug(thisFuncName + "Awaiting all db requests");
+	logger.trace(thisFuncName + "Awaiting all db requests");
 	
 	var preAwaitTime = Date.now() - startTime;
 	
@@ -56,9 +56,9 @@ router.get("/", async function(req, res) {
 		var assigned = values[4];
 		
 		var postAwaitTime = Date.now() - startTime - preAwaitTime;
-		logger.debug(`preAwaitTime: ${preAwaitTime}ms, postAwaitTime: ${postAwaitTime}ms`)
+		logger.trace(`preAwaitTime: ${preAwaitTime}ms, postAwaitTime: ${postAwaitTime}ms`)
 		
-		logger.debug(thisFuncName + "Rendering");
+		logger.trace(thisFuncName + "Rendering");
 		
 		res.render("./manage/scoutingpairs", {
 			title: "Scouting Pairs",
@@ -72,78 +72,19 @@ router.get("/", async function(req, res) {
 	
 	//Everything below is legacy, pre-rewrite.
 	return;
-	
-	//Gets collection (aka a "table") from db
-	var collection = db.get("team~members");
-	
-	var progTeam;
-	var mechTeam;
-	var elecTeam;
-	var assigned;
-	
-	//Searches for and sets variables for each subteam.
-	//Each subteam var is an array with team member names inside.
-	collection.find({"subteam":"prog","present":"true","assigned":"false"}, {sort: {"name": 1}}, function(e, docs){
-		
-		if(e){ //if error, log to console
-			logger.debug(thisFuncName + e);
-		}
-		progTeam = docs;
-		
-		collection.find({"subteam":"mech","present":"true","assigned":"false"}, {sort: {"name": 1}}, function(e, docs){
-			if(e){ //if error, log to console
-				logger.debug(thisFuncName + e);
-			}
-			mechTeam = docs;
-			
-			collection.find({"subteam":"elec","present":"true","assigned":"false"}, {sort: {"name": 1}}, function(e, docs){
-				if(e){ //if error, log to console
-					logger.debug(thisFuncName + e);
-				}
-				elecTeam = docs;
-				
-				//Gets the current set of already-assigned pairs
-				var collection2 = db.get("scoutingpairs");
-				collection2.find({}, {}, function (e, docs) {;
-					if(e){ //if error, log to console
-						logger.debug(thisFuncName + e);
-					}
-					assigned = docs;
-
-					// 2018-04-03, M.O'C - Adding in set of "present but not assigned" people
-					collection.find({"assigned": "false", "present": "true"}, {sort: {"name": 1}}, function(e, docs) {
-						if(e){ //if error, log to console
-							logger.debug(thisFuncName + e);
-						}
-						available = docs;
-					
-						//Renders page through Jade.
-						logger.debug(thisFuncName + "RENDERING");
-						
-						res.render("./manage/scoutingpairs", {
-							title: "Scouting Pairs",
-							prog: progTeam,
-							mech: mechTeam,
-							elec: elecTeam,
-							assigned: assigned,
-							available: available
-						});
-					});
-				});
-			});
-		});
-	});
-	
-	logger.debug(thisFuncName + "DONE");
 });
 
 /* POST to Set scoutingPair Service */
 router.post('/setscoutingpair', async function(req, res) {
 	
-	var thisFuncName = "setscoutingpair: ";
+	var thisFuncName = "scoutingpairs.setscoutingpair[post]: ";
 	
+    // Get our form values. These rely on the "name" attributes of form elements (e.g., named 'data' in the form)
+    var data = req.body.data;
+	var org_key = req.user.org_key;
+
 	// Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER org_key=" + org_key);
 
 	// Set our internal DB variable
 	/*
@@ -157,33 +98,15 @@ router.post('/setscoutingpair', async function(req, res) {
 	}
 	*/
 
-    // Get our form values. These rely on the "name" attributes of form elements (e.g., named 'data' in the form)
-    var data = req.body.data;
-	var org_key = req.user.org_key;
     //logger.debug(thisFuncName + data);
 	
 	// The javascript Object was JSON.stringify() on the client end; we need to re-hydrate it with JSON.parse()
 	var selectedMembers = JSON.parse(data);
 	// 2020-02-12, M.O'C - Adding 'org_key'
 	selectedMembers['org_key'] = org_key;
-	logger.debug(thisFuncName + "selectedMembers=" + JSON.stringify(selectedMembers));
-	//var insertArray = [];
-	//insertArray["pair"] = selectedMembers;
+	logger.trace(thisFuncName + "selectedMembers=" + JSON.stringify(selectedMembers));
 
-	////// Update selected teams to reflect the newly-picked team
-	
-	// Set collection to 'scoutingpairs'
-	/*
-    var collection = db.get('scoutingpairs');
-	// Submit to the DB
-	collection.insert(selectedMembers);
-	*/
 	await utilities.insert("scoutingpairs", selectedMembers);
-
-	////// Update members in 'users' so that they're marked as "assigned" (and won't be available to choose afterwards)
-	
-    // Set collection to 'users'
-    //var collection = db.get('users');
 
 	// TODO: Redo as... teamCol.bulkWrite([{updateMany:{filter:{ "name": {$in: nameList }}, update:{ $set: { "assigned" : "true" } }}}], function(e, docs){
     // Submit to the DB
@@ -195,67 +118,36 @@ router.post('/setscoutingpair', async function(req, res) {
 		selectedUpdates.push(selectedMembers.member2);
 	if (selectedMembers.member3)
 		selectedUpdates.push(selectedMembers.member3);
-	logger.debug(thisFuncName + "selectedUpdates=" + JSON.stringify(selectedUpdates));
+	logger.trace(thisFuncName + "selectedUpdates=" + JSON.stringify(selectedUpdates));
 
 	var query = {"name": {$in: selectedUpdates}};
 	var update = {$set: {"event_info.assigned": true}};
 	
 	await utilities.update("users", query, update, {multi: true, castIds: true});
-
-	/*
-	{
-		logger.debug(selectedMembers[member]);
-		collection.update(
-			{ "name" : selectedMembers[member] },
-			{ $set: { "assigned" : "true" } }
-		)
-	}
-	*/
 	
-	logger.debug(thisFuncName + "REDIRECT");
+	logger.trace(thisFuncName + "REDIRECT");
 	res.redirect("./");
 	
-	logger.debug(thisFuncName + "DONE");
+	logger.trace(thisFuncName + "DONE");
 });
 
 router.post("/deletescoutingpair", async function(req, res) {
 	
-	var thisFuncName = "deletescoutingpair: ";
-	
-	// Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + "ENTER");
-	
-	/*
-	var db = req.db;
-	if(db._state == 'closed'){ //If database does not exist, send error
-		res.render('./error',{
-			message: "Database error: Offline",
-			error: {status: "If the database is running, try restarting the Node server."}
-		});
-	}
-	*/
+	var thisFuncName = "scoutingpairs.deletescoutingpair[post]: ";
 	
 	var data = req.body.data;
 	var org_key = req.user.org_key;
-	
+
+	// Log message so we can see on the server side when we enter this
+	logger.info(thisFuncName + "ENTER org_key=" + org_key);
+		
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
 	var thisPairArray = await utilities.find("scoutingpairs", {"org_key": org_key, "_id": data});
 	var thisPair = {};
 	if (thisPairArray.length > 0)
 		thisPair = thisPairArray[0];
 
-	/*
-	var scoutCol = db.get("scoutingpairs");
-	//scoutCol.find({"_id": data}, {}, function(e, docs){
-		
-		if(e){ //if error, log to console
-			logger.debug(thisFuncName + e);
-		}
-		thisPair = docs[0];
-	*/
-	logger.debug("thisPair=" + JSON.stringify(thisPair));
-
-	//var teamCol = db.get('team~members');
+	logger.trace("thisPair=" + JSON.stringify(thisPair));
 
 	var nameList = [];
 	if (thisPair.member1)
@@ -264,7 +156,7 @@ router.post("/deletescoutingpair", async function(req, res) {
 		nameList.push(thisPair.member2);
 	if (thisPair.member3)
 		nameList.push(thisPair.member3);
-	logger.debug("nameList=" + JSON.stringify(nameList));
+	logger.trace("nameList=" + JSON.stringify(nameList));
 
 	await utilities.bulkWrite("users", [{updateMany:{filter:{ "name": {$in: nameList }}, update:{ $set: { "event_info.assigned" : false } }}}]);
 
@@ -272,14 +164,16 @@ router.post("/deletescoutingpair", async function(req, res) {
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
 	await utilities.remove("scoutingpairs", {"org_key": org_key, "_id": data});
 	//scoutCol.remove({"_id": data}, function(e, docs) {
-	logger.debug(thisFuncName + "REDIRECT");
+	logger.trace(thisFuncName + "REDIRECT");
 	res.redirect("./");	
 	
-	logger.debug(thisFuncName + "DONE");
+	logger.trace(thisFuncName + "DONE");
 });
 
 router.post("/generateteamallocations", async function(req, res) {
 	
+	var thisFuncName = "scoutingpairs.generateteamallocations[post]: ";
+
 	var passCheckSuccess;
 		
 	if( !req.body.password || req.body.password == ""){
@@ -287,12 +181,11 @@ router.post("/generateteamallocations", async function(req, res) {
 		return res.send({status: 401, alert: "No password entered."});
 	}
 
+	// Log message so we can see on the server side when we enter this
+	logger.info(thisFuncName + "ENTER");
+
 	var user = await utilities.find("users", { name: req.user.name });
-	// var db = req.db;
-	// var teammembers = db.get('teammembers');
-	// teammembers.find( { name: req.user.name }, {}, function( e, user ){
-	// 	if(e)
-	// 		return logger.error(e);
+
 	if(!user[0]){
 		res.send({status: 500, alert:"Passport error: no user found in db?"});
 		return logger.error("no user found? generateteamallocations");
@@ -318,95 +211,43 @@ router.post("/generatematchallocations2", async function(req, res) {
 	
 	var thisFuncName = "scoutingpairs.generateMATCHallocations2[post]: ";
 
-	// HARDCODED
-	var activeTeamKey = 'frc102';
-	
 	// Gap between matches equal to or over this value means a "major" gap (e.g., lunch, overnight, etc.)
 	var matchGapBreakThreshold = 30 * 60;  // 30 minutes, in seconds
 	// Size of match blocks to be scouted - scouts will do this many matches in a row
 	var matchBlockSize = 5;  // default
-	logger.debug(thisFuncName + 'req.body.blockSize=' + req.body.blockSize);
+	logger.trace(thisFuncName + 'req.body.blockSize=' + req.body.blockSize);
 	if (req.body.blockSize)
 	{
 		matchBlockSize = req.body.blockSize;
-		logger.debug(thisFuncName + 'Overriding matchBlockSize to ' + matchBlockSize);
+		logger.trace(thisFuncName + 'Overriding matchBlockSize to ' + matchBlockSize);
 		// remove from req.body before proceeding to pulling out the multi-checkbox list
 		req.body.blockSize = null;
 	}
 	
-	// Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + "ENTER");
-
-	var availableArray = [];
-	logger.debug(thisFuncName + '*** Tagged as available:');
-	for(var i in req.body) {
-		logger.debug(thisFuncName + i);
-		availableArray.push(i);
-	}
-
-	// used when writing data to DB, for later querying by year
-	// 2019-01-23, M.O'C: See YEARFIX comment above
-	//var year = (new Date()).getFullYear();
-							
-	// var db = req.db;
-	// var currentCol = db.get("current");
-	// var scoutPairCol = db.get("scoutingpairs");
-	// var memberCol = db.get("teammembers");
-	// var scoutDataCol = db.get("scoutingdata");
-	// var scoreDataCol = db.get("scoringdata");
-	// var matchCol = db.get("matches");
-
-	// if(db._state == 'closed'){ //If database does not exist, send error
-	// 	return res.render('./error',{
-	// 		message: "Database error: Offline",
-	// 		error: {status: "If the database is running, try restarting the Node server."}
-	// 	});
-	// }
-
-	// nodeclient
-	// var Client = require('node-rest-client').Client;
-	// var client = new Client();
-	// var args = {
-	// 	headers: { "accept": "application/json", "X-TBA-Auth-Key": "iSpbq2JH2g27Jx2CI5yujDsoKYeC8pGuMw94YeK3gXFU6lili7S2ByYZYZOYI3ew" }
-	// }
-		
-	//
-	// Get the 'current' event from DB
-	//
-	/*
-	//currentCol.find({}, {}, function(e, docs) {
-		var noEventFound = 'No event defined';
-		var eventId = noEventFound;
-		if (docs)
-			if (docs.length > 0)
-				eventId = docs[0].event;
-		if (eventId === noEventFound) {
-			return res.render('./manage/admin', { 
-				title: 'Admin pages',
-				current: eventId
-			});
-		}
-		// used when writing data to DB, for later querying by event_key
-		//var event_key = eventId;
-		*/
 	var event_key = req.event.key;	
 	var org_key = req.user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info(thisFuncName + "ENTER org_key=" + org_key + ",matchBlockSize=" + matchBlockSize);
+
+	var availableArray = [];
+	logger.trace(thisFuncName + '*** Tagged as available:');
+	for(var i in req.body) {
+		logger.trace(thisFuncName + i);
+		availableArray.push(i);
+	}
 
 	// 2019-01-23, M.O'C: See YEARFIX comment above
 	var year = parseInt(event_key.substring(0,4));
 					
+	// HARDCODED
+	var activeTeamKey = 'frc102';
+	
 	// { year, event_key, match_key, match_number, alliance, 'match_team_key', assigned_scorer, actual_scorer, scoring_data: {} }
 
 	//
 	// Need map of team IDs to scouts (scoutingdata)
 	//
-	/*
-	//scoutDataCol.find({"event_key": event_key}, function(e, docs) {
-		if(e){ //if error, log to console
-			logger.debug(thisFuncName + e);
-		}
-		//var scoutDataArray = docs;
-		*/
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	var scoutDataArray = await utilities.find("pitscouting", {"org_key": org_key, "event_key": event_key});
 	
@@ -421,19 +262,12 @@ router.post("/generatematchallocations2", async function(req, res) {
 	//
 	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
-	/*
-	//memberCol.find({$or: [{"name": {$in: availableArray}}, {"assigned": "true"}]}, { sort: {"seniority": 1, "subteam": 1, "name": 1} }, function(e, docs) {
-		if(e){ //if error, log to console
-			logger.debug(thisFuncName + e);
-		}
-		//var matchScouts = docs;
-		*/
-		// - matchscouts is the "queue"; need a pointer to indicate where we are
+	// - matchscouts is the "queue"; need a pointer to indicate where we are
 	var matchScouts = await utilities.find("users", {$or: [{"name": {$in: availableArray}}, {"event_info.assigned": true}]}, { sort: {"seniority": 1, "subteam": 1, "name": 1} });
 	var matchScoutsLen = matchScouts.length;
-	logger.debug(thisFuncName + "*** Assigned + available, by seniority:");
+	logger.trace(thisFuncName + "*** Assigned + available, by seniority:");
 	for (var i = 0; i < matchScoutsLen; i++)
-		logger.debug(thisFuncName + "member["+i+"] = " + matchScouts[i].name);
+		logger.trace(thisFuncName + "member["+i+"] = " + matchScouts[i].name);
 
 	// who is "first" in line in the 'queue'
 	var nextMatchScout = 0;
@@ -441,7 +275,6 @@ router.post("/generatematchallocations2", async function(req, res) {
 	//
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	//
-	//matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
 	var timestampArray = await utilities.find("matches", { event_key: event_key, "alliances.red.score": -1 },{sort: {"time": 1}});
 
 	// Avoid crashing server if all matches at an event are done
@@ -452,14 +285,10 @@ router.post("/generatematchallocations2", async function(req, res) {
 	}
 
 	// Clear 'assigned_scorer', 'data' from all unresolved team@matches ('data' is just in case)
-	//scoreDataCol.bulkWrite([{updateMany:{filter:{ "event_key": eventId, "time": { $gte: earliestTimestamp } }, update:{ $unset: { "assigned_scorer" : "", "data": "" } }}}], function(e, docs){
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	await utilities.bulkWrite("matchscouting", [{updateMany:{filter:{ "org_key": org_key, "event_key": event_key, "time": { $gte: earliestTimestamp } }, update:{ $unset: { "assigned_scorer" : "", "data": "" } }}}]);
 
 	// Get list of matches from latest unresolved onward
-	//scoreDataCol.find({"event_key": eventId, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} }, function (e, docs) {
-	//matchCol.find({"event_key": eventId, "time": { $gte: earliestTimestamp }}, { sort: {"time": 1}}, function (e, docs) {
-		//var comingMatches = docs;
 	var comingMatches = await utilities.find("matches", {"event_key": event_key, "time": { $gte: earliestTimestamp }}, { sort: {"time": 1}});
 	var lastMatchTimestamp = earliestTimestamp;
 	
@@ -485,7 +314,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 				if (scoutPointer >= matchScoutsLen)
 					scoutPointer = 0;
 			}
-			logger.debug(thisFuncName + "Updated current scouts: " + JSON.stringify(scoutArray));
+			logger.trace(thisFuncName + "Updated current scouts: " + JSON.stringify(scoutArray));
 			
 			matchBlockCounter = 0;
 		}
@@ -500,7 +329,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 		var matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
 		if (matchGap > matchGapBreakThreshold) {
-			logger.debug(thisFuncName + "matchGap=" + matchGap + "... found a break");
+			logger.trace(thisFuncName + "matchGap=" + matchGap + "... found a break");
 			break;
 		}
 		
@@ -517,7 +346,7 @@ router.post("/generatematchallocations2", async function(req, res) {
 				teamArray.push(comingMatches[matchesIdx].alliances.blue.team_keys[i]);
 				teamArray.push(comingMatches[matchesIdx].alliances.red.team_keys[i]);
 			}
-		logger.debug(thisFuncName + "comingMatch[" + matchesIdx + "]: matchGap=" + (matchGap) + ", teamArray=" + JSON.stringify(teamArray));
+		logger.trace(thisFuncName + "comingMatch[" + matchesIdx + "]: matchGap=" + (matchGap) + ", teamArray=" + JSON.stringify(teamArray));
 		
 		// -- In each match, assign 6 scouts to 6 teams in 'scoringdata'
 		// *** PUZZLE: How to do team preferential assignment?
@@ -585,18 +414,10 @@ router.post("/generatematchallocations2", async function(req, res) {
 				// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 				var thisPromise = utilities.update("matchscouting", { "org_key": org_key, "match_team_key" : thisMatchTeamKey }, { $set: { "assigned_scorer" : thisScout }} );
 				assignmentPromisesArray.push(thisPromise);
-				// scoreDataCol.update(
-				// 	{ "match_team_key" : thisMatchTeamKey },
-				// 	{ $set: { "assigned_scorer" : thisScout } }
-				// )
-				//logger.debug(thisFuncName + "Assigned " + thisMatchTeamKey + " to " + thisScout);
 			}
 		}									
 		// wait for all the updates to finish
 		Promise.all(assignmentPromisesArray);
-		// for (var promiseIdx = 0; promiseIdx < assignmentPromisesArray.length; promiseIdx++) {
-		// 	await assignmentPromisesArray[promiseIdx];
-		// }
 		
 		// update the 'lastMatchTimestamp' so we can track until a break
 		lastMatchTimestamp = comingMatches[matchesIdx].time;
@@ -608,22 +429,20 @@ router.post("/generatematchallocations2", async function(req, res) {
 
 router.post("/clearmatchallocations", async function(req, res) {
 	
+	var thisFuncName = "scoutingpairs.clearmatchallocations[post]: ";
+	logger.info(thisFuncName + "ENTER");
+
 	var passCheckSuccess;
 	
 	if( !req.body.password || req.body.password == ""){
 		return res.send({status: 401, alert: "No password entered."});
 	}
 	
-	// var db = req.db;
-	// var teammembers = db.get('teammembers');
-
 	var user = await utilities.find("users", { name: req.user.name }, {});
-	// teammembers.find( { name: req.user.name }, {}, function( e, user ){
-	// 	if(e)
-	// 		return console.error(e);
+
 	if(!user[0]){
 		res.send({status: 500, alert:"Passport error: no user found in db?"});
-		return console.error("no user found? generateteamallocations");
+		return console.error("no user found? clearmatchallocations");
 	}
 		
 	bcrypt.compare( req.body.password, user[0].password, async function(e, out){
@@ -640,40 +459,9 @@ router.post("/clearmatchallocations", async function(req, res) {
 	var thisFuncName = "scoutingpairs.clearMATCHallocations[post]: ";
 	var org_key = req.user.org_key;
 
-	// used when writing data to DB, for later querying by year
-	// 2019-01-23, M.O'C: See YEARFIX comment above
-	//var year = (new Date()).getFullYear();
-							
 	// Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + "ENTER");
 	
-	// var db = req.db;
-	// var currentCol = db.get("current");
-	// var scoreDataCol = db.get("scoringdata");
-
-	// if(db._state == 'closed'){ //If database does not exist, send error
-	// 	return res.render('./error',{
-	// 		message: "Database error: Offline",
-	// 		error: {status: "If the database is running, try restarting the Node server."}
-	// 	});
-	// }
-
-	//
-	// Get the 'current' event from DB
-	//
-	// currentCol.find({}, {}, function(e, docs) {
-	// 	var noEventFound = 'No event defined';
-	// 	var eventId = noEventFound;
-	// 	if (docs)
-	// 		if (docs.length > 0)
-	// 			eventId = docs[0].event;
-	// 	if (eventId === noEventFound) {
-	// 		return res.render('./manage/admin', { 
-	// 			title: 'Admin pages',
-	// 			current: eventId
-	// 		});
-	// 	}
-	// 	var event_key = eventId;
 	var event_key = req.event.key;
 
 	// 2019-01-23, M.O'C: See YEARFIX comment above
@@ -683,7 +471,7 @@ router.post("/clearmatchallocations", async function(req, res) {
 	// Remove 'assigned_scorer' from all matching scoringdata elements
 	//
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	await utilities.bulkWrite("matchscouting", [{updateMany:{filter:{ "org_key": org_key, "event_key": eventId }, update:{ $unset: { "assigned_scorer" : "" } }}}]);
+	await utilities.bulkWrite("matchscouting", [{updateMany:{filter:{ "org_key": org_key, "event_key": event_key }, update:{ $unset: { "assigned_scorer" : "" } }}}]);
 
 	return res.send({status: 200, alert: "Cleared existing match scouting assignments successfully."});
 		
@@ -696,22 +484,20 @@ router.post("/clearmatchallocations", async function(req, res) {
 
 router.post("/generatematchallocations", async function(req, res) {
 	
+	var thisFuncName = "scoutingpairs.generatematchallocations[post]: ";
+	logger.info(thisFuncName + "ENTER");
+
 	var passCheckSuccess;
 	
 	if( !req.body.password || req.body.password == ""){
 		return res.send({status: 401, alert: "No password entered."});
 	}
 	
-	// var db = req.db;
-	// var teammembers = db.get('teammembers');
-
 	var user = await utilities.find("users", { name: req.user.name }, {});
-	// teammembers.find( { name: req.user.name }, {}, function( e, user ){
-	// 	if(e)
-	// 		return logger.error(e);
+
 	if(!user[0]){
 		res.send({status: 500, alert:"Passport error: no user found in db?"});
-		return logger.error("no user found? generateteamallocations");
+		return logger.error("no user found? generatematchallocations");
 	}
 	
 	bcrypt.compare( req.body.password, user[0].password, function(e, out){
@@ -739,15 +525,8 @@ router.get("/swapmembers", async function(req, res) {
 	// Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + "ENTER eventId=" + eventId + ",org_key=" + org_key);
 
-	// var db = req.db;
-	// var currentCol = db.get("current");
-	// var scoreDataCol = db.get("scoringdata");
-	// var matchCol = db.get("matches");
-	// var teammembers = db.get("teammembers");
-
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
-	// matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -760,14 +539,10 @@ router.get("/swapmembers", async function(req, res) {
 	// Get the distinct list of scorers from the unresolved matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var scorers = await utilities.distinct("matchscouting", "assigned_scorer", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }});
-	//scoreDataCol.distinct("assigned_scorer", {"event_key": eventId, "time": { $gte: earliestTimestamp }}, function (e, docs) {
-	//var scorers = docs;
 	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 
 	// Get list of all users
 	var users = await utilities.find("users", {}, {sort:{ "name": 1 }});
-	// teammembers.find( {}, {sort:{ "name": 1 }}, function(e, docs){
-	// 	var users = docs;
 
 	// Go to a Pug to show two lists & a button to do the swap - form with button
 	res.render("./manage/swapmembers", {
@@ -781,37 +556,17 @@ router.post("/swapmembers", async function(req, res) {
 	
 	var thisFuncName = "scoutingpairs.swapmembers[post]: ";
 	
+	// for later querying by event_key
+	var eventId = req.event.key;
+	var org_key = req.user.org_key;
+
 	// Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + "ENTER");
+	logger.info(thisFuncName + "ENTER org_key=" + org_key);
 	
 	// Extract 'from' & 'to' from req
 	var swapout = req.body.swapout;
 	var swapin = req.body.swapin;
 	logger.info(thisFuncName + 'swap out ' + swapin + ', swap in ' + swapout);
-
-	// var db = req.db;
-	// var currentCol = db.get("current");
-	// var scoreDataCol = db.get("scoringdata");
-	// var matchCol = db.get("matches");
-	
-	//
-	// Get the 'current' event from DB
-	//	
-	// currentCol.find({}, {}, function(e, docs) {
-	// 	var noEventFound = 'No event defined';
-	// 	var eventId = noEventFound;
-	// 	if (docs)
-	// 		if (docs.length > 0)
-	// 			eventId = docs[0].event;
-	// 	if (eventId === noEventFound) {
-	// 		res.render('/adminindex', { 
-	// 			title: 'Admin pages',
-	// 			current: eventId
-	// 		});
-	// 	}
-	// for later querying by event_key
-	var eventId = req.event.key;
-	var org_key = req.user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
@@ -836,15 +591,8 @@ router.post("/swapmembers", async function(req, res) {
 async function generateMatchAllocations(req, res){
 	/* Begin regular code ----------------------------------------------------------- */
 	
-	// HARDCODED
-	var activeTeamKey = 'frc102';
-		
 	var thisFuncName = "scoutingpairs.generateMATCHallocations[post]: ";
 
-	// used when writing data to DB, for later querying by year
-	// 2019-01-23, M.O'C: See YEARFIX comment above
-	//var year = (new Date()).getFullYear();
-							
 	// Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + "ENTER");
 	
@@ -873,6 +621,9 @@ async function generateMatchAllocations(req, res){
 	// 2019-06-19 JL: Changing TBA request to DB request for matches, for off-season events.
 	var matchesPromise = utilities.find("matches", {"event_key": event_key, "comp_level": "qm"}, { sort: {"time": 1}} );
 	
+	// HARDCODED
+	var activeTeamKey;
+		
 	logger.debug(thisFuncName + "Awaiting DB promises");
 	
 	var scoutDataArray = await scoutDataArrayPromise;
@@ -943,9 +694,9 @@ async function generateMatchAllocations(req, res){
 					//logger.debug(thisFuncName + 'thisTeamKey=' + thisTeamKey);
 					
 					// 2018-03-15, M.O'C: Skip assigning if this teams is the "active" team (currently hardcoding to 'frc102')
-					if( activeTeamKey != thisTeamKey ){
+					if( activeTeamKey && activeTeamKey != thisTeamKey ){
 						
-						logger.debug(thisFuncName + "scoutDataByTeam[thisTeamKey]:" + JSON.stringify(scoutDataByTeam[thisTeamKey]));
+						logger.trace(thisFuncName + "scoutDataByTeam[thisTeamKey]:" + JSON.stringify(scoutDataByTeam[thisTeamKey]));
 						
 						// Who is assigned to this team?
 						var thisScoutData = scoutDataByTeam[thisTeamKey];
@@ -968,211 +719,30 @@ async function generateMatchAllocations(req, res){
 			}
 		}
 		
-		logger.debug(thisFuncName + "*** thisMatch=" + thisMatch.key);
+		logger.trace(thisFuncName + "*** thisMatch=" + thisMatch.key);
 		for (var thisMatchDataIdx = 0; thisMatchDataIdx < thisMatchLen; thisMatchDataIdx++) {
-			logger.debug(thisFuncName + "team,assigned=" + thisMatchDataArray[thisMatchDataIdx].team_key + " ~> " + thisMatchDataArray[thisMatchDataIdx].assigned_scorer);
+			logger.trace(thisFuncName + "team,assigned=" + thisMatchDataArray[thisMatchDataIdx].team_key + " ~> " + thisMatchDataArray[thisMatchDataIdx].assigned_scorer);
 			// add to the overall array of match assignments
 			scoringDataArray.push(thisMatchDataArray[thisMatchDataIdx]);
 		}
 	}
 	
-	logger.debug(thisFuncName + "Removing old scoreData elements");
+	logger.trace(thisFuncName + "Removing old scoreData elements");
 	// Delete ALL the old elements first for the 'current' event
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	await utilities.remove("matchscouting", {"org_key": org_key, "event_key": event_key});
 	
-	logger.debug(thisFuncName + "Inserting new scoreData elements");
+	logger.trace(thisFuncName + "Inserting new scoreData elements");
 	// Insert the new data - w00t!
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	await utilities.insert("matchscouting", scoringDataArray);
 	
-	logger.debug(thisFuncName + "Done!");
+	logger.info(thisFuncName + "EXIT");
 	// Done!
 	res.send({status: 200, alert: "Generated team allocations successfully."});
 	
 	//All code below is legacy.
 	return;
-			
-	// var db = req.db;
-	// var currentCol = db.get("current");
-	// var scoutPairCol = db.get("scoutingpairs");
-	// var memberCol = db.get("teammembers");
-	// var scoutDataCol = db.get("scoutingdata");
-	// var scoreDataCol = db.get("scoringdata");
-	// var matchDataCol = db.get("matches");
-
-	// nodeclient
-	var Client = require('node-rest-client').Client;
-	var client = new Client();
-	var args = {
-		headers: { "accept": "application/json", "X-TBA-Auth-Key": "iSpbq2JH2g27Jx2CI5yujDsoKYeC8pGuMw94YeK3gXFU6lili7S2ByYZYZOYI3ew" }
-	}
-		
-	//
-	// Get the 'current' event from DB
-	//
-	currentCol.find({}, {}, function(e, docs) {
-		var noEventFound = 'No event defined';
-		var eventId = noEventFound;
-		if (docs)
-			if (docs.length > 0)
-				eventId = docs[0].event;
-		if (eventId === noEventFound) {
-			return res.render('./manage/admin', { 
-				title: 'Admin pages',
-				current: eventId
-			});
-		}
-		// used when writing data to DB, for later querying by event_key
-		var event_key = eventId;
-
-		// 2019-01-23, M.O'C: See YEARFIX comment above
-		var year = parseInt(event_key.substring(0,4));
-
-		// { year, event_key, match_key, match_number, alliance, 'match_team_key', assigned_scorer, actual_scorer, scoring_data: {} }
-
-		// Need: Map, teamID->primary/secondar/tertiary
-		// Read all matches
-		// For each match:
-		// Go through the teams, build data elements without assignees
-		// Try to allocate primaries (track assigned members in a map - can't assign someone twice!)
-		// Repeat again if blanks left over with secondaries
-		// Repeat again if blanks left over with tertiaries
-		// Add batch to collecting array for eventual DB mass insert
-
-		// Need map of team IDs to scouts (scoutingdata)
-		scoutDataCol.find({"event_key": event_key}, function(e, docs) {
-			if(e){ //if error, log to console
-				logger.debug(thisFuncName + e);
-			}
-			var scoutDataArray = docs;
-			
-			// Build teamID->primary/secondar/tertiary lookup
-			var scoutDataByTeam = {};
-			var scoutDataLen = scoutDataArray.length;
-			for (var i = 0; i < scoutDataLen; i++)
-				scoutDataByTeam[scoutDataArray[i].team_key] = scoutDataArray[i];
-			
-			// Read all matches
-			var url = "https://www.thebluealliance.com/api/v3/event/" + eventId + "/matches/simple";
-			logger.debug(thisFuncName + "url=" + url);
-
-			//// WARNING WARNING DANGER WILL ROBINSON - Manually editing for local DB access!
-	//			matchDataCol.find({"event_key": event_key}, function(e, docs) {
-	//				var matchArray = docs;
-	//				var matchLen = matchArray.length;
-
-			client.get(url, args, function (data, response) {
-				var matchArray = JSON.parse(data);
-				var matchLen = matchArray.length;
-				if (matchLen == null)
-				{
-					logger.debug(thisFuncName + "Whoops, there was an error!");
-					logger.debug(thisFuncName + "matchArray=" + matchArray);
-					
-					res.render('./manage/admin', { 
-						title: 'Admin pages',
-						current: eventId
-					});
-					return;
-				}
-				logger.debug(thisFuncName + 'Found ' + matchLen + ' matches for event ' + eventId);
-
-				// Build up the scoringdata array
-				var scoringDataArray = [];
-				// Loop through each match
-				for (var matchIdx = 0; matchIdx < matchLen; matchIdx++) {
-					var thisMatch = matchArray[matchIdx];
-					//logger.debug(thisFuncName + "*** thisMatch=" + thisMatch.key);
-					
-					// Build unassigned match-team data elements
-					var thisMatchDataArray = [];
-					
-					// { year, event_key, match_key, match_number, alliance, team_key, 'match_team_key', assigned_scorer, actual_scorer, scoring_data: {} }
-					var allianceArray = [ "red", "blue" ];
-					for (var allianceIdx = 0; allianceIdx < allianceArray.length; allianceIdx++) {
-						// teams are indexed 0, 1, 2
-						for (var teamIdx = 0; teamIdx < 3; teamIdx++)
-						{
-							var thisScoreData = {};
-							
-							thisScoreData["year"] = year;
-							thisScoreData["event_key"] = event_key;
-							thisScoreData["match_key"] = thisMatch.key;
-							thisScoreData["match_number"] = thisMatch.match_number;
-							// time is the best 'chronological order' sort field
-							thisScoreData["time"] = thisMatch.time;
-							
-							thisScoreData["alliance"] = allianceArray[allianceIdx];
-							thisScoreData["team_key"] = thisMatch.alliances[allianceArray[allianceIdx]].team_keys[teamIdx];
-							thisScoreData["match_team_key"] = thisMatch.key + "_" + thisScoreData["team_key"];
-
-							//logger.debug(thisFuncName + "thisScoreData=" + JSON.stringify(thisScoreData));
-							
-							thisMatchDataArray.push(thisScoreData);
-						}
-					}
-					var thisMatchLen = thisMatchDataArray.length;
-					//logger.debug(thisFuncName + "thisMatchDataArray=" + JSON.stringify(thisMatchDataArray));
-					
-					// Keep track of who we've assigned - can't assign someone twice!
-					var assignedMembers = {};
-					// Go through assigning primaries first, then secondaries, then tertiaries
-					var roleArray = [ "primary", "secondary", "tertiary" ];
-					for (var roleIdx = 0; roleIdx < roleArray.length; roleIdx++) {
-						// Which role (primary? secondary? tertiary?) are we checking
-						var thisRole = roleArray[roleIdx];
-						// Cycle through the scoring data, looking for blank assignees
-						for (var thisMatchIdx = 0; thisMatchIdx < thisMatchLen; thisMatchIdx++) {
-							var thisScoreData = thisMatchDataArray[thisMatchIdx];
-							//logger.debug(thisFuncName + "thisScoreData=" + thisScoreData);
-							// Not yet assigned?
-							if (!(thisScoreData.assigned_scorer)) {
-								// Which team is this?
-								var thisTeamKey = thisScoreData.team_key;
-								//logger.debug(thisFuncName + 'thisTeamKey=' + thisTeamKey);
-								
-								// 2018-03-15, M.O'C: Skip assigning if this teams is the "active" team (currently hardcoding to 'frc102')
-								if (activeTeamKey != thisTeamKey)
-								{					
-									// Who is assigned to this team?
-									var thisScoutData = scoutDataByTeam[thisTeamKey];
-									var thisPossibleAssignee = thisScoutData[thisRole];
-									// Only check if this role is defined for this team
-									if (thisPossibleAssignee) {
-										// Only proceed if this person is not yet assigned elsewhere
-										if (!assignedMembers[thisPossibleAssignee]) {
-											// Good to assign!
-											thisMatchDataArray[thisMatchIdx].assigned_scorer = thisPossibleAssignee;
-											// Mark them as assigned to a team
-											assignedMembers[thisPossibleAssignee] = thisPossibleAssignee;
-										}
-									}
-								}
-							}
-						}
-					}
-					
-					logger.debug(thisFuncName + "*** thisMatch=" + thisMatch.key);
-					for (var thisMatchDataIdx = 0; thisMatchDataIdx < thisMatchLen; thisMatchDataIdx++) {
-						logger.debug(thisFuncName + "team,assigned=" + thisMatchDataArray[thisMatchDataIdx].team_key + " ~> " + thisMatchDataArray[thisMatchDataIdx].assigned_scorer);
-						// add to the overall array of match assignments
-						scoringDataArray.push(thisMatchDataArray[thisMatchDataIdx]);
-					}
-				}
-
-				// Delete ALL the old elements first for the 'current' event
-				scoreDataCol.remove({"event_key": event_key}, function(e, docs) {
-					// Insert the new data - w00t!
-					scoreDataCol.insert(scoringDataArray, function(e, docs) {
-						//res.redirect("./");	
-						return res.send({status: 200, alert: "Generated team allocations successfully."});
-					});
-				});
-			});
-		});
-	});
-	/* End regular code ----------------------------------------------------------- */
 }
 
 //SEPARATE FUNCTION FOR GENERATETEAMALLOCATIONS
@@ -1180,36 +750,13 @@ async function generateTeamAllocations(req, res){
 	/* Begin regular code ----------------------------------------------------------- */	
 	
 	// HARDCODED
-	var activeTeamKey = 'frc102';			
+	//var activeTeamKey = 'frc102';			
+	var activeTeamKey;			
 		
 	var thisFuncName = "scoutingpairs.generateTEAMallocations[post]: ";
 
-	// used when writing data to DB, for later querying by year
-	// 2019-01-23, M.O'C: YEARFIX Why did I think using THIS year was a good idea? What about doing things with *last* year's data? :-/
-	// Instead, let's use the 1st four characters of the 'currentevent' (always a year)
-	//var year = (new Date()).getFullYear();
-							
 	// Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + "ENTER");
-	
-	// var db = req.db;
-	// var currentCol = db.get("current");
-	// var currentTeamsCol = db.get("currentteams");
-	// var scoutPairCol = db.get("scoutingpairs");
-	// var memberCol = db.get("teammembers");
-	// var scoutDataCol = db.get("scoutingdata");
-	// var scoreDataCol = db.get("scoringdata");
-
-	// if(db._state == 'closed'){ //If database does not exist, send error
-	// 	res.render('./error',{
-	// 		message: "Database error: Offline",
-	// 		error: {status: "If the database is running, try restarting the Node server."}
-	// 	});
-	// }
-
-	// nodeclient
-	var client = req.client;
-	var args = req.tbaRequestArgs;
 	
 	var event_key = req.event.key;
 	var year = req.event.year;
@@ -1220,11 +767,6 @@ async function generateTeamAllocations(req, res){
 	//
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
 	var scoutingpairs = await utilities.find("scoutingpairs", {"org_key": org_key});
-	// scoutPairCol.find({}, {}, function (e, docs) {
-	// 	if(e){ //if error, log to console
-	// 		logger.debug(thisFuncName + e);
-	// 	}
-	// 	var scoutingpairs = docs;
 
 	// Iterate through scoutingpairs; create {1st: 2nd: 3rd:} and add to 'dict' keying off 1st <1, or 1/2 2/1, or 1/2/3 2/3/1 3/1/2>
 	var primaryAndBackupMap = {};
@@ -1256,22 +798,15 @@ async function generateTeamAllocations(req, res){
 	// Read all present members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
 	var teammembers = await utilities.find("users", { "name": {$in: scoutingAssignedArray }}, { sort: {"seniority": 1, "subteam": 1, "name": 1} });
-	// memberCol.find({ "name": {$in: scoutingAssignedArray }}, { sort: {"seniority": 1, "subteam": 1, "name": 1} }, function(e, docs) {
-	// 	logger.debug(thisFuncName + "inside memberCol.find()");
-	// 	if(e){ //if error, log to console
-	// 		logger.debug(thisFuncName + e);
-	// 	}
-	// 	var teammembers = docs;
 	var teammembersLen = teammembers.length;
 
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	//var teamArray = await utilities.find("currentteams", {}, {});
 	var thisEventData = await utilities.find("events", {"key": event_key});
 	var thisEvent = thisEventData[0];
 	var teamArray = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
 	{
-		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		logger.trace(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
 		teamArray = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
 	}
 	
@@ -1305,7 +840,7 @@ async function generateTeamAllocations(req, res){
 		thisAssignment["team_key"] = thisTbaTeam.key;
 		
 		// 2018-03-15, M.O'C: Skip assigning if this teams is the "active" team (currently hardcoding to 'frc102')
-		if (activeTeamKey != thisTbaTeam.key) {						
+		if ((activeTeamKey && activeTeamKey != thisTbaTeam.key) || !activeTeamKey) {						
 			thisAssignment["primary"] = thisPrimaryAndBackup.primary;
 			if (thisPrimaryAndBackup.secondary)
 				thisAssignment["secondary"] = thisPrimaryAndBackup.secondary;
@@ -1316,7 +851,7 @@ async function generateTeamAllocations(req, res){
 			if (assigneePointer >= teammembersLen)
 				assigneePointer = 0;
 		} else {
-			logger.debug(thisFuncName + "Skipping team " + thisTbaTeam.key);
+			logger.trace(thisFuncName + "Skipping team " + thisTbaTeam.key);
 		}
 			
 		
@@ -1325,9 +860,9 @@ async function generateTeamAllocations(req, res){
 		// Map of assignments by team so we can lookup by team later during match assigning
 		teamassignmentsByTeam[thisTbaTeam.key] = thisAssignment;
 	}
-	logger.debug(thisFuncName + "****** New/updated teamassignments:");
+	logger.trace(thisFuncName + "****** New/updated teamassignments:");
 	for (var i = 0; i < teamArrayLen; i++)
-		logger.debug(thisFuncName + "team,primary,secondary,tertiary=" + teamassignments[i].team_key + " ~> " + teamassignments[i].primary + "," + teamassignments[i].secondary + ","  + teamassignments[i].tertiary);
+		logger.trace(thisFuncName + "team,primary,secondary,tertiary=" + teamassignments[i].team_key + " ~> " + teamassignments[i].primary + "," + teamassignments[i].secondary + ","  + teamassignments[i].tertiary);
 	
 	// Delete ALL the old elements first for the 'current' event
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
