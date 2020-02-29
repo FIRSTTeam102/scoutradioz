@@ -35,7 +35,7 @@ router.get('/', async function(req, res){
 		for (var i in events) {
 			var thisEvent = events[i];
 			eventMap[thisEvent.key] = thisEvent.year + " " + thisEvent.name;
-			logger.debug(thisEvent.year + " " + thisEvent.name);
+			//logger.debug(thisEvent.year + " " + thisEvent.name);
 		}
 
 		var enrichedOrgs = [];
@@ -53,7 +53,8 @@ router.get('/', async function(req, res){
 		res.render('./index', {
 			title: "Select an Organization",
 			orgs: orgs,
-			redirectURL: redirectURL
+			redirectURL: redirectURL,
+			isOrgSelectScreen: true
 		});
 	}
 });

@@ -1,23 +1,36 @@
 extends ./layout
 block content
-	form#selectorg-form(name="login-form" method="post" action="/selectorg")
+	div(class="w3-auto")
 		h3(class="theme-text") Please Select an Organization.
-		div(class="w3-container w3-auto w3-padding-16")
-			each org, i in orgs
-				div(class="w3-col")
-					div(class="w3-quarter") &nbsp;
-					div(class="w3-half w3-padding")
-						- var orglabel = org.nickname;
-						if (org.team_number)
-							- orglabel = org.team_number + ' - ' + org.nickname;
-						div(class="theme-hover-light-gray theme-submit w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=orglabel
-						if (org.event_label)
-							- var eventLabel = '@ ' + org.event_label;
-							p=eventLabel
-					div(class="w3-quarter") &nbsp;
-		input(type="hidden" name="org_key" value="")
-		if redirectURL
-			input(type="hidden" name="redirectURL" value=redirectURL)
+		hr 
+		div
+			p(class="indented info w3-mobile").
+				Scoutradioz enables multiple organizations to gain their own
+				intel at competitions.
+				Select an organization below to see what intel they have
+				collected!
+			p(class="info w3-mobile")
+				a(target="_blank" class="link" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki")
+					span For more information on Scoutradioz, click here.
+		hr 
+		form#selectorg-form(name="login-form" method="post" action="/selectorg")
+			div(class="w3-container w3-auto w3-padding")
+				each org, i in orgs
+					div(class="w3-col")
+						div(class="w3-quarter w3-hide-small") &nbsp;
+						div(class="w3-half w3-padding")
+							- var orglabel = org.nickname;
+							if (org.team_number)
+								- orglabel = org.team_number + ' - ' + org.nickname;
+							div(class="theme-hover-light-gray theme-submit w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=orglabel
+							if (org.event_label)
+								- var eventLabel = '@ ' + org.event_label;
+								p(class="theme-text-secondary")=eventLabel
+						div(class="w3-quarter w3-hide-small") &nbsp;
+			input(type="hidden" name="org_key" value="")
+			if redirectURL
+				input(type="hidden" name="redirectURL" value=redirectURL)
+					
 	script.
 		function submitOrg( org_key ){
 			$("input[name=org_key]").val(org_key);

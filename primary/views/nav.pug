@@ -13,7 +13,8 @@ div(style="overflow-x: hidden;")
 div(id="headerlogo" class="w3-padding w3-center")
 	a(href="/home")
 		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
-	h3=eventName
+	if (!isOrgSelectScreen)
+		h3=eventName
 style.
 	.slidein-menu{
 		position: fixed;
