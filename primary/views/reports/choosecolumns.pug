@@ -14,11 +14,11 @@ block content
 		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") Uncheck All
 		button(class="theme-submit w3-btn gear-btn" onclick="check()") Check All
 	form(action="/reports/choosecolumns" method="post")
-		div(class="w3-section")
+		div(class="w3-section w3-auto")
 			each item in layout
 				//- console.log("choosecolumns.pug: item=" + JSON.stringify(item))
-				div(class="w3-row")
-					div(class="w3-padding-small")
+				div(class="w3-row w3-mobile w3-auto" style="width: 320px;")
+					div(class="w3-padding-small w3-left-align")
 						//- if (item.type == 'counter' || item.type == 'badcounter' || item.type == 'checkbox')
 						- if (matchDataHelper.isQuantifiableType(item.type))
 							- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
@@ -26,7 +26,7 @@ block content
 								input(type="checkbox" class="w3-check" name=item.id id=item.id checked="checked")
 							- else
 								input(type="checkbox" class="w3-check" name=item.id id=item.id)
-							div(class="w3-show-inline-block w3-left-align" style="min-width: 320px;")
+							div(class="w3-show-inline-block w3-left-align")
 								label(class="theme-text" for=item.id) &nbsp;#{result2}
 							br 
 		//-	div(class="w3-container" style="max-width:200px;margin:auto;")
