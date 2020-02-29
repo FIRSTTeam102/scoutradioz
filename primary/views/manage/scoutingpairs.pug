@@ -32,7 +32,7 @@ block content
 	button(class="w3-btn w3-block theme-submit" onclick="submitPair()") Submit selected members as a new scouting group
 
 	if assigned.length > 0
-		p(class="theme-spacer")
+		hr 
 		h2 Scouting pairs
 	ul(class="w3-ul w3-left-align")
 		each pair in assigned
@@ -46,7 +46,7 @@ block content
 				|	#{thisButtonLabel}
 	form(method="post" action="/manage/scoutingpairs/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
-	p(class="theme-spacer")
+	hr 
 	div( onclick="promptPass('WARNING: Erases existing SCOUTING data for current event.', '/manage/scoutingpairs/generateteamallocations');")
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams to PIT SCOUTING members
 	br
@@ -56,7 +56,7 @@ block content
 	br 
 	div( onclick="promptPass('WARNING: Erases MATCH SCORING ASSIGNMENTS for current event.', '/manage/scoutingpairs/clearmatchallocations');")
 		button(class="w3-btn theme-red strong" type="submit") Clear all MATCH SCORING assignments
-	p(class="theme-spacer")
+	hr 
 	h2 Team@Match Allocation v2.0
 	form(action="/manage/scoutingpairs/generatematchallocations2" method="post")
 		each member in available

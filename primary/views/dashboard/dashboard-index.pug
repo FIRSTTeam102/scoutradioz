@@ -6,7 +6,7 @@ block content
 		h2(class="theme-text")= user.name
 		h4(style="font-style:italic") Scouting group:
 		h4(style="font-style:italic")= thisPair
-		p(class="theme-spacer")
+		hr 
 		if assignedTeams.length > 0
 			h3(class="theme-text") Scouting assignments
 			each team in assignedTeams
@@ -18,7 +18,7 @@ block content
 					a(href=`/scouting/pit?team=${team.team_key}`) 
 						div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
-			p(class="theme-spacer")
+			hr 
 		if backupTeams.length > 0
 			h3(class="theme-text") Partner(s) scouting assignments
 			each team in backupTeams
@@ -30,7 +30,7 @@ block content
 					a(href=`/scouting/pit?team=${team.team_key}`) 
 						div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
-			p(class="theme-spacer")
+			hr 
 		if scoringMatches.length > 0
 			h3(class="theme-text") Upcoming matches to be scored
 			br 
@@ -57,7 +57,7 @@ block content
 						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
 							div(class=`gear-btn ${btnColor} theme-hover-white w3-btn w3-section w3-margin-left w3-margin-right`)
 								span= match.team_key.substring(3)
-			p(class="theme-spacer")
+			hr 
 		div(class="w3-container w3-padding-16")
 			a(href="/dashboard/pits") 
 				div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")

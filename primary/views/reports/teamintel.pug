@@ -152,7 +152,7 @@ block content
 					h6 <i>Click match button for overall alliance performances</i>
 					h6(class="theme-text")
 						a(class="gear-btn theme-link w3-btn" href="/reports/teamdata?key=" + team.key) Scoring data for all team #{team.key.substring(3)} matches
-					p(class="theme-spacer")
+					hr 
 					
 					each match in matches
 						include templates/completedMatch

@@ -12,7 +12,7 @@ block content
 		h2(class="theme-text") Finished Matches
 		each match in matches
 			include templates/completedMatch
-			p(class="theme-spacer")
+			hr 
 			//-div(class="w3-row")
 				div(class="w3-col s12 m12 l2")
 					a(href=`/reports/matchintel?key=${match.key}`) 
