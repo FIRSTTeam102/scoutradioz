@@ -7,63 +7,99 @@
 	//
 extends ../layout
 block content
-	h3=title
-	div(class="w3-container w3-section")
-		h4 Member Management
-		a(href="/manage/scoutingaudit") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Scouting audit
-		a(href="/manage/scoutingpairs") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Scouting pairs
-		a(href="/manage/members") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Manage Members
-		a(href="/manage/members/present") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Set who is present at current event
-		a(href="/manage/scoutingpairs/swapmembers") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Swap out/in match scouts
-		div(class="w3-container")
-			a(href="/user/resetpassword")
+	style.
+		.events-container{
+			height: 400px;
+			overflow-y: scroll;
+		}
+		.event-row{
+			cursor: pointer;
+		}
+		/*
+		.events-container::-webkit-scrollbar {width: 15px;}
+		.events-container::-webkit-scrollbar-track {background: #00000000;}
+		.events-container::-webkit-scrollbar-thumb {background: #808090;}
+		.events-container::-webkit-scrollbar-thumb:hover {background: #555;}
+		//*/
+	div(class="w3-auto")
+		h3=title
+		div(class="w3-container w3-section")
+			h4 Member Management
+			a(href="/manage/scoutingaudit") 
 				div(class="gear-btn theme-link w3-btn w3-section")
-					span  Reset User Password
-	div(class="w3-container w3-section")
-		h4 Current Event - #{current}
-		a(href="/manage/currentevent/matches") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span See matches for current event
-		a(href="allianceselection") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Alliance selection data
-		a(href="/dashboard/allianceselection") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Track/simulate alliance selection
-		a(href="manage/currentevent/getcurrentteams") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Update list of current teams
-	div(class="w3-container w3-section")
-		h4 Organization Configuration
-		a(href="/manage/config/pitsurvey") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Configure pit survey layout
-		form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword")
-			div(class="w3-padding-small w3-show-inline-block")
-				input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")
-			div(class="w3-padding-small w3-show-inline-block")
-				button#btnSubmit(class="theme-submit w3-btn" onclick="confirmSetDefaultPassword()") Change default password for #{org.nickname}
-	div(class="w3-container w3-section")
-		h4 API Data Management
-		a(href="/manage/data/events") 
-			div(class="gear-btn theme-link w3-btn w3-section")
-				span Load/Update events
-		form#setCurrentEvent(name="setCurrentEvent" method="post" action="/manage/setcurrent")
-			div(class="w3-padding-small w3-show-inline-block")
-				input#setEvent(class="theme-input w3-no-border theme-inline-padding" placeholder="Event ID" type="text", name="eventId")
-			div(class="w3-padding-small w3-show-inline-block")
-				button#btnSubmit(class="theme-submit w3-btn" type="submit") Set current event ID
+					span Scouting audit
+			a(href="/manage/scoutingpairs") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Scouting pairs
+			a(href="/manage/members") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Manage Members
+			a(href="/manage/members/present") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Set who is present at current event
+			a(href="/manage/scoutingpairs/swapmembers") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Swap out/in match scouts
+			div(class="w3-container")
+				a(href="/user/resetpassword")
+					div(class="gear-btn theme-link w3-btn w3-section")
+						span  Reset User Password
+		div(class="w3-container w3-section")
+			h4 Current Event - #{current}
+			a(href="/manage/currentevent/matches") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span See matches for current event
+			a(href="allianceselection") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Alliance selection data
+			a(href="/dashboard/allianceselection") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Track/simulate alliance selection
+			a(href="manage/currentevent/getcurrentteams") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Update list of current teams
+		div(class="w3-container w3-section")
+			h4 Organization Configuration
+			a(href="/manage/config/pitsurvey") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Configure pit survey layout
+			form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword")
+				div(class="w3-padding-small w3-show-inline-block")
+					input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")
+				div(class="w3-padding-small w3-show-inline-block")
+					button#btnSubmit(class="theme-submit w3-btn" onclick="confirmSetDefaultPassword()") Change default password for #{org.nickname}
+		div(class="w3-container w3-section")
+			h4 Set current event
+			form#setCurrentEvent(name="setCurrentEvent" method="post" action="/manage/setcurrent")
+				div(class="w3-padding-small w3-threequarter")
+					input#setEvent(class="theme-input w3-no-border theme-inline-padding w3-block" placeholder="Search for events from this year" type="text", name="event_key")
+				div(class="w3-padding-small w3-rest")
+					button#btnSubmit(class="theme-submit w3-btn w3-block" type="submit") Set current event key
+			hr 
+			div(class="events-container")
+				table#events(class="w3-table w3-bordered")
+					tr 
+						th(style="width: 60%") Name 
+						th Date
+						th Key
+					each event in events
+						tr(class="w3-hover-white event-row item" onclick=`fillSetEvent('${event.key}')`)
+							td(class="w3-padding-16")=event.name 
+							td(class="w3-padding-16")=event.start_date
+							td(class="w3-padding-16")=event.key
 	script.
+		$(() => {
+			$("#setEvent").on('input', ev => {
+				const value = ev.target.value;
+				w3.filterHTML('#events', '.item', value);
+			});
+		});
+		
+		function fillSetEvent(value){
+			$("#setEvent").val(value);
+			$("#setEvent").trigger('input');
+		}
+		
 		function confirmSetDefaultPassword(){
 			
 			var newDefaultPassword = $("#defaultPassword").val();

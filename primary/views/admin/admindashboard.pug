@@ -9,6 +9,7 @@ extends ../layout
 block content
 	h3=title
 	div(class="w3-container w3-section")
+		h4 Resync
 		a(href="/admin/resyncteams") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Resync teams
@@ -23,6 +24,17 @@ block content
 		a(href="/admin/dngn3") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Use Case 3
+	div(class="w3-container w3-section")
+		h4 TBA Data
+		a(href="/manage/data/events") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Events
+		a(href=`/manage/data/matches?event_key=${event_key}`) 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Match data
+		a(href="/manage/data/teams") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span All teams (Load page with caution)
 
 
 	div(class="w3-container w3-section")

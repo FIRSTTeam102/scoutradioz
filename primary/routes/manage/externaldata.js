@@ -5,7 +5,7 @@ const tba_utils = require('../../tba_utils');
 
 router.all('/*', async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
 		next();
 	}
 })
@@ -106,7 +106,7 @@ router.get("/matches", async function(req, res) {
 	// var matchCol = db.get("matches");
 
     // Get our query value(s)
-    var eventId = req.query.eventId;
+    var eventId = req.query.eventId || req.query.event_key;
 	if (!eventId)
 	{
 		logger.debug(thisFuncName + 'No event specified');

@@ -17,12 +17,14 @@ router.all('/*', async (req, res, next) => {
  */
 router.get('/', async function(req, res) {
 	
-	var org = await utilities.findOne("orgs", {org_key: req.user.org_key});
+	const org = await utilities.findOne("orgs", {org_key: req.user.org_key});
+	const events = await utilities.find("events", {year: new Date().getFullYear()}, {sort: {start_date: 1}});
 	
 	res.render('./manage/managedashboard', { 
 		title: `Manage ${org.nickname}`,
 		org: org,
 		current: req.event.key,
+		events: events,
 	});
 });
 
@@ -45,84 +47,29 @@ router.post('/setdefaultpassword', async function(req, res) {
 router.post('/setcurrent', async function(req, res) {
 	
 	var thisFuncName = "adminindex.setcurrent[post]: ";
-	var eventId = req.body.eventId;
-	logger.info(thisFuncName + 'ENTER eventId=' + eventId);
-	
-	//Remove the previous 'current' data
-	// 2020-02-08, M.O'C - moving "current event" info into 'orgs'
-	//await utilities.remove('current');
-	//logger.debug(thisFuncName + 'Removed current');
-
-	// 2019orore
-	// 2019njbri
+	var eventKey = req.body.event_key;
+	logger.info(thisFuncName + 'ENTER eventId=' + eventKey);
 
 	//Now, insert the new data
 	// 2020-02-08, M.O'C - moving "current event" info into 'orgs'
-	//await utilities.insert('current', {"event": eventId});
 	if (req && req.user && req.user.org_key) {
 		var thisOrgKey = req.user.org_key;
-		await utilities.update( "orgs", {"org_key": thisOrgKey}, {$set: {"event_key": eventId}} );
-		logger.debug(thisFuncName + 'Inserted current');
+		
+		var event = await utilities.findOne("events", {key: eventKey});
+		
+		//If eventKey is valid, then update
+		if (event) {
+			await utilities.update( "orgs", {"org_key": thisOrgKey}, {$set: {"event_key": eventKey}} );
+			logger.debug(thisFuncName + 'Inserted current');
+			
+			res.redirect(`/manage?alert=Set current event ${eventKey} successfuly.`);
+		}
+		//If invalid, send an error
+		else {
+			res.redirect(`/manage?alert=Invalid event key: '${eventKey}'. Click on an event in the list to get its key.&type=error`);
+		}
 	}
 	
-	res.redirect(`/manage?alert=Set current event ${eventId} successfuly.`);
-
-	// 2020-02-08, M.O'C: Disconnect 'set current' from getting rankings & teams
-
-	/*
-	//Now get teams and rankings from TBA
-	var teamsUrl = `event/${eventId}/teams`;
-	var rankingsUrl = `event/${eventId}/rankings`;
-	
-	var promiseForTeams = utilities.requestTheBlueAlliance(teamsUrl);
-	var promiseForRankings = utilities.requestTheBlueAlliance(rankingsUrl);
-	logger.debug(thisFuncName + 'Got promises');
-
-	//Delete contents of currentTeams
-	await utilities.remove("currentteams");
-	logger.debug(thisFuncName + 'Renoved currentteams');
-	
-	//Await TBA request for teams
-	var teamsData = await promiseForTeams;
-	logger.debug(thisFuncName + 'Finished await promiseForTeams');
-	
-	//Now, insert teams into currentTeams
-	// if( typeof teamsData == "object" ){
-	// 	await utilities.insert("currentteams", teamsData);
-	// 	logger.debug(thisFuncName + 'Finished await currentteams');
-	// }
-	// else{
-		await utilities.insert("currentteams", JSON.parse(teamsData));
-		logger.debug(thisFuncName + 'Finished await currentteams #2');
-	// }
-		
-	//Delete contents of currentrankings
-	await utilities.remove("currentrankings");
-	logger.debug(thisFuncName + 'Finished remove currentrankings');
-	
-	//Await TBA request for rankings
-	var rankingsResponse = await promiseForRankings;
-	var rankingsResponse = JSON.parse(rankingsResponse);
-	
-	logger.debug(`${thisFuncName} rankingsResponse= ${JSON.stringify(rankingsResponse)}`);
-		
-	if (rankingsResponse && rankingsResponse != "null" 
-		&& rankingsResponse.rankings && rankingsResponse.rankings != "null") {
-		
-		//get rankings array
-		var rankings = rankingsResponse.rankings;
-		
-		//Now, insert rankings into currentrankings
-		await utilities.insert("currentrankings", rankings);
-		
-		//Finished with teams AND rankings
-		res.redirect(`/manage?alert=Set current event ${eventId} successfuly and got list of teams/rankings for event ${eventId} successfully.`);
-	}
-	else{
-		//Finished with teams and NO rankings
-		res.redirect(`/manage?alert=Set current event ${eventId} successfully and got list of teams for event ${eventId} successfully. NO RANKINGS HAVE BEEN RETRIEVED.`)
-	}
-	*/
 
 });
 
