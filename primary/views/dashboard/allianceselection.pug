@@ -64,13 +64,13 @@ block content
 									div(id=`all${allianceNum}team3` alliance=allianceNum class="alliance-team w3-border w3-border-white")
 									
 										span=(alliance.team3) ? alliance.team3.substring(3) : "[3]"
-				hr  &nbsp;
+				hr(class="w3-col")
 				div(class="w3-col")
 					each team, i in sortedTeams
 						div(class="w3-col s4 m2 l1 w3-padding-small")
 							div(id=team.team_key available="true" class="theme-dim alliance-team w3-border w3-border-white")
 								span=team.team_key.substring(3)
-		hr  &nbsp;
+		hr(class="w3-col")
 		
 		div(class="w3-section")
 			input(class="w3-check w3-margin-right" type="checkbox" checked id="showHideData")
