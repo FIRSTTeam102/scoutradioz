@@ -14,7 +14,8 @@ $(function(){
 				NotificationCard.show(message, {darken: true, type: "good", ttl: 0});
 				
 				setTimeout(() => {
-					window.location.href = '/dashboard';
+					window.onbeforeunload = null;
+					window.location.href = '/dashboard/matches';
 				}, 1000);
 			}
 		});
