@@ -27,9 +27,10 @@ logger.level = 'debug';
 //load custom middleware
 const usefunctions = require("./helpers/usefunctions");
 //load database utilities
-//const utilities = require('@firstteam102/scoutradioz-utilities');
-const utilities = require('./utilities');
-//utilities.config(path.join(__dirname, "databases.json"));
+const utilities = require('@firstteam102/scoutradioz-utilities');
+//Configure utilities with the full file path of our databases json file
+utilities.config(path.join(__dirname, "databases.json"));
+//const utilities = require('./utilities');
 
 //PUG CACHING (if production IS enabled)
 if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enabled.");
