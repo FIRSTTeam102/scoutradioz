@@ -27,7 +27,9 @@ logger.level = 'debug';
 //load custom middleware
 const usefunctions = require("./helpers/usefunctions");
 //load database utilities
-const utilities = require('./utilities');				
+//const utilities = require('@firstteam102/scoutradioz-utilities');
+const utilities = require('./utilities');
+//utilities.config(path.join(__dirname, "databases.json"));
 
 //PUG CACHING (if production IS enabled)
 if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enabled.");
@@ -48,7 +50,17 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 //Session
 console.log("app.js: app.use(session({... - START");
-//var sessionDb = utilities.getDB();
+const MongoClient = require('mongodb').MongoClient;
+//Get promise for MongoClient
+const clientPromise = new Promise((resolve, reject) => {
+	const url = utilities.getDBurl();
+	//Connect mongoClient to dbUrl specified in utilities
+	MongoClient.connect(url, function(err, client){
+		//Resolve/reject with client
+		if (err) reject(err);
+		else if (client) resolve(client);
+	});
+});
 app.use(session({
     secret: 'marcus night',
     saveUninitialized: false, // don't create session until something stored
@@ -56,7 +68,7 @@ app.use(session({
 	
 	store: new MongoStore({
 		//Use same URL that utilities uses for database
-		url: utilities.getDBurl(),
+		clientPromise: clientPromise,
 		//client: sessionDb,
         ttl: 3 * 24 * 60 * 60, // Time-to-live, in seconds.
 		autoRemove: 'interval',
@@ -139,12 +151,12 @@ app.use('/manage', manageindex);
 app.use('/manage/config', config);
 app.use('/manage/scoutingpairs', scoutingpairs);
 app.use("/manage/members", orgmembers);
-app.use('/manage/data', externaldata);
 app.use('/manage/currentevent', currentevent);
 app.use('/manage/scoutingaudit', scoutingaudit);
 app.use('/manage/manualdata', manualdata);
 
 app.use('/admin', adminindex);
+app.use('/manage/data', externaldata); //Eventually move/rename to /admin/externaldata
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);

@@ -11,7 +11,7 @@
     "accountId": "243452333432",
     "publicS3BucketName": "scoutradioz",
     "publicFolderName": "public",
-    "publicTierName": "app"
+    "publicTierName": "dev"
   },
   "scripts": {
     "start": "node app.local.js",
@@ -59,6 +59,8 @@
     "passport-local": "^1.0.0",
     "pug": "^2.0.4",
     "serve-favicon": "^2.5.0",
-    "web-push": "^3.4.1"
+    "web-push": "^3.4.1",
+    "mongodb": "^3.5.4",
+    "@firstteam102/scoutradioz-utilities": "^1.0.3"
   }
 }
