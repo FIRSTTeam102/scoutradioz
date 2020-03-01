@@ -35,11 +35,12 @@ html
 		script(src=`${fileRoot}/lib/w3.js`)
 		//script(src=`${fileRoot}/lib/hammer.min.js`)
 		script(src=`${fileRoot}/lib/jquery.min.js`)
+		script(src=`${fileRoot}/lib/jscookie-2.2.1.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
-		script(src=`${fileRoot}/js/scoutradioz.js?v=2`)
+		script(src=`${fileRoot}/js/scoutradioz.js?v=3`)
 		script(src=`${fileRoot}/js/FormSubmission.js`)
-		script(src=`${fileRoot}/js/NotificationCard.js`)
+		script(src=`${fileRoot}/js/NotificationCard.js?v=1`)
 		script(src=`${fileRoot}/js/NavMenu.js?v=2`)
 		if alert && alert != "undefined"
 			script.

@@ -2,6 +2,16 @@ if(!$){
 	console.error("scoutradioz.js error: jQuery not enabled");
 }
 
+$(() => {
+	if (Cookies.get("accepted") != "true") {
+		var cookiesMessage = new NotificationCard("Scoutradioz uses cookies to operate. By using this website, you consent to the use of cookies.",
+		{ttl: 0, exitable: true, onexit: function(){
+			Cookies.set("accepted", "true", {expires: 1000});
+		}});
+		cookiesMessage.show();
+	}
+});
+
 var debugLogger = document.createElement("div");
 $(debugLogger).css({
 	"background-color": "white",

@@ -143,6 +143,10 @@ class NotificationCard{
 					if (this.opts.darken && this.darkener) {
 						$(this.darkener).remove();
 					}
+					//Execute onexit callback
+					if (this.opts.onexit) {
+						this.opts.onexit();
+					}
 				});
 			//Add exit button to card
 			card.append(exitBtn);
@@ -199,6 +203,7 @@ class NotificationCard{
 			ttl: 2000,
 			exitable: false,
 			darken: false,
+			onexit: null,
 		}
 		
 		var opts = defaultOpts;
@@ -222,6 +227,10 @@ class NotificationCard{
 					case "darken":
 						if (typeof options[option] == 'boolean') opts[option] = options[option];
 						else throw new TypeError("NotificationCard.opts.darken must be a boolean.");
+						break;
+					case "onexit":
+						if (typeof options[option] == 'function') opts[option] = options[option];
+						else throw new TypeError("NotificationCard.opts.onexit must be a function.");
 						break;
 					default:
 						throw new ReferenceError("NotificationCard.opts: Unknown option " + option);
