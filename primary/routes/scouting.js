@@ -2,6 +2,7 @@ const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
+const uploadHelper = require('../helpers/uploadhelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
@@ -190,12 +191,15 @@ router.get('/pit*', async function(req, res) {
 		if (pitFind[0].data)
 			pitData = pitFind[0].data;
 	
+	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
+	
 	res.render("./scouting/pit", {
 		title: "Pit Scouting",
 		layout: layout,
 		pitData: pitData, 
 		key: teamKey,
-		uploadURL: uploadURL
+		uploadURL: uploadURL,
+		images: images
 	});
 });
 

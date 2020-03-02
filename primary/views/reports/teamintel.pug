@@ -13,9 +13,25 @@ block content
 		- if (team.country != 'USA') country = team.country;
 		h4(class="theme-text w3-tooltip" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
 			span(class="w3-tooltiptext w3-block" style="font-style:italic") #{team.name}
-		a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_lg.jpg`)
+		if images 
+			//-Main image
+			if images.main
+				a(href=images.main.lg)
+					img(src=images.main.md alt="" class="w3-image team-image-md")
+			//-Smaller images
+			div(style="width: 80%; margin: auto;")
+				if images.a
+					a(href=images.a.lg)
+						img(src=images.a.sm alt="" class="w3-image team-image-sm")
+				if images.b
+					a(href=images.b.lg)
+						img(src=images.b.sm alt="" class="w3-image team-image-sm")
+				if images.b
+					a(href=images.b.lg)
+						img(src=images.b.sm alt="" class="w3-image team-image-sm")
+		//a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_lg.jpg`)
 			img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
-		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
+		//div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
 			a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}a_lg.jpg`)
 				img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
 			a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}b_lg.jpg`)

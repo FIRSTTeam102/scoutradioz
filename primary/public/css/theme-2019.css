@@ -114,6 +114,10 @@
 	background-color: var(--footer);
 }
 
+.team-image-sm{max-height: 100px; margin: 4px;}
+.team-image-md{max-height: 350px; margin: 8px;}
+.team-image-lg{max-height: 550px; margin: 8px;}
+
 p.indented{
 	text-indent: 20px;
 }

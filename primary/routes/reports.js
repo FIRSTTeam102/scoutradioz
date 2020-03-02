@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const utilities = require('../utilities');
-const matchDataHelper = require ('../helpers/matchdatahelper');
+const matchDataHelper = require('../helpers/matchdatahelper');
+const uploadHelper = require('../helpers/uploadhelper');
 
 router.all('/*', async (req, res, next) => {
 	//Require viewer-level authentication for every method in this route.
@@ -169,17 +170,7 @@ router.get("/teamintel", async function(req, res){
 		return;
 	}
 	logger.debug(thisFuncName + 'teamKey=' + teamKey);
-	
-	// var rankCol = db.get("currentrankings");
-	// var teamsCol = db.get('currentteams');
-	// var pitCol = db.get('scoutingdata');
-	// var aggCol = db.get('scoringdata');
-	// var matchCol = db.get('matches');
-	// var scoutCol = db.get("scoutinglayout");
-	// var scoreCol = db.get("scoringlayout");
-	// 2019-03-21, M.O'C: Utilize the currentaggranges
-	// var currentAggCol = db.get("currentaggranges");
-	
+		
 	var event_key = req.event.key;
 	var event_year = req.event.year;
 	var org_key = req.user.org_key;
@@ -187,11 +178,10 @@ router.get("/teamintel", async function(req, res){
 	
 	// Team details
 	// 2020-02-09, M.O'C: Adjusted "currentteams" to "teams"
-	var teamFind = await utilities.find("teams", { "key" : teamKey }, {});
+	// 2020-02-29, JL: Changed utilities.find to utilities.findOne
+	var team = await utilities.findOne("teams", { "key" : teamKey }, {});
 	
-	// if(e)
-	// 	return console.error(e);
-	if(!teamFind[0]){
+	if(!team){
 		return res.render('./error', {
 			title: "Intel: Team " + teamKey.substring(3),
 			error: {
@@ -199,36 +189,30 @@ router.get("/teamintel", async function(req, res){
 			}
 		});
 	}
-	var team = teamFind[0];
 
 	// Extract the current team ranking, etc.
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	// var rankFind = await utilities.find("currentrankings", {team_key: teamKey}, {sort: {rank: 1}});
-	var rankFind = await utilities.find("rankings", {"event_key": event_key, "team_key": teamKey}, {sort:{rank: 1}});
-
-	var ranking = null;
-	if (rankFind && rankFind.length > 0)
-		ranking = rankFind[0];
-
+	// 2020-02-29, JL: Change utilities.find to utilities.findOne
+	var ranking = await utilities.findOne("rankings", {"event_key": event_key, "team_key": teamKey}, {sort:{rank: 1}});
+	
 	// Pit scouting info
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	var pitFind = await utilities.find("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, {});
+	// 2020-02-29, JL: Change utilities.find to utilities.findOne
+	var pitFind = await utilities.findOne("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, {});
 	var pitData = null;
 	var pitData1 = null;
-	if (pitFind && pitFind[0]) {
-		if (pitFind[0].data)
-			pitData = pitFind[0].data;
-		if (pitFind[0].data1)
-			pitData1 = pitFind[0].data1;
+	if (pitFind) {
+		if (pitFind)
+			pitData = pitFind.data;
+		if (pitFind.data1)
+			pitData1 = pitFind.data1;
 	}
-	//logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
-
+	
 	// Pit data layout
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
-	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
 	var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "pitscouting"}, {sort: {"order": 1}})
 	
-	//logger.debug(thisFuncName + 'layout=' + JSON.stringify(layout));
+	logger.trace(thisFuncName + 'layout=' + JSON.stringify(layout));
 	
 	// Pull in individual scouting data for this team, for this event, to enhance the match data
 	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey + ',event_key=' + event_key);
@@ -247,7 +231,7 @@ router.get("/teamintel", async function(req, res){
 			}
 		}
 	}
-			
+	
 	// Match history info
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : event_key, $or: [{"alliances.blue.team_keys": teamKey}, {"alliances.red.team_keys": teamKey}]}, {sort: {time: -1}});
 	if (matches && matches.length > 0) {
@@ -261,8 +245,8 @@ router.get("/teamintel", async function(req, res){
 			}
 		}
 	}
-	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
-
+	logger.trace(thisFuncName + 'matches=' + JSON.stringify(matches));
+	
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
 	// { $match : { "data":{$exists:true}, "event_key": "2018njfla", "team_key": "frc303" } }, 
@@ -272,7 +256,7 @@ router.get("/teamintel", async function(req, res){
 	// "teleScaleMAX": {$max: "$data.teleScale"}
 	//  } }
 	// ] );	
-
+	
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
@@ -337,7 +321,9 @@ router.get("/teamintel", async function(req, res){
 	var currentAggRanges = [];
 	if (currentAggFind)
 		currentAggRanges = currentAggFind;
-
+	
+	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
+	
 	res.render("./reports/teamintel", {
 		title: "Intel: Team " + teamKey.substring(3),
 		team: team,
@@ -349,7 +335,8 @@ router.get("/teamintel", async function(req, res){
 		aggdata: aggTable,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
-		matchDataHelper: matchDataHelper
+		matchDataHelper: matchDataHelper,
+		images: images
 	});
 });
 

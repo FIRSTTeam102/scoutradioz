@@ -52,6 +52,7 @@
     "log4js": "^5.2.2",
     "multer": "^1.4.2",
     "pug": "^2.0.4",
-    "run-parallel": "^1.1.9"
+    "run-parallel": "^1.1.9",
+    "@firstteam102/scoutradioz-utilities": "^1.0.3"
   }
 }

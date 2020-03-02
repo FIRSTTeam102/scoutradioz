@@ -14,23 +14,46 @@ block content
 	script(src=`${fileRoot}/js/script-pitscouting.js?v=8`)
 	h3= key.replace('frc','Team #')
 	p
-	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img#imgMain(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
-	br
-	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img#imgA(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img#imgB(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-		img#imgC(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
+	if images
+		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
+			//-Main image
+			if images.main
+				img#imgMain(src=images.main.md alt="" class="w3-image team-image-md")
+			else 
+				img#imgMain(alt="" class="w3-image team-image-md")
+		br
+		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
+			//-Small image 1
+			if images.a
+				img#imgA(src=images.a.sm alt="" class="w3-image team-image-sm")
+			else 
+				img#imgA(alt="" class="w3-image team-image-sm")
+			//-Small image 2
+			if images.b
+				img#imgB(src=images.b.sm alt="" class="w3-image team-image-sm")
+			else 
+				img#imgB(alt="" class="w3-image team-image-sm")
+			//-Small image 3
+			if images.c
+				img#imgC(src=images.b.sm alt="" class="w3-image team-image-sm")
+			else 
+				img#imgC(alt="" class="w3-image team-image-sm")
+	//div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
+		img#imgA(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}a_sm.jpg` alt="" class="w3-image team-image-sm")
+		img#imgB(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}b_sm.jpg` alt="" class="w3-image team-image-sm")
+		img#imgC(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}c_sm.jpg` alt="" class="w3-image team-image-sm")
 	form#imageform(action="javascript:void(0)" method="post")
 		//-Image inputs
-		input#imageMain(type="file" class="image-input" key=key name="imageMain")
-		input#imageA(type="file" class="image-input" key=`${key}a` name="imageA")
-		input#imageB(type="file" class="image-input" key=`${key}b` name="imageB")
-		input#imageC(type="file" class="image-input" key=`${key}c` name="imageC")
+		input#imageMain(type="file" class="image-input" index="0" name="imageMain")
+		input#imageA(type="file" class="image-input" index="1" name="imageA")
+		input#imageB(type="file" class="image-input" index="2" name="imageB")
+		input#imageC(type="file" class="image-input" index="3" name="imageC")
 		//-Hidden inputs that contain uploadURL (upload.scoutradioz.com/app/image) and event year
 		input(type="hidden" name="uploadURL" value=uploadURL)
 		input(type="hidden" name="year" value=event_year)
 		input(type="hidden" name="org_key" value=user.org_key)
+		input(type="hidden" name="team_key" value=key)
+		input(type="hidden" name="user" value=user._id)
 		//-The buttons are actually labels for each image input
 		div(class="w3-container w3-padding")
 			label#uploadMain(for="imageMain" class="w3-btn theme-submit") Upload Main Photo

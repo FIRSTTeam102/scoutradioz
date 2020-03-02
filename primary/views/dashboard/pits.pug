@@ -8,8 +8,8 @@ block content
 			th Assignee
 			th Team #
 			th Nickname
-			- if (pics)
-				th Pic
+			//if images
+				th Photo
 			each team in teams
 				if( user.name == team.primary )
 					- color = "gear-text-orange";
@@ -29,9 +29,10 @@ block content
 									span= team.team_key.substring(3)
 					td(class='w3-left-align theme-spacer')
 						h4(class=`${color}`) #{team.nickname}
-					- if (pics)
+					
+					//- if (pics)
 						td(class="theme-spacer")
 							img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.team_key}_sm.jpg` alt="" class="w3-image" style="max-height:80px;max-width:50px;")
-		h6
+		//h6
 			a(class="gear-btn theme-link w3-btn" href=`/dashboard/pits?pics=yes`) Refresh with pictures
 

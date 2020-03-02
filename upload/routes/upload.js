@@ -3,10 +3,14 @@ const _ = require('lodash');
 const multer = require('multer');
 const logger = require('log4js').getLogger();
 const S3Storage = require('../helpers/S3Storage');
+const path = require('path');
 const crypto = require('crypto');
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
+
+const utilities = require('@firstteam102/scoutradioz-utilities');
+utilities.config(path.join(__dirname, '../databases.json'))
 
 logger.warn("Images will be uploaded to S3.");
 
@@ -18,13 +22,20 @@ var storage = S3Storage({
 	key: function (req, file, cb) {
 		const thisFuncName = 'S3Storage.opts.getKey: ';
 		
-		//const bytes = crypto.pseudoRandomBytes(32);
-		//const checksum = crypto.createHash('MD5').update(bytes).digest('hex');
+		const bytes = crypto.pseudoRandomBytes(32);
+		const checksum = crypto.createHash('MD5').update(bytes).digest('hex');
+					
+		const tier = process.env.TIER;
+		const baseKey = process.env.S3_BASE_KEY;
+		const year = new Date().getFullYear();
+		let month = new Date().getMonth()+1;
+		if (month < 10) month = "0"+month;
 		
-		const fileKey = req.query.key;
-		const year = req.query.year;
-		const orgKey = req.query.org_key;
+		const key = `${tier}/${baseKey}/${year}_${month}/${checksum}`;
 		
+		cb(null, key);
+		
+		/*
 		console.log(req.query)
 		
 		if( fileKey && year && orgKey ){
@@ -47,32 +58,7 @@ var storage = S3Storage({
 			logger.error(`${thisFuncName} File key and year are not specified.`)
 			
 			cb(new Error("File key, year, and org key need to be specified."));
-		}
-		/*				
-		const fileKey = req.query.key;
-		const year = req.query.year;
-		
-		if( fileKey && year ){
-			
-			const filename = `${year}_${fileKey}`;
-			
-			const tier = process.env.TIER;
-			const baseKey = process.env.S3_BASE_KEY;
-			
-			const key = `${tier}/${baseKey}/${filename}`;
-			
-			logger.info(`${thisFuncName} s3 key=${key}`);
-			
-			cb(null, key);
-			
-		}
-		//throw if key information is not specified in request
-		else{
-			
-			logger.error(`${thisFuncName} File key and year are not specified.`)
-			
-			cb(new Error("File key and year need to be specified."));
-		}*/	
+		}*/
 	},	
 	acl: "public-read",
 	
@@ -134,8 +120,8 @@ router.post('/image', async (req, res, next) => {
 });
 
 router.post('/image', upload.single("image"), async (req, res, next) => {
-	
-	logger.info(`upload/image post-upload: req.file=${JSON.stringify(req.file)}`);
+	const thisFuncName = "upload/image post-upload: ";
+	logger.debug(`${thisFuncName} req.file=${JSON.stringify(req.file)}`);
 	
 	var locations = [];
 	
@@ -151,6 +137,44 @@ router.post('/image', upload.single("image"), async (req, res, next) => {
 	
 	if (req.file[0]) {
 		var mainFile = req.file[0];
+		
+		const orgKey = req.query.org_key;
+		const index = req.query.index;
+		const year = req.query.year;
+		const teamKey = req.query.team_key;
+		const userId = req.query.user;
+		const useragent = req.shortagent;
+		const uploadTime = Date.now();
+		const s3Key = mainFile.key;
+		
+		const user = await utilities.findOne("users", {_id: userId});
+		var userName;
+		
+		if (user) {
+			userName = user.name;
+		}
+		else {
+			logger.error(`${thisFuncName} Could not find user in db; setting to undefined`);
+			userName = "Undefined";
+		}
+		
+		const data = {
+			org_key: orgKey,
+			year: parseInt(year),
+			team_key: teamKey,
+			uploader: {
+				name: userName,
+				id: userId,
+				useragent: useragent,
+				upload_time: uploadTime
+			},
+			s3_key: s3Key,
+			index: parseInt(index)
+		}
+		
+		logger.info(`${thisFuncName} Upload complete; data=${JSON.stringify(data)}`);
+		
+		await utilities.insert("uploads", data);
 		
 	}
 	

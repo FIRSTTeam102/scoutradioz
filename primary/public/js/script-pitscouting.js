@@ -59,12 +59,14 @@ async function submitImage(ev){
 	var button = $(`label[for=${imageInputID}]`);
 	
 	//formulate the url that we send a request to
-	var key = $(imageInput).attr("key");
+	var index = $(imageInput).attr("index");
 	var year = $("input[name=year]").val();
 	var orgKey = $("input[name=org_key]").val();
+	var teamKey = $("input[name=team_key]").val();
+	var userId = $("input[name=user]").val();
 	var uploadURLBase = $("input[name=uploadURL]").val();
 	
-	var uploadURL = `${uploadURLBase}?key=${key}&year=${year}&org_key=${orgKey}`;
+	var uploadURL = `${uploadURLBase}?index=${index}&year=${year}&org_key=${orgKey}&team_key=${teamKey}&user=${userId}`;
 	
 	//create FormData object to submit
 	var data = new FormData();
