@@ -65,6 +65,8 @@ router.post('/login/select', async function(req, res){
 	//get contents of request and selected organization
 	var org_key = req.user.org_key;
 	var org_password = req.body.org_password;
+	logger.debug(`${thisFuncName} - ${org_key}`);
+	
 	
 	//Make sure that form is filled
 	if(!org_key || !org_password || org_key == "" || org_password == ""){
@@ -87,7 +89,9 @@ router.post('/login/select', async function(req, res){
 	//If comparison succeeded, then proceed
 	if(comparison == true){
 		
-		var users = await utilities.find('users', {"org_key": org_key, name: {$ne: "default_user"}}, {sort: {name: 1}});
+		var users = await utilities.find('users', {org_key: org_key, name: {$ne: "default_user"}}, {sort: {name: 1}});
+
+		//logger.debug(thisFuncName + "users=" + JSON.stringify(users));
 				
 		res.render('./user/selectuser', {
 			title: `Sign In to ${selectedOrg.nickname}`,
