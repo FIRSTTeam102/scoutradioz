@@ -11,7 +11,7 @@
     "accountId": "243452333432",
     "publicS3BucketName": "scoutradioz",
     "publicFolderName": "public",
-    "publicTierName": "dev"
+    "publicTierName": "app"
   },
   "scripts": {
     "start": "node app.local.js",
