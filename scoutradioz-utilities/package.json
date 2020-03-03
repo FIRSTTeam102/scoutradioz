@@ -2,7 +2,7 @@
   "name": "@firstteam102/scoutradioz-utilities",
   "version": "1.0.3",
   "description": "Database utilities package for Scoutradioz",
-  "main": "index.js",
+  "main": "utilities.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
