@@ -36,7 +36,7 @@ functions.authenticate = function(req, res, next) {
 					res.redirect(`/user/login?redirectURL=${req.originalUrl}`);
 				}
 				else {
-					res.sendStatus(401);
+					res.redirect('/?alert=You are not authorized to access this page.&type=error');
 				}
 			}
 		}

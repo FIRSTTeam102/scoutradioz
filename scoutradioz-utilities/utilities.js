@@ -18,7 +18,7 @@ var dbConfigLocation;
  */
 utilities.config = function(configFile){
 	
-	if (typeof configFile != "string") throw new TypeError("configFile must be a string");
+	if (typeof configFile != "string") throw new TypeError("Utilities.config: configFile must be a string");
 	
 	if (fs.existsSync(configFile)) {
 		dbConfigLocation = configFile;
@@ -32,7 +32,7 @@ utilities.config = function(configFile){
 		}
 	}
 	else {
-		throw new Error("configFile is not a valid path or file does not exist");
+		throw new ReferenceError("configFile is not a valid path or file does not exist");
 	}
 }
 
@@ -145,23 +145,23 @@ utilities.getDBurl = function(){
 /**
  * Asynchronous "find" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
- * @param {Object} parameters Query parameters.
+ * @param {Object} query Filter for query.
  * @param {Object} options Query options, such as sort.
  */
-utilities.find = async function(collection, parameters, options){
+utilities.find = async function(collection, query, options, cacheOptions){
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Collection must be specified.");
+		throw new TypeError("Utilities.find: Collection must be specified.");
 	}
-	//If query parameters are not set, create an empty object for the DB call.
-	if(!parameters){
-		var parameters = {};
+	//If query query are not set, create an empty object for the DB call.
+	if(!query){
+		var query = {};
 	}
-	//If parameters exists and is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.find Error: Parameters must be of type object");
+	//If query exists and is not an object, throw an error. 
+	if(typeof(query) != "object"){
+		throw new TypeError("Utilities.find: query must be of type object");
 	}
 	//If query options are not set, create an empty object for the DB call.
 	if(!options){
@@ -169,18 +169,18 @@ utilities.find = async function(collection, parameters, options){
 	}
 	//If options exists and is not an object, throw an error.
 	if(typeof(options) != "object"){
-		throw new Error("Utilities.find Error: Options must be of type object");
+		throw new TypeError("Utilities.find: Options must be of type object");
 	}
 	
-	logger.trace(`utilities.find: ${collection}, ${JSON.stringify(parameters)}, ${JSON.stringify(options)}`);
+	logger.trace(`utilities.find: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
 	
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
-	//Find in collection with parameters and options
+	//Find in collection with query and options
 	var data = [];
-	data = await Col.find(parameters, options);
+	data = await Col.find(query, options);
 	
 	logger.trace(`utilities.find: result: ${data}`);
 	
@@ -191,23 +191,23 @@ utilities.find = async function(collection, parameters, options){
 /**
  * Asynchronous "findOne" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
- * @param {Object} parameters Query parameters.
+ * @param {Object} query Filter for query.
  * @param {Object} options Query options, such as sort.
  */
-utilities.findOne = async function(collection, parameters, options){
+utilities.findOne = async function(collection, query, options){
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Collection must be specified.");
+		throw new TypeError("Utilities.findOne: Collection must be specified.");
 	}
-	//If query parameters are not set, create an empty object for the DB call.
-	if(!parameters){
-		var parameters = {};
+	//If query query are not set, create an empty object for the DB call.
+	if(!query){
+		var query = {};
 	}
-	//If parameters exists and is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.find Error: Parameters must be of type object");
+	//If query exists and is not an object, throw an error. 
+	if(typeof(query) != "object"){
+		throw new TypeError("Utilities.findOne: query must be of type object");
 	}
 	//If query options are not set, create an empty object for the DB call.
 	if(!options){
@@ -215,19 +215,20 @@ utilities.findOne = async function(collection, parameters, options){
 	}
 	//If options exists and is not an object, throw an error.
 	if(typeof(options) != "object"){
-		throw new Error("Utilities.find Error: Options must be of type object");
+		throw new TypeError("Utilities.findOne: Options must be of type object");
 	}
+	logger.warn("hello")
 	
-	logger.trace(`utilities.findOne: ${collection}, ${JSON.stringify(parameters)}, ${JSON.stringify(options)}`);
+	logger.trace(`utilities.findOne: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
 	
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
 	
-	//Find in collection with parameters and options
+	//Find in collection with query and options
 	var data = [];
-	data = await Col.findOne(parameters, options);
+	data = await Col.findOne(query, options);
 	
 	logger.trace(`utilities.findOne: result: ${data}`);
 	
@@ -239,28 +240,35 @@ utilities.findOne = async function(collection, parameters, options){
  * Asynchronous "distinct" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
  * @param {String} field Which field to distinct.
- * @param {Object} parameters Query parameters.
+ * @param {Object} query The query for filtering the set of documents to which we apply the distinct filter.
  */
-utilities.distinct = async function(collection, field, parameters){
+utilities.distinct = async function(collection, field, query){
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Utilities.distinct Collection must be specified.");
+		throw new TypeError("Utilities.distinct: Collection must be specified.");
 	}
-	//If query parameters are not set, create an empty object for the DB call.
-	if(!parameters){
-		var parameters = {};
+	if(typeof(field) != "string"){
+		throw new TypeError("Utilities.distinct: Field string must be specified.")
+	}
+	//If query filter are not set, create an empty object for the DB call.
+	if(!query){
+		var query = {};
+	}
+	//If query exists and is not an object, throw an error. 
+	if(typeof(query) != "object"){
+		throw new TypeError("Utilities.distinct: query must be of type object");
 	}
 	
-	logger.trace(`utilities.distinct: ${collection}, ${JSON.stringify(parameters)}`);
+	logger.trace(`utilities.distinct: ${collection}, ${JSON.stringify(query)}`);
 	
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
-	//Find in collection with parameters and options
+	//Find in collection with query and options
 	var data = [];
-	data = await Col.distinct(field, parameters);
+	data = await Col.distinct(field, query);
 	
 	logger.trace(`utilities.distinct: result: ${data}`);
 	
@@ -271,31 +279,27 @@ utilities.distinct = async function(collection, field, parameters){
 /**
  * Asynchronous "aggregate" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
- * @param {Object} parameters Query parameters.
+ * @param {Object} pipeline Array containing all the aggregation framework commands for the execution.
  */
-utilities.aggregate = async function(collection, parameters) {
+utilities.aggregate = async function(collection, pipeline) {
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Utilities.aggregate Error: Collection must be specified.");
+		throw new TypeError("Utilities.aggregate: Collection must be specified.");
 	}
-	//If query parameters are not set, create an empty object for the DB call.
-	if(!parameters){
-		var parameters = {};
-	}
-	//If parameters exists and is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.aggregate Error: Parameters must be of type object");
+	//If query does not exist or is not an object, throw an error. 
+	if(typeof(pipeline) != "object"){
+		throw new TypeError("Utilities.aggregate: pipieline must be of type object");
 	}
 	
-	logger.trace(`utilities.aggregate: ${collection}, ${JSON.stringify(parameters)}`);
+	logger.trace(`utilities.aggregate: ${collection}, ${JSON.stringify(pipeline)}`);
 	
 	var db = this.getDB();
 	
 	var Col = db.get(collection);
-	//Find in collection with parameters and options
+	//Find in collection with query and options
 	var data = [];
-	data = await Col.aggregate(parameters);
+	data = await Col.aggregate(pipeline);
 	
 	logger.trace(`utilities.aggregate: result: ${data}`);
 	
@@ -306,28 +310,28 @@ utilities.aggregate = async function(collection, parameters) {
 /**
  * Asynchronous "update" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
- * @param {Object} parameters Query parameters.
+ * @param {Object} query Filter query.
  * @param {Object} update Update query.
  * @param {Object} options Query options, such as sort.
  */
-utilities.update = async function(collection, parameters, update, options){
+utilities.update = async function(collection, query, update, options){
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Collection must be specified.");
+		throw new TypeError("Utilities.update: Collection must be specified.");
 	}
-	//If query parameters are not set, create an empty object for the DB call.
-	if(!parameters){
-		var parameters = {};
+	//If query query are not set, create an empty object for the DB call.
+	if(!query){
+		var query = {};
 	}
-	//If parameters exists and is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.find Error: Parameters must be of type object");
+	//If query exists and is not an object, throw an error. 
+	if(typeof(query) != "object"){
+		throw new TypeError("Utilities.update: query must be of type object");
 	}
 	//If update does not exist or is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.find Error: Parameters must be specified and of type object");
+	if(typeof(update) != "object"){
+		throw new TypeError("Utilities.update: update must be specified and of type object");
 	}
 	//If query options are not set, create an empty object for the DB call.
 	if(!options){
@@ -335,18 +339,18 @@ utilities.update = async function(collection, parameters, update, options){
 	}
 	//If options exists and is not an object, throw an error.
 	if(typeof(options) != "object"){
-		throw new Error("Utilities.find Error: Options must be of type object");
+		throw new TypeError("Utilities.update: Options must be of type object");
 	}
 	
-	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(parameters)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
+	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
 	
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
-	//Remove in collection with parameters
+	//Remove in collection with query
 	var writeResult;
-	writeResult = await Col.update(parameters, update, options);
+	writeResult = await Col.update(query, update, options);
 	
 	//console.log(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
 	logger.trace(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
@@ -358,39 +362,39 @@ utilities.update = async function(collection, parameters, update, options){
 /**
  * Asynchronous "bulkWrite" function to a collection specified in first parameter.
  * @param {String} collection Collection to find in.
- * @param {Array} operations Array of bulkWrite operations.
- * @param {Object} parameters Query parameters.
+ * @param {Array} operations Array of Bulk operations to perform.
+ * @param {Object} options Optional settings.
  */
-utilities.bulkWrite = async function(collection, operations, parameters){
+utilities.bulkWrite = async function(collection, operations, options){
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Collection must be specified.");
+		throw new TypeError("Utilities.bulkWrite: Collection must be specified.");
 	}
-
+	
 	//If operations does not exist or is not an array, throw an error. 
 	if(!Array.isArray(operations)){
-		throw new Error("Utilities.bulkWrite Error: Operations must be specified and is an array of operations");
+		throw new TypeError("Utilities.bulkWrite: Operations must be specified and is an array of operations");
 	}
 	
-	//If query parameters are not set, create an empty object for the DB call.
-	if(!parameters){
-		var parameters = {};
+	//If query options are not set, create an empty object for the DB call.
+	if(!options){
+		var options = {};
 	}
-	//If parameters exists and is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.find Error: Parameters must be of type object");
+	//If options exists and is not an object, throw an error. 
+	if(typeof(options) != "object"){
+		throw new TypeError("Utilities.bulkWrite: options must be of type object");
 	}
 	
-	logger.trace(`utilities.bulkWrite: ${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(parameters)}`);
+	logger.trace(`utilities.bulkWrite: ${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(options)}`);
 
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
-	//Update in collection with parameters
+	//Update in collection with options
 	var writeResult;
-	writeResult = await Col.bulkWrite(operations, parameters);
+	writeResult = await Col.bulkWrite(operations, options);
 	
 	logger.trace(`utilities.bulkWrite: writeResult: ${JSON.stringify(writeResult)}`);
 	
@@ -401,33 +405,33 @@ utilities.bulkWrite = async function(collection, operations, parameters){
 /**
  * Asynchronous "remove" function to a collection specified in first parameter.
  * @param {String} collection Collection to remove from.
- * @param {Object} parameters Query parameters (Element/s to remove).
+ * @param {Object} query Filter for element/s to remove.
  */
-utilities.remove = async function(collection, parameters){
+utilities.remove = async function(collection, query){
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Collection must be specified.");
+		throw new TypeError("utilities.remove: Collection must be specified.");
 	}
-	//If query parameters are not set, create an empty object for the DB call.
-	if(!parameters){
-		var parameters = {};
+	//If query query are not set, create an empty object for the DB call.
+	if(!query){
+		var query = {};
 	}
-	//If parameters exists and is not an object, throw an error. 
-	if(typeof(parameters) != "object"){
-		throw new Error("Utilities.find Error: Parameters must be of type object");
+	//If query exists and is not an object, throw an error. 
+	if(typeof(query) != "object"){
+		throw new TypeError("utilities.remove: query must be of type object");
 	}
 	
-	logger.trace(`utilities.remove: ${collection}, param: ${JSON.stringify(parameters)}`);
+	logger.trace(`utilities.remove: ${collection}, param: ${JSON.stringify(query)}`);
 	
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
-	//Remove in collection with parameters
+	//Remove in collection with query
 	var writeResult;
-	writeResult = await Col.remove(parameters);
+	writeResult = await Col.remove(query);
 	
 	logger.trace(`utilities.remove: writeResult: ${JSON.stringify(writeResult)}`);
 	
@@ -438,18 +442,18 @@ utilities.remove = async function(collection, parameters){
 /**
  * Asynchronous "insert" function to a collection specified in first parameter.
  * @param {String} collection Collection to insert into.
- * @param {Object} parameters [Any] Element or array of elements to insert
+ * @param {Object} elements [Any] Element or array of elements to insert
  */
 utilities.insert = async function(collection, elements){
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new Error("Collection must be specified.");
+		throw new TypeError("utilities.insert: Collection must be specified.");
 	}
-	//If query parameters are not set, create an empty object for the DB call.
+	//If elements are not set, throw an error
 	if(!elements){
-		throw new Error("Must contain an element or array of elements to insert.");
+		throw new TypeError("utilities.insert: Must contain an element or array of elements to insert.");
 	}
 	
 	logger.trace(`utilities.insert: ${collection}, elements: ${JSON.stringify(elements)}`);

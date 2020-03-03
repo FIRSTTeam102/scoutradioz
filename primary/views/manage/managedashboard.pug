@@ -87,6 +87,8 @@ block content
 							td(class="w3-padding-16")=event.name 
 							td(class="w3-padding-16")=event.start_date
 							td(class="w3-padding-16")=event.key
+							td(style="display: none;")=event.city
+							td(style="display: none;")=event.country
 	script.
 		$(() => {
 			$("#setEvent").on('input', ev => {

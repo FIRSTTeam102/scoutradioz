@@ -1,21 +1,22 @@
 const router = require('express').Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require('../utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_SCOUTER)) {
 		next();
 	}
-})
+}));
 
 /**
  * Scouter's dashboard page. Provides a scouter's assigned teams for scouting and assigned matches for scoring
  * @url /dashboard
  * @view dashboard/dashboard-index
  */
-router.get('/', async function(req, res) {
+router.get('/', wrap(async (req, res) => {
 	
 	var thisFuncName = "dashboard.{root}[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -123,14 +124,14 @@ router.get('/', async function(req, res) {
 		"backupTeams": backupTeams,
 		"scoringMatches": scoringMatches
 	});
-});
+}));
 
 /**
  * Page for unassigned scorers. Provides links to one-off score matches or scout teams.
  * @url /dashboard/unassigned
  * @view dashboard/unassigned
  */
-router.get('/unassigned', async function(req, res) {
+router.get('/unassigned', wrap(async (req, res) => {
 	
 	var thisFuncName = "dashboard.unassigned[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -138,14 +139,14 @@ router.get('/unassigned', async function(req, res) {
 	res.render('./dashboard/unassigned',{
 		title: 'Unassigned'
 	});	
-});
+}));
 
 /**
  * Alliance selection page
  * @url /dashboard/allianceselection
  * @view dashboard/allianceselection
  */
-router.get('/allianceselection', async function(req, res){
+router.get('/allianceselection', wrap(async (req, res) => {
 	var thisFuncName = "dashboard.allianceselection[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
@@ -298,9 +299,9 @@ router.get('/allianceselection', async function(req, res){
 		logger.error(err);
 		res.redirect(`/?alert=${err.message || err}&type=error`);
 	}
-});
+}));
 
-router.get('/pits', async function(req, res) {
+router.get('/pits', wrap(async (req, res) => {
 	
 	var thisFuncName = "dashboard.pits[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -365,9 +366,9 @@ router.get('/pits', async function(req, res) {
 		pics: pics,
 		"teams": teams
 	});	
-});
+}));
 
-router.get('/matches', async function(req, res) {
+router.get('/matches', wrap(async (req, res) => {
 	
 	var thisFuncName = "dashboard.matches[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -453,6 +454,6 @@ router.get('/matches', async function(req, res) {
 		title: "Match Scouting",
 		matches: scoreData
 	});
-});
+}));
 
 module.exports = router;

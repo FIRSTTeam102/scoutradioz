@@ -27,7 +27,8 @@ logger.level = 'debug';
 //load custom middleware
 const usefunctions = require("./helpers/usefunctions");
 //load database utilities
-const utilities = require('@firstteam102/scoutradioz-utilities');
+//const utilities = require('@firstteam102/scoutradioz-utilities');
+const utilities = require('utilities-local');
 //Configure utilities with the full file path of our databases json file
 utilities.config(path.join(__dirname, "databases.json"));
 //const utilities = require('./utilities');
@@ -56,7 +57,7 @@ const MongoClient = require('mongodb').MongoClient;
 const clientPromise = new Promise((resolve, reject) => {
 	const url = utilities.getDBurl();
 	//Connect mongoClient to dbUrl specified in utilities
-	MongoClient.connect(url, function(err, client){
+	MongoClient.connect(url, {useUnifiedTopology: true}, function(err, client){
 		//Resolve/reject with client
 		if (err) reject(err);
 		else if (client) resolve(client);
@@ -131,13 +132,14 @@ var manageindex = require('./routes/manage/indexmgmt');
 var allianceselection = require('./routes/manage/allianceselection');
 var currentevent = require("./routes/manage/currentevent");
 var config = require("./routes/manage/orgconfig");
-var externaldata = require("./routes/manage/externaldata");
 var manualdata = require("./routes/manage/manualdata");
 var orgmembers = require("./routes/manage/members");
-var scoutingaudit = require("./routes/manage/scoutingaudit");
+var scoutingaudit = require('./routes/manage/scoutingaudit');
 var scoutingpairs = require('./routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
 var adminindex = require('./routes/admin/indexadmin');
+var externaldata = require("./routes/admin/externaldata");
+var sync = require('./routes/admin/sync');
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
@@ -157,7 +159,8 @@ app.use('/manage/scoutingaudit', scoutingaudit);
 app.use('/manage/manualdata', manualdata);
 
 app.use('/admin', adminindex);
-app.use('/manage/data', externaldata); //Eventually move/rename to /admin/externaldata
+app.use('/admin/sync', sync);
+app.use('/admin/externaldata', externaldata);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);

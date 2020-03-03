@@ -1,20 +1,21 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require('../../utilities');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
-})
+}));
 
 /**
  * Scoring audit page.
  * @url /manage/scoringaudit
  * @view /manage/index, /manage/scoringaudit
  */
-router.get("/", async function(req, res) {
+router.get("/", wrap(async (req, res) =>  {
 	
 	var thisFuncName = "audit.root[GET]:";
 	logger.debug(`${thisFuncName} enter`);
@@ -133,9 +134,9 @@ router.get("/", async function(req, res) {
 		title: "Scouter Audit",
 		audit: memberArr
 	});
-});
+}));
 
-router.get('/bymatch', async function(req, res){
+router.get('/bymatch', wrap(async (req, res) => {
 	
 	var audit = {};
 	var eventId = req.event.key;
@@ -201,9 +202,9 @@ router.get('/bymatch', async function(req, res){
 		title: "Match Scouting Audit",
 		"audit": audit
 	});
-})
+}));
 
-router.get('/comments', async function(req, res){
+router.get('/comments', wrap(async (req, res) => {
 	
 	var eventId = req.event.key;
 	var org_key = req.user.org_key;
@@ -236,7 +237,7 @@ router.get('/comments', async function(req, res){
 		title: "Scouter Comments Audit",
 		"audit": audit
 	});
-});
+}));
 
 
 module.exports = router;

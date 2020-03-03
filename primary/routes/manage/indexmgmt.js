@@ -1,21 +1,22 @@
 const bcrypt = require('bcryptjs')
 const router = require("express").Router();
+const wrap = require('express-async-handler');
 const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
-})
+}));
 
 /**
  * Admin index page. Provides links to all admin functionality.
  * @url /manage/
  * @views /manage/adminindex
  */
-router.get('/', async function(req, res) {
+router.get('/', wrap(async (req, res) => {
 	
 	const org = await utilities.findOne("orgs", {org_key: req.user.org_key});
 	const events = await utilities.find("events", {year: new Date().getFullYear()}, {sort: {start_date: 1}});
@@ -26,9 +27,9 @@ router.get('/', async function(req, res) {
 		current: req.event.key,
 		events: events,
 	});
-});
+}));
 
-router.post('/setdefaultpassword', async function(req, res) {
+router.post('/setdefaultpassword', wrap(async (req, res) => {
 	
 	var newDefaultPassword = req.body.defaultPassword
 	
@@ -38,13 +39,13 @@ router.post('/setdefaultpassword', async function(req, res) {
 	
 	res.redirect(`/manage?alert=Successfully changed password to ${newDefaultPassword}.`);
 	
-});
+}));
 
 /** POST method to set current event id.
  * @url /manage/setcurrent
  * @redirect /admin
  */
-router.post('/setcurrent', async function(req, res) {
+router.post('/setcurrent', wrap(async (req, res) => {
 	
 	var thisFuncName = "adminindex.setcurrent[post]: ";
 	var eventKey = req.body.event_key;
@@ -71,13 +72,13 @@ router.post('/setcurrent', async function(req, res) {
 	}
 	
 
-});
+}));
 
 /** Page to generate sample data. Might not be necessary anymore?
  * @url /manage/generatedata
  * @redirect /
  */
-router.get('/generatedata', async function(req, res) {
+router.get('/generatedata', wrap(async (req, res) => {
 	
 	return res.send("Legacy code! Don't break the site!");
 	
@@ -237,6 +238,6 @@ router.get('/generatedata', async function(req, res) {
 		logger.debug(thisFuncName + 'ERROR scoringMatches is null!!');
 		res.redirect('/');
 	}
-});
+}));
 
 module.exports = router;

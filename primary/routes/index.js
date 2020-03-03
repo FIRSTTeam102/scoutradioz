@@ -1,11 +1,12 @@
 const router = require('express').Router();
+const wrap = require('express-async-handler');
 const utilities = require('../utilities');
 const logger = require('log4js').getLogger();
 
 /**
  * The "index" page that loads is now a form to select an organization.
  */
-router.get('/', async function(req, res){
+router.get('/', wrap(async (req, res) => {
 	
 	//If there is a logged-in user, that means they HAVE selected an org, and 
 	// so then redirect to /home
@@ -15,10 +16,13 @@ router.get('/', async function(req, res){
 		//added originalUrl to make GET queries to persist (for alert)
 		res.redirect(307, '/home' + req.originalUrl);
 	}
-	else if ( req.cookies.org_key ){
+	else if ( req.query.org_key || req.cookies.org_key ){
+		//Prioritize QUERY org key over cookies
+		//If someone wishes to share a page in the future, the link will include org_key
+		var orgKey = req.query.org_key || req.cookies.org_key;
 		
 		//redirect to selectorg with the selected org_key to sign in to the org user
-		res.redirect(307, `/selectorg?org_key=${req.cookies.org_key}&redirectURL=${req.originalUrl}`)
+		res.redirect(307, `/selectorg?org_key=${orgKey}&redirectURL=${req.originalUrl}`)
 	}
 	else{
 		
@@ -57,12 +61,12 @@ router.get('/', async function(req, res){
 			isOrgSelectScreen: true
 		});
 	}
-});
+}));
 
 /**
  * User submission to select an organization.
  */
-router.all('/selectorg', async function(req, res) {
+router.all('/selectorg', wrap(async (req, res) =>  {
 	
 	const thisFuncName = 'index/selectorg: ';
 	
@@ -78,8 +82,15 @@ router.all('/selectorg', async function(req, res) {
 	//search for organization in database
 	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
 	
-	//If organization does not exist, send internal error
-	if(!selectedOrg) return res.redirect(500, '/');
+	//If organization does not exist:
+	if(!selectedOrg) {
+		//If there is an org_key cookie, remove it
+		if (req.cookies.org_key) {
+			res.clearCookie('org_key');
+		}
+		//Redirect to home, without the invalid org_key query parameter
+		return res.redirect(`/?redirectURL=${req.query.redirectURL}`);
+	}
 	
 	//Now, sign in to organization's default user
 	var defaultUser = await utilities.findOne("users", {org_key: org_key, name: "default_user"});
@@ -121,14 +132,14 @@ router.all('/selectorg', async function(req, res) {
 			res.redirect('/home');
 		}
 	});
-});
+}));
 
 /**
  * Main homepage.
  * @url /
  * @view /index
  */
-router.get('/home', async function(req, res) {
+router.get('/home', wrap(async (req, res) =>  {
 
 	var thisFuncName = "index.home[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -144,12 +155,12 @@ router.get('/home', async function(req, res) {
 			title: 'Home',
 		});
 	}
-});
+}));
 
-router.get('/throwanerror', async function(req, res){
+router.get('/throwanerror', wrap(async (req, res) => {
 	
 	console.log(foo);
 	
-});
+}));
 
 module.exports = router;

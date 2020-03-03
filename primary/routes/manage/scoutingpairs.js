@@ -1,21 +1,22 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require("../../utilities");
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate(process.env.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
-})
+}));
 
 /**
  * Admin page to control and assign pairs of students for scouting.
  * @url /manage/scoutingpairs/
  * @views /manage/scoutingpairs
  */
-router.get("/", async function(req, res) {
+router.get("/", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.scoutingpairs(root): ";
 	var startTime = Date.now();
@@ -72,10 +73,10 @@ router.get("/", async function(req, res) {
 	
 	//Everything below is legacy, pre-rewrite.
 	return;
-});
+}));
 
 /* POST to Set scoutingPair Service */
-router.post('/setscoutingpair', async function(req, res) {
+router.post('/setscoutingpair', wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.setscoutingpair[post]: ";
 	
@@ -129,9 +130,9 @@ router.post('/setscoutingpair', async function(req, res) {
 	res.redirect("./");
 	
 	logger.trace(thisFuncName + "DONE");
-});
+}));
 
-router.post("/deletescoutingpair", async function(req, res) {
+router.post("/deletescoutingpair", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.deletescoutingpair[post]: ";
 	
@@ -168,9 +169,9 @@ router.post("/deletescoutingpair", async function(req, res) {
 	res.redirect("./");	
 	
 	logger.trace(thisFuncName + "DONE");
-});
+}));
 
-router.post("/generateteamallocations", async function(req, res) {
+router.post("/generateteamallocations", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.generateteamallocations[post]: ";
 
@@ -203,11 +204,11 @@ router.post("/generateteamallocations", async function(req, res) {
 			generateTeamAllocations(req, res);
 		}
 	});
-});	
+}));	
 
 //////////// Match allocating by batches of matches
 
-router.post("/generatematchallocations2", async function(req, res) {
+router.post("/generatematchallocations2", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.generateMATCHallocations2[post]: ";
 
@@ -425,9 +426,9 @@ router.post("/generatematchallocations2", async function(req, res) {
 
 	// all done, go to the matches list
 	res.redirect("/dashboard/matches");
-});
+}));
 
-router.post("/clearmatchallocations", async function(req, res) {
+router.post("/clearmatchallocations", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.clearmatchallocations[post]: ";
 	logger.info(thisFuncName + "ENTER");
@@ -478,11 +479,11 @@ router.post("/clearmatchallocations", async function(req, res) {
 /* End regular code ----------------------------------------------------------- */
 		}
 	});
-});
+}));
 
 //////////// Match allocating by team assignment
 
-router.post("/generatematchallocations", async function(req, res) {
+router.post("/generatematchallocations", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.generatematchallocations[post]: ";
 	logger.info(thisFuncName + "ENTER");
@@ -512,9 +513,9 @@ router.post("/generatematchallocations", async function(req, res) {
 			generateMatchAllocations(req, res);
 		}
 	});
-});
+}));
 
-router.get("/swapmembers", async function(req, res) {
+router.get("/swapmembers", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.swapmembers[get]: ";
 	
@@ -550,9 +551,9 @@ router.get("/swapmembers", async function(req, res) {
 		scorers: scorers,
 		users: users
 	});
-});
+}));
 
-router.post("/swapmembers", async function(req, res) {
+router.post("/swapmembers", wrap(async (req, res) => {
 	
 	var thisFuncName = "scoutingpairs.swapmembers[post]: ";
 	
@@ -586,7 +587,7 @@ router.post("/swapmembers", async function(req, res) {
 		update:{ $set: { assigned_scorer: swapin } }}}]);
 
 	res.redirect("/dashboard/matches");
-});
+}));
 
 async function generateMatchAllocations(req, res){
 	/* Begin regular code ----------------------------------------------------------- */

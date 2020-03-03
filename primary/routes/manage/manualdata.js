@@ -1,20 +1,21 @@
 const router = require("express").Router();
+const wrap = require('express-async-handler');
 const logger = require('log4js').getLogger();
 const utilities = require('../../utilities');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require GLOBAL-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
 		next();
 	}
-})
+}));
 
 /**
  * Admin page to manually input/edit list of teams at an event (w/o TBA).
  * @url /manage/manualinput/teams
  * @views manualinput/teams
  */
-router.get('/teams', async function(req, res){
+router.get('/teams', wrap(async (req, res) => {
 	
 	//return res.send("Code hasn't been updated to 2020 data structure! Sorry!");
 	
@@ -25,14 +26,14 @@ router.get('/teams', async function(req, res){
 		title: "Edit List of Teams",
 		teams: teamsArray
 	});
-});
+}));
 
 /**
  * POST method to retrieve manually updated list of teams.
  * @url /manage/manualinput/teams
  * @redirect /admin
  */
-router.post('/teams', async function(req, res){
+router.post('/teams', wrap(async (req, res) => {
 	
 	return res.send("Legacy code! Don't break the site!");
 	
@@ -124,14 +125,14 @@ router.post('/teams', async function(req, res){
 	
 	//Redirect with success message.
 	res.redirect('/manage?alert=Input teams successfully.');
-});
+}));
 
 /**
  * POST Method that fetches info on a team from TheBlueAlliance.
  * @param team_number Team number to fetch
  * @return [Object] Team info from TBA. If the team is invalid, object contains only an array named "Errors".
  */
-router.post('/api/team', async function(req, res){
+router.post('/api/team', wrap(async (req, res) => {
 	
 	if(!req.body.team_number){
 		logger.debug("manage/manualinput/api/team error: No team number specified.", true);
@@ -155,14 +156,14 @@ router.post('/api/team', async function(req, res){
 	res.status(200).send(teamInfoResponse);
 	
 	logger.debug(teamInfoResponse);
-});
+}));
 
 /**
  * Manual input for inputtnig match schedule, if TBA is not accessible.
  * @url /manualinput/matchschedule
  * @views manualinput/matchschedule
  */
-router.get('/matchschedule', async function(req, res){
+router.get('/matchschedule', wrap(async (req, res) => {
 	
 	var thisFuncName = "[GET] /manage/manualinput/matchschedule => ";
 	
@@ -176,9 +177,9 @@ router.get('/matchschedule', async function(req, res){
 		title: "Enter Match Schedule",
 		matches: matches
 	});
-});
+}));
 
-router.post('/matchschedule', async function(req, res){
+router.post('/matchschedule', wrap(async (req, res) => {
 	
 	/*
 		"actual_time": "",
@@ -306,14 +307,14 @@ router.post('/matchschedule', async function(req, res){
 	await utilities.insert("matches", matchArrayFormatted);
 	
 	res.redirect('./matchschedule');
-})
+}));
 
 /**
  * Manual input for correcting each match, if TBA is not accessible.
  * @url /manualinput/matches
  * @views manualinput/matches
  */
-router.get('/matches', async function(req, res) {
+router.get('/matches', wrap(async (req, res) => {
 	
 	var event_key = req.event.key;
 	
@@ -323,12 +324,12 @@ router.get('/matches', async function(req, res) {
 		title: "Input Match Outcomes",
 		matches: matches,
 	});
-});
+}));
 
 /** POST method for 
  * 
  */
-router.post('/matches', async function(req, res){
+router.post('/matches', wrap(async (req, res) => {
 	
 	var event_key = req.event.key;
 	
@@ -602,6 +603,6 @@ router.post('/matches', async function(req, res){
 
 	//Redirect to updatematches page with success alert.
 	res.redirect('/manage/manualinput/matches?alert=Updated match successfully.');
-});
+}));
 
 module.exports = router;
