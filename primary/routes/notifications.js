@@ -1,16 +1,17 @@
 const router = require('express').Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const webpush = require('web-push');
 const utilities = require('../utilities');
 
-router.get('/', async function(req, res){
+router.get('/', wrap(async (req, res) => {
 	
 	res.render('./notifications', {
 		title: "Subscribing to a notification"
 	});
-});
+}));
 
-router.post('/save-subscription', async function(req, res) {
+router.post('/save-subscription', wrap(async (req, res) => {
 	//check if user is logged in as a scouter
 	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
 	//check if it's a valid save request
@@ -53,9 +54,9 @@ router.post('/save-subscription', async function(req, res) {
 			}
 		});
 	}
-});
+}));
 
-router.post('/disable-subscription', async function(req, res) {
+router.post('/disable-subscription', wrap(async (req, res) => {
 	
 	var thisFuncName = 'notifications/disable-subscription: ';
 	
@@ -67,9 +68,9 @@ router.post('/disable-subscription', async function(req, res) {
 	
 	res.setHeader('Content-Type', 'application/json');
 	res.send({data: {success: true}});
-});
+}));
 
-router.post('/sendtest', async function(req, res){
+router.post('/sendtest', wrap(async (req, res) => {
 	//check if user is logged in as a scouter
 	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
 	const thisFuncName = 'notifications/sendtest: ';
@@ -112,7 +113,7 @@ router.post('/sendtest', async function(req, res){
 	}
 	
 	res.redirect('/notifications');
-});
+}));
 
 async function sendPushMessage (subscription, dataToSend) {
 	

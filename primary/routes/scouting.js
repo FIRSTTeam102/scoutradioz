@@ -1,17 +1,18 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require('../utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
 const uploadHelper = require('../helpers/uploadhelper');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_SCOUTER)) {
 		next();
 	}
-})
+}));
 
-router.get('/match*', async function(req, res) {
+router.get('/match*', wrap(async (req, res) => {
 	
 	var thisFuncName = "scouting.match*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -67,9 +68,9 @@ router.get('/match*', async function(req, res) {
 		alliance: alliance,
 		answers: answers
 	});
-});
+}));
 
-router.post('/match/submit', async function(req, res) {
+router.post('/match/submit', wrap(async (req, res) => {
 	
 	var thisFuncName = "scouting.match[post]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -160,9 +161,9 @@ router.post('/match/submit', async function(req, res) {
 	await utilities.update("matchscouting", { "org_key": org_key, "match_team_key" : match_team_key }, { $set: { "data" : matchData, "actual_scorer": thisUserName, useragent: req.shortagent } });
 
 	return res.send({message: "Submitted data successfully.", status: 200});
-});
+}));
 
-router.get('/pit*', async function(req, res) {
+router.get('/pit*', wrap(async (req, res) => {
 	
 	var uploadURL = process.env.UPLOAD_URL + "/" + process.env.TIER + "/image";
 	
@@ -201,9 +202,9 @@ router.get('/pit*', async function(req, res) {
 		uploadURL: uploadURL,
 		images: images
 	});
-});
+}));
 
-router.post('/pit/submit', async function(req, res){
+router.post('/pit/submit', wrap(async (req, res) => {
 	
 	var thisFuncName = "scouting.submitpit[post]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -231,10 +232,10 @@ router.post('/pit/submit', async function(req, res){
 	await utilities.update("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName, useragent: req.shortagent } });
 
 	return res.send({message: "Submitted data successfully.", status: 200});
-});
+}));
 
 //For \views\scouting\teampictures.pug
-router.get('/teampictures', async function(req, res) {
+router.get('/teampictures', wrap(async (req, res) => {
 
 	var thisFuncName = "scouting.teampictures[get]: ";
 
@@ -273,12 +274,12 @@ router.get('/teampictures', async function(req, res) {
 		title: "Team Pictures",
 		teams: teams
 	});
-});
+}));
 
-router.get('/', async function(req, res){
+router.get('/', wrap(async (req, res) => {
 	
 	//redirect to pits dashboard
 	res.redirect('/dashboard/pits');
-});
+}));
 
 module.exports = router;

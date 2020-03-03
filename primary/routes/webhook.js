@@ -2,6 +2,7 @@ const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const express = require('express');
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const webpush = require('web-push');
 const utilities = require('../utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
@@ -37,15 +38,15 @@ webhook.use(bodyParser.urlencoded(options));
 webhook.use('/', router);
 
 //Routing
-router.get('/', async function(req, res) {
+router.get('/', wrap(async (req, res) => {
 	
 	logger.info(JSON.stringify(req.query));
 	
 	res.send(req.query);
 	
-});
+}));
 
-router.post('/', async function(req, res) {
+router.post('/', wrap(async (req, res) => {
 	var thisFuncName = "webhook.[root/post]: ";
 	
 	var message = req.body;
@@ -84,7 +85,7 @@ router.post('/', async function(req, res) {
 	}
 	
 	res.status(200).send("thanks!");
-});
+}));
 
 ////////// Type handlers
 

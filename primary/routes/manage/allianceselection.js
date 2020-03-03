@@ -1,9 +1,10 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require('../../utilities');
 const matchDataHelper = require ('../../helpers/matchdatahelper');
 
-router.get("/", async function(req, res){
+router.get("/", wrap(async (req, res) => {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
@@ -103,9 +104,9 @@ router.get("/", async function(req, res){
 		layout: scorelayout,
 		matchDataHelper: matchDataHelper
 	});
-});
+}));
 
-router.post("/updateteamvalue", async function(req, res){
+router.post("/updateteamvalue", wrap(async (req, res) => {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 	
@@ -130,6 +131,6 @@ router.post("/updateteamvalue", async function(req, res){
 	//await utilities.update("currentrankings", {"team_key": teamKey}, {$set: {"value": value}});
 
 	res.redirect("./");
-});
+}));
 
 module.exports = router;

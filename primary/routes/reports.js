@@ -1,23 +1,24 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require('../utilities');
 const matchDataHelper = require('../helpers/matchdatahelper');
 const uploadHelper = require('../helpers/uploadhelper');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_VIEWER)) {
 		next();
 	}
-})
+}));
 
-router.get("/", async function(req, res){
+router.get("/", wrap(async (req, res) => {
 	
 	// TODO - we should probaby make an index for reports?
 	res.redirect('/?alert=No index page for /reports/');
-});
+}));
 
-router.get("/rankings", async function(req, res){
+router.get("/rankings", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.rankings[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -34,9 +35,9 @@ router.get("/rankings", async function(req, res){
 		title: "Rankings",
 		rankings: rankings
 	});
-});
+}));
 
-router.get("/finishedmatches", async function(req, res){
+router.get("/finishedmatches", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.finishedmatches[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -53,9 +54,9 @@ router.get("/finishedmatches", async function(req, res){
 		title: "Matches",
 		matches: matches
 	});
-});
+}));
 
-router.get("/upcoming", async function(req, res){
+router.get("/upcoming", wrap(async (req, res) => {
 	
 	const thisFuncName = "reports.upcoming[GET]: ";
 	logger.info(thisFuncName + "ENTER");
@@ -157,9 +158,9 @@ router.get("/upcoming", async function(req, res){
 			teamList: teamNumbers
 		});
 	}	
-});
+}));
 
-router.get("/teamintel", async function(req, res){
+router.get("/teamintel", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.teamintel*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -338,9 +339,9 @@ router.get("/teamintel", async function(req, res){
 		matchDataHelper: matchDataHelper,
 		images: images
 	});
-});
+}));
 
-router.get("/teamintelhistory", async function(req, res){
+router.get("/teamintelhistory", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.teamintelhistory*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -491,9 +492,9 @@ router.get("/teamintelhistory", async function(req, res){
 		matches: matches,
 		year: year
 	});
-});
+}));
 
-router.get("/matchintel*", async function(req, res){
+router.get("/matchintel*", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.matchintel*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -521,9 +522,9 @@ router.get("/matchintel*", async function(req, res){
 		title: "Intel: Match "+matchKey.substring(matchKey.indexOf('qm')+2),
 		match: match
 	});
-});
+}));
 
-router.get("/teammatchintel*", async function(req, res){
+router.get("/teammatchintel*", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.teammatchintel*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -593,9 +594,9 @@ router.get("/teammatchintel*", async function(req, res){
 		teamKey: match_team_key.split("_")[2],
 		matchDataHelper: matchDataHelper
 	});
-});
+}));
 
-router.get("/alliancestats", async function(req, res) {
+router.get("/alliancestats", wrap(async (req, res) =>  {
 	
 	var thisFuncName = "reports.alliancestats[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -698,9 +699,9 @@ router.get("/alliancestats", async function(req, res) {
 		avgdata: avgTable,
 		maxdata: maxTable
 	});
-});
+}));
 
-router.get("/teamdata", async function(req, res) {
+router.get("/teamdata", wrap(async (req, res) =>  {
 	
 	var thisFuncName = "reports.teamdata[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -765,9 +766,9 @@ router.get("/teamdata", async function(req, res) {
 		team: team,
 		matchDataHelper: matchDataHelper
 	});
-});
+}));
 
-router.get("/matchdata", async function(req, res) {
+router.get("/matchdata", wrap(async (req, res) =>  {
 	
 	var thisFuncName = "reports.matchdata[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -830,9 +831,9 @@ router.get("/matchdata", async function(req, res) {
 		match: match,
 		matchDataHelper: matchDataHelper
 	});
-});
+}));
 
-router.get("/matchmetrics", async function(req, res) {
+router.get("/matchmetrics", wrap(async (req, res) =>  {
 	
 	var thisFuncName = "reports.matchmetrics[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -957,9 +958,9 @@ router.get("/matchmetrics", async function(req, res) {
 		currentAggRanges: currentAggRanges,
 		match: match
 	});
-});
+}));
 
-router.get("/metricsranked", async function(req, res){
+router.get("/metricsranked", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.metricsranked[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -1073,9 +1074,9 @@ router.get("/metricsranked", async function(req, res){
 		currentAggRanges: currentAggRanges,
 		aggdata: aggTable
 	});
-});
+}));
 
-router.get("/metrics", async function(req, res){
+router.get("/metrics", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.metrics[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -1170,9 +1171,9 @@ router.get("/metrics", async function(req, res){
 		currentAggRanges: currentAggRanges,
 		aggdata: aggTable
 	});
-});
+}));
 
-router.get("/metricintel*", async function(req, res){
+router.get("/metricintel*", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.metric*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -1253,12 +1254,12 @@ router.get("/metricintel*", async function(req, res){
 		currentAggRanges: currentAggRanges,
 		key: metricKey
 	});
-});
+}));
 
 /**
  * Metrics view
  */
-router.get("/allteammetrics", async function(req, res){
+router.get("/allteammetrics", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.allteammetrics[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -1407,11 +1408,11 @@ router.get("/allteammetrics", async function(req, res){
 		layout: scorelayout,
 		matchDataHelper: matchDataHelper
 	});
-});
+}));
 
 //// Choosing & setting scoring selections
 
-router.get("/choosecolumns", async function(req, res) {
+router.get("/choosecolumns", wrap(async (req, res) =>  {
 	var thisFuncName = "reports.choosecolumns[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
@@ -1444,9 +1445,9 @@ router.get("/choosecolumns", async function(req, res) {
 		savedCols: savedCols,
 		matchDataHelper: matchDataHelper
 	});
-});
+}));
 
-router.post("/choosecolumns", async function(req, res){
+router.post("/choosecolumns", wrap(async (req, res) => {
 	var thisFuncName = "reports.choosecolumns[post]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
@@ -1467,29 +1468,8 @@ router.post("/choosecolumns", async function(req, res){
 	logger.debug(thisFuncName + "columnCookie=" + columnCookie);
 
 	res.cookie(cookie_key, columnCookie, {maxAge: 30E9});
-
-	/*
-	//2019-11-20 JL: updated to only work with members of the right organization.
-	const orgKey = req.user.org_key;
-	
-	await utilities.update("users", {org_key: orgKey}, { $set: { "event_info.present" : "false" } }, {multi: true});
-	
-	//Get a list of all present member IDs.
-	var allPresentMembers = [];
-	for(var i in req.body)
-	{
-		allPresentMembers.push(monk.id(i));
-	}
-	
-	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
-	
-	var query = {"_id": {$in: allPresentMembers}, org_key: orgKey};
-	var update = {$set: {"event_info.present": true}};
-	
-	await utilities.update("users", query, update, {multi: true, castIds: true});
-	*/
 	
 	res.redirect("../home");
-});
+}));
 
 module.exports = router;

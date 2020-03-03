@@ -1,16 +1,17 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require('../../utilities');
 const matchDataHelper = require ('../../helpers/matchdatahelper');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
-})
+}));
 
-router.get("/matches", async function(req, res) {
+router.get("/matches", wrap(async (req, res) => {
 
 	var thisFuncName = "currentevent.matches[get]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -24,9 +25,9 @@ router.get("/matches", async function(req, res) {
 		title: "Matches",
 		"matches": matches
 	});
-});
+}));
 
-router.get("/getcurrentteams", async function(req, res){
+router.get("/getcurrentteams", wrap(async (req, res) => {
 
 	var thisFuncName = "currentevent.getcurrentteams[get]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -79,9 +80,9 @@ router.get("/getcurrentteams", async function(req, res){
 
 	res.redirect('/manage?alert=Updated current teams successfully.');
 	*/
-})
+}));
 
-router.post("/resetmatches", async function(req, res) {
+router.post("/resetmatches", wrap(async (req, res) => {
 	
 	var thisFuncName = "currentevent.resetmatches[post]: ";
 	logger.info(thisFuncName + 'ENTER');
@@ -97,9 +98,9 @@ router.post("/resetmatches", async function(req, res) {
 	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
 	
 	res.redirect('/manage/currentevent/matches?alert=Reset matches successfully.');
-});
+}));
 
-router.post("/updatematch", async function(req, res) {
+router.post("/updatematch", wrap(async (req, res) => {
 	
 	var thisFuncName = "currentevent.updatematch[post]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -267,9 +268,9 @@ router.post("/updatematch", async function(req, res) {
 		title: "Matches",
 		"matches": matches
 	});
-});
+}));
 
-router.post("/updatematches", async function(req, res) {
+router.post("/updatematches", wrap(async (req, res) => {
 	
 	var thisFuncName = "currentevent.updatematches[post]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -349,6 +350,6 @@ router.post("/updatematches", async function(req, res) {
 		
 		res.redirect('/manage/currentevent/matches');
 	}
-});
+}));
 
 module.exports = router;

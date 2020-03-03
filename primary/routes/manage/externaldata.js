@@ -1,21 +1,22 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require('../../utilities');
 const tba_utils = require('../../tba_utils');
 
-router.all('/*', async (req, res, next) => {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
 		next();
 	}
-})
+}));
 
 /**
  * Admin page to show a list of events by any given year.
  * @url /manage/data/events
  * @view /events
  */
-router.get("/events", async function(req, res) {
+router.get("/events", wrap(async (req, res) => {
 	
 	var thisFuncName = "externaldata.events[get]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -48,14 +49,14 @@ router.get("/events", async function(req, res) {
 		"years": uniqueYears,
 		"selectedYear": year
 	});
-});
+}));
 
 /**
  * POST: Admin page to update all events for a given year.
  * @url POST: /manage/data/events
  * @redirect /manage/data/events
  */
-router.post("/events", async function(req, res) {
+router.post("/events", wrap(async (req, res) => {
 	
 	//Event data synchronization is now updated automatically
 	res.send(410);
@@ -89,14 +90,14 @@ router.post("/events", async function(req, res) {
 	//redirect back to events page
 	res.redirect(`/manage/data/events?year=${year}`);
 	*/
-});
+}));
 
 /**
  * Admin page to display matches of a specified event id.
  * @url /manage/data/matches
  * @view /matches
  */
-router.get("/matches", async function(req, res) {
+router.get("/matches", wrap(async (req, res) => {
 	
 	var thisFuncName = "externaldata.matches[get]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -121,7 +122,7 @@ router.get("/matches", async function(req, res) {
 		title: "Matches",
 		"matches": matches
 	});
-});
+}));
 
 /**
  * POST: Admin page to update match information for a given event.
@@ -129,7 +130,7 @@ router.get("/matches", async function(req, res) {
  * @redirect /admin (to handle error)
  * @redirect /manage/data/matches
  */
-router.post("/matches", async function(req, res) {
+router.post("/matches", wrap(async (req, res) => {
 	
 	var thisFuncName = "externaldata.matches[post]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -164,7 +165,7 @@ router.post("/matches", async function(req, res) {
 		
 	//redirect to matches page
 	res.redirect(`/manage/data/matches?eventId=${eventId}`);
-});
+}));
 
 
 /**
@@ -172,7 +173,7 @@ router.post("/matches", async function(req, res) {
  * @url /manage/data/teams
  * @view /teams
  */
-router.get("/teams", async function(req, res) {
+router.get("/teams", wrap(async (req, res) => {
 	
 	var thisFuncName = "externaldata.teams[get]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -224,6 +225,6 @@ router.get("/teams", async function(req, res) {
 			"teams": teams
 		});
 	}
-});
+}));
 
 module.exports = router;

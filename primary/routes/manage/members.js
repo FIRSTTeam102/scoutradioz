@@ -1,16 +1,17 @@
 const router = require("express").Router();
 const monk = require("monk");
 const logger = require('log4js').getLogger();
+const wrap = require('express-async-handler');
 const utilities = require("../../utilities");
 
-router.all('/*', async function (req, res, next) {
+router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
-})
+}));
 
-router.get("/", async function(req, res) {
+router.get("/", wrap(async (req, res) => {
 	
 	var org_key = req.user.org_key;
 	
@@ -44,9 +45,9 @@ router.get("/", async function(req, res) {
 		config: config,
 		roles: roles
 	});
-});
+}));
 
-router.post("/addmember", async function(req, res){
+router.post("/addmember", wrap(async (req, res) => {
 	
 	var thisFuncName = "members.addmember[post]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -123,9 +124,9 @@ router.post("/addmember", async function(req, res){
 	var writeResult = await utilities.insert("users", insertQuery);
 	
 	res.redirect('/manage/members#addMember');
-});
+}));
 
-router.post("/updatemember", async function(req, res){
+router.post("/updatemember", wrap(async (req, res) => {
 	
 	var thisFuncName = "members.updatemember[post]: ";
 	logger.info(thisFuncName + 'ENTER')
@@ -212,9 +213,9 @@ router.post("/updatemember", async function(req, res){
 			});
 		}
 	}
-});
+}));
 
-router.post("/deletemember", async function(req, res){
+router.post("/deletemember", wrap(async (req, res) => {
 	
 	if(req.body.memberId){
 		
@@ -245,9 +246,9 @@ router.post("/deletemember", async function(req, res){
 			res.redirect('/manage/members?alert=Unauthorized to delete this user.');
 		}
 	}
-});
+}));
 
-router.get('/passwords', async function(req, res){
+router.get('/passwords', wrap(async (req, res) => {
 	
 	var orgKey = req.user.org_key;
 	
@@ -276,9 +277,9 @@ router.get('/passwords', async function(req, res){
 		membersByRole: membersByRole,
 		roles: roles
 	});
-});
+}));
 
-router.post('/resetpassword', async function (req, res) {
+router.post('/resetpassword', wrap(async (req, res) =>  {
 	const thisFuncName = 'manage/members/resetpassword[POST]: ';
 	
 	const memberId = req.body.memberId;
@@ -309,9 +310,9 @@ router.post('/resetpassword', async function (req, res) {
 		logger.error(err);
 		res.send({status: 500, message: err.toString()});
 	}
-})
+}));
 
-router.get("/present", async function(req, res) {
+router.get("/present", wrap(async (req, res) => {
 	
 	//2019-11-20 JL: updated to only work with members of the right organization.
 	const orgKey = req.user.org_key;
@@ -323,9 +324,9 @@ router.get("/present", async function(req, res) {
 		title: "Assign Who Is Present",
 		"members": users
 	});
-});
+}));
 
-router.post("/updatepresent", async function(req, res){
+router.post("/updatepresent", wrap(async (req, res) => {
 	
 	//2019-11-20 JL: updated to only work with members of the right organization.
 	const orgKey = req.user.org_key;
@@ -347,6 +348,6 @@ router.post("/updatepresent", async function(req, res){
 	await utilities.update("users", query, update, {multi: true, castIds: true});
 	
 	res.redirect("./present");
-});
+}));
 
 module.exports = router;

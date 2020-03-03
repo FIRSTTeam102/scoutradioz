@@ -1,21 +1,22 @@
 const express = require('express');
 const router = express.Router();
+const wrap = require('express-async-handler');
 const utilities = require('../utilities');
 const bcrypt = require('bcryptjs');
 const logger = require('log4js').getLogger();
 
 //Redirect to index
-router.get('/', async function(req, res){
+router.get('/', wrap(async (req, res) => {
 	res.redirect(301, "/");
-});
+}));
 
 //no longer used bb
-router.get('/selectorg', async function(req, res) {
+router.get('/selectorg', wrap(async (req, res) =>  {
 	
-	res.redirect(301, '/')
-});
+	res.redirect(301, '/');
+}));
 
-router.get('/login', async function (req, res){
+router.get('/login', wrap(async (req, res) => {
 	
 	var thisFuncName = 'user.js:login: ';
 	
@@ -45,15 +46,15 @@ router.get('/login', async function (req, res){
 		title: `Log In to ${selectedOrg.nickname}`,
 		redirectURL: req.query.redirectURL
 	});
-});
+}));
 
-router.post('/login', async function(req, res){
+router.post('/login', wrap(async (req, res) => {
 	
 	//Redirect to /user/login/select via POST (will preserve request body)
 	res.redirect(307, '/user/login/select');
-});
+}));
 
-router.post('/login/select', async function(req, res){
+router.post('/login/select', wrap(async (req, res) => {
 	//This URL can only be accessed via a POST method, because it requires an organization's password.
 	var thisFuncName = 'user.js:login/select[POST]: ';
 	
@@ -101,9 +102,9 @@ router.post('/login/select', async function(req, res){
 	else{
 		res.redirect(`/user/login?alert=Incorrect password for organization ${selectedOrg.nickname}`);
 	}
-})
+}));
 
-router.post('/login/withoutpassword', async function(req, res){
+router.post('/login/withoutpassword', wrap(async (req, res) => {
 	
 	var thisFuncName = 'user.js:/login/withoutpassword[POST]: ';
 	
@@ -251,9 +252,9 @@ router.post('/login/withoutpassword', async function(req, res){
 			});
 		});
 	}
-});
+}));
 
-router.post('/login/withpassword', async function(req, res){
+router.post('/login/withpassword', wrap(async (req, res) => {
 	
 	var thisFuncName = 'user.js/login/withpassword[POST]: ';
 	
@@ -354,9 +355,9 @@ router.post('/login/withpassword', async function(req, res){
 			alert: "Incorrect password."
 		});
 	}
-});
+}));
 
-router.post('/login/createpassword', async function(req, res) {
+router.post('/login/createpassword', wrap(async (req, res) =>  {
 	
 	var thisFuncName = 'user.js/login/createpassword[POST]: ';
 	
@@ -449,7 +450,7 @@ router.post('/login/createpassword', async function(req, res) {
 			redirect_url: "/?alert=Set password successfully."
 		});
 	})
-});
+}));
 
 /**
  * User page to change your own password.
@@ -457,16 +458,16 @@ router.post('/login/createpassword', async function(req, res) {
  * @view /login/changepassword
  *
  */
-router.get('/changepassword', async function(req, res){
+router.get('/changepassword', wrap(async (req, res) => {
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	res.render('./user/changepassword', {
 		title: "Change Password"
 	});
-});
+}));
 
 //Page to change your own password.
-router.post('/changepassword', async function(req, res){
+router.post('/changepassword', wrap(async (req, res) => {
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var currentPassword = req.body.currentPassword;
@@ -505,10 +506,10 @@ router.post('/changepassword', async function(req, res){
 	logger.debug("changepassword: " + JSON.stringify(writeResult), true);
 	
 	res.redirect('/?alert=Changed password successfully.');
-});
+}));
 
 //Log out
-router.get("/logout", async function(req, res) {
+router.get("/logout", wrap(async (req, res) =>  {
 	//Logout works a bit differently now.
 	//First destroy session, THEN "log in" to default_user of organization.
 	
@@ -539,11 +540,10 @@ router.get("/logout", async function(req, res) {
 		//now, once default user is logged in, redirect to index
 		res.redirect('/');
 	});
-	//});
-});
+}));
 
 //Switch a user's organization
-router.get('/switchorg', async function(req, res){
+router.get('/switchorg', wrap(async (req, res) => {
 	
 	//This will log the user out of their organization.
 	
@@ -560,48 +560,6 @@ router.get('/switchorg', async function(req, res){
 		//now, redirect to index
 		res.redirect('/');
 	});
-})
-
-/**
- * Admin page to reset another user's password.
- * @url /login/resetpassword
- * @view /login/resetpassword
- * @db users
- *
-router.get('/resetpassword', async function(req, res){
-	if( !require('./checkauthentication')(req, res, 'admin') ){
-		return logger.debug('authentication failed for /login/changepassword');
-	}
-	
-	var users = await utilities.find("users", {}, {sort:{ "name": 1 }});
-	
-	res.render('./login/resetpassword', { 
-		members: users,
-		title: "Reset Password for Any User"
-	});
-});
-
-/**
- * POST: Admin page to reset another user's password.
- * @url POST: /login/resetpassword
- * @redirect /
- *
-router.post('/resetpassword', async function(req, res){
-	if( !require('./checkauthentication')(req, res, 'admin') ){
-		return logger.debug('authentication failed for /login/resetpassword');
-	}
-	
-	var userToReset = req.body.username;
-	
-	if(!userToReset || userToReset == ""){
-		return res.redirect('./resetpassword');
-	}
-	
-	var writeResult = await utilities.update("users", { name: userToReset }, { $set: { password: 'default' } }, {});
-	
-	res.redirect('/?alert=Password successfully changed for user ' + userToReset);
-});
-
-*/
+}));
 
 module.exports = router;

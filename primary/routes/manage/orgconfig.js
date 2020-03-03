@@ -1,14 +1,22 @@
 const express = require('express');
 const router = express.Router();
+const wrap = require('express-async-handler');
 const utilities = require('../../utilities');
 
-router.get('/', async function(req, res) {
+router.all('/*', wrap(async (req, res, next) => {
+	//Require team-admin-level authentication for every method in this route.
+	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		next();
+	}
+}));
+
+router.get('/', wrap(async (req, res) => {
 	
 	res.redirect('/manage');
 	
-});
+}));
 
-router.get('/pitsurvey', async function(req, res) {
+router.get('/pitsurvey', wrap(async (req, res) => {
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
 		
 	var org_key = req.user.org_key;
@@ -25,6 +33,6 @@ router.get('/pitsurvey', async function(req, res) {
 		year: year
 	});
 	
-});
+}));
 
 module.exports = router;
