@@ -6,6 +6,11 @@ block content
 			/*Reduce page's padding*/
 			padding: 4px 8px!important;
 		}
+		.w3-tooltip .w3-tooltiptext{
+			width: 160px;
+			padding: 8px 16px;
+			margin-left: -80px;
+		}
 	if (rankings)
 		h2(class="theme-text") Current event rankings
 		h6 <i>Click on a team to see intel on that team</i>
@@ -14,10 +19,13 @@ block content
 				tr
 					th(class="w3-center theme-spacer") Rank
 					th(class="w3-center theme-spacer") Team
-					th(class="w3-center theme-spacer") W-L-T
-					th(class="w3-center theme-spacer") DQ
+					th(class="w3-center theme-spacer w3-tooltip") W-L-T
+						span(class="w3-tooltiptext") Win-Loss-Tie
+					th(class="w3-center theme-spacer w3-tooltip") DQ
+						span(class="w3-tooltiptext") Disqualifications
 					th(class="w3-center theme-spacer") Matches
-					th(class="w3-center theme-spacer") RP
+					th(class="w3-center theme-spacer w3-tooltip") RP
+						span(class="w3-tooltiptext") Ranking Points
 				each team in rankings
 					tr
 						td(class="theme-text w3-center")
