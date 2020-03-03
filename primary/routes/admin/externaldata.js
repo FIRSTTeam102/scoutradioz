@@ -13,7 +13,7 @@ router.all('/*', wrap(async (req, res, next) => {
 
 /**
  * Admin page to show a list of events by any given year.
- * @url /manage/data/events
+ * @url /admin/externaldata/events
  * @view /events
  */
 router.get("/events", wrap(async (req, res) => {
@@ -53,8 +53,8 @@ router.get("/events", wrap(async (req, res) => {
 
 /**
  * POST: Admin page to update all events for a given year.
- * @url POST: /manage/data/events
- * @redirect /manage/data/events
+ * @url POST: /admin/externaldata/events
+ * @redirect /admin/externaldata/events
  */
 router.post("/events", wrap(async (req, res) => {
 	
@@ -88,13 +88,13 @@ router.post("/events", wrap(async (req, res) => {
 	//Now insert new events list for year
 	await utilities.insert("events", events);
 	//redirect back to events page
-	res.redirect(`/manage/data/events?year=${year}`);
+	res.redirect(`/admin/externaldata/events?year=${year}`);
 	*/
 }));
 
 /**
  * Admin page to display matches of a specified event id.
- * @url /manage/data/matches
+ * @url /admin/externaldata/matches
  * @view /matches
  */
 router.get("/matches", wrap(async (req, res) => {
@@ -111,7 +111,7 @@ router.get("/matches", wrap(async (req, res) => {
 	if (!eventId)
 	{
 		logger.debug(thisFuncName + 'No event specified');
-		res.redirect("/manage/data/events");
+		res.redirect("/admin/externaldata/events");
 	}
 	logger.debug(thisFuncName + 'eventId=' + eventId);
 
@@ -126,9 +126,9 @@ router.get("/matches", wrap(async (req, res) => {
 
 /**
  * POST: Admin page to update match information for a given event.
- * @url POST: /manage/data/matches
+ * @url POST: /admin/externaldata/matches
  * @redirect /admin (to handle error)
- * @redirect /manage/data/matches
+ * @redirect /admin/externaldata/matches
  */
 router.post("/matches", wrap(async (req, res) => {
 	
@@ -164,13 +164,13 @@ router.post("/matches", wrap(async (req, res) => {
 	await utilities.insert("matches", matches);
 		
 	//redirect to matches page
-	res.redirect(`/manage/data/matches?eventId=${eventId}`);
+	res.redirect(`/admin/externaldata/matches?eventId=${eventId}`);
 }));
 
 
 /**
  * Admin page to display all teams in local database.
- * @url /manage/data/teams
+ * @url /admin/externaldata/teams
  * @view /teams
  */
 router.get("/teams", wrap(async (req, res) => {

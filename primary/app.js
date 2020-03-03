@@ -132,13 +132,13 @@ var manageindex = require('./routes/manage/indexmgmt');
 var allianceselection = require('./routes/manage/allianceselection');
 var currentevent = require("./routes/manage/currentevent");
 var config = require("./routes/manage/orgconfig");
-var externaldata = require("./routes/manage/externaldata");
 var manualdata = require("./routes/manage/manualdata");
 var orgmembers = require("./routes/manage/members");
 var scoutingaudit = require('./routes/manage/scoutingaudit');
 var scoutingpairs = require('./routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
 var adminindex = require('./routes/admin/indexadmin');
+var externaldata = require("./routes/admin/externaldata");
 var sync = require('./routes/admin/sync');
 
 //CONNECT URLS TO ROUTES
@@ -160,7 +160,7 @@ app.use('/manage/manualdata', manualdata);
 
 app.use('/admin', adminindex);
 app.use('/admin/sync', sync);
-app.use('/manage/data', externaldata); //Eventually move/rename to /admin/externaldata
+app.use('/admin/externaldata', externaldata);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);
