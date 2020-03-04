@@ -1455,20 +1455,82 @@ router.post("/choosecolumns", wrap(async (req, res) => {
 	var org_key = req.user.org_key;
 	var cookie_key = org_key + "_" + event_year + "_cols";
 
+	var setOrgDefault = false;
+
 	logger.trace(thisFuncName + "req.body=" + JSON.stringify(req.body));
 	var first = true;
 	var columnCookie = '';
 	for (var i in req.body) {
-		if (first)
-			first = false;
-		else
-			columnCookie += ','; 
-		columnCookie += i;
+		if (i == 'setOrgDefault')    // see choosecolumns.pug
+			setOrgDefault = true;
+		else {
+			if (first)
+				first = false;
+			else
+				columnCookie += ','; 
+			columnCookie += i;
+		}
 	}
 	logger.debug(thisFuncName + "columnCookie=" + columnCookie);
 
 	res.cookie(cookie_key, columnCookie, {maxAge: 30E9});
 	
+	// setting org defaults? NOTE only for Team Admins and above
+	if (setOrgDefault && req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN) {
+		logger.debug(thisFuncName + "Setting org defaults");
+		var thisOrg = await utilities.findOne("orgs", {org_key: org_key});
+		var thisConfig = thisOrg.config;
+		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
+		if (!thisConfig) {
+			thisConfig = {};
+			thisOrg['config'] = thisConfig;
+		}
+		var theseColDefaults = thisOrg.config.columnDefaults;
+		if (!theseColDefaults) {
+			theseColDefaults = {};
+			thisOrg.config['columnDefaults'] = theseColDefaults;
+		}
+
+		// set the defaults for this year
+		theseColDefaults[event_year] = columnCookie;
+		
+		// update DB
+		await utilities.update("orgs", {org_key: org_key}, {$set: {"config.columnDefaults": theseColDefaults}});
+
+		//logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
+	}
+
+	res.redirect("../home");
+}));
+
+router.post("/clearorgdefaultcols", wrap(async (req, res) => {
+	var thisFuncName = "reports.clearorgdefaultcols[post]: ";
+	logger.info(thisFuncName + 'ENTER');
+	
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+
+	if (req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN) {
+		var thisOrg = await utilities.findOne("orgs", {org_key: org_key});
+		var thisConfig = thisOrg.config;
+		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
+		if (!thisConfig) {
+			thisConfig = {};
+			thisOrg['config'] = thisConfig;
+		}
+		var theseColDefaults = thisOrg.config.columnDefaults;
+		if (!theseColDefaults) {
+			theseColDefaults = {};
+			thisOrg.config['columnDefaults'] = theseColDefaults;
+		}
+
+		// remove values (if they exist) for the event year
+		delete theseColDefaults[event_year];
+
+		// update DB
+		await utilities.update("orgs", {org_key: org_key}, {$set: {"config.columnDefaults": theseColDefaults}});
+	}
+
 	res.redirect("../home");
 }));
 
