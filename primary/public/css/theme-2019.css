@@ -17,7 +17,6 @@
 	--grey: #888;
 	--dark: #454b4e;
 	--black: #000;
-	/*--gearheads-orange: #ff7f00;*/
 	
 	/* 2020 theme colors */
 	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
@@ -31,7 +30,6 @@
 	--button-primary: var(--frc-orange);
 	--button-secondary: var(--frc-yellow);
 	
-	/* --background: #333; */
 	/* Coordinate "background" with the image as defined in the 'layout.pug'! */
 	--background: #000;
 	--header: var(--trim);
@@ -53,6 +51,8 @@
 	--mb-bar-width: 0.6;
 	--mb-bar-height: 3px;
 	--mb-bar-spacing: 8px;
+	
+	--sprites-url: url('/images/sprites.png');
 }
 
 /* 2019 background colors */
@@ -84,20 +84,43 @@
 .alliance-border-blue{border: 1px solid hsl(242, 100%, 89%)!important}
 .alliance-hover-blue:hover{color:rgb(14, 13, 32)!important;background-color:rgb(134, 132, 235)!important}
 
-/*Make theme-input placeholder color lighter*/
-.theme-input::-webkit-input-placeholder {color:var(--placeholder-color);}
-.theme-input:-moz-placeholder {color:var(--placeholder-color);opacity:1;}
-.theme-input::-moz-placeholder {color:var(--placeholder-color);opacity:  1;}
-.theme-input:-ms-input-placeholder {color:var(--placeholder-color);}
-.theme-input::-ms-input-placeholder {color:var(--placeholder-color);}
-.theme-input::placeholder {color:var(--placeholder-color);}
+.header{background-color: var(--header);}
+.footer{background-color: var(--footer);}
 
-/* Header and Nav Menu */
-.mburger{
-	background-color: var(--header);
-	color: black;
+/*For sprites*/
+.sprite.sp-4{--size:4px;}
+.sprite.sp-8{--size:8px;}
+.sprite.sp-12{--size:12px;}
+.sprite.sp-16{--size:16px;}
+.sprite.sp-24{--size:24px;}
+.sprite.sp-32{--size:32px;}
+.sprite.sp-48{--size:48px;}
+.sprite.sp-64{--size:64px;}
+.sprite.sp-128{--size:128px;}
+
+.sprite.sp-first{--position: 0;}
+.sprite.sp-scoutradioz{--position: -1;}
+.sprite.sp-tba-logo{--position: -2;}
+.sprite.sp-radio{--position: -3;}
+
+.sprite.sp-user{--position: -8;}
+.sprite.sp-org{--position: -9;}
+.sprite.sp-settings{--position: -10;}
+.sprite.sp-info{--position: -11;}
+.sprite.sp-wheel{--position: -12;}
+.sprite.sp-sheet{--position: -13;}
+.sprite.sp-home{--position: -14;}
+
+.sprite{
+	display: inline-block;
+	width:var(--size);
+	height:var(--size);
+	background: var(--sprites-url) 0 calc(var(--position) * var(--size));
+	background-size: var(--size) auto;
 }
 
+/* Header and Nav Menu */
+.mburger{background-color: var(--header);color: black;}
 .header-logo{
 	max-height: 100%; 
 	max-width: 100%;
@@ -105,13 +128,6 @@
 	background-color: var(--header);
 	padding: 4px; 
 	padding-left: 8px;
-}
-
-.header{
-	background-color: var(--header);
-}
-.footer{
-	background-color: var(--footer);
 }
 
 .team-image-sm{max-height: 100px; margin: 4px;}
@@ -132,6 +148,7 @@ a.link{
 	text-decoration: underline!important;
 }
 
+/* For background */
 .background{
 	--fixed-gradient-radius: farthest-corner;
 	background: radial-gradient(circle var(--fixed-gradient-radius) at bottom,rgba(29,107,137,0.5) 0%, rgba(0,0,0,0) 100%),
@@ -147,9 +164,7 @@ body{
 	--bottom-gradient-radius: 900px;
 	background: radial-gradient(circle var(--bottom-gradient-radius) at bottom, 
 	rgb(44, 134, 170) 0%, rgba(29,107,137,1) 10%, rgba(0,0,0,0) 100%);
-	
 	display: flex;
-	/*flex-direction: column;*/
 	min-height: 100%;
 }
 html{
@@ -173,23 +188,11 @@ html{
 	height: 240px;
 }
 @media(max-width: 600px){
-	.background{
-		--fixed-gradient-radius: farthest-corner;
-	}
-	body{
-		--bottom-gradient-radius: 400px;
-	}
-	#page{
-		background-position-x: -50px;
-		background-size: auto 160px;
-	}
-	#page::after{
-		height: 160px;
-	}
+	.background{--fixed-gradient-radius: farthest-corner;}
+	body{--bottom-gradient-radius: 400px;}
+	#page{background-position-x: -50px; background-size: auto 160px;}
+	#page::after{height: 160px;}
 }
-
-
-input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
 
 /* For spacers */
 .theme-spacer{
@@ -206,13 +209,19 @@ hr{
 .theme-input{
 	border-radius:12px;
 	border: 0;
-	
 	transition:0.2s;
-	
 	min-height:18px;
 	padding:9px;
 }
 textarea{padding:8px 12px;}
+input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
+.theme-input::-webkit-input-placeholder {color:var(--placeholder-color);}
+.theme-input:-moz-placeholder {color:var(--placeholder-color);opacity:1;}
+.theme-input::-moz-placeholder {color:var(--placeholder-color);opacity:  1;}
+.theme-input:-ms-input-placeholder {color:var(--placeholder-color);}
+.theme-input::-ms-input-placeholder {color:var(--placeholder-color);}
+.theme-input::placeholder {color:var(--placeholder-color);}
+
 
 /* For tables that contain spacers */
 .theme-contains-spacer{

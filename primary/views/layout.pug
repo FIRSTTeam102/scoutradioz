@@ -30,7 +30,9 @@ html
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mburger.css`)
 		link(rel="stylesheet" href=`${fileRoot}/css/theme-2019.css?v=10`)
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=3`)
-		style #page{ background-image: url('#{fileRoot}/images/backgrounds/city-light.png');	}
+		style.
+			#page{ background-image: url('#{fileRoot}/images/backgrounds/city-light.png');}
+			.sprite{ --sprites-url: url('#{fileRoot}/images/sprites.png');}
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		//script(src=`${fileRoot}/lib/hammer.min.js`)

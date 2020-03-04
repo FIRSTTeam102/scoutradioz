@@ -56,6 +56,12 @@ style.
 	.slidein-brand .w3-tooltiptext::after{
 		border-color: #eee transparent transparent transparent;
 	}
+	.menu-sprite{
+		margin-left: -8px;
+		margin-top: -4px;
+		margin-right: 12px;
+		vertical-align: middle;
+	}
 div(style="display: none;" class="slidein-overlay" id="overlay")
 div(style="display: none;" id="menuParent")
 	nav(id="menu" class="slidein-menu")
@@ -63,7 +69,9 @@ div(style="display: none;" id="menuParent")
 			We can make that procedural sometime in the future.
 		ul
 			li
-				a(href="/home") Home
+				a(href="/home")
+					span(class="sprite sp-24 sp-home menu-sprite")
+					span Home
 			//-BELOW: This is for when we have multiple different dashboard types
 			//li
 				span Dashboard
@@ -78,7 +86,9 @@ div(style="display: none;" id="menuParent")
 			if user
 				//- Reports pages for current event
 				li 
-					span Info on #{eventName}
+					span
+						span(class="sprite sp-24 sp-info menu-sprite")
+						span Info on #{eventName}
 					ul 
 						if teams && teams[0]
 							li
@@ -103,7 +113,9 @@ div(style="display: none;" id="menuParent")
 						li 
 							a(href="/reports/allteammetrics") Stats for All Teams
 				li
-					a(href=`/reports/choosecolumns`) Configure report columns
+					a(href=`/reports/choosecolumns`)
+						span(class="sprite sp-24 sp-sheet menu-sprite")
+						span Configure report columns
 				//- Below: Shows up to anyone who has "logged in"
 				if user.name != 'default_user'
 					//- Below: If user has VIEWER ACCESS (and is "logged in")
@@ -112,9 +124,13 @@ div(style="display: none;" id="menuParent")
 					//- Below: If user has SCOUTER access
 					if user.role.access_level >= process.env.ACCESS_SCOUTER 
 						li 
-							a(href="/dashboard") Dashboard
+							a(href="/dashboard") 
+								span(class="sprite sp-24 sp-wheel menu-sprite")
+								span Drive Team Dashboard
 						li 
-							span Scouting
+							a(href="/dashboard")
+								span(class="sprite sp-24 sp-radio menu-sprite") 
+								span Scouting
 							ul 
 								li 
 									a(href="/dashboard/pits") Pit Scouting
@@ -123,7 +139,9 @@ div(style="display: none;" id="menuParent")
 					//- Below: If user has TEAM ADMIN access
 					if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
 						li
-							a(href="/manage") Manage #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
+							a(href="/manage")
+								span(class="sprite sp-24 sp-settings menu-sprite")
+								span Manage:&nbsp; #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
 							ul 
 								li 
 									span Members
@@ -152,10 +170,15 @@ div(style="display: none;" id="menuParent")
 					//- Below: If user has GLOBAL ADMIN access
 					if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
 						li 
-							a(href="/admin") Admin
+							a(href="/admin")
+								span(class="sprite sp-24 sp-scoutradioz menu-sprite")
+								span Admin
 					//- Below: (Logged-in users): User-specific links (e.g. logout/change password)
 					li 
-						span #{user.name}
+						span
+							span(class="sprite sp-user sp-24 menu-sprite") &nbsp;
+							span(style="width: 48px;display: inline-block;") User:
+							span #{user.name}
 						ul 
 							li 
 								a(href='/user/logout') Log Out
@@ -164,7 +187,10 @@ div(style="display: none;" id="menuParent")
 				//- Below: (Anyone who selected an org) Org-related links (e.g. Switch Org/log in)
 				if user.org 
 					li 
-						span #{user.org.nickname}
+						span
+							span(class="sprite sp-org sp-24 menu-sprite") 
+							span(style="width: 48px; display: inline-block;") Org:
+							span #{user.org.nickname}
 						ul 
 							li 
 								a(href='/user/switchorg') Change Organization
