@@ -27,6 +27,31 @@ functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, c
 	var savedCols = {};
 	var noneSelected = true;
 	//colCookie = "a,b,ccc,d";
+
+	// 2020-03-03, M.O'C: Read "default" columns from DB if none set - TODO could be cached
+	if (!colCookie) {
+		var thisOrg = await utilities.findOne("orgs", {org_key: org_key});
+		logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
+		var thisConfig = thisOrg.config;
+		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
+		if (!thisConfig) {
+			thisConfig = {};
+			thisOrg['config'] = thisConfig;
+		}
+		var theseColDefaults = thisOrg.config.columnDefaults;
+		if (!theseColDefaults) {
+			theseColDefaults = {};
+			thisOrg.config['columnDefaults'] = theseColDefaults;
+		}
+
+		logger.debug(thisFuncName + "theseColDefaults=" + JSON.stringify(theseColDefaults));
+		var defaultSet = theseColDefaults[event_year];		
+		logger.debug(thisFuncName + "defaultSet=" + defaultSet);
+
+		if (defaultSet)
+			colCookie = defaultSet;
+	}
+	
 	if (colCookie) {
 		logger.debug(thisFuncName + "colCookie=" + colCookie);
 		noneSelected = false;
@@ -36,7 +61,7 @@ functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, c
 	}
 	//logger.debug(thisFuncName + "noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
 
-	// Use the cookies (if defined) to slim down the layout array
+	// Use the cookies (if defined, or if defaults set) to slim down the layout array
 	if (noneSelected)
 		scorelayout = scorelayoutDB;
 	else {
