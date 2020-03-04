@@ -31,7 +31,7 @@ functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, c
 	// 2020-03-03, M.O'C: Read "default" columns from DB if none set - TODO could be cached
 	if (!colCookie) {
 		var thisOrg = await utilities.findOne("orgs", {org_key: org_key});
-		logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
+		//logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
 		var thisConfig = thisOrg.config;
 		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
 		if (!thisConfig) {
@@ -44,16 +44,18 @@ functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, c
 			thisOrg.config['columnDefaults'] = theseColDefaults;
 		}
 
-		logger.debug(thisFuncName + "theseColDefaults=" + JSON.stringify(theseColDefaults));
+		//logger.debug(thisFuncName + "theseColDefaults=" + JSON.stringify(theseColDefaults));
 		var defaultSet = theseColDefaults[event_year];		
-		logger.debug(thisFuncName + "defaultSet=" + defaultSet);
+		//logger.debug(thisFuncName + "defaultSet=" + defaultSet);
 
-		if (defaultSet)
+		if (defaultSet) {
 			colCookie = defaultSet;
+			logger.debug(thisFuncName + "Using org default cookies=" + colCookie);
+		}
 	}
 	
 	if (colCookie) {
-		logger.debug(thisFuncName + "colCookie=" + colCookie);
+		//logger.debug(thisFuncName + "colCookie=" + colCookie);
 		noneSelected = false;
 		var savedColArray = colCookie.split(",");
 		for (var i in savedColArray)
