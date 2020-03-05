@@ -69,6 +69,7 @@ router.get("/upcoming", wrap(async (req, res) => {
 	else
 		var teamKey = req.query.team;
 	
+	/*
 	//get our collections
 	var teamRanks = {};
 	
@@ -102,9 +103,17 @@ router.get("/upcoming", wrap(async (req, res) => {
 			teamRanks[team] = rankObj.rank;
 			
 		};
-	
+	*/
+
+	var upcomingData = await getUpcomingMatchData(event_key, teamKey);
+
+	var matches = upcomingData.matches;
+	var teamRanks = upcomingData.teamRanks;
+	var teamNumbers = upcomingData.teamNumbers;
+
 	if(teamKey != 'all'){
-		
+
+		/*
 		//our query for matches collection
 		var query = {
 			$and: [
@@ -127,6 +136,7 @@ router.get("/upcoming", wrap(async (req, res) => {
 		//if no results, send empty array for view to deal with
 		if(!matches)
 			return res.render('./reports/upcoming', { title:"Upcoming", matches: [] });
+		*/
 		
 		res.render('./reports/upcoming', {
 			title: "Upcoming",
@@ -138,6 +148,8 @@ router.get("/upcoming", wrap(async (req, res) => {
 	}
 	//if teamKey is 'all'
 	else {
+
+		/*
 		//find all matches for this event that have not been completed
 		var matches = await utilities.find("matches", {event_key: req.event.key, "alliances.blue.score": -1}, {sort: {time: 1}});
 		// TODO what was 'e'?
@@ -149,7 +161,8 @@ router.get("/upcoming", wrap(async (req, res) => {
 				title: "Events",
 				matches: [] 
 			});
-		
+		*/
+
 		//render page
 		res.render('./reports/upcoming', {
 			title: "Upcoming",
@@ -175,7 +188,7 @@ router.get("/teamintel", wrap(async (req, res) => {
 	var event_key = req.event.key;
 	var event_year = req.event.year;
 	var org_key = req.user.org_key;
-	logger.debug(event_year);
+	logger.debug(thisFuncName + "event_year=" + event_year);
 	
 	// Team details
 	// 2020-02-09, M.O'C: Adjusted "currentteams" to "teams"
@@ -616,6 +629,10 @@ router.get("/alliancestats", wrap(async (req, res) =>  {
 		return res.redirect("/?alert=Must specify comma-separated list of teams for reports/alliancestats");
 	}
 	var teams = req.query.teams;
+
+	var allianceStatsData = await getAllianceStatsData(event_year, event_key, org_key, teams, req.cookies);
+
+	/*
 	var teamList = req.query.teams.split(',');
 	logger.debug(thisFuncName + 'teamList=' + JSON.stringify(teamList));
 
@@ -690,6 +707,13 @@ router.get("/alliancestats", wrap(async (req, res) =>  {
 	var currentAggRanges = [];
 	if (currentAggR)
 		currentAggRanges = currentAggR;
+	*/
+
+	var teams = allianceStatsData.teams;
+	var teamList = allianceStatsData.teamList;
+	var currentAggRanges = allianceStatsData.currentAggRanges;
+	var avgTable = allianceStatsData.avgTable;
+	var maxTable = allianceStatsData.maxTable;
 
 	res.render("./reports/alliancestats", {
 		title: "Alliance Team Statistics",
@@ -1533,5 +1557,211 @@ router.post("/clearorgdefaultcols", wrap(async (req, res) => {
 
 	res.redirect("../home");
 }));
+
+////////// Helper functions
+
+// Takes
+//   event_key
+//   team_key (can be 'all' or null)
+// Returns a data blob containing the *starred* attributes:
+//   matches: *matches*,
+//   teamRanks: *teamRanks*, {map of team #s to rankings}
+//   team: *teamKey*,
+//   teamList: *teamNumbers* {array of team #s?}
+async function getUpcomingMatchData( event_key, team_key ) {
+	var thisFuncName = "reports.getUpcomingMatchData(): ";
+	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',team_key=' + team_key);
+	var returnData = {};
+
+	var teamKey = team_key;
+	if(!team_key)
+		teamKey = 'all';
+
+	//get our collections
+	var teamRanks = {};
+	
+	//get list of teams for this event
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	//var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
+	var thisEventData = await utilities.find("events", {"key": event_key});
+	var thisEvent = thisEventData[0];
+	var teams = [];
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
+	{
+		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		teams = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+	}
+
+	//get list of just team numbers
+	var teamNumbers = [];
+	for(var i in teams){
+		teamNumbers[i] = teams[i].team_number;
+	}
+	
+	//get rankings for this event
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// var rankings = await utilities.find("currentrankings", {}, {sort:{rank: 1}});
+	var rankings = await utilities.find("rankings", {"event_key": event_key}, {sort:{rank: 1}});
+	if(rankings)
+		for(var i = 0; i < rankings.length; i++){
+			var rankObj = rankings[i];
+			var team = rankObj.team_key;
+			
+			teamRanks[team] = rankObj.rank;
+			
+		};
+	
+	returnData.teamRanks = teamRanks;
+	returnData.teamNumbers = teamNumbers;
+
+	var matches = [];
+	if(teamKey != 'all'){
+		
+		//our query for matches collection
+		var query = {
+			$and: [
+				{ event_key: event_key },
+				{ "alliances.blue.score": -1 },
+				{
+					$or: [
+						{ "alliances.blue.team_keys": teamKey },
+						{ "alliances.red.team_keys": teamKey },
+					]
+				}
+			]
+		};
+		
+		//find matches with our query
+		matches = await utilities.find("matches", query, {sort: {time: 1}});
+		// TODO what was 'e'?			
+		// if(e)
+		// 	return logger.debug(e);
+		//if no results, send empty array for view to deal with
+		if(!matches)
+			matches = [];
+
+		returnData.matches = matches;
+		returnData.team = teamKey;
+	}
+	//if teamKey is 'all'
+	else {
+		//find all matches for this event that have not been completed
+		var matches = await utilities.find("matches", {event_key: event_key, "alliances.blue.score": -1}, {sort: {time: 1}});
+		// TODO what was 'e'?
+		// if(e)
+		// 	return logger.debug(e);
+		//if no results, send empty array for view to deal with
+		if(!matches)
+			matches = [];
+
+		returnData.matches = matches;
+	}	
+
+	return returnData;	
+}
+
+// Inputs
+//   event_year
+//   event_key
+//   org_key
+//   teams_list (comma-separated list of teams, red alliance first, use ",0" between red list and blue list)
+//   cookies (from req.cookies)
+// Returns a data blob containing the *starred* attributes:
+//   teams: *teams*, {comma-separated list}
+//   teamList: *teamList*, {split version of teams}
+//   currentAggRanges: *currentAggRanges*,
+//   avgdata: *avgTable*,
+//   maxdata: *maxTable*
+async function getAllianceStatsData( event_year, event_key, org_key, teams_list, cookies ) {
+	var thisFuncName = "reports.getAllianceStatsData(): ";
+	logger.info(thisFuncName + 'ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
+	var returnData = {};
+
+	var teams = teams_list;
+
+	var teamList = teams.split(',');
+	logger.debug(thisFuncName + 'teamList=' + JSON.stringify(teamList));
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
+	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var cookie_key = org_key + "_" + event_year + "_cols";
+	var colCookie = cookies[cookie_key];
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+
+	var aggQuery = [];
+	aggQuery.push({ $match : { "team_key": {$in: teamList}, "org_key": org_key, "event_key": event_key } });
+	var groupClause = {};
+	// group by individual teams
+	groupClause["_id"] = "$team_key";
+
+	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		var thisLayout = scorelayout[scoreIdx];
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
+			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
+		}
+	}
+	aggQuery.push({ $group: groupClause });
+	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR = await utilities.aggregate("matchscouting", aggQuery);
+	var aggresult = {};
+	if (aggR)
+		aggresult = aggR;
+	logger.trace(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+
+	// Build a map of the result rows by team key
+	var aggRowsByTeam = {};
+	for (var resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
+		aggRowsByTeam[ aggresult[resultIdx]["_id"] ] = aggresult[resultIdx];
+	logger.trace( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
+
+	// Unspool N rows of aggregate results into tabular form
+	var avgTable = [];
+	var maxTable = [];
+
+	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		var thisLayout = scorelayout[scoreIdx];
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			var avgRow = {};
+			var maxRow = {};
+			avgRow['key'] = thisLayout.id;
+			maxRow['key'] = thisLayout.id;
+			for (var teamIdx = 0; teamIdx < teamList.length; teamIdx++)
+			{
+				if (aggRowsByTeam[teamList[teamIdx]])
+				{
+					avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + "AVG"] * 10)/10).toFixed(1);
+					maxRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + "MAX"] * 10)/10).toFixed(1);
+				}
+			}
+			avgTable.push(avgRow);
+			maxTable.push(maxRow);
+		}
+	}
+	logger.trace(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
+	logger.trace(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
+
+	// read in the current agg ranges
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	// currentAggR = await utilities.find("currentaggranges", {}, {});
+	var currentAggR = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = [];
+	if (currentAggR)
+		currentAggRanges = currentAggR;
+
+	// set up the return data
+	returnData.teams = teams;
+	returnData.teamList = teamList;
+	returnData.currentAggRanges = currentAggRanges;
+	returnData.avgTable = avgTable;
+	returnData.maxTable = maxTable;
+
+	return returnData;	
+}
 
 module.exports = router;
