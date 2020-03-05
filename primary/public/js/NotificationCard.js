@@ -25,8 +25,13 @@
 class NotificationCard{
 	
 	/**
-	 * @param {String} text Text to display on notification card
-	 * @param {Object} options Options
+	 * @param {string} text Text to display on notification card
+	 * @param {object} [options] Optional settings
+	 * @param {string} [options.type=undefined] Type of card to show (success, warn, error)
+	 * @param {number} [options.ttl=2000] Time-to-live of notification card.
+	 * @param {boolean} [options.darken=false] Whether card darkens/disabled entire screen when it is shown.
+	 * @param {boolean} [options.exitable=false] Whether card has an exit button.
+	 * @param {function} [options.onexit=undefined] Callback for when a user clicks the exit button.
 	 */
 	constructor(text, options){
 		
@@ -47,7 +52,12 @@ class NotificationCard{
 	/**
 	 * Static method to create and return a new NotificationCard with specified options.
 	 * @param {String} text Text to display on notification card
-	 * @param {Object} opts (optional) Options
+	 * @param {object} [options] Optional settings
+	 * @param {string} [options.type=undefined] Type of card to show (success, warn, error)
+	 * @param {number} [options.ttl=2000] Time-to-live of notification card.
+	 * @param {boolean} [options.darken=false] Whether card darkens/disabled entire screen when it is shown.
+	 * @param {boolean} [options.exitable=false] Whether card has an exit button.
+	 * @param {function} [options.onexit=undefined] Callback for when a user clicks the exit button.
 	 * @return {NotificationCard} The new NotificationCard object.
 	 */
 	static show(text, opts){
@@ -62,7 +72,7 @@ class NotificationCard{
 	/**
 	 * Shorthand to display an error/bad notification card.
 	 * @param {string} text Text to display.
-	 * @param {Object} opts (optional) Options
+	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
 	static error(text, opts){
 		
@@ -75,6 +85,7 @@ class NotificationCard{
 	/**
 	 * Shorthand to display a good/success notification card.
 	 * @param {string} text Text to display.
+	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
 	static good(text, opts){
 		
@@ -87,6 +98,7 @@ class NotificationCard{
 	/**
 	 * Shorthand to display a warning notification card.
 	 * @param {string} text Text to display.
+	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
 	static warn(text, opts){
 		
