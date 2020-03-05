@@ -102,14 +102,18 @@
 .sprite.sp-scoutradioz{--position: -1;}
 .sprite.sp-tba{--position: -2;}
 .sprite.sp-radio{--position: -3;}
-
+.sprite.sp-language{--position: -4;}
+.sprite.sp-share-android{--position: -5;}
+.sprite.sp-share-ios{--position: -6;}
+.sprite.sp-home{--position: -7;}
 .sprite.sp-user{--position: -8;}
 .sprite.sp-org{--position: -9;}
 .sprite.sp-settings{--position: -10;}
-.sprite.sp-info{--position: -11;}
-.sprite.sp-wheel{--position: -12;}
-.sprite.sp-sheet{--position: -13;}
-.sprite.sp-home{--position: -14;}
+.sprite.sp-wheel{--position: -11;}
+.sprite.sp-sheet{--position: -12;}
+.sprite.sp-info{--position: -13;}
+.sprite.sp-help{--position: -14;}
+.sprite.sp-warn{--position: -15;}
 
 .sprite{
 	display: inline-block;
