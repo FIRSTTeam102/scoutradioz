@@ -18,23 +18,39 @@ router.get('/*', wrap(async (req, res, next) => {
 	//Get orgKey and remove it from urlBits
 	var orgKey = urlBits.shift(0, 1);
 	
-	var org = await utilities.findOne('orgs', {org_key: orgKey});
+	//if user is not logged in OR logged-in user is part of a DIFFERENT org:
+	if (!req.user || req.user.org_key != orgKey) {
 	
-	//If org was found
-	if (org) {
+		var org = await utilities.findOne('orgs', {org_key: orgKey});
+		
+		//If org was found
+		if (org) {
+			//if there is a trailing url, set it as redirect
+			if (urlBits.length > 0) {
+				var redirectURL = '/' + urlBits.join('/');
+				res.redirect(`/selectorg?org_key=${orgKey}&redirectURL=${redirectURL}`);
+			}
+			//If no trailing url, just log in to org and go to home screen
+			else {
+				res.redirect(`/selectorg?org_key=${orgKey}`);
+			}
+		}
+		//If org was not found, skip this function
+		else {
+			next();
+		}
+	}
+	//If logged-in user is already part of the same org:
+	else {
 		//if there is a trailing url, set it as redirect
 		if (urlBits.length > 0) {
 			var redirectURL = '/' + urlBits.join('/');
-			res.redirect(`/selectorg?org_key=${orgKey}&redirectURL=${redirectURL}`);
+			res.redirect(`/?redirectURL=${redirectURL}`);
 		}
-		//If no trailing url, just log in to org and go to home screen
+		//If no trailing url, just go to home screen
 		else {
-			res.redirect(`/selectorg?org_key=${orgKey}`);
+			res.redirect('/');
 		}
-	}
-	//If org was not found, skip this function
-	else {
-		next();
 	}
 }));
 
