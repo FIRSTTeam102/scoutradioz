@@ -15,80 +15,22 @@ div(id="headerlogo" class="w3-padding w3-center")
 		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
 	if (!isOrgSelectScreen)
 		h3=eventName
-style.
-	.slidein-menu{
-		position: fixed;
-		z-index: 2;
-		
-		width: 80vw;
-		min-width: 140px;
-		max-width: 440px;
-		
-		box-shadow: 0px 0px 15px #000;
-		
-		display: none;
-	}
-	.slidein-overlay{
-		opacity: 0;
-		background-color: #53555a60;
-		z-index: 1;
-		position: fixed;
-		width: 100%;
-		height: 100%;
-		top: 0px;
-		left: 0px;
-	}
-	.slidein-brand{
-		padding: 16px;
-	}
-	.slidein-brand img{
-		max-height: 32px;
-		max-width: 32px;
-	}
-	.slidein-brand .w3-tooltiptext{
-		background-color: #eee;
-		color: #000;
-		padding: 8px;
-		max-width: 100%;
-		left: 0;
-		margin-left: 0;
-	}
-	.slidein-brand .w3-tooltiptext::after{
-		border-color: #eee transparent transparent transparent;
-	}
-	.menu-sprite{
-		margin-left: -8px;
-		margin-top: -4px;
-		margin-right: 12px;
-		vertical-align: middle;
-	}
 div(style="display: none;" class="slidein-overlay" id="overlay")
 div(style="display: none;" id="menuParent")
 	nav(id="menu" class="slidein-menu")
-		//- NOTE: If you add a (class="selected") to an "li" element, it will be highlighted by the mmenu extension. 
-			We can make that procedural sometime in the future.
 		ul
 			li
 				a(href="/home")
 					span(class="sprite sp-24 sp-home menu-sprite")
 					span Home
-			//-BELOW: This is for when we have multiple different dashboard types
-			//li
-				span Dashboard
-				ul 
-					li
-						a(href="/dashboard") Scouting
-					li
-						a(href="#") Drive Team
-					li
-						a(href="#") Pit Crew
 			//- Below: Shows up to anyone who has selected an organization
 			if user
 				//- Reports pages for current event
 				li 
 					span
 						span(class="sprite sp-24 sp-info menu-sprite")
-						span Info on #{eventName}
+						span Info and Reports:&nbsp; 
+						span(class="theme-text-secondary theme-strong") #{eventName}
 					ul 
 						if teams && teams[0]
 							li
@@ -141,7 +83,8 @@ div(style="display: none;" id="menuParent")
 						li
 							a(href="/manage")
 								span(class="sprite sp-24 sp-settings menu-sprite")
-								span Manage:&nbsp; #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
+								span Manage:&nbsp; 
+								span(class="theme-text-secondary") #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
 							ul 
 								li 
 									span Members
@@ -176,9 +119,9 @@ div(style="display: none;" id="menuParent")
 					//- Below: (Logged-in users): User-specific links (e.g. logout/change password)
 					li 
 						span
-							span(class="sprite sp-user sp-24 menu-sprite") &nbsp;
-							span(style="width: 48px;display: inline-block;") User:
-							span #{user.name}
+							span(class="sprite sp-user sp-24 menu-sprite")
+							span User:&nbsp; 
+							span(class="theme-text-secondary") #{user.name}
 						ul 
 							li 
 								a(href='/user/logout') Log Out
@@ -189,8 +132,8 @@ div(style="display: none;" id="menuParent")
 					li 
 						span
 							span(class="sprite sp-org sp-24 menu-sprite") 
-							span(style="width: 48px; display: inline-block;") Org:
-							span #{user.org.nickname}
+							span Org:&nbsp; 
+							span(class="theme-text-secondary") #{user.org.nickname}
 						ul 
 							li 
 								a(href='/user/switchorg') Change Organization
@@ -210,7 +153,7 @@ script var navMenuTitle = `#{navMenuTitle}`;
 //-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
 script.
 	var footerContents = [
-		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/monochrome-badge.png" alt=""><span class="w3-tooltiptext">Copyright 2020 FIRST Team 102 and Robotics Fund Inc.</span></img></a>`,
-		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/tba-logo.png" alt=""><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
-		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><img src="#{fileRoot}/images/brand-logos/FIRST-logo-white.png" alt=""><span class="w3-tooltiptext">We are proud to be participants of FIRST Robotics Competition!</span></img></a>`,
+		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-scoutradioz"></span><span class="w3-tooltiptext">Copyright 2020 FIRST Team 102 and Robotics Fund Inc.</span></img></a>`,
+		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-tba"></span><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
+		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-first"></span><span class="w3-tooltiptext">We are proud to be participants of FIRST Robotics Competition!</span></img></a>`,
 		];
