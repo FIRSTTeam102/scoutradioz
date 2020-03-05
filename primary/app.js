@@ -127,6 +127,7 @@ var dashboard = require("./routes/dashboard");
 var scouting = require("./routes/scouting");
 var reports = require('./routes/reports');
 var notifications = require('./routes/notifications');
+var share = require('./routes/share.js');
 //ORG MANAGEMENT ROUTES
 var manageindex = require('./routes/manage/indexmgmt');
 var allianceselection = require('./routes/manage/allianceselection');
@@ -161,6 +162,8 @@ app.use('/manage/manualdata', manualdata);
 app.use('/admin', adminindex);
 app.use('/admin/sync', sync);
 app.use('/admin/externaldata', externaldata);
+
+app.use('/', share);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);
