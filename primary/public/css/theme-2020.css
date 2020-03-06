@@ -115,6 +115,7 @@
 .sprite.sp-help{--position: -14;}
 .sprite.sp-warn{--position: -15;}
 
+/* USAGE: <span class="sprite sp-(SIZE) sp-(TYPE)"></span> */
 .sprite{
 	display: inline-block;
 	width:var(--size);
@@ -135,7 +136,7 @@
 }
 .slidein-menu{
 	position: fixed;
-	z-index: 2;
+	z-index: 4;
 	width: 80vw;
 	min-width: 140px;
 	max-width: 440px;
@@ -287,7 +288,7 @@ input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
 	position: fixed;
 	z-index: 2;
 	width: 100%;
-	top: 0px;
+	top: 45px;
 	left: 0px;
 }
 
