@@ -1,6 +1,6 @@
 'use strict';
 const logger = require('log4js').getLogger();
-const utilities = require("../utilities");
+const utilities = require("@firstteam102/scoutradioz-utilities");
 
 var functions = module.exports = {};
 
@@ -20,7 +20,11 @@ functions.findTeamImages = async (orgKey, year, teamKey) => {
 	
 	logger.debug(`${thisFuncName} Finding list of images`)
 	//Sorted by inverse of upload time
-	var uploads = await utilities.find("uploads", {org_key: orgKey, year: year, team_key: teamKey}, {sort: {"index": 1, "uploader.upload_time": -1}});
+	var uploads = await utilities.find("uploads", 
+		{org_key: orgKey, year: year, team_key: teamKey}, 
+		{sort: {"index": 1, "uploader.upload_time": -1}},
+		{allowCache: true, maxCacheAge: 10}
+	);
 	var imageKeys = {};
 	var imageLinks = {};
 	

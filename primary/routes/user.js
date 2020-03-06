@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const wrap = require('express-async-handler');
-const utilities = require('../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 const bcrypt = require('bcryptjs');
 const logger = require('log4js').getLogger();
 
@@ -37,7 +37,10 @@ router.get('/login', wrap(async (req, res) => {
 	logger.debug(`User's organization: ${org_key}`);
 	
 	//search for organization in database
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	var selectedOrg = await utilities.findOne('orgs', 
+		{"org_key": org_key}, {},
+		{allowCache: true}
+	);
 	
 	//If organization does not exist, send internal error
 	if(!selectedOrg) return res.status(500).send("Invalid organization");
@@ -77,7 +80,10 @@ router.post('/login/select', wrap(async (req, res) => {
 	//If form is filled, then proceed.
 	
 	//Get org that matches request
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	var selectedOrg = await utilities.findOne('orgs', 
+		{"org_key": org_key}, {},
+		{allowCache: true}
+	);
 	
 	//If organization does not exist, send internal error
 	if(!selectedOrg) return res.redirect(500, '/user/selectorg');
@@ -90,7 +96,11 @@ router.post('/login/select', wrap(async (req, res) => {
 	//If comparison succeeded, then proceed
 	if(comparison == true){
 		
-		var users = await utilities.find('users', {org_key: org_key, name: {$ne: "default_user"}}, {sort: {name: 1}});
+		var users = await utilities.find('users', 
+			{org_key: org_key, name: {$ne: "default_user"}}, 
+			{sort: {name: 1}},
+			{allowCache: true}
+		);
 
 		//logger.debug(thisFuncName + "users=" + JSON.stringify(users));
 				
@@ -136,7 +146,10 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	}
 	
 	//Get org that matches request
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	var selectedOrg = await utilities.findOne('orgs',
+		{"org_key": org_key}, {},
+		{allowCache: true}
+	);
 	
 	//If organization does not exist, send internal error
 	if(!selectedOrg) return res.redirect(500, '/user/login');
@@ -169,7 +182,10 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	
 	//Get role information from database, and compare to access role for a scouter
 	var role_key = user.role_key;
-	var userRole = await utilities.findOne("roles", {role_key: role_key});
+	var userRole = await utilities.findOne("roles", 
+		{role_key: role_key}, {},
+		{allowCache: true}
+	);
 	
 	//If no such role exists, throw an error because there must be one
 	if(!userRole) throw new Error(`user.js /login/withoutpassword: No role exists in DB with key ${role_key}`);
@@ -287,7 +303,10 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	}
 	
 	//Get org that matches request
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	var selectedOrg = await utilities.findOne('orgs', 
+		{"org_key": org_key}, {},
+		{allowCache: true}
+	);
 	if(!selectedOrg) return res.redirect(500, '/user/login');
 	
 	var orgPasswordHash = selectedOrg.default_password;
@@ -329,7 +348,10 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 			//If error, then log and return an error
 			if(err){ logger.error(err); return res.send({status: 500, alert: err}) };
 			
-			var userRole = await utilities.findOne("roles", {role_key: user.role_key});
+			var userRole = await utilities.findOne("roles", 
+				{role_key: user.role_key},
+				{allowCache: true}
+			);
 			
 			var redirectURL;
 			
@@ -390,7 +412,10 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	}
 	
 	//Get org that matches request
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	var selectedOrg = await utilities.findOne('orgs', 
+		{"org_key": org_key}, {},
+		{allowCache: true}
+	);
 	if(!selectedOrg) return res.redirect(500, '/user/login');
 	
 	var orgPasswordHash = selectedOrg.default_password;
@@ -528,10 +553,16 @@ router.get("/logout", wrap(async (req, res) =>  {
 	//	if (err) { return next(err); }
 		
 	//after current session is destroyed, now re log in to org
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	var selectedOrg = await utilities.findOne('orgs', 
+		{"org_key": org_key}, {},
+		{allowCache: true}
+	);
 	if(!selectedOrg) return res.redirect(500, '/');
 	
-	var defaultUser = await utilities.findOne('users', {"org_key": org_key, name: "default_user"});
+	var defaultUser = await utilities.findOne('users', 
+		{"org_key": org_key, name: "default_user"}, {},
+		{allowCache: true}
+	);
 	if(!defaultUser) return res.redirect(500, '/');
 	
 	

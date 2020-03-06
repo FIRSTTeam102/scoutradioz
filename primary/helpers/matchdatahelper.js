@@ -1,12 +1,24 @@
 const logger = require('log4js').getLogger();
-const utilities = require("../utilities");
+const utilities = require("@firstteam102/scoutradioz-utilities");
 
 var functions = module.exports = {};
 
 functions.isQuantifiableType = function(type) {
-    if (type == 'checkbox' || type == 'counter' || type == 'badcounter' || type == 'derived')
-        return true;
-    return false;
+	
+	var isQuantifiable;
+	
+	switch (type) {
+		case 'checkbox':
+		case 'counter':
+		case 'badcounter':
+		case 'derived':
+			isQuantifiable = true;
+			break;
+		default:
+			isQuantifiable = false;
+	}
+	
+	return isQuantifiable;
 }
 
 //
@@ -21,7 +33,11 @@ functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, c
     var scorelayout = [];
 
     // read in the layout as stored in the DB
-	var scorelayoutDB = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var scorelayoutDB = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 
     // Process the cookies & (if selections defined) prepare to reduce
 	var savedCols = {};
@@ -30,7 +46,10 @@ functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, c
 
 	// 2020-03-03, M.O'C: Read "default" columns from DB if none set - TODO could be cached
 	if (!colCookie) {
-		var thisOrg = await utilities.findOne("orgs", {org_key: org_key});
+		var thisOrg = await utilities.findOne("orgs", 
+			{org_key: org_key}, {},
+			{allowCache: true}
+		);
 		//logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
 		var thisConfig = thisOrg.config;
 		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
@@ -95,7 +114,11 @@ functions.calculateAndStoreAggRanges = async function(org_key, event_year, event
 	var thisFuncName = "matchdatahelper.calculateAndStoreAggRanges: ";
 	logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
 
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
+	var scorelayout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
     //logger.debug(thisFuncName + "scorelayout=" + JSON.stringify(scorelayout));        
     
 	var aggQuery = [];

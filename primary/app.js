@@ -32,6 +32,7 @@ const utilities = require('@firstteam102/scoutradioz-utilities');
 utilities.config(require('./databases.json'), {
 	cache: {
 		enable: true,
+		maxAge: 30,
 	}
 });
 

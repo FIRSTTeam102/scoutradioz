@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs')
 const router = require("express").Router();
 const wrap = require('express-async-handler');
 const logger = require('log4js').getLogger();
-const utilities = require('../../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
@@ -18,8 +18,15 @@ router.all('/*', wrap(async (req, res, next) => {
  */
 router.get('/', wrap(async (req, res) => {
 	
-	const org = await utilities.findOne("orgs", {org_key: req.user.org_key});
-	const events = await utilities.find("events", {year: new Date().getFullYear()}, {sort: {start_date: 1}});
+	const org = await utilities.findOne("orgs", 
+		{org_key: req.user.org_key}, {},
+		{allowCache: true}
+	);
+	const events = await utilities.find("events", 
+		{year: new Date().getFullYear()}, 
+		{sort: {start_date: 1}},
+		{allowCache: true}
+	);
 	
 	res.render('./manage/managedashboard', { 
 		title: `Manage ${org.nickname}`,
@@ -27,6 +34,8 @@ router.get('/', wrap(async (req, res) => {
 		current: req.event.key,
 		events: events,
 	});
+	
+	utilities.dumpCache();
 }));
 
 router.post('/setdefaultpassword', wrap(async (req, res) => {
@@ -56,7 +65,10 @@ router.post('/setcurrent', wrap(async (req, res) => {
 	if (req && req.user && req.user.org_key) {
 		var thisOrgKey = req.user.org_key;
 		
-		var event = await utilities.findOne("events", {key: eventKey});
+		var event = await utilities.findOne("events", 
+			{key: eventKey}, {},
+			{allowCache: true}
+		);
 		
 		//If eventKey is valid, then update
 		if (event) {
@@ -70,7 +82,6 @@ router.post('/setcurrent', wrap(async (req, res) => {
 			res.redirect(`/manage?alert=Invalid event key: '${eventKey}'. Click on an event in the list to get its key.&type=error`);
 		}
 	}
-	
 
 }));
 

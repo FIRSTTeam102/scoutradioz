@@ -1,5 +1,5 @@
 const logger = require('log4js').getLogger();
-const utilities = require("../utilities");
+const utilities = require("@firstteam102/scoutradioz-utilities");
 
 require('colors');
 
@@ -65,7 +65,11 @@ functions.setViewVariables = async function(req, res, next){
 	logger.debug("usefunctions.js - functions.userViewVars: ENTER");
 	
 	if(req.user) {
-		const org = await utilities.findOne('orgs', {org_key: req.user.org_key});
+		const org = await utilities.findOne('orgs', 
+			{org_key: req.user.org_key},
+			{},
+			{allowCache: true}
+		);
 		req.user.org = org;
 		res.locals.user = req.user;
 	} 
@@ -105,12 +109,15 @@ functions.getEventInfo = async function(req, res, next) {
 		teams: null,
 	};
 	
-	//var current = await utilities.find("current", {}, {});
 	// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
 	var thisOrg;
 	if (req && req.user && req.user.org_key) {
 		var thisOrgKey = req.user.org_key;
-		var thisOrg = await utilities.findOne("orgs", {"org_key": thisOrgKey}, {});
+		var thisOrg = await utilities.findOne("orgs", 
+			{"org_key": thisOrgKey}, 
+			{},
+			{allowCache: true}
+		);
 	}
 
 	//sets locals to no event defined just in case we don't find thing and we can just do next();
@@ -129,7 +136,11 @@ functions.getEventInfo = async function(req, res, next) {
 		res.locals.event_key = req.event.key;
 		res.locals.event_year = req.event.year;
 		
-		var currentEvent = await utilities.findOne("events", {key: eventId}, {});
+		var currentEvent = await utilities.findOne("events", 
+			{key: eventId}, 
+			{},
+			{allowCache: true, maxCacheAge: 60},
+		);
 		
 		if (currentEvent) {
 			//Set current event info to req.event and res.locals
@@ -139,13 +150,18 @@ functions.getEventInfo = async function(req, res, next) {
 			//If a list of teams exists, find team info in teams db.
 			if (currentEvent.team_keys && currentEvent.team_keys.length > 0) {
 				
-				var teams = await utilities.find("teams", {"key": {$in: currentEvent.team_keys}}, {sort: {team_number: 1}});
+				var teams = await utilities.find("teams", 
+					{"key": {$in: currentEvent.team_keys}}, 
+					{sort: {team_number: 1}}, 
+					{allowCache: true, maxCacheAge: 60}
+				);
 				//Set teams list to req.event.teams
 				req.teams = teams;
 				res.locals.teams = teams;
 			}
 		}
 	}
+	
 	next();
 }
 
@@ -212,7 +228,12 @@ functions.renderLogger = function(req, res, next){
 			//stores post-render time
 			let renderTime = Date.now() - req.requestTime - beforeRenderTime;
 			
-			logger.info(`Completed ${res.req.url} in ${(beforeRenderTime).toString().yellow} ms; Rendered ${link} in ${(renderTime).toString().yellow} ms`);
+			let appender = "[cache=0]";
+			if (utilities.options && utilities.options.cache.enable == true) {
+				appender = "[cache=1]";
+			}
+			
+			logger.info(`Completed route in ${(beforeRenderTime).toString().yellow} ms; Rendered in ${(renderTime).toString().yellow} ms ${appender} \t[Route: ${res.req.originalUrl.brightGreen} View: ${link.brightGreen}]`);
 			
 			return result;
 		}

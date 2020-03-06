@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const wrap = require('express-async-handler');
-const utilities = require('../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 const logger = require('log4js').getLogger();
 
 /**
@@ -27,11 +27,16 @@ router.get('/', wrap(async (req, res) => {
 	else{
 		
 		//Get list of participating organizations.
-		var orgs = await utilities.find("orgs", {}, {sort: {team_number: 1, org_key: 1}});
+		var orgs = await utilities.find("orgs", {}, {sort: {team_number: 1, org_key: 1}},
+			{allowCache: true}
+		);
 		logger.trace(JSON.stringify(orgs));
 		
 		// Get all events - only get key, year, & name
-		var events = await utilities.find("events", {}, ["key", "year", "name", {sort: {event_key: 1}}]);
+		var events = await utilities.find("events", 
+			{}, ["key", "year", "name", {sort: {event_key: 1}}],
+			{allowCache: true}
+		);
 		logger.trace(JSON.stringify(events));
 
 		// Create a map of year+name by key
@@ -80,7 +85,10 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 	}
 	
 	//search for organization in database
-	var selectedOrg = await utilities.findOne('orgs', {"org_key": org_key});
+	var selectedOrg = await utilities.findOne('orgs', 
+		{"org_key": org_key}, {},
+		{allowCache: true}
+	);
 	
 	//If organization does not exist:
 	if(!selectedOrg) {
@@ -93,7 +101,10 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 	}
 	
 	//Now, sign in to organization's default user
-	var defaultUser = await utilities.findOne("users", {org_key: org_key, name: "default_user"});
+	var defaultUser = await utilities.findOne("users", 
+		{org_key: org_key, name: "default_user"}, {},
+		{allowCache: true}
+	);
 	logger.debug(`${thisFuncName} defaultUser=${JSON.stringify(defaultUser)}`);
 	
 	if(!defaultUser){

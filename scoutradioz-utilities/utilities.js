@@ -322,6 +322,55 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 	}
 }
 
+/**
+ * Asynchronous "update" function to a collection specified in first parameter.
+ * @param {string} collection Collection to find in.
+ * @param {object} query Filter query.
+ * @param {object} update Update query.
+ * @param {object} options Query options, such as sort.
+ */
+utilities.update = async function(collection, query, update, options){
+	//Collection filter
+	if (typeof collection != "string") throw new TypeError("Utilities.update: Collection must be specified.");
+	//Query type filter
+	if (!query) var query = {};
+	if (typeof query != "object") throw new TypeError("Utilities.update: query must be of type object");
+	//Update filter
+	if (typeof update != "object") throw new TypeError("Utilities.update: update must be specified and of type object");
+	//Query options filter
+	if (!options) var options = {};
+	if (typeof options != "object") throw new TypeError("Utilities.update: Options must be of type object");
+	
+	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
+	
+	var queryHashFind = await this.hashQuery('find', collection, query, options);
+	var queryHashFindOne = await this.hashQuery('findOne', collection, query, options);
+	console.log(`find hash: ${queryHashFind}, findOne hash: ${queryHashFindOne}`);
+	
+	//If cached responses for either hashed query exist, then delete them
+	if (this.cache[queryHashFind]) delete this.cache[queryHashFind];
+	if (this.cache[queryHashFindOne]) delete this.cache[queryHashFindOne];
+	
+	//Remove in collection with query
+	var writeResult = await this.getDB().get(collection).update(query, update, options);
+	
+	logger.trace(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
+	
+	//return writeResult
+	return writeResult;
+}
+
+utilities.dumpCache = function(){
+	
+	console.log(JSON.stringify(this.cache));
+}
+
+/**
+ * @param {string} type 
+ * @param {string} collection
+ * @param {object} param1
+ * @param {object} param2
+ */
 utilities.hashQuery = async function(type, collection, param1, param2) {
 	
 	type = type.toString();
@@ -404,58 +453,6 @@ utilities.aggregate = async function(collection, pipeline) {
 	
 	//Return (Promise to get) data
 	return data;
-}
-
-/**
- * Asynchronous "update" function to a collection specified in first parameter.
- * @param {string} collection Collection to find in.
- * @param {object} query Filter query.
- * @param {object} update Update query.
- * @param {object} options Query options, such as sort.
- */
-utilities.update = async function(collection, query, update, options){
-	
-	//If the collection is not specified and is not a String, throw an error.
-	//This would obly be caused by a programming error.
-	if(typeof(collection) != "string"){
-		throw new TypeError("Utilities.update: Collection must be specified.");
-	}
-	//If query query are not set, create an empty object for the DB call.
-	if(!query){
-		var query = {};
-	}
-	//If query exists and is not an object, throw an error. 
-	if(typeof(query) != "object"){
-		throw new TypeError("Utilities.update: query must be of type object");
-	}
-	//If update does not exist or is not an object, throw an error. 
-	if(typeof(update) != "object"){
-		throw new TypeError("Utilities.update: update must be specified and of type object");
-	}
-	//If query options are not set, create an empty object for the DB call.
-	if(!options){
-		var options = {};
-	}
-	//If options exists and is not an object, throw an error.
-	if(typeof(options) != "object"){
-		throw new TypeError("Utilities.update: Options must be of type object");
-	}
-	
-	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
-	
-	var db = this.getDB();
-	
-	//Get collection
-	var Col = db.get(collection);
-	//Remove in collection with query
-	var writeResult;
-	writeResult = await Col.update(query, update, options);
-	
-	//console.log(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
-	logger.trace(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
-	
-	//return writeResult
-	return writeResult;
 }
 
 /**
