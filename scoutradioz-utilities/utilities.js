@@ -1,6 +1,6 @@
 const monk = require("monk");
-const fs = require("fs");
-const logger = require('@log4js-node/log4js-api').getLogger();
+const crypto = require('crypto');
+const logger = require('@log4js-node/log4js-api').getLogger('utilities');
 
 var utilities = module.exports =  {};
 
@@ -8,32 +8,42 @@ var utilities = module.exports =  {};
 var dbRef, url;
 var lastRequestTime;
 var refMaxAge = 20000;
-// database configuration file and location
-var dbConfig;
-var dbConfigLocation;
+utilities.options = {
+	cache: {
+		enable: false,
+		maxAge: 30
+	}
+};
+utilities.cache = {};
 
 /**
  * (Required) Configure utilities with database config file.
- * @param {String} configFile Location of database configuration file (JSON format).
+ * @param {object} databaseConfig JSON object for database config (use require('databases.json') for security)
+ * @param {object} [options] Optional settings
+ * @param {object} [options.cache] Cache settings
+ * @param {boolean} [options.cache.enable=false] Whether to enable or disable caching in find requests
+ * @param {number} [options.cache.maxAge=30] Default maximum age of cached requests, in seconds
  */
-utilities.config = function(configFile){
+utilities.config = function(databaseConfig, options){
+	if (typeof databaseConfig != 'object') throw new TypeError('opts.databaseConfig must be provided. Use require("databases.json").');
 	
-	if (typeof configFile != "string") throw new TypeError("Utilities.config: configFile must be a string");
+	if (!options) options = {};
+	if (typeof options != 'object') throw new TypeError('opts must be an object');
+	if (!options.cache) options.cache = {};
+	if (options.cache.enable == undefined) options.cache.enable = false; //global trigger to enable/disable cache
+	if (options.cache.maxAge == undefined) options.cache.maxAge = 30; //max age in seconds
+	if (typeof options.cache != 'object') throw new TypeError('opts.cache must be an object');
+	if (typeof options.cache.enable != 'boolean') throw new TypeError('opts.cache.enable must be a boolean');
+	if (typeof options.cache.maxAge != 'number') throw new TypeError('opts.cache.maxAge must be a number');
 	
-	if (fs.existsSync(configFile)) {
-		dbConfigLocation = configFile;
-		
-		try {
-			dbConfig = require(dbConfigLocation);
-			console.log("Success!");
-		}
-		catch(err) {
-			throw new Error("Could not read configFile json", err)
-		}
-	}
-	else {
-		throw new ReferenceError("configFile is not a valid path or file does not exist");
-	}
+	if (!options.cache.enable) options.cache.enable = false;
+	if (!options.cache.maxAge) options.cache.maxAge = 30;
+	
+	if (options.cache.enable == true) logger.warn("utilities: Caching is enabled");
+	
+	//Set config variable
+	this.dbConfig = databaseConfig;
+	this.options = options;
 }
 
 /**
@@ -92,10 +102,11 @@ utilities.getDB = function(){
  */
 utilities.getDBurl = function(){	
 	const thisFuncName = 'utilities.getDBurl: ';
+	logger.debug(`${thisFuncName}: BEGIN`);
 	
 	var url;
 	//Check if db has been configured
-	if(dbConfig) {
+	if(this.dbConfig) {
 		
 		//Grab process tier 
 		var thisProcessTier = process.env.TIER;
@@ -103,7 +114,7 @@ utilities.getDBurl = function(){
 		//If a process tier is specified, then attempt to read db URL from that tier.
 		if(thisProcessTier){
 			
-			var thisDBinfo = dbConfig[thisProcessTier];
+			var thisDBinfo = this.dbConfig[thisProcessTier];
 			
 			//If there is an object inside databases for process tier, proceed with connecting to db.
 			if(thisDBinfo){
@@ -119,7 +130,7 @@ utilities.getDBurl = function(){
 		//If there is no process tier, then connect to specified default db
 		else{
 			
-			var thisDBinfo = dbConfig["default"];
+			var thisDBinfo = this.dbConfig["default"];
 			
 			//If default db exists, proceed with connecting to db.
 			if(thisDBinfo){
@@ -135,7 +146,7 @@ utilities.getDBurl = function(){
 	}
 	//If there is no databases file, then connect to localhost
 	else {
-		logger.warn("utilities: No databases file found; Defaulting to localhost:27017");
+		logger.warn("utilities: No databases file found; Defaulting to localhost:27017/app");
 		url = "mongodb://localhost:27017/app";
 	}
 	
@@ -144,103 +155,191 @@ utilities.getDBurl = function(){
 
 /**
  * Asynchronous "find" function to a collection specified in first parameter.
- * @param {String} collection Collection to find in.
- * @param {Object} query Filter for query.
- * @param {Object} options Query options, such as sort.
+ * @param {string} collection Collection to find in.
+ * @param {object} [query={}] Filter for query.
+ * @param {object} [options={}] Query options, such as sort.
+ * @param {object} [cacheOptions=undefined] Caching options.
+ * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
+ * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
  */
 utilities.find = async function(collection, query, options, cacheOptions){
+	//Collection type filter
+	if (typeof collection != "string") throw new TypeError("Collection must be specified.");
+	//Query type filter
+	if (!query) var query = {};
+	if (typeof query != "object") throw new TypeError("query must be of type object");
+	//Options type filter
+	if (!options) var options = {};
+	if (typeof options != "object") throw new TypeError("Options must be of type object");
+	//Cache options
+	if (!cacheOptions) var cacheOptions = {};
+	if (typeof cacheOptions != "object") throw new TypeError("cacheOptions must be of type object");
+	if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != "boolean") throw new TypeError("cacheOptions.allowCache must be of type boolean");
+	if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != "number") throw new TypeError("cacheOptions.maxCacheAge must be of type number");
+	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
+	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
-	//If the collection is not specified and is not a String, throw an error.
-	//This would obly be caused by a programming error.
-	if(typeof(collection) != "string"){
-		throw new TypeError("Utilities.find: Collection must be specified.");
+	logger.trace(`find: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
+	
+	//If cache is enabled
+	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
+		
+		logger.trace("Caching enabled");
+		var hashedQuery = await this.hashQuery('find', collection, query, options);
+		logger.trace(`(find) Request Hash: ${hashedQuery}`);
+		
+		//Look in cache for the query
+		if (this.cache[hashedQuery]) {
+			logger.trace("Request has been found in cache!");
+			
+			var cachedRequest = this.cache[hashedQuery];
+			
+			//If cached request has aged too much, create new request then re-cache it
+			if (cachedRequest.time < Date.now() - cacheOptions.maxCacheAge * 1000) {
+				logger.trace("Cache has aged too much; Requesting db.");
+				//Request db
+				var data = await this.getDB().get(collection).find(query, options);
+				//create new cachedRequest and cache it
+				cachedRequest = {
+					'time': Date.now(),
+					'data': data
+				};
+				this.cache[hashedQuery] = cachedRequest;
+			}
+			logger.trace(`Serving request from cache (find:${collection})`);
+			return cachedRequest.data;
+		}
+		//If query has not yet been cached
+		else {
+			logger.trace(`Caching request (find:${collection})`);
+			
+			//Request db
+			var data = await this.getDB().get(collection).find(query, options);
+			//Create new cachedRequest and cache it
+			var cachedRequest = {
+				'time': Date.now(),
+				'data': data
+			};
+			this.cache[hashedQuery] = cachedRequest;
+			
+			return cachedRequest.data;
+		}
 	}
-	//If query query are not set, create an empty object for the DB call.
-	if(!query){
-		var query = {};
+	//If cache is not enabled
+	else {
+		
+		//Request db
+		var data = await this.getDB().get(collection).find(query, options);
+		logger.trace(`non-cached: result: ${data}`);
+		
+		//Return (Promise to get) data
+		return data;
 	}
-	//If query exists and is not an object, throw an error. 
-	if(typeof(query) != "object"){
-		throw new TypeError("Utilities.find: query must be of type object");
-	}
-	//If query options are not set, create an empty object for the DB call.
-	if(!options){
-		var options = {};
-	}
-	//If options exists and is not an object, throw an error.
-	if(typeof(options) != "object"){
-		throw new TypeError("Utilities.find: Options must be of type object");
-	}
-	
-	logger.trace(`utilities.find: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
-	
-	var db = this.getDB();
-	
-	//Get collection
-	var Col = db.get(collection);
-	//Find in collection with query and options
-	var data = [];
-	data = await Col.find(query, options);
-	
-	logger.trace(`utilities.find: result: ${data}`);
-	
-	//Return (Promise to get) data
-	return data;
 }
 
 /**
  * Asynchronous "findOne" function to a collection specified in first parameter.
- * @param {String} collection Collection to find in.
- * @param {Object} query Filter for query.
- * @param {Object} options Query options, such as sort.
+ * @param {string} collection Collection to findOne in.
+ * @param {object} [query={}] Filter for query.
+ * @param {object} [options={}] Query options, such as sort.
+ * @param {object} [cacheOptions=undefined] Caching options.
+ * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
+ * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
  */
-utilities.findOne = async function(collection, query, options){
-	
-	//If the collection is not specified and is not a String, throw an error.
-	//This would obly be caused by a programming error.
-	if(typeof(collection) != "string"){
-		throw new TypeError("Utilities.findOne: Collection must be specified.");
-	}
-	//If query query are not set, create an empty object for the DB call.
-	if(!query){
-		var query = {};
-	}
-	//If query exists and is not an object, throw an error. 
-	if(typeof(query) != "object"){
-		throw new TypeError("Utilities.findOne: query must be of type object");
-	}
-	//If query options are not set, create an empty object for the DB call.
-	if(!options){
-		var options = {};
-	}
-	//If options exists and is not an object, throw an error.
-	if(typeof(options) != "object"){
-		throw new TypeError("Utilities.findOne: Options must be of type object");
-	}
-	logger.warn("hello")
+utilities.findOne = async function(collection, query, options, cacheOptions){
+	//Collection type filter
+	if (typeof collection != "string") throw new TypeError("Collection must be specified.");
+	//Query type filter
+	if (!query) var query = {};
+	if (typeof query != "object") throw new TypeError("query must be of type object");
+	//Options type filter
+	if (!options) var options = {};
+	if (typeof options != "object") throw new TypeError("Options must be of type object");
+	//Cache options
+	if (!cacheOptions) var cacheOptions = {};
+	if (typeof cacheOptions != "object") throw new TypeError("cacheOptions must be of type object");
+	if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != "boolean") throw new TypeError("cacheOptions.allowCache must be of type boolean");
+	if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != "number") throw new TypeError("cacheOptions.maxCacheAge must be of type number");
+	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
+	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
 	logger.trace(`utilities.findOne: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
 	
-	var db = this.getDB();
+	//If cache is enabled
+	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
+		
+		logger.trace("Caching enabled");
+		var hashedQuery = await this.hashQuery('findOne', collection, query, options);
+		logger.trace(`(findOne) Request Hash: ${hashedQuery}`);
+		
+		//Look in cache for the query
+		if (this.cache[hashedQuery]) {
+			logger.trace("Request has been found in cache!");
+			
+			var cachedRequest = this.cache[hashedQuery];
+			
+			//If cached request has aged too much, create new request then re-cache it
+			if (cachedRequest.time < Date.now() - cacheOptions.maxCacheAge * 1000) {
+				logger.trace("Cache has aged too much; Requesting db.");
+				//Request db
+				var data = await this.getDB().get(collection).findOne(query, options);
+				//create new cachedRequest and cache it
+				cachedRequest = {
+					'time': Date.now(),
+					'data': data
+				};
+				this.cache[hashedQuery] = cachedRequest;
+			}
+			logger.trace(`Serving request from cache (findOne:${collection})`);
+			return cachedRequest.data;
+		}
+		//If query has not yet been cached
+		else {
+			logger.trace(`Caching request (findOne:${collection})`);
+			
+			//Request db
+			var data = await this.getDB().get(collection).findOne(query, options);
+			//Create new cachedRequest and cache it
+			var cachedRequest = {
+				'time': Date.now(),
+				'data': data
+			};
+			this.cache[hashedQuery] = cachedRequest;
+			
+			return cachedRequest.data;
+		}
+	}
+	//If cache is not enabled
+	else {
+		
+		//Request db
+		var data = await this.getDB().get(collection).findOne(query, options);
+		logger.trace(`Not cached (findOne:${collection})`)
+		logger.trace(`non-cached: result: ${data}`);
+		
+		//Return (Promise to get) data
+		return data;
+	}
+}
+
+utilities.hashQuery = async function(type, collection, param1, param2) {
 	
-	//Get collection
-	var Col = db.get(collection);
+	type = type.toString();
+	collection = collection.toString();
+	param1 = JSON.stringify(param1);
+	param2 = JSON.stringify(param2);
 	
-	//Find in collection with query and options
-	var data = [];
-	data = await Col.findOne(query, options);
+	const hash = crypto.Hash('sha1');
+	hash.update(type + collection + param1 + param2);
 	
-	logger.trace(`utilities.findOne: result: ${data}`);
-	
-	//Return (Promise to get) data
-	return data;
+	return hash.digest('hex');
 }
 
 /**
  * Asynchronous "distinct" function to a collection specified in first parameter.
- * @param {String} collection Collection to find in.
- * @param {String} field Which field to distinct.
- * @param {Object} query The query for filtering the set of documents to which we apply the distinct filter.
+ * @param {string} collection Collection to find in.
+ * @param {string} field Which field to distinct.
+ * @param {object} query The query for filtering the set of documents to which we apply the distinct filter.
  */
 utilities.distinct = async function(collection, field, query){
 	//If the collection is not specified and is not a String, throw an error.
@@ -278,8 +377,8 @@ utilities.distinct = async function(collection, field, query){
 
 /**
  * Asynchronous "aggregate" function to a collection specified in first parameter.
- * @param {String} collection Collection to find in.
- * @param {Object} pipeline Array containing all the aggregation framework commands for the execution.
+ * @param {string} collection Collection to find in.
+ * @param {object} pipeline Array containing all the aggregation framework commands for the execution.
  */
 utilities.aggregate = async function(collection, pipeline) {
 	//If the collection is not specified and is not a String, throw an error.
@@ -309,10 +408,10 @@ utilities.aggregate = async function(collection, pipeline) {
 
 /**
  * Asynchronous "update" function to a collection specified in first parameter.
- * @param {String} collection Collection to find in.
- * @param {Object} query Filter query.
- * @param {Object} update Update query.
- * @param {Object} options Query options, such as sort.
+ * @param {string} collection Collection to find in.
+ * @param {object} query Filter query.
+ * @param {object} update Update query.
+ * @param {object} options Query options, such as sort.
  */
 utilities.update = async function(collection, query, update, options){
 	
@@ -361,9 +460,9 @@ utilities.update = async function(collection, query, update, options){
 
 /**
  * Asynchronous "bulkWrite" function to a collection specified in first parameter.
- * @param {String} collection Collection to find in.
+ * @param {string} collection Collection to find in.
  * @param {Array} operations Array of Bulk operations to perform.
- * @param {Object} options Optional settings.
+ * @param {object} options Optional settings.
  */
 utilities.bulkWrite = async function(collection, operations, options){
 	//If the collection is not specified and is not a String, throw an error.
@@ -404,8 +503,8 @@ utilities.bulkWrite = async function(collection, operations, options){
 
 /**
  * Asynchronous "remove" function to a collection specified in first parameter.
- * @param {String} collection Collection to remove from.
- * @param {Object} query Filter for element/s to remove.
+ * @param {string} collection Collection to remove from.
+ * @param {object} query Filter for element/s to remove.
  */
 utilities.remove = async function(collection, query){
 	
@@ -441,8 +540,8 @@ utilities.remove = async function(collection, query){
 
 /**
  * Asynchronous "insert" function to a collection specified in first parameter.
- * @param {String} collection Collection to insert into.
- * @param {Object} elements [Any] Element or array of elements to insert
+ * @param {string} collection Collection to insert into.
+ * @param {object} elements [Any] Element or array of elements to insert
  */
 utilities.insert = async function(collection, elements){
 	

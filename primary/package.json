@@ -42,27 +42,26 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@firstteam102/scoutradioz-utilities": "^1.0.3",
+    "@firstteam102/scoutradioz-utilities": "^1.0.10",
     "aws-serverless-express": "^3.3.6",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "colors": "^1.4.0",
-    "connect-mongo": "^3.0.0",
+    "connect-mongo": "^3.2.0",
     "cookie-parser": "^1.4.4",
     "dotenv": "^6.2.0",
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
     "express-session": "^1.17.0",
     "express-useragent": "^1.0.13",
-    "log4js": "^5.2.2",
+    "log4js": "^5.3.0",
     "mongodb": "^3.5.4",
-    "monk": "^7.1.1",
+    "monk": "^7.1.2",
     "node-rest-client": "^3.1.0",
-    "passport": "^0.4.0",
+    "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "pug": "^2.0.4",
     "serve-favicon": "^2.5.0",
-    "utilities-local": "file:../scoutradioz-utilities",
-    "web-push": "^3.4.1"
+    "web-push": "^3.4.3"
   }
 }

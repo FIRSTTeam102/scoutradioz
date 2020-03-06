@@ -27,11 +27,13 @@ logger.level = 'debug';
 //load custom middleware
 const usefunctions = require("./helpers/usefunctions");
 //load database utilities
-const utilities = require('@firstteam102/scoutradioz-utilities'); ////--
-////-- const utilities = require('utilities-local');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 //Configure utilities with the full file path of our databases json file
-//const utilities = require('./utilities'); ////--
-utilities.config(path.join(__dirname, "databases.json"));
+utilities.config(require('./databases.json'), {
+	cache: {
+		enable: true,
+	}
+});
 
 //PUG CACHING (if production IS enabled)
 if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enabled.");
@@ -95,7 +97,9 @@ app.use(async function(req, res, next){
 	req.requestTime = Date.now();
 	
 	if(req.user){
-		var userRole = await utilities.findOne("roles", {role_key: req.user.role_key});
+		var userRole = await utilities.findOne("roles", 
+			{role_key: req.user.role_key}, {},
+			{allowCache: true, maxCacheAge: 120});
 			
 		//Add user's role to user obj so we don't have to go searching in db every damn second
 		req.user.role = userRole;	
@@ -104,10 +108,10 @@ app.use(async function(req, res, next){
 	next();
 });
 
-//Event stuff
-app.use(usefunctions.getEventInfo);
 //Logging and timestamping
 app.use(usefunctions.requestLogger);
+//Event stuff
+app.use(usefunctions.getEventInfo);
 //adds logging to res.render function
 app.use(usefunctions.renderLogger);
 //Authentication middleware (req.authenticate)
