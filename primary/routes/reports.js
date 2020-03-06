@@ -1264,34 +1264,25 @@ router.get("/drivedashboard", wrap(async (req, res) => {
 
 		//logger.debug(thisFuncName + "avgNorms=" + JSON.stringify(avgNorms));
 		//logger.debug(thisFuncName + "maxNorms=" + JSON.stringify(maxNorms));
-
-		// res.render('./reports/upcoming', {
-		// 	title: "Upcoming",
-		res.render("./reports/alliancestats", {
-			title: "Alliance Team Statistics",
-			teams: teams,
-			teamList: teamList,
-			currentAggRanges: currentAggRanges,
-			avgdata: avgTable,
-			maxdata: maxTable,
-			avgnorms: avgNorms,
-			maxnorms: maxNorms,
-			matches: matches,
-			teamRanks: teamRanks,
-			team: teamKey,
-			teamNumbers: teamNumbers
-		});
-	} else {
-	
-		// TODO
-		res.render('./reports/upcoming', {
-			title: "Upcoming",
-			matches: matches,
-			teamRanks: teamRanks,
-			team: teamKey,
-			teamNumbers: teamNumbers
-		});
 	}
+
+	// TODO
+	// res.render('./reports/upcoming', {
+	// 	title: "Upcoming",
+	res.render("./reports/alliancestats", {
+		title: "Alliance Team Statistics",
+		teams: teams,
+		teamList: teamList,
+		currentAggRanges: currentAggRanges,
+		avgdata: avgTable,
+		maxdata: maxTable,
+		avgnorms: avgNorms,
+		maxnorms: maxNorms,
+		matches: matches,
+		teamRanks: teamRanks,
+		team: teamKey,
+		teamNumbers: teamNumbers
+	});
 }));
 
 
