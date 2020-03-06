@@ -20,10 +20,10 @@ block content
 			h3(class="theme-text") Upcoming matches for team #{team}
 		else
 			h3(class="theme-text") Upcoming matches
-		if( teamList && teamList[0] )
+		if( teamNumbers && teamNumbers[0] )
 			select#teamSelect(class="gear-btn theme-input w3-btn")
 				option(value="") Team #
-				each team in teamList
+				each team in teamNumbers
 					option(value=team class="w3-bar-item") #{team}
 			a#upcomingMatchesLink(href="/reports/upcoming")
 				div(class="gear-btn w3-btn theme-dim theme-hover-light-gray") View upcoming matches for 
