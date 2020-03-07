@@ -1138,6 +1138,123 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 	});
 }));
 
+//// Data exports
+
+router.get("/exportdata", wrap(async (req, res) => {
+	
+	var thisFuncName = "reports.exportdata[get]: ";
+
+	// for later querying by event_key
+	var event_key = req.event.key;
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+
+	var data_type = req.query.type;
+
+	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',org_key=' + org_key + ',data_type=' + data_type);
+
+	// read in the list of form options
+	var matchLayout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: data_type}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
+
+	// sanity check
+	if (!matchLayout || matchLayout.length == 0) {
+		// TODO return pop up
+	}
+
+	var sortKey = "";
+	switch (data_type) {
+		case 'matchscouting':
+			sortKey = "time";
+			break;
+		case 'pitcouting':
+			sortKey = "team_key";
+			break;
+	}
+
+	// read in all data
+	var scored = await utilities.find(data_type, {"org_key": org_key, "event_key": event_key, "data": {$exists: true} }, { sort: {sortKey: 1} });
+
+	// cycle through each scored match & build CSV
+	var fullCSVoutput = "";
+	// which 'pivot data columns' are we including?
+	var pivotDataCols = "";
+	switch (data_type) {
+		case 'matchscouting':
+			pivotDataCols = "org_key,year,event_key,match_key,match_number,time,alliance,team_key";
+			break;
+		case 'pitscouting':
+			pivotDataCols = "org_key,year,event_key,team_key";
+			break;
+		default:
+			pivotDataCols = "";
+	}
+	var pivotDataKeys = pivotDataCols.split(",");
+	var isFirstRow = true;
+	for (var i in scored) {
+		var thisScored = scored[i];
+		//logger.debug(thisFuncName + "thisScored=" + JSON.stringify(thisScored));
+		// should be redundant with the "$exists: true" in the DB find query, BUT... just in case...
+		if (thisScored.data) {
+			// emit header row if this is the first line of data
+			if (isFirstRow) {
+				isFirstRow = false;
+				// initialize header row with particular columns
+				var headerRow = pivotDataCols;
+				// add on metric IDs
+				for (var j in matchLayout) {
+					var thisItem = matchLayout[j];
+
+					if (matchDataHelper.isMetric(thisItem.type)) 
+						headerRow += "," + thisItem.id;
+				}
+				//logger.debug(thisFuncName + "headerRow=" + headerRow);
+				fullCSVoutput = headerRow;
+			}
+
+			var dataRow = "";
+			var thisData = thisScored.data;
+
+			// initialize data row with particular columns
+			var isFirstColumn = true;
+			for (var k in pivotDataKeys) {
+				if (isFirstColumn)
+					isFirstColumn = false;
+				else
+					dataRow += ",";
+				var thisVal = "" + thisScored[pivotDataKeys[k]];
+				dataRow += thisVal.replace(/(\r\n|\n|\r)/gm,"");
+			}			
+
+			// cycle through the metrics
+			for (var j in matchLayout) {
+				var thisItem = matchLayout[j];
+
+				if (matchDataHelper.isMetric(thisItem.type)) {
+					dataRow += ",";
+
+					if (thisData[thisItem.id] || thisData[thisItem.id] == 0) {
+						var thisVal = "" + thisData[thisItem.id];
+						dataRow += '"' + thisVal.replace(/(\r\n|\n|\r)/gm,"") + '"';
+					}
+				}
+			}
+			//logger.debug(thisFuncName + "dataRow=" + dataRow);
+			fullCSVoutput += "\n" + dataRow;
+		}
+	}	
+
+	logger.info(thisFuncName + "EXIT returning " + scored.length + " rows of CSV");
+
+	// Send back simple text
+	res.setHeader('Content-Type', 'text/csv');
+	res.setHeader('Content-Disposition', 'attachment; filename=\"' + data_type + '_' + org_key + '_' + event_key + '_' + Date.now() + '.csv\"');
+	return res.send(fullCSVoutput);
+}));
+
 //// Choosing & setting scoring selections
 
 router.get("/choosecolumns", wrap(async (req, res) =>  {

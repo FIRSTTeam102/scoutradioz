@@ -27,6 +27,28 @@ functions.isQuantifiableType = function(type) {
 }
 
 /**
+ * Returns whether a layout element type is a metric.
+ * @param {string} type Type of layout element
+ * @return {boolean} isMetric
+ */
+functions.isMetric = function(type) {
+	
+	var isMetric;
+	
+	switch (type) {
+		case 'spacer':
+		case 'h2':
+		case 'h3':
+			isMetric = false;
+			break;
+		default:
+			isMetric = true;
+	}
+	
+	return isMetric;
+}
+
+/**
  * @param {string} org_key Org key
  * @param {number} event_year Year of event
  * @param {string} colCookie Comma-separated list of metric IDs
