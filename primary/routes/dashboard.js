@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
-const utilities = require('../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
 
 router.all('/*', wrap(async (req, res, next) => {
@@ -30,13 +30,10 @@ router.get('/', wrap(async (req, res) => {
 
 	// Check to see if the logged in user is one of the scouting/scoring assignees
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	var assignedTeams = await utilities.find("pitscouting", {
-		"org_key": org_key, 
-		"event_key": eventId, 
-		"primary": thisUserName
-	}, {
-		sort: { "team_key": 1 }
-	});
+	var assignedTeams = await utilities.find("pitscouting", 
+		{"org_key": org_key, "event_key": eventId, "primary": thisUserName}, 
+		{sort: { "team_key": 1 }}
+	);
 		
 	// if no assignments, send off to unassigned
 	if (assignedTeams.length == 0) {
@@ -141,6 +138,220 @@ router.get('/unassigned', wrap(async (req, res) => {
 	});	
 }));
 
+
+/**
+ * Drive team dashboard view: Combination of [a] compare alliances and [b] upcoming matches
+ * -- Pass in a team_key as 'team'
+ * >> If null, use the organization's default; if no default, return nothing
+ */
+router.get("/drive", wrap(async (req, res) => {
+	
+	var thisFuncName = "reports.drivedashboard[get]: ";
+	logger.info(thisFuncName + 'ENTER');
+	
+	// for later querying by event_key
+	var event_key = req.event.key;
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+	logger.debug(thisFuncName + 'event_key=' + event_key);
+	var teamKey;
+	
+	//set teamKey to query or org default
+	if (req.query.team_key) {
+		teamKey = req.query.team_key;
+	}
+	else if (req.user.org.team_key) {
+		teamKey = req.user.org.team_key;
+	}
+	else {
+		teamKey = 'all';
+	}
+	
+	// Get upcoming match data for the specified team (or "all" if no default & none specified)
+	var upcomingData = await matchDataHelper.getUpcomingMatchData(event_key, teamKey);
+	// Data for the upcoming matches portion
+	var teamRanks = upcomingData.teamRanks;
+	var teamNumbers = upcomingData.teamNumbers;
+	
+	// Prepare empty alliance stats data
+	var teamList = null;
+	var currentAggRanges = null;
+	var avgTable = null;
+	var maxTable = null;
+	
+	// Pull out the first match (if it exists), get the team keys from the alliances
+	var matches = upcomingData.matches;
+	if (matches && matches.length > 0) {
+		var firstMatch = matches[0];
+
+		var teamKeyList = "";
+		var notFirst = true;
+		var redArray = firstMatch.alliances.red.team_keys; 
+		for (var i in redArray) {
+			if (notFirst) {
+				teamKeyList = redArray[i];
+				notFirst = false;
+			} else {
+				teamKeyList += "," + redArray[i];
+			}
+		}
+		teamKeyList += ",0";
+		var blueArray = firstMatch.alliances.blue.team_keys; 
+		for (var i in blueArray)
+			teamKeyList += "," + blueArray[i];
+		logger.debug(thisFuncName + "teamKeyList=" + teamKeyList);
+
+		// Get the alliance stats
+		var allianceStatsData = await matchDataHelper.getAllianceStatsData(event_year, event_key, org_key, teamKeyList, req.cookies);
+
+		teams = allianceStatsData.teams;
+		teamList = allianceStatsData.teamList;
+		currentAggRanges = allianceStatsData.currentAggRanges;
+		avgTable = allianceStatsData.avgTable;
+		maxTable = allianceStatsData.maxTable;
+		avgNorms = allianceStatsData.avgNorms;
+		maxNorms = allianceStatsData.maxNorms;
+		
+	}
+
+	var dataForChartJS = {
+		labels: [],
+		items: {
+			red: [
+				{
+					label: teamList[0].substring(3),
+					backgroundColor: 'rgba(255, 0, 0, 0.15)',
+					borderColor: 'rgba(255, 0, 0, 0.7)'
+				},
+				{
+					label: teamList[1].substring(3),
+					backgroundColor: 'rgba(255, 128, 0, 0.15)',
+					borderColor: 'rgba(255, 128, 0, 0.7)'
+				},
+				{
+					label: teamList[2].substring(3),
+					backgroundColor: 'rgba(255, 255, 0, 0.15)',
+					borderColor: 'rgba(255, 255, 0, 0.7)'
+				}
+			],
+			blue: [
+				{
+					label: teamList[4].substring(3),
+					backgroundColor: 'rgba(63, 63, 255, 0.3)',
+					borderColor: 'rgba(63, 63, 255, 1)'
+				},
+				{
+					label: teamList[5].substring(3),
+					backgroundColor: 'rgba(255, 0, 255, 0.15)',
+					borderColor: 'rgba(255, 0, 255, 0.7)'
+				},
+				{
+					label: teamList[6].substring(3),
+					backgroundColor: 'rgba(0, 255, 255, 0.15)',
+					borderColor: 'rgba(0, 255, 255, 0.7)'
+				}
+			]
+		},
+		datasets: {
+			avg: {red: [], blue: []},
+			max: {red: [], blue: []},
+			sum: {red: [], blue: []},
+		},
+		options: {
+			scale: {
+				angleLines: {
+					display: true
+				},
+				ticks: {
+						showLabelBackdrop: false,
+					suggestedMin: 0,
+					suggestedMax: 1,
+					display: false
+				},
+				angleLines: {
+					color: 'rgb(128, 128, 128)'
+				},
+				gridLines: {
+					color: 'rgb(64, 64, 64)'
+				}
+			}
+		}
+	};
+	
+	for (var i in dataForChartJS.datasets) {
+		var set = dataForChartJS.datasets[i];
+		for (var i = 0; i < 3; i++ ) {
+			set.red[i] = [];
+			set.blue[i] = [];
+		}
+	}
+	
+	//Populate labels array
+	for (var agg of avgTable) {
+		if (agg.hasOwnProperty('key')) {
+			var text = agg.key.replace( /([A-Z])/g, " $1" ); 
+			var label = (text.charAt(0).toUpperCase() + text.slice(1)).split(' ');
+			dataForChartJS.labels.push(label);
+		}
+	}
+	
+	//Avg norms
+	for (var agg of avgNorms) {
+		for (var i in teamList) {
+			var team = teamList[i];
+			if (agg.hasOwnProperty(team)) {
+				//red
+				if (i < 3) {
+					var thisDatum = agg[team];
+					dataForChartJS.datasets.avg.red[i].push(thisDatum);
+				}
+				//blue
+				else {
+					var thisDatum = agg[team];
+					dataForChartJS.datasets.avg.blue[i - 4].push(thisDatum);
+				}
+			}
+		}
+	}
+	//Max norms
+	for (var agg of maxNorms) {
+		for (var i in teamList) {
+			var team = teamList[i];
+			if (agg.hasOwnProperty(team)) {
+				//red
+				if (i < 3) {
+					var thisDatum = agg[team];
+					dataForChartJS.datasets.max.red[i].push(thisDatum);
+				}
+				//blue
+				else {
+					var thisDatum = agg[team];
+					dataForChartJS.datasets.max.blue[i - 4].push(thisDatum);
+				}
+			}
+		}
+	}
+	console.log(avgNorms);
+	//console.log(teamList);
+	console.log(JSON.stringify(dataForChartJS, 0, 2));
+	
+	
+	res.render("./dashboard/drive", {
+		title: "Drive Team Dashboard",
+		teamList: teamList,
+		currentAggRanges: currentAggRanges,
+		avgdata: avgTable,
+		maxdata: maxTable,
+		avgnorms: avgNorms,
+		maxnorms: maxNorms,
+		matches: matches,
+		teamRanks: teamRanks,
+		selectedTeam: teamKey,
+		teamNumbers: teamNumbers,
+		dataForChartJS: JSON.stringify(dataForChartJS)
+	});
+}));
+
 /**
  * Alliance selection page
  * @url /dashboard/allianceselection
@@ -180,8 +391,6 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		}
 	
 		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-		//var scoreLayout = await utilities.find("scoringlayout", { year: event_year }, {sort: {"order": 1}});
-		//var scoreLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 		var cookie_key = org_key + "_" + event_year + "_cols";
 		var colCookie = req.cookies[cookie_key];
 		var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
@@ -334,12 +543,12 @@ router.get('/pits', wrap(async (req, res) => {
 	
 	// read in team list for data
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	//var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
-	var thisEventData = await utilities.find("events", {"key": event_key});
-	var thisEvent = thisEventData[0];
+	var thisEvent = await utilities.findOne("events", 
+		{"key": event_key}, {},
+		{allowCache: true}
+	);
 	var teamArray = [];
-	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
-	{
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
 
 		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
 		teamArray = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
@@ -347,15 +556,13 @@ router.get('/pits', wrap(async (req, res) => {
 
 	// Build map of team_key -> team data
 	var teamKeyMap = {};
-	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++)
-	{
+	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++) {
 		//logger.debug(thisFuncName + 'teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
 	// Add data to 'teams' data
-	for (var teamIdx = 0; teamIdx < teams.length; teamIdx++)
-	{
+	for (var teamIdx = 0; teamIdx < teams.length; teamIdx++) {
 		//logger.debug(thisFuncName + 'teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
 		teams[teamIdx].nickname = teamKeyMap[teams[teamIdx].team_key].nickname;
 	}
@@ -423,14 +630,20 @@ router.get('/matches', wrap(async (req, res) => {
 	// read in team list for data
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
 	//var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
-	var thisEventData = await utilities.find("events", {"key": eventId});
-	var thisEvent = thisEventData[0];
+	var thisEvent = await utilities.find("events", 
+		{"key": eventId}, {},
+		{allowCache: true}
+	);
 	var teamArray = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
 	{
 
 		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
-		teamArray = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+		teamArray = await utilities.find("teams", 
+			{"key": {$in: thisEvent.team_keys}}, 
+			{sort: {team_number: 1}},
+			{allowCache: true}
+		);
 	}
 	//teamsCol.find({},{ sort: {team_number: 1} }, function(e, docs) {
 		
