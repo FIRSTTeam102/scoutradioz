@@ -545,8 +545,8 @@ router.get("/swapmembers", wrap(async (req, res) => {
 	var scorers = await utilities.distinct("matchscouting", "assigned_scorer", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }});
 	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 
-	// Get list of all users
-	var users = await utilities.find("users", {}, {sort:{ "name": 1 }});
+	// Get list of all users for this org
+	var users = await utilities.find("users", {org_key: org_key}, {sort:{ "name": 1 }});
 
 	// Go to a Pug to show two lists & a button to do the swap - form with button
 	res.render("./manage/swapmembers", {
