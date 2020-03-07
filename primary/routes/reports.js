@@ -1162,7 +1162,7 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	
 	res.render("./reports/allteammetrics", {
-		title: "Alliance Selection",
+		title: "All Team Metrics",
 		aggdata: aggArray,
 		currentAggRanges: currentAggRanges,
 		layout: scorelayout,
