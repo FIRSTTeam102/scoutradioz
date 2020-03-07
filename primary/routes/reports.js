@@ -1150,8 +1150,12 @@ router.get("/exportdata", wrap(async (req, res) => {
 	var org_key = req.user.org_key;
 
 	var data_type = req.query.type;
+	if (!data_type) {
+		res.redirect("/?alert=No data type specified for export.");
+		return;
+	}
 
-	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',org_key=' + org_key + ',data_type=' + data_type);
+	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',org_key=' + org_key + ',data_type=' + data_type + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
 	var matchLayout = await utilities.find("layout", 
@@ -1161,8 +1165,10 @@ router.get("/exportdata", wrap(async (req, res) => {
 	);
 
 	// sanity check
+	//logger.debug(thisFuncName + "layout=" + JSON.stringify(matchLayout));
 	if (!matchLayout || matchLayout.length == 0) {
-		// TODO return pop up
+		res.redirect("/?alert=No data found for type '" + data_type + "'.");
+		return;
 	}
 
 	var sortKey = "";
