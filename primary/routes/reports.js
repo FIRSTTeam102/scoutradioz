@@ -41,6 +41,7 @@ router.get("/finishedmatches", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.finishedmatches[get]: ";
 	logger.info(thisFuncName + 'ENTER');
+	var year = req.event.year;
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -49,10 +50,15 @@ router.get("/finishedmatches", wrap(async (req, res) => {
 	// Match history info
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : event_key}, {sort: {time: -1}});
 
+	// Ranking point info
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
+	//logger.debug(thisFuncName + "rankingPoints=" + JSON.stringify(rankingPoints));
+	
 	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 	res.render("./reports/finishedmatches", {
 		title: "Matches",
-		matches: matches
+		matches: matches,
+		rankingPoints: rankingPoints
 	});
 }));
 
@@ -146,8 +152,8 @@ router.get("/teamintel", wrap(async (req, res) => {
 	var pitData1 = null;
 	if (pitFind)
 		pitData = pitFind.data;
-	if (pitFind.data1)
-		pitData1 = pitFind.data1;
+	// if (pitFind.data1)
+	// 	pitData1 = pitFind.data1;
 	
 	// Pit data layout
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
@@ -195,7 +201,10 @@ router.get("/teamintel", wrap(async (req, res) => {
 		}
 	}
 	logger.trace(thisFuncName + 'matches=' + JSON.stringify(matches));
-	
+
+	// Ranking point info
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: event_year});
+
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
 	// { $match : { "data":{$exists:true}, "event_key": "2018njfla", "team_key": "frc303" } }, 
@@ -284,7 +293,8 @@ router.get("/teamintel", wrap(async (req, res) => {
 		currentAggRanges: currentAggRanges,
 		matches: matches,
 		matchDataHelper: matchDataHelper,
-		images: images
+		images: images,
+		rankingPoints: rankingPoints
 	});
 }));
 
@@ -363,6 +373,9 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	}
 	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 
+	// Ranking point info
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
+
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
 	// { $match : { "data":{$exists:true}, "team_key": "frc303" } },    <- No event; avg across ALL events
@@ -434,7 +447,8 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 		scorelayout: scorelayout,
 		aggdata: aggTable,
 		matches: matches,
-		year: year
+		year: year,
+		rankingPoints: rankingPoints
 	});
 }));
 

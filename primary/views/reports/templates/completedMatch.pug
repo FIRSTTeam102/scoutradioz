@@ -1,4 +1,5 @@
 div(class="w3-row")
+	- outcome = "Tie";
 	- if (match.winning_alliance == 'red') 
 		- outcome = "Red won";
 	- if (match.winning_alliance == 'blue') 
@@ -49,7 +50,7 @@ div(class="w3-row")
 		- var red1 = red[0], red2 = red[1], red3 = red[2];
 		- var blueContainerColor = "theme-dim", redContainerColor = "theme-dim", blueBorder = "", redBorder = "";
 		- if (match.winning_alliance == 'blue') blueContainerColor = "w3-white", blueBorder = "thick-border";
-		- else redContainerColor = "w3-white", redBorder = "thick-border"
+		- if (match.winning_alliance == 'red') redContainerColor = "w3-white", redBorder = "thick-border"
 		//-The Blue alliance
 		div(class="w3-col s6 w3-padding-small")
 			div(class=`w3-col rounded-small w3-border ${blueContainerColor} ${blueBorder}`)
@@ -82,14 +83,18 @@ div(class="w3-row")
 						span=match.alliances.blue.score
 					div(class="w3-padding")
 						- if (match.score_breakdown)
-							- if (match.score_breakdown.blue.completeRocketRankingPoint)
-								div(class="w3-tooltip w3-show-inline-block")
-									span CR&nbsp;
-									div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;") Completed Rocket
-							- if (match.score_breakdown.blue.habDockingRankingPoint)
-								div(class="w3-tooltip w3-show-inline-block")
-									span HD
-									div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;") Docked Habitat Zone
+							- if (rankingPoints)
+								- var firstLabel = true;
+								- for (var i = rankingPoints.attributes.length - 1; i >= 0; i--)
+									- var thisRp = rankingPoints.attributes[i];
+									- var thisName = thisRp.name;
+									- var thisAbbr = thisRp.abbr;
+									- if (match.score_breakdown.blue[thisName])
+										div(class="w3-tooltip w3-show-inline-block")
+											- if (firstLabel) firstLabel = false;
+											- else thisAbbr = '&nbsp;' + thisAbbr;
+											span !{thisAbbr}
+											div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;")=thisRp.label
 		//-The Red Alliance
 		div(class="w3-col s6 w3-padding-small")
 			div(class=`w3-col rounded-small w3-border ${redContainerColor} ${redBorder}`)
@@ -120,11 +125,15 @@ div(class="w3-row")
 						span=match.alliances.red.score
 					div(class="w3-padding")
 						- if (match.score_breakdown)
-							- if (match.score_breakdown.red.completeRocketRankingPoint)
-								div(class="w3-tooltip w3-show-inline-block")
-									span CR&nbsp;
-									div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;") Completed Rocket
-							- if (match.score_breakdown.red.habDockingRankingPoint)
-								div(class="w3-tooltip w3-show-inline-block")
-									span HD
-									div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;") Docked Habitat Zone
+							- if (rankingPoints)
+								- var firstLabel = true;
+								- for (var i = rankingPoints.attributes.length - 1; i >= 0; i--)
+									- var thisRp = rankingPoints.attributes[i];
+									- var thisName = thisRp.name;
+									- var thisAbbr = thisRp.abbr;
+									- if (match.score_breakdown.red[thisName])
+										div(class="w3-tooltip w3-show-inline-block")
+											- if (firstLabel) firstLabel = false;
+											- else thisAbbr = '&nbsp;' + thisAbbr;
+											span !{thisAbbr}
+											div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;")=thisRp.label
