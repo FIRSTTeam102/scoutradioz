@@ -241,8 +241,11 @@ router.post("/generatematchallocations2", wrap(async (req, res) => {
 	// 2019-01-23, M.O'C: See YEARFIX comment above
 	var year = parseInt(event_key.substring(0,4));
 					
-	// HARDCODED
-	var activeTeamKey = 'frc102';
+	// Pull 'active team key' from DB
+	// TODO make a toggle for this?
+	// var thisOrg = await utilities.findOne("orgs", {"org_key": org_key});
+	// var activeTeamKey = thisOrg.team_key;
+	var activeTeamKey = '';
 	
 	// { year, event_key, match_key, match_number, alliance, 'match_team_key', assigned_scorer, actual_scorer, scoring_data: {} }
 
@@ -542,8 +545,8 @@ router.get("/swapmembers", wrap(async (req, res) => {
 	var scorers = await utilities.distinct("matchscouting", "assigned_scorer", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }});
 	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 
-	// Get list of all users
-	var users = await utilities.find("users", {}, {sort:{ "name": 1 }});
+	// Get list of all users for this org
+	var users = await utilities.find("users", {org_key: org_key}, {sort:{ "name": 1 }});
 
 	// Go to a Pug to show two lists & a button to do the swap - form with button
 	res.render("./manage/swapmembers", {
@@ -622,8 +625,11 @@ async function generateMatchAllocations(req, res){
 	// 2019-06-19 JL: Changing TBA request to DB request for matches, for off-season events.
 	var matchesPromise = utilities.find("matches", {"event_key": event_key, "comp_level": "qm"}, { sort: {"time": 1}} );
 	
-	// HARDCODED
-	var activeTeamKey;
+	// Pull 'active team key' from DB
+	// TODO make a toggle
+	// var thisOrg = await utilities.findOne("orgs", {"org_key": org_key});
+	// var activeTeamKey = thisOrg.team_key;
+	var activeTeamKey = '';
 		
 	logger.debug(thisFuncName + "Awaiting DB promises");
 	
@@ -750,10 +756,6 @@ async function generateMatchAllocations(req, res){
 async function generateTeamAllocations(req, res){
 	/* Begin regular code ----------------------------------------------------------- */	
 	
-	// HARDCODED
-	//var activeTeamKey = 'frc102';			
-	var activeTeamKey;			
-		
 	var thisFuncName = "scoutingpairs.generateTEAMallocations[post]: ";
 
 	// Log message so we can see on the server side when we enter this
@@ -763,6 +765,10 @@ async function generateTeamAllocations(req, res){
 	var year = req.event.year;
 	var org_key = req.user.org_key;
 	
+	// Pull 'active team key' from DB
+	var thisOrg = await utilities.findOne("orgs", {"org_key": org_key});
+	var activeTeamKey = thisOrg.team_key;
+		
 	//
 	// Get the current set of already-assigned pairs; make a map of {"id": {"prim", "seco", "tert"}}
 	//

@@ -41,6 +41,7 @@ router.get("/finishedmatches", wrap(async (req, res) => {
 	
 	var thisFuncName = "reports.finishedmatches[get]: ";
 	logger.info(thisFuncName + 'ENTER');
+	var year = req.event.year;
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -49,10 +50,15 @@ router.get("/finishedmatches", wrap(async (req, res) => {
 	// Match history info
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : event_key}, {sort: {time: -1}});
 
+	// Ranking point info
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
+	//logger.debug(thisFuncName + "rankingPoints=" + JSON.stringify(rankingPoints));
+	
 	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 	res.render("./reports/finishedmatches", {
 		title: "Matches",
-		matches: matches
+		matches: matches,
+		rankingPoints: rankingPoints
 	});
 }));
 
@@ -146,8 +152,8 @@ router.get("/teamintel", wrap(async (req, res) => {
 	var pitData1 = null;
 	if (pitFind)
 		pitData = pitFind.data;
-	if (pitFind.data1)
-		pitData1 = pitFind.data1;
+	// if (pitFind.data1)
+	// 	pitData1 = pitFind.data1;
 	
 	// Pit data layout
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
@@ -195,7 +201,10 @@ router.get("/teamintel", wrap(async (req, res) => {
 		}
 	}
 	logger.trace(thisFuncName + 'matches=' + JSON.stringify(matches));
-	
+
+	// Ranking point info
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: event_year});
+
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
 	// { $match : { "data":{$exists:true}, "event_key": "2018njfla", "team_key": "frc303" } }, 
@@ -207,9 +216,15 @@ router.get("/teamintel", wrap(async (req, res) => {
 	// ] );	
 	
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
-	var colCookie = req.cookies[cookie_key];
-	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	//var cookie_key = org_key + "_" + event_year + "_cols";
+	//var colCookie = req.cookies[cookie_key];
+	//var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	// 2020-03-07, M.O'C: Disabled filtered columns for this report
+	var scorelayout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key, "team_key": teamKey } });
@@ -278,7 +293,8 @@ router.get("/teamintel", wrap(async (req, res) => {
 		currentAggRanges: currentAggRanges,
 		matches: matches,
 		matchDataHelper: matchDataHelper,
-		images: images
+		images: images,
+		rankingPoints: rankingPoints
 	});
 }));
 
@@ -357,6 +373,9 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	}
 	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
 
+	// Ranking point info
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
+
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
 	// { $match : { "data":{$exists:true}, "team_key": "frc303" } },    <- No event; avg across ALL events
@@ -428,7 +447,8 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 		scorelayout: scorelayout,
 		aggdata: aggTable,
 		matches: matches,
-		year: year
+		year: year,
+		rankingPoints: rankingPoints
 	});
 }));
 
@@ -793,9 +813,15 @@ router.get("/metricsranked", wrap(async (req, res) => {
 	// ] );
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
-	var colCookie = req.cookies[cookie_key];
-	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	// var cookie_key = org_key + "_" + event_year + "_cols";
+	// var colCookie = req.cookies[cookie_key];
+	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	// 2020-03-07, M.O'C: Disabled filtered columns for this report
+	var scorelayout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
@@ -897,9 +923,15 @@ router.get("/metrics", wrap(async (req, res) => {
 	// ] );
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
-	var colCookie = req.cookies[cookie_key];
-	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	// var cookie_key = org_key + "_" + event_year + "_cols";
+	// var colCookie = req.cookies[cookie_key];
+	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	// 2020-03-07, M.O'C: Disabled filtered columns for this report
+	var scorelayout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
@@ -1130,12 +1162,135 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	
 	res.render("./reports/allteammetrics", {
-		title: "Alliance Selection",
+		title: "All Team Metrics",
 		aggdata: aggArray,
 		currentAggRanges: currentAggRanges,
 		layout: scorelayout,
 		matchDataHelper: matchDataHelper
 	});
+}));
+
+//// Data exports
+
+router.get("/exportdata", wrap(async (req, res) => {
+	
+	var thisFuncName = "reports.exportdata[get]: ";
+
+	// for later querying by event_key
+	var event_key = req.event.key;
+	var event_year = req.event.year;
+	var org_key = req.user.org_key;
+
+	var data_type = req.query.type;
+	if (!data_type) {
+		res.redirect("/?alert=No data type specified for export.");
+		return;
+	}
+
+	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',org_key=' + org_key + ',data_type=' + data_type + ',req.shortagent=' + JSON.stringify(req.shortagent));
+
+	// read in the list of form options
+	var matchLayout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: data_type}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
+
+	// sanity check
+	//logger.debug(thisFuncName + "layout=" + JSON.stringify(matchLayout));
+	if (!matchLayout || matchLayout.length == 0) {
+		res.redirect("/?alert=No data found for type '" + data_type + "'.");
+		return;
+	}
+
+	var sortKey = "";
+	switch (data_type) {
+		case 'matchscouting':
+			sortKey = "time";
+			break;
+		case 'pitcouting':
+			sortKey = "team_key";
+			break;
+	}
+
+	// read in all data
+	var scored = await utilities.find(data_type, {"org_key": org_key, "event_key": event_key, "data": {$exists: true} }, { sort: {sortKey: 1} });
+
+	// cycle through each scored match & build CSV
+	var fullCSVoutput = "";
+	// which 'pivot data columns' are we including?
+	var pivotDataCols = "";
+	switch (data_type) {
+		case 'matchscouting':
+			pivotDataCols = "org_key,year,event_key,match_key,match_number,time,alliance,team_key";
+			break;
+		case 'pitscouting':
+			pivotDataCols = "org_key,year,event_key,team_key";
+			break;
+		default:
+			pivotDataCols = "";
+	}
+	var pivotDataKeys = pivotDataCols.split(",");
+	var isFirstRow = true;
+	for (var i in scored) {
+		var thisScored = scored[i];
+		//logger.debug(thisFuncName + "thisScored=" + JSON.stringify(thisScored));
+		// should be redundant with the "$exists: true" in the DB find query, BUT... just in case...
+		if (thisScored.data) {
+			// emit header row if this is the first line of data
+			if (isFirstRow) {
+				isFirstRow = false;
+				// initialize header row with particular columns
+				var headerRow = pivotDataCols;
+				// add on metric IDs
+				for (var j in matchLayout) {
+					var thisItem = matchLayout[j];
+
+					if (matchDataHelper.isMetric(thisItem.type)) 
+						headerRow += "," + thisItem.id;
+				}
+				//logger.debug(thisFuncName + "headerRow=" + headerRow);
+				fullCSVoutput = headerRow;
+			}
+
+			var dataRow = "";
+			var thisData = thisScored.data;
+
+			// initialize data row with particular columns
+			var isFirstColumn = true;
+			for (var k in pivotDataKeys) {
+				if (isFirstColumn)
+					isFirstColumn = false;
+				else
+					dataRow += ",";
+				var thisVal = "" + thisScored[pivotDataKeys[k]];
+				dataRow += thisVal.replace(/(\r\n|\n|\r)/gm,"");
+			}			
+
+			// cycle through the metrics
+			for (var j in matchLayout) {
+				var thisItem = matchLayout[j];
+
+				if (matchDataHelper.isMetric(thisItem.type)) {
+					dataRow += ",";
+
+					if (thisData[thisItem.id] || thisData[thisItem.id] == 0) {
+						var thisVal = "" + thisData[thisItem.id];
+						dataRow += '"' + thisVal.replace(/(\r\n|\n|\r)/gm,"") + '"';
+					}
+				}
+			}
+			//logger.debug(thisFuncName + "dataRow=" + dataRow);
+			fullCSVoutput += "\n" + dataRow;
+		}
+	}	
+
+	logger.info(thisFuncName + "EXIT returning " + scored.length + " rows of CSV");
+
+	// Send back simple text
+	res.setHeader('Content-Type', 'text/csv');
+	res.setHeader('Content-Disposition', 'attachment; filename=\"' + data_type + '_' + org_key + '_' + event_key + '_' + Date.now() + '.csv\"');
+	return res.send(fullCSVoutput);
 }));
 
 //// Choosing & setting scoring selections

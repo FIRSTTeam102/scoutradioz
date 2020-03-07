@@ -1,5 +1,19 @@
 include ../reports/templates/heatmap
 if (aggdata)
+	- var countDisplayCol = 0;
+	- for (var item of layout) if (matchDataHelper.isQuantifiableType(item.type)) countDisplayCol++;
+	- var colPercent = 100/countDisplayCol;
+
+	style.
+		.table-fixed {
+			vertical-align: text-bottom;
+			width: 50px;
+		}
+		.table-variable {
+			vertical-align: text-bottom;
+			width: #{colPercent}%;
+		}
+
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
@@ -17,7 +31,7 @@ if (aggdata)
 				-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
 				if (matchDataHelper.isQuantifiableType(item.type))
 					- var text = item.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-					th(class="w3-right-align" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
+					th(class="w3-right-align table-variable" onclick=`w3.sortHTML('#metricTable','.item', 'td:nth-child(${colIdx})')`)= result2
 					- colIdx++
 		tr 
 			th 

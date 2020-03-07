@@ -35,7 +35,7 @@ router.get('/', wrap(async (req, res) => {
 		events: events,
 	});
 	
-	utilities.dumpCache();
+	//utilities.dumpCache();
 }));
 
 router.post('/setdefaultpassword', wrap(async (req, res) => {
