@@ -13,67 +13,6 @@ block content
 		each match in matches
 			include templates/completedMatch
 			hr 
-			//-div(class="w3-row")
-				div(class="w3-col s12 m12 l2")
-					a(href=`/reports/matchintel?key=${match.key}`) 
-						div(class="theme-dim theme-hover-white w3-btn w3-block w3-border")
-							- var matchPrefix = "";
-							- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-							- var outcome = "Tie!";
-							- if (match.winning_alliance == 'red') outcome = "Red won";
-							- if (match.winning_alliance == 'blue') outcome = "Blue won";
-							span #{matchPrefix.toUpperCase()}Match #{match.match_number}: #{outcome}
-				div(class="w3-col s12 m12 l1") &nbsp;
-				div(class="w3-col s8 m3 l2")
-					div(class="w3-col w3-border alliance-blue previousmatches-container")
-						each teamkey in match.alliances.blue.team_keys
-							a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-								div(class="w3-padding w3-block previousmatches-team-container alliance-hover-blue")
-									span(class="previousmatches-team")= teamkey.substring(3)
-				div(class="w3-col s4 m2")
-					- var divClassBlue = 'w3-padding w3-block w3-border previousmatches-container ';
-					- if (match.winning_alliance == 'blue') divClassBlue += 'w3-white';
-					- else divClassBlue += 'theme-dim';
-					div(class=`${divClassBlue}`)
-						if (match.alliances.blue.score > -1)
-							span Score:
-							br
-							span= match.alliances.blue.score
-							br
-							- var blueRPs = ''
-							//- Sometimes score_breakdown does not exist 
-							- if (match.score_breakdown)
-								- if (match.score_breakdown.blue.completeRocketRankingPoint) blueRPs = 'CR '
-								- if (match.score_breakdown.blue.habDockingRankingPoint) blueRPs += 'HD'
-							- else blueRPs = "[Unknown RP]"
-							span= blueRPs
-						else
-							span &nbsp;
-				div(class="w3-col m2 l1") &nbsp;
-				div(class="w3-col s8 m3 l2")
-					div(class="w3-col w3-border alliance-red previousmatches-container")
-						each teamkey in match.alliances.red.team_keys
-							a(href=`/reports/teammatchintel?key=${match.key}_${teamkey}`)
-								div(class="w3-padding w3-block previousmatches-team-container alliance-hover-red")
-									span(class="previousmatches-team")= teamkey.substring(3)
-				div(class="w3-col s4 m2 l2")
-					- var divClassRed = 'w3-padding w3-block w3-border previousmatches-container ';
-					- if (match.winning_alliance == 'red') divClassRed += 'w3-white';
-					- else divClassRed += 'theme-dim';
-					div(class=`${divClassRed}`)
-						if (match.alliances.red.score > -1)
-							span Score:
-							br
-							span= match.alliances.red.score
-							br
-							- var redRPs = ''
-							- if (match.score_breakdown)
-								- if (match.score_breakdown.red.completeRocketRankingPoint) redRPs = 'CR '
-								- if (match.score_breakdown.red.habDockingRankingPoint) redRPs += 'HD'
-							- else redRPs = "[Unknown RP]"
-							span= redRPs
-						else
-							span &nbsp;	
 	else
 		h2(class="theme-text") <i>There are no matches in the system yet</i>
 		h6 Please check back later
