@@ -4,7 +4,7 @@ body {
 
 .strong{font-weight: bold}
 
-canvas, .canvas{
+.canvas{
 	z-index: -1;
 	position: fixed;
 	left: 0;

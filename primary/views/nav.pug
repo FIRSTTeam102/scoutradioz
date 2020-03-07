@@ -73,7 +73,7 @@ div(style="display: none;" id="menuParent")
 					//- Below: If user has SCOUTER access
 					if user.role.access_level >= process.env.ACCESS_SCOUTER 
 						li 
-							a(href="/dashboard") 
+							a(href="/dashboard/drive") 
 								span(class="sprite sp-24 sp-wheel menu-sprite")
 								span Drive Team Dashboard
 						li 
@@ -147,6 +147,10 @@ div(style="display: none;" id="menuParent")
 							if user.name == 'default_user'
 								li 
 									a(href='/user/login') Log In
+			li 
+				a(href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki")
+					span(class="sprite sp-help sp-24 menu-sprite")
+					span Need help? Check our wiki!
 			
 - var navMenuTitle;
 if user
@@ -164,3 +168,18 @@ script.
 		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-tba"></span><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
 		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-first"></span><span class="w3-tooltiptext">We are proud to be participants of FIRST Robotics Competition!</span></img></a>`,
 		];
+style.
+	.slidein-brand{
+		padding: 16px;
+	}
+	.slidein-brand .w3-tooltiptext{
+		background-color: #eee;
+		color: #000;
+		padding: 8px;
+		max-width: 100%;
+		left: 0;
+		margin-left: 0;
+	}
+	.slidein-brand .w3-tooltiptext::after{
+		border-color: #eee transparent transparent transparent;
+	}

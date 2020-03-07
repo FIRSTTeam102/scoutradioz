@@ -153,20 +153,6 @@
 	top: 0px;
 	left: 0px;
 }
-.slidein-brand{
-	padding: 16px;
-}
-.slidein-brand .w3-tooltiptext{
-	background-color: #eee;
-	color: #000;
-	padding: 8px;
-	max-width: 100%;
-	left: 0;
-	margin-left: 0;
-}
-.slidein-brand .w3-tooltiptext::after{
-	border-color: #eee transparent transparent transparent;
-}
 .menu-sprite{
 	margin-left: -8px;
 	margin-top: -4px;
@@ -236,6 +222,17 @@ html{
 	body{--bottom-gradient-radius: 400px;}
 	#page{background-position-x: -50px; background-size: auto 160px;}
 	#page::after{height: 160px;}
+}
+
+/* For templates/upcomingMatch.pug */
+.thick-border{
+	border-width: 6.5px!important;
+	margin-top: -5.5px;
+	border-radius: 10px;
+}
+.upcoming-rank{
+	margin-top: 2.5px;
+	min-width: 50px;
 }
 
 /* For spacers */

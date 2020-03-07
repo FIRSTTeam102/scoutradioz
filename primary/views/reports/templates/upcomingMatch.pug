@@ -1,0 +1,100 @@
+//- Requires match variable (from TBA)
+	Use: 	each match in matches
+				include templates/upcomingMatch
+if match
+	- if (selectedTeam) var team = selectedTeam.substring(3);
+	- console.log(team);
+	- match.teams = [];
+	- var isBlue = false, isRed = false;
+	each teamKey, i in match.alliances.blue.team_keys
+		- match.teams[i] = teamKey.substring(3);
+		//-isBlue for setting thick border of alliance div when a team is selected
+		- if( teamKey.substring(3) == team ) isBlue = true;
+	each teamKey, i in match.alliances.red.team_keys
+		- match.teams[i + 3] = teamKey.substring(3);
+		//-isRed for setting thick border of alliance div when a team is selected
+		- if( teamKey.substring(3) == team ) isRed = true;
+	- console.log(isBlue);
+	- console.log(isRed);
+	- //get date crap
+	- var date = new Date( match.time * 1000 )
+	- if (match.predicted_time) date = new Date( match.predicted_time * 1000 );
+	- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	- var day = days[date.getDay()];
+	- var hour = date.getHours();
+	- var minute = date.getMinutes();
+	- //make minute crap 2 digits
+	- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
+
+	div(class="w3-row")
+		//-Title for small screens
+		div(class="w3-col s12 m0 rounded theme-dim w3-border")
+			div(class="w3-col s10 w3-padding")
+				div(class="")
+					- var matchPrefix = "";
+					- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
+					span #{matchPrefix.toUpperCase()} Match #{match.match_number}
+					span  #{day} @ #{hour}:#{minute}
+			div(class="w3-col s2")
+				a(href=`/reports/matchmetrics?key=${match.key}`)
+					div(class="w3-padding-small w3-right-align w3-small theme-hover-light-gray rounded-br rounded-tr" style="padding-right: 18px!important;")
+						i Compare alliances
+		//-Title for medium screens
+		div(class="w3-col s0 m3 w3-padding-small")
+			div(class="rounded theme-dim w3-border")
+				- var matchPrefix = "";
+				- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
+				div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
+				div(class="w3-padding")  #{day} @ #{hour}:#{minute}
+				a(href=`/reports/matchmetrics?key=${match.key}`)
+					div(class="w3-padding-16 w3-small theme-hover-light-gray rounded-bottom") 
+						i Compare alliances
+		//-Alliances
+		div(class="w3-col s12 m9 w3-padding-small")
+			div(class="w3-col s6 w3-padding-small")
+				//- set shorthands for each team key
+				- var blue = match.alliances.blue.team_keys, red = match.alliances.red.team_keys;
+				- var blue1 = blue[0], blue2 = blue[1], blue3 = blue[2];
+				- var red1 = red[0], red2 = red[1], red3 = red[2];
+				//- set classes for alliance window
+				- var blueClass = "alliance-blue alliance-border-blue rounded-small";
+				- var redClass = "alliance-red alliance-border-red rounded-small";
+				- if( isBlue ) blueClass += " thick-border";
+				- else if( isRed ) redClass += " thick-border";
+				div(class=blueClass)
+					//- not doing this with a loop because border needs to be specified
+					a(href=`/reports/teamintel?team=${blue1}`)
+						div(class="w3-padding alliance-hover-blue rounded-small-top")
+							span(class="w3-left w3-small theme-text upcoming-rank") 
+								i(class="w3-left") Rank #{teamRanks[blue1]}
+							span=blue1.substring(3)
+					a(href=`/reports/teamintel?team=${blue2}`)
+						div(class="w3-padding alliance-hover-blue")
+							span(class="w3-left w3-small theme-text upcoming-rank") 
+								i(class="w3-left") Rank #{teamRanks[blue2]}
+							span=blue2.substring(3)
+					a(href=`/reports/teamintel?team=${blue3}`)
+						div(class="w3-padding alliance-hover-blue rounded-small-bottom")
+							span(class="w3-left w3-small theme-text upcoming-rank") 
+								i(class="w3-left") Rank #{teamRanks[blue3]}
+							span=blue3.substring(3)
+			div(class="w3-col s6 w3-padding-small")
+				div(class=redClass)
+					//- not doing this with a loop because border needs to be specified
+					a(href=`/reports/teamintel?team=${red1}`)
+						div(class="w3-padding alliance-hover-red rounded-small-top")
+							span(class="w3-left w3-small theme-text upcoming-rank") 
+								i(class="w3-left") Rank #{teamRanks[red1]}
+							span=match.alliances.red.team_keys[0].substring(3)
+					a(href=`/reports/teamintel?team=${red2}`)
+						div(class="w3-padding alliance-hover-red")
+							span(class="w3-left w3-small theme-text upcoming-rank") 
+								i(class="w3-left") Rank #{teamRanks[red2]}
+							span=match.alliances.red.team_keys[1].substring(3)
+					a(href=`/reports/teamintel?team=${red3}`)
+						div(class="w3-padding alliance-hover-red rounded-small-bottom")
+							span(class="w3-left w3-small theme-text upcoming-rank") 
+								i(class="w3-left") Rank #{teamRanks[red3]}
+							span=match.alliances.red.team_keys[2].substring(3)
+else 
+	p Error: reports/templates/upcomingMatch.pug: match is not defined
