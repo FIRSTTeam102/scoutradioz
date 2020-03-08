@@ -20,9 +20,9 @@ block content
 	h6 <i>Click on a metric to compare all event teams</i>
 	
 	span Show:  
-	input(type="radio" id="showAvg" name="sel" onclick="showAvg();")
+	input(type="radio" id="showAvg" name="sel" checked="checked" onclick="showAvg();")
 	label(for="showAvg")  Averages    
-	input(type="radio" id="showMax" name="sel" checked="checked" onclick="showMax();")
+	input(type="radio" id="showMax" name="sel" onclick="showMax();")
 	label(for="showMax")  Maximums 
 	p
 
@@ -79,7 +79,7 @@ block content
 	a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') Overall ranked event data
 
 	script.
-		showMax();
+		showAvg();
 
 		function showAvg() {
 			var avg = document.getElementById('avgSect');

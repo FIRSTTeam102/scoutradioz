@@ -14,16 +14,25 @@ block content
 	br 
 	//- Dashboard for other teams
 	div(class="w3-section")
-		form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
+		-// 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
+		-// form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
+		form(name="driveDashboardTeam" method="get" action="/reports/driveteam")
 			select(class="theme-input" style="min-width: 100;" name="team_key")
 				each team in teams 
 					if team.key == selectedTeam
 						option(selected value=team.key)=team.team_number
 					else 
 						option(value=team.key)=team.team_number
+				if selectedTeam == 'all'
+					option(selected value='all') All
+				else
+					option(value='all') All
 			button(class="w3-btn theme-submit w3-margin-left" type="submit") View dashboard for selected team
-	br 
-	h4 Next Match for Team #{selectedTeam.substring(3)}:
+	br
+	if selectedTeam == 'all'
+		h4 Next Match:
+	else
+		h4 Next Match for Team #{selectedTeam.substring(3)}:
 	//- View first match
 	- var match = matches[0];
 	include ../reports/templates/upcomingMatch
@@ -31,6 +40,7 @@ block content
 	//-Radar
 	div(class="w3-section w3-auto")
 		h4 Relative Strengths
+		h6 <i>Click on a legend to hide/show that team</i>
 		div(class="")
 			div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
 				h5 Blue Alliance
@@ -107,7 +117,10 @@ block content
 										td(class=`${valueCol}`)= agg[team]
 				
 	hr
-	h4 Future Matches for Team #{selectedTeam.substring(3)}:
+	if selectedTeam == 'all'
+		h4 Future Matches:
+	else
+		h4 Future Matches for Team #{selectedTeam.substring(3)}:
 	each match, i in matches
 		//-Skip first match
 		if (i > 0)

@@ -4,14 +4,10 @@ block content
 		h3(class="theme-text") Please Select an Organization.
 		hr 
 		div
-			p(class="indented info w3-mobile").
-				Scoutradioz enables multiple organizations to gain their own
-				intel at competitions.
-				Select an organization below to see what intel they have
-				collected!
+			p(class="info w3-mobile")= lang.chooseOrgTeaser
 			p(class="info w3-mobile")
 				a(target="_blank" class="link" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki")
-					span For more information on Scoutradioz, click here.
+					span= lang.chooseOrgLinkText
 		hr 
 		form#selectorg-form(name="login-form" method="post" action="/selectorg")
 			div(class="w3-container w3-auto w3-padding")

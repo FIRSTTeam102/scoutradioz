@@ -47,6 +47,13 @@ router.get('/', wrap(async (req, res) => {
 			//logger.debug(thisEvent.year + " " + thisEvent.name);
 		}
 
+		// TODO: currently hard-coded to US English
+		var i18n = await utilities.findOne("i18n",
+			{language: "en_US"}, {},
+			{allowCache: true}
+		);
+		logger.trace(JSON.stringify(i18n));
+		
 		var enrichedOrgs = [];
 		// Enrich the organizations
 		for (var j in orgs) {
@@ -63,7 +70,8 @@ router.get('/', wrap(async (req, res) => {
 			title: "Select an Organization",
 			orgs: orgs,
 			redirectURL: redirectURL,
-			isOrgSelectScreen: true
+			isOrgSelectScreen: true,
+			lang: i18n.labels
 		});
 	}
 }));

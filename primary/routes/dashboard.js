@@ -166,7 +166,7 @@ router.get('/unassigned', wrap(async (req, res) => {
  */
 router.get("/drive", wrap(async (req, res) => {
 	
-	var thisFuncName = "reports.drivedashboard[get]: ";
+	var thisFuncName = "dashboard.drive[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key

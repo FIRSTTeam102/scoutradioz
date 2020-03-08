@@ -8,7 +8,7 @@
 extends layout
 block content
 	h6(class="theme-text") 
-		i Click the top graphic on any page to get back to this home page!
+		i Click on the ≡ in the upper left to open the menu
 	p
 	div(class="w3-container w3-section")
 		h4(class="theme-text") Tournament Info
@@ -39,6 +39,10 @@ block content
 		a
 			div(class="gear-btn theme-link w3-btn" onclick="redUpcoming()")
 				span#upcomingMatches Upcoming Matches: All Teams
+		br
+		a(href="/reports/driveteam")
+			div(class="gear-btn theme-link w3-btn")
+				span Drive Team
 	//-If there is no logged-in user, then show a log-in link
 	if( !user || user.name == "default_user" || user.name == "[Dev]")
 		div(class="w3-container w3-section")

@@ -61,6 +61,12 @@ div(style="display: none;" id="menuParent")
 									a(href="/reports/exportdata?type=matchscouting") Export match scouting data
 								li
 									a(href="/reports/exportdata?type=pitscouting") Export pit scouting data
+				//- 2020-03-07, M.O'C: TEMPORARILY POINTING TO REPORTS SO UNAUTHENTICATED USERS CAN ACCESS
+				li 
+					//- a(href="/dashboard/drive") 
+					a(href="/reports/driveteam") 
+						span(class="sprite sp-24 sp-wheel menu-sprite")
+						span Drive Team Dashboard
 				li
 					a(href=`/reports/choosecolumns`)
 						span(class="sprite sp-24 sp-sheet menu-sprite")
@@ -72,10 +78,6 @@ div(style="display: none;" id="menuParent")
 						//No logged-in viewer-level pages yet
 					//- Below: If user has SCOUTER access
 					if user.role.access_level >= process.env.ACCESS_SCOUTER 
-						li 
-							a(href="/dashboard/drive") 
-								span(class="sprite sp-24 sp-wheel menu-sprite")
-								span Drive Team Dashboard
 						li 
 							a(href="/dashboard")
 								span(class="sprite sp-24 sp-radio menu-sprite") 
