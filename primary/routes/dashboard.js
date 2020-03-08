@@ -3,6 +3,7 @@ const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
+const uploadHelper = require('../helpers/uploadhelper');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
@@ -541,6 +542,7 @@ router.get('/pits', wrap(async (req, res) => {
 	var pics = req.query.pics;
 
 	// for later querying by event_key
+	var event_year = req.event.year;
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
 
@@ -586,6 +588,12 @@ router.get('/pits', wrap(async (req, res) => {
 		teams[teamIdx].nickname = teamKeyMap[teams[teamIdx].team_key].nickname;
 	}
 	//Add a call to the database for populating menus in pit scouting
+	var teamKeys = [];
+	for (var team of teamArray) {
+		if (team.hasOwnProperty("key")) teamKeys.push(team.key);
+	}
+	
+	//await uploadHelper.findTeamImagesMultiple(org_key, event_year, teamKeys)
 	
 	res.render('./dashboard/pits', {
 		title: "Pit Scouting", 
