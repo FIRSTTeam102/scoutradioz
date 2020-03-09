@@ -1,7 +1,7 @@
 const passport = require('passport');
 const logger = require('log4js').getLogger();
 //const LocalStrategy = require('passport-local').Strategy; //strategy for passport
-const utilities = require("../utilities");
+const utilities = require("@firstteam102/scoutradioz-utilities");
 
 // Creates the data necessary to store in the session cookie
 passport.serializeUser(function(user, done) {

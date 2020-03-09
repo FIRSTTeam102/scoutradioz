@@ -1,5 +1,5 @@
 const logger = require('log4js').getLogger();
-const utilities = require('./utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 
 var tba_utils = module.exports =  {};
 

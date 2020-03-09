@@ -1,7 +1,7 @@
 const express = require('express');
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
-const utilities = require('../../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 const router = express.Router();
 
 router.all('/*', wrap(async (req, res, next) => {
