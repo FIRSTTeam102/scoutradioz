@@ -114,6 +114,7 @@
 .sprite.sp-info{--position: -13;}
 .sprite.sp-help{--position: -14;}
 .sprite.sp-warn{--position: -15;}
+.sprite.sp-gearheads{--position: -16;}
 
 /* USAGE: <span class="sprite sp-(SIZE) sp-(TYPE)"></span> */
 .sprite{
@@ -233,6 +234,12 @@ html{
 .upcoming-rank{
 	margin-top: 2.5px;
 	min-width: 50px;
+}
+@media(max-width: 400px) {
+	.upcoming-rank{
+		display: block;
+		width: 100%;
+	}
 }
 
 /* For spacers */

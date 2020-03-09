@@ -18,6 +18,7 @@ select{
 	border-color: white;
 	border-image: initial;
 }
+.w3-padding-8{padding-top:8px!important;padding-bottom:8px!important;}
 
 a:link{text-decoration: none;}
 

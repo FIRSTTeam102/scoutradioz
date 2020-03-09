@@ -38,7 +38,7 @@ if match
 						div(class="w3-padding w3-small w3-border-top w3-border-gray theme-hover-white rounded-br")
 							i FIRST data
 		//-Alliance container
-		div(class="w3-col s12 m9 w3-padding-small")
+		div(class="w3-col s12 m9")
 			//- set shorthands for each team key
 			- var blue = match.alliances.blue.team_keys, red = match.alliances.red.team_keys;
 			- var blue1 = blue[0], blue2 = blue[1], blue3 = blue[2];
@@ -72,11 +72,11 @@ if match
 									span=blue3.substring(3)
 					//-breakdown
 					div(class="w3-col s5 m6 l4 rounded-small tr rounded-small br")
-						div(class="w3-padding rounded-small-tr")
+						div(class="w3-padding-8 rounded-small-tr")
 							span Score:
 						div
 							span=match.alliances.blue.score
-						div(class="w3-padding")
+						div(class="w3-padding-8")
 							- if (match.score_breakdown)
 								- if (rankingPoints)
 									- var firstLabel = true;
@@ -114,11 +114,11 @@ if match
 								else
 									span=red3.substring(3)
 					div(class="w3-col s5 m6 l4 rounded-small tr rounded-small br")
-						div(class="w3-padding rounded-small-tr")
+						div(class="w3-padding-8 rounded-small-tr")
 							span Score:
 						div
 							span=match.alliances.red.score
-						div(class="w3-padding")
+						div(class="w3-padding-8")
 							- if (match.score_breakdown)
 								- if (rankingPoints)
 									- var firstLabel = true;

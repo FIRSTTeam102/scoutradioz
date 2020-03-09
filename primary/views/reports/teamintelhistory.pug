@@ -80,7 +80,12 @@ block content
 					each match in matches
 						if (match.event_key != thisEventKey)
 							- thisEventKey = match.event_key;
-							h4(class="theme-text") #{thisEventKey}
+							br 
+							if events && events[thisEventKey]
+								h4 #{events[thisEventKey].year} #{events[thisEventKey].name}
+							else
+								h4(class="theme-text") #{thisEventKey}
+							hr 
 						include templates/completedMatch
 						if (match.scoringdata && user)
 							each element in scorelayout

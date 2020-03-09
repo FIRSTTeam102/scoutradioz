@@ -360,19 +360,40 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 		$or: [{"alliances.blue.team_keys": teamKey}, {"alliances.red.team_keys": teamKey}]}, 
 		{sort: {time: -1}}
 	);
+	var eventKeys = {}, eventKeysArray = [];
+	
 	if (matches && matches.length > 0) {
-		for (var matchesIdx = 0; matchesIdx < matches.length; matchesIdx++) {
+		for (var match of matches) {
 			//logger.debug(thisFuncName + 'For match ' + matches[matchesIdx].key);
-			var thisScoreData = matchDataMap[matches[matchesIdx].key];
+			var thisScoreData = matchDataMap[match.key];
 			if (thisScoreData)
 			{
 				//logger.debug(thisFuncName + 'Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
-				matches[matchesIdx].scoringdata = thisScoreData;
+				match.scoringdata = thisScoreData;
+			}
+			// 2020-03-09 JL: get list of all events that these matches contain
+			if (!eventKeys[match.event_key]) {
+				eventKeys[match.event_key] = true;
 			}
 		}
 	}
-	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
-
+	// 2020-03-09 JL: Teamintelhistory previous matches section used to show event key.
+	//		Edited to show event name instead.
+	for (var key in eventKeys) {
+		eventKeysArray.push(key);
+	}
+	var events = await utilities.find('events', 
+		{key: {$in: eventKeysArray}}, {},
+		{allowCache: true}
+	);
+	var eventInfos = {};
+	for (var event of events){
+		eventInfos[event.key] = {
+			year: event.year,
+			name: event.name
+		}
+	}
+	
 	// Ranking point info
 	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
 
@@ -448,7 +469,8 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 		aggdata: aggTable,
 		matches: matches,
 		year: year,
-		rankingPoints: rankingPoints
+		rankingPoints: rankingPoints,
+		events: eventInfos,
 	});
 }));
 
@@ -1364,9 +1386,9 @@ router.get("/driveteam", wrap(async (req, res) => {
 			}
 		}
 	}
-	console.log(avgNorms);
+	//console.log(avgNorms);
 	//console.log(teamList);
-	console.log(JSON.stringify(dataForChartJS, 0, 2));
+	//console.log(JSON.stringify(dataForChartJS, 0, 2));
 	
 	
 	res.render("./dashboard/drive", {
