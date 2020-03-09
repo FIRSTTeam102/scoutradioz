@@ -4,7 +4,7 @@ const express = require('express');
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const webpush = require('web-push');
-const utilities = require('../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
 
 //Create Express app for webhooks

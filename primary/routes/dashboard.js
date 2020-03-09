@@ -572,7 +572,10 @@ router.get('/pits', wrap(async (req, res) => {
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
 
 		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
-		teamArray = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+		teamArray = await utilities.find("teams", 
+			{"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}},
+			{allowCache: true}
+		);
 	}
 
 	// Build map of team_key -> team data

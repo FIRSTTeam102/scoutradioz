@@ -2,7 +2,7 @@ const router = require("express").Router();
 const monk = require("monk");
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
-const utilities = require("../../utilities");
+const utilities = require("@firstteam102/scoutradioz-utilities");
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.

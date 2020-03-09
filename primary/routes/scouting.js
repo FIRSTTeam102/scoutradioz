@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
-const utilities = require('../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 const matchDataHelper = require ('../helpers/matchdatahelper');
 const uploadHelper = require('../helpers/uploadhelper');
 
@@ -58,7 +58,11 @@ router.get('/match*', wrap(async (req, res) => {
 	//load layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var layout = await utilities.find("layout", {org_key: org_key, year: parseInt(event_year), form_type: "matchscouting"}, {sort: {"order": 1}})
+	var layout = await utilities.find("layout", 
+		{org_key: org_key, year: parseInt(event_year), form_type: "matchscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 
 	//render page
 	res.render("./scouting/match", {
@@ -102,7 +106,11 @@ router.post('/match/submit', wrap(async (req, res) => {
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var layout = await utilities.find("layout", {org_key: org_key, year: parseInt(event_year), form_type: "matchscouting"}, {sort: {"order": 1}})
+	var layout = await utilities.find("layout", 
+		{org_key: org_key, year: parseInt(event_year), form_type: "matchscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 
 	var layoutTypeById = {};
 	//logger.debug(thisFuncName + "layout=" + JSON.stringify(layout));
@@ -137,7 +145,11 @@ router.post('/match/submit', wrap(async (req, res) => {
 
 	// Calculate derived metrics [SEE ALSO INDEXADMIN.JS]
 	// read in the 'derived' metrics from the matchscouting layout, use to process data
-	var derivedLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, {sort: {"order": 1}})
+	var derivedLayout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 
 	for (var j in derivedLayout) {
 		var thisItem = derivedLayout[j];
@@ -183,7 +195,11 @@ router.get('/pit*', wrap(async (req, res) => {
 	
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
 	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
-	var layout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "pitscouting"}, {sort: {"order": 1}})
+	var layout = await utilities.find("layout", 
+		{org_key: org_key, year: event_year, form_type: "pitscouting"}, 
+		{sort: {"order": 1}},
+		{allowCache: true}
+	);
 	
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	var pitFind = await utilities.find("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, {});
@@ -248,13 +264,19 @@ router.get('/teampictures', wrap(async (req, res) => {
 
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
 	//var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
-	var thisEventData = await utilities.find("events", {"key": event_key});
+	var thisEventData = await utilities.find("events", 
+		{"key": event_key}, {},
+		{allowCache: true}
+	);
 	var thisEvent = thisEventData[0];
 	var teams = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
 	{
 		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
-		teams = await utilities.find("teams", {"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}})
+		teams = await utilities.find("teams", 
+			{"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}},
+			{allowCache: true}
+		);
 	}
 	
 	var fs = require("fs");

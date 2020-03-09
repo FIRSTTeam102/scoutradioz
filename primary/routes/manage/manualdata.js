@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const wrap = require('express-async-handler');
 const logger = require('log4js').getLogger();
-const utilities = require('../../utilities');
+const utilities = require('@firstteam102/scoutradioz-utilities');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require GLOBAL-admin-level authentication for every method in this route.
