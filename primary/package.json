@@ -42,6 +42,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@firstteam102/scoutradioz-helpers": "^1.0.2",
     "@firstteam102/scoutradioz-utilities": "^1.0.11",
     "aws-serverless-express": "^3.3.6",
     "bcryptjs": "^2.4.3",

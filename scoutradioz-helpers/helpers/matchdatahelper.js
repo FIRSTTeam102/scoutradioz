@@ -1,14 +1,15 @@
-const logger = require('log4js').getLogger();
+'use strict';
+const logger = require('@log4js-node/log4js-api').getLogger('helpers');
 const utilities = require("@firstteam102/scoutradioz-utilities");
 
-var functions = module.exports = {};
+var matchDataHelper = module.exports = {};
 
 /**
  * Returns whether a layout element type is quantifiable.
  * @param {string} type Type of layout element
  * @return {boolean} isQuantifiable
  */
-functions.isQuantifiableType = function(type) {
+matchDataHelper.isQuantifiableType = function(type) {
 	
 	var isQuantifiable;
 	
@@ -31,7 +32,7 @@ functions.isQuantifiableType = function(type) {
  * @param {string} type Type of layout element
  * @return {boolean} isMetric
  */
-functions.isMetric = function(type) {
+matchDataHelper.isMetric = function(type) {
 	
 	var isMetric;
 	
@@ -54,7 +55,7 @@ functions.isMetric = function(type) {
  * @param {string} colCookie Comma-separated list of metric IDs
  * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
  */
-functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, colCookie) {
+matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_year, colCookie) {
 	var thisFuncName = "matchdatahelper.getModifiedMatchScoutingLayout: ";
     logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
     
@@ -141,7 +142,7 @@ functions.getModifiedMatchScoutingLayout = async function(org_key, event_year, c
  * @param {number} event_year Year of event
  * @param {string} event_key Event key
  */
-functions.calculateAndStoreAggRanges = async function(org_key, event_year, event_key) {
+matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year, event_key) {
 	var thisFuncName = "matchdatahelper.calculateAndStoreAggRanges: ";
 	logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
 
@@ -256,7 +257,7 @@ class MatchData{
  * @param {string} [team_key] Team key (can be 'all' or null)
  * @returns {MatchData} Data blob containing matches, teamRanks, team, and teamList
  */
-functions.getUpcomingMatchData = async function (event_key, team_key) {
+matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 	
 	var thisFuncName = "reports.getUpcomingMatchData(): ";
 	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',team_key=' + team_key);
@@ -371,7 +372,7 @@ class AllianceStatsData {
  * @param {object} cookies req.cookies
  * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
  */
-functions.getAllianceStatsData = async function ( event_year, event_key, org_key, teams_list, cookies ) {
+matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, org_key, teams_list, cookies ) {
 	var thisFuncName = "reports.getAllianceStatsData(): ";
 	logger.info(thisFuncName + 'ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
 	var returnData = new AllianceStatsData(null, null, null, null, null);

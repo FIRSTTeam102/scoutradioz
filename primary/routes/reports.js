@@ -2,8 +2,8 @@ const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
-const matchDataHelper = require('../helpers/matchdatahelper');
-const uploadHelper = require('../helpers/uploadhelper');
+
+const {matchData: matchDataHelper, upload: uploadHelper} = require('@firstteam102/scoutradioz-helpers');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require viewer-level authentication for every method in this route.

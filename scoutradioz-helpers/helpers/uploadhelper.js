@@ -1,8 +1,8 @@
 'use strict';
-const logger = require('log4js').getLogger();
+const logger = require('@log4js-node/log4js-api').getLogger('helpers');
 const utilities = require("@firstteam102/scoutradioz-utilities");
 
-var functions = module.exports = {};
+var uploadHelper = module.exports = {};
 
 class ImageLinks{
 	/**
@@ -25,7 +25,7 @@ class ImageLinks{
  * @param {string} teamKey team_key
  * @returns {ImageLinks} Links to images
  */
-functions.findTeamImages = async (orgKey, year, teamKey) => {
+uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 	const thisFuncName = "uploadhelper.findTeamImages: ";
 	
 	if (!(typeof orgKey == 'string')) throw new TypeError('orgKey must be string');
@@ -89,7 +89,7 @@ functions.findTeamImages = async (orgKey, year, teamKey) => {
  * @param {array} teamKeys Array of team_keys
  * @returns {ImageLinks[]} Links to images
  */
-functions.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
+uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 	const thisFuncName = "uploadhelper.findTeamImagesMultiple: ";
 	
 	if (!(typeof orgKey == 'string')) throw new TypeError('orgKey must be string');
