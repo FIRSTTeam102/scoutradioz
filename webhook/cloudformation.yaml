@@ -9,7 +9,7 @@ Resources:
       DefinitionUri: ./simple-proxy-api.yaml
       StageName: prod
       Variables:
-        ServerlessExpressLambdaFunctionName: !Ref PrimaryFunction
+        ServerlessExpressLambdaFunctionName: !Ref WebhookFunction
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -38,7 +38,7 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt PrimaryFunction.Arn
+      FunctionName: !GetAtt WebhookFunction.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Join
         - ''
@@ -50,14 +50,14 @@ Resources:
           - !Ref ApiGatewayApi
           - "/*/*"
 
-  PrimaryFunction:
+  WebhookFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
       Handler: lambda.handler
       MemorySize: 1024
       Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: nodejs12.x
+      Runtime: nodejs10.x
       Timeout: 30
       Events:
         ProxyApiRoot:
@@ -83,7 +83,7 @@ Outputs:
         - ".console.aws.amazon.com/lambda/home?region="
         - !Ref AWS::Region
         - "#/functions/"
-        - !Ref PrimaryFunction
+        - !Ref WebhookFunction
 
   ApiGatewayApiConsoleUrl:
     Description: Console URL for the API Gateway API's Stage.
