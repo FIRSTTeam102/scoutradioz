@@ -1482,7 +1482,7 @@ router.get("/exportdata", wrap(async (req, res) => {
 				// add on metric IDs
 				for (var j in matchLayout) {
 					var thisItem = matchLayout[j];
-
+					
 					if (matchDataHelper.isMetric(thisItem.type)) 
 						headerRow += "," + thisItem.id;
 				}
@@ -1492,7 +1492,7 @@ router.get("/exportdata", wrap(async (req, res) => {
 
 			var dataRow = "";
 			var thisData = thisScored.data;
-
+			
 			// initialize data row with particular columns
 			var isFirstColumn = true;
 			for (var k in pivotDataKeys) {
@@ -1500,9 +1500,18 @@ router.get("/exportdata", wrap(async (req, res) => {
 					isFirstColumn = false;
 				else
 					dataRow += ",";
-				var thisVal = "" + thisScored[pivotDataKeys[k]];
+				var thisPivotDataKey = pivotDataKeys[k];
+				var thisVal = thisScored[thisPivotDataKey];
+				// 2020-03-11 JL: time now exports to date stringj
+				//If this value is a time, then convert it into a Date string
+				if (thisPivotDataKey == 'time') {
+					thisVal = new Date(thisVal * 1000).toLocaleString().replace(', ', ' ');
+				}
+				//Convert value into a string
+				thisVal = "" + thisVal;
+				//Add to dataRow
 				dataRow += thisVal.replace(/(\r\n|\n|\r)/gm,"");
-			}			
+			}
 
 			// cycle through the metrics
 			for (var j in matchLayout) {
