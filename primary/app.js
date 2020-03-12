@@ -33,8 +33,13 @@ utilities.config(require('./databases.json'), {
 	cache: {
 		enable: true,
 		maxAge: 30,
-	}
+	},
+	debug: false,
 });
+//Load helper functions
+const helpers = require('@firstteam102/scoutradioz-helpers');
+//Configure helper functions by passing our already-configured utilities module
+helpers.config(utilities);
 
 //PUG CACHING (if production IS enabled)
 if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enabled.");

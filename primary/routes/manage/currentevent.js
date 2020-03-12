@@ -46,40 +46,7 @@ router.get("/getcurrentteams", wrap(async (req, res) => {
 	await utilities.update( "events", {"key": event_key}, {$set: {"team_keys": thisTeamKeys}} );
 
 	res.redirect('/manage?alert=Updated team keys for the current event successfully.');
-
-	///////////////// OLD DEPRECATED CODE
-
-	/*
-	// //get TBA key from db
-	// var passwordsFind = await utilities.find("passwords", { name:"thebluealliance-args" });
-	// if(!passwordsFind[0]){
-	// 	return res.status(500).send("couldn't find TBA args in db");
-	// }
-	// args = passwordsFind[0];
 	
-	//set up tba call
-	// var Client = require('node-rest-client').Client;
-	// var client = new Client();
-	var eventId = req.event.key;
-	var teamsUrl = `event/${eventId}/teams`;
-	
-	//get teams from tba
-	var data = await utilities.requestTheBlueAlliance(teamsUrl);
-		
-	var currentTeams = JSON.parse(data);
-	
-	if(!currentTeams){
-		return res.status(500).send("didn't get teams list");
-	}
-	
-	//delete contents of currentteams
-	await utilities.remove("currentteams", {});
-		
-	//insert teams into currentteams
-	await utilities.insert("currentteams", currentTeams);
-
-	res.redirect('/manage?alert=Updated current teams successfully.');
-	*/
 }));
 
 router.post("/resetmatches", wrap(async (req, res) => {
@@ -277,13 +244,6 @@ router.post("/updatematches", wrap(async (req, res) => {
 	
 	// var matchCol = db.get("matches");
 	// var rankCol = db.get("currentrankings");
-	
-	// nodeclient
-	var Client = require('node-rest-client').Client;
-	var client = new Client();
-	var args = {
-		headers: { "accept": "application/json", "X-TBA-Auth-Key": "iSpbq2JH2g27Jx2CI5yujDsoKYeC8pGuMw94YeK3gXFU6lili7S2ByYZYZOYI3ew" }
-	}
 	
 	var matchId = req.body.matchId;
 	var eventId = req.event.key;

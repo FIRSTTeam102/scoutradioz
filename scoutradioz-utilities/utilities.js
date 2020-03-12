@@ -1,5 +1,6 @@
 const monk = require("monk");
 const crypto = require('crypto');
+const NodeCache = require('node-cache');
 const logger = require('@log4js-node/log4js-api').getLogger('utilities');
 
 var utilities = module.exports =  {};
@@ -12,9 +13,20 @@ utilities.options = {
 	cache: {
 		enable: false,
 		maxAge: 30
-	}
+	},
+	debug: false,
 };
-utilities.cache = {};
+utilities.cache = new NodeCache({
+	stdTTL: 30
+});
+
+//Performance debugging if enabled
+function consoleTime(name) {
+	if (utilities.options.debug == true) console.time(name + '\t\t');
+}
+function consoleTimeEnd(name) {
+	if (utilities.options.debug == true) console.timeEnd(name + '\t\t');
+}
 
 /**
  * (Required) Configure utilities with database config file.
@@ -23,6 +35,7 @@ utilities.cache = {};
  * @param {object} [options.cache] Cache settings
  * @param {boolean} [options.cache.enable=false] Whether to enable or disable caching in find requests
  * @param {number} [options.cache.maxAge=30] Default maximum age of cached requests, in seconds
+ * @param {debug} [options.debug=false] Whether to enable extra debug logging (Performance, timing, etc.)
  */
 utilities.config = function(databaseConfig, options){
 	if (typeof databaseConfig != 'object') throw new TypeError('opts.databaseConfig must be provided. Use require("databases.json").');
@@ -38,6 +51,7 @@ utilities.config = function(databaseConfig, options){
 	
 	if (!options.cache.enable) options.cache.enable = false;
 	if (!options.cache.maxAge) options.cache.maxAge = 30;
+	if (!options.debug) options.debug = false;
 	
 	if (options.cache.enable == true) logger.warn("utilities: Caching is enabled");
 	
@@ -179,7 +193,9 @@ utilities.find = async function(collection, query, options, cacheOptions){
 	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
-	logger.trace(`find: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
+	logger.trace(`find: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
+	var timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
+	consoleTime(timeLogName);
 	
 	//If cache is enabled
 	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
@@ -189,40 +205,28 @@ utilities.find = async function(collection, query, options, cacheOptions){
 		logger.trace(`(find) Request Hash: ${hashedQuery}`);
 		
 		//Look in cache for the query
-		if (this.cache[hashedQuery]) {
-			logger.trace("Request has been found in cache!");
+		if (this.cache.get(hashedQuery)) {
+			var cachedRequest = this.cache.get(hashedQuery);
 			
-			var cachedRequest = this.cache[hashedQuery];
-			
-			//If cached request has aged too much, create new request then re-cache it
-			if (cachedRequest.time < Date.now() - cacheOptions.maxCacheAge * 1000) {
-				logger.trace("Cache has aged too much; Requesting db.");
-				//Request db
-				var data = await this.getDB().get(collection).find(query, options);
-				//create new cachedRequest and cache it
-				cachedRequest = {
-					'time': Date.now(),
-					'data': data
-				};
-				this.cache[hashedQuery] = cachedRequest;
-			}
 			logger.trace(`Serving request from cache (find:${collection})`);
-			return cachedRequest.data;
+			logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
+			consoleTimeEnd(timeLogName);
+			
+			return cachedRequest;
 		}
 		//If query has not yet been cached
 		else {
 			logger.trace(`Caching request (find:${collection})`);
 			
 			//Request db
-			var data = await this.getDB().get(collection).find(query, options);
-			//Create new cachedRequest and cache it
-			var cachedRequest = {
-				'time': Date.now(),
-				'data': data
-			};
-			this.cache[hashedQuery] = cachedRequest;
+			var cachedRequest = await this.getDB().get(collection).find(query, options);
+			//Cache response (Including maxAge before automatic deletion)
+			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
-			return cachedRequest.data;
+			logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
+			consoleTimeEnd(timeLogName);
+			
+			return cachedRequest;
 		}
 	}
 	//If cache is not enabled
@@ -231,8 +235,8 @@ utilities.find = async function(collection, query, options, cacheOptions){
 		//Request db
 		var data = await this.getDB().get(collection).find(query, options);
 		logger.trace(`non-cached: result: ${data}`);
+		consoleTimeEnd(timeLogName);
 		
-		//Return (Promise to get) data
 		return data;
 	}
 }
@@ -264,6 +268,8 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
 	logger.trace(`utilities.findOne: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
+	var timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
+	consoleTime(timeLogName);
 	
 	//If cache is enabled
 	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
@@ -273,40 +279,28 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 		logger.trace(`(findOne) Request Hash: ${hashedQuery}`);
 		
 		//Look in cache for the query
-		if (this.cache[hashedQuery]) {
-			logger.trace("Request has been found in cache!");
+		if (this.cache.get(hashedQuery)) {
+			var cachedRequest = this.cache.get(hashedQuery);
 			
-			var cachedRequest = this.cache[hashedQuery];
-			
-			//If cached request has aged too much, create new request then re-cache it
-			if (cachedRequest.time < Date.now() - cacheOptions.maxCacheAge * 1000) {
-				logger.trace("Cache has aged too much; Requesting db.");
-				//Request db
-				var data = await this.getDB().get(collection).findOne(query, options);
-				//create new cachedRequest and cache it
-				cachedRequest = {
-					'time': Date.now(),
-					'data': data
-				};
-				this.cache[hashedQuery] = cachedRequest;
-			}
 			logger.trace(`Serving request from cache (findOne:${collection})`);
-			return cachedRequest.data;
+			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+			consoleTimeEnd(timeLogName);
+			
+			return cachedRequest;
 		}
 		//If query has not yet been cached
 		else {
 			logger.trace(`Caching request (findOne:${collection})`);
 			
 			//Request db
-			var data = await this.getDB().get(collection).findOne(query, options);
-			//Create new cachedRequest and cache it
-			var cachedRequest = {
-				'time': Date.now(),
-				'data': data
-			};
-			this.cache[hashedQuery] = cachedRequest;
+			var cachedRequest = await this.getDB().get(collection).findOne(query, options);
+			//Cache response (Including maxAge before automatic deletion)
+			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
-			return cachedRequest.data;
+			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+			consoleTimeEnd(timeLogName);
+			
+			return cachedRequest;
 		}
 	}
 	//If cache is not enabled
@@ -316,8 +310,8 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 		var data = await this.getDB().get(collection).findOne(query, options);
 		logger.trace(`Not cached (findOne:${collection})`)
 		logger.trace(`non-cached: result: ${data}`);
+		consoleTimeEnd(timeLogName);
 		
-		//Return (Promise to get) data
 		return data;
 	}
 }
@@ -342,27 +336,105 @@ utilities.update = async function(collection, query, update, options){
 	if (typeof options != "object") throw new TypeError("Utilities.update: Options must be of type object");
 	
 	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
+	var timeLogName = `update: ${collection} ${Math.floor(1000*Math.random())}`;
+	consoleTime(timeLogName);
 	
 	var queryHashFind = await this.hashQuery('find', collection, query, options);
 	var queryHashFindOne = await this.hashQuery('findOne', collection, query, options);
-	console.log(`find hash: ${queryHashFind}, findOne hash: ${queryHashFindOne}`);
+	logger.trace(`find hash: ${queryHashFind}, findOne hash: ${queryHashFindOne}`);
 	
 	//If cached responses for either hashed query exist, then delete them
-	if (this.cache[queryHashFind]) delete this.cache[queryHashFind];
-	if (this.cache[queryHashFindOne]) delete this.cache[queryHashFindOne];
+	this.cache.del(queryHashFind);
+	this.cache.del(queryHashFindOne);
 	
 	//Remove in collection with query
 	var writeResult = await this.getDB().get(collection).update(query, update, options);
 	
 	logger.trace(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
+	consoleTimeEnd(timeLogName);
 	
 	//return writeResult
 	return writeResult;
 }
 
+/**
+ * Asynchronous "aggregate" function to a collection specified in first parameter.
+ * @param {string} collection Collection to find in.
+ * @param {object} pipeline Array containing all the aggregation framework commands for the execution.
+ * @param {object} [cacheOptions=undefined] Caching options.
+ * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
+ * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
+ */
+utilities.aggregate = async function(collection, pipeline, cacheOptions) {
+	//If the collection is not specified and is not a String, throw an error.
+	//This would obly be caused by a programming error.
+	if(typeof(collection) != "string") throw new TypeError("Utilities.aggregate: Collection must be specified.");
+	//If query does not exist or is not an object, throw an error. 
+	if(typeof(pipeline) != "object") throw new TypeError("Utilities.aggregate: pipieline must be of type object");
+	//Cache options
+	if (!cacheOptions) var cacheOptions = {};
+	if (typeof cacheOptions != "object") throw new TypeError("cacheOptions must be of type object");
+	if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != "boolean") throw new TypeError("cacheOptions.allowCache must be of type boolean");
+	if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != "number") throw new TypeError("cacheOptions.maxCacheAge must be of type number");
+	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
+	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
+	
+	var timeLogName = `agg: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
+	consoleTime(timeLogName);
+	logger.trace(`utilities.aggregate: ${collection}, ${JSON.stringify(pipeline)}`);
+	
+	//If cache is enabled
+	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
+		
+		logger.trace("Caching enabled");
+		var hashedQuery = await this.hashQuery('aggregate', collection, pipeline, {});
+		logger.trace(`(aggregate) Request Hash: ${hashedQuery}`);
+		
+		//Look in cache for the query
+		if (this.cache.get(hashedQuery)) {
+			var cachedRequest = this.cache.get(hashedQuery);
+			
+			logger.trace(`Serving request from cache (aggregate:${collection})`);
+			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+			consoleTimeEnd(timeLogName);
+			
+			return cachedRequest;
+		}
+		//If query has not yet been cached
+		else {
+			logger.trace(`Caching request (aggregate:${collection})`);
+			
+			//Request db
+			var cachedRequest = await this.getDB().get(collection).aggregate(pipeline);
+			//Cache response (Including maxAge before automatic deletion)
+			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
+			
+			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+			consoleTimeEnd(timeLogName);
+			
+			return cachedRequest;
+		}
+	}
+	//If cache is not enabled
+	else {
+	
+		//Aggregate
+		var data = await this.getDB().get(collection).aggregate(pipeline);
+		
+		logger.trace(`Not cached (aggregate:${collection})`)
+		logger.trace(`result: ${data}`);
+		consoleTimeEnd(timeLogName);
+		
+		//Return (Promise to get) data
+		return data;
+	}
+}
+
 utilities.dumpCache = function(){
 	
-	console.log(JSON.stringify(this.cache));
+	//console.log(JSON.stringify(this.cache));
+	const used = process.memoryUsage().heapUsed / 1024 / 1024;
+	console.log(`The process uses approximately ${Math.round(used * 100) / 100} MB`);
 }
 
 /**
@@ -419,37 +491,6 @@ utilities.distinct = async function(collection, field, query){
 	data = await Col.distinct(field, query);
 	
 	logger.trace(`utilities.distinct: result: ${data}`);
-	
-	//Return (Promise to get) data
-	return data;
-}
-
-/**
- * Asynchronous "aggregate" function to a collection specified in first parameter.
- * @param {string} collection Collection to find in.
- * @param {object} pipeline Array containing all the aggregation framework commands for the execution.
- */
-utilities.aggregate = async function(collection, pipeline) {
-	//If the collection is not specified and is not a String, throw an error.
-	//This would obly be caused by a programming error.
-	if(typeof(collection) != "string"){
-		throw new TypeError("Utilities.aggregate: Collection must be specified.");
-	}
-	//If query does not exist or is not an object, throw an error. 
-	if(typeof(pipeline) != "object"){
-		throw new TypeError("Utilities.aggregate: pipieline must be of type object");
-	}
-	
-	logger.trace(`utilities.aggregate: ${collection}, ${JSON.stringify(pipeline)}`);
-	
-	var db = this.getDB();
-	
-	var Col = db.get(collection);
-	//Find in collection with query and options
-	var data = [];
-	data = await Col.aggregate(pipeline);
-	
-	logger.trace(`utilities.aggregate: result: ${data}`);
 	
 	//Return (Promise to get) data
 	return data;

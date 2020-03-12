@@ -1,8 +1,11 @@
 'use strict';
 const logger = require('@log4js-node/log4js-api').getLogger('helpers');
-const utilities = require("@firstteam102/scoutradioz-utilities");
-
+var utilities = null;
 var matchDataHelper = module.exports = {};
+
+matchDataHelper.config = function(utilitiesModule){
+	utilities = utilitiesModule;
+}
 
 /**
  * Returns whether a layout element type is quantifiable.

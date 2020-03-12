@@ -1,6 +1,6 @@
 {
   "name": "@firstteam102/scoutradioz-helpers",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "A series of helper files for Scoutradioz functions",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
   "dependencies": {
-    "@firstteam102/scoutradioz-utilities": "^1.0.11",
     "@log4js-node/log4js-api": "^1.0.2"
   }
 }

@@ -3,7 +3,8 @@ const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
-
+//const matchDataHelper = require('../../scoutradioz-helpers/helpers/matchdatahelper');
+//const uploadHelper = require('../../scoutradioz-helpers/helpers/uploadhelper');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route.
@@ -526,7 +527,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	}
 	catch (err) {
 		logger.error(err);
-		res.redirect(`/?alert=${err.message || err}&type=error`);
+		throw err;
 	}
 }));
 
@@ -534,12 +535,9 @@ router.get('/pits', wrap(async (req, res) => {
 	
 	var thisFuncName = "dashboard.pits[get]: ";
 	logger.info(thisFuncName + 'ENTER');
-
-	// var scoutDataCol = db.get("scoutingdata");
-	// var currentTeamsCol = db.get('currentteams');
 	
 	// are we asking for pictures?
-	var pics = req.query.pics;
+	var loadPhotos = req.query.loadPhotos;
 
 	// for later querying by event_key
 	var event_year = req.event.year;
@@ -553,13 +551,7 @@ router.get('/pits', wrap(async (req, res) => {
 	teams.sort(function(a, b) {
 		let aNum = parseInt(a.team_key.substring(3));
 		let bNum = parseInt(b.team_key.substring(3));
-		if( aNum < bNum ){
-			return -1;
-		}
-		if( aNum > bNum ){
-			return 1;
-		}
-		return 0;
+		return aNum - bNum;
 	});
 	
 	// read in team list for data
@@ -596,12 +588,16 @@ router.get('/pits', wrap(async (req, res) => {
 		if (team.hasOwnProperty("key")) teamKeys.push(team.key);
 	}
 	
-	//await uploadHelper.findTeamImagesMultiple(org_key, event_year, teamKeys)
+	var images;
+	
+	if (loadPhotos == true) {
+		images = await uploadHelper.findTeamImagesMultiple(org_key, event_year, teamKeys);
+	}
 	
 	res.render('./dashboard/pits', {
-		title: "Pit Scouting", 
-		pics: pics,
-		"teams": teams
+		title: "Pit Scouting",
+		teams: teams,
+		images: images
 	});	
 }));
 
