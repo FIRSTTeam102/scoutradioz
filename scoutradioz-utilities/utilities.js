@@ -234,7 +234,7 @@ utilities.find = async function(collection, query, options, cacheOptions){
 		
 		//Request db
 		var data = await this.getDB().get(collection).find(query, options);
-		logger.trace(`non-cached: result: ${data}`);
+		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
 		return data;
@@ -309,7 +309,7 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 		//Request db
 		var data = await this.getDB().get(collection).findOne(query, options);
 		logger.trace(`Not cached (findOne:${collection})`)
-		logger.trace(`non-cached: result: ${data}`);
+		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
 		return data;
@@ -422,7 +422,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 		var data = await this.getDB().get(collection).aggregate(pipeline);
 		
 		logger.trace(`Not cached (aggregate:${collection})`)
-		logger.trace(`result: ${data}`);
+		logger.trace(`result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
 		//Return (Promise to get) data
@@ -490,7 +490,7 @@ utilities.distinct = async function(collection, field, query){
 	var data = [];
 	data = await Col.distinct(field, query);
 	
-	logger.trace(`utilities.distinct: result: ${data}`);
+	logger.trace(`utilities.distinct: result: ${JSON.stringify(data)}`);
 	
 	//Return (Promise to get) data
 	return data;
