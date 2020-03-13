@@ -10,7 +10,6 @@ const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 
 const utilities = require('@firstteam102/scoutradioz-utilities');
-utilities.config(path.join(__dirname, '../databases.json'))
 
 logger.warn("Images will be uploaded to S3.");
 
@@ -169,7 +168,8 @@ router.post('/image', upload.single("image"), async (req, res, next) => {
 				upload_time: uploadTime
 			},
 			s3_key: s3Key,
-			index: parseInt(index)
+			index: parseInt(index),
+			removed: false,
 		}
 		
 		logger.info(`${thisFuncName} Upload complete; data=${JSON.stringify(data)}`);
