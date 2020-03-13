@@ -77,7 +77,7 @@ functions.setViewVariables = async function(req, res, next){
 	var fileRoot;
 	
 	//If we have set a process tier and S3 bucket name, then set fileRoot to an S3 url
-	if( process.env.TIER && process.env.S3_BUCKET ){
+	if( process.env.TIER && process.env.S3_BUCKET && process.env.STATICFILES_USE_S3 == 'true' ){
 		
 		fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}`;
 	}
