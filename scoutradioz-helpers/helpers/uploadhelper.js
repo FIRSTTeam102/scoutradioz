@@ -29,7 +29,7 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 	logger.debug(`${thisFuncName} Finding list of images`)
 	//Sorted by inverse of upload time
 	var uploads = await utilities.find("uploads", 
-		{org_key: orgKey, year: year, team_key: teamKey}, 
+		{org_key: orgKey, year: year, team_key: teamKey, removed: false}, 
 		{sort: {"index": 1, "uploader.upload_time": -1}},
 		{allowCache: true}
 	);
@@ -77,6 +77,27 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 }
 
 /**
+ * Return ImageLinks from an upload object.
+ * @param {object} upload Upload object from database.
+ * @returns {ImageLinks} Links to images
+ */
+uploadHelper.getLinks = (upload) => {
+	const thisFuncName = "uploadhelper.getLinks: ";
+	
+	var imageLinks = new ImageLinks();
+	
+	const key = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${upload.s3_key}`;
+	
+	imageLinks.sm = key + '_sm.jpg';
+	imageLinks.md = key + '_md.jpg';
+	imageLinks.lg = key + '_lg.jpg';
+	
+	logger.trace(`${thisFuncName} upload=${JSON.stringify(upload)}, imageLinks=${JSON.stringify(imageLinks)}`);
+	
+	return imageLinks;
+}
+
+/**
  * Find upload links for a given team.
  * @param {string} orgKey org_key
  * @param {number} year year
@@ -94,7 +115,7 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 	
 	//Sorted by inverse of upload time
 	var uploads = await utilities.find("uploads",
-		{org_key: orgKey, year: year, team_key: {$in: teamKeys}}, 
+		{org_key: orgKey, year: year, team_key: {$in: teamKeys}, removed: false}, 
 		{sort: {"index": 1, "uploader.upload_time": -1}},
 		{allowCache: true}
 	);
