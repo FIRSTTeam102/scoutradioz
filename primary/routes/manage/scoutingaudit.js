@@ -2,6 +2,7 @@ const router = require("express").Router();
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
+const uploadHelper = require('@firstteam102/scoutradioz-helpers').upload;
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
@@ -100,28 +101,6 @@ router.get("/", wrap(async (req, res) =>  {
 			auditElement.char = auditElementChar;
 			thisMemberArr.push(auditElement);
 			
-			/*
-			if (scoreData[scoreIdx].data)
-				if (scoreData[scoreIdx].assigned_scorer == scoreData[scoreIdx].actual_scorer)
-					thisMemberArr.push("Y");
-				else
-					// 2019-03-16 JL: App crashed due to actual_scorer being undefined
-					if (scoreData[scoreIdx].actual_scorer == undefined){
-						logger.debug(`${thisFuncName} actual_scorer undefined`);
-						thisMemberArr.push("N");
-					}
-					// 2018-03-22, M.O'C: Adding parent option
-					else if (scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('mr') || 
-						scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('mrs') || 
-						scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('ms'))
-						thisMemberArr.push("P");
-					else
-						thisMemberArr.push("C");
-			else{
-				thisMemberArr.push("N");
-			}
-				
-			*/
 		}
 		// Write in the last set of records
 		var thisRow = {};
@@ -134,6 +113,133 @@ router.get("/", wrap(async (req, res) =>  {
 		title: "Scouter Audit",
 		audit: memberArr
 	});
+}));
+
+router.get('/uploads', wrap(async (req, res) => {
+	
+	var orgKey = req.user.org_key;
+	
+	var uploads = await utilities.find('uploads', 
+		{org_key: orgKey, removed: false},
+		{},
+	);
+	
+	uploads.sort((a, b) => {
+		var aNum = parseInt(a.team_key.substring(3));
+		var bNum = parseInt(b.team_key.substring(3));
+		if (aNum == bNum) {
+			var aIdx = a.index;
+			var bIdx = b.index;
+			if (aIdx == bIdx) {
+				var aTime = a.uploader.upload_time;
+				var bTime = b.uploader.upload_time;
+				return aTime - bTime;
+			}
+			else {
+				return aIdx - bIdx;
+			}
+		}
+		else {
+			return aNum - bNum;
+		}
+	})
+	
+	//Sort into groups of teams
+	var uploadsByTeam = [];
+	var thisTeamKey, thisTeamUploads = [], thisUploadLinks;
+	for (var upload of uploads) {
+		var thisTeamLinks = uploadHelper.getLinks(upload);
+		upload.links = thisTeamLinks;
+		if (upload.hasOwnProperty('team_key')) {
+			//If thisUpload matches thisTeam, add to thisTeamUploads
+			if (thisTeamKey == upload.team_key) {
+				thisTeamUploads.push(upload);
+			}
+			//If not a match, then push thisTeamUploads, reset it and set thisTeamKey
+			else {
+				uploadsByTeam.push(thisTeamUploads);
+				thisTeamUploads = [];
+				thisTeamUploads.push(upload);
+				thisTeamKey = upload.team_key;
+			}
+		}
+	}
+	//get rid of first empty array (due to the way my loop was structured)
+	uploadsByTeam.splice(0, 1);
+	
+	res.render('./manage/audituploads', {
+		title: 'Uploads Audit',
+		uploadsByTeam: uploadsByTeam
+	});
+}));
+
+router.post('/uploads/changeindex', wrap(async (req, res) => {
+	var thisFuncName = 'audit.uploads.changeindex: ';
+	
+	try {
+		logger.debug(`${thisFuncName} ENTER`);
+		
+		var uploadId = req.body.id;
+		var changeAmt = parseInt(req.body.amount);
+		var orgKey = req.user.org_key;
+	
+		var upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
+		
+		if (upload) {
+			
+			var newIndex = upload.index + changeAmt;
+			
+			var writeResult = await utilities.update('uploads',
+				{_id: uploadId, org_key: orgKey},
+				{$set: {index: newIndex}}
+			);
+			
+			logger.debug(`${thisFuncName} writeResult=${writeResult}`);
+			res.status(200).send(writeResult)
+		}
+		else {
+			logger.error(`${thisFuncName} Could not find upload in db, id=${uploadId}`);
+			res.status(400).send("Could not find upload in database.");
+		}
+	}
+	catch (err) {
+		logger.error(err);
+		res.status(500).send(err.message);
+	}
+}));
+
+router.post('/uploads/delete', wrap(async (req, res) => {
+	var thisFuncName = 'audit.uploads.delete: ';
+	
+	try {
+		logger.debug(`${thisFuncName} ENTER`);
+		
+		var uploadId = req.body.id;
+		var orgKey = req.user.org_key;
+	
+		var upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
+		
+		if (upload) {
+			
+			logger.info(`${req.user} has deleted: ${JSON.stringify(upload)}`);
+			
+			var writeResult = await utilities.update('uploads',
+				{_id: uploadId, org_key: orgKey},
+				{$set: {removed: true}}
+			);
+			
+			logger.debug(`${thisFuncName} writeResult=${writeResult}`);
+			res.status(200).send(writeResult)
+		}
+		else {
+			logger.error(`${thisFuncName} Could not find upload in db, id=${uploadId}`);
+			res.status(400).send("Could not find upload in database.");
+		}
+	}
+	catch (err) {
+		logger.error(err);
+		res.status(500).send(err.message);
+	}
 }));
 
 router.get('/bymatch', wrap(async (req, res) => {

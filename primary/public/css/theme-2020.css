@@ -92,6 +92,7 @@
 .sprite.sp-8{--size:8px;}
 .sprite.sp-12{--size:12px;}
 .sprite.sp-16{--size:16px;}
+.sprite.sp-18{--size:18px;}
 .sprite.sp-24{--size:24px;}
 .sprite.sp-32{--size:32px;}
 .sprite.sp-48{--size:48px;}
@@ -115,6 +116,8 @@
 .sprite.sp-help{--position: -14;}
 .sprite.sp-warn{--position: -15;}
 .sprite.sp-gearheads{--position: -16;}
+
+.sprite.sp-inline{vertical-align: middle; margin-left: 4px; margin-right: 4px; margin-top: -4px;}
 
 /* USAGE: <span class="sprite sp-(SIZE) sp-(TYPE)"></span> */
 .sprite{
@@ -162,11 +165,15 @@
 }
 
 .team-image-sm{max-height: 100px; margin: 4px;}
-.team-image-md{max-height: 350px; margin: 8px;}
-.team-image-lg{max-height: 550px; margin: 8px;}
+.team-image-md{max-height: 225px; margin: 4px;}
+.team-image-lg{max-height: 350px; margin: 8px;}
 
 p.indented{
 	text-indent: 20px;
+}
+p.hanging-indent{
+	text-indent: -40px;
+	margin-left: 40px;
 }
 .info{
 	font-style: italic;

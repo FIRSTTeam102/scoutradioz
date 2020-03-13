@@ -1,0 +1,103 @@
+extends ../layout
+block content
+	style.
+		.index-counter{
+			display: inline-block;
+			margin-top: 0px;
+			width: 26px;
+			height: 26px;
+		}
+	h2 Audit trail for image uploads
+	i Be sure to check this page often. You do not want any inappropriate images uploaded to your organization's page.
+	p
+		a(href="/manage/scoutingaudit") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Per-Scouter Audit
+		a(href="/manage/scoutingaudit/comments") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Comments Audit
+		a(href="/manage/scoutingaudit/bymatch") 
+			div(class="gear-btn theme-link w3-btn w3-section")
+				span Per-Match Audit
+	//p 
+		if eventKey == 'all'
+			a(href="/manage/scoutingaudit/")
+		else 
+			a(href="./?event_key=all" class="gear-btn theme-submit w3-btn") All events
+			a(href="./?event_key=all" class="gear-btn theme-submit w3-btn") All events
+	div(class="w3-auto")
+		if !uploadsByTeam[0]
+			h4 No uploads are currently available.
+		each teamUploads in uploadsByTeam
+			div(class="w3-row")
+				hr
+				h4
+					a(href=`/reports/teamintel?team=${teamUploads[0].team_key}` class="link")
+						span=teamUploads[0].team_key.substring(3)
+				each upload in teamUploads
+					div(class="w3-row w3-padding-large" id=`row_${upload._id}`) 
+						div(class="w3-half")
+							img(src=upload.links.md class="w3-image team-image-md")
+						div(class="w3-half w3-left-align")
+							p(class="hanging-indent") Uploaded by: #{upload.uploader.name}
+							- var useragent = upload.uploader.useragent;
+							p(class="hanging-indent") Device: #{useragent.device} | #{useragent.browser} | #{useragent.os}
+							p(class="hanging-indent") Uploaded on: #{new Date(upload.uploader.upload_time)}
+							p(class="") Index: 
+								span(id=`index_${upload._id}`) #{upload.index}
+								span(class="sprite sp-help sp-18 sp-inline w3-tooltip")
+									span(class="w3-tooltiptext" style="margin-bottom: 4px").
+										Images are ordered first by their index and second by their upload date. A team's "main" image will be the NEWEST upload with the LOWEST index.
+							p
+								div(class="w3-col s6 m4 w3-padding")
+									button(class="w3-btn w3-block theme-input" onclick=`changeIndex('${upload._id}', -1)`) Index &nbsp;-1
+								div(class="w3-col s6 m4 w3-padding")
+									button(class="w3-btn w3-block theme-input" onclick=`changeIndex('${upload._id}', 1)`) Index &nbsp;+1
+								div(class="w3-col m4 w3-padding" onclick=`deleteUpload('${upload._id}')`)
+									button(class="w3-btn w3-block theme-red") Delete
+	script.
+		function changeIndex(id, amount) {
+			//id is id of document; amount is +1 or -1
+			var indexCard = new NotificationCard(`Changing image index by ${amount > 0 ? '+1' : '-1'}...`);
+			indexCard.show();
+			
+			$.post('/manage/scoutingaudit/uploads/changeindex', 
+				{'id': id, 'amount': amount}
+			)
+			.done(data => {
+				indexCard.remove(0);
+				NotificationCard.good("Successfully changed image index.\nChanges may take up to one minute to complete.");
+				
+				console.log($(`#index_${id}`));
+				var currentIdx = parseInt($(`#index_${id}`).text());
+				$(`#index_${id}`).text(currentIdx + amount);
+			})
+			.fail(err => {
+				console.error(err);
+				indexCard.remove(0);
+				NotificationCard.error("An error occurred: " + err.responseText, {ttl: 3000});
+			});
+		}
+		function deleteUpload(id) {
+			var deleteCard = new NotificationCard(`Deleting upload...`);
+			deleteCard.show();
+			
+			var confirmation = confirm("Do you really want to delete this image?")
+			console.log(confirmation);
+			
+			$.post('/manage/scoutingaudit/uploads/delete',
+				{'id': id}
+			)
+			.done(data => {
+				deleteCard.remove(0);
+				NotificationCard.warn("Successfully deleted image.\nChanges may take up to one minute to complete.");
+				
+				console.log($(`#row_${id}`));
+				$(`#row_${id}`).hide();
+			})
+			.fail(err => {
+				console.error(err);
+				deleteCard.remove(0);
+				NotificationCard.error("An error occurred: " + err.responseText, {ttl: 3000});
+			});
+		}

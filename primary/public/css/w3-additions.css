@@ -110,11 +110,11 @@ a:hover.text-link{text-decoration: underline;}
 /* Tooltip text */
 .w3-tooltip .w3-tooltiptext {
 	visibility: hidden;
-	width: 360px;
-	background-color: #555;
-	color: #fff;
+	width: 240px;
+	background-color: #eee;
+	color: #000;
 	text-align: center;
-	padding: 5px 0;
+	padding: 8px;
 	border-radius: 6px;
 
 	/* Position the tooltip text */
@@ -122,7 +122,7 @@ a:hover.text-link{text-decoration: underline;}
 	z-index: 1;
 	bottom: 125%;
 	left: 50%;
-	margin-left: -180px;
+	margin-left: -120px;
 
 	/* Fade in tooltip */
 	opacity: 0;
@@ -138,16 +138,9 @@ a:hover.text-link{text-decoration: underline;}
 	margin-left: -5px;
 	border-width: 5px;
 	border-style: solid;
-	border-color: #555 transparent transparent transparent;
+	border-color: #eee transparent transparent transparent;
 }
 
-.w3-tooltiptext.tooltip-white{
-	background-color: #f2f2f8;
-	color: #000!important;
-}
-.w3-tooltip .w3-tooltiptext.tooltip-white::after{
-	border-color: #f2f2f8 transparent transparent transparent;
-}
 .w3-tooltiptext.tooltip-gray{
 	background-color: #8a8a9b;
 	color: #fff!important;
@@ -168,6 +161,10 @@ pre{
 	white-space: -pre-wrap;      /* Opera 4-6 */
 	white-space: -o-pre-wrap;    /* Opera 7 */
 	word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+.w3-half-mobile{
+	width: 49.99999%;
 }
 
 @media (min-width:993px){
@@ -202,5 +199,8 @@ pre{
 		width: 100%;
 		margin-left: 0px;
 		left: 0px; 
+	}
+	.w3-block-half{
+		width: 100%;
 	}
 }
