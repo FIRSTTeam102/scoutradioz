@@ -2,4 +2,5 @@ lambda-invoke-response.json
 package.yaml
 databases.json
 node_modules
+zips
 primary/public/uploads/responsive

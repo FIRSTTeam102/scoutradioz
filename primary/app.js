@@ -108,8 +108,10 @@ app.use(async function(req, res, next){
 			{allowCache: true, maxCacheAge: 120});
 			
 		//Add user's role to user obj so we don't have to go searching in db every damn second
-		req.user.role = userRole;	
+		req.user.role = userRole;
 	}
+	
+	logger.info(`PROCESS ALIAS: ${process.env.ALIAS}`);
 	
 	next();
 });

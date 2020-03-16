@@ -16,6 +16,7 @@ const functionArn = "arn:aws:lambda:us-east-1:243452333432:function:SchedulerSta
 
 exports.handler = async (event, context, cb) => {
 	logger.info("Function is executing!!!");
+	logger.info('Version: Newer prod');
 	
 	console.log(event);
 	console.log(context);
