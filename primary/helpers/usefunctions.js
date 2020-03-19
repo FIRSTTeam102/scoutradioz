@@ -205,6 +205,9 @@ functions.requestLogger = function(req, res, next){
 		+ (req.url).cyan
 		+ " at "
 		+ formattedReqTime);
+	//fds
+	
+	res.locals.shortagent = req.shortagent;
 	
 	next();
 }

@@ -95,10 +95,20 @@ html
 					
 					window.history.replaceState({}, document.title, url);
 				});
-	
+		if shortagent
+			if shortagent.browser == 'IE'
+				script.
+					setTimeout(function(){
+						alert("It appears you are using an unsupported browser. Please use a modern browser (e.g. Chromium, Firefox, Edge, and newer versions of Safari) for Scoutradioz. Note: The site is built for mobile! Try it on your Android or iPhone!");
+					}, 20);
 	body(class="theme-text")
 		//div(class="menu-blank")
 		div(id="page" style="font-size:1.1em")
+			noscript 
+				p(style="display:block;width:100%;background-color:black;color:white;padding:8px 16px;")
+					span It appears JavaScript is disabled on this browser. Scoutradioz needs a modern browser with JavaScript enabled in order to function properly.
+					br 
+					span Supported browsers include: Chrome and other Chromium-based browsers, Firefox, Edge, Opera, and new versions of Safari.
 			include nav
 			main(class="w3-padding w3-mobile w3-center" id="content") 
 				block content
