@@ -55,12 +55,18 @@ div(style="display: none;" id="menuParent")
 						li 
 							a(href="/reports/allteammetrics") Stats for All Teams
 						li
-							span Export to CSV
+							span 
+								span(class="sprite sp-24 sp-download menu-sprite")
+								span Export to CSV
 							ul
 								li
-									a(href="/reports/exportdata?type=matchscouting") Export match scouting data
+									a(href="/reports/exportdata?type=matchscouting")
+										span(class="sprite sp-24 sp-download menu-sprite")
+										span Export match scouting data
 								li
-									a(href="/reports/exportdata?type=pitscouting") Export pit scouting data
+									a(href="/reports/exportdata?type=pitscouting") 
+										span(class="sprite sp-24 sp-download menu-sprite")
+										span Export pit scouting data
 				//- 2020-03-07, M.O'C: TEMPORARILY POINTING TO REPORTS SO UNAUTHENTICATED USERS CAN ACCESS
 				li 
 					//- a(href="/dashboard/drive") 

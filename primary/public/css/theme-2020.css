@@ -116,6 +116,7 @@
 .sprite.sp-help{--position: -14;}
 .sprite.sp-warn{--position: -15;}
 .sprite.sp-gearheads{--position: -16;}
+.sprite.sp-download{--position: -17;}
 
 .sprite.sp-inline{vertical-align: middle; margin-left: 4px; margin-right: 4px; margin-top: -4px;}
 
