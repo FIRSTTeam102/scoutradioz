@@ -28,7 +28,7 @@ router.get('/', wrap(async (req, res) => {
 	var org_key = req.user.org_key;
 
 	// for later querying by event_key
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 
 	// start by assuming this user has no assignments
 	var noAssignments = true;
@@ -37,7 +37,7 @@ router.get('/', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	var assignedTeams = await utilities.find("pitscouting", {
 		"org_key": org_key, 
-		"event_key": eventId, 
+		"event_key": eventKey, 
 		"primary": thisUserName
 	}, {
 		sort: { "team_key": 1 }
@@ -45,7 +45,7 @@ router.get('/', wrap(async (req, res) => {
 
 	// 2020-03-07, M.O'C: Allowing for scouts assigned to matches but NOT to pits
 	if (assignedTeams.length == 0) {
-		var assignedMatches = await utilities.find("matchscouting", {org_key: org_key, event_key: eventId, assigned_scorer: thisUserName});
+		var assignedMatches = await utilities.find("matchscouting", {org_key: org_key, event_key: eventKey, assigned_scorer: thisUserName});
 		if (assignedMatches.length > 0)
 			noAssignments = false;		
 	} else
@@ -87,7 +87,7 @@ router.get('/', wrap(async (req, res) => {
 		// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 		backupTeams = await utilities.find("pitscouting", {
 			"org_key": org_key, 
-			"event_key": eventId,
+			"event_key": eventKey,
 			$or:
 				[{"secondary": thisUserName},
 				{"tertiary": thisUserName}]
@@ -102,7 +102,7 @@ router.get('/', wrap(async (req, res) => {
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matchDocs = await utilities.find("matches", {
-		event_key: eventId, 
+		event_key: eventKey, 
 		"alliances.red.score": -1
 	},{
 		sort: {"time": 1}
@@ -124,7 +124,7 @@ router.get('/', wrap(async (req, res) => {
 		
 	// Get all the UNRESOLVED matches where they're set to score
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} });
+	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} });
 
 	for (var matchesIdx = 0; matchesIdx < scoringMatches.length; matchesIdx++)
 		logger.trace(thisFuncName + "scoringMatch[" + matchesIdx + "]: num,team=" + scoringMatches[matchesIdx].match_number + "," + scoringMatches[matchesIdx].team_key);
@@ -606,13 +606,13 @@ router.get('/matches', wrap(async (req, res) => {
 	var thisFuncName = "dashboard.matches[get]: ";
 
 	// for later querying by event_key
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
-	logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',eventId=' + eventId);
+	logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',eventKey=' + eventKey);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
+	var matches = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -634,7 +634,7 @@ router.get('/matches', wrap(async (req, res) => {
 
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }}, { limit: 60, sort: {"time": 1, "alliance": 1, "team_key": 1} });
+	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $gte: earliestTimestamp }}, { limit: 60, sort: {"time": 1, "alliance": 1, "team_key": 1} });
 
 	if(!scoreData)
 		return logger.error("mongo error at dashboard/matches");
@@ -653,7 +653,7 @@ router.get('/matches', wrap(async (req, res) => {
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
 	//var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
 	var thisEvent = await utilities.find("events", 
-		{"key": eventId}, {},
+		{"key": eventKey}, {},
 		{allowCache: true}
 	);
 	var teamArray = [];

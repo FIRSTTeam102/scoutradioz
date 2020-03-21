@@ -21,10 +21,10 @@ router.get("/", wrap(async (req, res) =>  {
 	var thisFuncName = "audit.root[GET]:";
 	logger.debug(`${thisFuncName} enter`);
 	
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
-	var matches = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 }, {sort: {"time": 1}});
+	var matches = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 }, {sort: {"time": 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -37,7 +37,7 @@ router.get("/", wrap(async (req, res) =>  {
 	logger.debug("Scoring audit: earliestTimestamp=" + earliestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"assigned_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
+	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"assigned_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
 	
 	if(!scoreData)
 		return res.redirect("/?alert=mongo error at dashboard/matches");
@@ -245,11 +245,11 @@ router.post('/uploads/delete', wrap(async (req, res) => {
 router.get('/bymatch', wrap(async (req, res) => {
 	
 	var audit = {};
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = await utilities.find("matches", {event_key: eventId, "alliances.red.score": -1}, {sort: {"time": 1}});
+	var matches = await utilities.find("matches", {event_key: eventKey, "alliances.red.score": -1}, {sort: {"time": 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -262,7 +262,7 @@ router.get('/bymatch', wrap(async (req, res) => {
 	logger.debug("Per-match audit: earliestTimestamp=" + earliestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1, "alliance": 1, "team_key": 1} });
+	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1, "alliance": 1, "team_key": 1} });
 	
 	//Create array of matches for audit, with each match-team inside each match
 	var audit = [];
@@ -312,11 +312,11 @@ router.get('/bymatch', wrap(async (req, res) => {
 
 router.get('/comments', wrap(async (req, res) => {
 	
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 		
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = utilities.find("matches", {event_key: eventId, "alliances.red.score": -1}, {sort: {"time": 1}});
+	var matches = utilities.find("matches", {event_key: eventKey, "alliances.red.score": -1}, {sort: {"time": 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -329,7 +329,7 @@ router.get('/comments', wrap(async (req, res) => {
 	logger.debug("Comments audit: earliestTimestamp=" + earliestTimestamp);
 		
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"actual_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
+	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"actual_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
 	
 	var audit = [];
 	

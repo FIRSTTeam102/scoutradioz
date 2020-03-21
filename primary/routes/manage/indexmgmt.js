@@ -58,7 +58,7 @@ router.post('/setcurrent', wrap(async (req, res) => {
 	
 	var thisFuncName = "adminindex.setcurrent[post]: ";
 	var eventKey = req.body.event_key;
-	logger.info(thisFuncName + 'ENTER eventId=' + eventKey);
+	logger.info(thisFuncName + 'ENTER eventKey=' + eventKey);
 
 	//Now, insert the new data
 	// 2020-02-08, M.O'C - moving "current event" info into 'orgs'
@@ -97,13 +97,13 @@ router.get('/generatedata', wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
 	//  Async/await this  //////////////////////
 	
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matchesFind = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
+	var matchesFind = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}});
 
 	var earliestTimestamp = 9999999999;
 	if (matchesFind && matchesFind[0])
@@ -114,7 +114,7 @@ router.get('/generatedata', wrap(async (req, res) => {
 		
 	// Get all the scoring data for RESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventId, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1} });
+	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1} });
 	if (scoringMatches)
 	{
 		logger.debug(thisFuncName + 'scoringMatches.length=' + scoringMatches.length);

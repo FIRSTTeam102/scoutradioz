@@ -523,14 +523,14 @@ router.get("/swapmembers", wrap(async (req, res) => {
 	var thisFuncName = "scoutingpairs.swapmembers[get]: ";
 	
 	// for later querying by event_key
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
 	// Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + "ENTER eventId=" + eventId + ",org_key=" + org_key);
+	logger.info(thisFuncName + "ENTER eventKey=" + eventKey + ",org_key=" + org_key);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
+	var matchDocs = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -542,7 +542,7 @@ router.get("/swapmembers", wrap(async (req, res) => {
 		
 	// Get the distinct list of scorers from the unresolved matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scorers = await utilities.distinct("matchscouting", "assigned_scorer", {"org_key": org_key, "event_key": eventId, "time": { $gte: earliestTimestamp }});
+	var scorers = await utilities.distinct("matchscouting", "assigned_scorer", {"org_key": org_key, "event_key": eventKey, "time": { $gte: earliestTimestamp }});
 	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 
 	// Get list of all users for this org
@@ -561,7 +561,7 @@ router.post("/swapmembers", wrap(async (req, res) => {
 	var thisFuncName = "scoutingpairs.swapmembers[post]: ";
 	
 	// for later querying by event_key
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
 	// Log message so we can see on the server side when we enter this
@@ -573,8 +573,8 @@ router.post("/swapmembers", wrap(async (req, res) => {
 	logger.info(thisFuncName + 'swap out ' + swapin + ', swap in ' + swapout);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matchDocs = await utilities.find("matches", { event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}});
-	// matchCol.find({ event_key: eventId, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+	var matchDocs = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}});
+	// matchCol.find({ event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -586,7 +586,7 @@ router.post("/swapmembers", wrap(async (req, res) => {
 		
 	// Do the updateMany - change instances of swapout to swapin
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	await utilities.bulkWrite("matchscouting", [{updateMany:{filter: { assigned_scorer: swapout, org_key: org_key, event_key: eventId, "time": { $gte: earliestTimestamp } }, 
+	await utilities.bulkWrite("matchscouting", [{updateMany:{filter: { assigned_scorer: swapout, org_key: org_key, event_key: eventKey, "time": { $gte: earliestTimestamp } }, 
 		update:{ $set: { assigned_scorer: swapin } }}}]);
 
 	res.redirect("/dashboard/matches");

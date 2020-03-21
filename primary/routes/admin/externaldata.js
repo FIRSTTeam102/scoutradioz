@@ -107,16 +107,16 @@ router.get("/matches", wrap(async (req, res) => {
 	// var matchCol = db.get("matches");
 
     // Get our query value(s)
-    var eventId = req.query.eventId || req.query.event_key;
-	if (!eventId)
+    var eventKey = req.query.eventKey || req.query.event_key;
+	if (!eventKey)
 	{
 		logger.debug(thisFuncName + 'No event specified');
 		res.redirect("/admin/externaldata/events");
 	}
-	logger.debug(thisFuncName + 'eventId=' + eventId);
+	logger.debug(thisFuncName + 'eventKey=' + eventKey);
 
 	// Read matches from DB for specified event
-	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
+	var matches = await utilities.find("matches", {"event_key": eventKey},{sort: {"time": 1}});
 	
 	res.render("./manage/matches", {
 		title: "Matches",
@@ -139,11 +139,11 @@ router.post("/matches", wrap(async (req, res) => {
 	// var eventCol = db.get("events");
 
     // Get our form value(s)
-    var eventId = req.body.eventId;
-	logger.debug(thisFuncName + 'eventId=' + eventId);
+    var eventKey = req.body.eventKey;
+	logger.debug(thisFuncName + 'eventKey=' + eventKey);
 	
 	//Set up TBA api request
-	var url = `event/${eventId}/matches`;
+	var url = `event/${eventKey}/matches`;
 	logger.debug(thisFuncName + "url=" + url);
 	
 	//Request from TBA
@@ -153,18 +153,18 @@ router.post("/matches", wrap(async (req, res) => {
 
 	//if request was invalid, redirect to admin page with alert message
 	if(matches.length == undefined || matches.length == 0){
-		return res.redirect("/manage?alert=Could not get matches from TBA for specified event " + eventId);
+		return res.redirect("/manage?alert=Could not get matches from TBA for specified event " + eventKey);
 	}
 	
-	logger.debug(thisFuncName + 'Found ' + matches.length + ' data for event ' + eventId);
+	logger.debug(thisFuncName + 'Found ' + matches.length + ' data for event ' + eventKey);
 	
 	// First delete existing match data for the given event
-	await utilities.remove("matches", {"event_key": eventId});
+	await utilities.remove("matches", {"event_key": eventKey});
 	// Now, insert the new data
 	await utilities.insert("matches", matches);
 		
 	//redirect to matches page
-	res.redirect(`/admin/externaldata/matches?eventId=${eventId}`);
+	res.redirect(`/admin/externaldata/matches?eventKey=${eventKey}`);
 }));
 
 
@@ -180,10 +180,10 @@ router.get("/teams", wrap(async (req, res) => {
 	
 	// var teamCol = db.get("teams");
 	
-	//return res.send(req.query.eventId);
+	//return res.send(req.query.eventKey);
 	
 	//if no event is specified send page with all teams
-	if(req.query.eventId == "" || req.query.eventId == undefined){
+	if(req.query.eventKey == "" || req.query.eventKey == undefined){
 		
 		// Read all teams from DB
 		var teams = await utilities.find("teams", {}, {sort: {"team_number": 1}});
@@ -196,11 +196,11 @@ router.get("/teams", wrap(async (req, res) => {
 	}
 	//if event is specified, get list of teams from event
 	else{
-		//get eventId
-		var eventId = req.query.eventId;
+		//get eventKey
+		var eventKey = req.query.eventKey;
 		
 		//prepare api call
-		var url = `event/${eventId}/teams/simple`;
+		var url = `event/${eventKey}/teams/simple`;
 		
 		//perform api call
 		var teamsData = await utilities.requestTheBlueAlliance(url);

@@ -9,7 +9,7 @@
 extends ..\layout
 block content
 	form#updateForEvent(name="updateForEvent" method="post" action="/admin/externaldata/matches")
-		input#seteventid(type="text", name="eventId")
+		input#setEventKey(type="text", name="eventKey")
 		button#btnSubmit(type="submit" class="w3-button w3-orange") Update DB for specified event ID
 	if locals.matches
 		table(class="w3-table")
@@ -24,7 +24,7 @@ block content
 				th Red Score
 				th Won?
 				th Update
-				//use these instead of "eventId" and "seteventid" for each input ("Won?" needs to be changed to "Won")
+				//use these instead of "eventKey" and "setEventKey" for each input ("Won?" needs to be changed to "Won")
 			each match in matches
 				tr
 					td= match.comp_level
@@ -32,26 +32,26 @@ block content
 					td= new Date(1000*match.time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")
 					if match.actual_time
 						td
-							input#seteventid(type="text", name="eventId", value=`${new Date(1000*match.actual_time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")}`)
+							input#setEventKey(type="text", name="eventKey", value=`${new Date(1000*match.actual_time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")}`)
 					else
 						td
-							input#seteventid(type="text", name="eventId")
+							input#setEventKey(type="text", name="eventKey")
 					td= match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3)
 					if (match.alliances.blue.score > -1)
 						td
-							input#seteventid(type="text", name="eventId", value=`${match.alliances.blue.score}`)
+							input#setEventKey(type="text", name="eventKey", value=`${match.alliances.blue.score}`)
 					else
 						td
-							input#seteventid(type="text", name="eventId")
+							input#setEventKey(type="text", name="eventKey")
 					td= match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3)
 					if (match.alliances.red.score > -1)
 						td
-							input#seteventid(type="text", name="eventId", value=`${match.alliances.red.score}`)
+							input#setEventKey(type="text", name="eventKey", value=`${match.alliances.red.score}`)
 					else
 						td
-							input#seteventid(type="text", name="eventId")
+							input#setEventKey(type="text", name="eventKey")
 					td
-						input#seteventid(type="text", name="eventId", value=`${match.winning_alliance}`)
+						input#setEventKey(type="text", name="eventKey", value=`${match.winning_alliance}`)
 					td
 						button(class="w3-button theme-submit" onClick=`updateMatch('${match.key}')`) Update #{match.key}
 	br

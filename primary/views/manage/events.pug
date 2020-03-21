@@ -49,9 +49,9 @@ block content
 					td
 						button(class="w3-btn theme-submit" onClick=`getTeamsForEvent('${event.key}')`) Teams
 	form#getmatchdata(name="getmatchdata" method="post" action="/admin/externaldata/matches")
-		input#matcheventId(type="hidden", name="eventId")
+		input#matcheventKey(type="hidden", name="eventKey")
 	form#getteamdata(name="getteamdata" method="get" action="/admin/externaldata/teams")
-		input#teamEventId(type="hidden", name="eventId")
+		input#teamEventKey(type="hidden", name="eventKey")
 	script.
 		function submitForYear()
 		{
@@ -60,16 +60,16 @@ block content
 			window.location = "/admin/externaldata/events?year=" + yearSelect;
 		}
 		
-		function getMatchesForEvent(eventId)
+		function getMatchesForEvent(eventKey)
 		{
-			console.log('eventId='+eventId);
-			document.getElementById("matcheventId").value = eventId;
+			console.log('eventKey='+eventKey);
+			document.getElementById("matcheventKey").value = eventKey;
 			document.getElementById("getmatchdata").submit();
 		}
 		
-		function getTeamsForEvent(eventId)
+		function getTeamsForEvent(eventKey)
 		{
-			console.log('eventId='+eventId);
-			document.getElementById("teamEventId").value = eventId;
+			console.log('eventKey='+eventKey);
+			document.getElementById("teamEventKey").value = eventKey;
 			document.getElementById("getteamdata").submit();
 		}

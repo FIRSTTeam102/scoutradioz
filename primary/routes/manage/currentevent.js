@@ -16,10 +16,10 @@ router.get("/matches", wrap(async (req, res) => {
 	var thisFuncName = "currentevent.matches[get]: ";
 	logger.info(thisFuncName + 'ENTER')
 	
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 		
 	// Read matches from DB for specified event
-	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
+	var matches = await utilities.find("matches", {"event_key": eventKey},{sort: {"time": 1}});
 		
 	res.render("./manage/currentmatches", {
 		title: "Matches",
@@ -56,13 +56,13 @@ router.post("/resetmatches", wrap(async (req, res) => {
 	
 	// var matchCol = db.get("matches");
 	
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	
 	// update all matches - set 'actualtime' to null/"", and team scores to -1
-	await utilities.bulkWrite("matches", [{updateMany:{filter:{"event_key": eventId}, update:{ $set: { "actual_time" : "", "winning_alliance" : "", "alliances.blue.score": -1, "alliances.red.score": -1 } }}}]);
+	await utilities.bulkWrite("matches", [{updateMany:{filter:{"event_key": eventKey}, update:{ $set: { "actual_time" : "", "winning_alliance" : "", "alliances.blue.score": -1, "alliances.red.score": -1 } }}}]);
 
 	// reread the data & render
-	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
+	var matches = await utilities.find("matches", {"event_key": eventKey},{sort: {"time": 1}});
 	
 	res.redirect('/manage/currentevent/matches?alert=Reset matches successfully.');
 }));
@@ -78,14 +78,14 @@ router.post("/updatematch", wrap(async (req, res) => {
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
 		
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	
 	// While we're here - Get the latest ranking (& OPR data...? maybe not?)
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
 
 	// Reload the rankings from TBA
-	var rankingUrl = "event/" + eventId + "/rankings";
+	var rankingUrl = "event/" + eventKey + "/rankings";
 	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
 
 	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
@@ -97,7 +97,7 @@ router.post("/updatematch", wrap(async (req, res) => {
 		var thisRankings = rankinfo.rankings;
 		for (var i in thisRankings) {
 			var thisRank = thisRankings[i];
-			thisRank['event_key'] = eventId;
+			thisRank['event_key'] = eventKey;
 			rankArr.push(thisRank);
 		}
 	}
@@ -132,7 +132,7 @@ router.post("/updatematch", wrap(async (req, res) => {
 	// Now, insert the new object
 	await utilities.insert("matches", array);
 	// Then read all the matches back in order
-	var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
+	var matches = await utilities.find("matches", {"event_key": eventKey},{sort: {"time": 1}});
 
 	//
 	// 2019-03-21, M.O'C: Adding in recalculation of aggregation data
@@ -246,7 +246,7 @@ router.post("/updatematches", wrap(async (req, res) => {
 	// var rankCol = db.get("currentrankings");
 	
 	var matchId = req.body.matchId;
-	var eventId = req.event.key;
+	var eventKey = req.event.key;
 	var event_year = req.event.year;
 	var org_key = req.user.org_key;
 
@@ -255,7 +255,7 @@ router.post("/updatematches", wrap(async (req, res) => {
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
 
 	// Reload the rankings from TBA
-	var rankingUrl = "event/" + eventId + "/rankings";
+	var rankingUrl = "event/" + eventKey + "/rankings";
 	logger.debug(thisFuncName + "rankingUrl=" + rankingUrl);
 
 	var rankingData = await utilities.requestTheBlueAlliance(rankingUrl);
@@ -267,7 +267,7 @@ router.post("/updatematches", wrap(async (req, res) => {
 		var thisRankings = rankinfo.rankings;
 		for (var i in thisRankings) {
 			var thisRank = thisRankings[i];
-			thisRank['event_key'] = eventId;
+			thisRank['event_key'] = eventKey;
 			rankArr.push(thisRank);
 		}
 	}
@@ -276,13 +276,13 @@ router.post("/updatematches", wrap(async (req, res) => {
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	// Delete the current rankings
 	//await utilities.remove("currentrankings", {});
-	await utilities.remove("rankings", {"event_key": eventId});
+	await utilities.remove("rankings", {"event_key": eventKey});
 	// Insert into DB
 	//await utilities.insert("currentrankings", rankArr);
 	await utilities.insert("rankings", rankArr);
 
 	// Get matches data from TBA
-	var url = "event/" + eventId + "/matches";
+	var url = "event/" + eventKey + "/matches";
 	logger.debug(thisFuncName + "url=" + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
 	var array = JSON.parse(matchData);
@@ -296,17 +296,17 @@ router.post("/updatematches", wrap(async (req, res) => {
 	}
 	else
 	{
-		logger.debug(thisFuncName + 'Found ' + arrayLength + ' data for event ' + eventId);
+		logger.debug(thisFuncName + 'Found ' + arrayLength + ' data for event ' + eventKey);
 		
 		// First delete existing match data for the given event
-		await utilities.remove("matches", {"event_key": eventId});
+		await utilities.remove("matches", {"event_key": eventKey});
 		// Now, insert the new data
 		await utilities.insert("matches", array);
 		// Then read it back in order
-		//var matches = await utilities.find("matches", {"event_key": eventId},{sort: {"time": 1}});
+		//var matches = await utilities.find("matches", {"event_key": eventKey},{sort: {"time": 1}});
 			
 		// call out to aggrange recalculator
-		await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, eventId);
+		await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, eventKey);
 		
 		res.redirect('/manage/currentevent/matches');
 	}

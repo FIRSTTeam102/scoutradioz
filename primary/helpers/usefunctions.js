@@ -122,23 +122,23 @@ functions.getEventInfo = async function(req, res, next) {
 	}
 
 	//sets locals to no event defined just in case we don't find thing and we can just do next();
-	var eventId = 'No event defined';
+	var eventKey = 'No event defined';
 	var eventYear = 'No year defined';
-	res.locals.eventName = eventId;
+	res.locals.eventName = eventKey;
 	
 	//if exist
 	if (thisOrg) {
 		
-		eventId = thisOrg.event_key;
-		eventYear = parseInt(eventId);
+		eventKey = thisOrg.event_key;
+		eventYear = parseInt(eventKey);
 		//set event key
-		req.event.key = eventId;
+		req.event.key = eventKey;
 		req.event.year = eventYear;
 		res.locals.event_key = req.event.key;
 		res.locals.event_year = req.event.year;
 		
 		var currentEvent = await utilities.findOne("events", 
-			{key: eventId}, 
+			{key: eventKey}, 
 			{},
 			{allowCache: true, maxCacheAge: 60},
 		);
