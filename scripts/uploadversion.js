@@ -80,7 +80,7 @@ function updateCode(zipBuffer, cb) {
 	lambda.updateFunctionCode(params, (err, data) => {
 		if (err) cb(err)
 		else {
-			console.log(`Uploaded function code:\n\t FunctionName=${data.FunctionName} Role=${data.Role} CodeSha256=${data.CodeSha256}`);
+			console.log(`Uploaded function code:\n\t FunctionName=${data.FunctionName}\n\t Role=${data.Role}\n\t CodeSha256=${data.CodeSha256}`);
 			
 			console.log('Publishing new version...');
 			var params = {
@@ -143,8 +143,16 @@ function makeZip(folder, cb) {
 	
 	var output = concat(data => {
 		
-		console.log(archive.pointer() + ' total bytes');
-		console.log('archiver has been finalized and the output file descriptor has closed.');
+		console.log('Archive has been completed and stored in memory.');
+		
+		var sizeBytes = parseInt(archive.pointer());
+		
+		if (sizeBytes > 1000000) {
+			console.log(sizeBytes / 1000000 + ' MB');
+		}
+		else {
+			console.log(sizeBytes / 1000 + ' KB');
+		}
 		
 		cb(null, data);
 	});
@@ -159,7 +167,8 @@ function makeZip(folder, cb) {
 		cb(err)
 	});
 	
-	console.log(`Zipping directory: ${folderPath}...`);
+	console.log(`Directory: "${folderPath}"`);
+	console.log('Zipping directory...')
 	archive.pipe(output);
 	archive.directory(folderPath + '/', false)
 	archive.finalize();

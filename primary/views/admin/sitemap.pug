@@ -1,0 +1,20 @@
+extends ../layout
+block content
+	style.
+		h4{
+			font-family: "Courier New", Courier, monospace
+		}
+	div(class="w3-auto")
+		h2 Site layout
+		//-Loop through layout
+		- for (var routeName in siteLayout)
+			- var route = siteLayout[routeName]
+			hr 
+			div(class="w3-section w3-left-align")
+				h4=routeName
+				ul 
+					- for (var url in route)
+						- var desc = route[url]
+						li(class="w3-padding-small")
+							a(href=url target="_blank" class="link w3-text-cyan")=url 
+							span &nbsp;- #{desc}

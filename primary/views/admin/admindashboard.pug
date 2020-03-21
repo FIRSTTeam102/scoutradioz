@@ -10,36 +10,37 @@ block content
 	h3=title
 	div(class="w3-container w3-section")
 		h4 Resync
-		a(href="/admin/resyncteams") 
+		a(href="/admin/sync/resyncteams") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Resync teams
-		a(href="/admin/recalcderived") 
+		a(href="/admin/sync/recalcderived") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Recalc derived metrics
-		form(action="/admin/resyncevents" method="GET")
-			input(type="text" name="year" value="2020")
-			input(type="text" name="start" value="m")
-			input(type="text" name="end" value="n")
-			input(type="submit" value="Submit")
+		form(action="/admin/sync/resyncevents" method="GET")
+			input(type="text" class="theme-input" name="year" value="2020")
+			input(type="text" class="theme-input" style="width: 50px" name="start" value="m")
+			input(type="text" class="theme-input" style="width: 50px"  name="end" value="n")
+			input(type="submit" class="theme-submit w3-btn" value="Resync events")
 		a(href="/admin/dngn3") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Use Case 3
 	div(class="w3-container w3-section")
 		h4 TBA Data
 		a(href="/admin/externaldata/events") 
-			div(class="gear-btn theme-link w3-btn w3-section")
+			div(class="gear-btn theme-link w3-btn")
 				span Events
 		a(href=`/admin/externaldata/matches?event_key=${event_key}`) 
-			div(class="gear-btn theme-link w3-btn w3-section")
+			div(class="gear-btn theme-link w3-btn")
 				span Match data
 		a(href="/admin/externaldata/teams") 
-			div(class="gear-btn theme-link w3-btn w3-section")
+			div(class="gear-btn theme-link w3-btn")
 				span All teams (Load page with caution)
-
 
 	div(class="w3-container w3-section")
 		h4 Testing functions - CAREFUL
-
+		a(href="/admin/sitemap")
+			div(class="gear-btn theme-link w3-btn") 
+				span Site map (Links to every page for testing)
 		form#posttowebhook(name="posttowebhook" method="post" action="/webhook" enctype="text/plain")
 			input#posttowebhookdata(type="hidden", name='{"message_type": "admin_test", "trash": "' value='"}')
 		button(class="gear-btn w3-btn w3-section theme-submit" onclick="submitHook()") Submit webhook
