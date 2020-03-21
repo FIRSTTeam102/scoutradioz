@@ -16,7 +16,7 @@ block content
 	div(class="w3-section")
 		-// 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
 		-// form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
-		form(name="driveDashboardTeam" method="get" action="/reports/driveteam")
+		form(name="driveDashboardTeam" method="get" action="/dashboard/driveteam")
 			select(class="theme-input" style="min-width: 100;" name="team_key")
 				each team in teams 
 					if team.key == selectedTeam
