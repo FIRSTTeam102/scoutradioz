@@ -73,8 +73,8 @@ block content
 				if( !!$("#teamNo").val()) {
 					//if teamSelect is filled, proceed to intel url
 					var key = "frc".concat($("#teamNo").val());
-					console.log("/reports/teamintel?team="+key);
-					window.location.href = "/reports/teamintel?team="+key;
+					console.log("/reports/teamintel?team_key="+key);
+					window.location.href = "/reports/teamintel?team_key="+key;
 				
 				}else if( !$("#stats").prop("disabled"))
 					//if nothing selected then do alert thang
@@ -82,8 +82,8 @@ block content
 			}else{
 				//if text input is filled, proceed to intel url
 				var key = "frc".concat($("#teamSelect").val());
-				console.log("/reports/teamintel?team="+key);
-				window.location.href = "/reports/teamintel?team="+key;
+				console.log("/reports/teamintel?team_key="+key);
+				window.location.href = "/reports/teamintel?team_key="+key;
 			}
 		}
 		//Checks if teamSelect/teamNo are filled; and if so, redirect user to upcoming page.
@@ -96,10 +96,10 @@ block content
 			else{
 				if(!!$("#teamSelect").val){
 					var key = "frc".concat($("#teamSelect").val());
-					window.location.href = "/reports/upcoming?team="+key;
+					window.location.href = "/reports/upcoming?team_key="+key;
 				}else{
 					var key = "frc".concat($("#teamNo").val());
-					window.location.href = "/reports/upcoming?team="+key;
+					window.location.href = "/reports/upcoming?team_key="+key;
 				}
 			}
 		}

@@ -32,7 +32,7 @@ block content
 			div(class="w3-row")
 				hr
 				h4
-					a(href=`/reports/teamintel?team=${teamUploads[0].team_key}` class="link")
+					a(href=`/reports/teamintel?team_key=${teamUploads[0].team_key}` class="link")
 						span=teamUploads[0].team_key.substring(3)
 				each upload in teamUploads
 					div(class="w3-row w3-padding-large" id=`row_${upload._id}`) 

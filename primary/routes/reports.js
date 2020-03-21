@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('reports.js');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 
@@ -23,11 +23,11 @@ router.get("/rankings", wrap(async (req, res) => {
 	var thisFuncName = "reports.rankings[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 
-	var event_key = req.event.key;
+	var eventKey = req.event.key;
 
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	var rankings = await utilities.find("rankings", 
-		{"event_key": event_key}, 
+		{"event_key": eventKey}, 
 		{sort:{rank: 1}}
 	);
 
@@ -44,11 +44,11 @@ router.get("/finishedmatches", wrap(async (req, res) => {
 	var year = req.event.year;
 	
 	// for later querying by event_key
-	var event_key = req.event.key;
-	logger.debug(thisFuncName + 'event_key=' + event_key);
+	var eventKey = req.event.key;
+	logger.debug(thisFuncName + 'event_key=' + eventKey);
 
 	// Match history info
-	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : event_key}, {sort: {time: -1}});
+	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : eventKey}, {sort: {time: -1}});
 
 	// Ranking point info
 	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
@@ -67,40 +67,25 @@ router.get("/upcoming", wrap(async (req, res) => {
 	const thisFuncName = "reports.upcoming[GET]: ";
 	logger.info(thisFuncName + "ENTER");
 
-	var event_key = req.event.key;
-
-	//check if the page queried a specific team for upcoming
-	if(!req.query || !req.query.team)
-		var teamKey = 'all';
-	else
-		var teamKey = req.query.team;
+	var eventKey = req.event.key;
+	var teamKey = req.query.team_key || 'all';
+	// 2020-03-21 JL: Changed query.team to query.team_key
 
 	// use helper function
-	var upcomingData = await matchDataHelper.getUpcomingMatchData(event_key, teamKey);
+	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey);
 	
 	var matches = upcomingData.matches;
 	var teamRanks = upcomingData.teamRanks;
-	var teamNumbers = upcomingData.teamNumbers;
-
-	if(teamKey != 'all'){
-		res.render('./reports/upcoming', {
-			title: "Upcoming",
-			matches: matches,
-			teamRanks: teamRanks,
-			team: teamKey,
-			teamNumbers: teamNumbers
-		});
-	}
-	//if teamKey is 'all'
-	else {
-		//render page
-		res.render('./reports/upcoming', {
-			title: "Upcoming",
-			matches: matches,
-			teamRanks: teamRanks,
-			teamList: teamNumbers
-		});
-	}	
+	//var teamNumbers = upcomingData.teamNumbers;
+	
+	// 2020-03-21 JL: Removed teamNumbers from locals (already set in usefunctions)
+	//	+ renamed team to teamKey
+	res.render('./reports/upcoming', {
+		title: "Upcoming",
+		matches: matches,
+		teamRanks: teamRanks,
+		teamKey: teamKey
+	});
 }));
 
 router.get("/teamintel", wrap(async (req, res) => {
@@ -108,17 +93,16 @@ router.get("/teamintel", wrap(async (req, res) => {
 	var thisFuncName = "reports.teamintel*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var teamKey = req.query.team;
-	if (!teamKey) {
-		res.redirect("/?alert=No team specified in Reports page.");
-		return;
-	}
+	var eventKey = req.event.key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+	logger.debug(thisFuncName + "event_year=" + eventYear);
+	
+	var teamKey = req.query.team_key;
+	if (!teamKey) throw Error("Please specify a team_key.");
+	
 	logger.debug(thisFuncName + 'teamKey=' + teamKey);
-		
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
-	logger.debug(thisFuncName + "event_year=" + event_year);
+	
 	
 	// Team details
 	// 2020-02-09, M.O'C: Adjusted "currentteams" to "teams"
@@ -127,26 +111,19 @@ router.get("/teamintel", wrap(async (req, res) => {
 		{allowCache: true}
 	);
 	
-	if(!team){
-		return res.render('./error', {
-			title: "Intel: Team " + teamKey.substring(3),
-			error: {
-				status: "FRC Team "+teamKey.substring(3)+" does not exist or did not participate in this event."
-			}
-		});
-	}
+	if (!team) throw Error(`Team ${teamKey.substring(3)} does not exist or did not participate in this event.`);
 
 	// Extract the current team ranking, etc.
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'
 	var ranking = await utilities.findOne("rankings", 
-		{"event_key": event_key, "team_key": teamKey}, 
+		{"event_key": eventKey, "team_key": teamKey}, 
 		{sort:{rank: 1}}
 	);
 	
 	// Pit scouting info
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	var pitFind = await utilities.findOne("pitscouting", 
-		{ "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }
+		{ "org_key": orgKey, "event_key" : eventKey, "team_key" : teamKey }
 	);
 	var pitData = null;
 	var pitData1 = null;
@@ -158,7 +135,7 @@ router.get("/teamintel", wrap(async (req, res) => {
 	// Pit data layout
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
 	var layout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "pitscouting"}, 
+		{org_key: orgKey, year: eventYear, form_type: "pitscouting"}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
@@ -166,9 +143,9 @@ router.get("/teamintel", wrap(async (req, res) => {
 	logger.trace(thisFuncName + 'layout=' + JSON.stringify(layout));
 	
 	// Pull in individual scouting data for this team, for this event, to enhance the match data
-	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey + ',event_key=' + event_key);
+	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey + ',event_key=' + eventKey);
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var aggFind = await utilities.find("matchscouting", {"org_key": org_key, "team_key": teamKey, "event_key": event_key}, {});
+	var aggFind = await utilities.find("matchscouting", {"org_key": orgKey, "team_key": teamKey, "event_key": eventKey}, {});
 	// Build a map of match_key->data
 	var matchDataMap = {};
 	if (aggFind && aggFind.length > 0) {
@@ -185,7 +162,7 @@ router.get("/teamintel", wrap(async (req, res) => {
 	
 	// Match history info
 	var matches = await utilities.find("matches", 
-		{"alliances.red.score": { $ne: -1}, "event_key" : event_key, 
+		{"alliances.red.score": { $ne: -1}, "event_key" : eventKey, 
 		$or: [{"alliances.blue.team_keys": teamKey}, {"alliances.red.team_keys": teamKey}]}, 
 		{sort: {time: -1}}
 	);
@@ -203,7 +180,7 @@ router.get("/teamintel", wrap(async (req, res) => {
 	logger.trace(thisFuncName + 'matches=' + JSON.stringify(matches));
 
 	// Ranking point info
-	var rankingPoints = await utilities.findOne("rankingpoints", {year: event_year});
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: eventYear});
 
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
@@ -221,13 +198,13 @@ router.get("/teamintel", wrap(async (req, res) => {
 	//var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
 	var scorelayout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{org_key: orgKey, year: eventYear, form_type: "matchscouting"}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
 
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key, "team_key": teamKey } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": orgKey, "event_key": eventKey, "team_key": teamKey } });
 	var groupClause = {};
 	groupClause["_id"] = "$team_key";
 
@@ -277,9 +254,9 @@ router.get("/teamintel", wrap(async (req, res) => {
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": eventKey});
 	
-	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
+	const images = await uploadHelper.findTeamImages(orgKey, eventYear, teamKey);
 	
 	res.render("./reports/teamintel", {
 		title: "Intel: Team " + teamKey.substring(3),
@@ -303,43 +280,33 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	var thisFuncName = "reports.teamintelhistory*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var teamKey = req.query.team;
-	if (!teamKey) {
-		res.redirect("/?alert=No team specified in Reports page.");
-		return;
-	}
+	var teamKey = req.query.team_key;
+	if (!teamKey) throw Error("Please specify a team_key.");
+	
 	logger.debug(thisFuncName + 'teamKey=' + teamKey);
 	
 	// 2020-02-21, M.O'C: Fixed to be event year
-	var year = req.event.year;
+	var eventYear = req.event.year;
 	// need timestamp at 00:00 on Jan 1 for match querying - looking for matches where time > Jan 1. {year}
-	var yearString = year + '-01-01T00:00:00';
+	var yearString = eventYear + '-01-01T00:00:00';
 	var yearInt = new Date(yearString).getTime() / 1000;
 	
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
 	
 	// Team details
 	var team = await utilities.findOne("teams", 
 		{ "key" : teamKey }, {},
 		{allowCache: true}
 	);
-	// if(e)
-	// 	return console.error(e);
-	if(!team){
-		return res.render('./error', {
-			title: "Intel: Team " + teamKey.substring(3),
-			error: {
-				status: "FRC Team "+teamKey.substring(3)+" does not exist or did not participate in this event."
-			}
-		});
-	}
+	if(!team) throw Error(`Team ${teamKey.substring(3)} does not exist or did not participate in this event.`);
+	
 	//logger.debug(thisFuncName + 'team=' + JSON.stringify(team));
 
 	// Pull in ALL individual scouting data for this team, for this event, to enhance the match data
 	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey);
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var aggFind = await utilities.find("matchscouting", {"org_key": org_key, "team_key": teamKey, "year": year}, {});
+	var aggFind = await utilities.find("matchscouting", {"org_key": orgKey, "team_key": teamKey, "year": eventYear}, {});
 	// Build a map of match_key->data
 	var matchDataMap = {};
 	if (aggFind && aggFind.length > 0) {
@@ -395,7 +362,7 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	}
 	
 	// Ranking point info
-	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
+	var rankingPoints = await utilities.findOne("rankingpoints", {year: eventYear});
 
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
@@ -408,12 +375,12 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	// ] );
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
+	var cookie_key = orgKey + "_" + eventYear + "_cols";
 	var colCookie = req.cookies[cookie_key];
-	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
 
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "team_key": teamKey, "year": year } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": orgKey, "team_key": teamKey, "year": eventYear } });
 	var groupClause = {};
 	groupClause["_id"] = "$team_key";
 
@@ -468,7 +435,7 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 		scorelayout: scorelayout,
 		aggdata: aggTable,
 		matches: matches,
-		year: year,
+		year: eventYear,
 		rankingPoints: rankingPoints,
 		events: eventInfos,
 	});
@@ -504,32 +471,32 @@ router.get("/teammatchintel*", wrap(async (req, res) => {
 	var thisFuncName = "reports.teammatchintel*[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var match_team_key = req.query.key;
-	if (!match_team_key) {
+	var matchTeamKey = req.query.key;
+	if (!matchTeamKey) {
 		res.redirect("/?alert=No team-match key specified in Team Match Intel page.");
 		return;
 	}
-	logger.debug(thisFuncName + 'teamMatchKey=' + match_team_key);
+	logger.debug(thisFuncName + 'teamMatchKey=' + matchTeamKey);
 	
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
 	
 	// Match data layout
 	var layout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{org_key: orgKey, year: eventYear, form_type: "matchscouting"}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2020-03-06 JL: utilities.find -> utilities.findOne
-	var teammatch = await utilities.findOne("matchscouting", {"org_key": org_key, "match_team_key": match_team_key}, {});
+	var teammatch = await utilities.findOne("matchscouting", {"org_key": orgKey, "match_team_key": matchTeamKey}, {});
 	var data = null;
 	if (teammatch) {
 		data = teammatch.data;
 	}
 	
-	var x = match_team_key;
+	var x = matchTeamKey;
 	var matchType, matchNum;
 	var teamNum = x.substring(x.lastIndexOf("_")+4);
 	
@@ -557,7 +524,7 @@ router.get("/teammatchintel*", wrap(async (req, res) => {
 		layout: layout,
 		data: data,
 		teammatch: teammatch,
-		teamKey: match_team_key.split("_")[2],
+		teamKey: matchTeamKey.split("_")[2],
 		matchDataHelper: matchDataHelper
 	});
 }));
@@ -567,9 +534,9 @@ router.get("/alliancestats", wrap(async (req, res) =>  {
 	var thisFuncName = "reports.alliancestats[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var event_key = req.event.key;
-	var org_key = req.user.org_key;
+	var eventYear = req.event.year;
+	var eventKey = req.event.key;
+	var orgKey = req.user.org_key;
 
 	if( !req.query.teams ){
 		return res.redirect("/?alert=Must specify comma-separated list of teams for reports/alliancestats");
@@ -577,7 +544,7 @@ router.get("/alliancestats", wrap(async (req, res) =>  {
 	var teams = req.query.teams;
 
 	// use helper function
-	var allianceStatsData = await matchDataHelper.getAllianceStatsData(event_year, event_key, org_key, teams, req.cookies);
+	var allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teams, req.cookies);
 	
 	var teams = allianceStatsData.teams;
 	var teamList = allianceStatsData.teamList;
@@ -603,15 +570,15 @@ router.get("/teamdata", wrap(async (req, res) =>  {
 	
 	var thisFuncName = "reports.teamdata[get]: ";
 	logger.info(thisFuncName + 'ENTER');
-
-	var event_year = req.event.year;
-	var event_key = req.event.key;
-	var teamKey = req.query.key;
-	var org_key = req.user.org_key;
-
-	if( !teamKey ){
-		return res.redirect("/?alert=Must specify team key for reports/teamdata");
-	}
+	
+	// 2020-03-21 JL: Changed query.key to query.team_key
+	var eventYear = req.event.year;
+	var eventKey = req.event.key;
+	var teamKey = req.query.team_key;
+	var orgKey = req.user.org_key;
+	
+	if (!teamKey) throw Error("Must specify team key for reports/teamdata");
+			
 	logger.debug(`${thisFuncName} teamKey: ${teamKey}`);
 
 	// get the specified team object
@@ -621,26 +588,28 @@ router.get("/teamdata", wrap(async (req, res) =>  {
 		{"key": teamKey}, {},
 		{allowCache: true}
 	);
-		
+	
+	if (!team) throw Error("Could not find team: " + teamKey);
+	
 	logger.debug(`${thisFuncName} team: ${JSON.stringify(team)}`);
 
 	// get the scoring data for the matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var matches = await utilities.find("matchscouting", {"team_key": teamKey, "year": event_year, "org_key": org_key, "event_key": event_key}, {sort: {"match_number": -1}});
+	var matches = await utilities.find("matchscouting", {"team_key": teamKey, "year": eventYear, "org_key": orgKey, "event_key": eventKey}, {sort: {"match_number": -1}});
 	
 	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
+	var cookie_key = orgKey + "_" + eventYear + "_cols";
 	var colCookie = req.cookies[cookie_key];
-	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
 
 	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": eventKey});
 	
 	res.render("./reports/teamdata", {
 		title: "Scoring Data For Team",
@@ -657,10 +626,10 @@ router.get("/matchdata", wrap(async (req, res) =>  {
 	var thisFuncName = "reports.matchdata[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var event_key = req.event.key;
+	var eventYear = req.event.year;
+	var eventKey = req.event.key;
 	var matchKey = req.query.key;
-	var org_key = req.user.org_key;
+	var orgKey = req.user.org_key;
 
 	if( !matchKey ){
 		return res.redirect("/?alert=Must specify match key for reports/matchdata");
@@ -675,21 +644,21 @@ router.get("/matchdata", wrap(async (req, res) =>  {
 
 	// get the scoring data for the match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var matches = await utilities.find("matchscouting", {"org_key": org_key, "match_key": matchKey}, {});
+	var matches = await utilities.find("matchscouting", {"org_key": orgKey, "match_key": matchKey}, {});
 	
 	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
+	var cookie_key = orgKey + "_" + eventYear + "_cols";
 	var colCookie = req.cookies[cookie_key];
-	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
 
 	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": eventKey});
 	
 	res.render("./reports/matchdata", {
 		title: "Scoring Data For Match",
@@ -706,10 +675,10 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 	var thisFuncName = "reports.matchmetrics[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var event_key = req.event.key;
+	var eventYear = req.event.year;
+	var eventKey = req.event.key;
 	var matchKey = req.query.key;
-	var org_key = req.user.org_key;
+	var orgKey = req.user.org_key;
 	
 	if( !matchKey ){
 		return res.redirect("/?alert=Must specify match key for reports/matchmetrics");
@@ -731,13 +700,13 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 	// ] );
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
+	var cookie_key = orgKey + "_" + eventYear + "_cols";
 	var colCookie = req.cookies[cookie_key];
-	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
 
 	var aggQuery = [];
 	var redAllianceArray = match.alliances.red.team_keys;
-	aggQuery.push({ $match : { "team_key": {$in: redAllianceArray}, "org_key": org_key, "event_key": event_key } });
+	aggQuery.push({ $match : { "team_key": {$in: redAllianceArray}, "org_key": orgKey, "event_key": eventKey } });
 	var groupClause = {};
 	// group teams for 1 row per event (we're doing this twice, once for red & once for blue)
 	groupClause["_id"] = "$event_key";
@@ -774,7 +743,7 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 	// repeat aggregation for blue alliance
 	aggQuery = [];
 	var blueAllianceArray = match.alliances.blue.team_keys;
-	aggQuery.push({ $match : { "team_key": {$in: blueAllianceArray}, "org_key": org_key, "event_key": event_key } });
+	aggQuery.push({ $match : { "team_key": {$in: blueAllianceArray}, "org_key": orgKey, "event_key": eventKey } });
 	// reuse prior groupClause
 	aggQuery.push({ $group: groupClause });
 	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
@@ -802,7 +771,7 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": eventKey});
 
 	res.render("./reports/matchmetrics", {
 		title: "Metrics For Upcoming Match",
@@ -817,12 +786,9 @@ router.get("/metricsranked", wrap(async (req, res) => {
 	var thisFuncName = "reports.metricsranked[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
-	
-	// for later querying by event_key
-	var event_key = req.event.key;
-	logger.debug(thisFuncName + 'event_key=' + event_key);
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+	var eventKey = req.event.key;
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will combo ALL teams
 	// db.scoringdata.aggregate( [ 
@@ -840,13 +806,13 @@ router.get("/metricsranked", wrap(async (req, res) => {
 	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
 	var scorelayout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{org_key: orgKey, year: eventYear, form_type: "matchscouting"}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
 
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": orgKey, "event_key": eventKey } });
 	var groupClause = {};
 	// group teams for 1 row per team
 	groupClause["_id"] = "$team_key";
@@ -913,7 +879,7 @@ router.get("/metricsranked", wrap(async (req, res) => {
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": eventKey});
 	
 	res.render("./reports/metricsranked", {
 		title: "Metrics For All Teams",
@@ -927,8 +893,8 @@ router.get("/metrics", wrap(async (req, res) => {
 	var thisFuncName = "reports.metrics[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -950,13 +916,13 @@ router.get("/metrics", wrap(async (req, res) => {
 	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
 	var scorelayout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{org_key: orgKey, year: eventYear, form_type: "matchscouting"}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
 
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": orgKey, "event_key": event_key } });
 	var groupClause = {};
 	// group on event for single row
 	groupClause["_id"] = "$event_key";
@@ -1005,7 +971,7 @@ router.get("/metrics", wrap(async (req, res) => {
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": event_key});
 	
 	res.render("./reports/metrics", {
 		title: "Metrics For All Teams",
@@ -1027,9 +993,9 @@ router.get("/metricintel*", wrap(async (req, res) => {
 	logger.debug(thisFuncName + 'metricKey=' + metricKey);
 	
 	// for later querying by event_key
-	var event_key = req.event.key;
-	var org_key = req.user.org_key;
-	logger.debug(thisFuncName + 'event_key=' + event_key);
+	var eventKey = req.event.key;
+	var orgKey = req.user.org_key;
+	logger.debug(thisFuncName + 'event_key=' + eventKey);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will output ALL teams
 	// db.scoringdata.aggregate( [ 
@@ -1041,7 +1007,7 @@ router.get("/metricintel*", wrap(async (req, res) => {
 	//  } }
 	// ] );						
 	var aggQuery = [];
-	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": org_key, "event_key": event_key } });
+	aggQuery.push({ $match : { "data":{$exists:true}, "org_key": orgKey, "event_key": eventKey } });
 	var groupClause = {};
 	// group on team for multiple rows
 	groupClause["_id"] = "$team_key";
@@ -1078,7 +1044,7 @@ router.get("/metricintel*", wrap(async (req, res) => {
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": eventKey});
 	
 	res.render("./reports/metricintel", {
 		title: "Intel: " + metricKey,
@@ -1097,14 +1063,14 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
-	logger.debug(thisFuncName + 'event_key=' + event_key);
+	var eventKey = req.event.key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+	logger.debug(thisFuncName + 'event_key=' + eventKey);
 	
 	// get the current rankings
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	var rankings = await utilities.find("rankings", {"event_key": event_key}, {});
+	var rankings = await utilities.find("rankings", {"event_key": eventKey}, {});
 	
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
@@ -1124,13 +1090,13 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 
 	// Variables ahead of modifying match scoring layout for cookies
 	// 2020-02-15, M.O'C: Leverage column selection cookies - pull in the cookies
-	var cookie_key = org_key + "_" + event_year + "_cols";
+	var cookie_key = orgKey + "_" + eventYear + "_cols";
 	var colCookie = req.cookies[cookie_key];
-	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
 
 	// Build the aggregation data
 	var aggQuery = [];
-	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
+	aggQuery.push({ $match : { "org_key": orgKey, "event_key": eventKey } });
 	var groupClause = {};
 	// group teams for 1 row per team
 	groupClause["_id"] = "$team_key";
@@ -1181,7 +1147,7 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
+	var currentAggRanges = await utilities.find("aggranges", {"org_key": orgKey, "event_key": eventKey});
 	
 	res.render("./reports/allteammetrics", {
 		title: "All Team Metrics",
@@ -1205,10 +1171,10 @@ router.get("/driveteam", wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
-	logger.debug(thisFuncName + 'event_key=' + event_key);
+	var eventKey = req.event.key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+	logger.debug(thisFuncName + 'event_key=' + eventKey);
 	var teamKey;
 	
 	//set teamKey to query or org default
@@ -1223,7 +1189,7 @@ router.get("/driveteam", wrap(async (req, res) => {
 	}
 	
 	// Get upcoming match data for the specified team (or "all" if no default & none specified)
-	var upcomingData = await matchDataHelper.getUpcomingMatchData(event_key, teamKey);
+	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey);
 	// Data for the upcoming matches portion
 	var teamRanks = upcomingData.teamRanks;
 	var teamNumbers = upcomingData.teamNumbers;
@@ -1257,7 +1223,7 @@ router.get("/driveteam", wrap(async (req, res) => {
 		logger.debug(thisFuncName + "teamKeyList=" + teamKeyList);
 
 		// Get the alliance stats
-		var allianceStatsData = await matchDataHelper.getAllianceStatsData(event_year, event_key, org_key, teamKeyList, req.cookies);
+		var allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamKeyList, req.cookies);
 
 		teams = allianceStatsData.teams;
 		teamList = allianceStatsData.teamList;
@@ -1414,21 +1380,21 @@ router.get("/exportdata", wrap(async (req, res) => {
 	var thisFuncName = "reports.exportdata[get]: ";
 
 	// for later querying by event_key
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	var eventKey = req.event.key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
 
-	var data_type = req.query.type;
-	if (!data_type) {
+	var dataType = req.query.type;
+	if (!dataType) {
 		res.redirect("/?alert=No data type specified for export.");
 		return;
 	}
 
-	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',org_key=' + org_key + ',data_type=' + data_type + ',req.shortagent=' + JSON.stringify(req.shortagent));
+	logger.info(thisFuncName + 'ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
 	var matchLayout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: data_type}, 
+		{org_key: orgKey, year: eventYear, form_type: dataType}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
@@ -1436,12 +1402,12 @@ router.get("/exportdata", wrap(async (req, res) => {
 	// sanity check
 	//logger.debug(thisFuncName + "layout=" + JSON.stringify(matchLayout));
 	if (!matchLayout || matchLayout.length == 0) {
-		res.redirect("/?alert=No data found for type '" + data_type + "'.");
+		res.redirect("/?alert=No data found for type '" + dataType + "'.");
 		return;
 	}
 
 	var sortKey = "";
-	switch (data_type) {
+	switch (dataType) {
 		case 'matchscouting':
 			sortKey = "time";
 			break;
@@ -1451,13 +1417,13 @@ router.get("/exportdata", wrap(async (req, res) => {
 	}
 
 	// read in all data
-	var scored = await utilities.find(data_type, {"org_key": org_key, "event_key": event_key, "data": {$exists: true} }, { sort: {sortKey: 1} });
+	var scored = await utilities.find(dataType, {"org_key": orgKey, "event_key": eventKey, "data": {$exists: true} }, { sort: {sortKey: 1} });
 
 	// cycle through each scored match & build CSV
 	var fullCSVoutput = "";
 	// which 'pivot data columns' are we including?
 	var pivotDataCols = "";
-	switch (data_type) {
+	switch (dataType) {
 		case 'matchscouting':
 			pivotDataCols = "org_key,year,event_key,match_key,match_number,time,alliance,team_key";
 			break;
@@ -1535,7 +1501,7 @@ router.get("/exportdata", wrap(async (req, res) => {
 
 	// Send back simple text
 	res.setHeader('Content-Type', 'text/csv');
-	res.setHeader('Content-Disposition', 'attachment; filename=\"' + data_type + '_' + org_key + '_' + event_key + '_' + Date.now() + '.csv\"');
+	res.setHeader('Content-Disposition', 'attachment; filename=\"' + dataType + '_' + orgKey + '_' + eventKey + '_' + Date.now() + '.csv\"');
 	return res.send(fullCSVoutput);
 }));
 
@@ -1545,18 +1511,18 @@ router.get("/choosecolumns", wrap(async (req, res) =>  {
 	var thisFuncName = "reports.choosecolumns[get]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
 
 	// read in the list of form options
 	var matchlayout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
+		{org_key: orgKey, year: eventYear, form_type: "matchscouting"}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
 	//logger.debug(thisFuncName + "matchlayout=" + JSON.stringify(matchlayout))
 
-	var cookie_key = org_key + "_" + event_year + "_cols";
+	var cookie_key = orgKey + "_" + eventYear + "_cols";
 	var savedCols = {};
 	var colCookie = req.cookies[cookie_key];
 
@@ -1584,9 +1550,9 @@ router.post("/choosecolumns", wrap(async (req, res) => {
 	var thisFuncName = "reports.choosecolumns[post]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
-	var cookie_key = org_key + "_" + event_year + "_cols";
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+	var cookieKey = orgKey + "_" + eventYear + "_cols";
 
 	var setOrgDefault = false;
 
@@ -1606,13 +1572,13 @@ router.post("/choosecolumns", wrap(async (req, res) => {
 	}
 	logger.debug(thisFuncName + "columnCookie=" + columnCookie);
 
-	res.cookie(cookie_key, columnCookie, {maxAge: 30E9});
+	res.cookie(cookieKey, columnCookie, {maxAge: 30E9});
 	
 	// setting org defaults? NOTE only for Team Admins and above
 	if (setOrgDefault && req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN) {
 		logger.debug(thisFuncName + "Setting org defaults");
 		var thisOrg = await utilities.findOne("orgs", 
-			{org_key: org_key}, {},
+			{org_key: orgKey}, {},
 			{allowCache: true}
 		);
 		var thisConfig = thisOrg.config;
@@ -1628,10 +1594,10 @@ router.post("/choosecolumns", wrap(async (req, res) => {
 		}
 
 		// set the defaults for this year
-		theseColDefaults[event_year] = columnCookie;
+		theseColDefaults[eventYear] = columnCookie;
 		
 		// update DB
-		await utilities.update("orgs", {org_key: org_key}, {$set: {"config.columnDefaults": theseColDefaults}});
+		await utilities.update("orgs", {org_key: orgKey}, {$set: {"config.columnDefaults": theseColDefaults}});
 
 		//logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
 	}
@@ -1643,12 +1609,12 @@ router.post("/clearorgdefaultcols", wrap(async (req, res) => {
 	var thisFuncName = "reports.clearorgdefaultcols[post]: ";
 	logger.info(thisFuncName + 'ENTER');
 	
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
 
 	if (req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN) {
 		var thisOrg = await utilities.findOne("orgs", 
-			{org_key: org_key}, {},
+			{org_key: orgKey}, {},
 			{allowCache: true}
 		);
 		var thisConfig = thisOrg.config;
@@ -1664,10 +1630,10 @@ router.post("/clearorgdefaultcols", wrap(async (req, res) => {
 		}
 
 		// remove values (if they exist) for the event year
-		delete theseColDefaults[event_year];
+		delete theseColDefaults[eventYear];
 
 		// update DB
-		await utilities.update("orgs", {org_key: org_key}, {$set: {"config.columnDefaults": theseColDefaults}});
+		await utilities.update("orgs", {org_key: orgKey}, {$set: {"config.columnDefaults": theseColDefaults}});
 	}
 
 	res.redirect("../home");

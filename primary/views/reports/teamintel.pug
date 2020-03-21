@@ -29,22 +29,12 @@ block content
 				if images.b
 					a(href=images.b.lg)
 						img(src=images.b.sm alt="" class="w3-image team-image-sm")
-		//a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_lg.jpg`)
-			img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
-		//div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-			a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}a_lg.jpg`)
-				img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}a_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-			a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}b_lg.jpg`)
-				img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}b_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-			a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}c_lg.jpg`)
-				img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}c_sm.jpg` alt="" class="w3-image" style="max-height:100px;")
-			//- div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-				img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_md.jpg` width="100%" height="100%" alt="")
 		div(class="w3-padding")
-			a(class="theme-link w3-btn" href=`/reports/upcoming?team=${team.key}`) Upcoming matches for team #{team.key.substring(3)}
+			a(class="theme-link w3-btn" href=`/reports/upcoming?team_key=${team.key}`) Upcoming matches for team #{team.key.substring(3)}
 		div(class="w3-padding")
-			a(class="theme-link w3-btn" href=`/reports/teamintelhistory?team=${team.key}`) All data for Team #{team.key.substring(3)} from this year
+			a(class="theme-link w3-btn" href=`/reports/teamintelhistory?team_key=${team.key}`) All data for Team #{team.key.substring(3)} from this year
 		br 
+		//-Pit scouting section
 		div(class="w3-padding-small")
 			button#PitScoutingButton(onClick="toggle('PitScoutingSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 				span(class="w3-left") &#9660;&nbsp;
@@ -92,6 +82,7 @@ block content
 						| </table>
 				else
 					h6 No pit scouting data yet - check back later
+		//-Statistics section
 		div(class="w3-padding-small")
 			button#StatisticsButton(onClick="toggle('StatisticsSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 				span(class="w3-left") &#9660;&nbsp;
@@ -139,6 +130,7 @@ block content
 								td(style="padding:0;")
 								td(style="padding:0;")
 								td(style="padding:0;")
+		//-Previous matches section
 		div(class="w3-padding-small")
 			button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 				span(class="w3-left") &#9660;&nbsp;
@@ -167,7 +159,7 @@ block content
 					h6 <i>Click team number for match scouting details</i>
 					h6 <i>Click match button for overall alliance performances</i>
 					h6(class="theme-text")
-						a(class="gear-btn theme-link w3-btn" href="/reports/teamdata?key=" + team.key) Scoring data for all team #{team.key.substring(3)} matches
+						a(class="gear-btn theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key) Scoring data for all team #{team.key.substring(3)} matches
 					hr 
 					
 					each match in matches

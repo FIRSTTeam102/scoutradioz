@@ -41,11 +41,11 @@ div(style="display: none;" id="menuParent")
 											span #{team.team_number}: #{team.nickname}
 											ul 
 												li 
-													a(href=`/reports/upcoming?team=${team.key}`) Upcoming Matches
+													a(href=`/reports/upcoming?team_key=${team.key}`) Upcoming Matches
 												li 
-													a(href=`/reports/teamintel?team=${team.key}`) Team Statistics
+													a(href=`/reports/teamintel?team_key=${team.key}`) Team Statistics
 												li 
-													a(href=`/reports/teamintelhistory?team=${team.key}`) Complete Statistics for #{new Date().getFullYear()}
+													a(href=`/reports/teamintelhistory?team_key=${team.key}`) Complete Statistics for #{new Date().getFullYear()}
 						li 
 							a(href="/reports/rankings") Current Rankings
 						li 

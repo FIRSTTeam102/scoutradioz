@@ -34,7 +34,7 @@ block content
 					for team in teamList
 						th(class="w3-right-align theme-text")
 							u
-								a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
+								a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
 				each agg in avgdata
 					tr
 						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
@@ -59,7 +59,7 @@ block content
 					for team in teamList
 						th(class="w3-right-align theme-text")
 							u
-								a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
+								a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
 				each agg in maxdata
 					tr
 						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)

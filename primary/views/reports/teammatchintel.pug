@@ -3,7 +3,7 @@ extends ../layout
 block content
 	if (teammatch)
 		h2(class="theme-text")
-			a(href=`/reports/teamintel?team=${teammatch.team_key}`)= teammatch.team_key.replace('frc','Team ')
+			a(href=`/reports/teamintel?team_key=${teammatch.team_key}`)= teammatch.team_key.replace('frc','Team ')
 		p
 		h3 Match ##{teammatch.match_number} - #{teammatch.alliance} alliance 
 		hr
@@ -41,6 +41,6 @@ block content
 				span=teamKey.substring(3)
 				span  for this match.
 		h4
-			a(class="gear-btn theme-link w3-btn" href=`/reports/teamintel?team=${teamKey}`) View this team's intel page.
+			a(class="gear-btn theme-link w3-btn" href=`/reports/teamintel?team_key=${teamKey}`) View this team's intel page.
 		
 

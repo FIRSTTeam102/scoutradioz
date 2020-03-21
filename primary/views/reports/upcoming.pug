@@ -1,15 +1,16 @@
 extends ../layout
 block content
-	- team = !!team ? team.substring(3) : null;
-	if !matches[0] && !team
+	if teamKey == 'all'
+		- teamLabel = 'all teams'
+	else 
+		- teamLabel = `Team ${teamKey.substring(3)}`;
+	
+	if !matches[0] && teamKey == 'all'
 		h3 No upcoming matches for this tournament.
 	else if !matches[0]
-		h3 No upcoming matches for team number #{team}.
+		h3 No upcoming matches for #{teamLabel}.
 	else
-		if team
-			h3(class="theme-text") Upcoming matches for team #{team}
-		else
-			h3(class="theme-text") Upcoming matches
+		h3 Upcoming matches for #{teamLabel}
 		if teams
 			select#teamSelect(class="gear-btn theme-input w3-btn")
 				option(value="") Team #
@@ -36,7 +37,7 @@ block content
 			//if a team has been selected
 			if(selectedTeam){
 				$("#upcomingMatchesLabel").text(`team ${selectedTeam}`);
-				$("#upcomingMatchesLink").attr("href", `/reports/upcoming?team=frc${selectedTeam}`)
+				$("#upcomingMatchesLink").attr("href", `/reports/upcoming?team_key=frc${selectedTeam}`)
 			}
 			else{
 				$("#upcomingMatchesLabel").text("[All Teams]");

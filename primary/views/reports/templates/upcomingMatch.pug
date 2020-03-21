@@ -63,17 +63,17 @@ if match
 				- else if( isRed ) redClass += " thick-border";
 				div(class=blueClass)
 					//- not doing this with a loop because border needs to be specified
-					a(href=`/reports/teamintel?team=${blue1}`)
+					a(href=`/reports/teamintel?team_key=${blue1}`)
 						div(class="w3-padding alliance-hover-blue rounded-small-top")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[blue1]}
 							span=blue1.substring(3)
-					a(href=`/reports/teamintel?team=${blue2}`)
+					a(href=`/reports/teamintel?team_key=${blue2}`)
 						div(class="w3-padding alliance-hover-blue")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[blue2]}
 							span=blue2.substring(3)
-					a(href=`/reports/teamintel?team=${blue3}`)
+					a(href=`/reports/teamintel?team_key=${blue3}`)
 						div(class="w3-padding alliance-hover-blue rounded-small-bottom")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[blue3]}
@@ -81,17 +81,17 @@ if match
 			div(class="w3-col s6 w3-padding-small")
 				div(class=redClass)
 					//- not doing this with a loop because border needs to be specified
-					a(href=`/reports/teamintel?team=${red1}`)
+					a(href=`/reports/teamintel?team_key=${red1}`)
 						div(class="w3-padding alliance-hover-red rounded-small-top")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[red1]}
 							span=match.alliances.red.team_keys[0].substring(3)
-					a(href=`/reports/teamintel?team=${red2}`)
+					a(href=`/reports/teamintel?team_key=${red2}`)
 						div(class="w3-padding alliance-hover-red")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[red2]}
 							span=match.alliances.red.team_keys[1].substring(3)
-					a(href=`/reports/teamintel?team=${red3}`)
+					a(href=`/reports/teamintel?team_key=${red3}`)
 						div(class="w3-padding alliance-hover-red rounded-small-bottom")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[red3]}

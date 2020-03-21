@@ -53,14 +53,14 @@ block content
 						-// td(class="w3-center")= row.value
 						if (row.value == -1)
 							td(class="w3-center")
-								a(href=`/reports/teamintel?team=${row._id}`)
+								a(href=`/reports/teamintel?team_key=${row._id}`)
 									strike= row._id.substring(3)
 						else if (row.value == 1)
 							td(class="w3-center" style="font-weight:800")
-								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+								a(href=`/reports/teamintel?team_key=${row._id}`)= row._id.substring(3)
 						else
 							td(class="w3-center")
-								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+								a(href=`/reports/teamintel?team_key=${row._id}`)= row._id.substring(3)
 						td(class="w3-right-align")= row.rank
 						for item in layout
 							-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
@@ -89,14 +89,14 @@ block content
 						-// td(class="w3-center")= row.value
 						if (row.value == -1)
 							td(class="w3-center")
-								a(href=`/reports/teamintel?team=${row._id}`)
+								a(href=`/reports/teamintel?team_key=${row._id}`)
 									strike= row._id.substring(3)
 						else if (row.value == 1)
 							td(class="w3-center" style="font-weight:800")
-								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+								a(href=`/reports/teamintel?team_key=${row._id}`)= row._id.substring(3)
 						else
 							td(class="w3-center")
-								a(href=`/reports/teamintel?team=${row._id}`)= row._id.substring(3)
+								a(href=`/reports/teamintel?team_key=${row._id}`)= row._id.substring(3)
 						td(class="w3-right-align")= row.rank
 						for item in layout
 							-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')

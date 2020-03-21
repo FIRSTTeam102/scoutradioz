@@ -31,7 +31,7 @@ block content
 					each agg, i in aggdata
 						tr
 							td(class="w3-text-light-gray w3-center")
-								a(href=`/reports/teamintel?team=${agg._id}`)= agg._id.substring(3)
+								a(href=`/reports/teamintel?team_key=${agg._id}`)= agg._id.substring(3)
 							- var minCol = 'w3-right-align w3-text-white'
 							- if (agg[key+"MIN"] == 0) minCol = 'w3-right-align w3-text-gray'
 							- var avgCol = 'w3-right-align w3-text-white'

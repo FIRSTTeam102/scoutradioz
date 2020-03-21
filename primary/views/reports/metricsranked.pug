@@ -26,7 +26,7 @@ block content
 							td(class='w3-text-white w3-center')= agg.team.substring(3)
 						else
 							td(class='w3-text-white w3-center')
-								a(href=`/reports/teamintel?team=${agg.team}`)= agg.team.substring(3)
+								a(href=`/reports/teamintel?team_key=${agg.team}`)= agg.team.substring(3)
 						- var avgCol = 'w3-right-align w3-text-white'
 						- if (agg.avg == 0) avgCol = 'w3-right-align w3-text-gray'
 						if (aggRangeMap[agg.key])

@@ -32,12 +32,12 @@ block content
 						for team in match.alliances.red.team_keys
 							th(class="w3-right-align theme-text")
 								u
-									a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
+									a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
 						th
 						for team in match.alliances.blue.team_keys
 							th(class="w3-right-align theme-text")
 								u
-									a(href=`/reports/teamintel?team=${team}`)= team.substring(3)
+									a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
 					each item in scoreLayout
 						case item.type
 							when "checkbox"

@@ -31,7 +31,7 @@ block content
 						td(class="theme-text w3-center")
 							b= team.rank
 						td(class="theme-text-secondary w3-center")
-							a(href=`/reports/teamintel?team=${team.team_key}`)= team.team_key.substring(3)
+							a(href=`/reports/teamintel?team_key=${team.team_key}`)= team.team_key.substring(3)
 						td(class="theme-text-secondary w3-center")= team.record.wins+'-'+team.record.losses+'-'+team.record.ties
 						td(class="theme-text-secondary w3-center")= team.dq
 						td(class="theme-text-secondary w3-center")= team.matches_played

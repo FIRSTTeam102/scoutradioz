@@ -22,9 +22,9 @@ block content
 						td(class="w3-text-light-gray w3-center")= team.team_number
 					td(class="theme-text w3-center")
 						if (team.hasPicture)
-							a(href=`/reports/teamintel?team=${team.key}` class="align")= team.nickname
+							a(href=`/reports/teamintel?team_key=${team.key}` class="align")= team.nickname
 						else
-							a(href=`/reports/teamintel?team=${team.key}`)= team.nickname
+							a(href=`/reports/teamintel?team_key=${team.key}`)= team.nickname
 					td
 						if (team.hasPicture)
 							a(href=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.key}_lg.jpg`)
