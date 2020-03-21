@@ -34,7 +34,7 @@ utilities.config(require('./databases.json'), {
 		enable: true,
 		maxAge: 30,
 	},
-	debug: false,
+	debug: true,
 });
 //Load helper functions
 const helpers = require('@firstteam102/scoutradioz-helpers');

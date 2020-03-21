@@ -1,4 +1,4 @@
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('usefunctions');
 const utilities = require("@firstteam102/scoutradioz-utilities");
 
 require('colors');
@@ -61,8 +61,8 @@ functions.authenticate = function(req, res, next) {
 //View engine locals variables
 //IMPORTANT: Must be called LAST, because it may rely on other usefunctions data
 functions.setViewVariables = async function(req, res, next){
-	
-	logger.debug("usefunctions.js - functions.userViewVars: ENTER");
+	const thisFuncName = 'userViewVars: ';
+	logger.debug(`${thisFuncName} ENTER`);
 	
 	if(req.user) {
 		const org = await utilities.findOne('orgs', 
@@ -100,6 +100,7 @@ functions.setViewVariables = async function(req, res, next){
  * Gets event info from local db
  */
 functions.getEventInfo = async function(req, res, next) {
+	var thisFuncName = 'getEventInfo: ';
 	
 	//Define req.event
 	req.event = {
@@ -142,6 +143,8 @@ functions.getEventInfo = async function(req, res, next) {
 			{allowCache: true, maxCacheAge: 60},
 		);
 		
+		//logger.debug(`${thisFuncName} currentEvent: ${JSON.stringify(currentEvent)}`)
+		
 		if (currentEvent) {
 			//Set current event info to req.event and res.locals
 			res.locals.eventName = currentEvent.year + " " + currentEvent.name;
@@ -155,6 +158,8 @@ functions.getEventInfo = async function(req, res, next) {
 					{sort: {team_number: 1}}, 
 					{allowCache: true, maxCacheAge: 60}
 				);
+				
+				logger.debug(`${thisFuncName} teams: length(${teams.length})`);
 				//Set teams list to req.event.teams
 				req.teams = teams;
 				res.locals.teams = teams;
