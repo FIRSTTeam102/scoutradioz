@@ -1,0 +1,66 @@
+extends ../layout
+block content
+	style.
+		.w3-col input,.w3-col button,.w3-col select{
+			width: 100%;
+		}
+	div(class="w3-auto w3-content")
+		h2 Manage organizations
+		each org in orgs
+			div(class="w3-row")
+				hr 
+				p=JSON.stringify(org)
+				//h4=org.org_key
+				form(id=`updateOrg_${org.org_key}` method="post" action="/admin/orgs")
+					div(class="w3-row")
+						div(class="w3-col s6 m2 w3-padding-small")
+							input(disabled type="text" class="theme-input w3-disabled" value=org.org_key)
+							input(type="hidden" name="org_key" value=org.org_key)
+						div(class="w3-col s6 m3 w3-padding-small")
+							input(type="text" class="theme-input" name="nickname" value=org.nickname)
+						div(class="w3-col s6 m2 w3-padding-small")
+							input(type="text" class="theme-input" name="team_key" value=org.team_key)
+						div(class="w3-col s6 m3 w3-padding-small")
+							input(type="text" class="theme-input" name="default_password" placeholder="Reset default password?")
+						div(class="w3-col m2 w3-padding-small")
+							button(type="submit" class="w3-btn theme-submit") Update Org
+					div(class="w3-row")
+						div(class="w3-col m6 w3-padding-small")
+							h4 Subteams
+							div(class="w3-col s4") Label
+							div(class="w3-col s4") Key
+							div(class="w3-col s4") Pit scout?
+							each subteam, i in org.config.members.subteams 
+								div(class="w3-col s4 w3-padding-small")
+									input(type="text" class="theme-input" name=`subteams_${i}_label` value=subteam.label)
+								div(class="w3-col s4 w3-padding-small")
+									input(type="text" class="theme-input" name=`subteams_${i}_key` value=subteam.subteam_key)
+								div(class="w3-col s4 w3-padding-small")
+									select(class="theme-input" name=`subteams_${i}_pitscout`)
+										if subteam.pit_scout == true
+											option(value="0") false
+											option(value="1" selected) true
+										else
+											option(value="0" selected) false
+											option(value="1") true
+						div(class="w3-col m6 w3-padding-small")
+							h4 Classes
+							div(class="w3-col s3") Label
+							div(class="w3-col s3") Key
+							div(class="w3-col s3") Seniority
+							div(class="w3-col s3") Youth?
+							each classname, i in org.config.members.classes
+								div(class="w3-col s3 w3-padding-small")
+									input(type="text" class="theme-input" name=`classes_${i}_label` value=classname.label)
+								div(class="w3-col s3 w3-padding-small")
+									input(type="text" class="theme-input" name=`classes_${i}_key` value=classname.class_key)
+								div(class="w3-col s3 w3-padding-small")
+									input(type="text" class="theme-input" name=`classes_${i}_seniority` value=classname.seniority)
+								div(class="w3-col s3 w3-padding-small")
+									select(class="theme-input" name=`classes_${i}_youth`)
+										if classname.youth == true
+											option(value="0") false
+											option(value="1" selected) true
+										else
+											option(value="0" selected) false
+											option(value="1") true

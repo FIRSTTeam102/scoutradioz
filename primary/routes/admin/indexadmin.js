@@ -114,4 +114,123 @@ router.get('/sitemap', wrap(async (req, res) => {
 	
 }));
 
+router.get('/orgs', wrap(async (req, res) => {
+	logger.addContext('funcName', 'orgs[GET]');
+	const thisFuncName = 'orgs[GET]: ';
+	
+	logger.warn('hello');
+	
+	const orgs = await utilities.find('orgs');
+	
+	res.render('./admin/manageorgs', {
+		title: 'Manage organizations',
+		orgs: orgs
+	});
+	
+}));
+
+router.post('/orgs', wrap(async (req, res) => {
+	const thisFuncName = 'orgs[POST]: ';
+	
+	console.log(req.body);
+	
+	const orgKey = req.body.org_key;
+	const nickname = req.body.nickname;
+	const teamKey = req.body.team_key;
+	const defaultPassword = req.body.default_password;
+	
+	var org = await utilities.findOne('orgs', {org_key: orgKey});
+	
+	logger.debug(`${thisFuncName} org=${JSON.stringify(org)}`);
+	if (!org) throw Error('Org could not be found');
+	
+	logger.info(`${thisFuncName} Updating org ${orgKey}, nickname=${nickname}`);
+	
+	//Aggregate config.members.subteams and config.members.classes
+	var subteams = [];
+	var classes = [];
+	for (var elem in req.body) {
+		var split = elem.split('_');
+		var elemIdx = parseInt(split[1]);
+		var elemType = split[2];
+		var elemKey, elemValue;
+		
+		switch (elemType) {
+			case 'pitscout':
+				elemKey = 'pit_scout';
+				elemValue = (req.body[elem] == true);
+				break;
+			case 'youth':
+				elemKey = 'youth';
+				elemValue = (req.body[elem] == true);
+				break;
+			default:
+				elemKey = elemType;
+				elemValue = req.body[elem];
+		}
+		
+		//Go through subteams
+		if (elem.includes('subteams')) {
+			//if there is no subteam at this idx, create it
+			if (!subteams[elemIdx]) {
+				subteams[elemIdx] = {}
+			}
+			//pop in this element into the corresponding part of subteams
+			subteams[elemIdx][elemType] = req.body[elem];
+		}
+		//Go through classes
+		else if (elem.includes('classes')) {
+			//if there is no subteam at this idx, create it
+			if (!classes[elemIdx]) {
+				classes[elemIdx] = {}
+			}
+			//pop in this element into the corresponding part of classes
+			classes[elemIdx][elemType] = req.body[elem];
+		}
+	}
+	logger.debug(`${thisFuncName} subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
+	
+	//Create update query
+	var updateQuery = {
+		$set: {
+			nickname: nickname,
+			"config.members.subteams": subteams,
+			"config.members.classes": classes,
+		}
+	}
+	
+	//If new default password is set
+	if (defaultPassword) {
+		//Hash new password
+		var hash = await bcrypt.hash(defaultPassword, 10);
+		
+		logger.info(`${thisFuncName} Setting ${orgKey}'s default password to: ${defaultPassword}`);
+		logger.info(`${thisFuncName} Old hash: ${org.default_password} New hash: ${hash}`);
+		//Add to updateQuery
+		updateQuery['$set'].default_password = hash;
+	}
+	
+	//If a team key is specified
+	if (teamKey) {
+		if (!teamKey.includes('frc')) throw Error('Team key is invalid.');
+		
+		var team = await utilities.findOne('teams', {key: teamKey});
+		if (!team) throw Error(`Team ${teamKey} could not be found`);
+		
+		var teamNumber = teamKey.substring(3);
+		updateQuery['$set'].team_key = teamKey;
+		updateQuery['$set'].team_number = teamNumber;
+	}
+	
+	logger.debug(`${thisFuncName} updateQuery=${JSON.stringify(updateQuery)}`);
+	
+	const writeResult = await utilities.update('orgs', 
+		{org_key: orgKey}, updateQuery
+	);
+	
+	logger.debug(`${thisFuncName} writeResult=${writeResult}`);
+	
+	res.redirect(`/admin/orgs?alert=Updated successfully. writeResult=${JSON.stringify(writeResult)}.&type=good`);
+}))
+
 module.exports = router;
