@@ -60,7 +60,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/reports/teamdata?team_key=frc102': 'shows all the quantifiable data for a given team',
 			'/reports/teamintel?team_key=frc1708': 'Team intel',
 			'/reports/teamintelhistory?team_key=frc102': 'Team intel history',
-			'/reports/teammatchintel?team_key=2019paca_qm55_frc4027': 'Shows match scouted data displayed in the same form as collection',
+			'/reports/teammatchintel?key=2019paca_qm55_frc4027': 'Shows match scouted data displayed in the same form as collection',
 			'/reports/upcoming': 'Upcoming matches all teams',
 			'/reports/upcoming?team_key=frc1708': 'Upcoming matches specific team',
 		},
