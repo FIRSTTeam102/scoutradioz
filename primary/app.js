@@ -129,8 +129,8 @@ app.use(usefunctions.authenticate);
 app.use(usefunctions.setViewVariables);
 
 //Route webhook express app first, to reduce load and to have custom body-parser config
-const webhook = require('./routes/webhook');
-app.use('/webhook', webhook);
+//const webhook = require('./routes/webhook');
+//app.use('/webhook', webhook);
 
 //USER ROUTES
 var index = require('./routes/index');
