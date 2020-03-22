@@ -1,3 +1,4 @@
+'use strict';
 const monk = require("monk");
 const crypto = require('crypto');
 const NodeCache = require('node-cache');
@@ -62,15 +63,17 @@ utilities.config = function(databaseConfig, options){
 
 /**
  * Function that first caches, then returns the cached database for the server process.
+ * @returns {monk.IMonkManager} Monk database manager
  */
 utilities.getDB = function(){
+	logger.addContext('funcName', 'getDB');
 	
 	//create db return variable
 	var db;
 	
 	//if dbRef doesn't exist, then create dbRef
 	if (!dbRef || !url) {
-		logger.info('utilities.getDB: Creating db ref');
+		logger.info('Creating db ref');
 		url = this.getDBurl();
 		dbRef = monk(url);
 		dbRef.then(result => {
@@ -83,7 +86,7 @@ utilities.getDB = function(){
 	//if ref has aged past its prime, then close and reopen it
 	if (lastRequestTime && lastRequestTime + refMaxAge < Date.now()) {
 		
-		logger.info('utilities.getDB: Ref has aged too much; Reconnecting');
+		logger.info('Ref has aged too much; Reconnecting');
 		try {
 			dbRef.close();
 			dbRef = monk(url);
@@ -106,6 +109,7 @@ utilities.getDB = function(){
 	lastRequestTime = Date.now();
 	db = dbRef;
 	
+	logger.removeContext('funcName');
 	//return
 	return db;
 }
@@ -113,10 +117,11 @@ utilities.getDB = function(){
 /**
  * Function that retrieves the database connection string from databases, and returns that connection string URL.
  * If databases does not exist, it defaults to localhost.
+ * @returns {string} Database connection uri.
  */
-utilities.getDBurl = function(){	
-	const thisFuncName = 'utilities.getDBurl: ';
-	logger.debug(`${thisFuncName}: BEGIN`);
+utilities.getDBurl = function(){
+	logger.addContext('funcName', 'getDBurl');
+	logger.debug(`BEGIN`);
 	
 	var url;
 	//Check if db has been configured
@@ -133,12 +138,12 @@ utilities.getDBurl = function(){
 			//If there is an object inside databases for process tier, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				logger.info(`${thisFuncName} Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for process tier, throw an error.
 			else{
-				throw new Error(`${thisFuncName} No database specified for process tier ${thisProcessTier} in databases`);
+				throw new Error(`No database specified for process tier ${thisProcessTier} in databases`);
 			}
 		}
 		//If there is no process tier, then connect to specified default db
@@ -149,12 +154,12 @@ utilities.getDBurl = function(){
 			//If default db exists, proceed with connecting to db.
 			if(thisDBinfo){
 				//Connect to db with specified url.
-				logger.info(`${thisFuncName}: Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+				logger.info(`Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
 				url = thisDBinfo.url;
 			}
 			//If there is no object in databases for default, throw an error.
 			else{
-				throw new Error(`${thisFuncName}: No default database URL specified in databases`);
+				throw new Error(`No default database URL specified in databases`);
 			}
 		}
 	}
@@ -164,6 +169,7 @@ utilities.getDBurl = function(){
 		url = "mongodb://localhost:27017/app";
 	}
 	
+	logger.removeContext('funcName');
 	return url;
 }
 
@@ -177,6 +183,8 @@ utilities.getDBurl = function(){
  * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
  */
 utilities.find = async function(collection, query, options, cacheOptions){
+	logger.addContext('funcName', 'find');
+	
 	//Collection type filter
 	if (typeof collection != "string") throw new TypeError("Collection must be specified.");
 	//Query type filter
@@ -193,9 +201,11 @@ utilities.find = async function(collection, query, options, cacheOptions){
 	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
-	logger.trace(`find: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
+	logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
 	var timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
 	consoleTime(timeLogName);
+	
+	var returnData;
 	
 	//If cache is enabled
 	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
@@ -212,7 +222,7 @@ utilities.find = async function(collection, query, options, cacheOptions){
 			logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
 			consoleTimeEnd(timeLogName);
 			
-			return cachedRequest;
+			returnData = cachedRequest;
 		}
 		//If query has not yet been cached
 		else {
@@ -226,7 +236,7 @@ utilities.find = async function(collection, query, options, cacheOptions){
 			logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
 			consoleTimeEnd(timeLogName);
 			
-			return cachedRequest;
+			returnData = cachedRequest;
 		}
 	}
 	//If cache is not enabled
@@ -237,8 +247,11 @@ utilities.find = async function(collection, query, options, cacheOptions){
 		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
-		return data;
+		returnData = data;
 	}
+	
+	logger.removeContext('funcName');
+	return returnData;
 }
 
 /**
@@ -251,25 +264,29 @@ utilities.find = async function(collection, query, options, cacheOptions){
  * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
  */
 utilities.findOne = async function(collection, query, options, cacheOptions){
+	logger.addContext('funcName', 'findOne');
+	
 	//Collection type filter
-	if (typeof collection != "string") throw new TypeError("Collection must be specified.");
+	if (typeof collection != "string") throw new TypeError("utilities.findOne: Collection must be specified.");
 	//Query type filter
 	if (!query) var query = {};
-	if (typeof query != "object") throw new TypeError("query must be of type object");
+	if (typeof query != "object") throw new TypeError("utilities.findOne: query must be of type object");
 	//Options type filter
 	if (!options) var options = {};
-	if (typeof options != "object") throw new TypeError("Options must be of type object");
+	if (typeof options != "object") throw new TypeError("utilities.findOne: Options must be of type object");
 	//Cache options
 	if (!cacheOptions) var cacheOptions = {};
-	if (typeof cacheOptions != "object") throw new TypeError("cacheOptions must be of type object");
+	if (typeof cacheOptions != "object") throw new TypeError("utilities.findOne: cacheOptions must be of type object");
 	if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != "boolean") throw new TypeError("cacheOptions.allowCache must be of type boolean");
 	if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != "number") throw new TypeError("cacheOptions.maxCacheAge must be of type number");
 	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
-	logger.trace(`utilities.findOne: ${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
+	logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
 	var timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
 	consoleTime(timeLogName);
+	
+	var returnData;
 	
 	//If cache is enabled
 	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
@@ -286,7 +303,7 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 			consoleTimeEnd(timeLogName);
 			
-			return cachedRequest;
+			returnData = cachedRequest;
 		}
 		//If query has not yet been cached
 		else {
@@ -300,7 +317,7 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 			consoleTimeEnd(timeLogName);
 			
-			return cachedRequest;
+			returnData = cachedRequest;
 		}
 	}
 	//If cache is not enabled
@@ -312,8 +329,11 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
-		return data;
+		returnData = data;
 	}
+	
+	logger.removeContext('funcName');
+	return returnData;
 }
 
 /**
@@ -322,8 +342,11 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
  * @param {object} query Filter query.
  * @param {object} update Update query.
  * @param {object} options Query options, such as sort.
+ * @returns {WriteResult} writeResult
  */
 utilities.update = async function(collection, query, update, options){
+	logger.addContext('funcName', 'update');
+	
 	//Collection filter
 	if (typeof collection != "string") throw new TypeError("Utilities.update: Collection must be specified.");
 	//Query type filter
@@ -348,11 +371,13 @@ utilities.update = async function(collection, query, update, options){
 	this.cache.del(queryHashFindOne);
 	
 	//Remove in collection with query
-	var writeResult = await this.getDB().get(collection).update(query, update, options);
+	var writeResult = new WriteResult();
+	writeResult = await this.getDB().get(collection).update(query, update, options);
 	
-	logger.trace(`utilities.update: writeResult: ${JSON.stringify(writeResult)}`);
+	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	consoleTimeEnd(timeLogName);
 	
+	logger.removeContext('funcName');
 	//return writeResult
 	return writeResult;
 }
@@ -364,8 +389,11 @@ utilities.update = async function(collection, query, update, options){
  * @param {object} [cacheOptions=undefined] Caching options.
  * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
  * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
+ * @returns {object} Aggregated data.
  */
 utilities.aggregate = async function(collection, pipeline, cacheOptions) {
+	logger.addContext('funcName', 'aggregate');
+	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string") throw new TypeError("Utilities.aggregate: Collection must be specified.");
@@ -373,7 +401,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 	if(typeof(pipeline) != "object") throw new TypeError("Utilities.aggregate: pipieline must be of type object");
 	//Cache options
 	if (!cacheOptions) var cacheOptions = {};
-	if (typeof cacheOptions != "object") throw new TypeError("cacheOptions must be of type object");
+	if (typeof cacheOptions != "object") throw new TypeError("Utilities.aggregate: cacheOptions must be of type object");
 	if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != "boolean") throw new TypeError("cacheOptions.allowCache must be of type boolean");
 	if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != "number") throw new TypeError("cacheOptions.maxCacheAge must be of type number");
 	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
@@ -381,8 +409,9 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 	
 	var timeLogName = `agg: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
 	consoleTime(timeLogName);
-	logger.trace(`utilities.aggregate: ${collection}, ${JSON.stringify(pipeline)}`);
+	logger.trace(`${collection}, ${JSON.stringify(pipeline)}`);
 	
+	var returnData; 
 	//If cache is enabled
 	if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
 		
@@ -398,7 +427,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 			consoleTimeEnd(timeLogName);
 			
-			return cachedRequest;
+			returnData = cachedRequest;
 		}
 		//If query has not yet been cached
 		else {
@@ -412,7 +441,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 			logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 			consoleTimeEnd(timeLogName);
 			
-			return cachedRequest;
+			returnData = cachedRequest;
 		}
 	}
 	//If cache is not enabled
@@ -426,24 +455,30 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 		consoleTimeEnd(timeLogName);
 		
 		//Return (Promise to get) data
-		return data;
+		returnData = data;
 	}
+	
+	logger.removeContext('funcName');
 }
 
 utilities.dumpCache = function(){
+	logger.addContext('funcName', 'dumpCache');
 	
 	//console.log(JSON.stringify(this.cache));
 	const used = process.memoryUsage().heapUsed / 1024 / 1024;
 	console.log(`The process uses approximately ${Math.round(used * 100) / 100} MB`);
+	
+	logger.removeContext('funcName');
 }
 
 /**
- * @param {string} type 
- * @param {string} collection
- * @param {object} param1
- * @param {object} param2
+ * @param {string} type Type of function
+ * @param {string} collection Collection
+ * @param {object} param1 First param (oft. query)
+ * @param {object} param2 Second param (oft. options)
  */
 utilities.hashQuery = async function(type, collection, param1, param2) {
+	logger.addContext('funcName', 'hashQuery');
 	
 	type = type.toString();
 	collection = collection.toString();
@@ -453,6 +488,7 @@ utilities.hashQuery = async function(type, collection, param1, param2) {
 	const hash = crypto.Hash('sha1');
 	hash.update(type + collection + param1 + param2);
 	
+	logger.removeContext('funcName');
 	return hash.digest('hex');
 }
 
@@ -461,8 +497,11 @@ utilities.hashQuery = async function(type, collection, param1, param2) {
  * @param {string} collection Collection to find in.
  * @param {string} field Which field to distinct.
  * @param {object} query The query for filtering the set of documents to which we apply the distinct filter.
+ * @returns {array} Distinct values for the specified field
  */
 utilities.distinct = async function(collection, field, query){
+	logger.addContext('funcName', 'distinct');
+	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
@@ -480,7 +519,7 @@ utilities.distinct = async function(collection, field, query){
 		throw new TypeError("Utilities.distinct: query must be of type object");
 	}
 	
-	logger.trace(`utilities.distinct: ${collection}, ${JSON.stringify(query)}`);
+	logger.trace(`${collection}, ${JSON.stringify(query)}`);
 	
 	var db = this.getDB();
 	
@@ -490,8 +529,9 @@ utilities.distinct = async function(collection, field, query){
 	var data = [];
 	data = await Col.distinct(field, query);
 	
-	logger.trace(`utilities.distinct: result: ${JSON.stringify(data)}`);
+	logger.trace(`result: ${JSON.stringify(data)}`);
 	
+	logger.removeContext('funcName');
 	//Return (Promise to get) data
 	return data;
 }
@@ -499,10 +539,13 @@ utilities.distinct = async function(collection, field, query){
 /**
  * Asynchronous "bulkWrite" function to a collection specified in first parameter.
  * @param {string} collection Collection to find in.
- * @param {Array} operations Array of Bulk operations to perform.
+ * @param {array} operations Array of Bulk operations to perform.
  * @param {object} options Optional settings.
+ * @returns {WriteResult} writeResult
  */
 utilities.bulkWrite = async function(collection, operations, options){
+	logger.addContext('funcName', 'bulkWrite');
+	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
@@ -523,18 +566,19 @@ utilities.bulkWrite = async function(collection, operations, options){
 		throw new TypeError("Utilities.bulkWrite: options must be of type object");
 	}
 	
-	logger.trace(`utilities.bulkWrite: ${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(options)}`);
+	logger.trace(`${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(options)}`);
 
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
 	//Update in collection with options
-	var writeResult;
+	var writeResult = new WriteResult();
 	writeResult = await Col.bulkWrite(operations, options);
 	
-	logger.trace(`utilities.bulkWrite: writeResult: ${JSON.stringify(writeResult)}`);
+	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
+	logger.removeContext('funcName');
 	//return result
 	return writeResult;
 }
@@ -543,8 +587,10 @@ utilities.bulkWrite = async function(collection, operations, options){
  * Asynchronous "remove" function to a collection specified in first parameter.
  * @param {string} collection Collection to remove from.
  * @param {object} query Filter for element/s to remove.
+ * @return {WriteResult} writeResult
  */
 utilities.remove = async function(collection, query){
+	logger.addContext('funcName', 'remove');
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
@@ -560,18 +606,19 @@ utilities.remove = async function(collection, query){
 		throw new TypeError("utilities.remove: query must be of type object");
 	}
 	
-	logger.trace(`utilities.remove: ${collection}, param: ${JSON.stringify(query)}`);
+	logger.trace(`${collection}, param: ${JSON.stringify(query)}`);
 	
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
 	//Remove in collection with query
-	var writeResult;
+	var writeResult = new WriteResult();
 	writeResult = await Col.remove(query);
 	
-	logger.trace(`utilities.remove: writeResult: ${JSON.stringify(writeResult)}`);
+	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
+	logger.removeContext('funcName');
 	//return writeResult
 	return writeResult;
 }
@@ -580,31 +627,34 @@ utilities.remove = async function(collection, query){
  * Asynchronous "insert" function to a collection specified in first parameter.
  * @param {string} collection Collection to insert into.
  * @param {object} elements [Any] Element or array of elements to insert
+ * @returns {WriteResult} writeResult
  */
 utilities.insert = async function(collection, elements){
+	logger.addContext('funcName', 'insert');
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
 	if(typeof(collection) != "string"){
-		throw new TypeError("utilities.insert: Collection must be specified.");
+		throw new TypeError("Utilities.insert: Collection must be specified.");
 	}
 	//If elements are not set, throw an error
 	if(!elements){
-		throw new TypeError("utilities.insert: Must contain an element or array of elements to insert.");
+		throw new TypeError("Utilities.insert: Must contain an element or array of elements to insert.");
 	}
 	
-	logger.trace(`utilities.insert: ${collection}, elements: ${JSON.stringify(elements)}`);
+	logger.trace(`${collection}, elements: ${JSON.stringify(elements)}`);
 	
 	var db = this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
 	//Insert in collection
-	var writeResult;
+	var writeResult = new WriteResult();
 	writeResult = await Col.insert(elements);
 	
-	logger.trace(`utilities.insert: writeResult: ${JSON.stringify(writeResult)}`);
+	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
+	logger.removeContext('funcName');
 	//return writeResult
 	return writeResult;
 }
@@ -612,9 +662,10 @@ utilities.insert = async function(collection, elements){
 /**
  * Asynchronous request to TheBlueAlliance. Requires a URL ending to execute correctly.
  * @param {string} url ENDING of URL, after "https://.../api/v3/" DO NOT INCLUDE A / AT THE START
- * @return {Promise} Promise; Resolves when client receives a request from TBA
+ * @return {object} JSON-formatted response from TBA
  */
 utilities.requestTheBlueAlliance = async function(url){
+	logger.addContext('funcName', 'requestTheBlueAlliance');
 	
 	//Setup our request URL, including specified URL ending parameter
 	var requestURL = "https://www.thebluealliance.com/api/v3/" + url + `?t=${Date.now()}`;
@@ -639,32 +690,68 @@ utilities.requestTheBlueAlliance = async function(url){
 			logger.debug(`TBA response: ${str.substring(0, 1000)}...`);
 			logger.trace(`Full TBA response: ${str}`);
 			
-			//tbaData = JSON.parse(tbaData);
 			//Inside client callback, resolve promise
 			resolve(tbaData);
 		});
 	});
 	
+	logger.removeContext('funcName');
 	//Resolve promise
 	return thisPromise;
 }
 
 /**
  * Asynchronous function to get our TheBlueAlliance API key from the DB.
- * @return {Promise} - TBA arguments
+ * @return {object} - TBA header arguments
  */
 utilities.getTBAKey = async function(){
+	logger.addContext('funcName', 'getTBAKey');
 	
 	var tbaArgs = await utilities.findOne("passwords", {name: "tba-api-headers"});
 	
 	if(tbaArgs){
 		var headers = tbaArgs.headers;
 		var key = {"headers": headers};
+		
+		logger.removeContext('funcName');
 		return key;
 	}
 	else{
 		//**********CONSIDER ANOTHER OPTION FOR HANDLING "CAN'T FIND REQUEST ARGS"
-		logger.warn("utilities.getTBAKey: Could not find tba-api-headers in database");
-		return null;
+		logger.fatal("utilities.getTBAKey: Could not find tba-api-headers in database");
+		
+		logger.removeContext('funcName');
+		throw "Could not find api-headers in database";
+	}
+}
+
+
+
+class WriteResult{
+	/**
+	 * A wrapper that contains the result status of the mongo shell write methods.
+	 * @param {number} nInserted The number of documents inserted, excluding upserted documents.
+	 * @param {number} nMatched The number of documents selected for update.
+	 * @param {number} nModified The number of existing documents updated.
+	 * @param {number} nUpserted The number of documents inserted by an upsert.
+	 * @param {ObjectId} _id The _id of the document inserted by an upsert. Returned only if an upsert results in an insert.
+	 * @param {number} nRemoved The number of documents removed.
+	 * @param {object} writeError A document that contains information regarding any error, excluding write concern errors, encountered during the write operation.
+	 * @param {number} writeError.code An integer value identifying the error.
+	 * @param {string} writeError.errmsg A description of the error.
+	 * @param {object} writeConcernError A document that contains information regarding any write concern errors encountered during the write operation.
+	 * @param {number} writeConcernError.code An integer value identifying the write concern error.
+	 * @param {any} writeConcernError.errInfo A document identifying the write concern setting related to the error.
+	 * @param {string} writeConcernError.errmsg A description of the error.
+	 */
+	constructor(nInserted, nMatched, nModified, nUpserted, _id, nRemoved, writeError, writeConcernError){
+		this.nInserted = nInserted;
+		this.nMatched = nMatched;
+		this.nModified = nModified;
+		this.nUpserted = nUpserted;
+		this._id = _id;
+		this.nRemoved = nRemoved;
+		this.writeError = writeError;
+		this.writeConcernError = writeConcernError;
 	}
 }
