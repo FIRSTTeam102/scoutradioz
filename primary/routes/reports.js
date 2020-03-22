@@ -447,10 +447,8 @@ router.get("/matchintel*", wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER');
 	
 	var matchKey = req.query.key;
-	if (!matchKey) {
-		res.redirect("/?alert=No match key specified in Match Intel page.");
-		return;
-	}
+	if (!matchKey) throw Error('No match key specified.');
+	
 	logger.debug(thisFuncName + 'matchKey=' + matchKey);
 	
 	var match = await utilities.findOne("matches", 
@@ -472,10 +470,8 @@ router.get("/teammatchintel*", wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER');
 	
 	var matchTeamKey = req.query.key;
-	if (!matchTeamKey) {
-		res.redirect("/?alert=No team-match key specified in Team Match Intel page.");
-		return;
-	}
+	if (!matchTeamKey) throw Error('No team-match key specified.');
+	
 	logger.debug(thisFuncName + 'teamMatchKey=' + matchTeamKey);
 	
 	var eventYear = req.event.year;
@@ -538,9 +534,8 @@ router.get("/alliancestats", wrap(async (req, res) =>  {
 	var eventKey = req.event.key;
 	var orgKey = req.user.org_key;
 
-	if( !req.query.teams ){
-		return res.redirect("/?alert=Must specify comma-separated list of teams for reports/alliancestats");
-	}
+	if (!req.query.teams) throw Error('Must specify comma-separated list of teams.');
+	
 	var teams = req.query.teams;
 
 	// use helper function
@@ -631,9 +626,8 @@ router.get("/matchdata", wrap(async (req, res) =>  {
 	var matchKey = req.query.key;
 	var orgKey = req.user.org_key;
 
-	if( !matchKey ){
-		return res.redirect("/?alert=Must specify match key for reports/matchdata");
-	}
+	if (!matchKey) throw Error('Must specify match key.')
+	
 	logger.debug(`${thisFuncName} matchKey: ${matchKey}`);
 
 	// get the specified match object
@@ -680,9 +674,8 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 	var matchKey = req.query.key;
 	var orgKey = req.user.org_key;
 	
-	if( !matchKey ){
-		return res.redirect("/?alert=Must specify match key for reports/matchmetrics");
-	}
+	if (!matchKey) throw Error('Must specify match key.')
+	
 	logger.debug(`${thisFuncName} matchKey: ${matchKey}`);
 
 	// get the specified match object
@@ -986,10 +979,8 @@ router.get("/metricintel*", wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER');
 	
 	var metricKey = req.query.key;
-	if (!metricKey) {
-		res.redirect("/?alert=No metric key specified in Metric Intel page.");
-		return;
-	}
+	if (!metricKey) throw Error('No metric key specified.');
+	
 	logger.debug(thisFuncName + 'metricKey=' + metricKey);
 	
 	// for later querying by event_key
