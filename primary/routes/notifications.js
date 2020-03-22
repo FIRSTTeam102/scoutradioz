@@ -1,8 +1,14 @@
 const router = require('express').Router();
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('notifications');
 const wrap = require('express-async-handler');
 const webpush = require('web-push');
 const utilities = require('@firstteam102/scoutradioz-utilities');
+
+router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
+	next();
+}));
 
 router.get('/', wrap(async (req, res) => {
 	
@@ -12,6 +18,9 @@ router.get('/', wrap(async (req, res) => {
 }));
 
 router.post('/save-subscription', wrap(async (req, res) => {
+	logger.addContext('funcName', 'save-subscription[post]');
+	logger.info('ENTER');
+	
 	//check if user is logged in as a scouter
 	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
 	//check if it's a valid save request
@@ -20,21 +29,19 @@ router.post('/save-subscription', wrap(async (req, res) => {
 		return res.send({data: {success: false}});
 	}
 	
-	const thisFuncName = 'notifications/save-subscription: ';
-	
-	logger.info(`${thisFuncName} Request to save push notification subscription for ${req.user.name}`);
-	logger.debug(`${thisFuncName} body: ${JSON.stringify(req.body)}`);
+	logger.info(`Request to save push notification subscription for ${req.user.name}`);
+	logger.debug(`body: ${JSON.stringify(req.body)}`);
 	
 	var pushSubscription = req.body;
 	
 	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {push_subscription: pushSubscription}});
 	
-	logger.trace(`${thisFuncName} writeResult: ${JSON.stringify(writeResult)}`)
+	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`)
 	
 	//if user has been updated w/ push subscription, then send a success message
 	if (writeResult.ok){
 		
-		logger.debug(`${thisFuncName} Success`);
+		logger.debug(`Success`);
 		
 		res.cookie('enable_notifications', 1);
 		
@@ -43,7 +50,7 @@ router.post('/save-subscription', wrap(async (req, res) => {
 	}
 	//if write result failed, then error out and send fail response
 	else {
-		logger.error(`${thisFuncName} The subscription was received but we were unable to save it to our database.`)
+		logger.error(`The subscription was received but we were unable to save it to our database.`)
 		
 		res.status(500);
 		res.setHeader('Content-Type', 'application/json');
@@ -57,12 +64,13 @@ router.post('/save-subscription', wrap(async (req, res) => {
 }));
 
 router.post('/disable-subscription', wrap(async (req, res) => {
-	
-	var thisFuncName = 'notifications/disable-subscription: ';
+	logger.addContext('funcName', 'disable-subscription[post]');
+	logger.info('ENTER');
 	
 	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {push_subscription: {}}});
 	
-	logger.debug(`${thisFuncName} Success`);
+	logger.debug(JSON.stringify(writeResult));
+	logger.info(`Success`);
 		
 	res.clearCookie('enable_notifications');
 	
@@ -71,9 +79,11 @@ router.post('/disable-subscription', wrap(async (req, res) => {
 }));
 
 router.post('/sendtest', wrap(async (req, res) => {
+	logger.addContext('funcName', 'sendtest[post]');
+	logger.info('ENTER');
+	
 	//check if user is logged in as a scouter
 	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
-	const thisFuncName = 'notifications/sendtest: ';
 	
 	const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});	
 	webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
@@ -109,7 +119,7 @@ router.post('/sendtest', wrap(async (req, res) => {
 		
 	}
 	else {
-		logger.debug(`${thisFuncName} Push subscription not available for ${req.user.name}`);
+		logger.debug(`Push subscription not available for ${req.user.name}`);
 	}
 	
 	res.redirect('/notifications');
@@ -150,6 +160,6 @@ async function isValidSaveRequest (req, res) {
 	  return false;
 	}
 	return true;
-  };
+};
 
 module.exports = router;

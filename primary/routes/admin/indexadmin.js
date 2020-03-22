@@ -1,10 +1,13 @@
 const express = require('express');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('indexadmin');
+const bcrypt = require('bcryptjs');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const router = express.Router();
 
 router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
 	//Require global-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
 		next();
@@ -20,6 +23,8 @@ router.get('/', wrap(async (req, res) => {
 }));
 
 router.get('/sitemap', wrap(async (req, res) => {
+	logger.addContext('funcName', 'sitemap[get]');
+	logger.info('ENTER');
 	
 	var siteLayout = {
 		'index.js': {
@@ -115,10 +120,8 @@ router.get('/sitemap', wrap(async (req, res) => {
 }));
 
 router.get('/orgs', wrap(async (req, res) => {
-	logger.addContext('funcName', 'orgs[GET]');
-	const thisFuncName = 'orgs[GET]: ';
-	
-	logger.warn('hello');
+	logger.addContext('funcName', 'orgs[get]');
+	logger.info('ENTER');
 	
 	const orgs = await utilities.find('orgs');
 	
@@ -130,7 +133,8 @@ router.get('/orgs', wrap(async (req, res) => {
 }));
 
 router.post('/orgs', wrap(async (req, res) => {
-	const thisFuncName = 'orgs[POST]: ';
+	const thisFuncName = 'orgs[post]: ';
+	logger.info('ENTER');
 	
 	console.log(req.body);
 	

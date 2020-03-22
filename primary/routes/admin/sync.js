@@ -1,12 +1,19 @@
 const express = require('express');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('sync');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const router = express.Router();
 
+router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
+	next();
+}));
+
+// Function to refresh the list of events for the current year (and) to refresh all teams data
 router.get('/resyncevents', wrap(async (req, res) => {
-	// Function to refresh the list of events for the current year (and) to refresh all teams data
-	var thisFuncName = "indexadmin.resyncevents[get]: ";
+	logger.addContext('funcName', 'resyncevents[get]');
+	logger.info('ENTER');	
 
 	// Get the year from the URL (or default to the current year)
 	var year = req.query.year;
@@ -31,11 +38,11 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	// We append 'zzzzzzz' to bracket every possible alphanumeric combination (after the first alpha character after the year) 
 	var queryEnd = year + urlEnd + 'zzzzzzz';
 
-	logger.debug(thisFuncName + "from URL (or defaults): year=" + year + ",queryStart=" + queryStart + ",queryEnd=" + queryEnd);
+	logger.debug("from URL (or defaults): year=" + year + ",queryStart=" + queryStart + ",queryEnd=" + queryEnd);
 
 	//Set up TBA url
 	var url = `events/${year}/simple`;
-	logger.debug(thisFuncName + "url=" + url);
+	logger.debug("url=" + url);
 	
 	//Submit request to TBA
 	var eventData = await utilities.requestTheBlueAlliance(url);
@@ -63,7 +70,7 @@ router.get('/resyncevents', wrap(async (req, res) => {
 					var thisTeamKeysData = await utilities.requestTheBlueAlliance(eventTeamsUrl);
 					readSuccess = true;
 				} catch(err) {
-					console.log(thisFuncName + "Problem reading team keys for " + thisEventKey + " - " + err.message);
+					console.log("Problem reading team keys for " + thisEventKey + " - " + err.message);
 					retries -= 1;
 				}
 	
@@ -78,11 +85,11 @@ router.get('/resyncevents', wrap(async (req, res) => {
 		}
 	}
 
-	console.log(thisFuncName + "enrichedEvents.length=" + enrichedEvents.length);
+	console.log("enrichedEvents.length=" + enrichedEvents.length);
 	
 	//Find existing events list for year & query brackets
 	var dbEvents = await utilities.find("events", { $and: [{"key": {$gt: queryStart}}, {"key": {$lt: queryEnd}}] }, {"key": 1} );
-	console.log(thisFuncName + "removing dbEvents.length=" + dbEvents.length);
+	console.log("removing dbEvents.length=" + dbEvents.length);
 
 	//Remove matching existing events
 	await utilities.remove("events", { $and: [{"key": {$gt: queryStart}}, {"key": {$lt: queryEnd}}] });
@@ -93,10 +100,11 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	return res.send("SUCCESS " + year + " removed " + dbEvents.length + " inserted " + enrichedEvents.length);
 }));
 
+// Function to refresh all teams data
 router.get('/resyncteams', wrap(async (req, res) => {
-	// Function to refresh all teams data
-	var thisFuncName = "indexadmin.resyncteams[get]: ";
-	
+	logger.addContext('funcName', 'resyncteams[get]');
+	logger.info('ENTER');
+		
 	////// Teams sync
 
 	var teamPageIdx = 0;
@@ -105,7 +113,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 	while (keepLooping) {
 		//Set up TBA url
 		var url = `teams/${teamPageIdx}`;
-		logger.debug(thisFuncName + "url=" + url);
+		logger.debug("url=" + url);
 		
 		//Submit request to TBA
 		var teamData = await utilities.requestTheBlueAlliance(url);
@@ -114,7 +122,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 		//if request was invalid, redirect to admin page with alert message
 		if(teams.length == undefined || teams.length == 0) {
 			// presumably we've reached the end of the data
-			logger.debug(thisFuncName + "finished pulling teams");
+			logger.debug("finished pulling teams");
 			keepLooping = false;
 		} else {
 			// we have teams to add to the total array
@@ -123,7 +131,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 				var team = teams[i];
 				// if (printIdx >= 50) {
 				// 	printIdx = 0;
-				// 	logger.debug(thisFuncName + "team=" + JSON.stringify(team));
+				// 	logger.debug("team=" + JSON.stringify(team));
 				// }
 				// printIdx += 1;
 				teamsArray.push(team);
@@ -133,7 +141,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 		// increment the index counter
 		teamPageIdx += 1;
 	}	
-	logger.debug(thisFuncName + "total teams=" + teamsArray.length);
+	logger.debug("total teams=" + teamsArray.length);
 	
 	//Remove existing events list for year
 	await utilities.remove("teams", {});
@@ -153,7 +161,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 
 	//Set up TBA url
 	var url = `events/${year}/simple`;
-	logger.debug(thisFuncName + "url=" + url);
+	logger.debug("url=" + url);
 	
 	//Submit request to TBA
 	var eventData = await utilities.requestTheBlueAlliance(url);
@@ -180,7 +188,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 				var thisTeamKeysData = await utilities.requestTheBlueAlliance(eventTeamsUrl);
 				readSuccess = true;
 			} catch(err) {
-				console.log(thisFuncName + "Problem reading team keys for " + thisEventKey + " - " + err.message);
+				console.log("Problem reading team keys for " + thisEventKey + " - " + err.message);
 				retries -= 1;
 			}
 
@@ -202,26 +210,27 @@ router.get('/resyncteams', wrap(async (req, res) => {
 	*/
 }));
 
+// Function to recalculate all derived data for the current team & current event
 router.get('/recalcderived', wrap(async (req, res) => {
-	// Function to recalculate all derived data for the current team & current event
-	var thisFuncName = "indexadmin.recalcderived[get]: ";
-
+	logger.addContext('funcName', 'recalcderived[get]');
+	logger.info('ENTER');
+	
 	var event_year = req.event.year;
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
 
-	logger.info(thisFuncName + "ENTER org_key=" + org_key + ",event_key=" + event_key);
+	logger.info("ENTER org_key=" + org_key + ",event_key=" + event_key);
 
 	// read in the 'derived' metrics from the matchscouting layout
 	var matchLayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting", type: "derived"}, {sort: {"order": 1}})
-	// logger.debug(thisFuncName + "matchLayout[0]" + JSON.stringify(matchLayout[0]));
+	// logger.debug("matchLayout[0]" + JSON.stringify(matchLayout[0]));
 	// for (var z in matchLayout[0].operands)
-	// 	logger.debug(thisFuncName + "operands[" + z + "]=" + matchLayout[0].operands[z]);
+	// 	logger.debug("operands[" + z + "]=" + matchLayout[0].operands[z]);
 
 	// read in existing match scouting data
 	var scored = await utilities.find("matchscouting", {"org_key": org_key, "event_key": event_key, "data": {$exists: true} }, { sort: {"time": 1} });
-	// logger.debug(thisFuncName + "scored[0].data=" + JSON.stringify(scored[0].data));
-	// logger.debug(thisFuncName + "scored[0].data[matchLayout[0].operands[2]]=" + JSON.stringify(scored[0].data[matchLayout[0].operands[2]]));
+	// logger.debug("scored[0].data=" + JSON.stringify(scored[0].data));
+	// logger.debug("scored[0].data[matchLayout[0].operands[2]]=" + JSON.stringify(scored[0].data[matchLayout[0].operands[2]]));
 
 	// cycle through each scored match & [re]calculate derived metrics - push into new array 'updatedScored'
 	// [SEE ALSO SCOUTING.JS]
@@ -231,7 +240,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 		var thisScored = scored[i];
 		// should be redundant with the "$exists: true" in the DB find query, BUT... just in case...
 		if (thisScored.data) {
-			// logger.debug(thisFuncName + "thisScored.match_team_key=" + thisScored.match_team_key);
+			// logger.debug("thisScored.match_team_key=" + thisScored.match_team_key);
 
 			for (var j in matchLayout) {
 				var thisItem = matchLayout[j];
@@ -251,7 +260,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 		}
 
 		// if (debugCountdown == 0) {
-		// 	logger.debug(thisFuncName + "thisScored=" + JSON.stringify(thisScored.data));
+		// 	logger.debug("thisScored=" + JSON.stringify(thisScored.data));
 		// 	debugCountdown = 20;
 		// }
 		// debugCountdown -= 1;

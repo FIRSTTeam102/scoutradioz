@@ -1,10 +1,12 @@
 const router = require("express").Router();
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('scouting');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
 
 router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
 	//Require scouter-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_SCOUTER)) {
 		next();
@@ -12,9 +14,8 @@ router.all('/*', wrap(async (req, res, next) => {
 }));
 
 router.get('/match*', wrap(async (req, res) => {
-	
-	var thisFuncName = "scouting.match*[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'match[get]');
+	logger.info('ENTER');
 	
 	// var scoringLayoutCol = db.get("scoringlayout");
 	// var scoringDataCol = db.get("scoringdata");
@@ -26,7 +27,7 @@ router.get('/match*', wrap(async (req, res) => {
 	var alliance = req.query.alliance;
 	var org_key = req.user.org_key;
 	
-	logger.debug(`${thisFuncName}- match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName}`);
+	logger.debug(`match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName}`);
 	
 	if (!match_team_key) {
 		res.redirect("/dashboard");
@@ -45,12 +46,12 @@ router.get('/match*', wrap(async (req, res) => {
 		//if we have data for this match, 
 		var data = scoringdata[0].data;
 		if(data){
-			logger.debug(`${thisFuncName}- data: ${JSON.stringify(scoringdata[0].data)}`);
+			logger.debug(`data: ${JSON.stringify(scoringdata[0].data)}`);
 			//set answers to data if exists
 			answers = data;
 		}
 		else{
-			logger.debug(`${thisFuncName}- no data for this match`)
+			logger.debug(`no data for this match`)
 		}
 	}
 	
@@ -74,9 +75,8 @@ router.get('/match*', wrap(async (req, res) => {
 }));
 
 router.post('/match/submit', wrap(async (req, res) => {
-	
-	var thisFuncName = "scouting.match[post]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'match/submit[post]');
+	logger.info('ENTER');
 	
 	if(req.user && req.user.name){
 		var thisUser = req.user;
@@ -93,11 +93,11 @@ router.post('/match/submit', wrap(async (req, res) => {
 	var match_team_key = matchData.match_team_key;
 	var org_key = req.user.org_key;
 
-	logger.debug(thisFuncName + "match_key=" + match_team_key + " ~ thisUserName=" + thisUserName);
+	logger.debug("match_key=" + match_team_key + " ~ thisUserName=" + thisUserName);
 	delete matchData.match_key;
-	logger.debug(thisFuncName + "matchData(pre-modified)=" + JSON.stringify(matchData));
-	//logger.debug(thisFuncName + 'match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
-	//logger.debug(thisFuncName + 'matchData=' + JSON.stringify(matchData));
+	logger.debug("matchData(pre-modified)=" + JSON.stringify(matchData));
+	//logger.debug('match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
+	//logger.debug('matchData=' + JSON.stringify(matchData));
 
 	// Get the 'layout' so we know types of data elements
 	// var scoreCol = db.get("scoringlayout");
@@ -112,10 +112,10 @@ router.post('/match/submit', wrap(async (req, res) => {
 	);
 
 	var layoutTypeById = {};
-	//logger.debug(thisFuncName + "layout=" + JSON.stringify(layout));
+	//logger.debug("layout=" + JSON.stringify(layout));
 	for (var property in layout) {
 		if (layout.hasOwnProperty(property)) {
-			//logger.debug(thisFuncName + layout[property].id + " is a " + layout[property].type);
+			//logger.debug(layout[property].id + " is a " + layout[property].type);
 			layoutTypeById[layout[property].id] = layout[property].type;
 		}
 	}
@@ -123,9 +123,9 @@ router.post('/match/submit', wrap(async (req, res) => {
 	// Process input data, convert to numeric values
 	for (var property in matchData) {
 		var thisType = layoutTypeById[property];
-		//logger.debug(thisFuncName + property + " :: " + matchData[property] + " ~ is a " + thisType);
+		//logger.debug(property + " :: " + matchData[property] + " ~ is a " + thisType);
 		if ('counter' == thisType || 'badcounter' == thisType) {
-			//logger.debug(thisFuncName + "...converting " + matchData[property] + " to a number");
+			//logger.debug("...converting " + matchData[property] + " to a number");
 			var newVal = -1;
 			if (matchData[property]) {
 				var parseVal = parseInt(matchData[property]);
@@ -135,12 +135,12 @@ router.post('/match/submit', wrap(async (req, res) => {
 			matchData[property] = newVal;
 		}
 		if ('checkbox' == thisType) {
-			//logger.debug(thisFuncName + "...converting " + matchData[property] + " to a boolean 1/0 number");
+			//logger.debug("...converting " + matchData[property] + " to a boolean 1/0 number");
 			var newVal = (matchData[property] == "true" || matchData[property] == true) ? 1 : 0;
 			matchData[property] = newVal;
 		}
 	}
-	logger.debug(thisFuncName + "matchData(UPDATED:1)=" + JSON.stringify(matchData));
+	logger.debug("matchData(UPDATED:1)=" + JSON.stringify(matchData));
 
 	// Calculate derived metrics [SEE ALSO INDEXADMIN.JS]
 	// read in the 'derived' metrics from the matchscouting layout, use to process data
@@ -165,7 +165,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 		}
 		matchData[thisItem.id] = derivedMetric;
 	}
-	logger.debug(thisFuncName + "matchData(UPDATED:2)=" + JSON.stringify(matchData));
+	logger.debug("matchData(UPDATED:2)=" + JSON.stringify(matchData));
 
 	// Post modified data to DB
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -175,6 +175,8 @@ router.post('/match/submit', wrap(async (req, res) => {
 }));
 
 router.get('/pit*', wrap(async (req, res) => {
+	logger.addContext('funcName', 'pit[get]');
+	logger.info('ENTER');
 	
 	var uploadURL = process.env.UPLOAD_URL + "/" + process.env.TIER + "/image";
 	
@@ -182,9 +184,6 @@ router.get('/pit*', wrap(async (req, res) => {
 	var event_key = req.event.key;
 	var event_year = req.event.year;
 	var org_key = req.user.org_key;
-	
-	var thisFuncName = "scouting.pit*[get]: ";
-	logger.info(thisFuncName + 'ENTER');
 
 	var teamKey = req.query.team;
 	if (!teamKey) {
@@ -220,21 +219,20 @@ router.get('/pit*', wrap(async (req, res) => {
 }));
 
 router.post('/pit/submit', wrap(async (req, res) => {
-	
-	var thisFuncName = "scouting.submitpit[post]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'pit/submit[post]');
+	logger.info('ENTER');
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
 	
-	//logger.debug(thisFuncName + 'req.body=' + JSON.stringify(req.body));
+	//logger.debug('req.body=' + JSON.stringify(req.body));
 	
 	var pitData = req.body;
 	logger.debug(req.body);
 	var teamKey = pitData.teamkey;
 	delete pitData.teamkey;
-	logger.debug(thisFuncName + 'teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
-	logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
+	logger.debug('teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
+	logger.debug('pitData=' + JSON.stringify(pitData));
 
     // var pitCol = db.get('scoutingdata');
 
@@ -247,54 +245,6 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	await utilities.update("pitscouting", { "org_key": org_key, "event_key" : event_key, "team_key" : teamKey }, { $set: { "data" : pitData, "actual_scouter": thisUserName, useragent: req.shortagent } });
 
 	return res.send({message: "Submitted data successfully.", status: 200});
-}));
-
-//For \views\scouting\teampictures.pug
-router.get('/teampictures', wrap(async (req, res) => {
-
-	var thisFuncName = "scouting.teampictures[get]: ";
-
-	logger.info(thisFuncName + 'ENTER');
-	
-	// var teamCol = db.get("currentteams");
-	
-	var event_year = req.event.year;
-	var event_key = req.event.key;
-
-	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	//var teams = await utilities.find("currentteams", {}, {sort: {team_number: 1}});
-	var thisEventData = await utilities.find("events", 
-		{"key": event_key}, {},
-		{allowCache: true}
-	);
-	var thisEvent = thisEventData[0];
-	var teams = [];
-	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
-	{
-		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
-		teams = await utilities.find("teams", 
-			{"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}},
-			{allowCache: true}
-		);
-	}
-	
-	var fs = require("fs");
-	var path = require("path");
-	var UPLOAD_PATH = path.resolve(__dirname, '..', process.env.AVATAR_STORAGE) + "\\";
-	for (var i = 0; i < teams.length; i++) {
-		var team = teams[i];
-			//console.log(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`);
-		if (fs.existsSync(`${UPLOAD_PATH}\\responsive\\${event_year}_${team.key}_sm.jpg`)) {
-			teams[i].hasPicture = true;
-		}
-		else {teams[i].hasPicture = false;}
-	}
-	//logger.debug(thisFuncName + 'rankings=' + JSON.stringify(rankings));
-	
-	res.render("./scouting/teampictures", {
-		title: "Team Pictures",
-		teams: teams
-	});
 }));
 
 router.get('/', wrap(async (req, res) => {

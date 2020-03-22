@@ -1,11 +1,13 @@
 const router = require("express").Router();
-const logger = require('log4js').getLogger('reports.js');
+const logger = require('log4js').getLogger('reports');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 
 const {matchData: matchDataHelper, upload: uploadHelper} = require('@firstteam102/scoutradioz-helpers');
 
 router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_VIEWER)) {
 		next();
@@ -19,9 +21,8 @@ router.get("/", wrap(async (req, res) => {
 }));
 
 router.get("/rankings", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.rankings[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'rankings[get]');
+	logger.info('ENTER');
 
 	var eventKey = req.event.key;
 
@@ -38,23 +39,22 @@ router.get("/rankings", wrap(async (req, res) => {
 }));
 
 router.get("/finishedmatches", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.finishedmatches[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'finishedmatches[get]');
+	logger.info('ENTER');
 	var year = req.event.year;
 	
 	// for later querying by event_key
 	var eventKey = req.event.key;
-	logger.debug(thisFuncName + 'event_key=' + eventKey);
+	logger.debug('event_key=' + eventKey);
 
 	// Match history info
 	var matches = await utilities.find("matches", {"alliances.red.score": { $ne: -1}, "event_key" : eventKey}, {sort: {time: -1}});
 
 	// Ranking point info
 	var rankingPoints = await utilities.findOne("rankingpoints", {year: year});
-	//logger.debug(thisFuncName + "rankingPoints=" + JSON.stringify(rankingPoints));
+	//logger.debug("rankingPoints=" + JSON.stringify(rankingPoints));
 	
-	//logger.debug(thisFuncName + 'matches=' + JSON.stringify(matches));
+	//logger.debug('matches=' + JSON.stringify(matches));
 	res.render("./reports/finishedmatches", {
 		title: "Matches",
 		matches: matches,
@@ -63,9 +63,8 @@ router.get("/finishedmatches", wrap(async (req, res) => {
 }));
 
 router.get("/upcoming", wrap(async (req, res) => {
-	
-	const thisFuncName = "reports.upcoming[GET]: ";
-	logger.info(thisFuncName + "ENTER");
+	logger.addContext('funcName', 'upcoming[get]');
+	logger.info("ENTER");
 
 	var eventKey = req.event.key;
 	var teamKey = req.query.team_key || 'all';
@@ -89,19 +88,18 @@ router.get("/upcoming", wrap(async (req, res) => {
 }));
 
 router.get("/teamintel", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.teamintel*[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'teamintel[get]');
+	logger.info('ENTER');
 	
 	var eventKey = req.event.key;
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
-	logger.debug(thisFuncName + "event_year=" + eventYear);
+	logger.debug("event_year=" + eventYear);
 	
 	var teamKey = req.query.team_key;
 	if (!teamKey) throw Error("Please specify a team_key.");
 	
-	logger.debug(thisFuncName + 'teamKey=' + teamKey);
+	logger.debug('teamKey=' + teamKey);
 	
 	
 	// Team details
@@ -140,10 +138,10 @@ router.get("/teamintel", wrap(async (req, res) => {
 		{allowCache: true}
 	);
 	
-	logger.trace(thisFuncName + 'layout=' + JSON.stringify(layout));
+	logger.trace('layout=' + JSON.stringify(layout));
 	
 	// Pull in individual scouting data for this team, for this event, to enhance the match data
-	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey + ',event_key=' + eventKey);
+	logger.debug('Pulling scoring data for teamKey=' + teamKey + ',event_key=' + eventKey);
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggFind = await utilities.find("matchscouting", {"org_key": orgKey, "team_key": teamKey, "event_key": eventKey}, {});
 	// Build a map of match_key->data
@@ -151,10 +149,10 @@ router.get("/teamintel", wrap(async (req, res) => {
 	if (aggFind && aggFind.length > 0) {
 		for (var mDMidx = 0; mDMidx < aggFind.length; mDMidx++) {
 			var thisTeamMatch = aggFind[mDMidx];
-			//logger.debug(thisFuncName + 'Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
+			//logger.debug('Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
 			if (thisTeamMatch.data)
 			{
-				//logger.debug(thisFuncName + 'Adding data to map');
+				//logger.debug('Adding data to map');
 				matchDataMap[thisTeamMatch.match_key] = thisTeamMatch.data;
 			}
 		}
@@ -168,16 +166,16 @@ router.get("/teamintel", wrap(async (req, res) => {
 	);
 	if (matches && matches.length > 0) {
 		for (var matchesIdx = 0; matchesIdx < matches.length; matchesIdx++) {
-			//logger.debug(thisFuncName + 'For match ' + matches[matchesIdx].key);
+			//logger.debug('For match ' + matches[matchesIdx].key);
 			var thisScoreData = matchDataMap[matches[matchesIdx].key];
 			if (thisScoreData)
 			{
-				//logger.debug(thisFuncName + 'Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
+				//logger.debug('Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
 				matches[matchesIdx].scoringdata = thisScoreData;
 			}
 		}
 	}
-	logger.trace(thisFuncName + 'matches=' + JSON.stringify(matches));
+	logger.trace('matches=' + JSON.stringify(matches));
 
 	// Ranking point info
 	var rankingPoints = await utilities.findOne("rankingpoints", {year: eventYear});
@@ -212,7 +210,7 @@ router.get("/teamintel", wrap(async (req, res) => {
 		var thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -220,14 +218,14 @@ router.get("/teamintel", wrap(async (req, res) => {
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggFind = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggFind && aggFind[0])
 		aggresult = aggFind[0];
-	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -248,9 +246,9 @@ router.get("/teamintel", wrap(async (req, res) => {
 			aggTable.push(aggRow);
 		}
 	}
-	//logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
-	//logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
-	//logger.debug(thisFuncName + 'pitData1=' + JSON.stringify(pitData1));
+	//logger.debug('aggTable=' + JSON.stringify(aggTable));
+	//logger.debug('pitData=' + JSON.stringify(pitData));
+	//logger.debug('pitData1=' + JSON.stringify(pitData1));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -276,14 +274,13 @@ router.get("/teamintel", wrap(async (req, res) => {
 }));
 
 router.get("/teamintelhistory", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.teamintelhistory*[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'teamintelhistory[get]');
+	logger.info('ENTER');
 	
 	var teamKey = req.query.team_key;
 	if (!teamKey) throw Error("Please specify a team_key.");
 	
-	logger.debug(thisFuncName + 'teamKey=' + teamKey);
+	logger.debug('teamKey=' + teamKey);
 	
 	// 2020-02-21, M.O'C: Fixed to be event year
 	var eventYear = req.event.year;
@@ -301,10 +298,10 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	);
 	if(!team) throw Error(`Team ${teamKey.substring(3)} does not exist or did not participate in this event.`);
 	
-	//logger.debug(thisFuncName + 'team=' + JSON.stringify(team));
+	//logger.debug('team=' + JSON.stringify(team));
 
 	// Pull in ALL individual scouting data for this team, for this event, to enhance the match data
-	logger.debug(thisFuncName + 'Pulling scoring data for teamKey=' + teamKey);
+	logger.debug('Pulling scoring data for teamKey=' + teamKey);
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggFind = await utilities.find("matchscouting", {"org_key": orgKey, "team_key": teamKey, "year": eventYear}, {});
 	// Build a map of match_key->data
@@ -312,10 +309,10 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	if (aggFind && aggFind.length > 0) {
 		for (var mDMidx = 0; mDMidx < aggFind.length; mDMidx++) {
 			var thisTeamMatch = aggFind[mDMidx];
-			//logger.debug(thisFuncName + 'Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
+			//logger.debug('Match scouting data for thisTeamMatch.match_key=' + thisTeamMatch.match_key);
 			if (thisTeamMatch.data)
 			{
-				//logger.debug(thisFuncName + 'Adding data to map');
+				//logger.debug('Adding data to map');
 				matchDataMap[thisTeamMatch.match_key] = thisTeamMatch.data;
 			}
 		}
@@ -331,11 +328,11 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	
 	if (matches && matches.length > 0) {
 		for (var match of matches) {
-			//logger.debug(thisFuncName + 'For match ' + matches[matchesIdx].key);
+			//logger.debug('For match ' + matches[matchesIdx].key);
 			var thisScoreData = matchDataMap[match.key];
 			if (thisScoreData)
 			{
-				//logger.debug(thisFuncName + 'Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
+				//logger.debug('Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
 				match.scoringdata = thisScoreData;
 			}
 			// 2020-03-09 JL: get list of all events that these matches contain
@@ -388,7 +385,7 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 		var thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -396,14 +393,14 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggFind = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggFind && aggFind[0])
 		aggresult = aggFind[0];
-	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -424,10 +421,10 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 			aggTable.push(aggRow);
 		}
 	}
-	//logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	//logger.debug('aggTable=' + JSON.stringify(aggTable));
 
-	//logger.debug(thisFuncName + 'pitData=' + JSON.stringify(pitData));
-	//logger.debug(thisFuncName + 'pitData1=' + JSON.stringify(pitData1));
+	//logger.debug('pitData=' + JSON.stringify(pitData));
+	//logger.debug('pitData1=' + JSON.stringify(pitData1));
 
 	res.render("./reports/teamintelhistory", {
 		title: "Intel History: Team " + teamKey.substring(3),
@@ -441,15 +438,14 @@ router.get("/teamintelhistory", wrap(async (req, res) => {
 	});
 }));
 
-router.get("/matchintel*", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.matchintel*[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+router.get("/matchintel", wrap(async (req, res) => {
+	logger.addContext('funcName', 'matchintel[get]');
+	logger.info('ENTER');
 	
 	var matchKey = req.query.key;
 	if (!matchKey) throw Error('No match key specified.');
 	
-	logger.debug(thisFuncName + 'matchKey=' + matchKey);
+	logger.debug('matchKey=' + matchKey);
 	
 	var match = await utilities.findOne("matches", 
 		{"key": matchKey}, {},
@@ -457,22 +453,21 @@ router.get("/matchintel*", wrap(async (req, res) => {
 	);
 	if (!match) throw Error(`Could not find match: ${matchKey}`);
 	
-	//logger.debug(thisFuncName + 'match=' + JSON.stringify(match));
+	//logger.debug('match=' + JSON.stringify(match));
 	res.render("./reports/matchintel", {
 		title: "Intel: Match "+matchKey.substring(matchKey.indexOf('qm')+2),
 		match: match
 	});
 }));
 
-router.get("/teammatchintel*", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.teammatchintel*[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+router.get("/teammatchintel", wrap(async (req, res) => {
+	logger.addContext('funcName', 'teammatchintel[get]');
+	logger.info('ENTER');
 	
 	var matchTeamKey = req.query.key;
 	if (!matchTeamKey) throw Error('No team-match key specified.');
 	
-	logger.debug(thisFuncName + 'teamMatchKey=' + matchTeamKey);
+	logger.debug('teamMatchKey=' + matchTeamKey);
 	
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
@@ -514,7 +509,7 @@ router.get("/teammatchintel*", wrap(async (req, res) => {
 	}
 	
 	
-	//logger.debug(thisFuncName + 'teammatch=' + JSON.stringify(teammatch));
+	//logger.debug('teammatch=' + JSON.stringify(teammatch));
 	res.render("./reports/teammatchintel", {
 		title: `Intel: ${matchType} ${matchNum} Team ${teamNum}`,
 		layout: layout,
@@ -526,9 +521,8 @@ router.get("/teammatchintel*", wrap(async (req, res) => {
 }));
 
 router.get("/alliancestats", wrap(async (req, res) =>  {
-	
-	var thisFuncName = "reports.alliancestats[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'alliancestats[get]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var eventKey = req.event.key;
@@ -562,9 +556,8 @@ router.get("/alliancestats", wrap(async (req, res) =>  {
 }));
 
 router.get("/teamdata", wrap(async (req, res) =>  {
-	
-	var thisFuncName = "reports.teamdata[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'teamdata[get]');
+	logger.info('ENTER');
 	
 	// 2020-03-21 JL: Changed query.key to query.team_key
 	var eventYear = req.event.year;
@@ -574,7 +567,7 @@ router.get("/teamdata", wrap(async (req, res) =>  {
 	
 	if (!teamKey) throw Error("Must specify team key for reports/teamdata");
 			
-	logger.debug(`${thisFuncName} teamKey: ${teamKey}`);
+	logger.debug(`teamKey: ${teamKey}`);
 
 	// get the specified team object
 	// 2020-02-09, M.O'C: Adjusted "currentteams" to "teams"
@@ -586,13 +579,13 @@ router.get("/teamdata", wrap(async (req, res) =>  {
 	
 	if (!team) throw Error("Could not find team: " + teamKey);
 	
-	logger.debug(`${thisFuncName} team: ${JSON.stringify(team)}`);
+	logger.debug(`team: ${JSON.stringify(team)}`);
 
 	// get the scoring data for the matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var matches = await utilities.find("matchscouting", {"team_key": teamKey, "year": eventYear, "org_key": orgKey, "event_key": eventKey}, {sort: {"match_number": -1}});
 	
-	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.trace(`matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
@@ -600,7 +593,7 @@ router.get("/teamdata", wrap(async (req, res) =>  {
 	var colCookie = req.cookies[cookie_key];
 	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
 
-	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -617,9 +610,8 @@ router.get("/teamdata", wrap(async (req, res) =>  {
 }));
 
 router.get("/matchdata", wrap(async (req, res) =>  {
-	
-	var thisFuncName = "reports.matchdata[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'matchdata[get]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var eventKey = req.event.key;
@@ -628,19 +620,19 @@ router.get("/matchdata", wrap(async (req, res) =>  {
 
 	if (!matchKey) throw Error('Must specify match key.')
 	
-	logger.debug(`${thisFuncName} matchKey: ${matchKey}`);
+	logger.debug(`matchKey: ${matchKey}`);
 
 	// get the specified match object
 	var match = await utilities.findOne("matches", {"key": matchKey}, {});
 	if (!match) throw Error(`Could not find match: ${matchKey}`);
 	
-	logger.trace(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.trace(`match: ${JSON.stringify(match)}`);
 
 	// get the scoring data for the match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var matches = await utilities.find("matchscouting", {"org_key": orgKey, "match_key": matchKey}, {});
 	
-	logger.trace(`${thisFuncName} matches: ${JSON.stringify(matches)}`);
+	logger.trace(`matches: ${JSON.stringify(matches)}`);
 
 	// get the scoring layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
@@ -648,7 +640,7 @@ router.get("/matchdata", wrap(async (req, res) =>  {
 	var colCookie = req.cookies[cookie_key];
 	var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
 
-	logger.trace(`${thisFuncName} scoreLayout: ${JSON.stringify(scoreLayout)}`);
+	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -665,9 +657,8 @@ router.get("/matchdata", wrap(async (req, res) =>  {
 }));
 
 router.get("/matchmetrics", wrap(async (req, res) =>  {
-	
-	var thisFuncName = "reports.matchmetrics[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'matchmetrics[get]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var eventKey = req.event.key;
@@ -676,12 +667,12 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 	
 	if (!matchKey) throw Error('Must specify match key.')
 	
-	logger.debug(`${thisFuncName} matchKey: ${matchKey}`);
+	logger.debug(`matchKey: ${matchKey}`);
 
 	// get the specified match object
 	var match = await utilities.findOne("matches", {"key": matchKey}, {}) || {};
 	
-	logger.trace(`${thisFuncName} match: ${JSON.stringify(match)}`);
+	logger.trace(`match: ${JSON.stringify(match)}`);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
 	// db.scoringdata.aggregate( [ 
@@ -711,14 +702,14 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 	}
 	aggQuery.push({ $group: groupClause });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR && aggR[0])
 		aggresult = aggR[0];
-	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -739,14 +730,14 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 	aggQuery.push({ $match : { "team_key": {$in: blueAllianceArray}, "org_key": orgKey, "event_key": eventKey } });
 	// reuse prior groupClause
 	aggQuery.push({ $group: groupClause });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR2 = await utilities.aggregate("matchscouting", aggQuery);
 	aggresult = {};
 	if (aggR2 && aggR2[0])
 		aggresult = aggR2[0];
-	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	// Utilize pointer to aggTable to line up data
@@ -760,7 +751,7 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 		}
 	}
 
-	logger.trace(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	logger.trace('aggTable=' + JSON.stringify(aggTable));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -775,9 +766,8 @@ router.get("/matchmetrics", wrap(async (req, res) =>  {
 }));
 
 router.get("/metricsranked", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.metricsranked[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'metricsranked[get]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
@@ -814,7 +804,7 @@ router.get("/metricsranked", wrap(async (req, res) => {
 		var thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			//groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			//groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -822,7 +812,7 @@ router.get("/metricsranked", wrap(async (req, res) => {
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate("matchscouting", aggQuery);
@@ -831,7 +821,7 @@ router.get("/metricsranked", wrap(async (req, res) => {
 	if (aggR)
 		aggData = aggR;
 		//aggresult = docs[0];
-	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool rows of aggregate results into tabular form - update values as higher values found
 	var aggTable = [];
@@ -868,7 +858,7 @@ router.get("/metricsranked", wrap(async (req, res) => {
 			aggTable.push(aggRow);
 		}
 	}
-	logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	logger.debug('aggTable=' + JSON.stringify(aggTable));
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -882,16 +872,15 @@ router.get("/metricsranked", wrap(async (req, res) => {
 }));
 
 router.get("/metrics", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.metrics[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'metrics[get]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
-	logger.debug(thisFuncName + 'event_key=' + event_key);
+	logger.debug('event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will combo ALL teams
 	// db.scoringdata.aggregate( [ 
@@ -924,7 +913,7 @@ router.get("/metrics", wrap(async (req, res) => {
 		var thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			//logger.debug(thisFuncName + 'thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
 			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
@@ -932,14 +921,14 @@ router.get("/metrics", wrap(async (req, res) => {
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR && aggR[0])
 		aggresult = aggR[0];
-	//logger.debug(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -960,7 +949,7 @@ router.get("/metrics", wrap(async (req, res) => {
 			aggTable.push(aggRow);
 		}
 	}
-	//logger.debug(thisFuncName + 'aggTable=' + JSON.stringify(aggTable));
+	//logger.debug('aggTable=' + JSON.stringify(aggTable));
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -973,20 +962,19 @@ router.get("/metrics", wrap(async (req, res) => {
 	});
 }));
 
-router.get("/metricintel*", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.metric*[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+router.get("/metricintel", wrap(async (req, res) => {
+	logger.addContext('funcName', 'metricintel[get]');
+	logger.info('ENTER');
 	
 	var metricKey = req.query.key;
 	if (!metricKey) throw Error('No metric key specified.');
 	
-	logger.debug(thisFuncName + 'metricKey=' + metricKey);
+	logger.debug('metricKey=' + metricKey);
 	
 	// for later querying by event_key
 	var eventKey = req.event.key;
 	var orgKey = req.user.org_key;
-	logger.debug(thisFuncName + 'event_key=' + eventKey);
+	logger.debug('event_key=' + eventKey);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will output ALL teams
 	// db.scoringdata.aggregate( [ 
@@ -1013,7 +1001,7 @@ router.get("/metricintel*", wrap(async (req, res) => {
 	sortClause[sortKey] = -1;
 
 	aggQuery.push({ $group: groupClause }, { $sort: sortClause });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggdata = await utilities.aggregate("matchscouting", aggQuery);
@@ -1031,7 +1019,7 @@ router.get("/metricintel*", wrap(async (req, res) => {
 		}
 	}
 	
-	//logger.debug(thisFuncName + 'aggdata=' + JSON.stringify(aggdata));
+	//logger.debug('aggdata=' + JSON.stringify(aggdata));
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -1049,15 +1037,14 @@ router.get("/metricintel*", wrap(async (req, res) => {
  * Metrics view
  */
 router.get("/allteammetrics", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.allteammetrics[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'allteammetrics[get]');
+	logger.info('ENTER');
 	
 	// for later querying by event_key
 	var eventKey = req.event.key;
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
-	logger.debug(thisFuncName + 'event_key=' + eventKey);
+	logger.debug('event_key=' + eventKey);
 	
 	// get the current rankings
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
@@ -1065,10 +1052,10 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 	
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+		//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 	}
-	//logger.debug(thisFuncName + 'rankMap=' + JSON.stringify(rankMap));
+	//logger.debug('rankMap=' + JSON.stringify(rankMap));
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
 	// db.scoringdata.aggregate( [ 
@@ -1105,7 +1092,7 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 	}
 	aggQuery.push({ $group: groupClause });
 	aggQuery.push({ $sort: { _id: 1 } });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate("matchscouting", aggQuery);
@@ -1113,7 +1100,7 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 	if (aggR)
 		aggArray = aggR;
 		
-	//logger.debug(thisFuncName + 'rankMap=' + rankMap);
+	//logger.debug('rankMap=' + rankMap);
 	
 	// Rewrite data into display-friendly values
 	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
@@ -1134,7 +1121,7 @@ router.get("/allteammetrics", wrap(async (req, res) => {
 			aggArray[aggIdx] = thisAgg;
 		}
 	}
-	//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
+	//logger.debug('aggArray=' + JSON.stringify(aggArray));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -1160,8 +1147,8 @@ router.get('/driveteam', wrap(async (req, res) => {
 //// Data exports
 
 router.get("/exportdata", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.exportdata[get]: ";
+	logger.addContext('funcName', 'exportdata[get]');
+	logger.info('ENTER');
 
 	// for later querying by event_key
 	var eventKey = req.event.key;
@@ -1174,7 +1161,7 @@ router.get("/exportdata", wrap(async (req, res) => {
 		return;
 	}
 
-	logger.info(thisFuncName + 'ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',req.shortagent=' + JSON.stringify(req.shortagent));
+	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
 	var matchLayout = await utilities.find("layout", 
@@ -1184,7 +1171,7 @@ router.get("/exportdata", wrap(async (req, res) => {
 	);
 
 	// sanity check
-	//logger.debug(thisFuncName + "layout=" + JSON.stringify(matchLayout));
+	//logger.debug("layout=" + JSON.stringify(matchLayout));
 	if (!matchLayout || matchLayout.length == 0) {
 		res.redirect("/?alert=No data found for type '" + dataType + "'.");
 		return;
@@ -1221,7 +1208,7 @@ router.get("/exportdata", wrap(async (req, res) => {
 	var isFirstRow = true;
 	for (var i in scored) {
 		var thisScored = scored[i];
-		//logger.debug(thisFuncName + "thisScored=" + JSON.stringify(thisScored));
+		//logger.debug("thisScored=" + JSON.stringify(thisScored));
 		// should be redundant with the "$exists: true" in the DB find query, BUT... just in case...
 		if (thisScored.data) {
 			// emit header row if this is the first line of data
@@ -1236,7 +1223,7 @@ router.get("/exportdata", wrap(async (req, res) => {
 					if (matchDataHelper.isMetric(thisItem.type)) 
 						headerRow += "," + thisItem.id;
 				}
-				//logger.debug(thisFuncName + "headerRow=" + headerRow);
+				//logger.debug("headerRow=" + headerRow);
 				fullCSVoutput = headerRow;
 			}
 
@@ -1276,12 +1263,12 @@ router.get("/exportdata", wrap(async (req, res) => {
 					}
 				}
 			}
-			//logger.debug(thisFuncName + "dataRow=" + dataRow);
+			//logger.debug("dataRow=" + dataRow);
 			fullCSVoutput += "\n" + dataRow;
 		}
 	}	
 
-	logger.info(thisFuncName + "EXIT returning " + scored.length + " rows of CSV");
+	logger.info("EXIT returning " + scored.length + " rows of CSV");
 
 	// Send back simple text
 	res.setHeader('Content-Type', 'text/csv');
@@ -1292,8 +1279,8 @@ router.get("/exportdata", wrap(async (req, res) => {
 //// Choosing & setting scoring selections
 
 router.get("/choosecolumns", wrap(async (req, res) =>  {
-	var thisFuncName = "reports.choosecolumns[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'choosecolumns[get]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
@@ -1304,14 +1291,14 @@ router.get("/choosecolumns", wrap(async (req, res) =>  {
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
-	//logger.debug(thisFuncName + "matchlayout=" + JSON.stringify(matchlayout))
+	//logger.debug("matchlayout=" + JSON.stringify(matchlayout))
 
 	var cookie_key = orgKey + "_" + eventYear + "_cols";
 	var savedCols = {};
 	var colCookie = req.cookies[cookie_key];
 
 	if (req.cookies[cookie_key]) {
-		logger.trace(thisFuncName + "req.cookies[cookie_key]=" + JSON.stringify(req.cookies[cookie_key]))
+		logger.trace("req.cookies[cookie_key]=" + JSON.stringify(req.cookies[cookie_key]))
 	}
 
 	//colCookie = "a,b,ccc,d";
@@ -1320,7 +1307,7 @@ router.get("/choosecolumns", wrap(async (req, res) =>  {
 		for (var i in savedColArray)
 			savedCols[savedColArray[i]] = savedColArray[i];
 	}
-	logger.debug(thisFuncName + "savedCols=" + JSON.stringify(savedCols))
+	logger.debug("savedCols=" + JSON.stringify(savedCols))
 
 	res.render("./reports/choosecolumns", {
 		title: "Choose Report Columns",
@@ -1331,8 +1318,8 @@ router.get("/choosecolumns", wrap(async (req, res) =>  {
 }));
 
 router.post("/choosecolumns", wrap(async (req, res) => {
-	var thisFuncName = "reports.choosecolumns[post]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'choosecolumns[post]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
@@ -1340,7 +1327,7 @@ router.post("/choosecolumns", wrap(async (req, res) => {
 
 	var setOrgDefault = false;
 
-	logger.trace(thisFuncName + "req.body=" + JSON.stringify(req.body));
+	logger.trace("req.body=" + JSON.stringify(req.body));
 	var first = true;
 	var columnCookie = '';
 	for (var i in req.body) {
@@ -1354,19 +1341,19 @@ router.post("/choosecolumns", wrap(async (req, res) => {
 			columnCookie += i;
 		}
 	}
-	logger.debug(thisFuncName + "columnCookie=" + columnCookie);
+	logger.debug("columnCookie=" + columnCookie);
 
 	res.cookie(cookieKey, columnCookie, {maxAge: 30E9});
 	
 	// setting org defaults? NOTE only for Team Admins and above
 	if (setOrgDefault && req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN) {
-		logger.debug(thisFuncName + "Setting org defaults");
+		logger.debug("Setting org defaults");
 		var thisOrg = await utilities.findOne("orgs", 
 			{org_key: orgKey}, {},
 			{allowCache: true}
 		);
 		var thisConfig = thisOrg.config;
-		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
+		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
 		if (!thisConfig) {
 			thisConfig = {};
 			thisOrg['config'] = thisConfig;
@@ -1383,15 +1370,15 @@ router.post("/choosecolumns", wrap(async (req, res) => {
 		// update DB
 		await utilities.update("orgs", {org_key: orgKey}, {$set: {"config.columnDefaults": theseColDefaults}});
 
-		//logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
+		//logger.debug("thisOrg=" + JSON.stringify(thisOrg));
 	}
 
 	res.redirect("../home");
 }));
 
 router.post("/clearorgdefaultcols", wrap(async (req, res) => {
-	var thisFuncName = "reports.clearorgdefaultcols[post]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'clearorgdefaultcols[post]');
+	logger.info('ENTER');
 	
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
@@ -1402,7 +1389,7 @@ router.post("/clearorgdefaultcols", wrap(async (req, res) => {
 			{allowCache: true}
 		);
 		var thisConfig = thisOrg.config;
-		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
+		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
 		if (!thisConfig) {
 			thisConfig = {};
 			thisOrg['config'] = thisConfig;

@@ -3,7 +3,13 @@ const router = express.Router();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const bcrypt = require('bcryptjs');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('user');
+
+router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
+	next();
+}));
 
 //Redirect to index
 router.get('/', wrap(async (req, res) => {
@@ -17,10 +23,9 @@ router.get('/selectorg', wrap(async (req, res) =>  {
 }));
 
 router.get('/login', wrap(async (req, res) => {
+	logger.addContext('funcName', 'login[get]');
 	
-	var thisFuncName = 'user.js:login: ';
-	
-	logger.debug(`${thisFuncName} ENTER`);
+	logger.debug(`ENTER`);
 	
 	//If there is no user logged in, send them to select-org page
 	if( !req.user ){
@@ -58,10 +63,10 @@ router.post('/login', wrap(async (req, res) => {
 }));
 
 router.post('/login/select', wrap(async (req, res) => {
+	logger.addContext('funcName', 'login/select[post]');
 	//This URL can only be accessed via a POST method, because it requires an organization's password.
-	var thisFuncName = 'user.js:login/select[POST]: ';
 	
-	logger.debug(`${thisFuncName} ENTER`);
+	logger.debug(`ENTER`);
 	
 	//this can only be accessed if someone has logged in to default_user'
 	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return null;
@@ -69,7 +74,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	//get contents of request and selected organization
 	var org_key = req.user.org_key;
 	var org_password = req.body.org_password;
-	logger.debug(`${thisFuncName} - ${org_key}`);
+	logger.debug(`- ${org_key}`);
 	
 	
 	//Make sure that form is filled
@@ -101,8 +106,6 @@ router.post('/login/select', wrap(async (req, res) => {
 			{sort: {name: 1}},
 			{allowCache: true}
 		);
-
-		//logger.debug(thisFuncName + "users=" + JSON.stringify(users));
 				
 		res.render('./user/selectuser', {
 			title: `Sign In to ${selectedOrg.nickname}`,
@@ -119,15 +122,14 @@ router.post('/login/select', wrap(async (req, res) => {
 }));
 
 router.post('/login/withoutpassword', wrap(async (req, res) => {
-	
-	var thisFuncName = 'user.js:/login/withoutpassword[POST]: ';
+	logger.addContext('funcName', 'login/withoutpassword[post]');
 	
 	//This is where /user/login/selectuser sends a request first
 	var userID = req.body.user;
 	var org_key = req.body.org_key;
 	var org_password = req.body.org_password;
 	
-	logger.debug(`${thisFuncName} userID=${userID}`);
+	logger.debug(`userID=${userID}`);
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
@@ -178,7 +180,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		});
 	}
 	
-	logger.debug(`${thisFuncName} user: ${JSON.stringify(user)}`);
+	logger.debug(`user: ${JSON.stringify(user)}`);
 	
 	//Get role information from database, and compare to access role for a scouter
 	var role_key = user.role_key;
@@ -213,7 +215,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		//First, check if the user has a password that is default
 		if( user.password == "default"){
 			
-			logger.debug(`${thisFuncName} Logging in scouter`);
+			logger.debug(`Logging in scouter`);
 		
 			//If password is default, then we may proceed
 			req.logIn(user, function(err){
@@ -221,8 +223,8 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 				//If error, then log and return an error
 				if(err){ console.error(err); return res.send({status: 500, alert: err}) };
 				
-				logger.debug(`${thisFuncName} Sending success/password_needed: false`)
-				logger.info(`${thisFuncName} ${user.name} has logged in`);
+				logger.debug(`Sending success/password_needed: false`)
+				logger.info(`${user.name} has logged in`);
 				
 				var redirectURL;
 				//if redirectURL has been passed from another function then send it back
@@ -243,7 +245,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		}
 		else{
 			
-			logger.debug(`${thisFuncName} Sending password_needed: true`);
+			logger.debug(`Sending password_needed: true`);
 			
 			//if password is not default, then return with password needed.
 			res.send({
@@ -254,7 +256,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	}
 	else{
 		
-		logger.debug(`${thisFuncName} Logging in viewer`)
+		logger.debug(`Logging in viewer`)
 		
 		//if access_level < process.env.ACCESS_SCOUTER, then log in user
 		req.logIn(user, function(err){
@@ -262,7 +264,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 			//If error, then log and return an error
 			if(err){ console.error(err); return res.send({status: 500, alert: err}) };
 			
-			logger.info(`${thisFuncName} ${user.name} has logged in`);
+			logger.info(`${user.name} has logged in`);
 			
 			//Now, return with redirect_url: '/'
 			res.send({
@@ -275,16 +277,15 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 }));
 
 router.post('/login/withpassword', wrap(async (req, res) => {
-	
-	var thisFuncName = 'user.js/login/withpassword[POST]: ';
+	logger.addContext('funcName', 'login/withpassword[post]');
 	
 	var userID = req.body.user;
 	var userPassword = req.body.password;
 	var org_key = req.body.org_key;
 	var org_password = req.body.org_password;
 	
-	logger.debug(`${thisFuncName} userID=${userID}`);
-	logger.debug(`${thisFuncName} password=${userPassword}`);
+	logger.debug(`userID=${userID}`);
+	logger.debug(`password=${userPassword}`);
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
@@ -336,11 +337,11 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	//Compare passwords
 	var userComparison = await bcrypt.compare( userPassword, user.password );
 	
-	logger.debug(`${thisFuncName} user=${JSON.stringify(user)}, password comparison:${userComparison}`);
+	logger.debug(`user=${JSON.stringify(user)}, password comparison:${userComparison}`);
 	
 	if(userComparison){
 		
-		logger.debug(`${thisFuncName} Logging in`);
+		logger.debug(`Logging in`);
 		
 		//If comparison succeeded, then log in user
 		req.logIn(user, async function(err){
@@ -373,7 +374,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	}
 	else{
 		
-		logger.debug(`${thisFuncName} Login failed`);
+		logger.debug(`Login failed`);
 		
 		//If authentication failed, then send alert
 		return res.send({
@@ -384,8 +385,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 }));
 
 router.post('/login/createpassword', wrap(async (req, res) =>  {
-	
-	var thisFuncName = 'user.js/login/createpassword[POST]: ';
+	logger.addContext('funcName', 'login/createpassword[post]');
 	
 	var userID = req.body.user;
 	var org_key = req.body.org_key;
@@ -393,7 +393,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	var p1 = req.body.newPassword1;
 	var p2 = req.body.newPassword2;
 	
-	logger.info(`${thisFuncName} Request to create password: ${JSON.stringify(req.body)}`);
+	logger.info(`Request to create password: ${JSON.stringify(req.body)}`);
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
@@ -488,6 +488,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
  *
  */
 router.get('/changepassword', wrap(async (req, res) => {
+	logger.addContext('funcName', 'changepassword[get]');
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	res.render('./user/changepassword', {
@@ -497,6 +498,7 @@ router.get('/changepassword', wrap(async (req, res) => {
 
 //Page to change your own password.
 router.post('/changepassword', wrap(async (req, res) => {
+	logger.addContext('funcName', 'changepassword[post]');
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	var currentPassword = req.body.currentPassword;
@@ -539,6 +541,8 @@ router.post('/changepassword', wrap(async (req, res) => {
 
 //Log out
 router.get("/logout", wrap(async (req, res) =>  {
+	logger.addContext('funcName', 'logout[get]');
+	logger.info('ENTER');
 	//Logout works a bit differently now.
 	//First destroy session, THEN "log in" to default_user of organization.
 	
@@ -579,6 +583,7 @@ router.get("/logout", wrap(async (req, res) =>  {
 
 //Switch a user's organization
 router.get('/switchorg', wrap(async (req, res) => {
+	logger.addContext('funcName', 'switchorg[get]');
 	
 	//This will log the user out of their organization.
 	

@@ -1,5 +1,5 @@
 'use strict';
-const logger = require('@log4js-node/log4js-api').getLogger('helpers');
+const logger = require('@log4js-node/log4js-api').getLogger('helpers.upload');
 /*const logger = {
 	debug: console.log,
 	info: console.log,
@@ -20,13 +20,13 @@ uploadHelper.config = function(utilitiesModule){
  * @returns {ImageLinks} Links to images
  */
 uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
-	const thisFuncName = "uploadhelper.findTeamImages: ";
+	logger.addContext('funcName', 'findTeamImages');
 	
 	if (!(typeof orgKey == 'string')) throw new TypeError('orgKey must be string');
 	if (!(typeof year == 'number')) throw new TypeError('year must be number');
 	if (!(typeof teamKey == 'string')) throw new TypeError('teamKey must be string');
 	
-	logger.debug(`${thisFuncName} Finding list of images`)
+	logger.debug(`Finding list of images`)
 	//Sorted by inverse of upload time
 	var uploads = await utilities.find("uploads", 
 		{org_key: orgKey, year: year, team_key: teamKey, removed: false}, 
@@ -36,7 +36,7 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 	var imageKeys = {};
 	var imageLinks = new ImageLinks();
 	
-	logger.debug(`${thisFuncName} uploads=${JSON.stringify(uploads)}`)
+	logger.debug(`uploads=${JSON.stringify(uploads)}`)
 	
 	if (uploads[0]) {
 		for (var upload of uploads) {
@@ -60,7 +60,7 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 		}
 	}
 	
-	logger.info(`${thisFuncName} imageKeys=${JSON.stringify(imageKeys)}`);
+	logger.info(`imageKeys=${JSON.stringify(imageKeys)}`);
 	
 	//For main, a, b, and c, set links to _sm, _md, and _lg respectively
 	for (var prop in imageKeys) {
@@ -71,8 +71,9 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 		}
 	}
 	
-	logger.debug(`${thisFuncName} imageLinks=${JSON.stringify(imageLinks)}`);
+	logger.debug(`imageLinks=${JSON.stringify(imageLinks)}`);
 	
+	logger.removeContext('funcName');
 	return imageLinks;
 }
 
@@ -82,7 +83,7 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
  * @returns {ImageLinks} Links to images
  */
 uploadHelper.getLinks = (upload) => {
-	const thisFuncName = "uploadhelper.getLinks: ";
+	logger.addContext('funcName', 'findTeamImages');
 	
 	var imageLinks = new ImageLinks();
 	
@@ -92,8 +93,9 @@ uploadHelper.getLinks = (upload) => {
 	imageLinks.md = key + '_md.jpg';
 	imageLinks.lg = key + '_lg.jpg';
 	
-	logger.trace(`${thisFuncName} upload=${JSON.stringify(upload)}, imageLinks=${JSON.stringify(imageLinks)}`);
+	logger.trace(`upload=${JSON.stringify(upload)}, imageLinks=${JSON.stringify(imageLinks)}`);
 	
+	logger.removeContext('funcName');
 	return imageLinks;
 }
 
@@ -105,13 +107,13 @@ uploadHelper.getLinks = (upload) => {
  * @returns {ImageLinks[]} Links to images
  */
 uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
-	const thisFuncName = "uploadhelper.findTeamImagesMultiple: ";
+	logger.addContext('funcName', 'findTeamImages');
 	
 	if (!(typeof orgKey == 'string')) throw new TypeError('orgKey must be string');
 	if (!(typeof year == 'number')) throw new TypeError('year must be number');
 	if (!(typeof teamKeys == 'object')) throw new TypeError('teamKey must be array');
 	
-	logger.debug(`${thisFuncName} Finding list of images`);
+	logger.debug(`Finding list of images`);
 	
 	//Sorted by inverse of upload time
 	var uploads = await utilities.find("uploads",
@@ -124,7 +126,7 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 	var imageLinks = new ImageLinks();
 	
 	//console.log(uploads);
-	//logger.debug(`${thisFuncName} uploads=${JSON.stringify(uploads)}`);
+	//logger.debug(`uploads=${JSON.stringify(uploads)}`);
 	
 	//Sort results by team number
 	uploads.sort((a, b) => {
@@ -203,8 +205,9 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 		imageLinksArr.push(imageLinks);
 	}
 	
-	//logger.debug(`${thisFuncName} imageLinksArr=${JSON.stringify(imageLinksArr)}`);
+	//logger.debug(`imageLinksArr=${JSON.stringify(imageLinksArr)}`);
 	
+	logger.removeContext('funcName');
 	return imageLinksArr;
 }
 

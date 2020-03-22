@@ -1,5 +1,5 @@
 'use strict';
-const logger = require('@log4js-node/log4js-api').getLogger('helpers');
+const logger = require('@log4js-node/log4js-api').getLogger('helpers.matchData');
 var utilities = null;
 var matchDataHelper = module.exports = {};
 
@@ -59,8 +59,8 @@ matchDataHelper.isMetric = function(type) {
  * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
  */
 matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_year, colCookie) {
-	var thisFuncName = "matchdatahelper.getModifiedMatchScoutingLayout: ";
-    logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
+	logger.addContext('funcName', 'getModifiedMatchScoutingLayout');
+    logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
     
     // create the return array
     var scorelayout = [];
@@ -83,9 +83,9 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
 			{org_key: org_key}, {},
 			{allowCache: true}
 		);
-		//logger.debug(thisFuncName + "thisOrg=" + JSON.stringify(thisOrg));
+		//logger.debug("thisOrg=" + JSON.stringify(thisOrg));
 		var thisConfig = thisOrg.config;
-		//logger.debug(thisFuncName + "thisConfig=" + JSON.stringify(thisConfig));
+		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
 		if (!thisConfig) {
 			thisConfig = {};
 			thisOrg['config'] = thisConfig;
@@ -96,24 +96,24 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
 			thisOrg.config['columnDefaults'] = theseColDefaults;
 		}
 
-		//logger.debug(thisFuncName + "theseColDefaults=" + JSON.stringify(theseColDefaults));
+		//logger.debug("theseColDefaults=" + JSON.stringify(theseColDefaults));
 		var defaultSet = theseColDefaults[event_year];		
-		//logger.debug(thisFuncName + "defaultSet=" + defaultSet);
+		//logger.debug("defaultSet=" + defaultSet);
 
 		if (defaultSet) {
 			colCookie = defaultSet;
-			logger.debug(thisFuncName + "Using org default cookies=" + colCookie);
+			logger.debug("Using org default cookies=" + colCookie);
 		}
 	}
 	
 	if (colCookie) {
-		//logger.debug(thisFuncName + "colCookie=" + colCookie);
+		//logger.debug("colCookie=" + colCookie);
 		noneSelected = false;
 		var savedColArray = colCookie.split(",");
 		for (var i in savedColArray)
 			savedCols[savedColArray[i]] = savedColArray[i];
 	}
-	//logger.debug(thisFuncName + "noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
+	//logger.debug("noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
 
 	// Use the cookies (if defined, or if defaults set) to slim down the layout array
 	if (noneSelected)
@@ -135,7 +135,9 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
     var retLength = -1;
     if (scorelayout)
         retLength = scorelayout.length;
-	logger.info(thisFuncName + 'EXIT returning ' + retLength);
+	logger.info('EXIT returning ' + retLength);
+	
+	logger.removeContext('funcName');
     return scorelayout;
 }
 
@@ -146,15 +148,16 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
  * @param {string} event_key Event key
  */
 matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year, event_key) {
+	logger.addContext('funcName', 'calculateAndStoreAggRanges');
 	var thisFuncName = "matchdatahelper.calculateAndStoreAggRanges: ";
-	logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
+	logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
 
 	var scorelayout = await utilities.find("layout", 
 		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
 		{sort: {"order": 1}},
 		{allowCache: true}
 	);
-    //logger.debug(thisFuncName + "scorelayout=" + JSON.stringify(scorelayout));        
+    //logger.debug("scorelayout=" + JSON.stringify(scorelayout));        
     
 	var aggQuery = [];
 	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
@@ -176,7 +179,7 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 	}
 	aggQuery.push({ $group: groupClause });
 	aggQuery.push({ $sort: { _id: 1 } });
-	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.trace('aggQuery=' + JSON.stringify(aggQuery));
 
 	// Run the aggregation!
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -217,12 +220,12 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 			thisMinMax['VARmin'] = VARmin; thisMinMax['VARmax'] = VARmax;
 			thisMinMax['MAXmin'] = MAXmin; thisMinMax['MAXmax'] = MAXmax;
 
-			logger.trace(thisFuncName + 'thisMinMax=' + JSON.stringify(thisMinMax));
+			logger.trace('thisMinMax=' + JSON.stringify(thisMinMax));
 
 			aggMinMaxArray.push(thisMinMax);
 		}
 	}
-	logger.trace(thisFuncName + 'aggMinMaxArray=' + JSON.stringify(aggMinMaxArray));
+	logger.trace('aggMinMaxArray=' + JSON.stringify(aggMinMaxArray));
 
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	// Delete the current agg ranges
@@ -235,7 +238,9 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
     var inserted = -1;
     if (aggMinMaxArray)
         inserted = aggMinMaxArray.length;
-	logger.info(thisFuncName + 'EXIT org_key=' + org_key + ', inserted ' + inserted);
+	logger.info('EXIT org_key=' + org_key + ', inserted ' + inserted);
+	
+	logger.removeContext('funcName');
 }
 
 class MatchData{
@@ -261,9 +266,9 @@ class MatchData{
  * @returns {MatchData} Data blob containing matches, teamRanks, team, and teamList
  */
 matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
+	logger.addContext('funcName', 'getUpcomingMatchData');
+	logger.info('ENTER event_key=' + event_key + ',team_key=' + team_key);
 	
-	var thisFuncName = "reports.getUpcomingMatchData(): ";
-	logger.info(thisFuncName + 'ENTER event_key=' + event_key + ',team_key=' + team_key);
 	var returnData = new MatchData(null, null, null, null);
 
 	var teamKey = team_key;
@@ -282,7 +287,7 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 	var teams = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
 	{
-		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		logger.debug("thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
 		teams = await utilities.find("teams", 
 			{"key": {$in: thisEvent.team_keys}}, 
 			{sort: {team_number: 1}},
@@ -344,7 +349,8 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 
 		returnData.matches = matches;
 	}	
-
+	
+	logger.removeContext('funcName');
 	return returnData;	
 }
 
@@ -376,14 +382,15 @@ class AllianceStatsData {
  * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
  */
 matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, org_key, teams_list, cookies ) {
-	var thisFuncName = "reports.getAllianceStatsData(): ";
-	logger.info(thisFuncName + 'ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
+	logger.addContext('funcName', 'getAllianceStatsData');
+	
+	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
 	var returnData = new AllianceStatsData(null, null, null, null, null);
 
 	var teams = teams_list;
 
 	var teamList = teams.split(',');
-	logger.debug(thisFuncName + 'teamList=' + JSON.stringify(teamList));
+	logger.debug('teamList=' + JSON.stringify(teamList));
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	var cookie_key = org_key + "_" + event_year + "_cols";
@@ -405,20 +412,20 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	logger.trace('aggQuery=' + JSON.stringify(aggQuery));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate("matchscouting", aggQuery);
 	var aggresult = {};
 	if (aggR)
 		aggresult = aggR;
-	logger.trace(thisFuncName + 'aggresult=' + JSON.stringify(aggresult));
+	logger.trace('aggresult=' + JSON.stringify(aggresult));
 
 	// Build a map of the result rows by team key
 	var aggRowsByTeam = {};
 	for (var resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
 		aggRowsByTeam[ aggresult[resultIdx]["_id"] ] = aggresult[resultIdx];
-	logger.trace( thisFuncName + 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
+	logger.trace( 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
 
 	// Unspool N rows of aggregate results into tabular form
 	var avgTable = [];
@@ -444,8 +451,8 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 			maxTable.push(maxRow);
 		}
 	}
-	logger.trace(thisFuncName + 'avgTable=' + JSON.stringify(avgTable));
-	logger.trace(thisFuncName + 'maxTable=' + JSON.stringify(maxTable));
+	logger.trace('avgTable=' + JSON.stringify(avgTable));
+	logger.trace('maxTable=' + JSON.stringify(maxTable));
 
 	//
 	// Calculate the 'normalized' ranges
@@ -453,7 +460,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 	var avgNorms = [];
 	for (var i in avgTable) {
 		var thisAvg = avgTable[i];
-		//logger.debug(thisFuncName + "i=" + i + ",key=" + thisAvg.key);
+		//logger.debug("i=" + i + ",key=" + thisAvg.key);
 		var min = 9e9;
 		var max = -9e9;
 		var theseKeys = Object.keys(thisAvg);
@@ -487,7 +494,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 	var maxNorms = [];
 	for (var i in maxTable) {
 		var thisMax = maxTable[i];
-		//logger.debug(thisFuncName + "i=" + i + ",key=" + thisMax.key);
+		//logger.debug("i=" + i + ",key=" + thisMax.key);
 		var min = 9e9;
 		var max = -9e9;
 		var theseKeys = Object.keys(thisMax);
@@ -517,8 +524,8 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 		}
 		maxNorms.push(thisNorm);
 	}
-	logger.trace(thisFuncName + "avgNorms=" + JSON.stringify(avgNorms));
-	logger.trace(thisFuncName + "maxNorms=" + JSON.stringify(maxNorms));
+	logger.trace("avgNorms=" + JSON.stringify(avgNorms));
+	logger.trace("maxNorms=" + JSON.stringify(maxNorms));
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -533,5 +540,6 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 	returnData.avgNorms = avgNorms;
 	returnData.maxNorms = maxNorms;
 
+	logger.removeContext('funcName');
 	return returnData;	
 }

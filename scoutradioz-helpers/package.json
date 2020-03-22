@@ -1,6 +1,6 @@
 {
   "name": "@firstteam102/scoutradioz-helpers",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A series of helper files for Scoutradioz functions",
   "main": "index.js",
   "scripts": {

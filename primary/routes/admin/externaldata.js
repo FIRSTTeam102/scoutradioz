@@ -1,9 +1,11 @@
 const router = require("express").Router();
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('externaldata');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 
 router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
 		next();
@@ -16,9 +18,8 @@ router.all('/*', wrap(async (req, res, next) => {
  * @view /events
  */
 router.get("/events", wrap(async (req, res) => {
-	
-	var thisFuncName = "externaldata.events[get]: ";
-	logger.info(thisFuncName + 'ENTER')
+	logger.addContext('funcName', 'events[get]');
+	logger.info('ENTER')
 	
 	var events = {};
 	
@@ -30,9 +31,9 @@ router.get("/events", wrap(async (req, res) => {
 	if (!year)
 	{
 		year = (new Date()).getFullYear();
-		logger.debug(thisFuncName + 'No year specified, defaulting to ' + year);
+		logger.debug('No year specified, defaulting to ' + year);
 	}
-	logger.debug(thisFuncName + 'Year: ' + year);
+	logger.debug('Year: ' + year);
 
 	var events = await utilities.find("events", {"year": parseInt(year)},{sort: {"start_date": 1, "end_date": 1, "name": 1}});
 		
@@ -40,7 +41,7 @@ router.get("/events", wrap(async (req, res) => {
 	var distinctYears = await utilities.distinct("events", "year");
 	var uniqueYears = distinctYears.sort();
 
-	logger.debug(thisFuncName + "uniqueYears=" + uniqueYears);
+	logger.debug("uniqueYears=" + uniqueYears);
 	
 	res.render("./manage/events", {
 		title: "Events",
@@ -70,7 +71,7 @@ router.post("/events", wrap(async (req, res) => {
 	
 	//Set up TBA url
 	var url = `events/${year}/simple`;
-	logger.debug(thisFuncName + "url=" + url);
+	logger.debug("url=" + url);
 	
 	//Submit request to TBA
 
@@ -97,9 +98,8 @@ router.post("/events", wrap(async (req, res) => {
  * @view /matches
  */
 router.get("/matches", wrap(async (req, res) => {
-	
-	var thisFuncName = "externaldata.matches[get]: ";
-	logger.info(thisFuncName + 'ENTER')
+	logger.addContext('funcName', 'matches[get]');
+	logger.info('ENTER')
 	
 	var matches = {};
 	
@@ -109,10 +109,10 @@ router.get("/matches", wrap(async (req, res) => {
     var eventKey = req.query.eventKey || req.query.event_key;
 	if (!eventKey)
 	{
-		logger.debug(thisFuncName + 'No event specified');
+		logger.debug('No event specified');
 		res.redirect("/admin/externaldata/events");
 	}
-	logger.debug(thisFuncName + 'eventKey=' + eventKey);
+	logger.debug('eventKey=' + eventKey);
 
 	// Read matches from DB for specified event
 	var matches = await utilities.find("matches", {"event_key": eventKey},{sort: {"time": 1}});
@@ -130,32 +130,31 @@ router.get("/matches", wrap(async (req, res) => {
  * @redirect /admin/externaldata/matches
  */
 router.post("/matches", wrap(async (req, res) => {
-	
-	var thisFuncName = "externaldata.matches[post]: ";
-	logger.info(thisFuncName + 'ENTER')
+	logger.addContext('funcName', 'matches[post]');
+	logger.info('ENTER')
 	
 	// var matchCol = db.get("matches");
 	// var eventCol = db.get("events");
 
     // Get our form value(s)
     var eventKey = req.body.eventKey;
-	logger.debug(thisFuncName + 'eventKey=' + eventKey);
+	logger.debug('eventKey=' + eventKey);
 	
 	//Set up TBA api request
 	var url = `event/${eventKey}/matches`;
-	logger.debug(thisFuncName + "url=" + url);
+	logger.debug("url=" + url);
 	
 	//Request from TBA
 	var eventData = await utilities.requestTheBlueAlliance(url);
 	var matches = JSON.parse(eventData);
-	logger.debug(`${thisFuncName} matches= ${JSON.stringify(matches)}`);
+	logger.debug(`matches= ${JSON.stringify(matches)}`);
 
 	//if request was invalid, redirect to admin page with alert message
 	if(matches.length == undefined || matches.length == 0){
 		return res.redirect("/manage?alert=Could not get matches from TBA for specified event " + eventKey);
 	}
 	
-	logger.debug(thisFuncName + 'Found ' + matches.length + ' data for event ' + eventKey);
+	logger.debug('Found ' + matches.length + ' data for event ' + eventKey);
 	
 	// First delete existing match data for the given event
 	await utilities.remove("matches", {"event_key": eventKey});
@@ -173,9 +172,8 @@ router.post("/matches", wrap(async (req, res) => {
  * @view /teams
  */
 router.get("/teams", wrap(async (req, res) => {
-	
-	var thisFuncName = "externaldata.teams[get]: ";
-	logger.info(thisFuncName + 'ENTER')
+	logger.addContext('funcName', 'teams[get]');
+	logger.info('ENTER')
 	
 	// var teamCol = db.get("teams");
 	

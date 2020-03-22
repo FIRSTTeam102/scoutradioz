@@ -1,9 +1,16 @@
 const router = require('express').Router();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('share');
+
+router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
+	next();
+}));
 
 router.get('/*', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'root[get]');
 	
 	logger.info(req.url);
 	var url = req.url;

@@ -1,12 +1,20 @@
 const router = require('express').Router();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('index');
+
+router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
+	next();
+}));
 
 /**
  * The "index" page that loads is now a form to select an organization.
  */
 router.get('/', wrap(async (req, res) => {
+	logger.addContext('funcName', 'root[get]');
+	logger.debug('ENTER');
 	
 	//If there is a logged-in user, that means they HAVE selected an org, and 
 	// so then redirect to /home
@@ -80,11 +88,11 @@ router.get('/', wrap(async (req, res) => {
  * User submission to select an organization.
  */
 router.all('/selectorg', wrap(async (req, res) =>  {
-	
-	const thisFuncName = 'index/selectorg: ';
+	logger.addContext('funcName', 'selectorg[all]');
+	logger.debug('ENTER');
 	
 	var org_key = req.body.org_key || req.query.org_key;
-	logger.debug(`${thisFuncName} org_key=${org_key}`)
+	logger.debug(`org_key=${org_key}`)
 	
 	//Make sure that form is filled
 	if(!org_key || org_key == ""){
@@ -113,7 +121,7 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 		{org_key: org_key, name: "default_user"}, {},
 		{allowCache: true}
 	);
-	logger.debug(`${thisFuncName} defaultUser=${JSON.stringify(defaultUser)}`);
+	logger.debug(`defaultUser=${JSON.stringify(defaultUser)}`);
 	
 	if(!defaultUser){
 		logger.debug("No default user")
@@ -124,27 +132,27 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 	if( req.user ){
 		//destroy session then log in to default user
 		req.logout();
-		logger.debug(`${thisFuncName} req.user is defined, so we are logging them out first`);
+		logger.debug(`req.user is defined, so we are logging them out first`);
 	}
 				
 	//Now, log in to defaultUser
 	req.logIn(defaultUser, function(err){
 		
-		logger.debug(`${thisFuncName} defaultUser logged in`)
+		logger.debug(`defaultUser logged in`)
 		
 		//set org_key cookie to selected organization
-		logger.debug(`${thisFuncName} Setting org_key cookie`)
+		logger.debug(`Setting org_key cookie`)
 		res.cookie("org_key", org_key, {maxAge: 30E9});
 			
 		//If error, then log and return an error
 		if(err){ console.error(err); return res.status(500).send({alert: err}) };
 		
 		//now, once default user is logged in, redirect to index
-		logger.debug(`${thisFuncName} User is now logged in, redirecting`);
+		logger.debug(`User is now logged in, redirecting`);
 		
 		if (req.body.redirectURL || req.query.redirectURL) {
 			
-			logger.debug(`${thisFuncName} redirect: ${req.body.redirectURL || req.query.redirectURL}`);
+			logger.debug(`redirect: ${req.body.redirectURL || req.query.redirectURL}`);
 			res.redirect(req.body.redirectURL || req.query.redirectURL);
 		}
 		else {
@@ -159,13 +167,12 @@ router.all('/selectorg', wrap(async (req, res) =>  {
  * @view /index
  */
 router.get('/home', wrap(async (req, res) =>  {
-
-	var thisFuncName = "index.home[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'home[get]');
+	logger.debug('ENTER');
 	
 	if (req.body.redirectURL || req.query.redirectURL) {
 			
-		logger.debug(`${thisFuncName} redirect: ${req.body.redirectURL || req.query.redirectURL}`);
+		logger.debug(`redirect: ${req.body.redirectURL || req.query.redirectURL}`);
 		res.redirect(req.body.redirectURL || req.query.redirectURL);
 	}
 	else if (!req.user) res.redirect('/');
@@ -177,6 +184,7 @@ router.get('/home', wrap(async (req, res) =>  {
 }));
 
 router.get('/throwanerror', wrap(async (req, res) => {
+	logger.addContext('funcName', 'throwanerror[get]');
 	
 	console.log(foo);
 	

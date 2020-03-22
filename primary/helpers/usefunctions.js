@@ -61,8 +61,8 @@ functions.authenticate = function(req, res, next) {
 //View engine locals variables
 //IMPORTANT: Must be called LAST, because it may rely on other usefunctions data
 functions.setViewVariables = async function(req, res, next){
-	const thisFuncName = 'userViewVars: ';
-	logger.debug(`${thisFuncName} ENTER`);
+	logger.addContext('funcName', 'setViewVariables');
+	logger.debug(`ENTER`);
 	
 	if(req.user) {
 		const org = await utilities.findOne('orgs', 
@@ -93,6 +93,8 @@ functions.setViewVariables = async function(req, res, next){
 	res.locals.alert = req.query.alert;
 	res.locals.alertType = req.query.type;
 	
+	logger.debug('EXIT');
+	logger.removeContext('funcName');
 	next();
 }
 
@@ -100,7 +102,7 @@ functions.setViewVariables = async function(req, res, next){
  * Gets event info from local db
  */
 functions.getEventInfo = async function(req, res, next) {
-	var thisFuncName = 'getEventInfo: ';
+	logger.addContext('funcName', 'getEventInfo');
 	
 	//Define req.event
 	req.event = {
@@ -143,7 +145,7 @@ functions.getEventInfo = async function(req, res, next) {
 			{allowCache: true, maxCacheAge: 60},
 		);
 		
-		//logger.debug(`${thisFuncName} currentEvent: ${JSON.stringify(currentEvent)}`)
+		//logger.debug(`currentEvent: ${JSON.stringify(currentEvent)}`)
 		
 		if (currentEvent) {
 			//Set current event info to req.event and res.locals
@@ -159,7 +161,7 @@ functions.getEventInfo = async function(req, res, next) {
 					{allowCache: true, maxCacheAge: 60}
 				);
 				
-				logger.debug(`${thisFuncName} teams: length(${teams.length})`);
+				logger.debug(`teams: length(${teams.length})`);
 				//Set teams list to req.event.teams
 				req.teams = teams;
 				res.locals.teams = teams;
@@ -167,6 +169,7 @@ functions.getEventInfo = async function(req, res, next) {
 		}
 	}
 	
+	logger.removeContext('funcName');
 	next();
 }
 
@@ -280,13 +283,17 @@ functions.notFoundHandler = function(req, res, next) {
  * Handles all errors
  */
 functions.errorHandler = function(err, req, res, next) {
+	logger.addContext('funcName', 'errorHandler');
+	
 	// set locals, only providing error in development
 	res.locals.message = err.message;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
 	
-	logger.error(err.message);
+	logger.error(err.message + '\n' + err.stack);
 	
 	// render the error page
 	res.status(err.status || 500);
 	res.render('error');
+	
+	logger.removeContext('funcName');
 }

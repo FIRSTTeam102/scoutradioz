@@ -143,15 +143,15 @@ function makeZip(folder, cb) {
 	
 	var output = concat(data => {
 		
-		console.log('Archive has been completed and stored in memory.');
+		console.log(`Archive has been completed and stored in memory after ${Date.now()-startTime} ms`);
 		
 		var sizeBytes = parseInt(archive.pointer());
 		
 		if (sizeBytes > 1000000) {
-			console.log(sizeBytes / 1000000 + ' MB');
+			console.log('Size: ' + sizeBytes / 1000000 + ' MB');
 		}
 		else {
-			console.log(sizeBytes / 1000 + ' KB');
+			console.log('Size: ' + sizeBytes / 1000 + ' KB');
 		}
 		
 		cb(null, data);
@@ -167,6 +167,7 @@ function makeZip(folder, cb) {
 		cb(err)
 	});
 	
+	var startTime = Date.now();
 	console.log(`Directory: "${folderPath}"`);
 	console.log('Zipping directory...')
 	archive.pipe(output);

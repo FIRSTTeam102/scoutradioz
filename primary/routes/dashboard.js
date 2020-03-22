@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('dashboard');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
@@ -7,6 +7,8 @@ const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam10
 //const uploadHelper = require('../../scoutradioz-helpers/helpers/uploadhelper');
 
 router.all('/*', wrap(async (req, res, next) => {
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_VIEWER)) {
 		next();
@@ -14,15 +16,14 @@ router.all('/*', wrap(async (req, res, next) => {
 }));
 
 router.get("/driveteam", wrap(async (req, res) => {
-	
-	var thisFuncName = "reports.driveteam[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'driveteam[get]');
+	logger.info('ENTER');
 	
 	// for later querying by event_key
 	var eventKey = req.event.key;
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
-	logger.debug(thisFuncName + 'event_key=' + eventKey);
+	logger.debug('event_key=' + eventKey);
 	var teamKey;
 	
 	//set teamKey to query or org default
@@ -51,7 +52,6 @@ router.get("/driveteam", wrap(async (req, res) => {
 	// Pull out the first match (if it exists), get the team keys from the alliances
 	var matches = upcomingData.matches;
 	
-	console.log(matches[0]);
 	if (!matches || !matches[0]) throw Error("There are no upcoming matches for team " + teamKey);
 	
 	var firstMatch = matches[0];
@@ -71,7 +71,7 @@ router.get("/driveteam", wrap(async (req, res) => {
 	var blueArray = firstMatch.alliances.blue.team_keys; 
 	for (var i in blueArray)
 		teamKeyList += "," + blueArray[i];
-	logger.debug(thisFuncName + "teamKeyList=" + teamKeyList);
+	logger.debug("teamKeyList=" + teamKeyList);
 
 	// Get the alliance stats
 	var allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamKeyList, req.cookies);
@@ -232,9 +232,8 @@ router.all('/*', wrap(async (req, res, next) => {
  * @view dashboard/dashboard-index
  */
 router.get('/', wrap(async (req, res) => {
-	
-	var thisFuncName = "dashboard.{root}[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'root[get]');
+	logger.info('ENTER');
 	
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
@@ -267,12 +266,12 @@ router.get('/', wrap(async (req, res) => {
 	// if no assignments, send off to unassigned
 	//if (assignedTeams.length == 0) {
 	if (noAssignments) {
-		logger.debug(thisFuncName + "User '" + thisUserName + "' has no assigned teams");
+		logger.debug("User '" + thisUserName + "' has no assigned teams");
 		res.redirect('./dashboard/unassigned');
 		return;
 	}
 	for (var assignedIdx = 0; assignedIdx < assignedTeams.length; assignedIdx++)
-	 	logger.trace(thisFuncName + "assignedTeam[" + assignedIdx + "]=" + assignedTeams[assignedIdx].team_key + "; data=" + assignedTeams[assignedIdx].data);
+	 	logger.trace("assignedTeam[" + assignedIdx + "]=" + assignedTeams[assignedIdx].team_key + "; data=" + assignedTeams[assignedIdx].data);
 
 	// Get their scouting team
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
@@ -310,7 +309,7 @@ router.get('/', wrap(async (req, res) => {
 			
 		//logs backup teams to console
 		for (var backupIdx = 0; backupIdx < backupTeams.length; backupIdx++)
-			logger.trace(thisFuncName + "backupTeam[" + backupIdx + "]=" + backupTeams[backupIdx].team_key);
+			logger.trace("backupTeam[" + backupIdx + "]=" + backupTeams[backupIdx].team_key);
 	}
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
@@ -331,7 +330,7 @@ router.get('/', wrap(async (req, res) => {
 	var matchLookup = {};
 	if (matchDocs)
 		for (var matchIdx = 0; matchIdx < matchDocs.length; matchIdx++) {
-			//logger.debug(thisFuncName + 'associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
+			//logger.debug('associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
 			matchLookup[matchDocs[matchIdx].key] = matchDocs[matchIdx];
 		}
 		
@@ -340,10 +339,10 @@ router.get('/', wrap(async (req, res) => {
 	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "assigned_scorer": thisUserName, "time": { $gte: earliestTimestamp }}, { limit: 10, sort: {"time": 1} });
 
 	for (var matchesIdx = 0; matchesIdx < scoringMatches.length; matchesIdx++)
-		logger.trace(thisFuncName + "scoringMatch[" + matchesIdx + "]: num,team=" + scoringMatches[matchesIdx].match_number + "," + scoringMatches[matchesIdx].team_key);
+		logger.trace("scoringMatch[" + matchesIdx + "]: num,team=" + scoringMatches[matchesIdx].match_number + "," + scoringMatches[matchesIdx].team_key);
 
 	for (var scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
-		//logger.debug(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
+		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoringMatches[scoreIdx] && scoringMatches[scoreIdx] && matchLookup[scoringMatches[scoreIdx].match_key])
 			scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
 	}
@@ -363,227 +362,12 @@ router.get('/', wrap(async (req, res) => {
  * @view dashboard/unassigned
  */
 router.get('/unassigned', wrap(async (req, res) => {
-	
-	var thisFuncName = "dashboard.unassigned[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'unassigned[get]');
+	logger.info('ENTER');
 	
 	res.render('./dashboard/unassigned',{
 		title: 'Unassigned'
 	});	
-}));
-
-
-/**
- * Drive team dashboard view: Combination of [a] compare alliances and [b] upcoming matches
- * -- Pass in a team_key as 'team'
- * >> If null, use the organization's default; if no default, return nothing
- */
-router.get("/drive", wrap(async (req, res) => {
-	
-	var thisFuncName = "dashboard.drive[get]: ";
-	logger.info(thisFuncName + 'ENTER');
-	
-	// for later querying by event_key
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
-	logger.debug(thisFuncName + 'event_key=' + event_key);
-	var teamKey;
-	
-	//set teamKey to query or org default
-	if (req.query.team_key) {
-		teamKey = req.query.team_key;
-	}
-	else if (req.user.org.team_key) {
-		teamKey = req.user.org.team_key;
-	}
-	else {
-		teamKey = 'all';
-	}
-	
-	// Get upcoming match data for the specified team (or "all" if no default & none specified)
-	var upcomingData = await matchDataHelper.getUpcomingMatchData(event_key, teamKey);
-	// Data for the upcoming matches portion
-	var teamRanks = upcomingData.teamRanks;
-	var teamNumbers = upcomingData.teamNumbers;
-	
-	// Prepare empty alliance stats data
-	var teamList = null;
-	var currentAggRanges = null;
-	var avgTable = null;
-	var maxTable = null;
-	
-	// Pull out the first match (if it exists), get the team keys from the alliances
-	var matches = upcomingData.matches;
-	if (matches && matches.length > 0) {
-		var firstMatch = matches[0];
-
-		var teamKeyList = "";
-		var notFirst = true;
-		var redArray = firstMatch.alliances.red.team_keys; 
-		for (var i in redArray) {
-			if (notFirst) {
-				teamKeyList = redArray[i];
-				notFirst = false;
-			} else {
-				teamKeyList += "," + redArray[i];
-			}
-		}
-		teamKeyList += ",0";
-		var blueArray = firstMatch.alliances.blue.team_keys; 
-		for (var i in blueArray)
-			teamKeyList += "," + blueArray[i];
-		logger.debug(thisFuncName + "teamKeyList=" + teamKeyList);
-
-		// Get the alliance stats
-		var allianceStatsData = await matchDataHelper.getAllianceStatsData(event_year, event_key, org_key, teamKeyList, req.cookies);
-
-		teams = allianceStatsData.teams;
-		teamList = allianceStatsData.teamList;
-		currentAggRanges = allianceStatsData.currentAggRanges;
-		avgTable = allianceStatsData.avgTable;
-		maxTable = allianceStatsData.maxTable;
-		avgNorms = allianceStatsData.avgNorms;
-		maxNorms = allianceStatsData.maxNorms;
-		
-	}
-
-	var dataForChartJS = {
-		labels: [],
-		items: {
-			red: [
-				{
-					label: teamList[0].substring(3),
-					backgroundColor: 'rgba(255, 0, 0, 0.15)',
-					borderColor: 'rgba(255, 0, 0, 0.7)'
-				},
-				{
-					label: teamList[1].substring(3),
-					backgroundColor: 'rgba(255, 128, 0, 0.15)',
-					borderColor: 'rgba(255, 128, 0, 0.7)'
-				},
-				{
-					label: teamList[2].substring(3),
-					backgroundColor: 'rgba(255, 255, 0, 0.15)',
-					borderColor: 'rgba(255, 255, 0, 0.7)'
-				}
-			],
-			blue: [
-				{
-					label: teamList[4].substring(3),
-					backgroundColor: 'rgba(63, 63, 255, 0.3)',
-					borderColor: 'rgba(63, 63, 255, 1)'
-				},
-				{
-					label: teamList[5].substring(3),
-					backgroundColor: 'rgba(255, 0, 255, 0.15)',
-					borderColor: 'rgba(255, 0, 255, 0.7)'
-				},
-				{
-					label: teamList[6].substring(3),
-					backgroundColor: 'rgba(0, 255, 255, 0.15)',
-					borderColor: 'rgba(0, 255, 255, 0.7)'
-				}
-			]
-		},
-		datasets: {
-			avg: {red: [], blue: []},
-			max: {red: [], blue: []},
-			sum: {red: [], blue: []},
-		},
-		options: {
-			scale: {
-				angleLines: {
-					display: true
-				},
-				ticks: {
-						showLabelBackdrop: false,
-					suggestedMin: 0,
-					suggestedMax: 1,
-					display: false
-				},
-				angleLines: {
-					color: 'rgb(128, 128, 128)'
-				},
-				gridLines: {
-					color: 'rgb(64, 64, 64)'
-				}
-			}
-		}
-	};
-	
-	for (var i in dataForChartJS.datasets) {
-		var set = dataForChartJS.datasets[i];
-		for (var i = 0; i < 3; i++ ) {
-			set.red[i] = [];
-			set.blue[i] = [];
-		}
-	}
-	
-	//Populate labels array
-	for (var agg of avgTable) {
-		if (agg.hasOwnProperty('key')) {
-			var text = agg.key.replace( /([A-Z])/g, " $1" ); 
-			var label = (text.charAt(0).toUpperCase() + text.slice(1)).split(' ');
-			dataForChartJS.labels.push(label);
-		}
-	}
-	
-	//Avg norms
-	for (var agg of avgNorms) {
-		for (var i in teamList) {
-			var team = teamList[i];
-			if (agg.hasOwnProperty(team)) {
-				//red
-				if (i < 3) {
-					var thisDatum = agg[team];
-					dataForChartJS.datasets.avg.red[i].push(thisDatum);
-				}
-				//blue
-				else {
-					var thisDatum = agg[team];
-					dataForChartJS.datasets.avg.blue[i - 4].push(thisDatum);
-				}
-			}
-		}
-	}
-	//Max norms
-	for (var agg of maxNorms) {
-		for (var i in teamList) {
-			var team = teamList[i];
-			if (agg.hasOwnProperty(team)) {
-				//red
-				if (i < 3) {
-					var thisDatum = agg[team];
-					dataForChartJS.datasets.max.red[i].push(thisDatum);
-				}
-				//blue
-				else {
-					var thisDatum = agg[team];
-					dataForChartJS.datasets.max.blue[i - 4].push(thisDatum);
-				}
-			}
-		}
-	}
-	console.log(avgNorms);
-	//console.log(teamList);
-	console.log(JSON.stringify(dataForChartJS, 0, 2));
-	
-	
-	res.render("./dashboard/drive", {
-		title: "Drive Team Dashboard",
-		teamList: teamList,
-		currentAggRanges: currentAggRanges,
-		avgdata: avgTable,
-		maxdata: maxTable,
-		avgnorms: avgNorms,
-		maxnorms: maxNorms,
-		matches: matches,
-		teamRanks: teamRanks,
-		selectedTeam: teamKey,
-		teamNumbers: teamNumbers,
-		dataForChartJS: JSON.stringify(dataForChartJS)
-	});
 }));
 
 /**
@@ -592,8 +376,8 @@ router.get("/drive", wrap(async (req, res) => {
  * @view dashboard/allianceselection
  */
 router.get('/allianceselection', wrap(async (req, res) => {
-	var thisFuncName = "dashboard.allianceselection[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'allianceselection[get]');
+	logger.info('ENTER');
 	
 	var event_key = req.event.key;
 	var event_year = req.event.year;
@@ -620,7 +404,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			
 		var rankMap = {};
 		for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-			//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+			//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 			rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 		}
 	
@@ -677,7 +461,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			}
 			if(!rankMap[thisAgg._id] || !rankMap[thisAgg._id].value){
 				//return res.redirect("/?alert=Make sure that team rankings have been pulled from TheBlueAlliance");
-				logger.trace(`${thisFuncName}Gonna crash w/ id ${thisAgg._id}`);
+				logger.trace(`Gonna crash w/ id ${thisAgg._id}`);
 			}
 			if(rankMap[thisAgg._id]){
 				thisAgg['rank'] = rankMap[thisAgg._id].rank;
@@ -719,14 +503,14 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			}
 		});
 		
-		logger.trace(thisFuncName + sortedTeams);
+		logger.trace(sortedTeams);
 	
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges
 		// var currentAggRanges = await utilities.find("currentaggranges", {}, {});
 		var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
 	
-		//logger.debug(thisFuncName + 'aggArray=' + JSON.stringify(aggArray));
+		//logger.debug('aggArray=' + JSON.stringify(aggArray));
 		res.render('./dashboard/allianceselection', {
 			title: "Alliance Selection",
 			rankings: rankings,
@@ -745,9 +529,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 }));
 
 router.get('/pits', wrap(async (req, res) => {
-	
-	var thisFuncName = "dashboard.pits[get]: ";
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'pits[get]');
+	logger.info('ENTER');
 	
 	// are we asking for pictures?
 	var loadPhotos = req.query.loadPhotos;
@@ -776,7 +559,7 @@ router.get('/pits', wrap(async (req, res) => {
 	var teamArray = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
 
-		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+		logger.debug("thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
 		teamArray = await utilities.find("teams", 
 			{"key": {$in: thisEvent.team_keys}}, {sort: {team_number: 1}},
 			{allowCache: true}
@@ -786,13 +569,13 @@ router.get('/pits', wrap(async (req, res) => {
 	// Build map of team_key -> team data
 	var teamKeyMap = {};
 	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++) {
-		//logger.debug(thisFuncName + 'teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
+		//logger.debug('teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
 	// Add data to 'teams' data
 	for (var teamIdx = 0; teamIdx < teams.length; teamIdx++) {
-		//logger.debug(thisFuncName + 'teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
+		//logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
 		teams[teamIdx].nickname = teamKeyMap[teams[teamIdx].team_key].nickname;
 	}
 	//Add a call to the database for populating menus in pit scouting
@@ -815,14 +598,14 @@ router.get('/pits', wrap(async (req, res) => {
 }));
 
 router.get('/matches', wrap(async (req, res) => {
-	
-	var thisFuncName = "dashboard.matches[get]: ";
+	logger.addContext('funcName', 'matches[get]');
+	logger.info('ENTER');
 
 	// for later querying by event_key
 	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
-	logger.info(thisFuncName + 'ENTER org_key=' + org_key + ',eventKey=' + eventKey);
+	logger.info('ENTER org_key=' + org_key + ',eventKey=' + eventKey);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	var matches = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}});
@@ -839,11 +622,11 @@ router.get('/matches', wrap(async (req, res) => {
 	var matchLookup = {};
 	if (matches)
 		for (var matchIdx = 0; matchIdx < matches.length; matchIdx++) {
-			//logger.debug(thisFuncName + 'associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
+			//logger.debug('associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
 			matchLookup[matches[matchIdx].key] = matches[matchIdx];
 		}
 
-	logger.debug(thisFuncName + 'earliestTimestamp=' + earliestTimestamp);
+	logger.debug('earliestTimestamp=' + earliestTimestamp);
 
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -852,52 +635,53 @@ router.get('/matches', wrap(async (req, res) => {
 	if(!scoreData)
 		return logger.error("mongo error at dashboard/matches");
 
-	logger.debug(thisFuncName + 'scoreData.length=' + scoreData.length);
+	logger.debug('scoreData.length=' + scoreData.length);
 
 	for (var scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
-		//logger.debug(thisFuncName + 'getting for ' + scoreData[scoreIdx].match_key);
+		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key])
 			scoreData[scoreIdx].predicted_time = matchLookup[scoreData[scoreIdx].match_key].predicted_time;
 	}
 	
-	logger.trace(thisFuncName + 'DEBUG getting nicknames next?');
+	logger.trace('DEBUG getting nicknames next?');
 
 	// read in team list for data
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
 	//var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
-	var thisEvent = await utilities.find("events", 
+	var thisEvent = await utilities.findOne("events", 
 		{"key": eventKey}, {},
 		{allowCache: true}
 	);
-	var teamArray = [];
-	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
-	{
-
-		logger.debug(thisFuncName + "thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
+	if (!thisEvent) throw "Could not find event in db";
+	
+	var teamArray;
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
+		logger.debug("thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
 		teamArray = await utilities.find("teams", 
 			{"key": {$in: thisEvent.team_keys}}, 
 			{sort: {team_number: 1}},
 			{allowCache: true}
 		);
 	}
-	//teamsCol.find({},{ sort: {team_number: 1} }, function(e, docs) {
+	if (!teamArray) throw Error('Could not find list of teams at this event');
 		
 	// Build map of team_key -> team data
 	var teamKeyMap = {};
-	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++)
-	{
-		//logger.debug(thisFuncName + 'teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
+	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++) {
+		//logger.debug('teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
-
-	for(var i in scoreData)
-	{
+	
+	for(var i in scoreData) {
 		scoreData[i].team_nickname = "None";
-		if (teamKeyMap[scoreData[i].team_key])
+		//logger.debug(scoreData[i].team_key);
+		//logger.debug(teamKeyMap[scoreData[i].team_key]);
+		if (teamKeyMap[scoreData[i].team_key]) {
 			scoreData[i].team_nickname = teamKeyMap[scoreData[i].team_key].nickname;
+		}
 	}
 		//this line has a definition problem ^
-	logger.debug(thisFuncName + 'scoreData.length=' + scoreData.length);
+	logger.debug('scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
 		title: "Match Scouting",
 		matches: scoreData

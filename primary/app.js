@@ -14,13 +14,41 @@ require('aws-serverless-express/middleware');
 //load .env variables
 require('dotenv').config();
 
-//logger config
-if( process.env.COLORIZE_LOGS != 'true'){
-	log4js.configure({
-		appenders: { out: { type: 'stdout', layout: { type: 'basic' } } },
-		categories: { default: { appenders: ['out'], level: 'info' } }
-	});
+//log4js config
+function logTier(logEvent) {
+	if (process.env.ALIAS) {
+		return process.env.ALIAS;
+	}
+	else {
+		return 'LOCAL';
+	}
 }
+function funcName(logEvent) {
+	if (logEvent.context && logEvent.context.funcName) {
+		return logEvent.context.funcName;
+	}
+	else {
+		return '';
+	}
+}
+var log4jsConfig = {
+	appenders: { out: { type: 'stdout', layout: {
+		type: 'pattern',
+		//Non-colored pattern layout (default)
+		pattern: '[%x{tier}] [%p] %c.%x{funcName} - %m',
+		tokens: {
+			'tier': logTier,
+			'funcName': funcName,
+		},
+	} } },
+	categories: { default: { appenders: ['out'], level: 'info' } }
+}
+if( process.env.COLORIZE_LOGS == 'true'){
+	//Colored pattern layout
+	log4jsConfig.appenders.out.layout.pattern = '%[[%d{hh:mm:ss}] [%x{tier}] [%p] %c.%x{funcName} - %]%m';
+}
+log4js.configure(log4jsConfig);
+
 const logger = log4js.getLogger();
 logger.level = 'debug';
 
@@ -34,7 +62,7 @@ utilities.config(require('./databases.json'), {
 		enable: true,
 		maxAge: 30,
 	},
-	debug: true,
+	debug: false,
 });
 //Load helper functions
 const helpers = require('@firstteam102/scoutradioz-helpers');
@@ -112,6 +140,10 @@ app.use(async function(req, res, next){
 	}
 	
 	logger.info(`PROCESS ALIAS: ${process.env.ALIAS}`);
+	
+	//Remove funcName from log4js context so that it does not stay persistent
+	// from one method that DOES set it to another method that does NOT set it
+	logger.removeContext('funcName');
 	
 	next();
 });
