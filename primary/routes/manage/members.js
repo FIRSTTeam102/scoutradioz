@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const monk = require("monk");
+const monk = require("@firstteam102/monk-fork");
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require("@firstteam102/scoutradioz-utilities");

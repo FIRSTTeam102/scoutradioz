@@ -1,5 +1,5 @@
 'use strict';
-const monk = require("monk");
+const monk = require("@firstteam102/monk-fork");
 const crypto = require('crypto');
 const NodeCache = require('node-cache');
 const logger = require('@log4js-node/log4js-api').getLogger('utilities');

@@ -48,8 +48,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@firstteam102/monk-fork": "^0.0.1",
     "@firstteam102/scoutradioz-helpers": "^1.0.10",
-    "@firstteam102/scoutradioz-utilities": "^1.0.37",
+    "@firstteam102/scoutradioz-utilities": "^1.0.39",
     "aws-serverless-express": "^3.3.6",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
@@ -63,7 +64,6 @@
     "express-useragent": "^1.0.13",
     "log4js": "^5.3.0",
     "mongodb": "~3.5.5",
-    "monk": "^7.1.2",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "pug": "^2.0.4",
