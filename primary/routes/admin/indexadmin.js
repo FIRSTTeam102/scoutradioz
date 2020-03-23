@@ -168,6 +168,14 @@ router.post('/orgs', wrap(async (req, res) => {
 				elemKey = 'youth';
 				elemValue = (req.body[elem] == true);
 				break;
+			case 'subteamkey':
+				elemKey = 'subteam_key';
+				elemValue = req.body[elem];
+				break;
+			case 'classkey':
+				elemKey = 'class_key';
+				elemValue = req.body[elem];
+				break;
 			default:
 				elemKey = elemType;
 				elemValue = req.body[elem];
@@ -180,7 +188,7 @@ router.post('/orgs', wrap(async (req, res) => {
 				subteams[elemIdx] = {}
 			}
 			//pop in this element into the corresponding part of subteams
-			subteams[elemIdx][elemType] = req.body[elem];
+			subteams[elemIdx][elemKey] = req.body[elem];
 		}
 		//Go through classes
 		else if (elem.includes('classes')) {
@@ -189,7 +197,7 @@ router.post('/orgs', wrap(async (req, res) => {
 				classes[elemIdx] = {}
 			}
 			//pop in this element into the corresponding part of classes
-			classes[elemIdx][elemType] = req.body[elem];
+			classes[elemIdx][elemKey] = req.body[elem];
 		}
 	}
 	logger.debug(`${thisFuncName} subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
@@ -228,13 +236,14 @@ router.post('/orgs', wrap(async (req, res) => {
 	
 	logger.debug(`${thisFuncName} updateQuery=${JSON.stringify(updateQuery)}`);
 	
+	//return res.send(200);
 	const writeResult = await utilities.update('orgs', 
 		{org_key: orgKey}, updateQuery
 	);
 	
-	logger.debug(`${thisFuncName} writeResult=${writeResult}`);
+	logger.debug(`${thisFuncName} writeResult=${JSON.stringify(writeResult)}`);
 	
-	res.redirect(`/admin/orgs?alert=Updated successfully. writeResult=${JSON.stringify(writeResult)}.&type=good`);
+	res.redirect(`/admin/orgs?alert=Updated successfully.&type=good`);
 }))
 
 module.exports = router;
