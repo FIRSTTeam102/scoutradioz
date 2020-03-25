@@ -12,7 +12,8 @@
     "publicS3BucketName": "scoutradioz",
     "publicFolderName": "public",
     "publicTierName": "app",
-    "functionFullName": "ScoutradiozPrimaryStack-PrimaryFunction-1N6C440CXO15P"
+    "functionFullName": "ScoutradiozPrimaryStack-PrimaryFunction-1N6C440CXO15P",
+    "folder": "primary"
   },
   "scripts": {
     "start": "node app.local.js",
@@ -40,8 +41,12 @@
     "win-delete-stack": "aws cloudformation delete-stack --stack-name %npm_package_config_cloudFormationStackName% --region %npm_package_config_region%",
     "win-setup": "npm install && (aws s3api get-bucket-location --bucket %npm_package_config_s3BucketName% --region %npm_package_config_region% || npm run win-create-bucket) && npm run win-package-deploy",
     "win-sync": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/%npm_package_config_publicTierName% --acl public-read",
-    "upload-test": "node ../scripts/uploadversion.js --alias test --folder primary --function-name %npm_package_config_functionFullName%",
-    "upload-qa": "node ../scripts/uploadversion.js --alias qa --folder primary --function-name %npm_package_config_functionFullName%",
+    "sync-test": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/test --acl public-read",
+    "sync-qa": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/qa --acl public-read",
+    "sync-prod": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/prod --acl public-read",
+    "sync-all": "npm run sync-test && npm run sync-qa && npm run sync-prod",
+    "upload-test": "node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
+    "upload-qa": "node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
     "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
     "promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name %npm_package_config_functionFullName%",
     "rollback-prod": "node ../scripts/rollbackversion.js --function-name %npm_package_config_functionFullName%"
