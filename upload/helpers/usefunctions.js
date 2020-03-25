@@ -1,5 +1,6 @@
 //For colorful logging
 require('colors');
+const logger = require('log4js').getLogger('usefunctions');
 
 var functions = module.exports = {};
 
@@ -36,7 +37,7 @@ functions.logger = function(req, res, next){
 		browser: req.useragent.browser
 	}
 	//logs request
-	console.log( (req.method).red 
+	logger.info( (req.method).red 
 		+ " Request from " 
 		+ req.shortagent.ip
 		+ " on " 
@@ -73,11 +74,17 @@ functions.notFoundHandler = function(req, res, next) {
  * @param {*} next 
  */
 functions.errorHandler = function(err, req, res, next) {
+	logger.addContext('funcName', 'error');
+	
 	// set locals, only providing error in development
 	res.locals.message = err.message;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
-  
+	
+	logger.error(''+err);
+	
 	// render the error page
 	res.status(err.status || 500);
 	res.send(err.message);
+	
+	logger.removeContext('funcName')
 }
