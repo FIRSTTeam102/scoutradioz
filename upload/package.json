@@ -8,7 +8,9 @@
     "region": "us-east-1",
     "cloudFormationStackName": "ScoutradiozUploadStack",
     "functionName": "UploadFunction",
-    "accountId": "243452333432"
+    "accountId": "243452333432",
+    "functionFullName": "ScoutradiozUploadStack-UploadFunction-10WXXKC5SRHNE",
+    "folder": "upload"
   },
   "scripts": {
     "start": "node app.local.js",
@@ -33,7 +35,12 @@
     "win-deploy": "aws cloudformation deploy --template-file package.yaml --stack-name %npm_package_config_cloudFormationStackName% --capabilities CAPABILITY_IAM --region %npm_package_config_region%",
     "win-package-deploy": "npm run win-package && npm run win-deploy",
     "win-delete-stack": "aws cloudformation delete-stack --stack-name %npm_package_config_cloudFormationStackName% --region %npm_package_config_region%",
-    "win-setup": "npm install && (aws s3api get-bucket-location --bucket %npm_package_config_s3BucketName% --region %npm_package_config_region% || npm run win-create-bucket) && npm run win-package-deploy"
+    "win-setup": "npm install && (aws s3api get-bucket-location --bucket %npm_package_config_s3BucketName% --region %npm_package_config_region% || npm run win-create-bucket) && npm run win-package-deploy",
+    "upload-test": "node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
+    "upload-qa": "node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
+    "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
+    "promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name %npm_package_config_functionFullName%",
+    "rollback-prod": "node ../scripts/rollbackversion.js --function-name %npm_package_config_functionFullName%"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -45,6 +52,7 @@
     "concat-stream": "^2.0.0",
     "dotenv": "^6.2.0",
     "express": "^4.17.1",
+    "express-async-handler": "^1.1.4",
     "express-session": "^1.17.0",
     "express-useragent": "^1.0.13",
     "file-type": "^12.4.2",

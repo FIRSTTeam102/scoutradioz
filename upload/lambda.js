@@ -27,4 +27,13 @@ const binaryMimeTypes = [
 ]
 const server = awsServerlessExpress.createServer(app, null, binaryMimeTypes)
 
-exports.handler = (event, context) => awsServerlessExpress.proxy(server, event, context)
+exports.handler = (event, context) => {
+  
+  var alias = context.invokedFunctionArn.replace(/.*:/g,'');
+  console.log("ALIAS: "+ alias);
+  
+  process.env.ALIAS = alias;
+  process.env.TIER = alias.toLowerCase();
+
+  return awsServerlessExpress.proxy(server, event, context);
+} 

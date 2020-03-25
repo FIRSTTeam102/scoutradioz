@@ -20,7 +20,7 @@ function logTier(logEvent) {
 		return process.env.ALIAS;
 	}
 	else {
-		return 'LOCAL';
+		return 'LOCAL|' + process.env.TIER;
 	}
 }
 function funcName(logEvent) {
@@ -75,6 +75,8 @@ if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enable
 //Create app
 const app = express();
 
+app.use(utilities.refreshTier);
+
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -91,13 +93,18 @@ console.log("app.js: app.use(session({... - START");
 const MongoClient = require('mongodb').MongoClient;
 //Get promise for MongoClient
 const clientPromise = new Promise((resolve, reject) => {
-	const url = utilities.getDBurl();
-	//Connect mongoClient to dbUrl specified in utilities
-	MongoClient.connect(url, {useUnifiedTopology: true}, function(err, client){
-		//Resolve/reject with client
-		if (err) reject(err);
-		else if (client) resolve(client);
-	});
+	logger.debug('Waiting for utilities.getDBurl');
+	//2020-03-23 JL: Made getDBurl() async to wait for TIER to be given
+	utilities.getDBurl()
+	.then(url => {
+		logger.info('Got url');
+		//Connect mongoClient to dbUrl specified in utilities
+		MongoClient.connect(url, {useUnifiedTopology: true}, function(err, client){
+			//Resolve/reject with client
+			if (err) reject(err);
+			else if (client) resolve(client);
+		});
+	})
 });
 app.use(session({
     secret: 'marcus night',

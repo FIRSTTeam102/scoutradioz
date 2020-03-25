@@ -1,4 +1,17 @@
-'use strict'
+'use strict';
+
+exports.handler = (event, context) => {
+  
+  var alias = context.invokedFunctionArn.replace(/.*:/g,'');
+  console.log("ALIAS: "+ alias);
+  
+  process.env.ALIAS = alias;
+  //process.env.TIER is overridden here during every request.
+  process.env.TIER = alias.toLowerCase();
+
+  return awsServerlessExpress.proxy(server, event, context);
+} 
+
 const awsServerlessExpress = require(process.env.NODE_ENV === 'test' ? '../../index' : 'aws-serverless-express')
 const app = require('./app')
 
@@ -26,13 +39,3 @@ const binaryMimeTypes = [
   'text/xml'
 ]
 const server = awsServerlessExpress.createServer(app, null, binaryMimeTypes)
-
-exports.handler = (event, context) => {
-  
-  var alias = context.invokedFunctionArn.replace(/.*:/g,'');
-  console.log("ALIAS: "+ alias);
-  
-  process.env.ALIAS = alias;
-
-  return awsServerlessExpress.proxy(server, event, context);
-} 

@@ -1,10 +1,10 @@
 {
   "name": "@firstteam102/scoutradioz-utilities",
-  "version": "1.0.39",
+  "version": "1.0.45",
   "description": "Database utilities package for Scoutradioz",
   "main": "utilities.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -16,6 +16,9 @@
     "url": "https://github.com/firstteam102/ScoringApp-Serverless/issues"
   },
   "homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
+  "devDependencies": {
+    "log4js": "^6.1.2"
+  },
   "dependencies": {
     "@log4js-node/log4js-api": "^1.0.2",
     "@firstteam102/monk-fork": "^0.0.1",

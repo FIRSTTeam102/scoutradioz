@@ -2,24 +2,33 @@
 const monk = require("@firstteam102/monk-fork");
 const crypto = require('crypto');
 const NodeCache = require('node-cache');
-const logger = require('@log4js-node/log4js-api').getLogger('utilities');
+var logger;
+try {
+	logger = require('log4js').getLogger('utilities');
+}
+catch {
+	logger = require('@log4js-node/log4js-api').getLogger('utilities');
+}
 
-var utilities = module.exports =  {};
+var utilities = module.exports =  {
+	activeTier: null,
+	dbConfig: null,
+	ready: false,
+	whenReadyQueue: [],
+	options: {
+		cache: {
+			enable: false,
+			maxAge: 30
+		},
+		debug: false,
+	},
+	cache: new NodeCache({stdTTL: 30}),
+};
 
 // cached DB reference
-var dbRef, url;
+var dbRefs = {}, urls = {};
 var lastRequestTime;
 var refMaxAge = 20000;
-utilities.options = {
-	cache: {
-		enable: false,
-		maxAge: 30
-	},
-	debug: false,
-};
-utilities.cache = new NodeCache({
-	stdTTL: 30
-});
 
 //Performance debugging if enabled
 function consoleTime(name) {
@@ -65,12 +74,33 @@ utilities.config = function(databaseConfig, options){
  * Function that first caches, then returns the cached database for the server process.
  * @returns {monk.IMonkManager} Monk database manager
  */
-utilities.getDB = function(){
+utilities.getDB = async function(){
 	logger.addContext('funcName', 'getDB');
 	
 	//create db return variable
 	var db;
 	
+	var tier = this.activeTier;
+	var dbRef = dbRefs[tier];
+	var url = urls[tier];
+	logger.trace(`tier=${tier} dbRef=${dbRef} url=${url}`);
+	
+	//2020-03-23 JL: one db ref for every tier
+	if (!dbRef || !url) {
+		logger.info(`Creating db ref for ${tier}`);
+		var url = await this.getDBurl();
+		var dbRef = monk(url);
+		logger.trace(`Got url, url=${url}, tier=${tier} this.activeTier=${this.activeTier}`);
+		
+		dbRef.then(result => {
+			logger.info('Connected!');
+		}).catch(err => {
+			logger.error(JSON.stringify(err));
+		});
+		urls[tier] = url;
+		dbRefs[tier] = dbRef;
+	}
+	/*
 	//if dbRef doesn't exist, then create dbRef
 	if (!dbRef || !url) {
 		logger.info('Creating db ref');
@@ -81,7 +111,7 @@ utilities.getDB = function(){
 		}).catch(err => {
 			logger.error(JSON.stringify(err));
 		});
-	}
+	}*/
 	
 	//if ref has aged past its prime, then close and reopen it
 	if (lastRequestTime && lastRequestTime + refMaxAge < Date.now()) {
@@ -109,9 +139,12 @@ utilities.getDB = function(){
 	lastRequestTime = Date.now();
 	db = dbRef;
 	
+	logger.trace('returning db');
 	logger.removeContext('funcName');
 	//return
-	return db;
+	//Must use object destructuring becasue for SOME reason,
+	// returning monk from an async function hangs the process
+	return {db};
 }
 
 /**
@@ -121,8 +154,36 @@ utilities.getDB = function(){
  */
 utilities.getDBurl = function(){
 	logger.addContext('funcName', 'getDBurl');
-	logger.debug(`BEGIN`);
+	logger.trace(`Returning promise`);
 	
+	return new Promise((resolve, reject) => {
+		//only execute when utilities.js is ready
+		this.whenReady(() => {
+			logger.addContext('funcName', 'getDBurl(whenReady cb)')
+			logger.trace('BEGIN')
+			//if no config is provided
+			if (!this.dbConfig) {
+				logger.warn('No database config provided; Defaulting to localhost:27017/app');
+				return resolve('mongodb://localhost:27017/app');
+			}
+			//if no tier exists, something went wrong
+			if (!this.activeTier) {
+				logger.error('Something went wrong; activeTier is not defined');
+				return reject(new Error('Something went wrong; activeTier is not defined'));
+			}
+			var thisDBinfo = this.dbConfig[this.activeTier];
+			
+			if (!thisDBinfo || !thisDBinfo.url) {
+				return reject('No database URL specified for tier '+ this.activeTier);
+			}
+			
+			logger.info(`Connecting to tier: ${this.activeTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
+			resolve(thisDBinfo.url);
+			
+			logger.removeContext('funcName');
+		});
+	});
+	/*
 	var url;
 	//Check if db has been configured
 	if(this.dbConfig) {
@@ -169,8 +230,52 @@ utilities.getDBurl = function(){
 		url = "mongodb://localhost:27017/app";
 	}
 	
-	logger.removeContext('funcName');
 	return url;
+	*/
+}
+
+/**
+ * Internal function to execute whenever ready
+ * @param {function} cb Callback
+ */
+utilities.whenReady = function(cb) {
+	logger.addContext('funcName', 'whenReady');
+	logger.trace('ENTER')
+	
+	//if state is already ready, then execute immediately
+	if (this.ready == true) {
+		logger.trace('ready=true; executing cb');
+		cb();
+	}
+	//if not ready, then add request to queue
+	else {
+		logger.trace('ready=false; adding cb to queue');
+		this.whenReadyQueue.push(cb);
+	}
+	
+	logger.removeContext('funcName');
+}
+
+/**
+ * Express middleware function to refresh the active tier of utilities.js.
+ */
+utilities.refreshTier = function(req, res, next) {
+//	logger.addContext('funcName', 'refreshTier');
+//	logger.trace('ENTER')
+	
+	//set this.ready to true
+	utilities.ready = true;
+	utilities.activeTier = process.env.TIER;
+	
+//	logger.trace(`queue.length=${utilities.whenReadyQueue.length}`);
+	
+	while (utilities.whenReadyQueue.length > 0) {
+		var cb = utilities.whenReadyQueue.splice(0, 1)[0];
+		cb();
+	}
+	
+//	logger.removeContext('funcName');
+	if (typeof next == 'function') next();
 }
 
 /**
@@ -229,7 +334,8 @@ utilities.find = async function(collection, query, options, cacheOptions){
 			logger.trace(`Caching request (find:${collection})`);
 			
 			//Request db
-			var cachedRequest = await this.getDB().get(collection).find(query, options);
+			var {db} = await this.getDB();
+			var cachedRequest = await db.get(collection).find(query, options);
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
@@ -242,8 +348,10 @@ utilities.find = async function(collection, query, options, cacheOptions){
 	//If cache is not enabled
 	else {
 		
+		//Must use object destructuring because returning monk from an async function hangs the process
+		var {db} = await this.getDB();
 		//Request db
-		var data = await this.getDB().get(collection).find(query, options);
+		var data = await db.get(collection).find(query, options);
 		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
@@ -310,7 +418,8 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 			logger.trace(`Caching request (findOne:${collection})`);
 			
 			//Request db
-			var cachedRequest = await this.getDB().get(collection).findOne(query, options);
+			var {db} = await this.getDB();
+			var cachedRequest = await db.get(collection).findOne(query, options);
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
@@ -324,7 +433,8 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 	else {
 		
 		//Request db
-		var data = await this.getDB().get(collection).findOne(query, options);
+		var {db} = await this.getDB();
+		var data = await db.get(collection).findOne(query, options);
 		logger.trace(`Not cached (findOne:${collection})`)
 		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
@@ -372,7 +482,8 @@ utilities.update = async function(collection, query, update, options){
 	
 	//Remove in collection with query
 	var writeResult = new WriteResult();
-	writeResult = await this.getDB().get(collection).update(query, update, options);
+	var {db} = await this.getDB();
+	writeResult = await db.get(collection).update(query, update, options);
 	
 	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	consoleTimeEnd(timeLogName);
@@ -434,7 +545,8 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 			logger.trace(`Caching request (aggregate:${collection})`);
 			
 			//Request db
-			var cachedRequest = await this.getDB().get(collection).aggregate(pipeline);
+			var {db} = await this.getDB();
+			var cachedRequest = await db.get(collection).aggregate(pipeline);
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
@@ -448,7 +560,8 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 	else {
 	
 		//Aggregate
-		var data = await this.getDB().get(collection).aggregate(pipeline);
+		var {db} = await this.getDB();
+		var data = await db.get(collection).aggregate(pipeline);
 		
 		logger.trace(`Not cached (aggregate:${collection})`)
 		logger.trace(`result: ${JSON.stringify(data)}`);
@@ -478,7 +591,7 @@ utilities.dumpCache = function(){
  * @param {object} param2 Second param (oft. options)
  */
 utilities.hashQuery = async function(type, collection, param1, param2) {
-	logger.addContext('funcName', 'hashQuery');
+	//logger.addContext('funcName', 'hashQuery');
 	
 	type = type.toString();
 	collection = collection.toString();
@@ -486,9 +599,10 @@ utilities.hashQuery = async function(type, collection, param1, param2) {
 	param2 = JSON.stringify(param2);
 	
 	const hash = crypto.Hash('sha1');
-	hash.update(type + collection + param1 + param2);
+	//2020-03-23 JL: added tier to hash
+	hash.update(process.env.TIER + type + collection + param1 + param2);
 	
-	logger.removeContext('funcName');
+	//logger.removeContext('funcName');
 	return hash.digest('hex');
 }
 
@@ -521,7 +635,7 @@ utilities.distinct = async function(collection, field, query){
 	
 	logger.trace(`${collection}, ${JSON.stringify(query)}`);
 	
-	var db = this.getDB();
+	var {db} = await this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
@@ -568,7 +682,7 @@ utilities.bulkWrite = async function(collection, operations, options){
 	
 	logger.trace(`${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(options)}`);
 
-	var db = this.getDB();
+	var {db} = await this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
@@ -608,7 +722,7 @@ utilities.remove = async function(collection, query){
 	
 	logger.trace(`${collection}, param: ${JSON.stringify(query)}`);
 	
-	var db = this.getDB();
+	var {db} = await this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);
@@ -644,7 +758,7 @@ utilities.insert = async function(collection, elements){
 	
 	logger.trace(`${collection}, elements: ${JSON.stringify(elements)}`);
 	
-	var db = this.getDB();
+	var {db} = await this.getDB();
 	
 	//Get collection
 	var Col = db.get(collection);

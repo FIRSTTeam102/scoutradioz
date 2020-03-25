@@ -1,10 +1,11 @@
 const router = require('express').Router();
 const _ = require('lodash');
 const multer = require('multer');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('upload');
 const S3Storage = require('../helpers/S3Storage');
 const path = require('path');
 const crypto = require('crypto');
+const wrap = require('express-async-handler');
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
@@ -46,7 +47,7 @@ var storage = S3Storage({
 			
 			const key = `${tier}/${baseKey}/${orgKey}/${filename}`;
 			
-			logger.info(`${thisFuncName} s3 key=${key}`);
+			logger.info(`s3 key=${key}`);
 			
 			cb(null, key);
 			
@@ -54,7 +55,7 @@ var storage = S3Storage({
 		//throw if key information is not specified in request
 		else{
 			
-			logger.error(`${thisFuncName} File key and year are not specified.`)
+			logger.error(`File key and year are not specified.`)
 			
 			cb(new Error("File key, year, and org key need to be specified."));
 		}*/
@@ -101,26 +102,47 @@ var upload = multer({
 	fileFilter: fileFilter,
 });
 
-router.get('/ping', async function(req, res) {
+router.all('/*', wrap(async (req, res, next) => {
+	
+	logger.removeContext('funcName');
+	next();
+}));
+
+router.get('/test', wrap(async (req, res) => {
+	logger.addContext('funcName', 'testping[get]');
+	logger.info('ENTER');
 	
 	res.status(200).send("Pong!");
-});
+}));
 
-router.post('/ping', async function(req, res) {
+router.get('/ping', wrap(async (req, res) => {
+	logger.addContext('funcName', 'ping[get]');
+	logger.info('ENTER');
 	
 	res.status(200).send("Pong!");
-});
+}));
 
-router.post('/image', async (req, res, next) => {
+router.post('/ping', wrap(async (req, res) => {
+	logger.addContext('funcName', 'ping[post]');
+	logger.info('ENTER');
+	
+	res.status(200).send("Pong!");
+}));
+
+router.post('/image', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'middleware[post]');
+	logger.info('ENTER');
 	
 	logger.info('Hi, I\'m a middleware function!');
 	
 	next();
-});
+}));
 
-router.post('/image', upload.single("image"), async (req, res, next) => {
-	const thisFuncName = "upload/image post-upload: ";
-	logger.debug(`${thisFuncName} req.file=${JSON.stringify(req.file)}`);
+router.post('/image', upload.single("image"), wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'image-after-upload[post]');
+	logger.info('ENTER');
+	
+	logger.debug(`req.file=${JSON.stringify(req.file)}`);
 	
 	var locations = [];
 	
@@ -153,7 +175,7 @@ router.post('/image', upload.single("image"), async (req, res, next) => {
 			userName = user.name;
 		}
 		else {
-			logger.error(`${thisFuncName} Could not find user in db; setting to undefined`);
+			logger.error(`Could not find user in db; setting to undefined`);
 			userName = "Undefined";
 		}
 		
@@ -172,7 +194,7 @@ router.post('/image', upload.single("image"), async (req, res, next) => {
 			removed: false,
 		}
 		
-		logger.info(`${thisFuncName} Upload complete; data=${JSON.stringify(data)}`);
+		logger.info(`Upload complete; data=${JSON.stringify(data)}`);
 		
 		await utilities.insert("uploads", data);
 		
@@ -180,6 +202,6 @@ router.post('/image', upload.single("image"), async (req, res, next) => {
 	
 	res.status(200).send(locations);
 	
-});
+}));
 
 module.exports = router;
