@@ -1,6 +1,6 @@
 extends ../layout
-
 block content
+	include mixins/youtubeEmbed
 	if match.score_breakdown
 		div(class="w3-auto")
 			h2 Match #{match.match_number} - Winner: #{match.winning_alliance}
@@ -17,7 +17,8 @@ block content
 				if (match.videos[0])
 					if (match.videos[0].type == "youtube")
 						hr
-						a(class="theme-link w3-btn" href=`https://www.youtube.com/watch?v=${match.videos[0].key}`) Watch this match on YouTube
+						//a(class="theme-link w3-btn" href=`https://www.youtube.com/watch?v=${match.videos[0].key}`) Watch this match on YouTube
+						+youtubeEmbed(match.videos[0].key)
 			hr
 			table(class="w3-table w3-auto" style="width: 80%")
 				tr

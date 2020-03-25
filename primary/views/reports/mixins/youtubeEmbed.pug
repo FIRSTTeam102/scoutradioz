@@ -1,0 +1,46 @@
+mixin youtubeEmbed(youtubeKey)
+	div(class="w3-auto w3-mobile")
+		div#youtubeEmbedParent(class="w3-hide")
+			iframe#youtubeEmbed(width="420" height="236" src=`https://www.youtube.com/embed/${youtubeKey}` style="border: none;")
+	script.
+		var ratio = 9/16;
+		var width = 0.8;
+		var maxWidth = 480;
+		
+		$(() => {
+			if (width * window.innerWidth < maxWidth) {
+				$("#youtubeEmbed").attr({
+					'width': width * window.innerWidth,
+					'height': ratio * width * window.innerWidth
+				});
+			}
+			else {
+				$("#youtubeEmbed").attr({
+					'width': maxWidth,
+					'height': ratio * maxWidth
+				});
+			}
+			$("#youtubeEmbedParent").removeClass('w3-hide');
+			
+			var ticking = false;
+			$(window).resize(() => {
+				if (!ticking) {
+					ticking = true;
+					setTimeout(() => {
+						if (width * window.innerWidth < maxWidth) {
+							$("#youtubeEmbed").attr({
+								'width': width * window.innerWidth,
+								'height': ratio * width * window.innerWidth
+							});
+						}
+						else {
+							$("#youtubeEmbed").attr({
+								'width': maxWidth,
+								'height': ratio * maxWidth
+							});
+						}
+						ticking = false;
+					}, 200);
+				}
+			})
+		})
