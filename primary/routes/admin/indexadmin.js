@@ -244,6 +244,6 @@ router.post('/orgs', wrap(async (req, res) => {
 	logger.debug(`${thisFuncName} writeResult=${JSON.stringify(writeResult)}`);
 	
 	res.redirect(`/admin/orgs?alert=Updated successfully.&type=good`);
-}))
+}));
 
 module.exports = router;

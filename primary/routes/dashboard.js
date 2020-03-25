@@ -592,7 +592,7 @@ router.get('/pits', wrap(async (req, res) => {
 	
 	res.render('./dashboard/pits', {
 		title: "Pit Scouting",
-		teams: teams,
+		teamAssignments: teams,
 		images: images
 	});	
 }));

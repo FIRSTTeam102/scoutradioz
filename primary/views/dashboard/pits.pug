@@ -9,7 +9,7 @@ block content
 			th Nickname
 			if images
 				th Photo
-			each team, i in teams
+			each team, i in teamAssignments
 				if( user.name == team.primary )
 					- color = "gear-text-orange";
 				else
@@ -32,7 +32,8 @@ block content
 						td(class="theme-spacer")
 							//- console.log(images[i])
 							- if (images[i] && images[i].main)
-								img(src=images[i].main.sm alt="" style="max-height:80px; max-width: 50px;")
+								a(href=images[i].main.lg target="_blank")
+									img(src=images[i].main.sm alt="" style="max-height:80px; max-width: 50px;")
 					//- if (pics)
 						td(class="theme-spacer")
 							img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.team_key}_sm.jpg` alt="" class="w3-image" style="max-height:80px;max-width:50px;")
