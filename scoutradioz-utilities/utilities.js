@@ -174,7 +174,7 @@ utilities.getDBurl = function(){
 			var thisDBinfo = this.dbConfig[this.activeTier];
 			
 			if (!thisDBinfo || !thisDBinfo.url) {
-				return reject('No database URL specified for tier '+ this.activeTier);
+				return reject(new Error('No database URL specified for tier '+ this.activeTier));
 			}
 			
 			logger.info(`Connecting to tier: ${this.activeTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
@@ -835,7 +835,7 @@ utilities.getTBAKey = async function(){
 		logger.fatal("utilities.getTBAKey: Could not find tba-api-headers in database");
 		
 		logger.removeContext('funcName');
-		throw "Could not find api-headers in database";
+		throw Error("Could not find api-headers in database");
 	}
 }
 
