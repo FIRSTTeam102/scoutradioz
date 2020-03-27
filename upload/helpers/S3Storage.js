@@ -10,7 +10,7 @@ var parallel = require('run-parallel')
 
 const Jimp = require('jimp');
 const concat = require('concat-stream');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('S3Storage');
 
 function staticValue (value) {
 	return function (req, file, cb) {
@@ -112,10 +112,10 @@ function collect (storage, req, file, cb) {
 }
 
 function processImage (opts, cb) {
-	
+	logger.addContext('funcName', 'processImage');
 	var thisFuncName = "S3Storage/processImage: ";
 	
-	logger.debug(`${thisFuncName} ENTER key=${opts.key}`);
+	logger.debug(`ENTER key=${opts.key}`);
 	
 	logger.trace(opts);
 	
@@ -126,7 +126,7 @@ function processImage (opts, cb) {
 		
 	const concatFile = concat(imageData => {
 		
-		logger.trace(`${thisFuncName} imageData=${imageData}`);
+		logger.trace(`imageData=${imageData}`);
 	
 		Jimp.read(imageData)
 			.then(async image => {
@@ -166,24 +166,24 @@ function processImage (opts, cb) {
 				
 				// For square image
 				if (opts.square) {
-					logger.debug(`${thisFuncName} Cropping image to square`);
+					logger.debug(`Cropping image to square`);
 					if (threshold) square = Math.min(square, threshold);
 					clone = clone.crop((clone.bitmap.width - square) / 2, (clone.bitmap.height - square) / 2, square, square);
 				}
 				
 				// For greyscale image
 				if (opts.greyscale) {
-					logger.debug(`${thisFuncName} Converting image to greyscale`)
+					logger.debug(`Converting image to greyscale`)
 					clone = clone.greyscale();
 				}
 				
 				// For output quality
-				logger.debug(`${thisFuncName} Setting quality to ${opts.quality}`);
+				logger.debug(`Setting quality to ${opts.quality}`);
 				clone = clone.quality(opts.quality);
 				
 				// For responsive images
 				if (opts.responsive) {	 
-					logger.debug(`${thisFuncName} Mapping RESPONSIVE image batch`)
+					logger.debug(`Mapping RESPONSIVE image batch`)
 					
 					for (var size of sizes){
 						
@@ -192,7 +192,7 @@ function processImage (opts, cb) {
 						// example: (key)_sm.jpg
 						let newKey = `${key}_${size}.${opts.output}`;
 						
-						logger.debug(`${thisFuncName} size=${size} newKey=${newKey}`)
+						logger.debug(`size=${size} newKey=${newKey}`)
 						
 						//scale the image based on the size
 						switch (size) {
@@ -207,7 +207,7 @@ function processImage (opts, cb) {
 								break;
 						}
 						
-						logger.trace(`${thisFuncName} getting buffer`)
+						logger.trace(`getting buffer`)
 						
 						//get buffer then push to batch
 						const buffer = await image.getBufferAsync(mime);
@@ -220,11 +220,11 @@ function processImage (opts, cb) {
 				}
 				// For non responsive image
 				else {
-					logger.debug(`${thisFuncName} Adding single image to batch`);
+					logger.debug(`Adding single image to batch`);
 					
 					let newKey = `${key}.${mime}`;
 					
-					logger.debug(`${thisFuncName} newKey=${newKey}`)
+					logger.debug(`newKey=${newKey}`)
 					
 					//get buffer then push single image to batch
 					const buffer = await clone.getBufferAsync(mime);
@@ -242,6 +242,7 @@ function processImage (opts, cb) {
 	});
 	
 	opts.replacementStream.pipe(concatFile);
+	logger.removeContext('funcName');
 }
 
 function S3Storage (opts) {
@@ -363,7 +364,7 @@ function S3Storage (opts) {
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
-	var thisFuncName = "S3Storage._handleFile: "
+	logger.addContext('funcName', '_handleFile');
 	
 	// collect all parameters into 'opts' object
 	collect(this, req, file, (err, opts) => {
@@ -374,13 +375,15 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 		
 		//process image with Jimp
 		processImage(opts, async (err, files) => {		
+			logger.addContext('funcName', '_handleFile[post-process]');
+			
 			if(err) return cb(err);
 			
-			logger.debug(`${thisFuncName} files=${JSON.stringify(files).substring(0,200)}`);
+			logger.debug(`files=${JSON.stringify(files).substring(0,200)}`);
 			
 			for(var file of files){
 				
-				logger.info(`${thisFuncName} uploading image, key=${file.key}`);
+				logger.info(`uploading image, key=${file.key}`);
 				
 				var currentSize = 0;
 
@@ -414,7 +417,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 				uploadBatch.push(upload);
 			}
 			
-			logger.debug(`${thisFuncName} Got batch of upload functions, going to run them in parallel now`);
+			logger.debug(`Got batch of upload functions, going to run them in parallel now`);
 			
 			var uploadPromises = [];
 			
@@ -423,7 +426,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 				uploadPromises.push( upload.promise() );
 			}
 			
-			logger.debug(`${thisFuncName} uploadPromises=${JSON.stringify(uploadPromises)}`);
+			logger.debug(`uploadPromises=${JSON.stringify(uploadPromises)}`);
 			
 			//Resolve all promises
 			Promise.all(uploadPromises)
@@ -447,7 +450,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 						})
 					}
 					
-					logger.debug(`${thisFuncName} Upload done! ${JSON.stringify(finalResult)}`);
+					logger.debug(`Upload done! ${JSON.stringify(finalResult)}`);
 					cb(null, finalResult);
 				})
 				.catch(cb);

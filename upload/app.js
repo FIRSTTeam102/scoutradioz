@@ -92,34 +92,31 @@ app.use((req, res, next) => {
 })
 
 app.use((req, res, next) => {
-	logger.addContext('funcName', 'urlParser')
+	logger.addContext('funcName', 'urlParser');
 	
 	//Tier is overridden in lambda.js.
 	var tier = process.env.TIER;
-	
 	logger.info(`tier=${tier} originalUrl=${req.originalUrl} url=${req.url}`);
 	
 	var splitUrl = req.url.split('/');
-	
 	logger.debug(splitUrl);
 	
 	if (splitUrl[1] == tier) {
 		logger.info('URL includes tier. Cutting it out of url.');
-		
 		//Remove tier from url
 		splitUrl.splice(1, 1);
 		req.url = splitUrl.join('/');
+		//if url does not start with a slash, add a slash to avoid breaking something
+		if (req.url[0] != '/') req.url = '/' + req.url;
 		logger.info(`new req.url=${req.url}`);
-		
 		next();
 	}
 	//If current tier is not in the url, send a 404
 	else {
-		logger.info('URL does not include tier. Sending 404.')
-		
+		logger.info('URL does not include tier. Sending 404.');
 		res.status(404).send('Not found. Must include process tier in URL.');
 	}
-})
+});
 
 //CONNECT URLS TO ROUTES
 app.use(`/`, upload);
