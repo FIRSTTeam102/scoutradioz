@@ -15,6 +15,7 @@ router.get('/*', wrap(async (req, res, next) => {
 	logger.info(req.url);
 	var url = req.url;
 	var urlBits = url.split('/');
+	var redirectURL;
 	
 	//remove empty bit of url
 	if (urlBits[0] == '') {
@@ -34,7 +35,7 @@ router.get('/*', wrap(async (req, res, next) => {
 		if (org) {
 			//if there is a trailing url, set it as redirect
 			if (urlBits.length > 0) {
-				var redirectURL = '/' + urlBits.join('/');
+				redirectURL = '/' + urlBits.join('/');
 				res.redirect(`/selectorg?org_key=${orgKey}&redirectURL=${redirectURL}`);
 			}
 			//If no trailing url, just log in to org and go to home screen
@@ -51,7 +52,7 @@ router.get('/*', wrap(async (req, res, next) => {
 	else {
 		//if there is a trailing url, set it as redirect
 		if (urlBits.length > 0) {
-			var redirectURL = '/' + urlBits.join('/');
+			redirectURL = '/' + urlBits.join('/');
 			res.redirect(`/?redirectURL=${redirectURL}`);
 		}
 		//If no trailing url, just go to home screen

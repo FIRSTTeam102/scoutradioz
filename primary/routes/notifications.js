@@ -13,7 +13,7 @@ router.all('/*', wrap(async (req, res, next) => {
 router.get('/', wrap(async (req, res) => {
 	
 	res.render('./notifications', {
-		title: "Subscribing to a notification"
+		title: 'Subscribing to a notification'
 	});
 }));
 
@@ -34,14 +34,14 @@ router.post('/save-subscription', wrap(async (req, res) => {
 	
 	var pushSubscription = req.body;
 	
-	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {push_subscription: pushSubscription}});
+	var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: pushSubscription}});
 	
-	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`)
+	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
 	//if user has been updated w/ push subscription, then send a success message
 	if (writeResult.ok){
 		
-		logger.debug(`Success`);
+		logger.debug('Success');
 		
 		res.cookie('enable_notifications', 1);
 		
@@ -50,7 +50,7 @@ router.post('/save-subscription', wrap(async (req, res) => {
 	}
 	//if write result failed, then error out and send fail response
 	else {
-		logger.error(`The subscription was received but we were unable to save it to our database.`)
+		logger.error('The subscription was received but we were unable to save it to our database.');
 		
 		res.status(500);
 		res.setHeader('Content-Type', 'application/json');
@@ -67,10 +67,10 @@ router.post('/disable-subscription', wrap(async (req, res) => {
 	logger.addContext('funcName', 'disable-subscription[post]');
 	logger.info('ENTER');
 	
-	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {push_subscription: {}}});
+	var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: {}}});
 	
 	logger.debug(JSON.stringify(writeResult));
-	logger.info(`Success`);
+	logger.info('Success');
 		
 	res.clearCookie('enable_notifications');
 	
@@ -88,16 +88,16 @@ router.post('/sendtest', wrap(async (req, res) => {
 	const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});	
 	webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
 	
-	const notificationBody = req.body.content != '' ? req.body.content : "Hello world!";
+	const notificationBody = req.body.content != '' ? req.body.content : 'Hello world!';
 	
 	const pushSubscription = req.user.push_subscription;
 	
 	if (pushSubscription){
 		
 		const notificationContent = JSON.stringify({
-			title: "Match 24 is about to start",
+			title: 'Match 24 is about to start',
 			options: {
-				body: "You're assigned to team 4261 on the red alliance.",
+				body: 'You\'re assigned to team 4261 on the red alliance.',
 				badge: '/images/brand-logos/monochrome-badge.png',
 				icon: '/images/brand-logos/FIRST-logo.png',
 				image: 'https://upload.scoutradioz.com/app/generate/upcomingmatch?match_number=24&comp_level=qm&set_number=2&blue1=225&blue2=102&blue3=1676&red1=11&red2=2590&red3=4261&assigned=red3',
@@ -110,7 +110,7 @@ router.post('/sendtest', wrap(async (req, res) => {
 				]
 			},
 			ifFocused: {
-				message: "Don't forget! This is a reminder!"
+				message: 'Don\'t forget! This is a reminder!'
 			},
 		});
 		// https://web-push-book.gauntface.com/demos/notification-examples/ 
@@ -137,7 +137,7 @@ async function sendPushMessage (subscription, dataToSend) {
 	catch (err) {
 		
 		if (err.statusCode == 404 || err.statusCode == 410) {
-			logger.warn(`Subscription has expired or is no longer valid: `, err);
+			logger.warn('Subscription has expired or is no longer valid: ', err);
 		}
 		
 		logger.error(err);
@@ -148,18 +148,18 @@ async function isValidSaveRequest (req, res) {
 	
 	// Check the request body has at least an endpoint
 	if (!req.body || !req.body.endpoint) {
-	  // Not a valid subscription.
-	  res.status(400);
-	  res.setHeader('Content-Type', 'application/json');
-	  res.send(JSON.stringify({
-		error: {
-		  id: 'no-endpoint',
-		  message: 'Subscription must have an endpoint.'
-		}
-	  }));
-	  return false;
+		// Not a valid subscription.
+		res.status(400);
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify({
+			error: {
+				id: 'no-endpoint',
+				message: 'Subscription must have an endpoint.'
+			}
+		}));
+		return false;
 	}
 	return true;
-};
+}
 
 module.exports = router;

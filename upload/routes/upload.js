@@ -3,7 +3,7 @@ const _ = require('lodash');
 const multer = require('multer');
 const logger = require('log4js').getLogger('upload');
 const S3Storage = require('../helpers/S3Storage');
-const path = require('path');
+//const path = require('path');
 const crypto = require('crypto');
 const wrap = require('express-async-handler');
 
@@ -12,15 +12,15 @@ const s3 = new AWS.S3();
 
 const utilities = require('@firstteam102/scoutradioz-utilities');
 
-logger.warn("Images will be uploaded to S3.");
+logger.warn('Images will be uploaded to S3.');
 
 var storage = S3Storage({
-    s3: s3,
-    bucket: process.env.S3_BUCKET,
-    contentType: S3Storage.AUTO_CONTENT_TYPE,
+	s3: s3,
+	bucket: process.env.S3_BUCKET,
+	contentType: S3Storage.AUTO_CONTENT_TYPE,
 	
 	key: function (req, file, cb) {
-		const thisFuncName = 'S3Storage.opts.getKey: ';
+		//const thisFuncName = 'S3Storage.opts.getKey: ';
 		
 		const bytes = crypto.pseudoRandomBytes(32);
 		const checksum = crypto.createHash('MD5').update(bytes).digest('hex');
@@ -29,7 +29,7 @@ var storage = S3Storage({
 		const baseKey = process.env.S3_BASE_KEY;
 		const year = new Date().getFullYear();
 		let month = new Date().getMonth()+1;
-		if (month < 10) month = "0"+month;
+		if (month < 10) month = '0'+month;
 		
 		const key = `${tier}/${baseKey}/${year}_${month}/${checksum}`;
 		
@@ -60,11 +60,11 @@ var storage = S3Storage({
 			cb(new Error("File key, year, and org key need to be specified."));
 		}*/
 	},	
-	acl: "public-read",
+	acl: 'public-read',
 	
 	square: false,
 	responsive: true,
-	output: "jpg",
+	output: 'jpg',
 	greyscale: false,
 	quality: 60,
 	threshold: 500,
@@ -78,9 +78,9 @@ var limits = {
 
 //file filter to guarantee filetype is image
 var fileFilter = function (req, file, cb) {
-	var thisFuncName = "upload/image: ";
+	var thisFuncName = 'upload/image: ';
 	//logger.debug(thisFuncName + "ENTER");
-	logger.info(thisFuncName + "Entering file filter");
+	logger.info(thisFuncName + 'Entering file filter');
 	
 	//supported image file mimetypes
 	var allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'];
@@ -88,11 +88,12 @@ var fileFilter = function (req, file, cb) {
 	if (_.includes(allowedMimes, file.mimetype)) {
 		// allow supported image files
 		cb(null, true);
-	} else {
+	}
+	else {
 		// throw error for invalid files
 		cb(new TypeError('Invalid file type. Only jpg, png and gif image files are allowed.'));
 	}
-	logger.debug(thisFuncName + "DONE");
+	logger.debug(thisFuncName + 'DONE');
 };
 
 //create basic multer function upload
@@ -112,21 +113,21 @@ router.get('/test', wrap(async (req, res) => {
 	logger.addContext('funcName', 'testping[get]');
 	logger.info('ENTER');
 	
-	res.status(200).send("Pong!");
+	res.status(200).send('Pong!');
 }));
 
 router.get('/ping', wrap(async (req, res) => {
 	logger.addContext('funcName', 'ping[get]');
 	logger.info('ENTER');
 	
-	res.status(200).send("Pong!");
+	res.status(200).send('Pong!');
 }));
 
 router.post('/ping', wrap(async (req, res) => {
 	logger.addContext('funcName', 'ping[post]');
 	logger.info('ENTER');
 	
-	res.status(200).send("Pong!");
+	res.status(200).send('Pong!');
 }));
 
 router.post('/image', wrap(async (req, res, next) => {
@@ -138,7 +139,7 @@ router.post('/image', wrap(async (req, res, next) => {
 	next();
 }));
 
-router.post('/image', upload.single("image"), wrap(async (req, res, next) => {
+router.post('/image', upload.single('image'), wrap(async (req, res, next) => {
 	logger.addContext('funcName', 'image-after-upload[post]');
 	logger.info('ENTER');
 	
@@ -150,7 +151,7 @@ router.post('/image', upload.single("image"), wrap(async (req, res, next) => {
 		if(req.file.hasOwnProperty(i)){
 			var file = req.file[i];
 			
-			if(file && file.hasOwnProperty("location")) {
+			if(file && file.hasOwnProperty('location')) {
 				locations.push(file.location);
 			}
 		}
@@ -168,15 +169,15 @@ router.post('/image', upload.single("image"), wrap(async (req, res, next) => {
 		const uploadTime = Date.now();
 		const s3Key = mainFile.key;
 		
-		const user = await utilities.findOne("users", {_id: userId});
+		const user = await utilities.findOne('users', {_id: userId});
 		var userName;
 		
 		if (user) {
 			userName = user.name;
 		}
 		else {
-			logger.error(`Could not find user in db; setting to undefined`);
-			userName = "Undefined";
+			logger.error('Could not find user in db; setting to undefined');
+			userName = 'Undefined';
 		}
 		
 		const data = {
@@ -192,11 +193,11 @@ router.post('/image', upload.single("image"), wrap(async (req, res, next) => {
 			s3_key: s3Key,
 			index: parseInt(index),
 			removed: false,
-		}
+		};
 		
 		logger.info(`Upload complete; data=${JSON.stringify(data)}`);
 		
-		await utilities.insert("uploads", data);
+		await utilities.insert('uploads', data);
 		
 	}
 	

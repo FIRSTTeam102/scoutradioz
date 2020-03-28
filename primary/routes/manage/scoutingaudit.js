@@ -1,4 +1,4 @@
-const router = require("express").Router();
+const router = require('express').Router();
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
@@ -16,31 +16,30 @@ router.all('/*', wrap(async (req, res, next) => {
  * @url /manage/scoringaudit
  * @view /manage/index, /manage/scoringaudit
  */
-router.get("/", wrap(async (req, res) =>  {
+router.get('/', wrap(async (req, res) =>  {
 	
-	var thisFuncName = "audit.root[GET]:";
+	var thisFuncName = 'audit.root[GET]:';
 	logger.debug(`${thisFuncName} enter`);
 	
 	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
-	var matches = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 }, {sort: {"time": 1}});
+	var matches = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 }, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
-	if (matches && matches[0])
-	{
+	if (matches && matches[0]) {
 		var earliestMatch = matches[0];
 		earliestTimestamp = earliestMatch.time;
 	}
 	
-	logger.debug("Scoring audit: earliestTimestamp=" + earliestTimestamp);
+	logger.debug('Scoring audit: earliestTimestamp=' + earliestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"assigned_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
+	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'assigned_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	if(!scoreData)
-		return res.redirect("/?alert=mongo error at dashboard/matches");
+		return res.redirect('/?alert=mongo error at dashboard/matches');
 
 	// Build per-team-member array
 	var memberArr = [];
@@ -51,7 +50,7 @@ router.get("/", wrap(async (req, res) =>  {
 		for (var scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 			var thisMember = scoreData[scoreIdx].assigned_scorer;
 			if (thisMember != lastMember) {
-				var thisRow = {};
+				let thisRow = {};
 				thisRow['member'] = lastMember;
 				thisRow['record'] = thisMemberArr;
 				if ('NOLASTMEMBER' != lastMember)
@@ -72,29 +71,29 @@ router.get("/", wrap(async (req, res) =>  {
 			if (scoreData[scoreIdx].data){
 				
 				if (scoreData[scoreIdx].assigned_scorer == scoreData[scoreIdx].actual_scorer)
-					auditElementChar = "Y";
+					auditElementChar = 'Y';
 				else
-					// 2019-03-16 JL: App crashed due to actual_scorer being undefined
-					if (scoreData[scoreIdx].actual_scorer == undefined){
-						logger.debug(`${thisFuncName} actual_scorer undefined`);
-						auditElementChar = "N";
-					}
-					// 2018-03-22, M.O'C: Adding parent option
-					else if (scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('mr') || 
+				// 2019-03-16 JL: App crashed due to actual_scorer being undefined
+				if (scoreData[scoreIdx].actual_scorer == undefined){
+					logger.debug(`${thisFuncName} actual_scorer undefined`);
+					auditElementChar = 'N';
+				}
+				// 2018-03-22, M.O'C: Adding parent option
+				else if (scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('mr') || 
 						scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('mrs') || 
 						scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('ms')){
-							//covered by parent (and insert actual_scorer)
-							auditElementChar = "P";
-							auditElement.actual_scorer = scoreData[scoreIdx].actual_scorer;
-						}
-					else{
-						//covered by lead (and insert actual_scorer)
-						auditElementChar = "C";
-						auditElement.actual_scorer = scoreData[scoreIdx].actual_scorer;
-					}		
+					//covered by parent (and insert actual_scorer)
+					auditElementChar = 'P';
+					auditElement.actual_scorer = scoreData[scoreIdx].actual_scorer;
+				}
+				else{
+					//covered by lead (and insert actual_scorer)
+					auditElementChar = 'C';
+					auditElement.actual_scorer = scoreData[scoreIdx].actual_scorer;
+				}		
 			}
 			else{
-				auditElementChar = "N";
+				auditElementChar = 'N';
 			}
 			
 			//set auditElement's char to what we set above, then push to member array
@@ -103,14 +102,14 @@ router.get("/", wrap(async (req, res) =>  {
 			
 		}
 		// Write in the last set of records
-		var thisRow = {};
+		let thisRow = {};
 		thisRow['member'] = lastMember;
 		thisRow['record'] = thisMemberArr;
 		memberArr.push(thisRow);
 	}
 
 	res.render('./manage/audit',{
-		title: "Scouter Audit",
+		title: 'Scouter Audit',
 		audit: memberArr
 	});
 }));
@@ -142,11 +141,11 @@ router.get('/uploads', wrap(async (req, res) => {
 		else {
 			return aNum - bNum;
 		}
-	})
+	});
 	
 	//Sort into groups of teams
 	var uploadsByTeam = [];
-	var thisTeamKey, thisTeamUploads = [], thisUploadLinks;
+	var thisTeamKey, thisTeamUploads = [];
 	for (var upload of uploads) {
 		var thisTeamLinks = uploadHelper.getLinks(upload);
 		upload.links = thisTeamLinks;
@@ -195,11 +194,11 @@ router.post('/uploads/changeindex', wrap(async (req, res) => {
 			);
 			
 			logger.debug(`${thisFuncName} writeResult=${writeResult}`);
-			res.status(200).send(writeResult)
+			res.status(200).send(writeResult);
 		}
 		else {
 			logger.error(`${thisFuncName} Could not find upload in db, id=${uploadId}`);
-			res.status(400).send("Could not find upload in database.");
+			res.status(400).send('Could not find upload in database.');
 		}
 	}
 	catch (err) {
@@ -229,11 +228,11 @@ router.post('/uploads/delete', wrap(async (req, res) => {
 			);
 			
 			logger.debug(`${thisFuncName} writeResult=${writeResult}`);
-			res.status(200).send(writeResult)
+			res.status(200).send(writeResult);
 		}
 		else {
 			logger.error(`${thisFuncName} Could not find upload in db, id=${uploadId}`);
-			res.status(400).send("Could not find upload in database.");
+			res.status(400).send('Could not find upload in database.');
 		}
 	}
 	catch (err) {
@@ -244,12 +243,11 @@ router.post('/uploads/delete', wrap(async (req, res) => {
 
 router.get('/bymatch', wrap(async (req, res) => {
 	
-	var audit = {};
 	var eventKey = req.event.key;
 	var org_key = req.user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = await utilities.find("matches", {event_key: eventKey, "alliances.red.score": -1}, {sort: {"time": 1}});
+	var matches = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -259,17 +257,17 @@ router.get('/bymatch', wrap(async (req, res) => {
 		earliestTimestamp = earliestMatch.time;
 	}
 	
-	logger.debug("Per-match audit: earliestTimestamp=" + earliestTimestamp);
+	logger.debug('Per-match audit: earliestTimestamp=' + earliestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1, "alliance": 1, "team_key": 1} });
+	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	//Create array of matches for audit, with each match-team inside each match
 	var audit = [];
 	
 	var lastMatchNum = scoreData[0].match_number;
 	
-	for(var i = 0, thisAuditIdx = 0; i < scoreData.length; i++){
+	for(var i = 0; i < scoreData.length; i++){
 		
 		let thisMatchNum  = scoreData[i].match_number;
 		
@@ -292,8 +290,8 @@ router.get('/bymatch', wrap(async (req, res) => {
 				//if not, JUST IN CASE something went wrong with the data, push an object with scored: false
 				else{
 					matchTeamArr.push({
-						"match_number": thisMatchNum,
-						"scored": false
+						'match_number': thisMatchNum,
+						'scored': false
 					});
 				}
 				//this way, each matchTeamArr is 6 objects large
@@ -305,8 +303,8 @@ router.get('/bymatch', wrap(async (req, res) => {
 	}
 	
 	res.render('./manage/auditbymatch', {
-		title: "Match Scouting Audit",
-		"audit": audit
+		title: 'Match Scouting Audit',
+		'audit': audit
 	});
 }));
 
@@ -316,7 +314,7 @@ router.get('/comments', wrap(async (req, res) => {
 	var org_key = req.user.org_key;
 		
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = utilities.find("matches", {event_key: eventKey, "alliances.red.score": -1}, {sort: {"time": 1}});
+	var matches = utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	var earliestTimestamp = 9999999999;
@@ -326,22 +324,22 @@ router.get('/comments', wrap(async (req, res) => {
 		earliestTimestamp = earliestMatch.time;
 	}
 	
-	logger.debug("Comments audit: earliestTimestamp=" + earliestTimestamp);
+	logger.debug('Comments audit: earliestTimestamp=' + earliestTimestamp);
 		
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"actual_scorer": 1, "time": 1, "alliance": 1, "team_key": 1} });
+	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'actual_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	var audit = [];
 	
 	for(var i in scoreData){
-		if(scoreData[i].data && scoreData[i].data.otherNotes != ""){
+		if(scoreData[i].data && scoreData[i].data.otherNotes != ''){
 			audit.push(scoreData[i]);
 		}
 	}
 	
 	res.render('./manage/auditcomments', {
-		title: "Scouter Comments Audit",
-		"audit": audit
+		title: 'Scouter Comments Audit',
+		'audit': audit
 	});
 }));
 

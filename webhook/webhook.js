@@ -55,8 +55,8 @@ const options = {
 		console.log(`Our hash: ${hash}`);
 		
 		//If comparison failed, then we need to throw an error to stop code
-		if (hash != hmac) throw "X-TBA-HMAC not verified.";
-    }
+		if (hash != hmac) throw Error('X-TBA-HMAC not verified.');
+	}
 };
 webhook.use(bodyParser.json(options));
 webhook.use(bodyParser.urlencoded(options));
@@ -96,7 +96,7 @@ webhook.use((req, res, next) => {
 	var err = new Error('Not Found');
 	err.status = 404;
 	next(err);
-});
+}); 
 //Error handler
 webhook.use((err, req, res, next) => {
 	logger.addContext('funcName', 'error');
@@ -109,7 +109,7 @@ webhook.use((err, req, res, next) => {
 router.all('/*', wrap(async (req, res, next) => {
 	logger.removeContext('funcName');
 	next();
-}))
+}));
 
 //Routing
 router.get('/', wrap(async (req, res) => {
@@ -124,42 +124,41 @@ router.post('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[post]');
 	
 	var message = req.body;
-	logger.info("ENTER message=" + JSON.stringify(message));
+	logger.info('ENTER message=' + JSON.stringify(message));
 
-    var messageType = message.message_type;
+	var messageType = message.message_type;
 	var messageData = message.message_data;
 	
-    logger.info("messageType=" + messageType);
+	logger.info('messageType=' + messageType);
 	
 	//Delegate data handling to separate functions.
 	switch(messageType){
-		
-		case "upcoming_match":
+		case 'upcoming_match':
 			await handleUpcomingMatch( messageData );
 			break;
-		case "match_score":
 		// 2020-02-20, adding 'match_video' - appears to be the same data as 'match_score'
-		case "match_video":
+		case 'match_score':
+		case 'match_video':
 			await handleMatchScore( messageData );
 			break;
-		case "starting_comp_level":
+		case 'starting_comp_level':
 			await handleStartingCompLevel( messageData );
 			break;
-		case "alliance_selection":
+		case 'alliance_selection':
 			await handleAllianceSelection( messageData );
 			break;
-		case "schedule_updated":
+		case 'schedule_updated':
 			await handleScheduleUpdated( messageData );
 			break;
-		case "awards_posted":
+		case 'awards_posted':
 			await handleAwardsPosted( messageData );
 			break;
 		default:
-			logger.info("unknown messageType-" + messageType + ",messageData=" + JSON.stringify(messageData));
+			logger.info('unknown messageType-' + messageType + ',messageData=' + JSON.stringify(messageData));
 	}
 	
 	logger.info('DONE');
-	res.status(200).send("thanks!");
+	res.status(200).send('thanks!');
 }));
 
 ////////// Type handlers
@@ -171,7 +170,7 @@ async function handleUpcomingMatch( data ) {
 	var match_key = data.match_key;
 	var event_key = match_key.split('_')[0];
 	var event_year = parseInt(event_key.substring(0, 4));
-	logger.info("ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
+	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
 
 	// Synchronize the rankings (just in case)
 	await syncRankings(event_key);
@@ -179,7 +178,7 @@ async function handleUpcomingMatch( data ) {
 	// push notifications
 	if (process.env.disablePushNotifications != 'true') {
 	
-		logger.debug(`Configuring web-push`);
+		logger.debug('Configuring web-push');
 		const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
 		webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
 		
@@ -229,7 +228,7 @@ async function handleUpcomingMatch( data ) {
 						titleIdentifier = `Final Match ${matchNumber}`;
 					} 
 					else {
-						throw new Error(`Unexpected matchKey comp_level identifier`);
+						throw new Error('Unexpected matchKey comp_level identifier');
 					}
 					
 					var imageHref = 'https://upload.scoutradioz.com/app/generate/upcomingmatch?'
@@ -240,7 +239,7 @@ async function handleUpcomingMatch( data ) {
 						+ `&red1=${teamKeys[3].substring(3)}`
 						+ `&red2=${teamKeys[4].substring(3)}`
 						+ `&red3=${teamKeys[5].substring(3)}`
-						+ `&assigned=red1`;
+						+ '&assigned=red1';
 					
 					const notificationContent = JSON.stringify({
 						title: `${titleIdentifier} will start soon`,
@@ -258,7 +257,7 @@ async function handleUpcomingMatch( data ) {
 							]
 						},
 						ifFocused: {
-							message: "Don't forget! This is a reminder!"
+							message: 'Don\'t forget! This is a reminder!'
 						},
 					});
 					// https://web-push-book.gauntface.com/demos/notification-examples/ 
@@ -266,7 +265,7 @@ async function handleUpcomingMatch( data ) {
 					await sendPushMessage(pushSubscription, notificationContent);
 				}
 				else {
-					logger.debug(`Push subscription not available for ${req.user.name}`);
+					logger.debug(`Push subscription not available for ${user.name}`);
 			
 				}
 			}
@@ -275,7 +274,7 @@ async function handleUpcomingMatch( data ) {
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
-	var orgsAtEvent = await utilities.find("orgs", {event_key: event_key});
+	var orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
 		//var aggRangePromises = [];
@@ -296,16 +295,16 @@ async function handleMatchScore( data ) {
 	var match_key = data.match.key;
 	var event_key = match_key.split('_')[0];
 	var event_year = parseInt(event_key.substring(0, 4));
-	logger.info("ENTER event_year=" + event_year + ",event_key=" + event_key + ",match_key=" + match_key);
+	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
 
 	// 2020-02-13, M.O'C: Handle possible bugs in webhook push data?
 	// Setting winning_alliance
 	if (!data.match.winning_alliance) {
-		var winning_alliance = "";
+		var winning_alliance = '';
 		if (data.match.alliances.blue.score > data.match.alliances.red.score)
-			winning_alliance = "blue";
+			winning_alliance = 'blue';
 		if (data.match.alliances.blue.score < data.match.alliances.red.score)
-			winning_alliance = "red";
+			winning_alliance = 'red';
 		data.match.winning_alliance = winning_alliance;
 	}
 	// Renaming the 'teams' attribute
@@ -324,16 +323,16 @@ async function handleMatchScore( data ) {
 	}
 
 	// Delete the matching match record
-	await utilities.remove("matches", {"key": match_key});
+	await utilities.remove('matches', {'key': match_key});
 	// Insert the match data
-	await utilities.insert("matches", data.match);
+	await utilities.insert('matches', data.match);
 	
 	// Synchronize the rankings
 	await syncRankings(event_key);
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
-	var orgsAtEvent = await utilities.find("orgs", {event_key: event_key});
+	var orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
 		//var aggRangePromises = [];
@@ -350,7 +349,7 @@ async function handleMatchScore( data ) {
 
 async function handleStartingCompLevel( data ) {
 	logger.addContext('funcName', 'handleStartingCompLevel');
-	logger.info("ENTER (sync rankings only) data=" + JSON.stringify(data));
+	logger.info('ENTER (sync rankings only) data=' + JSON.stringify(data));
 	var event_key = data.event_key; // <-- Comment this out & send 'starting_comp_level' webhooks from TBA to cause errors
 	
 	// Synchronize the rankings
@@ -359,7 +358,7 @@ async function handleStartingCompLevel( data ) {
 
 async function handleAllianceSelection( data ) {
 	logger.addContext('funcName', 'handleAllianceSelection');
-	logger.info("ENTER DNGN data=" + JSON.stringify(data));
+	logger.info('ENTER DNGN data=' + JSON.stringify(data));
 }
 
 async function handleScheduleUpdated( data ) {
@@ -374,20 +373,20 @@ async function handleScheduleUpdated( data ) {
 
 	var event_key = data.event_key;
 	var event_year = parseInt(event_key.substring(0, 4));
-	logger.info("ENTER event_year=" + event_year + ",event_key=" + event_key);
+	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key);
 
 	// Reload the matches
-	var url = "event/" + event_key + "/matches";
-	logger.debug("url=" + url);
+	var url = 'event/' + event_key + '/matches';
+	logger.debug('url=' + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
 	var array = JSON.parse(matchData);
 	if (array && array.length && array.length > 0) {
-		var arrayLength = array.length;
+		//var arrayLength = array.length;
 
 		// First delete existing match data for the given event
-		await utilities.remove("matches", {"event_key": event_key});
+		await utilities.remove('matches', {'event_key': event_key});
 		// Now, insert the new data
-		await utilities.insert("matches", array);
+		await utilities.insert('matches', array);
 	}
 
 	// Synchronize the rankings (just in case)
@@ -396,7 +395,7 @@ async function handleScheduleUpdated( data ) {
 
 async function handleAwardsPosted( data ) {
 	logger.addContext('funcName', 'handleAwardsPosted');
-	logger.info("ENTER DNGN data=" + JSON.stringify(data));
+	logger.info('ENTER DNGN data=' + JSON.stringify(data));
 }
 
 ////////// Helper functions
@@ -404,17 +403,16 @@ async function handleAwardsPosted( data ) {
 // Pull down rankings for event event_key
 async function syncRankings(event_key) {
 	logger.addContext('funcName', 'syncRankings');
-	logger.info("ENTER");
+	logger.info('ENTER');
 
 	// Reload the rankings from TBA
-	var rankingUrl = "event/" + event_key + "/rankings";
-	logger.info("rankingUrl=" + rankingUrl);
+	var rankingUrl = 'event/' + event_key + '/rankings';
+	logger.info('rankingUrl=' + rankingUrl);
 
 	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankinfo = JSON.parse(rankData);
 	var rankArr = [];
-	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0)
-	{
+	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
 		var thisRankings = rankinfo.rankings;
 		for (var i in thisRankings) {
@@ -428,16 +426,16 @@ async function syncRankings(event_key) {
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	// Delete the current rankings
 	//await utilities.remove("currentrankings", {});
-	await utilities.remove("rankings", {"event_key": event_key});
+	await utilities.remove('rankings', {'event_key': event_key});
 	// Insert into DB
 	//await utilities.insert("currentrankings", rankArr);
-	await utilities.insert("rankings", rankArr);
+	await utilities.insert('rankings', rankArr);
 }
 
 // Push notification function
 async function sendPushMessage(subscription, dataToSend) {
 	logger.addContext('funcName', 'sendPushMessage');
-	logger.info("ENTER");
+	logger.info('ENTER');
 	
 	logger.debug(`Attempting to send push message: ${dataToSend}`);
 	
@@ -449,7 +447,7 @@ async function sendPushMessage(subscription, dataToSend) {
 	catch (err) {
 		
 		if (err.statusCode == 404 || err.statusCode == 410) {
-			logger.warn(`Subscription has expired or is no longer valid: `, err);
+			logger.warn('Subscription has expired or is no longer valid: ', err);
 		}
 		
 		logger.error(err);

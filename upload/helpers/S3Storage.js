@@ -3,10 +3,10 @@
  * Its license is provided at the bottom of this file.
  */
 
-var crypto = require('crypto')
-var stream = require('stream')
-var fileType = require('file-type')
-var parallel = require('run-parallel')
+var crypto = require('crypto');
+var stream = require('stream');
+var fileType = require('file-type');
+var parallel = require('run-parallel');
 
 const Jimp = require('jimp');
 const concat = require('concat-stream');
@@ -14,8 +14,8 @@ const logger = require('log4js').getLogger('S3Storage');
 
 function staticValue (value) {
 	return function (req, file, cb) {
-		cb(null, value)
-	}
+		cb(null, value);
+	};
 }
 
 var defaultAcl = staticValue('private');
@@ -38,7 +38,7 @@ var defaultResponsive = staticValue(false);
 
 function defaultKey (req, file, cb) {
 	crypto.randomBytes(16, function (err, raw) {
-		cb(err, err ? undefined : raw.toString('hex'))
+		cb(err, err ? undefined : raw.toString('hex'));
 	});
 }
 
@@ -113,7 +113,7 @@ function collect (storage, req, file, cb) {
 
 function processImage (opts, cb) {
 	logger.addContext('funcName', 'processImage');
-	var thisFuncName = "S3Storage/processImage: ";
+	var thisFuncName = 'S3Storage/processImage: ';
 	
 	logger.debug(`ENTER key=${opts.key}`);
 	
@@ -149,12 +149,12 @@ function processImage (opts, cb) {
 				//fetch the Jimp image dimensions
 				var width = clone.bitmap.width;
 				var height = clone.bitmap.height;
-				logger.debug(thisFuncName + "width=" + width + ", height=" + height);
+				logger.debug(thisFuncName + 'width=' + width + ', height=' + height);
 				
 				var square = Math.min(width, height);
 				var rectangle = Math.max(width, height);
 				var threshold = opts.threshold;
-				logger.trace(thisFuncName + "threshold="+threshold+", square="+square+", rectangle="+rectangle+", width="+width+", height="+height);						
+				logger.trace(thisFuncName + 'threshold='+threshold+', square='+square+', rectangle='+rectangle+', width='+width+', height='+height);						
 				
 				// Auto scale the image dimensions to fit the threshold requirement
 				if (threshold && square > threshold) {
@@ -166,14 +166,14 @@ function processImage (opts, cb) {
 				
 				// For square image
 				if (opts.square) {
-					logger.debug(`Cropping image to square`);
+					logger.debug('Cropping image to square');
 					if (threshold) square = Math.min(square, threshold);
 					clone = clone.crop((clone.bitmap.width - square) / 2, (clone.bitmap.height - square) / 2, square, square);
 				}
 				
 				// For greyscale image
 				if (opts.greyscale) {
-					logger.debug(`Converting image to greyscale`)
+					logger.debug('Converting image to greyscale');
 					clone = clone.greyscale();
 				}
 				
@@ -183,7 +183,7 @@ function processImage (opts, cb) {
 				
 				// For responsive images
 				if (opts.responsive) {	 
-					logger.debug(`Mapping RESPONSIVE image batch`)
+					logger.debug('Mapping RESPONSIVE image batch');
 					
 					for (var size of sizes){
 						
@@ -192,7 +192,7 @@ function processImage (opts, cb) {
 						// example: (key)_sm.jpg
 						let newKey = `${key}_${size}.${opts.output}`;
 						
-						logger.debug(`size=${size} newKey=${newKey}`)
+						logger.debug(`size=${size} newKey=${newKey}`);
 						
 						//scale the image based on the size
 						switch (size) {
@@ -207,7 +207,7 @@ function processImage (opts, cb) {
 								break;
 						}
 						
-						logger.trace(`getting buffer`)
+						logger.trace('getting buffer');
 						
 						//get buffer then push to batch
 						const buffer = await image.getBufferAsync(mime);
@@ -220,11 +220,11 @@ function processImage (opts, cb) {
 				}
 				// For non responsive image
 				else {
-					logger.debug(`Adding single image to batch`);
+					logger.debug('Adding single image to batch');
 					
 					let newKey = `${key}.${mime}`;
 					
-					logger.debug(`newKey=${newKey}`)
+					logger.debug(`newKey=${newKey}`);
 					
 					//get buffer then push single image to batch
 					const buffer = await clone.getBufferAsync(mime);
@@ -248,74 +248,74 @@ function processImage (opts, cb) {
 function S3Storage (opts) {
 
 	switch (typeof opts.s3) {
-		case 'object': this.s3 = opts.s3; break
+		case 'object': this.s3 = opts.s3; break;
 		default: throw new TypeError('Expected opts.s3 to be object');
 	}
 
 	switch (typeof opts.bucket) {
-		case 'function': this.getBucket = opts.bucket; break
-		case 'string': this.getBucket = staticValue(opts.bucket); break
+		case 'function': this.getBucket = opts.bucket; break;
+		case 'string': this.getBucket = staticValue(opts.bucket); break;
 		case 'undefined': throw new Error('bucket is required');
 		default: throw new TypeError('Expected opts.bucket to be undefined, string or function');
 	}
 
 	switch (typeof opts.key) {
-		case 'function': this.getKey = opts.key; break
-		case 'undefined': this.getKey = defaultKey; break
+		case 'function': this.getKey = opts.key; break;
+		case 'undefined': this.getKey = defaultKey; break;
 		default: throw new TypeError('Expected opts.key to be undefined or function');
 	}
 
 	switch (typeof opts.acl) {
-		case 'function': this.getAcl = opts.acl; break
-		case 'string': this.getAcl = staticValue(opts.acl); break
-		case 'undefined': this.getAcl = defaultAcl; break
+		case 'function': this.getAcl = opts.acl; break;
+		case 'string': this.getAcl = staticValue(opts.acl); break;
+		case 'undefined': this.getAcl = defaultAcl; break;
 		default: throw new TypeError('Expected opts.acl to be undefined, string or function');
 	}
 
 	switch (typeof opts.contentType) {
-		case 'function': this.getContentType = opts.contentType; break
-		case 'undefined': this.getContentType = defaultContentType; break
+		case 'function': this.getContentType = opts.contentType; break;
+		case 'undefined': this.getContentType = defaultContentType; break;
 		default: throw new TypeError('Expected opts.contentType to be undefined or function');
 	}
 
 	switch (typeof opts.metadata) {
-		case 'function': this.getMetadata = opts.metadata; break
-		case 'undefined': this.getMetadata = defaultMetadata; break
+		case 'function': this.getMetadata = opts.metadata; break;
+		case 'undefined': this.getMetadata = defaultMetadata; break;
 		default: throw new TypeError('Expected opts.metadata to be undefined or function');
 	}
 
 	switch (typeof opts.cacheControl) {
-		case 'function': this.getCacheControl = opts.cacheControl; break
-		case 'string': this.getCacheControl = staticValue(opts.cacheControl); break
-		case 'undefined': this.getCacheControl = defaultCacheControl; break
+		case 'function': this.getCacheControl = opts.cacheControl; break;
+		case 'string': this.getCacheControl = staticValue(opts.cacheControl); break;
+		case 'undefined': this.getCacheControl = defaultCacheControl; break;
 		default: throw new TypeError('Expected opts.cacheControl to be undefined, string or function');
 	}
 
 	switch (typeof opts.contentDisposition) {
-		case 'function': this.getContentDisposition = opts.contentDisposition; break
-		case 'string': this.getContentDisposition = staticValue(opts.contentDisposition); break
-		case 'undefined': this.getContentDisposition = defaultContentDisposition; break
+		case 'function': this.getContentDisposition = opts.contentDisposition; break;
+		case 'string': this.getContentDisposition = staticValue(opts.contentDisposition); break;
+		case 'undefined': this.getContentDisposition = defaultContentDisposition; break;
 		default: throw new TypeError('Expected opts.contentDisposition to be undefined, string or function');
 	}
 
 	switch (typeof opts.storageClass) {
-		case 'function': this.getStorageClass = opts.storageClass; break
-		case 'string': this.getStorageClass = staticValue(opts.storageClass); break
-		case 'undefined': this.getStorageClass = defaultStorageClass; break
+		case 'function': this.getStorageClass = opts.storageClass; break;
+		case 'string': this.getStorageClass = staticValue(opts.storageClass); break;
+		case 'undefined': this.getStorageClass = defaultStorageClass; break;
 		default: throw new TypeError('Expected opts.storageClass to be undefined, string or function');
 	}
 
 	switch (typeof opts.serverSideEncryption) {
-		case 'function': this.getSSE = opts.serverSideEncryption; break
-		case 'string': this.getSSE = staticValue(opts.serverSideEncryption); break
-		case 'undefined': this.getSSE = defaultSSE; break
+		case 'function': this.getSSE = opts.serverSideEncryption; break;
+		case 'string': this.getSSE = staticValue(opts.serverSideEncryption); break;
+		case 'undefined': this.getSSE = defaultSSE; break;
 		default: throw new TypeError('Expected opts.serverSideEncryption to be undefined, string or function');
 	}
 
 	switch (typeof opts.sseKmsKeyId) {
-		case 'function': this.getSSEKMS = opts.sseKmsKeyId; break
-		case 'string': this.getSSEKMS = staticValue(opts.sseKmsKeyId); break
-		case 'undefined': this.getSSEKMS = defaultSSEKMS; break
+		case 'function': this.getSSEKMS = opts.sseKmsKeyId; break;
+		case 'string': this.getSSEKMS = staticValue(opts.sseKmsKeyId); break;
+		case 'undefined': this.getSSEKMS = defaultSSEKMS; break;
 		default: throw new TypeError('Expected opts.sseKmsKeyId to be undefined, string, or function');
 	}
 	
@@ -398,13 +398,13 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 					ServerSideEncryption: opts.serverSideEncryption,
 					SSEKMSKeyId: opts.sseKmsKeyId,
 					Body: file.buffer,
-				}
+				};
 				
 				if (opts.contentDisposition) {
-					params.ContentDisposition = opts.contentDisposition
+					params.ContentDisposition = opts.contentDisposition;
 				}
 				
-				var upload = this.s3.upload(params);
+				let upload = this.s3.upload(params);
 				
 				upload.on('httpUploadProgress', function (ev) {
 					if (ev.total) currentSize = ev.total;
@@ -412,17 +412,17 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 				});
 				
 				//Async function that returns S3 upload promise when run
-				var sendUpload = upload.promise;
+				//var sendUpload = upload.promise;
 				
 				uploadBatch.push(upload);
 			}
 			
-			logger.debug(`Got batch of upload functions, going to run them in parallel now`);
+			logger.debug('Got batch of upload functions, going to run them in parallel now');
 			
 			var uploadPromises = [];
 			
 			//Run every upload function and create array of promises
-			for(var upload of uploadBatch){
+			for(let upload of uploadBatch){
 				uploadPromises.push( upload.promise() );
 			}
 			
@@ -447,7 +447,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 							location: result.Location,
 							etag: result.ETag,
 							versionId: result.VersionId,
-						})
+						});
 					}
 					
 					logger.debug(`Upload done! ${JSON.stringify(finalResult)}`);
@@ -456,18 +456,18 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 				.catch(cb);
 		});
 	});
-}
+};
 
 S3Storage.prototype._removeFile = function (req, file, cb) {
 	this.s3.deleteObject({ Bucket: file.bucket, Key: file.key }, cb);
-}
+};
 
 module.exports = function (opts) {
 	return new S3Storage(opts);
-}
+};
 
-module.exports.AUTO_CONTENT_TYPE = autoContentType
-module.exports.DEFAULT_CONTENT_TYPE = defaultContentType
+module.exports.AUTO_CONTENT_TYPE = autoContentType;
+module.exports.DEFAULT_CONTENT_TYPE = defaultContentType;
 
 /*
 Below is the license of badunk's "multer-s3" package.

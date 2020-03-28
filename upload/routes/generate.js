@@ -10,7 +10,7 @@ router.get('/upcomingmatch', async (req, res, next) => {
 	//all parameters from query
 	var matchNum = verifyNumber(req.query.match_number);
 	var setNum = verifyNumber(req.query.set_number || 1);
-	var compLevel = req.query.comp_level || "";
+	var compLevel = req.query.comp_level || '';
 	var blue = [
 		verifyNumber(req.query.blue1),
 		verifyNumber(req.query.blue2),
@@ -21,7 +21,7 @@ router.get('/upcomingmatch', async (req, res, next) => {
 		verifyNumber(req.query.red2),
 		verifyNumber(req.query.red3),
 	];
-	var assigned = req.query.assigned || "blue1";
+	var assigned = req.query.assigned || 'blue1';
 	
 	var headerText;
 	switch (compLevel) {
@@ -127,7 +127,7 @@ router.get('/upcomingmatch', async (req, res, next) => {
 	res.setHeader('Content-Type', 'image/jpeg');
 	res.send(buffer);
 	
-	logger.info(`Completed image in ${Date.now() - startTime} ms`)
+	logger.info(`Completed image in ${Date.now() - startTime} ms`);
 });
 
 function verifyNumber(input) {

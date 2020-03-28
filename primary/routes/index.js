@@ -30,19 +30,19 @@ router.get('/', wrap(async (req, res) => {
 		var orgKey = req.query.org_key || req.cookies.org_key;
 		
 		//redirect to selectorg with the selected org_key to sign in to the org user
-		res.redirect(307, `/selectorg?org_key=${orgKey}&redirectURL=${req.originalUrl}`)
+		res.redirect(307, `/selectorg?org_key=${orgKey}&redirectURL=${req.originalUrl}`);
 	}
 	else{
 		
 		//Get list of participating organizations.
-		var orgs = await utilities.find("orgs", {}, {sort: {team_number: 1, org_key: 1}},
+		var orgs = await utilities.find('orgs', {}, {sort: {team_number: 1, org_key: 1}},
 			{allowCache: true}
 		);
 		logger.trace(JSON.stringify(orgs));
 		
 		// Get all events - only get key, year, & name
-		var events = await utilities.find("events", 
-			{}, ["key", "year", "name", {sort: {event_key: 1}}],
+		var events = await utilities.find('events', 
+			{}, ['key', 'year', 'name', {sort: {event_key: 1}}],
 			{allowCache: true}
 		);
 		logger.trace(JSON.stringify(events));
@@ -50,21 +50,21 @@ router.get('/', wrap(async (req, res) => {
 		// Create a map of year+name by key
 		var eventMap = {};
 		for (var i in events) {
-			var thisEvent = events[i];
-			eventMap[thisEvent.key] = thisEvent.year + " " + thisEvent.name;
-			//logger.debug(thisEvent.year + " " + thisEvent.name);
+			if (events[i].key) {
+				var thisEvent = events[i];
+				eventMap[thisEvent.key] = thisEvent.year + ' ' + thisEvent.name;
+			}
 		}
 
 		// TODO: currently hard-coded to US English
-		var i18n = await utilities.findOne("i18n",
-			{language: "en_US"}, {},
+		var i18n = await utilities.findOne('i18n',
+			{language: 'en_US'}, {},
 			{allowCache: true}
 		);
 		logger.trace(JSON.stringify(i18n));
 		
-		var enrichedOrgs = [];
 		// Enrich the organizations
-		for (var j in orgs) {
+		for (let j in orgs) {
 			if (orgs[j].event_key)
 				if (eventMap[orgs[j].event_key])
 					orgs[j].event_label = eventMap[orgs[j].event_key];
@@ -72,10 +72,10 @@ router.get('/', wrap(async (req, res) => {
 
 		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 		var redirectURL = req.query.redirectURL;
-		if( redirectURL == "undefined" ) redirectURL = undefined;
+		if( redirectURL == 'undefined' ) redirectURL = undefined;
 		
 		res.render('./index', {
-			title: "Select an Organization",
+			title: 'Select an Organization',
 			orgs: orgs,
 			redirectURL: redirectURL,
 			isOrgSelectScreen: true,
@@ -92,17 +92,17 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 	logger.debug('ENTER');
 	
 	var org_key = req.body.org_key || req.query.org_key;
-	logger.debug(`org_key=${org_key}`)
+	logger.debug(`org_key=${org_key}`);
 	
 	//Make sure that form is filled
-	if(!org_key || org_key == ""){
-		logger.debug("Form isn't filled, redir. and telling to select an org.");
+	if(!org_key || org_key == ''){
+		logger.debug('Form isn\'t filled, redir. and telling to select an org.');
 		return res.redirect('/?alert=Please select an organization.');
 	}
 	
 	//search for organization in database
 	var selectedOrg = await utilities.findOne('orgs', 
-		{"org_key": org_key}, {},
+		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
 	
@@ -117,14 +117,14 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 	}
 	
 	//Now, sign in to organization's default user
-	var defaultUser = await utilities.findOne("users", 
-		{org_key: org_key, name: "default_user"}, {},
+	var defaultUser = await utilities.findOne('users', 
+		{org_key: org_key, name: 'default_user'}, {},
 		{allowCache: true}
 	);
 	logger.debug(`defaultUser=${JSON.stringify(defaultUser)}`);
 	
 	if(!defaultUser){
-		logger.debug("No default user")
+		logger.debug('No default user');
 		return res.redirect(`/?alert=Error: No default user for organization ${org_key} exists in database.`);
 	}
 	
@@ -132,23 +132,23 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 	if( req.user ){
 		//destroy session then log in to default user
 		req.logout();
-		logger.debug(`req.user is defined, so we are logging them out first`);
+		logger.debug('req.user is defined, so we are logging them out first');
 	}
 				
 	//Now, log in to defaultUser
 	req.logIn(defaultUser, function(err){
 		
-		logger.debug(`defaultUser logged in`)
+		logger.debug('defaultUser logged in');
 		
 		//set org_key cookie to selected organization
-		logger.debug(`Setting org_key cookie`)
-		res.cookie("org_key", org_key, {maxAge: 30E9});
+		logger.debug('Setting org_key cookie');
+		res.cookie('org_key', org_key, {maxAge: 30E9});
 			
 		//If error, then log and return an error
-		if(err){ console.error(err); return res.status(500).send({alert: err}) };
+		if(err){ console.error(err); return res.status(500).send({alert: err}); }
 		
 		//now, once default user is logged in, redirect to index
-		logger.debug(`User is now logged in, redirecting`);
+		logger.debug('User is now logged in, redirecting');
 		
 		if (req.body.redirectURL || req.query.redirectURL) {
 			
@@ -186,7 +186,7 @@ router.get('/home', wrap(async (req, res) =>  {
 router.get('/throwanerror', wrap(async (req, res) => {
 	logger.addContext('funcName', 'throwanerror[get]');
 	
-	console.log(foo);
+	throw new Error('This was on purpose.');
 	
 }));
 

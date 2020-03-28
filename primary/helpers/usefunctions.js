@@ -1,9 +1,30 @@
 const logger = require('log4js').getLogger('usefunctions');
-const utilities = require("@firstteam102/scoutradioz-utilities");
+const utilities = require('@firstteam102/scoutradioz-utilities');
 
 require('colors');
 
 var functions = module.exports = {};
+
+//Go-to one-stop-shop for tidbits and bipbops that we wanna add in every method
+functions.initialMiddleware = async function(req, res, next){
+	//For logging
+	req.requestTime = Date.now();
+	
+	if(req.user){
+		var userRole = await utilities.findOne('roles', 
+			{role_key: req.user.role_key}, {},
+			{allowCache: true, maxCacheAge: 120});
+			
+		//Add user's role to user obj so we don't have to go searching in db every damn second
+		req.user.role = userRole;
+	}
+	
+	//Remove funcName from log4js context so that it does not stay persistent
+	// from one method that DOES set it to another method that does NOT set it
+	logger.removeContext('funcName');
+	
+	next();
+};
 
 functions.authenticate = function(req, res, next) {
 	
@@ -15,7 +36,7 @@ functions.authenticate = function(req, res, next) {
 		accessLevel = parseInt( accessLevel );
 		
 		//Throw if access level is not a valid number (Programming error)
-		if( isNaN(accessLevel) ) throw new Error("req.authenticate: Access level is not a number (Check naming of process.env.ACCESS_X)");
+		if( isNaN(accessLevel) ) throw new Error('req.authenticate: Access level is not a number (Check naming of process.env.ACCESS_X)');
 		
 		var user = req.user;
 		
@@ -32,7 +53,7 @@ functions.authenticate = function(req, res, next) {
 			// If user does not have the correct access level, then handle redirection and return false
 			else{
 				
-				if (req.method == 'GET' && user.name == "default_user") {
+				if (req.method == 'GET' && user.name == 'default_user') {
 					res.redirect(`/user/login?redirectURL=${req.originalUrl}`);
 				}
 				else {
@@ -47,7 +68,7 @@ functions.authenticate = function(req, res, next) {
 		}
 		
 		return isAuthenticated;
-	}
+	};
 	
 	//write authenticate function to req
 	Object.defineProperty(req, 'authenticate', {
@@ -56,13 +77,13 @@ functions.authenticate = function(req, res, next) {
 	});
 	
 	next();
-}
+};
 
 //View engine locals variables
 //IMPORTANT: Must be called LAST, because it may rely on other usefunctions data
 functions.setViewVariables = async function(req, res, next){
 	logger.addContext('funcName', 'setViewVariables');
-	logger.debug(`ENTER`);
+	logger.debug('ENTER');
 	
 	if(req.user) {
 		const org = await utilities.findOne('orgs', 
@@ -96,7 +117,7 @@ functions.setViewVariables = async function(req, res, next){
 	logger.debug('EXIT');
 	logger.removeContext('funcName');
 	next();
-}
+};
 
 /**
  * Gets event info from local db
@@ -106,9 +127,9 @@ functions.getEventInfo = async function(req, res, next) {
 	
 	//Define req.event
 	req.event = {
-		key: "undefined",
-		name: "undefined",
-		year: "undefined",
+		key: 'undefined',
+		name: 'undefined',
+		year: 'undefined',
 		teams: null,
 	};
 	
@@ -116,8 +137,8 @@ functions.getEventInfo = async function(req, res, next) {
 	var thisOrg;
 	if (req && req.user && req.user.org_key) {
 		var thisOrgKey = req.user.org_key;
-		var thisOrg = await utilities.findOne("orgs", 
-			{"org_key": thisOrgKey}, 
+		thisOrg = await utilities.findOne('orgs', 
+			{'org_key': thisOrgKey}, 
 			{},
 			{allowCache: true}
 		);
@@ -139,7 +160,7 @@ functions.getEventInfo = async function(req, res, next) {
 		res.locals.event_key = req.event.key;
 		res.locals.event_year = req.event.year;
 		
-		var currentEvent = await utilities.findOne("events", 
+		var currentEvent = await utilities.findOne('events', 
 			{key: eventKey}, 
 			{},
 			{allowCache: true, maxCacheAge: 60},
@@ -149,14 +170,14 @@ functions.getEventInfo = async function(req, res, next) {
 		
 		if (currentEvent) {
 			//Set current event info to req.event and res.locals
-			res.locals.eventName = currentEvent.year + " " + currentEvent.name;
+			res.locals.eventName = currentEvent.year + ' ' + currentEvent.name;
 			req.event.name = currentEvent.name;
 			
 			//If a list of teams exists, find team info in teams db.
 			if (currentEvent.team_keys && currentEvent.team_keys.length > 0) {
 				
-				var teams = await utilities.find("teams", 
-					{"key": {$in: currentEvent.team_keys}}, 
+				var teams = await utilities.find('teams', 
+					{'key': {$in: currentEvent.team_keys}}, 
 					{sort: {team_number: 1}}, 
 					{allowCache: true, maxCacheAge: 60}
 				);
@@ -171,7 +192,7 @@ functions.getEventInfo = async function(req, res, next) {
 	
 	logger.removeContext('funcName');
 	next();
-}
+};
 
 /**
  * Logs requests and user agent
@@ -180,9 +201,9 @@ functions.requestLogger = function(req, res, next){
 	
 	//formatted request time for logging
 	let d = new Date(req.requestTime),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear(),
+		month = '' + (d.getMonth() + 1),
+		day = '' + d.getDate(),
+		year = d.getFullYear(),
 		hours = d.getHours(),
 		minutes = d.getMinutes(),
 		seconds = d.getSeconds();
@@ -190,35 +211,35 @@ functions.requestLogger = function(req, res, next){
 	day = day.length<2? '0'+day : day;
 	let formattedReqTime = (
 		[year, month, day, [hours, minutes, seconds].join(':')].join('-')
-	)
+	);
 	
 	//user agent
 	req.shortagent = {
 		ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-		device: req.useragent.isMobile ? "mobile" : req.useragent.isDesktop ? "desktop" : (req.useragent.isiPad || req.useragent.isAndroidTablet) ? "tablet" : req.useragent.isBot ? "bot" : "other",
+		device: req.useragent.isMobile ? 'mobile' : req.useragent.isDesktop ? 'desktop' : (req.useragent.isiPad || req.useragent.isAndroidTablet) ? 'tablet' : req.useragent.isBot ? 'bot' : 'other',
 		os: req.useragent.os,
 		browser: req.useragent.browser
-	}
+	};
 	//logs request
 	console.log( (req.method).red 
-		+ " Request from " 
+		+ ' Request from ' 
 		+ req.shortagent.ip
-		+ " on " 
+		+ ' on ' 
 		+ req.shortagent.device 
-		+ "|"
+		+ '|'
 		+ req.shortagent.os
-		+ "|"
+		+ '|'
 		+ req.shortagent.browser
-		+ " to "
+		+ ' to '
 		+ (req.url).cyan
-		+ " at "
+		+ ' at '
 		+ formattedReqTime);
 	//fds
 	
 	res.locals.shortagent = req.shortagent;
 	
 	next();
-}
+};
 
 /**
  * Extra logging for res.render and res.redirect
@@ -239,15 +260,15 @@ functions.renderLogger = function(req, res, next){
 			//stores post-render time
 			let renderTime = Date.now() - req.requestTime - beforeRenderTime;
 			
-			let appender = "[cache=0]";
+			let appender = '[cache=0]';
 			if (utilities.options && utilities.options.cache.enable == true) {
-				appender = "[cache=1]";
+				appender = '[cache=1]';
 			}
 			
 			logger.info(`Completed route in ${(beforeRenderTime).toString().yellow} ms; Rendered in ${(renderTime).toString().yellow} ms ${appender} \t[Route: ${res.req.originalUrl.brightGreen} View: ${link.brightGreen}]`);
 			
 			return result;
-		}
+		};
 	}());
 	
 	res.redirect = (function(url, status){
@@ -261,14 +282,14 @@ functions.renderLogger = function(req, res, next){
 			//applies render function
 			let result = cached_function.apply(this, arguments);
 			
-			logger.info(`Completed ${res.req.url} in ${(completedRouteTime).toString().yellow} ms; Redirecting to ${(typeof url == 'string' ? url : " ").yellow + (typeof status == 'string' ? status : " ").yellow}`);
+			logger.info(`Completed ${res.req.url} in ${(completedRouteTime).toString().yellow} ms; Redirecting to ${(typeof url == 'string' ? url : ' ').yellow + (typeof status == 'string' ? status : ' ').yellow}`);
 			
 			return result;
-		}
+		};
 	}());
 	
 	next();
-}
+};
  
 /**
  * Handles 404 errors
@@ -296,4 +317,4 @@ functions.errorHandler = function(err, req, res, next) {
 	res.render('error');
 	
 	logger.removeContext('funcName');
-}
+};

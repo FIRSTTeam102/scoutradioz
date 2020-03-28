@@ -17,7 +17,7 @@ router.all('/*', wrap(async (req, res, next) => {
 router.get('/', wrap(async (req, res) => {
 	
 	res.render('./admin/admindashboard', { 
-		title: `Administration`
+		title: 'Administration'
 	});
 	
 }));
@@ -110,7 +110,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/admin/externaldata/matches?eventId=2020week0': 'Displays list of matches for a specific (\"Non-current\") event. (Quite out of date - Might contain \"dangerous\" code?)',
 			'/admin/externaldata/teams': 'List of ALL teams (Note: Very large page)',
 		},
-	}
+	};
 	
 	res.render('./admin/sitemap', {
 		title: 'Site map',
@@ -153,6 +153,7 @@ router.post('/orgs', wrap(async (req, res) => {
 	//Aggregate config.members.subteams and config.members.classes
 	var subteams = [];
 	var classes = [];
+	//eslint-disable-next-line
 	for (var elem in req.body) {
 		var split = elem.split('_');
 		var elemIdx = parseInt(split[1]);
@@ -185,7 +186,7 @@ router.post('/orgs', wrap(async (req, res) => {
 		if (elem.includes('subteams')) {
 			//if there is no subteam at this idx, create it
 			if (!subteams[elemIdx]) {
-				subteams[elemIdx] = {}
+				subteams[elemIdx] = {};
 			}
 			//pop in this element into the corresponding part of subteams
 			subteams[elemIdx][elemKey] = req.body[elem];
@@ -194,7 +195,7 @@ router.post('/orgs', wrap(async (req, res) => {
 		else if (elem.includes('classes')) {
 			//if there is no subteam at this idx, create it
 			if (!classes[elemIdx]) {
-				classes[elemIdx] = {}
+				classes[elemIdx] = {};
 			}
 			//pop in this element into the corresponding part of classes
 			classes[elemIdx][elemKey] = req.body[elem];
@@ -206,10 +207,10 @@ router.post('/orgs', wrap(async (req, res) => {
 	var updateQuery = {
 		$set: {
 			nickname: nickname,
-			"config.members.subteams": subteams,
-			"config.members.classes": classes,
+			'config.members.subteams': subteams,
+			'config.members.classes': classes,
 		}
-	}
+	};
 	
 	//If new default password is set
 	if (defaultPassword) {
@@ -243,7 +244,7 @@ router.post('/orgs', wrap(async (req, res) => {
 	
 	logger.debug(`${thisFuncName} writeResult=${JSON.stringify(writeResult)}`);
 	
-	res.redirect(`/admin/orgs?alert=Updated successfully.&type=good`);
+	res.redirect('/admin/orgs?alert=Updated successfully.&type=good');
 }));
 
 module.exports = router;

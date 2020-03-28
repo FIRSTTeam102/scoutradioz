@@ -17,9 +17,9 @@ functions.logger = function(req, res, next){
 	
 	//formatted request time for logging
 	let d = new Date(req.requestTime),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear(),
+		month = '' + (d.getMonth() + 1),
+		day = '' + d.getDate(),
+		year = d.getFullYear(),
 		hours = d.getHours(),
 		minutes = d.getMinutes(),
 		seconds = d.getSeconds();
@@ -27,32 +27,32 @@ functions.logger = function(req, res, next){
 	day = day.length<2? '0'+day : day;
 	let formattedReqTime = (
 		[year, month, day, [hours, minutes, seconds].join(':')].join('-')
-	)
+	);
 	
 	//user agent
 	req.shortagent = {
 		ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-		device: req.useragent.isMobile ? "mobile" : req.useragent.isDesktop ? "desktop" : (req.useragent.isiPad || req.useragent.isAndroidTablet) ? "tablet" : req.useragent.isBot ? "bot" : "other",
+		device: req.useragent.isMobile ? 'mobile' : req.useragent.isDesktop ? 'desktop' : (req.useragent.isiPad || req.useragent.isAndroidTablet) ? 'tablet' : req.useragent.isBot ? 'bot' : 'other',
 		os: req.useragent.os,
 		browser: req.useragent.browser
-	}
+	};
 	//logs request
 	logger.info( (req.method).red 
-		+ " Request from " 
+		+ ' Request from ' 
 		+ req.shortagent.ip
-		+ " on " 
+		+ ' on ' 
 		+ req.shortagent.device 
-		+ "|"
+		+ '|'
 		+ req.shortagent.os
-		+ "|"
+		+ '|'
 		+ req.shortagent.browser
-		+ " to "
+		+ ' to '
 		+ (req.url).cyan
-		+ " at "
+		+ ' at '
 		+ formattedReqTime);
 	
 	next();
-}
+};
  
 /**
  * Handles 404 errors
@@ -86,5 +86,5 @@ functions.errorHandler = function(err, req, res, next) {
 	res.status(err.status || 500);
 	res.send(err.message);
 	
-	logger.removeContext('funcName')
-}
+	logger.removeContext('funcName');
+};

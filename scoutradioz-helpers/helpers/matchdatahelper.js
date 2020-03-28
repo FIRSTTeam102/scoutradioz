@@ -5,7 +5,7 @@ var matchDataHelper = module.exports = {};
 
 matchDataHelper.config = function(utilitiesModule){
 	utilities = utilitiesModule;
-}
+};
 
 /**
  * Returns whether a layout element type is quantifiable.
@@ -28,7 +28,7 @@ matchDataHelper.isQuantifiableType = function(type) {
 	}
 	
 	return isQuantifiable;
-}
+};
 
 /**
  * Returns whether a layout element type is a metric.
@@ -50,7 +50,7 @@ matchDataHelper.isMetric = function(type) {
 	}
 	
 	return isMetric;
-}
+};
 
 /**
  * @param {string} org_key Org key
@@ -60,32 +60,33 @@ matchDataHelper.isMetric = function(type) {
  */
 matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_year, colCookie) {
 	logger.addContext('funcName', 'getModifiedMatchScoutingLayout');
-    logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
+	logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
     
-    // create the return array
-    var scorelayout = [];
+	// create the return array
+	var scorelayout = [];
 
-    // read in the layout as stored in the DB
-	var scorelayoutDB = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
-		{sort: {"order": 1}},
+	// read in the layout as stored in the DB
+	var scorelayoutDB = await utilities.find('layout', 
+		{org_key: org_key, year: event_year, form_type: 'matchscouting'}, 
+		{sort: {'order': 1}},
 		{allowCache: true}
 	);
 
-    // Process the cookies & (if selections defined) prepare to reduce
+	// Process the cookies & (if selections defined) prepare to reduce
 	var savedCols = {};
 	var noneSelected = true;
 	//colCookie = "a,b,ccc,d";
-
+	
 	// 2020-03-03, M.O'C: Read "default" columns from DB if none set - TODO could be cached
 	if (!colCookie) {
-		var thisOrg = await utilities.findOne("orgs", 
+		var thisOrg = await utilities.findOne('orgs', 
 			{org_key: org_key}, {},
 			{allowCache: true}
 		);
 		//logger.debug("thisOrg=" + JSON.stringify(thisOrg));
 		var thisConfig = thisOrg.config;
-		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
+		logger.trace('thisConfig=' + JSON.stringify(thisConfig));
+		
 		if (!thisConfig) {
 			thisConfig = {};
 			thisOrg['config'] = thisConfig;
@@ -96,32 +97,32 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
 			thisOrg.config['columnDefaults'] = theseColDefaults;
 		}
 
-		//logger.debug("theseColDefaults=" + JSON.stringify(theseColDefaults));
+		logger.trace('theseColDefaults=' + JSON.stringify(theseColDefaults));
 		var defaultSet = theseColDefaults[event_year];		
-		//logger.debug("defaultSet=" + defaultSet);
+		logger.trace('defaultSet=' + defaultSet);
 
 		if (defaultSet) {
 			colCookie = defaultSet;
-			logger.debug("Using org default cookies=" + colCookie);
+			logger.debug('Using org default cookies=' + colCookie);
 		}
 	}
 	
 	if (colCookie) {
-		//logger.debug("colCookie=" + colCookie);
+		logger.trace('colCookie=' + colCookie);
 		noneSelected = false;
-		var savedColArray = colCookie.split(",");
-		for (var i in savedColArray)
-			savedCols[savedColArray[i]] = savedColArray[i];
+		var savedColArray = colCookie.split(',');
+		for (var savedCol of savedColArray)
+			savedCols[savedCol] = savedCol;
 	}
-	//logger.debug("noneSelected=" + noneSelected + ",savedCols=" + JSON.stringify(savedCols));
+	logger.trace('noneSelected=' + noneSelected + ',savedCols=' + JSON.stringify(savedCols));
 
 	// Use the cookies (if defined, or if defaults set) to slim down the layout array
 	if (noneSelected)
 		scorelayout = scorelayoutDB;
 	else {
 		// Weed out unselected columns
-		for (var i in scorelayoutDB) {
-			var thisLayout = scorelayoutDB[i];
+		for (var thisLayout of scorelayoutDB) {
+			//var thisLayout = scorelayoutDB[i];
 			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (this.isQuantifiableType(thisLayout.type)) {
 				if (savedCols[thisLayout.id]) 
@@ -130,16 +131,16 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
 			else
 				scorelayout.push(thisLayout);
 		}
-    }
+	}
     
-    var retLength = -1;
-    if (scorelayout)
-        retLength = scorelayout.length;
+	var retLength = -1;
+	if (scorelayout)
+		retLength = scorelayout.length;
 	logger.info('EXIT returning ' + retLength);
 	
 	logger.removeContext('funcName');
-    return scorelayout;
-}
+	return scorelayout;
+};
 
 /**
  * Recalculates aggregated data ranges for org & event and stores in DB
@@ -149,32 +150,31 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
  */
 matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year, event_key) {
 	logger.addContext('funcName', 'calculateAndStoreAggRanges');
-	var thisFuncName = "matchdatahelper.calculateAndStoreAggRanges: ";
 	logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
 
-	var scorelayout = await utilities.find("layout", 
-		{org_key: org_key, year: event_year, form_type: "matchscouting"}, 
-		{sort: {"order": 1}},
+	var scorelayout = await utilities.find('layout', 
+		{org_key: org_key, year: event_year, form_type: 'matchscouting'}, 
+		{sort: {'order': 1}},
 		{allowCache: true}
 	);
-    //logger.debug("scorelayout=" + JSON.stringify(scorelayout));        
+	logger.trace('scorelayout=' + JSON.stringify(scorelayout));        
     
 	var aggQuery = [];
-	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
+	aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
 	var groupClause = {};
 	// group teams for 1 row per team
-	groupClause["_id"] = "$team_key";
+	groupClause['_id'] = '$team_key';
 
-	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		var thisLayout = scorelayout[scoreIdx];
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		let thisLayout = scorelayout[scoreIdx];
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
-        //if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
 		if (this.isQuantifiableType(thisLayout.type)) {
-			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
+			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'VAR'] = {$stdDevPop: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -183,13 +183,13 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 
 	// Run the aggregation!
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var aggArray = await utilities.aggregate("matchscouting", aggQuery);
+	var aggArray = await utilities.aggregate('matchscouting', aggQuery);
 			
 	var aggMinMaxArray = [];
 
 	// Cycle through & build a map of min/max values per scoring type per aggregation
-	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		var thisLayout = scorelayout[scoreIdx];
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
 		if (this.isQuantifiableType(thisLayout.type)) {
 			var thisMinMax = {};
@@ -203,10 +203,10 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 			// cycle through all the per-team aggregated data
 			for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
 				var thisAgg = aggArray[aggIdx];
-				var roundedMinVal = (Math.round(thisAgg[thisLayout.id + "MIN"] * 10)/10).toFixed(1);
-				var roundedAvgVal = (Math.round(thisAgg[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
-				var roundedVarVal = (Math.round(thisAgg[thisLayout.id + "VAR"] * 10)/10).toFixed(1);
-				var roundedMaxVal = (Math.round(thisAgg[thisLayout.id + "MAX"] * 10)/10).toFixed(1);
+				var roundedMinVal = (Math.round(thisAgg[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
+				var roundedAvgVal = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				var roundedVarVal = (Math.round(thisAgg[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
+				var roundedMaxVal = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
 
 				if (roundedMinVal < MINmin) MINmin = roundedMinVal; if (roundedMinVal > MINmax) MINmax = roundedMinVal; 
 				if (roundedAvgVal < AVGmin) AVGmin = roundedAvgVal; if (roundedAvgVal > AVGmax) AVGmax = roundedAvgVal; 
@@ -230,34 +230,18 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	// Delete the current agg ranges
 	// await utilities.remove("currentaggranges", {});
-	await utilities.remove("aggranges", {"org_key": org_key, "event_key": event_key});
+	await utilities.remove('aggranges', {'org_key': org_key, 'event_key': event_key});
 	// Reinsert the updated values
 	// await utilities.insert("currentaggranges", aggMinMaxArray);
-    await utilities.insert("aggranges", aggMinMaxArray);
+	await utilities.insert('aggranges', aggMinMaxArray);
     
-    var inserted = -1;
-    if (aggMinMaxArray)
-        inserted = aggMinMaxArray.length;
+	var inserted = -1;
+	if (aggMinMaxArray)
+		inserted = aggMinMaxArray.length;
 	logger.info('EXIT org_key=' + org_key + ', inserted ' + inserted);
 	
 	logger.removeContext('funcName');
-}
-
-class MatchData{
-	/**
-	 * Return contents of getUpcomingMatchData
-	 * @param {array} matches Matches
-	 * @param {array} teamRanks Team ranks
-	 * @param {string} team Team key
-	 * @param {array} teamList Team numbers
-	 */
-	constructor(matches, teamRanks, team, teamList) {
-		this.matches = matches;
-		this.teamRanks = teamRanks;
-		this.team = team;
-		this.teamList = teamList;
-	}
-}
+};
 
 /**
  * Gets upcoming match data for a specified event (and team).
@@ -269,7 +253,7 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 	logger.addContext('funcName', 'getUpcomingMatchData');
 	logger.info('ENTER event_key=' + event_key + ',team_key=' + team_key);
 	
-	var returnData = new MatchData(null, null, null, null);
+	var returnData = new MatchData();
 
 	var teamKey = team_key;
 	if(!team_key)
@@ -280,16 +264,15 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 	
 	//get list of teams for this event
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	var thisEvent = await utilities.findOne("events", 
-		{"key": event_key}, {},
+	var thisEvent = await utilities.findOne('events', 
+		{'key': event_key}, {},
 		{allowCache: true}
 	);
 	var teams = [];
-	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0)
-	{
-		logger.debug("thisEvent.team_keys=" + JSON.stringify(thisEvent.team_keys));
-		teams = await utilities.find("teams", 
-			{"key": {$in: thisEvent.team_keys}}, 
+	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
+		logger.debug('thisEvent.team_keys=' + JSON.stringify(thisEvent.team_keys));
+		teams = await utilities.find('teams', 
+			{'key': {$in: thisEvent.team_keys}}, 
 			{sort: {team_number: 1}},
 			{allowCache: true}
 		);
@@ -297,24 +280,26 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 
 	//get list of just team numbers
 	var teamNumbers = [];
-	for(var i in teams){
-		teamNumbers[i] = teams[i].team_number;
+	for(let i in teams) {
+		if (teams[i]) {
+			teamNumbers[i] = teams[i].team_number;
+		}
 	}
 	
 	//get rankings for this event
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	var rankings = await utilities.find("rankings", 
-		{"event_key": event_key}, 
+	var rankings = await utilities.find('rankings', 
+		{'event_key': event_key}, 
 		{sort:{rank: 1}}
 	);
 	if(rankings)
-		for(var i = 0; i < rankings.length; i++){
+		for(let i = 0; i < rankings.length; i++){
 			var rankObj = rankings[i];
 			var team = rankObj.team_key;
 			
 			teamRanks[team] = rankObj.rank;
 			
-		};
+		}
 	
 	returnData.teamRanks = teamRanks;
 	returnData.teamNumbers = teamNumbers;
@@ -326,18 +311,18 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 		var query = {
 			$and: [
 				{ event_key: event_key },
-				{ "alliances.blue.score": -1 },
+				{ 'alliances.blue.score': -1 },
 				{
 					$or: [
-						{ "alliances.blue.team_keys": teamKey },
-						{ "alliances.red.team_keys": teamKey },
+						{ 'alliances.blue.team_keys': teamKey },
+						{ 'alliances.red.team_keys': teamKey },
 					]
 				}
 			]
 		};
 		
 		//find matches with our query
-		matches = await utilities.find("matches", query, {sort: {time: 1}});
+		matches = await utilities.find('matches', query, {sort: {time: 1}});
 
 		returnData.matches = matches;
 		returnData.team = teamKey;
@@ -345,14 +330,196 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 	//if teamKey is 'all'
 	else {
 		//find all matches for this event that have not been completed
-		matches = await utilities.find("matches", {event_key: event_key, "alliances.blue.score": -1}, {sort: {time: 1}});
+		matches = await utilities.find('matches', {event_key: event_key, 'alliances.blue.score': -1}, {sort: {time: 1}});
 
 		returnData.matches = matches;
 	}	
 	
 	logger.removeContext('funcName');
 	return returnData;	
-}
+};
+
+/**
+ * Gets alliance stats
+ * @param {string} event_year Event year
+ * @param {string} event_key Event key
+ * @param {string} org_key Org key
+ * @param {string} teams_list Comma-separated list of teams, red alliance first, use ",0" between red list and blue list
+ * @param {object} cookies req.cookies
+ * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
+ */
+matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, org_key, teams_list, cookies ) {
+	logger.addContext('funcName', 'getAllianceStatsData');
+	
+	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
+	var returnData = new AllianceStatsData();
+
+	var teams = teams_list;
+
+	var teamList = teams.split(',');
+	logger.debug('teamList=' + JSON.stringify(teamList));
+
+	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
+	var cookie_key = org_key + '_' + event_year + '_cols';
+	var colCookie = cookies[cookie_key];
+	var scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+
+	var aggQuery = [];
+	aggQuery.push({ $match : { 'team_key': {$in: teamList}, 'org_key': org_key, 'event_key': event_key } });
+	var groupClause = {};
+	// group by individual teams
+	groupClause['_id'] = '$team_key';
+
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		let thisLayout = scorelayout[scoreIdx];
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (this.isQuantifiableType(thisLayout.type)) {
+			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+		}
+	}
+	aggQuery.push({ $group: groupClause });
+	logger.trace('aggQuery=' + JSON.stringify(aggQuery));
+
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	var aggR = await utilities.aggregate('matchscouting', aggQuery);
+	var aggresult = {};
+	if (aggR)
+		aggresult = aggR;
+	logger.trace('aggresult=' + JSON.stringify(aggresult));
+
+	// Build a map of the result rows by team key
+	var aggRowsByTeam = {};
+	for (var resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
+		aggRowsByTeam[ aggresult[resultIdx]['_id'] ] = aggresult[resultIdx];
+	logger.trace( 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
+
+	// Unspool N rows of aggregate results into tabular form
+	var avgTable = [];
+	var maxTable = [];
+
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		let thisLayout = scorelayout[scoreIdx];
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (this.isQuantifiableType(thisLayout.type)) {
+			var avgRow = {};
+			var maxRow = {};
+			avgRow['key'] = thisLayout.id;
+			maxRow['key'] = thisLayout.id;
+			for (var teamIdx = 0; teamIdx < teamList.length; teamIdx++) {
+				if (aggRowsByTeam[teamList[teamIdx]]) {
+					avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+					maxRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+				}
+			}
+			avgTable.push(avgRow);
+			maxTable.push(maxRow);
+		}
+	}
+	logger.trace('avgTable=' + JSON.stringify(avgTable));
+	logger.trace('maxTable=' + JSON.stringify(maxTable));
+
+	//
+	// Calculate the 'normalized' ranges
+	//
+	var avgNorms = [];
+	for (let i in avgTable) {
+		if (avgTable[i]) {
+			var thisAvg = avgTable[i];
+			//logger.debug("i=" + i + ",key=" + thisAvg.key);
+			var min = 9e9;
+			var max = -9e9;
+			var theseKeys = Object.keys(thisAvg);
+			// Find the minimum & maximum from this range
+			for (let j in theseKeys) {
+				if (thisAvg.hasOwnProperty(theseKeys[j])) {
+					let thisVal = thisAvg[theseKeys[j]];
+					if (thisVal != thisAvg.key) {
+						let numVal = parseFloat(thisVal);
+						if (numVal < min) min = numVal;
+						if (numVal > max) max = numVal;
+					}
+				}
+			}
+			// Go through again & set values from 0 to 1, scaled by (val-min)/(max-min)
+			let thisNorm = {};
+			thisNorm.key = thisAvg.key;
+			for (let j in theseKeys) {
+				if (thisAvg.hasOwnProperty(theseKeys[j])) {
+					let thisVal = thisAvg[theseKeys[j]];
+					if (thisVal != thisAvg.key) {
+						let numVal = parseFloat(thisVal);
+						// Special case: If max == min then all values are Math.sign(Math.abs(max))
+						let normVal = Math.sign(Math.abs(max));
+						if (max != min) {
+							normVal = (numVal - min) / (max - min);
+							thisNorm[theseKeys[j]] = (Math.round(normVal * 10)/10).toFixed(1);
+						}
+					}
+				}
+			}
+			avgNorms.push(thisNorm);
+		}
+	}
+	// repeat but for maxTable
+	var maxNorms = [];
+	for (let i in maxTable) {
+		if (maxTable[i]) {
+			var thisMax = maxTable[i];
+			//logger.debug("i=" + i + ",key=" + thisMax.key);
+			let min = 9e9;
+			let max = -9e9;
+			let theseKeys = Object.keys(thisMax);
+			// Find the minimum & maximum from this range
+			for (let j in theseKeys) {
+				if (thisMax.hasOwnProperty(theseKeys[j])) {
+					let thisVal = thisMax[theseKeys[j]];
+					if (thisVal != thisMax.key) {
+						let numVal = parseFloat(thisVal);
+						if (numVal < min) min = numVal;
+						if (numVal > max) max = numVal;
+					}
+				}
+			}
+			// Go through again & set values from 0 to 1, scaled by (val-min)/(max-min)
+			let thisNorm = {};
+			thisNorm.key = thisMax.key;
+			for (let j in theseKeys) {
+				if (thisMax.hasOwnProperty(theseKeys[j])) {
+					let thisVal = thisMax[theseKeys[j]];
+					if (thisVal != thisMax.key) {
+						let numVal = parseFloat(thisVal);
+						// Special case: If max == min then all values are Math.sign(Math.abs(max))
+						let normVal = Math.sign(Math.abs(max));
+						if (max != min) {
+							normVal = (numVal - min) / (max - min);
+							thisNorm[theseKeys[j]] = (Math.round(normVal * 10)/10).toFixed(1);
+						}
+					}
+				}
+			}
+			maxNorms.push(thisNorm);	
+		}
+	}
+	logger.trace('avgNorms=' + JSON.stringify(avgNorms));
+	logger.trace('maxNorms=' + JSON.stringify(maxNorms));
+	
+	// read in the current agg ranges
+	// 2020-02-08, M.O'C: Tweaking agg ranges
+	var currentAggRanges = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
+	
+	// set up the return data
+	returnData.teams = teams;
+	returnData.teamList = teamList;
+	returnData.currentAggRanges = currentAggRanges;
+	returnData.avgTable = avgTable;
+	returnData.maxTable = maxTable;
+	returnData.avgNorms = avgNorms;
+	returnData.maxNorms = maxNorms;
+
+	logger.removeContext('funcName');
+	return returnData;	
+};
 
 class AllianceStatsData {
 	/**
@@ -372,174 +539,18 @@ class AllianceStatsData {
 	}
 }
 
-/**
- * Gets alliance stats
- * @param {string} event_year Event year
- * @param {string} event_key Event key
- * @param {string} org_key Org key
- * @param {string} teams_list Comma-separated list of teams, red alliance first, use ",0" between red list and blue list
- * @param {object} cookies req.cookies
- * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
- */
-matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, org_key, teams_list, cookies ) {
-	logger.addContext('funcName', 'getAllianceStatsData');
-	
-	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
-	var returnData = new AllianceStatsData(null, null, null, null, null);
-
-	var teams = teams_list;
-
-	var teamList = teams.split(',');
-	logger.debug('teamList=' + JSON.stringify(teamList));
-
-	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var cookie_key = org_key + "_" + event_year + "_cols";
-	var colCookie = cookies[cookie_key];
-	var scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
-
-	var aggQuery = [];
-	aggQuery.push({ $match : { "team_key": {$in: teamList}, "org_key": org_key, "event_key": event_key } });
-	var groupClause = {};
-	// group by individual teams
-	groupClause["_id"] = "$team_key";
-
-	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		var thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (this.isQuantifiableType(thisLayout.type)) {
-			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
-		}
+class MatchData{
+	/**
+	 * Return contents of getUpcomingMatchData
+	 * @param {array} matches Matches
+	 * @param {array} teamRanks Team ranks
+	 * @param {string} team Team key
+	 * @param {array} teamList Team numbers
+	 */
+	constructor(matches, teamRanks, team, teamList) {
+		this.matches = matches;
+		this.teamRanks = teamRanks;
+		this.team = team;
+		this.teamList = teamList;
 	}
-	aggQuery.push({ $group: groupClause });
-	logger.trace('aggQuery=' + JSON.stringify(aggQuery));
-
-	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var aggR = await utilities.aggregate("matchscouting", aggQuery);
-	var aggresult = {};
-	if (aggR)
-		aggresult = aggR;
-	logger.trace('aggresult=' + JSON.stringify(aggresult));
-
-	// Build a map of the result rows by team key
-	var aggRowsByTeam = {};
-	for (var resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
-		aggRowsByTeam[ aggresult[resultIdx]["_id"] ] = aggresult[resultIdx];
-	logger.trace( 'aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]) );
-
-	// Unspool N rows of aggregate results into tabular form
-	var avgTable = [];
-	var maxTable = [];
-
-	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		var thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (this.isQuantifiableType(thisLayout.type)) {
-			var avgRow = {};
-			var maxRow = {};
-			avgRow['key'] = thisLayout.id;
-			maxRow['key'] = thisLayout.id;
-			for (var teamIdx = 0; teamIdx < teamList.length; teamIdx++)
-			{
-				if (aggRowsByTeam[teamList[teamIdx]])
-				{
-					avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + "AVG"] * 10)/10).toFixed(1);
-					maxRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + "MAX"] * 10)/10).toFixed(1);
-				}
-			}
-			avgTable.push(avgRow);
-			maxTable.push(maxRow);
-		}
-	}
-	logger.trace('avgTable=' + JSON.stringify(avgTable));
-	logger.trace('maxTable=' + JSON.stringify(maxTable));
-
-	//
-	// Calculate the 'normalized' ranges
-	//
-	var avgNorms = [];
-	for (var i in avgTable) {
-		var thisAvg = avgTable[i];
-		//logger.debug("i=" + i + ",key=" + thisAvg.key);
-		var min = 9e9;
-		var max = -9e9;
-		var theseKeys = Object.keys(thisAvg);
-		// Find the minimum & maximum from this range
-		for (var j in theseKeys) {
-			var thisVal = thisAvg[theseKeys[j]];
-			if (thisVal != thisAvg.key) {
-				var numVal = parseFloat(thisVal);
-				if (numVal < min) min = numVal;
-				if (numVal > max) max = numVal;
-			}
-		}
-		// Go through again & set values from 0 to 1, scaled by (val-min)/(max-min)
-		var thisNorm = {};
-		thisNorm.key = thisAvg.key;
-		for (var j in theseKeys) {
-			var thisVal = thisAvg[theseKeys[j]];
-			if (thisVal != thisAvg.key) {
-				var numVal = parseFloat(thisVal);
-				// Special case: If max == min then all values are Math.sign(Math.abs(max))
-				var normVal = Math.sign(Math.abs(max));
-				if (max != min) {
-					normVal = (numVal - min) / (max - min);
-					thisNorm[theseKeys[j]] = (Math.round(normVal * 10)/10).toFixed(1);
-				}
-			}
-		}
-		avgNorms.push(thisNorm);
-	}
-	// repeat but for maxTable
-	var maxNorms = [];
-	for (var i in maxTable) {
-		var thisMax = maxTable[i];
-		//logger.debug("i=" + i + ",key=" + thisMax.key);
-		var min = 9e9;
-		var max = -9e9;
-		var theseKeys = Object.keys(thisMax);
-		// Find the minimum & maximum from this range
-		for (var j in theseKeys) {
-			var thisVal = thisMax[theseKeys[j]];
-			if (thisVal != thisMax.key) {
-				var numVal = parseFloat(thisVal);
-				if (numVal < min) min = numVal;
-				if (numVal > max) max = numVal;
-			}
-		}
-		// Go through again & set values from 0 to 1, scaled by (val-min)/(max-min)
-		var thisNorm = {};
-		thisNorm.key = thisMax.key;
-		for (var j in theseKeys) {
-			var thisVal = thisMax[theseKeys[j]];
-			if (thisVal != thisMax.key) {
-				var numVal = parseFloat(thisVal);
-				// Special case: If max == min then all values are Math.sign(Math.abs(max))
-				var normVal = Math.sign(Math.abs(max));
-				if (max != min) {
-					normVal = (numVal - min) / (max - min);
-					thisNorm[theseKeys[j]] = (Math.round(normVal * 10)/10).toFixed(1);
-				}
-			}
-		}
-		maxNorms.push(thisNorm);
-	}
-	logger.trace("avgNorms=" + JSON.stringify(avgNorms));
-	logger.trace("maxNorms=" + JSON.stringify(maxNorms));
-	
-	// read in the current agg ranges
-	// 2020-02-08, M.O'C: Tweaking agg ranges
-	var currentAggRanges = await utilities.find("aggranges", {"org_key": org_key, "event_key": event_key});
-	
-	// set up the return data
-	returnData.teams = teams;
-	returnData.teamList = teamList;
-	returnData.currentAggRanges = currentAggRanges;
-	returnData.avgTable = avgTable;
-	returnData.maxTable = maxTable;
-	returnData.avgNorms = avgNorms;
-	returnData.maxNorms = maxNorms;
-
-	logger.removeContext('funcName');
-	return returnData;	
 }

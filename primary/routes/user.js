@@ -13,7 +13,7 @@ router.all('/*', wrap(async (req, res, next) => {
 
 //Redirect to index
 router.get('/', wrap(async (req, res) => {
-	res.redirect(301, "/");
+	res.redirect(301, '/');
 }));
 
 //no longer used bb
@@ -25,14 +25,14 @@ router.get('/selectorg', wrap(async (req, res) =>  {
 router.get('/login', wrap(async (req, res) => {
 	logger.addContext('funcName', 'login[get]');
 	
-	logger.debug(`ENTER`);
+	logger.debug('ENTER');
 	
 	//If there is no user logged in, send them to select-org page
 	if( !req.user ){
 		return res.redirect('/??alert=Please select an organization to sign in to.');
 	}
 	//If the user logged in is NOT default_user, then send them to index.
-	else if( req.user.name != "default_user" ){
+	else if( req.user.name != 'default_user' ){
 		return res.redirect('/?alert=Please log out before you can sign in to another user.');
 	}
 	//Otherwise, proceed.
@@ -43,12 +43,12 @@ router.get('/login', wrap(async (req, res) => {
 	
 	//search for organization in database
 	var selectedOrg = await utilities.findOne('orgs', 
-		{"org_key": org_key}, {},
+		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
 	
 	//If organization does not exist, send internal error
-	if(!selectedOrg) return res.status(500).send("Invalid organization");
+	if(!selectedOrg) return res.status(500).send('Invalid organization');
 	
 	res.render('./user/login', {
 		title: `Log In to ${selectedOrg.nickname}`,
@@ -66,7 +66,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	logger.addContext('funcName', 'login/select[post]');
 	//This URL can only be accessed via a POST method, because it requires an organization's password.
 	
-	logger.debug(`ENTER`);
+	logger.debug('ENTER');
 	
 	//this can only be accessed if someone has logged in to default_user'
 	if( !await req.authenticate( process.env.ACCESS_VIEWER ) ) return null;
@@ -78,7 +78,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	
 	
 	//Make sure that form is filled
-	if(!org_key || !org_password || org_key == "" || org_password == ""){
+	if(!org_key || !org_password || org_key == '' || org_password == ''){
 		return res.redirect('/user/login?alert=Please select an organization and enter your organization\'s password.');
 	}
 	
@@ -86,7 +86,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	
 	//Get org that matches request
 	var selectedOrg = await utilities.findOne('orgs', 
-		{"org_key": org_key}, {},
+		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
 	
@@ -102,7 +102,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	if(comparison == true){
 		
 		var users = await utilities.find('users', 
-			{org_key: org_key, name: {$ne: "default_user"}}, 
+			{org_key: org_key, name: {$ne: 'default_user'}}, 
 			{sort: {name: 1}},
 			{allowCache: true}
 		);
@@ -135,7 +135,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(!org_key || !org_password){
 		return res.send({
 			status: 400,
-			redirect_url: "/user/login?alert=Sorry, please re-submit your organization login information."
+			redirect_url: '/user/login?alert=Sorry, please re-submit your organization login information.'
 		});
 	}
 	
@@ -143,13 +143,13 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(!userID || userID == ''){
 		return res.send({
 			status: 400,
-			alert: "Please select a user."
+			alert: 'Please select a user.'
 		});
 	}
 	
 	//Get org that matches request
 	var selectedOrg = await utilities.findOne('orgs',
-		{"org_key": org_key}, {},
+		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
 	
@@ -165,18 +165,18 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(!comparison){
 		return res.send({
 			status: 400,
-			redirect_url: "/user/login?alert=Sorry, please re-submit your organization login information."
+			redirect_url: '/user/login?alert=Sorry, please re-submit your organization login information.'
 		});
 	}
 	
 	//Find user info that matches selected id
-	var user = await utilities.findOne("users", {_id: userID});
+	var user = await utilities.findOne('users', {_id: userID});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
 		return res.send({
 			status: 400,
-			alert: "No such user exists"
+			alert: 'No such user exists'
 		});
 	}
 	
@@ -184,7 +184,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	
 	//Get role information from database, and compare to access role for a scouter
 	var role_key = user.role_key;
-	var userRole = await utilities.findOne("roles", 
+	var userRole = await utilities.findOne('roles', 
 		{role_key: role_key}, {},
 		{allowCache: true}
 	);
@@ -196,7 +196,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(userRole.access_level > process.env.ACCESS_SCOUTER){
 		
 		//if user does not have a password but NEEDS a password, then they will need to create one
-		if( user.password == "default" ){
+		if( user.password == 'default' ){
 			res.send({
 				status: 200,
 				create_password: true
@@ -213,17 +213,17 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	else if(userRole.access_level == process.env.ACCESS_SCOUTER){
 		
 		//First, check if the user has a password that is default
-		if( user.password == "default"){
+		if( user.password == 'default'){
 			
-			logger.debug(`Logging in scouter`);
+			logger.debug('Logging in scouter');
 		
 			//If password is default, then we may proceed
 			req.logIn(user, function(err){
 				
 				//If error, then log and return an error
-				if(err){ console.error(err); return res.send({status: 500, alert: err}) };
+				if(err){ console.error(err); return res.send({status: 500, alert: err}); }
 				
-				logger.debug(`Sending success/password_needed: false`)
+				logger.debug('Sending success/password_needed: false');
 				logger.info(`${user.name} has logged in`);
 				
 				var redirectURL;
@@ -245,7 +245,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		}
 		else{
 			
-			logger.debug(`Sending password_needed: true`);
+			logger.debug('Sending password_needed: true');
 			
 			//if password is not default, then return with password needed.
 			res.send({
@@ -256,13 +256,13 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	}
 	else{
 		
-		logger.debug(`Logging in viewer`)
+		logger.debug('Logging in viewer');
 		
 		//if access_level < process.env.ACCESS_SCOUTER, then log in user
 		req.logIn(user, function(err){
 			
 			//If error, then log and return an error
-			if(err){ console.error(err); return res.send({status: 500, alert: err}) };
+			if(err){ console.error(err); return res.send({status: 500, alert: err}); }
 			
 			logger.info(`${user.name} has logged in`);
 			
@@ -291,7 +291,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	if(!org_key || !org_password){
 		return res.send({
 			status: 400,
-			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
 		});
 	}
 	
@@ -299,13 +299,13 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	if(!userID || userID == ''){
 		return res.send({
 			status: 400,
-			alert: "Please select a user."
+			alert: 'Please select a user.'
 		});
 	}
 	
 	//Get org that matches request
 	var selectedOrg = await utilities.findOne('orgs', 
-		{"org_key": org_key}, {},
+		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
 	if(!selectedOrg) return res.redirect(500, '/user/login');
@@ -319,18 +319,18 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	if(!orgComparison){
 		return res.send({
 			status: 400,
-			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
 		});
 	}
 	
 	//Find user info that matches selected id
-	var user = await utilities.findOne("users", {_id: userID});
+	var user = await utilities.findOne('users', {_id: userID});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user || !user.password){
 		return res.send({
 			status: 400,
-			alert: "No such user exists"
+			alert: 'No such user exists'
 		});
 	}
 	
@@ -341,15 +341,15 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	
 	if(userComparison){
 		
-		logger.debug(`Logging in`);
+		logger.debug('Logging in');
 		
 		//If comparison succeeded, then log in user
 		req.logIn(user, async function(err){
 			
 			//If error, then log and return an error
-			if(err){ logger.error(err); return res.send({status: 500, alert: err}) };
+			if(err){ logger.error(err); return res.send({status: 500, alert: err}); }
 			
-			var userRole = await utilities.findOne("roles", 
+			var userRole = await utilities.findOne('roles', 
 				{role_key: user.role_key},
 				{allowCache: true}
 			);
@@ -374,12 +374,12 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	}
 	else{
 		
-		logger.debug(`Login failed`);
+		logger.debug('Login failed');
 		
 		//If authentication failed, then send alert
 		return res.send({
 			status: 400,
-			alert: "Incorrect password."
+			alert: 'Incorrect password.'
 		});
 	}
 }));
@@ -399,7 +399,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!org_key || !org_password){
 		return res.status.send({
 			status: 400,
-			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
 		});
 	}
 	
@@ -407,13 +407,13 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!userID || userID == ''){
 		return res.send({
 			status: 400,
-			alert: "Please select a user."
+			alert: 'Please select a user.'
 		});
 	}
 	
 	//Get org that matches request
 	var selectedOrg = await utilities.findOne('orgs', 
-		{"org_key": org_key}, {},
+		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
 	if(!selectedOrg) return res.redirect(500, '/user/login');
@@ -427,37 +427,37 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!orgComparison){
 		return res.send({
 			status: 400,
-			redirect_url: "/user/login?Sorry, please re-submit your organization login information."
+			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
 		});
 	}
 	
 	//Find user info that matches selected id
-	var user = await utilities.findOne("users", {_id: userID});
+	var user = await utilities.findOne('users', {_id: userID});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
 		return res.send({
 			status: 500,
-			alert: "No such user exists"
+			alert: 'No such user exists'
 		});
 	}
 	
-	if(user.password != "default"){
+	if(user.password != 'default'){
 		return res.send({
 			password_needed: true,
-			alert: "Password already exists. Please submit your current password."
+			alert: 'Password already exists. Please submit your current password.'
 		});
 	}
 	
 	//make sure forms are filled
 	if( !p1 || !p2 ){
 		return res.send({
-			alert: "Please fill both password forms."
+			alert: 'Please fill both password forms.'
 		});
 	}
 	if( p1 != p2 ){
 		return res.send({
-			alert: "Both new password forms must be equal."
+			alert: 'Both new password forms must be equal.'
 		});
 	}
 	
@@ -466,19 +466,19 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	
 	var hash = await bcrypt.hash( p1, saltRounds );
 	
-	var writeResult = await utilities.update("users", {_id: userID}, {$set: {password: hash}});
+	var writeResult = await utilities.update('users', {_id: userID}, {$set: {password: hash}});
 	
 	logger.debug(`${p1} -> ${hash}`);
-	logger.debug("createpassword: " + JSON.stringify(writeResult, 0, 2));
+	logger.debug('createpassword: ' + JSON.stringify(writeResult, 0, 2));
 	
 	req.logIn(user, function(err){
 		
 		if(err) logger.error(err);
 		
 		res.send({
-			redirect_url: "/?alert=Set password successfully."
+			redirect_url: '/?alert=Set password successfully.'
 		});
-	})
+	});
 }));
 
 /**
@@ -492,7 +492,7 @@ router.get('/changepassword', wrap(async (req, res) => {
 	if( !await req.authenticate( process.env.ACCESS_SCOUTER ) ) return;
 	
 	res.render('./user/changepassword', {
-		title: "Change Password"
+		title: 'Change Password'
 	});
 }));
 
@@ -507,16 +507,16 @@ router.post('/changepassword', wrap(async (req, res) => {
 	
 	//make sure forms are filled
 	if( !p1 || !p2 ){
-		return res.redirect("/user/changepassword?alert=Please enter new password.");
+		return res.redirect('/user/changepassword?alert=Please enter new password.');
 	}
 	if( p1 != p2 ){
-		return res.redirect("/user/changepassword?alert=Both new password forms must be equal.");
+		return res.redirect('/user/changepassword?alert=Both new password forms must be equal.');
 	}
 	
 	var passComparison;
 	
 	//if user's password is set to default, then allow them to change their password
-	if( req.user.password == "default"){
+	if( req.user.password == 'default'){
 		passComparison = true;
 	}
 	else{
@@ -532,15 +532,15 @@ router.post('/changepassword', wrap(async (req, res) => {
 	
 	var hash = await bcrypt.hash( p1, saltRounds );
 	
-	var writeResult = await utilities.update("users", {_id: req.user._id}, {$set: {password: hash}});
+	var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {password: hash}});
 	
-	logger.debug("changepassword: " + JSON.stringify(writeResult), true);
+	logger.debug('changepassword: ' + JSON.stringify(writeResult), true);
 	
 	res.redirect('/?alert=Changed password successfully.');
 }));
 
 //Log out
-router.get("/logout", wrap(async (req, res) =>  {
+router.get('/logout', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'logout[get]');
 	logger.info('ENTER');
 	//Logout works a bit differently now.
@@ -558,13 +558,13 @@ router.get("/logout", wrap(async (req, res) =>  {
 		
 	//after current session is destroyed, now re log in to org
 	var selectedOrg = await utilities.findOne('orgs', 
-		{"org_key": org_key}, {},
+		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
 	if(!selectedOrg) return res.redirect(500, '/');
 	
 	var defaultUser = await utilities.findOne('users', 
-		{"org_key": org_key, name: "default_user"}, {},
+		{'org_key': org_key, name: 'default_user'}, {},
 		{allowCache: true}
 	);
 	if(!defaultUser) return res.redirect(500, '/');
@@ -574,7 +574,7 @@ router.get("/logout", wrap(async (req, res) =>  {
 	req.logIn(defaultUser, async function(err){
 			
 		//If error, then log and return an error
-		if(err){ console.error(err); return res.send({status: 500, alert: err}) };
+		if(err){ console.error(err); return res.send({status: 500, alert: err}); }
 		
 		//now, once default user is logged in, redirect to index
 		res.redirect('/');
@@ -594,8 +594,8 @@ router.get('/switchorg', wrap(async (req, res) => {
 		if (err) return console.log(err);
 		
 		//clear org_key cookie
-		logger.debug(`Clearing org_key cookie`);
-		res.clearCookie("org_key");
+		logger.debug('Clearing org_key cookie');
+		res.clearCookie('org_key');
 		
 		//now, redirect to index
 		res.redirect('/');

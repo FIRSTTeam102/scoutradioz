@@ -1,5 +1,5 @@
-const bcrypt = require('bcryptjs')
-const router = require("express").Router();
+const bcrypt = require('bcryptjs');
+const router = require('express').Router();
 const wrap = require('express-async-handler');
 const logger = require('log4js').getLogger();
 const utilities = require('@firstteam102/scoutradioz-utilities');
@@ -18,11 +18,11 @@ router.all('/*', wrap(async (req, res, next) => {
  */
 router.get('/', wrap(async (req, res) => {
 	
-	const org = await utilities.findOne("orgs", 
+	const org = await utilities.findOne('orgs', 
 		{org_key: req.user.org_key}, {},
 		{allowCache: true}
 	);
-	const events = await utilities.find("events", 
+	const events = await utilities.find('events', 
 		{year: new Date().getFullYear()}, 
 		{sort: {start_date: 1}},
 		{allowCache: true}
@@ -40,7 +40,7 @@ router.get('/', wrap(async (req, res) => {
 
 router.post('/setdefaultpassword', wrap(async (req, res) => {
 	
-	var newDefaultPassword = req.body.defaultPassword
+	var newDefaultPassword = req.body.defaultPassword;
 	
 	var hash = await bcrypt.hash(newDefaultPassword, 10);
 	
@@ -56,7 +56,7 @@ router.post('/setdefaultpassword', wrap(async (req, res) => {
  */
 router.post('/setcurrent', wrap(async (req, res) => {
 	
-	var thisFuncName = "adminindex.setcurrent[post]: ";
+	var thisFuncName = 'adminindex.setcurrent[post]: ';
 	var eventKey = req.body.event_key;
 	logger.info(thisFuncName + 'ENTER eventKey=' + eventKey);
 
@@ -65,14 +65,14 @@ router.post('/setcurrent', wrap(async (req, res) => {
 	if (req && req.user && req.user.org_key) {
 		var thisOrgKey = req.user.org_key;
 		
-		var event = await utilities.findOne("events", 
+		var event = await utilities.findOne('events', 
 			{key: eventKey}, {},
 			{allowCache: true}
 		);
 		
 		//If eventKey is valid, then update
 		if (event) {
-			await utilities.update( "orgs", {"org_key": thisOrgKey}, {$set: {"event_key": eventKey}} );
+			await utilities.update( 'orgs', {'org_key': thisOrgKey}, {$set: {'event_key': eventKey}} );
 			logger.debug(thisFuncName + 'Inserted current');
 			
 			res.redirect(`/manage?alert=Set current event ${eventKey} successfuly.`);
@@ -91,9 +91,10 @@ router.post('/setcurrent', wrap(async (req, res) => {
  */
 router.get('/generatedata', wrap(async (req, res) => {
 	
-	return res.send("Legacy code! Don't break the site!");
+	return res.send('Legacy code! Don\'t break the site!');
 	
-	var thisFuncName = "adminindex.generatedata[get]: ";
+	// eslint-disable-next-line no-unreachable
+	var thisFuncName = 'adminindex.generatedata[get]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
@@ -103,20 +104,18 @@ router.get('/generatedata', wrap(async (req, res) => {
 	//  Async/await this  //////////////////////
 	
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matchesFind = await utilities.find("matches", { event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}});
+	var matchesFind = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
 
 	var earliestTimestamp = 9999999999;
-	if (matchesFind && matchesFind[0])
-	{
+	if (matchesFind && matchesFind[0]) {
 		var earliestMatch = matchesFind[0];
 		earliestTimestamp = earliestMatch.time;
 	}
 		
 	// Get all the scoring data for RESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoringMatches = await utilities.find("matchscouting", {"org_key": org_key, "event_key": eventKey, "time": { $lt: earliestTimestamp }}, { sort: {"time": 1} });
-	if (scoringMatches)
-	{
+	var scoringMatches = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'time': 1} });
+	if (scoringMatches) {
 		logger.debug(thisFuncName + 'scoringMatches.length=' + scoringMatches.length);
 		
 		for (var scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
@@ -132,7 +131,7 @@ router.get('/generatedata', wrap(async (req, res) => {
 			thisV3 = Math.pow(kFac, (9 - thisV3)/9)/(kFac-1) - (1/(kFac-1)); thisV3 = Math.round(thisV3*1000)/1000;
 			thisV4 = Math.pow(kFac, (9 - thisV4)/9)/(kFac-1) - (1/(kFac-1)); thisV4 = Math.round(thisV4*1000)/1000;
 			logger.debug(thisFuncName + 'score[' + scoreIdx + ']: teamMatchKey=' + scoringMatches[scoreIdx].match_team_key + '... teamKey=' + scoringMatches[scoreIdx].team_key
-				+ ": v1,v2,v3,v4 = " + thisV1 + ", " + thisV2 + ", " + thisV3 + ", " + thisV4);
+				+ ': v1,v2,v3,v4 = ' + thisV1 + ', ' + thisV2 + ', ' + thisV3 + ', ' + thisV4);
 
 			// object to be populated
 			var data = {};
@@ -140,13 +139,13 @@ router.get('/generatedata', wrap(async (req, res) => {
 			//
 			// 2019 SPECIFIC CODE
 			//
-// "data" : {  "sandstormStartLevel2" : 1, "sandstormCrossHabLine" : 0,
-// 			"sandstormCargoShipPanel" : 1, "sandstormCargoShipCargo" : 2, "sandstormRocketPanel" : 3, "sandstormRocketCargo" : 6,
-// 			"teleopCargoShipPanel" : 2, "teleopCargoShipCargo" : 0, "teleopRocketPanel" : 3, "teleopRocketCargo" : 1,
-// 			"endgameAttemptedClimbLevel" : 3, "endgameActualScoredClimbLevel" : 1,
-// 			"playedDefense" : 1, "playedCounterDefense" : 0,
-// 			"diedDuringMatch" : 1, "recoveredFromFreeze" : 1,
-// 			"otherNotes" : "These are some notes"
+			// "data" : {  "sandstormStartLevel2" : 1, "sandstormCrossHabLine" : 0,
+			// 			"sandstormCargoShipPanel" : 1, "sandstormCargoShipCargo" : 2, "sandstormRocketPanel" : 3, "sandstormRocketCargo" : 6,
+			// 			"teleopCargoShipPanel" : 2, "teleopCargoShipCargo" : 0, "teleopRocketPanel" : 3, "teleopRocketCargo" : 1,
+			// 			"endgameAttemptedClimbLevel" : 3, "endgameActualScoredClimbLevel" : 1,
+			// 			"playedDefense" : 1, "playedCounterDefense" : 0,
+			// 			"diedDuringMatch" : 1, "recoveredFromFreeze" : 1,
+			// 			"otherNotes" : "These are some notes"
 
 			// V1 ~ sandstorm, V2 ~ teleop
 			// V3 ~ cargo ship, V4 ~ rocket
@@ -236,16 +235,15 @@ router.get('/generatedata', wrap(async (req, res) => {
 			var notes = 'Autogenerated ' + thisV1 + ', ' + thisV2 + ', ' + thisV3 + ', ' + thisV4;
 			data.otherNotes = notes;
 			
-			logger.debug(thisFuncName + "data=" + JSON.stringify(data));
+			logger.debug(thisFuncName + 'data=' + JSON.stringify(data));
 			
 			// write to database
 			// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-			await utilities.update("matchscouting", {"match_team_key": scoringMatches[scoreIdx].match_team_key}, {$set: {"data": data}});
+			await utilities.update('matchscouting', {'match_team_key': scoringMatches[scoreIdx].match_team_key}, {$set: {'data': data}});
 		}
 		res.redirect('/');
 	}
-	else
-	{
+	else {
 		logger.debug(thisFuncName + 'ERROR scoringMatches is null!!');
 		res.redirect('/');
 	}

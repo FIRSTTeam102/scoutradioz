@@ -1,35 +1,39 @@
 env:
   browser: true
+  commonjs: true
   es6: true
   node: true
-extends:
-  - airbnb-base
+extends: 'eslint:recommended'
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
 parserOptions:
   ecmaVersion: 2018
-  sourceType: module
-rules: {
-  linebreak-style: 0,
-  no-tabs: 0,
-  eqeqeq: 0,
-  indent: 0,
-  no-trailing-spaces: 0,
-  radix: 0,
-  prefer-destructuring: [error, {object: false}],
-  brace-style: [warn, stroustrup],
-  consistent-return: 0,
-  padded-blocks: 0,
-  no-plusplus: 0,
-  max-len: [warn, 130],
-  camelcase: warn,
-  no-underscore-dangle: 0,
-  no-var: 0,
-  vars-on-top: 0,
-  no-prototype-builtins: 0,
-  no-restricted-syntax: 0, #
-  guard-for-in: 0, #Take a look at this for our code rework
-  no-restricted-globals: 0, 
-  no-redeclare: 0, #
-}
+rules:
+  indent:
+    - error
+    - tab
+    - SwitchCase: 1
+  linebreak-style:
+    - error
+    - windows
+  quotes:
+    - error
+    - single
+  semi:
+    - error
+    - always
+  no-unused-vars: 
+    - warn
+    - args: none
+  global-require: error
+  no-new-require: error
+  no-mixed-requires: error
+  no-prototype-builtins: 0
+  brace-style:
+    - error
+    - stroustrup
+    - allowSingleLine: true
+  guard-for-in: 
+    - warn
+  no-useless-escape: 0

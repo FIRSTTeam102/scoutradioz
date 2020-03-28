@@ -29,8 +29,8 @@
   "dependencies": {
     "@firstteam102/monk-fork": "^0.0.1",
     "@firstteam102/scoutradioz-helpers": "^1.0.10",
-    "@firstteam102/scoutradioz-utilities": "^1.0.45",
-    "aws-serverless-express": "^3.3.6",
+    "@firstteam102/scoutradioz-utilities": "^1.0.47",
+    "aws-serverless-express": "^3.3.8",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "colors": "^1.4.0",

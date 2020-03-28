@@ -15,34 +15,26 @@ require('aws-serverless-express/middleware');
 require('dotenv').config();
 
 //log4js config
-function logTier(logEvent) {
-	if (process.env.ALIAS) {
-		return process.env.ALIAS;
-	}
-	else {
-		return 'LOCAL|' + process.env.TIER;
-	}
-}
-function funcName(logEvent) {
-	if (logEvent.context && logEvent.context.funcName) {
-		return logEvent.context.funcName;
-	}
-	else {
-		return '';
-	}
-}
 var log4jsConfig = {
 	appenders: { out: { type: 'stdout', layout: {
 		type: 'pattern',
 		//Non-colored pattern layout (default)
 		pattern: '[%x{tier}] [%p] %c.%x{funcName} - %m',
 		tokens: {
-			'tier': logTier,
-			'funcName': funcName,
+			'tier': logEvent => {
+				if (process.env.ALIAS) return process.env.ALIAS;
+				else return 'LOCAL|' + process.env.TIER;
+			},
+			'funcName': logEvent => {
+				if (logEvent.context && logEvent.context.funcName) {
+					return logEvent.context.funcName;
+				}
+				else return '';
+			},
 		},
 	} } },
 	categories: { default: { appenders: ['out'], level: 'info' } }
-}
+};
 if( process.env.COLORIZE_LOGS == 'true'){
 	//Colored pattern layout
 	log4jsConfig.appenders.out.layout.pattern = '%[[%d{hh:mm:ss}] [%x{tier}] [%p] %c.%x{funcName} - %]%m';
@@ -53,7 +45,7 @@ const logger = log4js.getLogger();
 logger.level = 'debug';
 
 //load custom middleware
-const usefunctions = require("./helpers/usefunctions");
+const usefunctions = require('./helpers/usefunctions');
 //load database utilities
 const utilities = require('@firstteam102/scoutradioz-utilities');
 //Configure utilities with the full file path of our databases json file
@@ -70,11 +62,12 @@ const helpers = require('@firstteam102/scoutradioz-helpers');
 helpers.config(utilities);
 
 //PUG CACHING (if production IS enabled)
-if(process.env.NODE_ENV == "production") logger.info("Pug caching will be enabled.");
+if(process.env.NODE_ENV == 'production') logger.info('Pug caching will be enabled.');
 
 //Create app
 const app = express();
 
+//Must be the very first app.use
 app.use(utilities.refreshTier);
 
 //Boilerplate setup
@@ -89,40 +82,40 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 //Session
-console.log("app.js: app.use(session({... - START");
+console.log('app.js: app.use(session({... - START');
 const MongoClient = require('mongodb').MongoClient;
 //Get promise for MongoClient
 const clientPromise = new Promise((resolve, reject) => {
 	logger.debug('Waiting for utilities.getDBurl');
 	//2020-03-23 JL: Made getDBurl() async to wait for TIER to be given
 	utilities.getDBurl()
-	.then(url => {
-		logger.info('Got url');
-		//Connect mongoClient to dbUrl specified in utilities
-		MongoClient.connect(url, {useUnifiedTopology: true}, function(err, client){
+		.then(url => {
+			logger.info('Got url');
+			//Connect mongoClient to dbUrl specified in utilities
+			MongoClient.connect(url, {useUnifiedTopology: true}, function(err, client){
 			//Resolve/reject with client
-			if (err) reject(err);
-			else if (client) resolve(client);
+				if (err) reject(err);
+				else if (client) resolve(client);
+			});
 		});
-	})
 });
 app.use(session({
-    secret: 'marcus night',
-    saveUninitialized: false, // don't create session until something stored
+	secret: 'marcus night',
+	saveUninitialized: false, // don't create session until something stored
 	resave: false, //don't save session if unmodified
 	
 	store: new MongoStore({
 		//Use same URL that utilities uses for database
 		clientPromise: clientPromise,
 		//client: sessionDb,
-        ttl: 3 * 24 * 60 * 60, // Time-to-live, in seconds.
+		ttl: 3 * 24 * 60 * 60, // Time-to-live, in seconds.
 		autoRemove: 'interval',
 		autoRemoveInterval: 10, // In minutes. Default
 		touchAfter: 24 * 3600, // time period in seconds for lazy loading session
 		mongoOptions: {
 			useUnifiedTopology: true
 		}
-    })
+	})
 }));
 
 //User agent for logging
@@ -133,28 +126,8 @@ require('./helpers/passport-config');
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(async function(req, res, next){
-	//For logging
-	req.requestTime = Date.now();
-	
-	if(req.user){
-		var userRole = await utilities.findOne("roles", 
-			{role_key: req.user.role_key}, {},
-			{allowCache: true, maxCacheAge: 120});
-			
-		//Add user's role to user obj so we don't have to go searching in db every damn second
-		req.user.role = userRole;
-	}
-	
-	logger.info(`PROCESS ALIAS: ${process.env.ALIAS}`);
-	
-	//Remove funcName from log4js context so that it does not stay persistent
-	// from one method that DOES set it to another method that does NOT set it
-	logger.removeContext('funcName');
-	
-	next();
-});
-
+//Various other middleware stuff
+app.use(usefunctions.initialMiddleware);
 //Logging and timestamping
 app.use(usefunctions.requestLogger);
 //Event stuff
@@ -167,37 +140,33 @@ app.use(usefunctions.authenticate);
 //IMPORTANT: Must be called last, because it may rely on other useFunctions data
 app.use(usefunctions.setViewVariables);
 
-//Route webhook express app first, to reduce load and to have custom body-parser config
-//const webhook = require('./routes/webhook');
-//app.use('/webhook', webhook);
-
 //USER ROUTES
 var index = require('./routes/index');
 var user = require('./routes/user');
-var dashboard = require("./routes/dashboard");
-var scouting = require("./routes/scouting");
+var dashboard = require('./routes/dashboard');
+var scouting = require('./routes/scouting');
 var reports = require('./routes/reports');
 var notifications = require('./routes/notifications');
 var share = require('./routes/share.js');
 //ORG MANAGEMENT ROUTES
 var manageindex = require('./routes/manage/indexmgmt');
 var allianceselection = require('./routes/manage/allianceselection');
-var currentevent = require("./routes/manage/currentevent");
-var config = require("./routes/manage/orgconfig");
-var manualdata = require("./routes/manage/manualdata");
-var orgmembers = require("./routes/manage/members");
+var currentevent = require('./routes/manage/currentevent');
+var config = require('./routes/manage/orgconfig');
+var manualdata = require('./routes/manage/manualdata');
+var orgmembers = require('./routes/manage/members');
 var scoutingaudit = require('./routes/manage/scoutingaudit');
 var scoutingpairs = require('./routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
 var adminindex = require('./routes/admin/indexadmin');
-var externaldata = require("./routes/admin/externaldata");
+var externaldata = require('./routes/admin/externaldata');
 var sync = require('./routes/admin/sync');
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
 app.use('/user', user);
 app.use('/scouting', scouting);
-app.use("/dashboard", dashboard);
+app.use('/dashboard', dashboard);
 app.use('/reports', reports);
 app.use('/allianceselection', allianceselection);
 app.use('/notifications', notifications);
@@ -205,7 +174,7 @@ app.use('/notifications', notifications);
 app.use('/manage', manageindex);
 app.use('/manage/config', config);
 app.use('/manage/scoutingpairs', scoutingpairs);
-app.use("/manage/members", orgmembers);
+app.use('/manage/members', orgmembers);
 app.use('/manage/currentevent', currentevent);
 app.use('/manage/scoutingaudit', scoutingaudit);
 app.use('/manage/manualdata', manualdata);

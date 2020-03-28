@@ -1,4 +1,5 @@
-const router = require("express").Router();
+/* eslint-disable */
+const router = require('express').Router();
 const wrap = require('express-async-handler');
 const logger = require('log4js').getLogger();
 const utilities = require('@firstteam102/scoutradioz-utilities');
@@ -20,10 +21,10 @@ router.get('/teams', wrap(async (req, res) => {
 	//return res.send("Code hasn't been updated to 2020 data structure! Sorry!");
 	
 	//Get list of currentteams
-	var teamsArray = await utilities.find("currentteams", {}, {sort: {"team_number": 1}});
+	var teamsArray = await utilities.find('currentteams', {}, {sort: {'team_number': 1}});
 	
 	res.render('./manage/manualinput/teams', {
-		title: "Edit List of Teams",
+		title: 'Edit List of Teams',
 		teams: teamsArray
 	});
 }));
@@ -35,8 +36,9 @@ router.get('/teams', wrap(async (req, res) => {
  */
 router.post('/teams', wrap(async (req, res) => {
 	
-	return res.send("Legacy code! Don't break the site!");
+	return res.send('Legacy code! Don\'t break the site!');
 	
+	// eslint-disable-next-line no-unreachable
 	logger.debug(req.body);
 	
 	var teamNumbersArray = [];
@@ -75,7 +77,7 @@ router.post('/teams', wrap(async (req, res) => {
 		var thisTeamInfo = teamInfoArray[i];
 		//if obj contains error, remove it
 		if(thisTeamInfo.Errors){
-			logger.debug("Going to remove: " + JSON.stringify(thisTeamInfo));
+			logger.debug('Going to remove: ' + JSON.stringify(thisTeamInfo));
 			teamInfoArray.splice(i, 1);
 			i--;
 		}
@@ -92,8 +94,8 @@ router.post('/teams', wrap(async (req, res) => {
 		
 		let didFindDuplicate = false;
 		
-		logger.debug("================");
-		logger.debug("CHECKING TEAM " + thisTeamNum);
+		logger.debug('================');
+		logger.debug('CHECKING TEAM ' + thisTeamNum);
 		
 		for(var j = 0; j < teamInfoNoDuplicates.length; j++){
 			
@@ -101,27 +103,27 @@ router.post('/teams', wrap(async (req, res) => {
 			var thatTeamInfo = teamInfoArray[j];
 			var thatTeamNum = thatTeamInfo.team_number;
 			
-			logger.debug("CMP: " + thatTeamNum);
+			logger.debug('CMP: ' + thatTeamNum);
 			
 			//if duplicat exists, set true
 			if(thisTeamNum == thatTeamNum){
 				didFindDuplicate = true;
-				logger.debug("MATCH: Removing duplicate " + thisTeamNum + " from team list", true);
+				logger.debug('MATCH: Removing duplicate ' + thisTeamNum + ' from team list', true);
 			}
 		}
 		//Add to new array if no duplicates exist.
 		if(!didFindDuplicate){
 			teamInfoNoDuplicates.push(thisTeamInfo);
-			logger.debug("PUSHING " + thisTeamNum);
+			logger.debug('PUSHING ' + thisTeamNum);
 		}
 	}
 	
 	//Now, we have a list of all teams attending the event.
 	//Empty currentteams.
-	await utilities.remove("currentteams");
+	await utilities.remove('currentteams');
 	
 	//Now, insert into currentteams.
-	await utilities.insert("currentteams", teamInfoNoDuplicates);
+	await utilities.insert('currentteams', teamInfoNoDuplicates);
 	
 	//Redirect with success message.
 	res.redirect('/manage?alert=Input teams successfully.');
@@ -135,8 +137,8 @@ router.post('/teams', wrap(async (req, res) => {
 router.post('/api/team', wrap(async (req, res) => {
 	
 	if(!req.body.team_number){
-		logger.debug("manage/manualinput/api/team error: No team number specified.", true);
-		return res.status(400).send("No team number specified.");
+		logger.debug('manage/manualinput/api/team error: No team number specified.', true);
+		return res.status(400).send('No team number specified.');
 	}
 	
 	//get team number
@@ -144,12 +146,12 @@ router.post('/api/team', wrap(async (req, res) => {
 	
 	//if not a number, return with error 400
 	if(isNaN(team_number)){
-		logger.debug("manage/manualinput/api/team error: No team number specified.", true);
-		return res.status(400).send("Team number was not parseable.");
+		logger.debug('manage/manualinput/api/team error: No team number specified.', true);
+		return res.status(400).send('Team number was not parseable.');
 	}
 	
 	//create team key
-	var team_key = "frc" + team_number;
+	var team_key = 'frc' + team_number;
 	
 	var teamInfoResponse = await utilities.requestTheBlueAlliance(`team/${team_key}`);
 	
@@ -165,16 +167,16 @@ router.post('/api/team', wrap(async (req, res) => {
  */
 router.get('/matchschedule', wrap(async (req, res) => {
 	
-	var thisFuncName = "[GET] /manage/manualinput/matchschedule => ";
+	var thisFuncName = '[GET] /manage/manualinput/matchschedule => ';
 	
 	var event_key = req.event.key;
 	
 	logger.debug(`${thisFuncName} Getting matches`);
 	
-	var matches = await utilities.find("matches", {"event_key": event_key});
+	var matches = await utilities.find('matches', {'event_key': event_key});
 	
 	res.render('./manage/manualinput/matchschedule', {
-		title: "Enter Match Schedule",
+		title: 'Enter Match Schedule',
 		matches: matches
 	});
 }));
@@ -222,9 +224,9 @@ router.post('/matchschedule', wrap(async (req, res) => {
 	
 	for(var elementName in req.body){
 		//if this input elem. name is a match row (Names are split by Name_#)
-		if(elementName.split("_")[1]){
+		if(elementName.split('_')[1]){
 			//update idx to the # in element name minus 1
-			idx = parseInt(elementName.split("_")[1]) - 1;
+			idx = parseInt(elementName.split('_')[1]) - 1;
 			//if no match obj has been created in matchArray, create one
 			if(!matchArray[idx]){
 				matchArray[idx] = {};
@@ -232,7 +234,7 @@ router.post('/matchschedule', wrap(async (req, res) => {
 			//grab this match obj
 			var thisMatch = matchArray[idx];
 			//add this element to match obj
-			var nameMinusNumber = elementName.split("_")[0]
+			var nameMinusNumber = elementName.split('_')[0];
 			thisMatch[nameMinusNumber] = req.body[elementName];
 		}
 	}
@@ -245,13 +247,13 @@ router.post('/matchschedule', wrap(async (req, res) => {
 	//First, filter matchArray to trash any matches that don't have complete data.
 	var matchArrayFiltered = [];
 	
-	for(var i = 0; i < matchArray.length; i++){
-		var match = matchArray[i];
+	for(let i = 0; i < matchArray.length; i++){
+		let match = matchArray[i];
 		
 		if(match.BlueTeam1 && match.BlueTeam2 && match.BlueTeam3 &&
 			match.RedTeam1 && match.RedTeam2 && match.RedTeam3 && match.SchedTime != -1){
-				//If all elements exist and are populated, and time is not -1
-				matchArrayFiltered.push(match);
+			//If all elements exist and are populated, and time is not -1
+			matchArrayFiltered.push(match);
 		}
 	}
 	
@@ -260,51 +262,51 @@ router.post('/matchschedule', wrap(async (req, res) => {
 	//Now, we can rearrange our data.
 	var matchArrayFormatted = [];
 	
-	for(var i = 0; i < matchArrayFiltered.length; i++){
+	for(let i = 0; i < matchArrayFiltered.length; i++){
 		
-		var match = matchArrayFiltered[i];
+		let match = matchArrayFiltered[i];
 		//Time is in seconds, not ms: divide by 1000
 		match.SchedTime = parseInt( match.SchedTime / 1000 );
 		//Create formatted match thing
 		matchArrayFormatted[i] = {
-			"actual_time": "",
-			"alliances": {
-				"blue": {
-					"score": -1,
-					"team_keys": [
-						"frc" + match.BlueTeam1,
-						"frc" + match.BlueTeam2,
-						"frc" + match.BlueTeam3
+			'actual_time': '',
+			'alliances': {
+				'blue': {
+					'score': -1,
+					'team_keys': [
+						'frc' + match.BlueTeam1,
+						'frc' + match.BlueTeam2,
+						'frc' + match.BlueTeam3
 					]
 				},
-				"red": {
-					"score": -1,
-					"team_keys": [
-						"frc" + match.RedTeam1,
-						"frc" + match.RedTeam2,
-						"frc" + match.RedTeam3
+				'red': {
+					'score': -1,
+					'team_keys': [
+						'frc' + match.RedTeam1,
+						'frc' + match.RedTeam2,
+						'frc' + match.RedTeam3
 					]
 				}
 			},
-			"comp_level": "qm", //only support qualifying matches
-			"event_key": event_key,
-			"key": `${event_key}_qm${i + 1}`, //2019pahat_qm1 (# is i+1) 
-			"match_number": i + 1,
-			"post_result_time": match.SchedTime, //idk what all this time stuff is, just gonna set it to sched time
-			"predicted_time": match.SchedTime,
-			"set_number": 1,
-			"time": match.SchedTime,
-			"winning_alliance": ""
-		}
+			'comp_level': 'qm', //only support qualifying matches
+			'event_key': event_key,
+			'key': `${event_key}_qm${i + 1}`, //2019pahat_qm1 (# is i+1) 
+			'match_number': i + 1,
+			'post_result_time': match.SchedTime, //idk what all this time stuff is, just gonna set it to sched time
+			'predicted_time': match.SchedTime,
+			'set_number': 1,
+			'time': match.SchedTime,
+			'winning_alliance': ''
+		};
 	}
 	
 	logger.debug(matchArrayFormatted);
 	
 	//Remove matches from db
-	await utilities.remove("matches", {"event_key": event_key});
+	await utilities.remove('matches', {'event_key': event_key});
 	
 	//now insert matches into db
-	await utilities.insert("matches", matchArrayFormatted);
+	await utilities.insert('matches', matchArrayFormatted);
 	
 	res.redirect('./matchschedule');
 }));
@@ -318,10 +320,10 @@ router.get('/matches', wrap(async (req, res) => {
 	
 	var event_key = req.event.key;
 	
-	var matches = await utilities.find("matches", {"event_key": event_key}, {sort: {time: 1}});
+	var matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
 	
-	res.render("./manage/manualinput/matches", {
-		title: "Input Match Outcomes",
+	res.render('./manage/manualinput/matches', {
+		title: 'Input Match Outcomes',
 		matches: matches,
 	});
 }));
@@ -334,7 +336,7 @@ router.post('/matches', wrap(async (req, res) => {
 	var event_key = req.event.key;
 	
 	//Get list of matches from the database.
-	var matches = await utilities.find("matches", {"event_key": event_key}, {sort: {time: 1}});
+	var matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
 	
 	var startTime = Date.now();
 	
@@ -343,24 +345,25 @@ router.post('/matches', wrap(async (req, res) => {
 	
 	//go through body and group every piece of data
 	for(var elementName in req.body){
-		//console.log(`${elementName}: ${req.body[elementName]}`);
-		var elementContents = req.body[elementName];
-		
-		//match key 2019mrcmp_qm1
-		var thisMatchKey = elementName.split("_")[1] + "_" + elementName.split("_")[2];
-		//e.g. BlueCompletedRocket or WinningAlliance
-		var thisElementType = elementName.split("_")[0];
-		
-		//if a match does not exist already, create new obj
-		if( !userInputGrouped[thisMatchKey] ){
-			userInputGrouped[thisMatchKey] = {};
+		if (req.body[elementName]) {
+			//console.log(`${elementName}: ${req.body[elementName]}`);
+			var elementContents = req.body[elementName];
+			
+			//match key 2019mrcmp_qm1
+			var thisMatchKey = elementName.split('_')[1] + '_' + elementName.split('_')[2];
+			//e.g. BlueCompletedRocket or WinningAlliance
+			var thisElementType = elementName.split('_')[0];
+			
+			//if a match does not exist already, create new obj
+			if( !userInputGrouped[thisMatchKey] ){
+				userInputGrouped[thisMatchKey] = {};
+			}
+			//add contents to grouped match info
+			userInputGrouped[thisMatchKey][thisElementType] = elementContents;
 		}
-		//add contents to grouped match info
-		userInputGrouped[thisMatchKey][thisElementType] = elementContents;
 	}
 	
-	for(var i in matches){
-		var match = matches[i];
+	for(var match of matches){
 		var match_key = match.key;
 		
 		var userInputThisMatch = userInputGrouped[match_key];
@@ -392,13 +395,16 @@ router.post('/matches', wrap(async (req, res) => {
 	
 	
 	//Remove matches
-	await utilities.remove("matches", {"event_key": event_key});
+	await utilities.remove('matches', {'event_key': event_key});
 	
 	//Now, insert updated list of matches
-	await utilities.insert("matches", matches);
+	await utilities.insert('matches', matches);
 	
 	var endTime = Date.now();
 	logger.debug(`Done in ${endTime - startTime} ms`);
+	
+	
+	return;
 	
 	//// Recalculate rankings
 	/*
@@ -416,28 +422,30 @@ router.post('/matches', wrap(async (req, res) => {
 	*/
 
 	// Build an array of objects, one per team
-	var teamsArray = await utilities.find("currentteams", {}, {sort: {"team_number": 1}});
+	
+	// eslint-disable-next-line no-unreachable
+	var teamsArray = await utilities.find('currentteams', {}, {sort: {'team_number': 1}});
 	mapTeamToOrder = {};
 	rankArray = [];
 	for (var i in teamsArray) {
 		var team = teamsArray[i];
 		thisRank = {
-			"dq": 0,
-			"extra_stats": [0],
-			"qual_average": null,
-			"record": {
-				"losses": 0,
-				"ties": 0,
-				"wins": 0 },
-			"sort_orders": [0, 0, 0],
-			"team_key": team.key,
-			"team_number": team.team_number };
+			'dq': 0,
+			'extra_stats': [0],
+			'qual_average': null,
+			'record': {
+				'losses': 0,
+				'ties': 0,
+				'wins': 0 },
+			'sort_orders': [0, 0, 0],
+			'team_key': team.key,
+			'team_number': team.team_number };
 		rankArray.push(thisRank);
 		mapTeamToOrder[team.key] = i;
 	}
-	console.log("DEBUG: rankArray=" + JSON.stringify(rankArray));
-	console.log("DEBUG: mapTeamToOrder=" + JSON.stringify(mapTeamToOrder));
-	console.log("DEBUG: frc102=" + JSON.stringify(mapTeamToOrder["frc102"]));
+	console.log('DEBUG: rankArray=' + JSON.stringify(rankArray));
+	console.log('DEBUG: mapTeamToOrder=' + JSON.stringify(mapTeamToOrder));
+	console.log('DEBUG: frc102=' + JSON.stringify(mapTeamToOrder['frc102']));
 
 	// Go through every match, updating the rank array
 	for (var i in matches) {
@@ -471,9 +479,9 @@ router.post('/matches', wrap(async (req, res) => {
 			var redRP = 0;
 			var blueRP = 0;
 			var redWin = 0; var blueWin = 0; var isTie = 0;
-			if (thisMatch.winning_alliance == "red") { redRP = 2; redWin = 1; }
-			if (thisMatch.winning_alliance == "blue") { blueRP = 2; blueWin = 1; }
-			if (thisMatch.winning_alliance == "") { redRP = 1; blueRP = 1; isTie = 1; }
+			if (thisMatch.winning_alliance == 'red') { redRP = 2; redWin = 1; }
+			if (thisMatch.winning_alliance == 'blue') { blueRP = 2; blueWin = 1; }
+			if (thisMatch.winning_alliance == '') { redRP = 1; blueRP = 1; isTie = 1; }
 			if (thisMatch.score_breakdown.red.habDockingRankingPoint) redRP++;
 			if (thisMatch.score_breakdown.red.completeRocketRankingPoint) redRP++;
 			if (thisMatch.score_breakdown.blue.habDockingRankingPoint) blueRP++;
@@ -568,7 +576,7 @@ router.post('/matches', wrap(async (req, res) => {
 			}
 		}
 	}
-	console.log("DEBUG: rankArray=" + JSON.stringify(rankArray));
+	console.log('DEBUG: rankArray=' + JSON.stringify(rankArray));
 
 	// comparator for rankings - generally, higher numbers means 'lower' rank #
 	var compareRankings = function(a,b) {
@@ -582,7 +590,7 @@ router.post('/matches', wrap(async (req, res) => {
 		}
 		// final tiebreaker - inverted (lower team #s -> higher rank)
 		return a.team_number - b.team_number;		
-	}
+	};
 	// sort the rankings
 	var sortedRankArray = rankArray.sort(compareRankings);
 	// add in the rank values
@@ -591,15 +599,15 @@ router.post('/matches', wrap(async (req, res) => {
 		sortedRankArray[i].rank = parseInt(i) + 1;
 		sortedRankArray[i].event_key = event_key;
 	}
-	console.log("DEBUG: sortedRankArray=" + JSON.stringify(sortedRankArray));
+	console.log('DEBUG: sortedRankArray=' + JSON.stringify(sortedRankArray));
 
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	// Delete the current rankings
 	//await utilities.remove("currentrankings", {});
-	await utilities.remove("rankings", {"event_key": event_key});
+	await utilities.remove('rankings', {'event_key': event_key});
 	// Insert into DB
 	//await utilities.insert("currentrankings", sortedRankArray);
-	await utilities.insert("rankings", sortedRankArray);
+	await utilities.insert('rankings', sortedRankArray);
 
 	//Redirect to updatematches page with success alert.
 	res.redirect('/manage/manualinput/matches?alert=Updated match successfully.');
