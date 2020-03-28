@@ -14,6 +14,7 @@ rules:
     - error
     - tab
     - SwitchCase: 1
+    - ignoreComments: true
   linebreak-style:
     - error
     - windows
