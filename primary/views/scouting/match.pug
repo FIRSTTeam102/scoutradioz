@@ -11,9 +11,9 @@ block content
 	- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');
 	- var btnColor = (alliance == "Red") ? "theme-red" : "gear-blue"
 	p
-	div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		- var teamKey = key.split('_')[2]
-		img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${teamKey}_md.jpg` alt="" class="w3-image" style="max-height:350px;")
+	if images
+		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
+			img(src=images.md alt="" class="w3-image team-image-lg")
 	br
 	h3
 		div(class=`${btnColor} w3-btn`)
