@@ -30,8 +30,8 @@ const server = awsServerlessExpress.createServer(app, null, binaryMimeTypes);
 exports.handler = (event, context) => {
   
 	var alias = context.invokedFunctionArn.replace(/.*:/g,'');
-	console.log('ALIAS: '+ alias);
-  
+	//console.log('ALIAS: '+ alias);
+	
 	process.env.ALIAS = alias;
 	//process.env.TIER is overridden here during every request.
 	process.env.TIER = alias.toLowerCase();

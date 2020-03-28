@@ -221,7 +221,7 @@ functions.requestLogger = function(req, res, next){
 		browser: req.useragent.browser
 	};
 	//logs request
-	console.log( (req.method).red 
+	logger.info( (req.method).red 
 		+ ' Request from ' 
 		+ req.shortagent.ip
 		+ ' on ' 
@@ -282,7 +282,8 @@ functions.renderLogger = function(req, res, next){
 			//applies render function
 			let result = cached_function.apply(this, arguments);
 			
-			logger.info(`Completed ${res.req.url} in ${(completedRouteTime).toString().yellow} ms; Redirecting to ${(typeof url == 'string' ? url : ' ').yellow + (typeof status == 'string' ? status : ' ').yellow}`);
+			//logger.info(`Completed ${res.req.url} in ${(completedRouteTime).toString().yellow} ms; Redirecting to ${(typeof url == 'string' ? url : ' ').yellow + (typeof status == 'string' ? status : ' ').yellow}`);
+			logger.info(`Completed route in ${(completedRouteTime).toString().yellow} ms \t[Route: ${res.req.originalUrl.brightGreen} Redirecting to: ${(typeof url == 'string' ? url : ' ').yellow + (typeof status == 'string' ? status : ' ').yellow}]`);
 			
 			return result;
 		};

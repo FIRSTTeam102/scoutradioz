@@ -30,13 +30,17 @@ var utilities = module.exports =  {
 var dbRefs = {}, urls = {};
 var lastRequestTime;
 var refMaxAge = 20000;
+var debugTimes = {};
 
 //Performance debugging if enabled
 function consoleTime(name) {
-	if (utilities.options.debug == true) console.time(name + '\t\t');
+	if (utilities.options.debug == true) debugTimes[name] = Date.now();
 }
 function consoleTimeEnd(name) {
-	if (utilities.options.debug == true) console.timeEnd(name + '\t\t');
+	if (utilities.options.debug == true && debugTimes[name]) {
+		logger.debug(`${name}\t\t: ${Date.now() - debugTimes[name]} ms`);
+		delete debugTimes[name];
+	}
 }
 
 /**
@@ -296,7 +300,7 @@ utilities.find = async function(collection, query, options, cacheOptions){
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
 	logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
-	var timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
+	var timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 	consoleTime(timeLogName);
 	
 	var returnData, cachedRequest;
@@ -380,7 +384,7 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
 	logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
-	var timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
+	var timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 	consoleTime(timeLogName);
 	
 	var returnData, data, cachedRequest;
@@ -458,7 +462,7 @@ utilities.update = async function(collection, query, update, options){
 	if (typeof options != 'object') throw new TypeError('Utilities.update: Options must be of type object');
 	
 	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
-	var timeLogName = `update: ${collection} ${Math.floor(1000*Math.random())}`;
+	var timeLogName = `update: ${collection}`;
 	consoleTime(timeLogName);
 	
 	var queryHashFind = await this.hashQuery('find', collection, query, options);
@@ -507,7 +511,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 	
-	var timeLogName = `agg: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable} ${Math.floor(1000*Math.random())}`;
+	var timeLogName = `agg: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 	consoleTime(timeLogName);
 	logger.trace(`${collection}, ${JSON.stringify(pipeline)}`);
 	

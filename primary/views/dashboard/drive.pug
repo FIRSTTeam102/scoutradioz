@@ -129,7 +129,7 @@ block content
 
 	script var chartData = JSON.parse('!{dataForChartJS}');
 	script.
-		console.log(chartData);
+		console.log(JSON.parse(JSON.stringify(chartData)));
 	script.
 		Chart.defaults.global.defaultFontStyle = 'bold';
 		Chart.defaults.global.defaultFontColor = '#DDD';

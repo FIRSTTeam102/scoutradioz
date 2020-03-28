@@ -9,6 +9,8 @@ const passport = require('passport');					//for user authentication
 const useragent = require('express-useragent');			//for info on connected users
 const log4js = require('log4js');						//for extensive logging functionality
 
+const appStartupTime = Date.now();
+
 //AWS middleware magic
 require('aws-serverless-express/middleware');
 //load .env variables
@@ -189,6 +191,8 @@ app.use('/', share);
 app.use(usefunctions.notFoundHandler);
 // error handler
 app.use(usefunctions.errorHandler);
+
+logger.info(`app.js READY: ${Date.now() - appStartupTime} ms`);
 
 // Export your express server so you can import it in the lambda function.
 module.exports = app;
