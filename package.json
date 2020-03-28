@@ -2,6 +2,9 @@
   "name": "scoutradioz",
   "private": true,
   "version": "1.0.0",
+  "config": {
+    "backupsS3BucketName": "scoutradioz-backups"
+  },
   "scripts": {
     "lint": "./node_modules/.bin/eslint primary/app.js"
   },

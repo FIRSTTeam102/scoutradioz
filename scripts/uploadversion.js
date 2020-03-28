@@ -7,11 +7,24 @@ const concat = require('concat-stream');
 const lambda = new aws.Lambda({
 	region: 'us-east-1'
 });
+const s3 = new aws.S3({
+	region: 'us-east-1'
+});
+
+const packageJson = require('../package.json');
+const backupsS3BucketName = packageJson.config.backupsS3BucketName;
+
+console.log(`Backups S3 Bucket: ${backupsS3BucketName}`);
+
+if (!backupsS3BucketName) {
+	throw Error('No backups S3 bucket provided in the root package.json.');
+}
 
 var alias = 'test';
 var functionName;
 var folder;
 
+//eslint-disable-next-line
 for (var i in process.argv) {
 	let thisArg = process.argv[i];
 	let nextArg = process.argv[i - -1];
@@ -30,14 +43,14 @@ for (var i in process.argv) {
 }
 
 if (alias.toUpperCase() == 'PROD' || alias.toUpperCase() == 'PREVIOUS') {
-	throw "Do not upload code directly to PROD or to PREVIOUS."
+	throw 'Do not upload code directly to PROD or to PREVIOUS.';
 }
 else {
 	alias = alias.toUpperCase();
 }
 
 if (!folder) {
-	throw "Folder is not defined.";
+	throw 'Folder is not defined.';
 }
 
 console.log(`alias=${alias} functionName=${functionName} folder=${folder}`);
@@ -61,10 +74,48 @@ makeZip(folder, (err, zipBuffer) => {
 			}
 			else {
 				console.log(data);
+				var functionVersion = data.FunctionVersion;
+				uploadToS3(zipBuffer, functionVersion, (err, data) => {
+					if (err) {
+						throw err;
+					}
+					else {
+						console.log(data);
+					}
+				});
 			}
 		});
 	}
 });
+
+function uploadToS3(zipBuffer, functionVersion, cb) {
+	
+	var key = `lambda/${functionName}/${functionName}_${functionVersion}.zip`;
+	
+	console.log(`Uploading code backup, key=${key}`);
+	
+	var params = {
+		Bucket: backupsS3BucketName,
+		Key: key,
+		ContentType: 'application/zip',
+		Body: zipBuffer,
+	};
+	
+	let upload = s3.upload(params);
+				
+	upload.on('httpUploadProgress', function (ev) {
+		if (ev.total) currentSize = ev.total;
+		console.log(JSON.stringify(ev));
+	});
+	
+	upload.send((err, data) => {
+		if (err) cb(err);
+		else {
+			console.log('Successfully uploaded backup zip of code.');
+			cb(null, data);
+		}
+	});
+}
 
 function updateCode(zipBuffer, cb) {
 	
@@ -78,7 +129,7 @@ function updateCode(zipBuffer, cb) {
 	console.log('Uploading function code...');
 	
 	lambda.updateFunctionCode(params, (err, data) => {
-		if (err) cb(err)
+		if (err) cb(err);
 		else {
 			console.log(`Uploaded function code:\n\t FunctionName=${data.FunctionName}\n\t Role=${data.Role}\n\t CodeSha256=${data.CodeSha256}`);
 			
@@ -87,9 +138,9 @@ function updateCode(zipBuffer, cb) {
 				CodeSha256: data.CodeSha256,
 				Description: `${time}`,
 				FunctionName: functionName,
-			}
+			};
 			lambda.publishVersion(params, (err, data) => {
-				if (err) cb(err)
+				if (err) cb(err);
 				else {
 					//Keep this to update alias later
 					var newVersion = data.Version;
@@ -103,7 +154,7 @@ function updateCode(zipBuffer, cb) {
 						console.log(`Getting data for alias=${alias}`);
 						
 						lambda.getAlias(params, (err, data) => {
-							if (err) cb("Could not find alias: " + alias, err);
+							if (err) cb('Could not find alias: ' + alias, err);
 							else {
 								//For safekeeping or something
 								var oldVersion = data.FunctionVersion;
@@ -115,13 +166,13 @@ function updateCode(zipBuffer, cb) {
 									Name: alias
 								};
 								lambda.updateAlias(params, (err, data) => {
-									if (err) cb(err)
+									if (err) cb(err);
 									else {
 										cb(null, data);
 									}
 								});
 							}
-						})
+						});
 					}
 					else {
 						cb('No alias specified.');
@@ -164,13 +215,13 @@ function makeZip(folder, cb) {
 	//});
 	
 	archive.on('error', function(err){
-		cb(err)
+		cb(err);
 	});
 	
 	var startTime = Date.now();
 	console.log(`Directory: "${folderPath}"`);
-	console.log('Zipping directory...')
+	console.log('Zipping directory...');
 	archive.pipe(output);
-	archive.directory(folderPath + '/', false)
+	archive.directory(folderPath + '/', false);
 	archive.finalize();
 }
