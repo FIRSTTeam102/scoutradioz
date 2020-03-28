@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const logger = require('log4js').getLogger();
 const Jimp = require('jimp');
-const path = require('path');
+//const path = require('path');
 
 var imageTemplate, pointerTemplate, headerFont, teamFont;
 
