@@ -113,6 +113,7 @@ functions.setViewVariables = async function(req, res, next){
 	//Set alert local in here so that we don't have to throw this into Every Single Route
 	res.locals.alert = req.query.alert;
 	res.locals.alertType = req.query.type;
+	res.locals.alertAutoFade = req.query.autofade;
 	
 	logger.debug('EXIT');
 	logger.removeContext('funcName');

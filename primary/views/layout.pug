@@ -50,12 +50,18 @@ html
 				$(function(){
 					var alertType = '#{alertType}';
 					var alert = `#{alert.replace(/'/, '\'')}`;
-					//alert("#{alert}");
-					NotificationCard.show(alert, {
-						ttl: 0, 
-						exitable: true, 
-						type: alertType
-					});
+					var autofade = #{alertAutoFade}
+					
+					if (autofade == 'true' || autofade == true) {
+						NotificationCard.show(alert, {type: alertType});
+					}
+					else {
+						NotificationCard.show(alert, {
+							ttl: 0, 
+							exitable: true, 
+							type: alertType
+						});
+					}
 					
 					//Remove alert and type from url queries so it doesn't appear again when the user refreshes
 					var url = window.location.href;
@@ -71,13 +77,13 @@ html
 					//splice alert and type from queries array
 					for(var i = 0; i < queries.length; i++){
 						console.log(queries[i].split('='));
-						if( queries[i].split('=')[0] == 'alert'){
-							queries.splice(i, 1);
-							i--;
-						}
-						else if (queries[i].split('=')[0] == 'type') {
-							queries.splice(i, 1);
-							i--;
+						switch(queries[i].split('=')[0]) {
+							case 'alert':
+							case 'type':
+							case 'autofade':
+								queries.splice(i, 1);
+								i--;
+								break;
 						}
 					}
 					
