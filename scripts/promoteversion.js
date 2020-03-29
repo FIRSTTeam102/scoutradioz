@@ -8,6 +8,7 @@ var aliasPromoteTo;
 var aliasPromoteFrom;
 var functionName;
 
+//eslint-disable-next-line
 for (var i in process.argv) {
 	let thisArg = process.argv[i];
 	let nextArg = process.argv[i - -1];
@@ -27,7 +28,7 @@ for (var i in process.argv) {
 
 //
 if (!(aliasPromoteFrom && aliasPromoteTo)) {
-	throw "Aliases not specified. Use arguments --promote-from and --promote-to.";
+	throw 'Aliases not specified. Use arguments --promote-from and --promote-to.';
 }
 
 console.log(`${functionName}: Promoting from ${aliasPromoteFrom} to ${aliasPromoteTo}`);
@@ -51,7 +52,7 @@ function promoteCode(cb) {
 	
 	//Get data for alias that we will promote from.
 	lambda.getAlias(params, (err, data) => {
-		if (err) cb("Could not find alias: " + aliasPromoteFrom, err);
+		if (err) cb('Could not find alias: ' + aliasPromoteFrom, err);
 		else {
 			//Version to promote.
 			var versionToPromote = data.FunctionVersion;
@@ -66,7 +67,7 @@ function promoteCode(cb) {
 			
 			//Get data for alias that we will promote to.
 			lambda.getAlias(params, (err, data) => {
-				if (err) cb("Could not find alias: " + aliasPromoteTo, err);
+				if (err) cb('Could not find alias: ' + aliasPromoteTo, err);
 				else {
 					//Version that already exists for this alias.
 					var oldVersion = data.FunctionVersion;
@@ -76,7 +77,7 @@ function promoteCode(cb) {
 						FunctionName: functionName,
 						Name: aliasPromoteTo,
 						FunctionVersion: versionToPromote,
-					}
+					};
 					console.log(`Setting ${aliasPromoteTo} to version ${versionToPromote}`);
 					
 					//Promote version to new alias.
@@ -99,7 +100,7 @@ function promoteCode(cb) {
 									else {
 										cb(null, data);
 									}
-								})
+								});
 							}
 							else {
 								cb(null, data);
@@ -107,7 +108,7 @@ function promoteCode(cb) {
 						}
 					});
 				}
-			})
+			});
 		}
 	});
 }

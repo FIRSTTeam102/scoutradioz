@@ -8,6 +8,7 @@ var aliasProd = 'PROD';
 var aliasPrevious = 'PREVIOUS';
 var functionName;
 
+//eslint-disable-next-line
 for (var i in process.argv) {
 	let thisArg = process.argv[i];
 	let nextArg = process.argv[i - -1];
@@ -40,7 +41,7 @@ function rollbackProd(cb) {
 	
 	//Get data for prod alias.
 	lambda.getAlias(params, (err, data) => {
-		if (err) cb("Could not find alias: " + aliasProd, err);
+		if (err) cb('Could not find alias: ' + aliasProd, err);
 		else {
 			//Version to promote.
 			var versionToDemote = data.FunctionVersion;
@@ -55,7 +56,7 @@ function rollbackProd(cb) {
 			
 			//Get data for alias that we will promote to.
 			lambda.getAlias(params, (err, data) => {
-				if (err) cb("Could not find alias: " + aliasPrevious, err);
+				if (err) cb('Could not find alias: ' + aliasPrevious, err);
 				else {
 					//Version that already exists for this alias.
 					var versionToPromote = data.FunctionVersion;
@@ -65,7 +66,7 @@ function rollbackProd(cb) {
 						FunctionName: functionName,
 						Name: aliasPrevious,
 						FunctionVersion: versionToDemote,
-					}
+					};
 					console.log(`Setting ${aliasPrevious} to version ${versionToDemote}`);
 					
 					//Demote version from PROD into PREVIOUS.
@@ -86,11 +87,11 @@ function rollbackProd(cb) {
 								else {
 									cb(null, data);
 								}
-							})
+							});
 						}
 					});
 				}
-			})
+			});
 		}
 	});
 }

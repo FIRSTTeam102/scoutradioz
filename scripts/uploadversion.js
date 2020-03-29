@@ -104,7 +104,7 @@ function uploadToS3(zipBuffer, functionVersion, cb) {
 	let upload = s3.upload(params);
 				
 	upload.on('httpUploadProgress', function (ev) {
-		if (ev.total) currentSize = ev.total;
+		if (ev.total) var currentSize = ev.total;
 		console.log(JSON.stringify(ev));
 	});
 	

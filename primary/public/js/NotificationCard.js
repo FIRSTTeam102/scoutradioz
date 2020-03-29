@@ -1,4 +1,6 @@
-"use strict";
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+'use strict';
 // Notification cards.
 //	Usage:
 // 		NotificationCard.show("My text");
@@ -39,14 +41,14 @@ class NotificationCard{
 		
 		this.text = text;
 		
-		if (typeof text != "string") {
-			throw new TypeError("NotificationCard: text must be string.");
+		if (typeof text != 'string') {
+			throw new TypeError('NotificationCard: text must be string.');
 		}
-		if (typeof options != "object"){
-			throw new TypeError("NotificationCard: opts must be object.");
+		if (typeof options != 'object'){
+			throw new TypeError('NotificationCard: opts must be object.');
 		}
 		
-		this.opts = this._filterOptions(options)
+		this.opts = this._filterOptions(options);
 	}
 	
 	/**
@@ -114,13 +116,13 @@ class NotificationCard{
 	 */
 	static container(){
 		
-		var containerElement = $("#notificationcard-container");
+		var containerElement = $('#notificationcard-container');
 		//If container element does not already exist, then create one with necessary properties
 		if ( !containerElement[0] ){
-			containerElement =  $(document.createElement("div"))
-			.addClass("notification-card-container")
-			.attr("id", "notificationcard-container")
-			.appendTo(document.body);
+			containerElement =  $(document.createElement('div'))
+				.addClass('notification-card-container')
+				.attr('id', 'notificationcard-container')
+				.appendTo(document.body);
 		}
 		return containerElement;
 	}
@@ -130,22 +132,22 @@ class NotificationCard{
 	 */
 	show(){
 		//Create card element
-		var card = $(document.createElement("div"))
-			.addClass("notification-card")
+		var card = $(document.createElement('div'))
+			.addClass('notification-card')
 			.css({
-				"background-color": this.opts.color,
-				"border-bottom-color": this.opts.borderColor,
-				"color": this.opts.textColor,
+				'background-color': this.opts.color,
+				'border-bottom-color': this.opts.borderColor,
+				'color': this.opts.textColor,
 			});
 		//Create text element
-		var text = $(document.createElement("div"))
-			.addClass("notification-card-content")
+		var text = $(document.createElement('div'))
+			.addClass('notification-card-content')
 			.text(this.text);
 		//Add exit button if exitable option is enabled
 		if (this.opts.exitable) {
 			//Create exit button
-			var exitBtn = $(document.createElement("div"))
-				.addClass("notification-card-exit")
+			var exitBtn = $(document.createElement('div'))
+				.addClass('notification-card-exit')
 				.css({})
 				.text('X')
 				.click(() => {
@@ -169,10 +171,10 @@ class NotificationCard{
 		NotificationCard.container().append(card);
 		//If screen-darken is enabled, then create darkener & add to container element
 		if (this.opts.darken){
-			this.darkener = $(document.createElement("div"))
-			.addClass("canvas")
-			.addClass("theme-darkener")
-			.appendTo(NotificationCard.container());
+			this.darkener = $(document.createElement('div'))
+				.addClass('canvas')
+				.addClass('theme-darkener')
+				.appendTo(NotificationCard.container());
 		}
 		
 		this.card = card;		
@@ -194,12 +196,12 @@ class NotificationCard{
 		
 		var removeTime = 0;
 		
-		if (typeof time == "number") {
+		if (typeof time == 'number') {
 			removeTime = time;
 		}
 		
 		if (this.card) {
-			$(this.card).css("opacity", 0);
+			$(this.card).css('opacity', 0);
 			setTimeout(() => {
 				$(this.card).remove();
 			}, removeTime);
@@ -211,12 +213,12 @@ class NotificationCard{
 	_filterOptions(options){
 		
 		var defaultOpts = {
-			type: "normal",
+			type: 'normal',
 			ttl: 2000,
 			exitable: false,
 			darken: false,
 			onexit: null,
-		}
+		};
 		
 		var opts = defaultOpts;
 		
@@ -224,55 +226,55 @@ class NotificationCard{
 			
 			if (options.hasOwnProperty(option)) {	
 				switch(option){
-					case "type":
+					case 'type':
 						if (typeof options[option] == 'string') opts[option] = options[option];
-						else throw new TypeError("NotificationCard.opts.type must be string.")
+						else throw new TypeError('NotificationCard.opts.type must be string.');
 						break;
-					case "ttl":
+					case 'ttl':
 						if (typeof options[option] == 'number') opts[option] = options[option];
-						else throw new TypeError("NotificationCard.opts.ttl must be a number.")
+						else throw new TypeError('NotificationCard.opts.ttl must be a number.');
 						break;
-					case "exitable":
+					case 'exitable':
 						if (typeof options[option] == 'boolean') opts[option] = options[option];
-						else throw new TypeError("NotificationCard.opts.exitable must be a boolean.")
+						else throw new TypeError('NotificationCard.opts.exitable must be a boolean.');
 						break;
-					case "darken":
+					case 'darken':
 						if (typeof options[option] == 'boolean') opts[option] = options[option];
-						else throw new TypeError("NotificationCard.opts.darken must be a boolean.");
+						else throw new TypeError('NotificationCard.opts.darken must be a boolean.');
 						break;
-					case "onexit":
+					case 'onexit':
 						if (typeof options[option] == 'function') opts[option] = options[option];
-						else throw new TypeError("NotificationCard.opts.onexit must be a function.");
+						else throw new TypeError('NotificationCard.opts.onexit must be a function.');
 						break;
 					default:
-						throw new ReferenceError("NotificationCard.opts: Unknown option " + option);
+						throw new ReferenceError('NotificationCard.opts: Unknown option ' + option);
 				}
 			}
 		}
 		
 		//sort through type and set opts.color and opts.textColor
 		switch (opts.type) {
-			case "good": 
-			case "success": 
-				opts.color = "rgb(91, 209, 255)";
-				opts.borderColor = "rgb(59, 102, 119)";
-				opts.textColor = "rgb(0,0,0)";
+			case 'good': 
+			case 'success': 
+				opts.color = 'rgb(91, 209, 255)';
+				opts.borderColor = 'rgb(59, 102, 119)';
+				opts.textColor = 'rgb(0,0,0)';
 				break;
-			case "warn": 
-				opts.color = "rgb(230,170,10)";
-				opts.borderColor = "rgb(90,54,0)";
-				opts.textColor = "rgb(0,0,0)";
+			case 'warn': 
+				opts.color = 'rgb(230,170,10)';
+				opts.borderColor = 'rgb(90,54,0)';
+				opts.textColor = 'rgb(0,0,0)';
 				break;
-			case "bad": 
-			case "error": 
-				opts.color = "rgb(160,20,10)";
-				opts.borderColor = "rgb(84,0,0)";
-				opts.textColor = "rgb(255,255,255)";
+			case 'bad': 
+			case 'error': 
+				opts.color = 'rgb(160,20,10)';
+				opts.borderColor = 'rgb(84,0,0)';
+				opts.textColor = 'rgb(255,255,255)';
 				break;
 			default: 
-				opts.color = "rgb(240,245,255)";
-				opts.borderColor = "rgb(80,80,84)";
-				opts.textColor = "rgb(0,0,0)";
+				opts.color = 'rgb(240,245,255)';
+				opts.borderColor = 'rgb(80,80,84)';
+				opts.textColor = 'rgb(0,0,0)';
 		}
 		
 		return opts;

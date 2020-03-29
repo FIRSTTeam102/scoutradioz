@@ -1,4 +1,6 @@
-"use strict";
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+'use strict';
 class FormSubmission{
 	
 	/**
@@ -17,7 +19,7 @@ class FormSubmission{
 			this._addToLocalStorage();
 		}
 		else {
-			throw new TypeError("FormSubmission: Form, URL and Key must be entered.")
+			throw new TypeError('FormSubmission: Form, URL and Key must be entered.');
 		}
 	}
 	
@@ -34,35 +36,35 @@ class FormSubmission{
 			var data = JSON.parse(dataString);
 			
 			//Create a persistent notification card while the data is submitting.
-			var cardSubmit = new NotificationCard("Submitting...", {ttl: 0}).show();
+			var cardSubmit = new NotificationCard('Submitting...', {ttl: 0}).show();
 			
 			console.log(`Submitting to url: ${this.url}`);
-			console.log(`data:`);
+			console.log('data:');
 			console.log(data);
 			
 			$.post(this.url, data)
-			.always(() => {
+				.always(() => {
 				
-				//Remove submission notification card
-				cardSubmit.remove(0);
-			})
-			.done((response) => {
+					//Remove submission notification card
+					cardSubmit.remove(0);
+				})
+				.done((response) => {
 				
-				cb(null, response.message);
-			})
-			.fail(() => {
-				console.warn("failed");
+					cb(null, response.message);
+				})
+				.fail(() => {
+					console.warn('failed');
 				
-				NotificationCard.show("Failed to send data. Attempting to re-submit...", {type: "warn", ttl: 1000});
-				setTimeout(() =>{
-					this.submit(cb);
-				}, 3000);
-			});
+					NotificationCard.show('Failed to send data. Attempting to re-submit...', {type: 'warn', ttl: 1000});
+					setTimeout(() =>{
+						this.submit(cb);
+					}, 3000);
+				});
 			
 		}
 		//if data isn't found
 		else{
-			cb("Failed to retrieve data from LocalStorage")
+			cb('Failed to retrieve data from LocalStorage');
 		}
 	}
 	

@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
 $(function(){
 	
 	/*
@@ -15,16 +17,16 @@ $(function(){
 	});*/
 	
 	//when a file input changes, run submit-image func.
-	$("input[type=file]").on("change", submitImage);
+	$('input[type=file]').on('change', submitImage);
 	
-	$("#submit").on('click', function(){
+	$('#submit').on('click', function(){
 		
-		var pitForm = $("form[name=scoutform]");
+		var pitForm = $('form[name=scoutform]');
 		
 		console.log(pitForm);
 		//debugToHTML(pitForm);
 		
-		var pitSubmission = new FormSubmission(pitForm, "/scouting/pit/submit", "pitScouting");
+		var pitSubmission = new FormSubmission(pitForm, '/scouting/pit/submit', 'pitScouting');
 		
 		//debugToHTML(pitSubmission);
 
@@ -32,11 +34,11 @@ $(function(){
 		
 		pitSubmission.submit((err, message) => {
 			if (err) {
-				NotificationCard.error("An error occurred. Please retry.")
+				NotificationCard.error('An error occurred. Please retry.');
 			}
 			else{
 				
-				NotificationCard.show(message, {darken: true, type: "good", ttl: 0});
+				NotificationCard.show(message, {darken: true, type: 'good', ttl: 0});
 				
 				setTimeout(() => {
 					window.location.href = '/dashboard';
@@ -46,7 +48,7 @@ $(function(){
 	});
 	
 	window.onbeforeunload = function() {
-		return "Leaving this page will lose pit scouting data.";
+		return 'Leaving this page will lose pit scouting data.';
 	};
 });
 
@@ -54,17 +56,17 @@ async function submitImage(ev){
 	
 	//var form = $("#imageform")[0];
 	var imageInput = this;
-	var imageInputID = imageInput.id
+	var imageInputID = imageInput.id;
 	//get the label so we can disable it during upload
 	var button = $(`label[for=${imageInputID}]`);
 	
 	//formulate the url that we send a request to
-	var index = $(imageInput).attr("index");
-	var year = $("input[name=year]").val();
-	var orgKey = $("input[name=org_key]").val();
-	var teamKey = $("input[name=team_key]").val();
-	var userId = $("input[name=user]").val();
-	var uploadURLBase = $("input[name=uploadURL]").val();
+	var index = $(imageInput).attr('index');
+	var year = $('input[name=year]').val();
+	var orgKey = $('input[name=org_key]').val();
+	var teamKey = $('input[name=team_key]').val();
+	var userId = $('input[name=user]').val();
+	var uploadURLBase = $('input[name=uploadURL]').val();
 	
 	var uploadURL = `${uploadURLBase}?index=${index}&year=${year}&org_key=${orgKey}&team_key=${teamKey}&user=${userId}`;
 	
@@ -81,22 +83,22 @@ async function submitImage(ev){
 		//debugToHTML(typeof imageData);
 		
 		//**Append the file to the FormData object under name "image"
-		data.append("image", imageFile);
+		data.append('image', imageFile);
 		
-		console.log("Got data, going to submit to " + uploadURL);
-		console.log(data.get("image"));
+		console.log('Got data, going to submit to ' + uploadURL);
+		console.log(data.get('image'));
 		
 		//$("#logger").append(uploadURL + "\n");
 		
-		$(button).addClass("w3-disabled");
+		$(button).addClass('w3-disabled');
 		
-		var uploadingCard = new NotificationCard("Uploading photo...", {ttl: 0}).show();
+		var uploadingCard = new NotificationCard('Uploading photo...', {ttl: 0}).show();
 		
 		try{
 			
 			//Send an AJAX request
 			$.ajax({
-				type: "POST",
+				type: 'POST',
 				enctype: 'multipart/form-data',
 				url: uploadURL,
 				data: data,
@@ -106,29 +108,29 @@ async function submitImage(ev){
 				timeout: 60000,
 				success: function (data) {
 					
-					console.log("SUCCESS : ", data);
-					$(button).removeClass("w3-disabled");
+					console.log('SUCCESS : ', data);
+					$(button).removeClass('w3-disabled');
 					
 					uploadingCard.remove(0);
-					NotificationCard.good("Photo successfully uploaded.")
+					NotificationCard.good('Photo successfully uploaded.');
 					
-					//Refresh image href.
-					if(typeof data == "array" || typeof data == "object"){
+					//Refresh image href. (Must be array)
+					if(typeof data == 'object'){
 						switch(imageInputID){
-							case "imageMain":
+							case 'imageMain':
 								//data[1] should be _md
 								//?Date.now() will force browser to refresh cache
-								$("#imgMain").attr("src", `${data[1]}?${Date.now()}`);
+								$('#imgMain').attr('src', `${data[1]}?${Date.now()}`);
 								break;
-							case "imageA":
+							case 'imageA':
 								//data[2] should be _sm
-								$("#imgA").attr("src", `${data[2]}?${Date.now()}`);
+								$('#imgA').attr('src', `${data[2]}?${Date.now()}`);
 								break;
-							case "imageB":
-								$("#imgB").attr("src", `${data[2]}?${Date.now()}`);
+							case 'imageB':
+								$('#imgB').attr('src', `${data[2]}?${Date.now()}`);
 								break;
-							case "imageC":
-								$("#imgC").attr("src", `${data[2]}?${Date.now()}`);
+							case 'imageC':
+								$('#imgC').attr('src', `${data[2]}?${Date.now()}`);
 								break;
 						}
 					}
@@ -136,18 +138,18 @@ async function submitImage(ev){
 				error: function (err, textStatus, errorThrown) {
 					
 					console.error(err.responseText || err);
-					$(button).removeClass("w3-disabled");
+					$(button).removeClass('w3-disabled');
 					
 					//if error.responseText exists, then log that
 					if (err.responseText){
 						uploadingCard.remove(0);
-						NotificationCard.show(err.responseText, {type: "bad", ttl: 10000});
+						NotificationCard.show(err.responseText, {type: 'bad', ttl: 10000});
 						//debugToHTML(err.responseText+"\n");
 					}
 					//if error.responseText does not exist, then stringify error and log it
 					else{
 						uploadingCard.remove(0);
-						NotificationCard.show(JSON.stringify(err), {type: "bad", ttl: 10000});
+						NotificationCard.show(JSON.stringify(err), {type: 'bad', ttl: 10000});
 						//debugToHTML(JSON.stringify(err)+"\n");
 					}
 					//log textStatus and errorThrown
@@ -183,7 +185,7 @@ async function submitImage(ev){
 		}
 		catch (l) {
 			uploadingCard.remove(0);
-			NotificationCard.show(JSON.stringify(l), {type: "bad", ttl: 10000});
+			NotificationCard.show(JSON.stringify(l), {type: 'bad', ttl: 10000});
 			//debugToHTML("CAUGHT: "+l+"\n");
 		}
 	}

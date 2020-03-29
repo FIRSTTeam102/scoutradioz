@@ -1,8 +1,11 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+'use strict';
 var navMenu;
 
 $(() => {
 	navMenu = new NavigationBar();
-})
+});
 
 
 class NavigationBar{
@@ -13,48 +16,49 @@ class NavigationBar{
 			openingInterval: 25,
 			fastTransitionTime: 200,
 			slowTransitionTime: 400,
-			slowTransition: "cubic-bezier(0.22, 0.61, 0.36, 1)",
-			fastTransition: "cubic-bezier(0.45, 0.05, 0.55, 0.95)",
+			slowTransition: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+			fastTransition: 'cubic-bezier(0.45, 0.05, 0.55, 0.95)',
 			panThreshold: 30,
-		}
+		};
 		//Options
 		this.opened = false;
 		this.moving = false;
 		this.panning = false;
 		this.pendingAnimationFrame = false;
 		//Related DOM elements
-		this.menuElem = $("#menu");
-		this.barElem = $("#headerbar");
-		this.overlayElem = $("#overlay");
+		this.menuElem = $('#menu');
+		this.barElem = $('#headerbar');
+		this.overlayElem = $('#overlay');
 		//Take menu title & footer branding variables from inline script in nav.pug
+		
 		if (navMenuTitle) this.title = navMenuTitle;
-		else this.title = "Menu"
+		else this.title = 'Menu';
 		if (footerContents) this.footerContents = footerContents;
 		else this.footerContents = [];
 		
 		//Create Mmenu object
 		this.menu = new Mmenu('#menu',
-		{
+			{
 			//navbar title
-			navbar: {
-				title: this.title,
-			},
-			//ON-canvas menu (We're handling all the sliding stuff)
-			offCanvas: false,
-			//Number counters on subpanels
-			counters: true,
-			//Changes border-lines to fill the whole panel
-			extensions: {
-				"all": ["border-full"],
-			},
-			//Branding on bottom of menu (footerContents is set in nav.pug)
-			navbars: [
-			   {
-				  position: "bottom",
-				  content: this.footerContents,
-			   }
-			],
-		}, { });
+				navbar: {
+					title: this.title,
+				},
+				//ON-canvas menu (We're handling all the sliding stuff)
+				offCanvas: false,
+				//Number counters on subpanels
+				counters: true,
+				//Changes border-lines to fill the whole panel
+				extensions: {
+					'all': ['border-full'],
+				},
+				//Branding on bottom of menu (footerContents is set in nav.pug)
+				navbars: [
+					{
+						position: 'bottom',
+						content: this.footerContents,
+					}
+				],
+			}, { });
 		
 		this.api = this.menu.API;
 		//Move element into parent body
@@ -66,7 +70,7 @@ class NavigationBar{
 	eventHandlers(){
 		
 		//Our main toggle boi
-		$("#burger").click(() => {
+		$('#burger').click(() => {
 			
 			//console.log("Burger has been clicked");
 			//If menu is fully closed
@@ -90,7 +94,7 @@ class NavigationBar{
 		});
 		
 		//When page is clicked, close menu
-		$("#page").click(() => {
+		$('#page').click(() => {
 			//If menu is fully opened
 			if (this.opened && !this.moving) {
 				//run pre-closing sequence
@@ -100,7 +104,7 @@ class NavigationBar{
 					this.menuClose();
 				}, this.opts.openingInterval);
 			}
-		})
+		});
 		
 		/*
 		//Hammer.js - Native-like touch interfaces
@@ -297,7 +301,7 @@ class NavigationBar{
 		});
 		
 		//Add class for mburger to animate opening
-		$("#burger").addClass("mm-wrapper_opened");
+		$('#burger').addClass('mm-wrapper_opened');
 		//Call postMenuOpen after full opening interval
 		setTimeout(() => {
 			this.postMenuOpen();
@@ -348,7 +352,7 @@ class NavigationBar{
 		});
 		
 		//Remove class for mburger to animate closing
-		$("#burger").removeClass("mm-wrapper_opened");
+		$('#burger').removeClass('mm-wrapper_opened');
 		//Call postMenuClose after full closing interval
 		setTimeout(() => {
 			this.postMenuClose();
@@ -395,7 +399,7 @@ class NavigationBar{
 		//if 80% of screen is greater than 440px, use pixels
 		else {
 			positions.menu = Math.floor( (1- percentageOpened) * -440) + 'px', 
-			positions.bar = Math.floor( (percentageOpened) * 440) + 'px'
+			positions.bar = Math.floor( (percentageOpened) * 440) + 'px';
 		}
 		
 		//console.log(`calculateTransformPosition: menu: ${positions.menu} bar: ${positions.bar}`);
