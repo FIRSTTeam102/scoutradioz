@@ -50,7 +50,7 @@ html
 				$(function(){
 					var alertType = '#{alertType}';
 					var alert = `#{alert.replace(/'/, '\'')}`;
-					var autofade = #{alertAutoFade}
+					var autofade = !{alertAutoFade ? true : false};
 					
 					if (autofade == 'true' || autofade == true) {
 						NotificationCard.show(alert, {type: alertType});
