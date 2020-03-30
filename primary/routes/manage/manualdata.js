@@ -13,8 +13,8 @@ router.all('/*', wrap(async (req, res, next) => {
 
 /**
  * Admin page to manually input/edit list of teams at an event (w/o TBA).
- * @url /manage/manualinput/teams
- * @views manualinput/teams
+ * @url /manage/manualdata/teams
+ * @views manualdata/teams
  */
 router.get('/teams', wrap(async (req, res) => {
 	
@@ -23,7 +23,7 @@ router.get('/teams', wrap(async (req, res) => {
 	//Get list of currentteams
 	var teamsArray = await utilities.find('currentteams', {}, {sort: {'team_number': 1}});
 	
-	res.render('./manage/manualinput/teams', {
+	res.render('./manage/manualdata/teams', {
 		title: 'Edit List of Teams',
 		teams: teamsArray
 	});
@@ -31,7 +31,7 @@ router.get('/teams', wrap(async (req, res) => {
 
 /**
  * POST method to retrieve manually updated list of teams.
- * @url /manage/manualinput/teams
+ * @url /manage/manualdata/teams
  * @redirect /admin
  */
 router.post('/teams', wrap(async (req, res) => {
@@ -137,7 +137,7 @@ router.post('/teams', wrap(async (req, res) => {
 router.post('/api/team', wrap(async (req, res) => {
 	
 	if(!req.body.team_number){
-		logger.debug('manage/manualinput/api/team error: No team number specified.', true);
+		logger.debug('manage/manualdata/api/team error: No team number specified.', true);
 		return res.status(400).send('No team number specified.');
 	}
 	
@@ -146,7 +146,7 @@ router.post('/api/team', wrap(async (req, res) => {
 	
 	//if not a number, return with error 400
 	if(isNaN(team_number)){
-		logger.debug('manage/manualinput/api/team error: No team number specified.', true);
+		logger.debug('manage/manualdata/api/team error: No team number specified.', true);
 		return res.status(400).send('Team number was not parseable.');
 	}
 	
@@ -162,12 +162,12 @@ router.post('/api/team', wrap(async (req, res) => {
 
 /**
  * Manual input for inputtnig match schedule, if TBA is not accessible.
- * @url /manualinput/matchschedule
- * @views manualinput/matchschedule
+ * @url /manualdata/matchschedule
+ * @views manualdata/matchschedule
  */
 router.get('/matchschedule', wrap(async (req, res) => {
 	
-	var thisFuncName = '[GET] /manage/manualinput/matchschedule => ';
+	var thisFuncName = '[GET] /manage/manualdata/matchschedule => ';
 	
 	var event_key = req.event.key;
 	
@@ -175,7 +175,7 @@ router.get('/matchschedule', wrap(async (req, res) => {
 	
 	var matches = await utilities.find('matches', {'event_key': event_key});
 	
-	res.render('./manage/manualinput/matchschedule', {
+	res.render('./manage/manualdata/matchschedule', {
 		title: 'Enter Match Schedule',
 		matches: matches
 	});
@@ -313,8 +313,8 @@ router.post('/matchschedule', wrap(async (req, res) => {
 
 /**
  * Manual input for correcting each match, if TBA is not accessible.
- * @url /manualinput/matches
- * @views manualinput/matches
+ * @url /manualdata/matches
+ * @views manualdata/matches
  */
 router.get('/matches', wrap(async (req, res) => {
 	
@@ -322,7 +322,7 @@ router.get('/matches', wrap(async (req, res) => {
 	
 	var matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
 	
-	res.render('./manage/manualinput/matches', {
+	res.render('./manage/manualdata/matches', {
 		title: 'Input Match Outcomes',
 		matches: matches,
 	});
@@ -610,7 +610,7 @@ router.post('/matches', wrap(async (req, res) => {
 	await utilities.insert('rankings', sortedRankArray);
 
 	//Redirect to updatematches page with success alert.
-	res.redirect('/manage/manualinput/matches?alert=Updated match successfully.');
+	res.redirect('/manage/manualdata/matches?alert=Updated match successfully.');
 }));
 
 module.exports = router;

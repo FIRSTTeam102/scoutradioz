@@ -1,4 +1,4 @@
-extends ../layout
+extends ../../layout
 block content
 	style.
 		.index-counter{
@@ -90,7 +90,7 @@ block content
 			)
 			.done(data => {
 				deleteCard.remove(0);
-				NotificationCard.warn("Successfully deleted image.\nChanges may take up to one minute to complete.");
+				NotificationCard.warn("Successfully deleted image.\nChanges may take up to one minute to take effect.");
 				
 				console.log($(`#row_${id}`));
 				$(`#row_${id}`).hide();

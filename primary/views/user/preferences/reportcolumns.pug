@@ -1,0 +1,102 @@
+//-
+	User config page with checkboxes to choose which columns are visible in a report.
+	PARAM
+		layout 			[Object Array]	from layouts {'matchscouting'}
+		savedCols		[Object Array]	originally from cookie (later, or database); dictionary of "selected" columns
+		orgCols 		[Object] 		Org's default columns (^)
+		doesOrgHaveNoDefaults [Boolean] Yes/no value for if the org has no default columns at all
+		matchDataHelper [Module]		scoutradioz-helpers.matchData helper function
+	CALLED BY
+		user.js	'/preferences/reportcolumns'
+	//
+extends ../../layout
+block content
+	h2 Choose Report Columns
+	h6
+		i 
+			p If NONE selected, report pages will show default set of columns for organization.
+			p 
+				span Organization's default columns are
+				strong &nbsp;bold. 
+			p If ALL selected, or SOME selected, report pages will show ONLY the selected columns.
+			
+	div(class="w3-section")
+		button(class="theme-input w3-btn gear-btn" onclick="resetToDefault()") Default
+		button(class="theme-input w3-btn gear-btn" onclick="check()") Check All
+		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") Uncheck All
+	form(action="" method="post")
+		div(class="w3-section w3-auto")
+			each item in layout
+				div(class="w3-row w3-mobile w3-auto" style="width: 320px;")
+					div(class="w3-padding-small w3-left-align")
+						- if (matchDataHelper.isQuantifiableType(item.type))
+							- var text = item.id; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+							- if (savedCols[item.id])
+								input(type="checkbox" class="w3-check" name=item.id id=item.id checked="checked")
+							- else
+								input(type="checkbox" class="w3-check" name=item.id id=item.id)
+							div(class="w3-show-inline-block w3-left-align")
+								- var thisTextClass = (orgCols[item.id]||doesOrgHaveNoDefaults) ? 'strong' : 'theme-text-secondary';
+								label(class=thisTextClass for=item.id) &nbsp;#{result2}
+							br 
+		//-Checkbox to set org defaults
+		- if (user.role.access_level >= process.env.ACCESS_TEAM_ADMIN)
+			br
+			//- 'setOrgDefault': see reports.js, /reports/choosecolumns
+			input(type="checkbox" class="w3-check" name='setOrgDefault' id='setOrgDefault')
+			label(class="theme-text" for='setOrgDefaultLabel') &nbsp;Check this to set the organization defaults
+			br
+			br
+		div(style="width:200px;margin:auto;text-align:center")
+			button(type="submit" class="w3-btn theme-submit") Save Column Selections
+	//-Button to clear org defaults
+	- if (user.role.access_level >= process.env.ACCESS_TEAM_ADMIN)
+		br
+		form#clearOrgDefault(action="/user/preferences/reportcolumns/clearorgdefaultcols" method="post")
+			div(style="width:200px;margin:auto;text-align:center")
+		button(type="submit" class="w3-btn theme-red" onclick='confirmResetDefault()') CLEAR ORGANIZATION DEFAULTS
+	script(type="text/javascript").
+		var orgCols = JSON.parse('!{JSON.stringify(orgCols)}');
+		var doesOrgHaveNoDefaults = !{doesOrgHaveNoDefaults};
+		function uncheck(){
+			var elements = $("input");
+			
+			for(var i = 0; i < elements.length; i++){
+				$(elements[i]).attr("checked", false);
+			}
+		}
+		
+		function check(){
+			var elements = $("input");
+			
+			for(var i = 0; i < elements.length; i++){
+				$(elements[i]).attr("checked", true);
+			}
+		}
+		
+		function resetToDefault() {
+			if (doesOrgHaveNoDefaults) {
+				console.log('Org has no defaults; Checking all');
+				check();
+			}
+			else {
+				console.log('Checking only org default inputs');
+				var elements = $('input');
+				
+				for (var i = 0; i < elements.length; i++) {
+					var name = $(elements[i]).attr('name');
+					if (orgCols[name]) {
+						$(elements[i]).attr('checked', true);
+					}
+					else {
+						$(elements[i]).attr('checked', false);
+					}
+				}
+			}
+		}
+		
+		function confirmResetDefault(){ 
+			if (confirm('Doing this will clear your organization\'s report column defaults (for EVERYONE, not just you). Are you sure?')) {
+				$('#clearOrgDefault').submit();
+			}
+		}

@@ -21,7 +21,7 @@ router.get('/matches', wrap(async (req, res) => {
 	// Read matches from DB for specified event
 	var matches = await utilities.find('matches', {'event_key': eventKey},{sort: {'time': 1}});
 		
-	res.render('./manage/currentmatches', {
+	res.render('./manage/currentevent/matches', {
 		title: 'Matches',
 		'matches': matches
 	});
@@ -54,6 +54,10 @@ router.post('/resetmatches', wrap(async (req, res) => {
 	var thisFuncName = 'currentevent.resetmatches[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
+	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+		return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
+	}
+	
 	// var matchCol = db.get("matches");
 	
 	var eventKey = req.event.key;
@@ -68,9 +72,12 @@ router.post('/resetmatches', wrap(async (req, res) => {
 }));
 
 router.post('/updatematch', wrap(async (req, res) => {
-	
 	var thisFuncName = 'currentevent.updatematch[post]: ';
 	logger.info(thisFuncName + 'ENTER');
+	
+	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+		return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
+	}
 	
 	var matchId = req.body.matchId;
 
@@ -129,9 +136,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 	
 	// Now, insert the new object
 	await utilities.insert('matches', array);
-	// Then read all the matches back in order
-	var matches = await utilities.find('matches', {'event_key': eventKey},{sort: {'time': 1}});
-
+	//2020-03-29 JL: Removed the part where matches are re-pulled from DB because it was unnecessary
 	//
 	// 2019-03-21, M.O'C: Adding in recalculation of aggregation data
 	//
@@ -141,104 +146,19 @@ router.post('/updatematch', wrap(async (req, res) => {
 
 	// call out to aggrange recalculator
 	await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
-
-	////////////////////////////////////////////
-	// need org_key, event_year, event_key
-
-	/*
-	var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
-			
-	var aggQuery = [];
-	aggQuery.push({ $match : { "org_key": org_key, "event_key": event_key } });
-	var groupClause = {};
-	// group teams for 1 row per team
-	groupClause["_id"] = "$team_key";
-
-	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		var thisLayout = scorelayout[scoreIdx];
-		thisLayout.key = thisLayout.id;
-		scorelayout[scoreIdx] = thisLayout;
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + "AVG"] = {$avg: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
-		}
-	}
-	aggQuery.push({ $group: groupClause });
-	aggQuery.push({ $sort: { _id: 1 } });
-	logger.trace(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
-
-	// Run the aggregation!
-	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var aggArray = await utilities.aggregate("matchscouting", aggQuery);
-			
-	var aggMinMaxArray = [];
-
-	// Cycle through & build a map of min/max values per scoring type per aggregation
-	for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		var thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			var thisMinMax = {};
-			// 2020-02-08, M.O'C: Tweaking agg ranges
-			// This data element is specifically for this organization & a specific event
-			thisMinMax['org_key'] = org_key;
-			thisMinMax['event_key'] = event_key;
-
-			// initialize ranges
-			var MINmin = 999999; var MINmax = 0; var AVGmin = 999999; var AVGmax = 0; var VARmin = 999999; var VARmax = 0; var MAXmin = 999999; var MAXmax = 0;
-			// cycle through all the per-team aggregated data
-			for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
-				var thisAgg = aggArray[aggIdx];
-				var roundedMinVal = (Math.round(thisAgg[thisLayout.id + "MIN"] * 10)/10).toFixed(1);
-				var roundedAvgVal = (Math.round(thisAgg[thisLayout.id + "AVG"] * 10)/10).toFixed(1);
-				var roundedVarVal = (Math.round(thisAgg[thisLayout.id + "VAR"] * 10)/10).toFixed(1);
-				var roundedMaxVal = (Math.round(thisAgg[thisLayout.id + "MAX"] * 10)/10).toFixed(1);
-
-				if (roundedMinVal < MINmin) MINmin = roundedMinVal; if (roundedMinVal > MINmax) MINmax = roundedMinVal; 
-				if (roundedAvgVal < AVGmin) AVGmin = roundedAvgVal; if (roundedAvgVal > AVGmax) AVGmax = roundedAvgVal; 
-				if (roundedVarVal < VARmin) VARmin = roundedVarVal; if (roundedVarVal > VARmax) VARmax = roundedVarVal; 
-				if (roundedMaxVal < MAXmin) MAXmin = roundedMaxVal; if (roundedMaxVal > MAXmax) MAXmax = roundedMaxVal; 
-			}
-
-			thisMinMax['key'] = thisLayout.key;
-			thisMinMax['MINmin'] = MINmin; thisMinMax['MINmax'] = MINmax;
-			thisMinMax['AVGmin'] = AVGmin; thisMinMax['AVGmax'] = AVGmax;
-			thisMinMax['VARmin'] = VARmin; thisMinMax['VARmax'] = VARmax;
-			thisMinMax['MAXmin'] = MAXmin; thisMinMax['MAXmax'] = MAXmax;
-
-			logger.debug(thisFuncName + 'thisMinMax=' + JSON.stringify(thisMinMax));
-
-			aggMinMaxArray.push(thisMinMax);
-		}
-	}
-	logger.trace(thisFuncName + 'aggMinMaxArray=' + JSON.stringify(aggMinMaxArray));
-
-	// 2020-02-08, M.O'C: Tweaking agg ranges
-	// Delete the current agg ranges
-	// await utilities.remove("currentaggranges", {});
-	await utilities.remove("aggranges", {"org_key": org_key, "event_key": event_key});
-	// Reinsert the updated values
-	// await utilities.insert("currentaggranges", aggMinMaxArray);
-	await utilities.insert("aggranges", aggMinMaxArray);
-	*/
-
-	// ...aggregation over
-	////////////////////////////////////////////
-
-	// And we're done!
-	res.render('./manage/currentmatches', {
-		title: 'Matches',
-		'matches': matches
-	});
+	
+	//and we're done!
+	res.redirect('/manage/currentevent/matches');
 }));
 
 router.post('/updatematches', wrap(async (req, res) => {
 	
 	var thisFuncName = 'currentevent.updatematches[post]: ';
 	logger.info(thisFuncName + 'ENTER');
+	
+	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+		return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
+	}
 	
 	// var matchCol = db.get("matches");
 	// var rankCol = db.get("currentrankings");

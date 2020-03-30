@@ -3,8 +3,8 @@
 	PARAM
 		matches		[Object Array] Every match for current event, from the matches collection.
 	CALLED FROM
-		current.js	'/matches' '/resetmatches' '/updatematch' '/updatematches'
-extends ../layout
+		currentevent.js		'/manage/currentevent/matches'
+extends ../../layout
 block content
 	style html{overflow-x: visible;}
 	form#updatematches(name="updatematches" method="post" action="/manage/currentevent/updatematches")

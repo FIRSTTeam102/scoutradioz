@@ -108,7 +108,7 @@ router.get('/', wrap(async (req, res) =>  {
 		memberArr.push(thisRow);
 	}
 
-	res.render('./manage/audit',{
+	res.render('./manage/audit/index',{
 		title: 'Scouter Audit',
 		audit: memberArr
 	});
@@ -166,7 +166,7 @@ router.get('/uploads', wrap(async (req, res) => {
 	//get rid of first empty array (due to the way my loop was structured)
 	uploadsByTeam.splice(0, 1);
 	
-	res.render('./manage/audituploads', {
+	res.render('./manage/audit/uploads', {
 		title: 'Uploads Audit',
 		uploadsByTeam: uploadsByTeam
 	});
@@ -302,7 +302,7 @@ router.get('/bymatch', wrap(async (req, res) => {
 		}
 	}
 	
-	res.render('./manage/auditbymatch', {
+	res.render('./manage/audit/bymatch', {
 		title: 'Match Scouting Audit',
 		'audit': audit
 	});
@@ -337,7 +337,7 @@ router.get('/comments', wrap(async (req, res) => {
 		}
 	}
 	
-	res.render('./manage/auditcomments', {
+	res.render('./manage/audit/comments', {
 		title: 'Scouter Comments Audit',
 		'audit': audit
 	});

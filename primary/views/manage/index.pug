@@ -1,9 +1,9 @@
 //-
-	Admin index. Provides links to various administative pages.
+	Org management index. Provides links to various administative pages.
 	PARAM
 		current		[String] Current event key.
 	CALLED FROM
-		adminindex.js	'/'
+		manage.js	'/'
 	//
 extends ../layout
 block content
@@ -15,12 +15,12 @@ block content
 		.event-row{
 			cursor: pointer;
 		}
-		/*
-		.events-container::-webkit-scrollbar {width: 15px;}
-		.events-container::-webkit-scrollbar-track {background: #00000000;}
-		.events-container::-webkit-scrollbar-thumb {background: #808090;}
-		.events-container::-webkit-scrollbar-thumb:hover {background: #555;}
-		//*/
+		@media(min-width: 601px) {
+			.events-container::-webkit-scrollbar {width: 15px;}
+			.events-container::-webkit-scrollbar-track {background: #00000000;}
+			.events-container::-webkit-scrollbar-thumb {background: #808090;}
+			.events-container::-webkit-scrollbar-thumb:hover {background: #555;}
+		}
 	div(class="w3-auto")
 		h3=title
 		div(class="w3-container w3-section")
@@ -60,9 +60,12 @@ block content
 					span Update list of current teams
 		div(class="w3-container w3-section")
 			h4 Organization Configuration
-			a(href="/manage/config/pitsurvey") 
+			//a(href="/manage/config/pitsurvey") 
 				div(class="gear-btn theme-link w3-btn w3-section")
 					span Configure pit survey layout
+			a(href="/user/preferences/reportcolumns") 
+				div(class="gear-btn theme-link w3-btn w3-section")
+					span Configure report columns
 			form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword")
 				div(class="w3-padding-small w3-show-inline-block")
 					input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")

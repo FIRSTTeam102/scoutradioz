@@ -187,7 +187,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 		}
 	}	
 	
-	res.render('./dashboard/drive', {
+	res.render('./dashboard/driveteam', {
 		title: 'Drive Team Dashboard',
 		teamList: teamList,
 		currentAggRanges: currentAggRanges,
@@ -213,7 +213,7 @@ router.all('/*', wrap(async (req, res, next) => {
 /**
  * Scouter's dashboard page. Provides a scouter's assigned teams for scouting and assigned matches for scoring
  * @url /dashboard
- * @view dashboard/dashboard-index
+ * @view dashboard/index
  */
 router.get('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[get]');
@@ -332,7 +332,7 @@ router.get('/', wrap(async (req, res) => {
 			scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
 	}
 	
-	res.render('./dashboard/dashboard-index',{
+	res.render('./dashboard/index',{
 		title: 'Dashboard for '+thisUserName,
 		'thisPair': thisPairLabel,
 		'assignedTeams': assignedTeams,

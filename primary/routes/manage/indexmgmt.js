@@ -28,7 +28,7 @@ router.get('/', wrap(async (req, res) => {
 		{allowCache: true}
 	);
 	
-	res.render('./manage/managedashboard', { 
+	res.render('./manage/index', { 
 		title: `Manage ${org.nickname}`,
 		org: org,
 		current: req.event.key,

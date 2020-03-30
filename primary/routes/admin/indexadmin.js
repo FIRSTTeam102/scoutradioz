@@ -16,7 +16,7 @@ router.all('/*', wrap(async (req, res, next) => {
 
 router.get('/', wrap(async (req, res) => {
 	
-	res.render('./admin/admindashboard', { 
+	res.render('./admin/index', { 
 		title: 'Administration'
 	});
 	
@@ -35,6 +35,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/user/login': 'Login to org',
 			'/user/changepassword': 'Change password',
 			'/user/logout': 'Log out',
+			'/user/preferences/reportcolumns': 'Choose report columns',
 		},
 		'dashboard.js': {
 			'/dashboard': 'Exclusive to \"assigned\" scouters- Pit/match scouting assignments',
@@ -53,7 +54,6 @@ router.get('/sitemap', wrap(async (req, res) => {
 		'reports.js': {
 			'/reports/alliancestats?teams=frc3260,frc379,frc2053,0,frc2656,frc4085,frc4780': 'show metrics (averages vs. maximums) for individual teams [nominally, to compare alliances]',
 			'/reports/allteammetrics': 'show all the metrics for all the teams in single visualization',
-			'/reports/choosecolumns': 'Choose report columns',
 			'/reports/finishedmatches': 'shows all the finished matches for the event so far; can get per-match scout data & FIRST data, also individual team scout numbers',
 			'/reports/matchdata?key=2019paca_qm55': 'shows \"quantifiable\" data for all teams from a particular match',
 			'/reports/matchintel?key=2019paca_qm55': 'shows the detailed FIRST data for a given match, including the \"Watch this match on YouTube\" link',

@@ -4,6 +4,7 @@ const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const bcrypt = require('bcryptjs');
 const logger = require('log4js').getLogger('user');
+const {matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -600,6 +601,169 @@ router.get('/switchorg', wrap(async (req, res) => {
 		//now, redirect to index
 		res.redirect('/');
 	});
+}));
+
+//user preferences
+router.get('/preferences', wrap(async (req, res) => {
+	logger.addContext('funcName', 'preferences[get]');
+	
+	//Currently the only user preferneces page we have
+	res.redirect('/user/preferences/reportcolumns');
+}));
+
+router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
+	logger.addContext('funcName', 'preferences/reportcolumns[get]');
+	logger.info('ENTER');
+	
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+	var thisOrg = req.user.org;
+	var thisOrgConfig = thisOrg.config;
+	
+	
+	// read in the list of form options
+	var matchlayout = await utilities.find('layout', 
+		{org_key: orgKey, year: eventYear, form_type: 'matchscouting'}, 
+		{sort: {'order': 1}},
+		{allowCache: true}
+	);
+	//logger.debug("matchlayout=" + JSON.stringify(matchlayout))
+	
+	var orgColumnDefaults;
+	var orgCols = {};
+	//Boolean for the view
+	var doesOrgHaveNoDefaults = true;
+	
+	if (thisOrgConfig.columnDefaults && thisOrgConfig.columnDefaults[''+eventYear]) {
+		orgColumnDefaults = thisOrgConfig.columnDefaults[''+eventYear];
+		doesOrgHaveNoDefaults = false;
+	}
+	logger.debug(`orgColumnDefaults=${orgColumnDefaults}`);
+	
+	if (orgColumnDefaults) {
+		var orgColArray = orgColumnDefaults.split(',');
+		for (var orgCol of orgColArray) {
+			orgCols[orgCol] = orgCol;
+		}
+	}
+
+	var cookieKey = orgKey + '_' + eventYear + '_cols';
+	var savedCols = {};
+	var colCookie = req.cookies[cookieKey];
+
+	if (req.cookies[cookieKey]) {
+		logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
+	}
+
+	//colCookie = "a,b,ccc,d";
+	if (colCookie) {
+		var savedColArray = colCookie.split(',');
+		for (var savedCol of savedColArray)
+			savedCols[savedCol] = savedCol;
+	}
+	logger.debug('savedCols=' + JSON.stringify(savedCols));
+
+	res.render('./user/preferences/reportcolumns', {
+		title: 'Choose Report Columns',
+		layout: matchlayout,
+		savedCols: savedCols,
+		orgCols: orgCols,
+		doesOrgHaveNoDefaults: doesOrgHaveNoDefaults,
+		matchDataHelper: matchDataHelper,
+	});
+}));
+
+router.post('/preferences/reportcolumns', wrap(async (req, res) => {
+	logger.addContext('funcName', 'preferences/reportcolumns[post]');
+	logger.info('ENTER');
+	
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+	var cookieKey = orgKey + '_' + eventYear + '_cols';
+
+	var setOrgDefault = false;
+
+	logger.trace('req.body=' + JSON.stringify(req.body));
+	var first = true;
+	var columnCookie = '';
+	for (var i in req.body) {
+		if (i == 'setOrgDefault')    // see choosecolumns.pug
+			setOrgDefault = true;
+		else {
+			if (first)
+				first = false;
+			else
+				columnCookie += ','; 
+			columnCookie += i;
+		}
+	}
+	logger.debug('columnCookie=' + columnCookie);
+
+	res.cookie(cookieKey, columnCookie, {maxAge: 30E9});
+	
+	// setting org defaults? NOTE only for Team Admins and above
+	if (setOrgDefault && req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN) {
+		logger.debug('Setting org defaults');
+		var thisOrg = await utilities.findOne('orgs', 
+			{org_key: orgKey}, {},
+			{allowCache: true}
+		);
+		var thisConfig = thisOrg.config;
+		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
+		if (!thisConfig) {
+			thisConfig = {};
+			thisOrg['config'] = thisConfig;
+		}
+		var theseColDefaults = thisOrg.config.columnDefaults;
+		if (!theseColDefaults) {
+			theseColDefaults = {};
+			thisOrg.config['columnDefaults'] = theseColDefaults;
+		}
+
+		// set the defaults for this year
+		theseColDefaults[eventYear] = columnCookie;
+		
+		// update DB
+		await utilities.update('orgs', {org_key: orgKey}, {$set: {'config.columnDefaults': theseColDefaults}});
+
+		//logger.debug("thisOrg=" + JSON.stringify(thisOrg));
+	}
+
+	res.redirect('/user/preferences/reportcolumns?alert=Saved preferences successfully.&type=success&autofade=true');
+}));
+
+router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, res) => {
+	logger.addContext('funcName', 'preferences/reportcolumns/clearorgdefaultcols[post]');
+	logger.info('ENTER');
+	
+	var eventYear = req.event.year;
+	var orgKey = req.user.org_key;
+
+	if (req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN) {
+		var thisOrg = await utilities.findOne('orgs', 
+			{org_key: orgKey}, {},
+			{allowCache: true}
+		);
+		var thisConfig = thisOrg.config;
+		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
+		if (!thisConfig) {
+			thisConfig = {};
+			thisOrg['config'] = thisConfig;
+		}
+		var theseColDefaults = thisOrg.config.columnDefaults;
+		if (!theseColDefaults) {
+			theseColDefaults = {};
+			thisOrg.config['columnDefaults'] = theseColDefaults;
+		}
+
+		// remove values (if they exist) for the event year
+		delete theseColDefaults[eventYear];
+
+		// update DB
+		await utilities.update('orgs', {org_key: orgKey}, {$set: {'config.columnDefaults': theseColDefaults}});
+	}
+
+	res.redirect('/user/preferences/reportcolumns?alert=Cleared org default columns successfully.&type=success&autofade=true');
 }));
 
 module.exports = router;

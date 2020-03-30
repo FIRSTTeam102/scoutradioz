@@ -37,7 +37,7 @@ router.get('/events', wrap(async (req, res) => {
 
 	logger.debug('uniqueYears=' + uniqueYears);
 	
-	res.render('./manage/events', {
+	res.render('./admin/externaldata/events', {
 		title: 'Events',
 		'events': events,
 		'years': uniqueYears,
@@ -106,7 +106,7 @@ router.get('/matches', wrap(async (req, res) => {
 	// Read matches from DB for specified event
 	var matches = await utilities.find('matches', {'event_key': eventKey},{sort: {'time': 1}});
 	
-	res.render('./manage/matches', {
+	res.render('./admin/externaldata/matches', {
 		title: 'Matches',
 		'matches': matches
 	});
@@ -174,10 +174,9 @@ router.get('/teams', wrap(async (req, res) => {
 		// Read all teams from DB
 		teams = await utilities.find('teams', {}, {sort: {'team_number': 1}});
 		//render page w/ all teams			
-		res.render('./manage/teams', {
+		res.render('./admin/externaldata/teams', {
 			title: 'All Teams',
-			'teams': teams,
-			header: 'All Teams in Database'
+			teams: teams,
 		});
 	}
 	//if event is specified, get list of teams from event
@@ -206,9 +205,9 @@ router.get('/teams', wrap(async (req, res) => {
 		});
 		
 		//render page with sorted list of teams
-		res.render('./manage/teams', {
+		res.render('./admin/externaldata/teams', {
 			title: `Teams in ${req.event.name}`,
-			'teams': teams
+			teams: teams
 		});
 	}
 }));

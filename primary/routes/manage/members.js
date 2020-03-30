@@ -38,7 +38,7 @@ router.get('/', wrap(async (req, res) => {
 		}
 	}
 	
-	res.render('./manage/members', { 
+	res.render('./manage/members/index', { 
 		title: 'Organization Members',
 		//members: orgMembers,
 		membersByRole: membersByRole,
@@ -271,7 +271,7 @@ router.get('/passwords', wrap(async (req, res) => {
 		}
 	}		
 	
-	res.render('./manage/memberpasswords', { 
+	res.render('./manage/members/passwords', { 
 		title: 'Organization Members',
 		//members: orgMembers,
 		membersByRole: membersByRole,
@@ -320,7 +320,7 @@ router.get('/present', wrap(async (req, res) => {
 	var users = await utilities.find('users', {org_key: orgKey, visible: true}, {sort: {'name': 1}});
 	logger.trace('members.present: users=' + JSON.stringify(users));
 
-	res.render('./manage/present', {
+	res.render('./manage/members/present', {
 		title: 'Assign Who Is Present',
 		'members': users
 	});
