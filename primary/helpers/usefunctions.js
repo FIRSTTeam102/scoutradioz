@@ -314,9 +314,21 @@ functions.errorHandler = function(err, req, res, next) {
 	
 	logger.error(err.message + '\n' + err.stack);
 	
+	var title;
+	switch (err.status) {
+		case 404:
+			title = 'Not Found';
+			break;
+		default:
+			title = 'Error';
+			break;
+	}
+	
 	// render the error page
 	res.status(err.status || 500);
-	res.render('error');
+	res.render('error', {
+		title: title
+	});
 	
 	logger.removeContext('funcName');
 };

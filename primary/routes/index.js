@@ -2,6 +2,7 @@ const router = require('express').Router();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const logger = require('log4js').getLogger('index');
+const e = require('@firstteam102/http-errors');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -186,8 +187,15 @@ router.get('/home', wrap(async (req, res) =>  {
 router.get('/throwanerror', wrap(async (req, res) => {
 	logger.addContext('funcName', 'throwanerror[get]');
 	
-	throw new Error('This was on purpose.');
+	throw new e.InternalServerError('This was on purpose.');
 	
 }));
+
+router.get('/usererror', wrap(async (req, res) => {
+	logger.addContext('funcName', 'usererror[get]');
+	
+	throw new e.UserError();
+}));
+
 
 module.exports = router;
