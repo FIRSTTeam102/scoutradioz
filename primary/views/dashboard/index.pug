@@ -1,5 +1,9 @@
+//-
+	Scouting dashboard shows a scouter's pit and match scouting assignments.
+		dashboard.js
+		'/dashboard'
+	//
 extends ../layout
-
 block content
 	if user
 		h2(class="theme-text") Dashboard for
@@ -11,11 +15,11 @@ block content
 			h3(class="theme-text") Scouting assignments
 			each team in assignedTeams
 				if team.data
-					a(href=`/scouting/pit?team=${team.team_key}`) 
+					a(href=`/scouting/pit?team_key=${team.team_key}`) 
 						div(class="gear-btn w3-dark-grey w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 				else
-					a(href=`/scouting/pit?team=${team.team_key}`) 
+					a(href=`/scouting/pit?team_key=${team.team_key}`) 
 						div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 			hr 
@@ -23,11 +27,11 @@ block content
 			h3(class="theme-text") Partner(s) scouting assignments
 			each team in backupTeams
 				if team.data
-					a(href=`/scouting/pit?team=${team.team_key}`) 
+					a(href=`/scouting/pit?team_key=${team.team_key}`) 
 						div(class="gear-btn w3-dark-grey w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 				else
-					a(href=`/scouting/pit?team=${team.team_key}`) 
+					a(href=`/scouting/pit?team_key=${team.team_key}`) 
 						div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 							span= team.team_key.substring(3)
 			hr 

@@ -1,7 +1,12 @@
+//-
+	Team Intel shows all useful info for a particular team.
+		reports.js
+		'/reports/teamintel'
+			QUERY: team_key (Team key)
 extends ../layout
-
 block content
 	include templates/heatmap
+	include mixins/completedMatch
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
@@ -163,7 +168,8 @@ block content
 					hr 
 					
 					each match in matches
-						include templates/completedMatch
+						//include templates/completedMatch
+						+completedMatch(match)
 						if (match.scoringdata && user)
 							each element in scorelayout
 								case element.type

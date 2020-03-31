@@ -1,5 +1,10 @@
+//- 
+	Pit Scouting dashboard shows each team at the event and scouting assignments
+	for each team.
+		dashboard.js
+		'/dashboard/pits'
+	//
 extends ../layout
-
 block content
 	if teams.length > 0
 		h3(class="theme-text")=title
@@ -19,11 +24,11 @@ block content
 						h4(class=`${color}`) #{team.primary}
 					td(class="theme-spacer")
 						if team.data
-							a(href=`/scouting/pit?team=${team.team_key}`) 
+							a(href=`/scouting/pit?team_key=${team.team_key}`) 
 								div(class="gear-btn w3-dark-grey w3-btn w3-section")
 									span= team.team_key.substring(3)
 						else
-							a(href=`/scouting/pit?team=${team.team_key}`) 
+							a(href=`/scouting/pit?team_key=${team.team_key}`) 
 								div(class="gear-btn theme-link w3-btn w3-section")
 									span= team.team_key.substring(3)
 					td(class='w3-left-align theme-spacer')

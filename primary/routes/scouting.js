@@ -3,6 +3,7 @@ const logger = require('log4js').getLogger('scouting');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const {upload: uploadHelper} = require('@firstteam102/scoutradioz-helpers');
+const e = require('@firstteam102/http-errors');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -194,10 +195,9 @@ router.get('/pit*', wrap(async (req, res) => {
 	var event_year = req.event.year;
 	var org_key = req.user.org_key;
 
-	var teamKey = req.query.team;
+	var teamKey = req.query.team_key;
 	if (!teamKey) {
-		res.redirect('/dashboard');
-		return;
+		throw new e.UserError('Team key is not defined.');
 	}
 	
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"

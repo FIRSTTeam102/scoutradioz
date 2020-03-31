@@ -1,6 +1,11 @@
+//-
+	Team Intel History shows data for a particular team for the whole season.
+		reports.js
+		'/reports/teamintelhistory'
+			QUERY: team_key (team key)
 extends ../layout
-
 block content
+	include mixins/completedMatch
 	div(class="w3-auto")
 		h2 Team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
 		if (ranking)
@@ -86,7 +91,8 @@ block content
 							else
 								h4(class="theme-text") #{thisEventKey}
 							hr 
-						include templates/completedMatch
+						//include templates/completedMatch
+						+completedMatch(match)
 						if (match.scoringdata && user)
 							each element in scorelayout
 								case element.type

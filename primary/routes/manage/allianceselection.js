@@ -3,6 +3,7 @@ const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const matchDataHelper = require('@firstteam102/scoutradioz-helpers').matchData;
+const e = require('@firstteam102/http-errors');
 
 router.get('/', wrap(async (req, res) => {
 	//Check authentication for team admin level
@@ -10,12 +11,6 @@ router.get('/', wrap(async (req, res) => {
 	
 	var thisFuncName = 'allianceselection{root}[get]: ';
 	logger.info(thisFuncName + 'ENTER');
-	
-	// var aggCol = db.get('scoringdata');
-	// var scoreCol = db.get("scoringlayout");
-	// var rankCol = db.get('currentrankings');
-	// // 2019-03-21, M.O'C: Utilize the currentaggranges
-	// var currentAggCol = db.get("currentaggranges");
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
@@ -97,7 +92,7 @@ router.get('/', wrap(async (req, res) => {
 	// var currentAggRanges = await utilities.find("currentaggranges", {}, {});
 	var currentAggRanges = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
 
-	res.render('./allianceselection/allianceselection-index', {
+	res.render('./manage/allianceselection', {
 		title: 'Alliance Selection',
 		aggdata: aggArray,
 		currentAggRanges: currentAggRanges,
@@ -112,6 +107,8 @@ router.post('/updateteamvalue', wrap(async (req, res) => {
 	
 	var thisFuncName = 'allianceselection.updateteamvalue[post]: ';
 	logger.info(thisFuncName + 'ENTER');
+	
+	throw new e.TooEarlyError('updateteamvalue is not currently available');
 
 	// var db = rq.db;    was req
 	

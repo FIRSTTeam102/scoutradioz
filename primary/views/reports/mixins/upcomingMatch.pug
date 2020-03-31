@@ -1,7 +1,9 @@
-//- Requires match variable (from TBA)
-	Use: 	each match in matches
-				include templates/upcomingMatch
-if match
+//-
+	Mixin for an upcoming match.
+	PARAM
+		match [db Object] TBA data for a completed match.
+		includeHr [boolean] Whether to include an hr at the bottom.
+mixin upcomingMatch(match, includeHr=false)
 	- if (selectedTeam) var team = selectedTeam.substring(3);
 	//- console.log(team);
 	- match.teams = [];
@@ -14,16 +16,12 @@ if match
 		- match.teams[i + 3] = teamKey.substring(3);
 		//-isRed for setting thick border of alliance div when a team is selected
 		- if( teamKey.substring(3) == team ) isRed = true;
-	//- console.log(isBlue);
-	//- console.log(isRed);
-	- //get date crap
 	- var date = new Date( match.time * 1000 )
 	- if (match.predicted_time) date = new Date( match.predicted_time * 1000 );
 	- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 	- var day = days[date.getDay()];
 	- var hour = date.getHours();
 	- var minute = date.getMinutes();
-	- //make minute crap 2 digits
 	- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
 
 	div(class="w3-row")
@@ -96,5 +94,5 @@ if match
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[red3]}
 							span=match.alliances.red.team_keys[2].substring(3)
-else 
-	p Error: reports/templates/upcomingMatch.pug: match is not defined
+	if (includeHr == true)
+		hr 

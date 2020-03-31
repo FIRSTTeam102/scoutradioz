@@ -1,13 +1,13 @@
 //-
-	Admin scoring audit page.
-	PARAM
-		audit	[Object array]
-			member	Member name
-			record	[Object array]
-				match	Each match; either [N]ot scored, [C]overed, covered by [P]arent; if null, match completed
-	CALLED FROM
-		scoutingaudit.js	'/manage/scoutingaudit'
-		
+	Org mgmt audit trail for match scouting assignments, sorted by scouter.
+		PARAM
+			audit	[Object array]
+				member	Member name
+				record	[Object array]
+					match	Each match; either [N]ot scored, [C]overed, covered by [P]arent; if null, match completed
+		manage/scoutingaudit.js	
+		'/manage/scoutingaudit'
+	//	
 extends ../../layout
 block content
 	h2 Audit trail for match scouting

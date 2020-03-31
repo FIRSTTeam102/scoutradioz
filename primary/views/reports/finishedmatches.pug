@@ -1,6 +1,10 @@
+//-
+	Finished Matches shows a list of all finished matches and their outcome.
+		reports.js
+		'/reports/finishedmatches'
 extends ../layout
-
 block content
+	include mixins/completedMatch
 	style.
 		.thick-border{
 			border-width: 3px!important;
@@ -10,9 +14,9 @@ block content
 		}
 	if (matches && matches.length > 0)
 		h2(class="theme-text") Finished Matches
+		br 
 		each match in matches
-			include templates/completedMatch
-			hr 
+			+completedMatch(match, true)
 	else
 		h2(class="theme-text") <i>There are no matches in the system yet</i>
 		h6 Please check back later

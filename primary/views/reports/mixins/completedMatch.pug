@@ -1,4 +1,9 @@
-if match
+//-
+	Mixin for a completed match.
+	PARAM
+		match [db Object] TBA data for a completed match.
+		includeHr [boolean] Whether to include an hr at the bottom.
+mixin completedMatch(match, includeHr=false)
 	div(class="w3-row")
 		- outcome = "Tie";
 		- if (match.winning_alliance == 'red') 
@@ -132,5 +137,5 @@ if match
 												- else thisAbbr = '&nbsp;' + thisAbbr;
 												span !{thisAbbr}
 												div(class="w3-tooltiptext tooltip-gray" style="width: 80px; margin-left: -40px;")=thisRp.label
-else 
-	p Error: reports/templates/completedMatch.pug: match is not defined
+	if includeHr == true 
+		hr 

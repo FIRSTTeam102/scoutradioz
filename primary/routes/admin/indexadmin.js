@@ -47,7 +47,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/dashboard/driveteam?team_key=frc3201': 'Drive team dashboard for specific team',
 		},
 		'scouting.js': {
-			'/scouting/pit?team=frc102': 'Pit scouting survey + photo upload',
+			'/scouting/pit?team_key=frc102': 'Pit scouting survey + photo upload',
 			'/scouting/match?key=2019paca_qm57_frc2656&alliance=Blue': 'Match scouting survey',
 			'/scouting/teampictures': 'Team pictures list (currently broken)',
 		},
@@ -73,7 +73,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/manage': 'Main org-management page',
 		},
 		'manage/allianceselection.js': {
-			'/allianceselection': 'manage/allianceselection',
+			'/manage/allianceselection': 'manage/allianceselection',
 		},
 		'manage/currentevent.js': {
 			'/manage/currentevent/matches': '\"See matches for current event\"- (Legacy) Manual match-updating buttons (+ data aggregation?)',
@@ -125,7 +125,7 @@ router.get('/orgs', wrap(async (req, res) => {
 	
 	const orgs = await utilities.find('orgs');
 	
-	res.render('./admin/manageorgs', {
+	res.render('./admin/orgs', {
 		title: 'Manage organizations',
 		orgs: orgs
 	});

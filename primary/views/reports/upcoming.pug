@@ -1,5 +1,11 @@
+//-
+	Upcoming shows upcoming matches at an event (for all teams or one team)
+		reports.js
+		'/reports/upcoming'
+			QUERY: [optional] team_key (Team key for which to view upcoming matches)
 extends ../layout
 block content
+	include mixins/upcomingMatch
 	if teamKey == 'all'
 		- teamLabel = 'all teams'
 	else 
@@ -23,8 +29,8 @@ block content
 		br 
 		section
 			each match in matches
-				include templates/upcomingMatch 
-				hr 
+				//include templates/upcomingMatch 
+				+upcomingMatch(match, true)
 	script.
 		$("#teamSelect").change(function(){
 			doTeamSelectChange(this);

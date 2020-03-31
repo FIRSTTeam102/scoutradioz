@@ -1,9 +1,10 @@
 //-
-	Match scoring page.
+	Match scouting page.
 	PARAM
 		layout	[Object Array] [{type, label, id}] from db.scoringlayout
-	CALLED BY
-		scouting.js '/scouting/match'
+		scouting.js
+		'/scouting/match'
+			QUERY: key (match-team key, event_match_team)
 	//
 extends ../layout
 block content

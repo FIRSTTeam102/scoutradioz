@@ -1,13 +1,13 @@
 //-
 	User config page with checkboxes to choose which columns are visible in a report.
-	PARAM
-		layout 			[Object Array]	from layouts {'matchscouting'}
-		savedCols		[Object Array]	originally from cookie (later, or database); dictionary of "selected" columns
-		orgCols 		[Object] 		Org's default columns (^)
-		doesOrgHaveNoDefaults [Boolean] Yes/no value for if the org has no default columns at all
-		matchDataHelper [Module]		scoutradioz-helpers.matchData helper function
-	CALLED BY
-		user.js	'/preferences/reportcolumns'
+		PARAM
+			layout 			[Object Array]	from layouts {'matchscouting'}
+			savedCols		[Object Array]	originally from cookie (later, or database); dictionary of "selected" columns
+			orgCols 		[Object] 		Org's default columns (^)
+			doesOrgHaveNoDefaults [Boolean] Yes/no value for if the org has no default columns at all
+			matchDataHelper [Module]		scoutradioz-helpers.matchData helper function
+		user.js	
+		'/user/preferences/reportcolumns'
 	//
 extends ../../layout
 block content

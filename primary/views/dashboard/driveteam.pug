@@ -1,6 +1,13 @@
+//-
+	Drive team dashboard shows upcoming matches for a particular team, 
+	and shows alliance stats for the first match.
+		dashboard.js
+		'/dashboard/driveteam'
+			QUERY: [optional] team_key (team key; defaults to org's team)
+	//
 extends ../layout
-
 block content
+	include ../reports/mixins/upcomingMatch
 	style.
 		html{
 			overflow-x: visible;
@@ -35,7 +42,8 @@ block content
 		h4 Next Match for Team #{selectedTeam.substring(3)}:
 	//- View first match
 	- var match = matches[0];
-	include ../reports/templates/upcomingMatch
+	//include ../reports/templates/upcomingMatch
+	+upcomingMatch(match)
 	hr 
 	//-Radar
 	div(class="w3-section w3-auto")
@@ -124,7 +132,8 @@ block content
 	each match, i in matches
 		//-Skip first match
 		if (i > 0)
-			include ../reports/templates/upcomingMatch
+			//include ../reports/templates/upcomingMatch
+			+upcomingMatch(match)
 			hr 
 
 	script var chartData = JSON.parse('!{dataForChartJS}');

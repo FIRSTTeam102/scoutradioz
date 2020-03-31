@@ -170,10 +170,10 @@ app.use('/user', user);
 app.use('/scouting', scouting);
 app.use('/dashboard', dashboard);
 app.use('/reports', reports);
-app.use('/allianceselection', allianceselection);
 app.use('/notifications', notifications);
 
 app.use('/manage', manageindex);
+app.use('/manage/allianceselection', allianceselection);
 app.use('/manage/config', config);
 app.use('/manage/scoutingpairs', scoutingpairs);
 app.use('/manage/members', orgmembers);

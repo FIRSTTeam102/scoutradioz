@@ -1,9 +1,9 @@
 //-
-	Admin page for viewing or updating teams list for any event ID.
-	PARAM
-		teams	[Object Array]	from db.teams
-	CALLED FROM
-		externaldata '/admin/externaldata/teams'
+	Admin page to view every team in the database.
+		PARAM
+			teams	[Object Array]	from db.teams
+		admin/externaldata.js
+		'/admin/externaldata/teams'
 extends ../../layout
 block content
 	form#updateForEvent(name="updateForEvent" method="get" action="/admin/externaldata/teams")
