@@ -160,6 +160,7 @@ functions.getEventInfo = async function(req, res, next) {
 		req.event.year = eventYear;
 		res.locals.event_key = req.event.key;
 		res.locals.event_year = req.event.year;
+		res.locals.url = req.url;
 		
 		var currentEvent = await utilities.findOne('events', 
 			{key: eventKey}, 

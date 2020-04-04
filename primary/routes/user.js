@@ -619,7 +619,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	var orgKey = req.user.org_key;
 	var thisOrg = req.user.org;
 	var thisOrgConfig = thisOrg.config;
-	
+	var redirectURL = req.query.redirectURL;
 	
 	// read in the list of form options
 	var matchlayout = await utilities.find('layout', 
@@ -670,6 +670,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 		orgCols: orgCols,
 		doesOrgHaveNoDefaults: doesOrgHaveNoDefaults,
 		matchDataHelper: matchDataHelper,
+		redirectURL: redirectURL,
 	});
 }));
 
@@ -680,10 +681,37 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
 	var cookieKey = orgKey + '_' + eventYear + '_cols';
-
+	
+	//2020-04-04 JL: Added redirectURL to take user back to previous page
+	var redirectURL = '/user/preferences/reportcolumns';
 	var setOrgDefault = false;
-
+	
 	logger.trace('req.body=' + JSON.stringify(req.body));
+	
+	var columnArray = [];
+	for (var key in req.body) {
+		if (key == 'setOrgDefault') {
+			setOrgDefault = true;
+		}
+		else if (key == 'redirectURL') {
+			//2020-04-04 JL: Added exceptions to redirectURL 
+			//	(currently only home, but made it a regex to make it easier to add more in the future)
+			//	/\b(?:home|foo|bar)/;
+			var redirectExceptions = /\b(?:home)/;
+			if (!req.body.redirectURL.includes(redirectExceptions)) {
+				redirectURL = req.body.redirectURL;
+			}
+		}
+		else {
+			columnArray.push(key);
+		}
+	}
+	
+	var columnCookie = columnArray.join(',');
+	
+	logger.debug('columnCookie=' + columnCookie);
+	
+	/*
 	var first = true;
 	var columnCookie = '';
 	for (var i in req.body) {
@@ -697,7 +725,8 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 			columnCookie += i;
 		}
 	}
-	logger.debug('columnCookie=' + columnCookie);
+	*/
+	
 
 	res.cookie(cookieKey, columnCookie, {maxAge: 30E9});
 	
@@ -725,11 +754,10 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 		
 		// update DB
 		await utilities.update('orgs', {org_key: orgKey}, {$set: {'config.columnDefaults': theseColDefaults}});
-
-		//logger.debug("thisOrg=" + JSON.stringify(thisOrg));
+		
 	}
 
-	res.redirect('/user/preferences/reportcolumns?alert=Saved preferences successfully.&type=success&autofade=true');
+	res.redirect(redirectURL + '?alert=Saved column preferences successfully.&type=success&autofade=true');
 }));
 
 router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, res) => {

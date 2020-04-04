@@ -25,6 +25,7 @@ block content
 		button(class="theme-input w3-btn gear-btn" onclick="check()") Check All
 		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") Uncheck All
 	form(action="" method="post")
+		input(type="hidden" name="redirectURL" value=redirectURL)
 		div(class="w3-section w3-auto")
 			each item in layout
 				div(class="w3-row w3-mobile w3-auto" style="width: 320px;")
