@@ -8,14 +8,14 @@ class UserError extends Error {
 class UnauthorizedError extends Error {
 	constructor(message) {
 		super(message || 'Unauthorized');
-		this.status = 400;
+		this.status = 401;
 	}
 }
 
 class ForbiddenError extends Error {
 	constructor(message) {
 		super(message || 'Forbidden');
-		this.status = 400;
+		this.status = 403;
 	}
 }
 
