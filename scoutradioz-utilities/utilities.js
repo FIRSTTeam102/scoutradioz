@@ -28,7 +28,7 @@ var utilities = module.exports =  {
 
 // cached DB reference
 var dbRefs = {}, urls = {};
-var lastRequestTime;
+var lastRequestTime = {};
 var refMaxAge = 20000;
 var debugTimes = {};
 
@@ -107,7 +107,7 @@ utilities.getDB = async function(){
 	}
 	
 	//if ref has aged past its prime, then close and reopen it
-	if (lastRequestTime && lastRequestTime + refMaxAge < Date.now()) {
+	if (lastRequestTime[tier] && lastRequestTime[tier] + refMaxAge < Date.now()) {
 		
 		logger.info('(getDB) Ref has aged too much; Reconnecting');
 		try {
@@ -120,7 +120,7 @@ utilities.getDB = async function(){
 		}
 		dbRef.then(result => {
 			//renew lastRequestTime
-			lastRequestTime = Date.now();
+			lastRequestTime[tier] = Date.now();
 			db = dbRef;
 			logger.info('(getDB) Connected!');
 		}).catch(err => {
@@ -129,7 +129,7 @@ utilities.getDB = async function(){
 	}
 	
 	//renew lastRequestTime
-	lastRequestTime = Date.now();
+	lastRequestTime[tier] = Date.now();
 	db = dbRef;
 	
 	logger.trace('(getDB) returning db');

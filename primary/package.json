@@ -27,10 +27,10 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@firstteam102/http-errors": "^1.0.0",
+    "@firstteam102/http-errors": "^1.0.1",
     "@firstteam102/monk-fork": "^0.0.1",
     "@firstteam102/scoutradioz-helpers": "^1.0.10",
-    "@firstteam102/scoutradioz-utilities": "^1.0.47",
+    "@firstteam102/scoutradioz-utilities": "^1.0.49",
     "aws-serverless-express": "^3.3.8",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
