@@ -309,26 +309,50 @@ functions.notFoundHandler = function(req, res, next) {
 functions.errorHandler = function(err, req, res, next) {
 	logger.addContext('funcName', 'errorHandler');
 	
-	// set locals, only providing error in development
-	res.locals.message = err.message;
-	res.locals.error = req.app.get('env') === 'development' ? err : {};
-	
-	logger.error(err.message + '\n' + err.stack);
-	
 	var title;
+	var viewError = {};
+	
+	viewError.message = err.message;
+	viewError.status = err.status;
 	switch (err.status) {
+		case 400:
+			title = 'Error';
+			viewError.statusMessage = 'Bad Request';
+			break;
+		case 401:
+			title = 'Unauthorized';
+			viewError.statusMessage = 'Unauthorized';
+			break;
+		case 403:
+			title = 'Forbidden';
+			viewError.statusMessage = 'Forbidden';
+			break;
 		case 404:
 			title = 'Not Found';
+			viewError.statusMessage = 'Not Found';
+			break;
+		case 500:
+			title = 'Error';
+			viewError.statusMessage = 'Internal Server Error';
 			break;
 		default:
 			title = 'Error';
 			break;
 	}
 	
+	//Only provide error stack in development
+	if (req.app.get('env') == 'development') {
+		viewError.stack = err.stack;
+	}
+	
+	logger.warn(typeof err.stack);
+	logger.error(err.message + '\n' + err.stack);
+	
 	// render the error page
 	res.status(err.status || 500);
 	res.render('error', {
-		title: title
+		title: title,
+		error: viewError
 	});
 	
 	logger.removeContext('funcName');

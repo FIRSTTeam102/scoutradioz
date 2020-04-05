@@ -6,6 +6,6 @@
 extends layout
 block content
 	div(class="w3-left-align w3-margin-left")
-		p(class="w3-xlarge theme-text")= message
-		p(class="w3-large")= error.status
+		p(class="w3-xlarge theme-text")= error.message
+		p(class="w3-large") #{error.status} #{error.statusMessage}
 		pre(class="" style="text-shadow: 1px 1px 2px #000000")= error.stack
