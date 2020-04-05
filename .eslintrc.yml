@@ -4,6 +4,8 @@ env:
   es6: true
   node: true
 extends: 'eslint:recommended'
+plugins:
+  - scoutradioz-eslint
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
@@ -37,3 +39,5 @@ rules:
   guard-for-in: 
     - warn
   no-useless-escape: 0
+  scoutradioz-eslint/res-render-require-title:
+    - error
