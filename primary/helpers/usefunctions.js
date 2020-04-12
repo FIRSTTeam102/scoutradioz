@@ -114,6 +114,10 @@ functions.setViewVariables = async function(req, res, next){
 	res.locals.alert = req.query.alert;
 	res.locals.alertType = req.query.type;
 	res.locals.alertAutoFade = req.query.autofade;
+	res.locals.isIOS = (
+		req.shortagent.browser == 'Safari'
+		|| req.shortagent.os == 'OS X'
+	) ? true : false;
 	
 	logger.debug('EXIT');
 	logger.removeContext('funcName');
@@ -149,6 +153,7 @@ functions.getEventInfo = async function(req, res, next) {
 	var eventKey = 'No event defined';
 	var eventYear = 'No year defined';
 	res.locals.eventName = eventKey;
+	res.locals.url = req.url;
 	
 	//if exist
 	if (thisOrg) {
@@ -160,7 +165,6 @@ functions.getEventInfo = async function(req, res, next) {
 		req.event.year = eventYear;
 		res.locals.event_key = req.event.key;
 		res.locals.event_year = req.event.year;
-		res.locals.url = req.url;
 		
 		var currentEvent = await utilities.findOne('events', 
 			{key: eventKey}, 

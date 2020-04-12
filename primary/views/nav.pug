@@ -9,16 +9,31 @@ div(style="overflow-x: hidden;")
 				b 
 				b 
 				b 
+		//- Scoutradioz logo
 		div(class="w3-show-inline-block" style="max-width: 50%; height: 45px;")
 			span(style="display:inline-block;height:100%;vertical-align:middle;")
 			img(src=`${fileRoot}/images/brand-logos/scoutradioz-black-sm.png` class="header-logo")
-		div(class="w3-right w3-show-inline-block" style="height: 45px;")
+		//div(class="w3-right w3-show-inline-block" style="height: 45px;")
 			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-one-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
+		//- Share button
+		div(class="w3-right w3-show-inline-block w3-text-black" style="height: 45px;")
+			if user
+				- var orgKey = user.org.org_key;
+			else 
+				- var orgKey = 0;
+			div(class="w3-show-inline-block")
+				a(href=`javascript:share('${orgKey}')` style="margin-right: 8px;" class="w3-tooltip" title="Share")
+					- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
+					span(class=`sprite sp-32 ${spriteType} sp-black` style="margin-top: 5.5px;")
+			//div(class="w3-show-inline-block" style="height: 45px; vertical-align: middle;")
+				span Share
 div(id="headerlogo" class="w3-padding w3-center")
 	a(href="/home")
 		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
 	if (!isOrgSelectScreen)
 		h3=eventName
+div(style="position: absolute; width: 0px; height: 0px; top: -50px; left: 0px;")
+	input(id='shareURLInput' type='text' style="")
 div(style="display: none;" class="slidein-overlay" id="overlay")
 div(style="display: none;" id="menuParent")
 	nav(id="menu" class="slidein-menu")
@@ -71,9 +86,7 @@ div(style="display: none;" id="menuParent")
 									a(href="/reports/exportdata?type=pitscouting") 
 										span(class="sprite sp-24 sp-download menu-sprite")
 										span Export pit scouting data
-				//- 2020-03-07, M.O'C: TEMPORARILY POINTING TO REPORTS SO UNAUTHENTICATED USERS CAN ACCESS
 				li 
-					//- a(href="/dashboard/drive") 
 					a(href="/dashboard/driveteam") 
 						span(class="sprite sp-24 sp-wheel menu-sprite")
 						span Drive Team Dashboard

@@ -53,3 +53,59 @@ function debugToHTML(message) {
 	
 	$(debugLogger).append(newTextElem);
 }
+
+function share(orgKey) {
+	
+	var origin = window.location.origin;
+	var pathname = window.location.pathname;
+	var search = window.location.search;
+	
+	//if orgKey is defined, add it to the base of the pathname
+	if (orgKey != false) {
+		pathname = '/' + orgKey + pathname;
+	}
+	
+	var shareURL = origin + pathname + search;
+	
+	console.log(shareURL);
+	
+	// Attempt to use navigator.clipboard.writeText
+	if (navigator.clipboard && navigator.clipboard.writeText) {
+		
+		console.log('Attempting navigator.clipboard.writeText');
+		
+		navigator.clipboard.writeText(shareURL)
+			.then(() => {
+				NotificationCard.good('Copied link to clipboard. Share it in an app.');
+			})
+			.catch(err => {
+				//Fallback to DOM copy
+				console.log(err);
+				copyClipboardDom(shareURL);
+			});
+	}
+	else {
+		//Fallback to DOM copy
+		console.log('navigator.clipboard.writeText does not exist; falling back to DOM copy');
+		copyClipboardDom(shareURL);
+	}
+}
+
+function copyClipboardDom(text) {
+	try {
+		
+		console.log('Attempting DOM copy');
+		
+		var shareURLInput = $('#shareURLInput');
+		shareURLInput.attr('value', text);
+		shareURLInput[0].select();
+		shareURLInput[0].setSelectionRange(0, 99999); 
+		document.execCommand('copy');
+		
+		NotificationCard.good('Copied link to clipboard. Share it in an app.');
+	}
+	catch (err) {
+		console.error(err);
+		NotificationCard.bad(`Could not copy to clipboard. Error: ${err.message}`);
+	}
+}
