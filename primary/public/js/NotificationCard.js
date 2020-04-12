@@ -139,10 +139,14 @@ class NotificationCard{
 				'border-bottom-color': this.opts.borderColor,
 				'color': this.opts.textColor,
 			});
+		
+		//Enrich text with bold typefacing
+		var enrichedText = this._enrichText();
+		
 		//Create text element
 		var text = $(document.createElement('div'))
 			.addClass('notification-card-content')
-			.text(this.text);
+			.html(enrichedText);
 		//Add exit button if exitable option is enabled
 		if (this.opts.exitable) {
 			//Create exit button
@@ -278,5 +282,84 @@ class NotificationCard{
 		}
 		
 		return opts;
+	}
+	
+	_enrichText() {
+		
+		var text = this.text;
+		
+		//HTML-encode the text of the notificationcard (for safety)
+		var enrichedText = $(document.createElement('span'))
+			.text(text);
+		
+		//Enrich text with predetermined keys
+		enrichedText = this._enrichWithClosingTags(enrichedText.html(), '*', '<b>', '</b>');
+		enrichedText = this._enrichWithClosingTags(enrichedText.html(), '_', '<i>', '</i>');
+		enrichedText = this._enrichWithSelfClosingTags(enrichedText.html(), '\n', '</br>');
+		enrichedText = this._enrichWithSelfClosingTags(enrichedText.html(), '/n', '</br>');
+		
+		return enrichedText;
+	}
+	
+	_enrichWithClosingTags(html, key, openTag, closeTag) {
+		
+		//Get all locations of the key
+		var locationsOfKey = [];
+		for (var i = 0; i < html.length; i++) {
+			if (html.substring(i, i + key.length) == key) {
+				locationsOfKey.push(i);
+			}
+		}
+		
+		var numIterations = 0;
+		//Loop until there are no more pairs of the key
+		while (locationsOfKey.length > 1) {
+			
+			//Add length of openTag/closeTag to indices so the indices don't get messed up
+			var lengthAddition = numIterations * (openTag.length + closeTag.length - 2 * key.length);
+			var thisIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
+			var nextIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
+			//Splice html together with opening and closing tags
+			html = html.slice(0, thisIndex) + openTag + html.slice(thisIndex + key.length, nextIndex) + closeTag + html.slice(nextIndex + key.length);
+						
+			numIterations++;
+		}
+		
+		//Create new span with the enriched html.
+		var enrichedText = $(document.createElement('span'))
+			.html(html);
+		
+		return enrichedText;
+	}
+	
+	_enrichWithSelfClosingTags(html, key, tag) {
+		
+		//Get all locations of the key
+		var locationsOfKey = [];
+		for (var i = 0; i < html.length; i++) {
+			if (html.substring(i, i + key.length) == key) {
+				locationsOfKey.push(i);
+			}
+		}
+		
+		var numIterations = 0;
+		//Loop until there are no more pairs of the key
+		while (locationsOfKey.length > 0) {
+			
+			//Add length of tag to indices so the indices don't get messed up
+			var lengthAddition = numIterations * (tag.length - key.length);
+			var thisIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
+			
+			//Splice html together with opening and closing tags
+			html = html.slice(0, thisIndex) + tag + html.slice(thisIndex + key.length);
+			
+			numIterations++;
+		}
+		
+		//Create new span with the enriched html.
+		var enrichedText = $(document.createElement('span'))
+			.html(html);
+		
+		return enrichedText;
 	}
 }
