@@ -4,7 +4,7 @@ const favicon = require('serve-favicon');				//serves favicon
 const bodyParser = require('body-parser');				//parses http request information
 const session = require('express-session');				//session middleware
 const cookieParser = require('cookie-parser');			//cookies
-const MongoStore = require('connect-mongo')(session);	//Alternative session storage
+const MongoStore = require('connect-mongo');			//Alternative session storage
 const passport = require('passport');					//for user authentication
 const useragent = require('express-useragent');			//for info on connected users
 const log4js = require('log4js');						//for extensive logging functionality
@@ -106,7 +106,7 @@ app.use(session({
 	saveUninitialized: false, // don't create session until something stored
 	resave: false, //don't save session if unmodified
 	
-	store: new MongoStore({
+	store: MongoStore.create({
 		//Use same URL that utilities uses for database
 		clientPromise: clientPromise,
 		//client: sessionDb,
@@ -117,7 +117,7 @@ app.use(session({
 		mongoOptions: {
 			useUnifiedTopology: true
 		}
-	})
+	}),
 }));
 
 //User agent for logging
