@@ -93,6 +93,7 @@
 .sprite.sp-12{--size:12px;}
 .sprite.sp-16{--size:16px;}
 .sprite.sp-18{--size:18px;}
+.sprite.sp-20{--size:20px;}
 .sprite.sp-24{--size:24px;}
 .sprite.sp-32{--size:32px;}
 .sprite.sp-48{--size:48px;}
@@ -103,7 +104,7 @@
 .sprite.sp-scoutradioz{--position: -1;}
 .sprite.sp-tba{--position: -2;}
 .sprite.sp-radio{--position: -3;}
-.sprite.sp-language{--position: -4;}
+.sprite.sp-i18n{--position: -4;}
 .sprite.sp-share-android{--position: -5;}
 .sprite.sp-share-ios{--position: -6;}
 .sprite.sp-home{--position: -7;}
@@ -117,6 +118,7 @@
 .sprite.sp-warn{--position: -15;}
 .sprite.sp-gearheads{--position: -16;}
 .sprite.sp-download{--position: -17;}
+.sprite.sp-edit{--position: -18;}
 
 .sprite.sp-black{-webkit-filter: invert(100%);filter: invert(100%);}
 

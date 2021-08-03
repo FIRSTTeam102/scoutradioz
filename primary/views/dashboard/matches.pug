@@ -48,9 +48,12 @@ block content
 										span= assignment.assigned_scorer
 								//- Link to team
 								div(class="w3-col s4 w3-padding")
+									//-here is if the match has been completed
 									if assignment.data
 										a(href=`/scouting/match?key=${assignment.match_team_key}&alliance=${assignment.alliance}`)
 											div(class="w3-btn w3-col theme-dim w3-padding")
+												span(class="w3-left")
+													span(class="sprite sp-20 sp-edit" style="vertical-align: middle; margin-top: -3px;")
 												span= assignment.team_key.substring(3)
 									else
 										- var btnColor = (assignment.alliance == "Red") ? "alliance-red" : "alliance-blue"
