@@ -19,6 +19,13 @@ class ForbiddenError extends Error {
 	}
 }
 
+class NotFoundError extends Error {
+	constructor(message) {
+		super(message || 'Not Found');
+		this.status = 404;
+	}
+}
+
 class TeapotError extends Error {
 	constructor(message) {
 		super(message || 'I\'m a teapot');
@@ -51,6 +58,7 @@ module.exports = {
 	UserError: UserError,
 	UnauthorizedError: UnauthorizedError,
 	ForbiddenError: ForbiddenError, 
+	NotFoundError: NotFoundError,
 	TeapotError: TeapotError,
 	TooEarlyError: TooEarlyError,
 	InternalServerError: InternalServerError,

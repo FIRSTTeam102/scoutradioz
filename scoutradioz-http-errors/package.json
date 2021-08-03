@@ -1,6 +1,6 @@
 {
   "name": "@firstteam102/http-errors",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "A very basic module that defines errors with HTTP status codes, such as 400 Bad Request.",
   "main": "index.js",
   "scripts": {
