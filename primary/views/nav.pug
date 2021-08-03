@@ -4,6 +4,7 @@
 	//
 div(style="overflow-x: hidden;")
 	div(id="headerbar" class="w3-card header")
+		//- Hamburger menu button
 		a(id="burger")
 			button(class="mburger mburger--squeeze")
 				b 
@@ -15,18 +16,23 @@ div(style="overflow-x: hidden;")
 			img(src=`${fileRoot}/images/brand-logos/scoutradioz-black-sm.png` class="header-logo")
 		//div(class="w3-right w3-show-inline-block" style="height: 45px;")
 			img(src=`${fileRoot}/images/infinite-recharge/Horizontal-one-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
-		//- Share button
+		//- Share and i18n buttons ***w3-right class cascades from right-to-left**
 		div(class="w3-right w3-show-inline-block w3-text-black" style="height: 45px;")
-			if user
-				- var orgKey = user.org.org_key;
-			else 
-				- var orgKey = 0;
-			div(class="w3-show-inline-block")
-				a(href=`javascript:share('${orgKey}')` style="margin-right: 8px;" class="w3-tooltip" title="Share")
+			//- Share
+			- var orgKey = user ? user.org.org_key : 0;
+			div(class="w3-right" style="margin-right: 8px;")
+				a(href=`javascript:share('${orgKey}')` class="w3-right w3-show-inline-block" style="height: 45px;" title="Share")
 					- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
-					span(class=`sprite sp-32 ${spriteType} sp-black` style="margin-top: 5.5px;")
-			//div(class="w3-show-inline-block" style="height: 45px; vertical-align: middle;")
-				span Share
+					div(class="w3-show-inline-block")
+						span(class=`sprite sp-32 ${spriteType} sp-black` style="margin-top: 5.5px;")
+					div(class="w3-show-inline-block")
+						span(style="font-size:14px; margin-left: 1px; position:relative; top:-9px; font-family:Tahoma,Geneva,sans-serif;") Share
+			//- i18n
+			//- disabled for now
+			//div(class="w3-right" style="margin-right: 8px;")
+				a(href="" class="w3-show-inline-block" style="height: 45px;" title="Language")
+					div(class="w3-show-inline-block")
+						span(class="sprite sp-32 sp-language sp-i18n sp-black" style="margin-top: 7px;")
 div(id="headerlogo" class="w3-padding w3-center")
 	a(href="/home")
 		img(src=`${fileRoot}/images/infinite-recharge/Horizontal-reverse.png` class="w3-image w3-center w3-padding-large" style="max-height: 160px;")
