@@ -10,7 +10,7 @@ $(() => {
 			{ttl: 0, exitable: true, onexit: function(){
 				Cookies.set('accepted', 'true', {expires: 1000});
 			}});
-		cookiesMessage.show();
+		// cookiesMessage.show();	2021-08-03 JL: Disabled cookie message because we probably don't need to show the message for the time being
 	}
 });
 
