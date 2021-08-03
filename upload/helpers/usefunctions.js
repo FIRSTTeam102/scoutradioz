@@ -76,11 +76,7 @@ functions.notFoundHandler = function(req, res, next) {
 functions.errorHandler = function(err, req, res, next) {
 	logger.addContext('funcName', 'error');
 	
-	// set locals, only providing error in development
-	res.locals.message = err.message;
-	res.locals.error = req.app.get('env') === 'development' ? err : {};
-	
-	logger.error(''+err);
+	logger.error(err.message + '\n' + err.stack);
 	
 	// render the error page
 	res.status(err.status || 500);
