@@ -2,19 +2,20 @@
 /* eslint-disable no-unused-vars */
 $(function(){
 	
-	/*
-	if (localStorage.getItem("preprocessImages") == "true"){
-		$("input[name=chkPreprocess]").prop("checked", true);
+	Cookies.set('preprocessImages', '0'); // Preprocessing images temporarily disabled until it can be properly tested
+	
+	if (Cookies.get('preprocessImages') == '1') {
+		$('input[name=chkPreprocess]').prop('checked', true);
 	}
 	
-	$("input[name=chkPreprocess]").on("change", function(){
+	$('input[name=chkPreprocess]').on('change', function(){
 		if (this.checked == true) {
-			localStorage.setItem("preprocessImages", true);
+			Cookies.set('preprocessImages', '1');
 		}
 		else{
-			localStorage.setItem("preprocessImages", false);
+			Cookies.set('preprocessImages', '0');
 		}
-	});*/
+	});
 	
 	//when a file input changes, run submit-image func.
 	$('input[type=file]').on('change', submitImage);
@@ -73,14 +74,14 @@ async function submitImage(ev){
 	//create FormData object to submit
 	var data = new FormData();
 	
-	var imageData = imageInput.files[0];
+	var imageData = await getImageData(imageInput.files[0]);
 	
 	if (imageData) {
 		
 		var imageFile = imageData;
 		
-		//debugToHTML(imageData);
-		//debugToHTML(typeof imageData);
+		// debugToHTML(imageData);
+		// debugToHTML('imageData=' + typeof imageData);
 		
 		//**Append the file to the FormData object under name "image"
 		data.append('image', imageFile);
@@ -140,21 +141,9 @@ async function submitImage(ev){
 					console.error(err.responseText || err);
 					$(button).removeClass('w3-disabled');
 					
-					//if error.responseText exists, then log that
-					if (err.responseText){
-						uploadingCard.remove(0);
-						NotificationCard.show(err.responseText, {type: 'bad', ttl: 10000});
-						//debugToHTML(err.responseText+"\n");
-					}
-					//if error.responseText does not exist, then stringify error and log it
-					else{
-						uploadingCard.remove(0);
-						NotificationCard.show(JSON.stringify(err), {type: 'bad', ttl: 10000});
-						//debugToHTML(JSON.stringify(err)+"\n");
-					}
-					//log textStatus and errorThrown
-					//debugToHTML(textStatus+"\n");
-					//debugToHTML(errorThrown+"\n");
+					uploadingCard.remove(0);
+					var message = err.responseText || err.message || 'An error occurred.';
+					NotificationCard.show(message, {type: 'bad', ttl: 10000});
 					
 				},/*
 				xhr: function(){
@@ -189,6 +178,103 @@ async function submitImage(ev){
 			//debugToHTML("CAUGHT: "+l+"\n");
 		}
 	}
+}
+
+function getImageData(file) {
+	
+	return new Promise((resolve, reject) => {
+		var imageData;
+	
+		var preprocessImages = $('input[name=chkPreprocess]').prop('checked');
+		
+		console.log(preprocessImages);
+		
+		if (preprocessImages) {
+			console.log('Going to pre-process image.');
+			
+			if (Jimp) {
+				
+				var preReadTime = Date.now();
+				
+				//Read file
+				var reader = new FileReader();
+				
+				reader.onload = async () => {
+					
+					var imgArrayBuffer = reader.result;
+						
+					NotificationCard.show('Compressing photo...');
+					
+					var preJimpReadTime = Date.now();
+					
+					//Read image buffer
+					var image = await Jimp.read(imgArrayBuffer);
+					
+					var jimpReadTime = Date.now();
+					
+					var width = image.bitmap.width, height = image.bitmap.height;
+					var ratio = width / height;
+					var resizeWidth, resizeHeight;
+					
+					//only resize if original image is larger than 1000x1000
+					if (width > 1000 && height > 1000) {
+						if (width < height) {
+							resizeWidth = 1000;
+							resizeHeight = Math.floor( resizeWidth / ratio );
+						}
+						else {
+							resizeHeight = 1000;
+							resizeWidth = Math.floor( resizeHeight * ratio );
+						}
+						
+						console.log('Resizing image');
+						
+						//resize image and transform to jpg
+						//A higher resolution image can be a lower quality
+						image.resize( resizeWidth, resizeHeight )
+							.quality(60);
+						
+					}
+					else {
+						//a lower resolution image should be a higher quality
+						image.quality(90);
+					}
+					
+					var imgResizeTime = Date.now();
+					
+					image.getBuffer('image/jpeg', async (err, newArrayBuffer) => {
+						if(err){
+							console.error(err);
+							debugToHTML(err);
+							resolve(file);
+						}
+						
+						var imgBufferTime = Date.now();
+						
+						var str = `FileRead: ${preJimpReadTime - preReadTime}ms, JimpRead: ${jimpReadTime - preJimpReadTime}ms, Resize: ${imgResizeTime-jimpReadTime}ms, getBuffer: ${imgBufferTime-imgResizeTime}ms`;
+						console.log(str);
+						debugToHTML(str);
+						
+						var newFile = new File(newArrayBuffer, file.name, {type: 'image/jpeg'});
+						
+						console.log(newArrayBuffer);
+						console.log(newFile);
+						
+						resolve(newFile);
+					});
+				};
+				
+				reader.readAsArrayBuffer(file);
+			}
+			//Fallback if Jimp is not defined
+			else {
+				resolve(file);
+			}
+		}
+		else {
+			resolve(file);
+		}
+	});
 }
 
 /*

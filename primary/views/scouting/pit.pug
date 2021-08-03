@@ -14,7 +14,8 @@ block content
 			position: absolute;
 			z-index: -1;
 		}
-	script(src=`${fileRoot}/js/script-pitscouting.js?v=9`)
+	script(src=`${fileRoot}/lib/jimp.min.js`)
+	script(src=`${fileRoot}/js/script-pitscouting.js?v=10`)
 	h3= key.replace('frc','Team #')
 	p
 	if images
@@ -38,13 +39,9 @@ block content
 				img#imgB(alt="" class="w3-image team-image-sm")
 			//-Small image 3
 			if images.c
-				img#imgC(src=images.b.sm alt="" class="w3-image team-image-sm")
+				img#imgC(src=images.c.sm alt="" class="w3-image team-image-sm")
 			else 
 				img#imgC(alt="" class="w3-image team-image-sm")
-	//div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
-		img#imgA(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}a_sm.jpg` alt="" class="w3-image team-image-sm")
-		img#imgB(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}b_sm.jpg` alt="" class="w3-image team-image-sm")
-		img#imgC(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${key}c_sm.jpg` alt="" class="w3-image team-image-sm")
 	form#imageform(action="javascript:void(0)" method="post")
 		//-Image inputs
 		input#imageMain(type="file" class="image-input" index="0" name="imageMain")
@@ -67,7 +64,8 @@ block content
 				label#uploadB(for="imageB" class="w3-btn theme-submit") Upload Small #2
 			div(class="w3-padding w3-show-inline-block")
 				label#uploadC(for="imageC" class="w3-btn theme-submit") Upload Small #3
-	//div(class="w3-container")
+	//- Preprocess images: Temporarily disabled
+	div(class="w3-container w3-hide")
 		input(type="checkbox" name="chkPreprocess" id="chkPreprocess" class="w3-check")
 		label(for="chkPreprocess" class="theme-inline-padding") Pre-process photos to conserve mobile data?
 	p
