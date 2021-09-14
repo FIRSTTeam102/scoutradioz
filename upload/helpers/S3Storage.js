@@ -43,11 +43,14 @@ function defaultKey (req, file, cb) {
 }
 
 function autoContentType (req, file, cb) {
-	file.stream.once('data', function (firstChunk) {
-		var type = fileType(firstChunk);
+	file.stream.once('data', async function (firstChunk) {
+		// var type = fileType(firstChunk);
+		// var type = fileType.fromStream(file.stream);
+		var type = await fileType.fromBuffer(firstChunk);
+		console.log(type);
 		var mime;
 
-		if (type) {
+		if (type && type.mime) {
 			mime = type.mime;
 		}
 		else {
