@@ -29,8 +29,10 @@ var utilities = module.exports =  {
 // cached DB reference
 var dbRefs = {}, urls = {};
 var lastRequestTime = {};
-var refMaxAge = 20000;
+var refMaxAge = 60000;
 var debugTimes = {};
+var isDBlocked = false;
+var dbLockPromiseResolves = [];
 
 //Performance debugging if enabled
 function consoleTime(name) {
@@ -41,6 +43,37 @@ function consoleTimeEnd(name) {
 		logger.debug(`${name}\t\t: ${Date.now() - debugTimes[name]} ms`);
 		delete debugTimes[name];
 	}
+}
+
+function enterDbLock() {
+	logger.trace('Entering DB lock');
+	isDBlocked = true;
+}
+
+function leaveDbLock() {
+	logger.trace('Leaving DB lock');
+	isDBlocked = false;
+	logger.trace(`Resolving ${dbLockPromiseResolves.length} lock promises`);
+	for (let i in dbLockPromiseResolves) {
+		let resolve = dbLockPromiseResolves[i];
+		resolve();
+	}
+	// Clear the promise resolves list
+	dbLockPromiseResolves = [];
+	logger.trace('Done resolving db locks');
+}
+
+function dbLock() {
+	return new Promise((resolve, reject) => {
+		if (!isDBlocked) {
+			logger.trace('DB not locked; Resolving instantly');
+			resolve();
+		}
+		else {
+			logger.trace('Awaiting DB lock...')
+			dbLockPromiseResolves.push(resolve);
+		}
+	})
 }
 
 /**
@@ -79,65 +112,91 @@ utilities.config = function(databaseConfig, options){
  * Function that first caches, then returns the cached database for the server process.
  * @returns {monk.IMonkManager} Monk database manager
  */
-utilities.getDB = async function(){
-	//logger.addContext('funcName', 'getDB');
+utilities.getDB = function(){
 	
-	//create db return variable
-	var db;
-	
-	var tier = this.activeTier;
-	var dbRef = dbRefs[tier];
-	var url = urls[tier];
-	logger.trace(`(getDB) tier=${tier} dbRef=${dbRef} url=${url}`);
-	
-	//2020-03-23 JL: one db ref for every tier
-	if (!dbRef || !url) {
-		logger.info(`(getDB) Creating db ref for ${tier}`);
-		url = await this.getDBurl();
-		dbRef = monk(url);
-		logger.trace(`(getDB) Got url, url=${url}, tier=${tier} this.activeTier=${this.activeTier}`);
+	return new Promise(async (resolve, reject) => {
 		
-		dbRef.then(result => {
-			logger.info('(getDB) Connected!');
-		}).catch(err => {
-			logger.error(JSON.stringify(err));
-		});
-		urls[tier] = url;
-		dbRefs[tier] = dbRef;
-	}
-	
-	//if ref has aged past its prime, then close and reopen it
-	if (lastRequestTime[tier] && lastRequestTime[tier] + refMaxAge < Date.now()) {
+		//create db return variable
+		var db;
 		
-		logger.info('(getDB) Ref has aged too much; Reconnecting');
-		try {
-			dbRef.close();
+		var tier = this.activeTier;
+		var dbRef = dbRefs[tier];
+		var url = urls[tier];
+		// logger.trace(`(getDB) tier=${tier} dbRef=${dbRef} url=${url}`);
+		
+		//2020-03-23 JL: one db ref for every tier
+		if (!dbRef || !url) {
+			enterDbLock();
+			
+			logger.info(`(getDB) Creating db ref for ${tier}`);
+			url = await this.getDBurl();
 			dbRef = monk(url);
+			logger.trace(`(getDB) Got url, url=${url}, tier=${tier} this.activeTier=${this.activeTier}`);
+			
+			dbRef.then(result => {
+				logger.info('(getDB) Connected!');
+				leaveDbLock(); // unlock
+			}).catch(err => {
+				logger.error(JSON.stringify(err));
+			});
+			urls[tier] = url;
+			dbRefs[tier] = dbRef;
 		}
-		catch (err) {
-			logger.error(err);
-			dbRef = monk(url);
+		
+		//if ref has aged past its prime, then close and reopen it
+		if (lastRequestTime[tier] && lastRequestTime[tier] + refMaxAge < Date.now()) {
+			
+			enterDbLock(); // Lock the database until a new connection has been achieved
+			
+			logger.info('(getDB) Ref has aged too much; Reconnecting');
+			try {
+				dbRef.close();
+				dbRef = monk(url);
+			}
+			catch (err) {
+				logger.error(err);
+				dbRef = monk(url);
+			}
+			
+			// lastRequestTime must be refreshed immediately (not after connection) 
+			//	to avoid multiple reconnect attempts
+			lastRequestTime[tier] = Date.now();
+			
+			dbRef.then(result => {
+				db = dbRef;
+				dbRefs[tier] = dbRef;
+				logger.info('(getDB) Connected!');
+				
+				leaveDbLock(); // Unlock the database
+				resolve({db});
+			}).catch(err => {
+				logger.error(JSON.stringify(err));
+				// Resolve with old db (even if it's closed) (this shouldn't occur)
+				logger.error('(getDB) Error connecting');
+				
+				reject(err);
+				leaveDbLock();
+			});
 		}
-		dbRef.then(result => {
+		else {
+			
+			await dbLock();
+			
+			// Reload the db ref in case it has been reconnected
+			var dbRef = dbRefs[tier];
+			var url = urls[tier];
+		
 			//renew lastRequestTime
 			lastRequestTime[tier] = Date.now();
 			db = dbRef;
-			logger.info('(getDB) Connected!');
-		}).catch(err => {
-			logger.error(JSON.stringify(err));
-		});
-	}
-	
-	//renew lastRequestTime
-	lastRequestTime[tier] = Date.now();
-	db = dbRef;
-	
-	logger.trace('(getDB) returning db');
-	//logger.removeContext('funcName');
-	//return
-	//Must use object destructuring becasue for SOME reason,
-	// returning monk from an async function hangs the process
-	return {db};
+			
+			logger.trace('(getDB) returning db');
+			
+			//Must use object destructuring becasue for SOME reason,
+			// returning monk from an async function hangs the process
+			resolve({db});
+		}
+	});
 };
 
 /**
@@ -328,6 +387,7 @@ utilities.find = async function(collection, query, options, cacheOptions){
 			
 			//Request db
 			let {db} = await this.getDB();
+			logger.warn('====after await thisgetdb===');
 			cachedRequest = await db.get(collection).find(query, options);
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
