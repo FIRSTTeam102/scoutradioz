@@ -4,6 +4,7 @@ const path = require('path');
 const archiver = require('archiver');
 const aws = require('aws-sdk');
 const concat = require('concat-stream');
+const retry = require("oh-no-i-insist");
 const lambda = new aws.Lambda({
 	region: 'us-east-1'
 });
@@ -133,55 +134,91 @@ function updateCode(zipBuffer, cb) {
 		else {
 			console.log(`Uploaded function code:\n\t FunctionName=${data.FunctionName}\n\t Role=${data.Role}\n\t CodeSha256=${data.CodeSha256}`);
 			
-			console.log('Publishing new version...');
-			var params = {
-				CodeSha256: data.CodeSha256,
-				Description: `${time}`,
-				FunctionName: functionName,
-			};
-			lambda.publishVersion(params, (err, data) => {
-				if (err) cb(err);
-				else {
-					//Keep this to update alias later
-					var newVersion = data.Version;
-					console.log(`Published new version! Version=${newVersion}`);
-					
-					if (alias) {
-						var params = {
-							FunctionName: functionName, 
-							Name: alias,
-						};
-						console.log(`Getting data for alias=${alias}`);
-						
-						lambda.getAlias(params, (err, data) => {
-							if (err) cb('Could not find alias: ' + alias, err);
-							else {
-								//For safekeeping or something
-								var oldVersion = data.FunctionVersion;
-								console.log(`Alias ${alias}: Old version: ${oldVersion}; Updating to ${newVersion}`);
-								
-								var params = {
-									FunctionName: functionName, 
-									FunctionVersion: newVersion, 
-									Name: alias
-								};
-								lambda.updateAlias(params, (err, data) => {
-									if (err) cb(err);
-									else {
-										cb(null, data);
-									}
-								});
-							}
-						});
-					}
-					else {
-						cb('No alias specified.');
-					}
-				}
-			});
+			publishVersion(data, time, cb);
 		}
 	});
 }
+
+/**
+ * @param {aws.Lambda.FunctionConfiguration} data from updateFunctionCode result
+ */
+async function publishVersion(data, time, cb) {
+	
+	console.log('Waiting for function update to be complete...');
+	
+	await waitUntilNotPending(lambda, functionName, 1000, 5);
+	
+	console.log('Publishing new version...');
+	var params = {
+		CodeSha256: data.CodeSha256,
+		Description: `${time}`,
+		FunctionName: functionName,
+	};
+	lambda.publishVersion(params, (err, data) => {
+		if (err) cb(err);
+		else {
+			//Keep this to update alias later
+			var newVersion = data.Version;
+			console.log(`Published new version! Version=${newVersion}`);
+			
+			if (alias) {
+				var params = {
+					FunctionName: functionName, 
+					Name: alias,
+				};
+				console.log(`Getting data for alias=${alias}`);
+				
+				lambda.getAlias(params, (err, data) => {
+					if (err) cb('Could not find alias: ' + alias, err);
+					else {
+						//For safekeeping or something
+						var oldVersion = data.FunctionVersion;
+						console.log(`Alias ${alias}: Old version: ${oldVersion}; Updating to ${newVersion}`);
+						
+						var params = {
+							FunctionName: functionName, 
+							FunctionVersion: newVersion, 
+							Name: alias
+						};
+						lambda.updateAlias(params, (err, data) => {
+							if (err) cb(err);
+							else {
+								cb(null, data);
+							}
+						});
+					}
+				});
+			}
+			else {
+				cb('No alias specified.');
+			}
+		}
+	});
+}
+
+// Credit: https://github.com/claudiajs/claudia/issues/226#issuecomment-984717841
+async function waitUntilNotPending(lambda, functionName, timeout, retries) {
+	'use strict';
+	await new Promise(resolve => setTimeout(resolve, timeout));
+
+	return retry(
+		() => {
+			return lambda.getFunctionConfiguration({FunctionName: functionName}).promise()
+				.then(result => {					
+					if (result.state === 'Failed') {
+						throw `Lambda resource update failed`;
+					}
+					if (result.state === 'Pending') {
+						throw 'Pending';
+					}
+				});
+		},
+		timeout,
+		retries,
+		failure => failure === 'Pending',
+		() => console.log('Lambda function is in Pending state, waiting...'),
+	);
+};
 
 function makeZip(folder, cb) {
 	//if (file_system.existsSync(zipPath)) {
