@@ -112,6 +112,73 @@ router.get('/matches', wrap(async (req, res) => {
 	});
 }));
 
+/* 
+// This is for the ML predictor. Don't upload to Lambda with this method un-commented.
+router.get('/allmatches', wrap(async (req, res) => {
+	const events = await utilities.find('events', {});
+	
+	for (let event of events) {
+		let eventKey = event.key;
+		var url = `event/${event.key}/matches`;
+		logger.debug('url=' + url);
+		
+		//Request from TBA
+		var eventData = await utilities.requestTheBlueAlliance(url);
+		var matches = JSON.parse(eventData);
+		logger.debug(`matches= ${JSON.stringify(matches)}`);
+
+		//if request was invalid, redirect to admin page with alert message
+		if(matches.length == undefined || matches.length == 0){
+			logger.warn('/manage?alert=Could not get matches from TBA for specified event ' + eventKey);
+		}
+		
+		logger.debug('Found ' + matches.length + ' data for event ' + eventKey);
+		
+		// First delete existing match data for the given event
+		await utilities.remove('matches', {'event_key': eventKey});
+		// Now, insert the new data
+		await utilities.insert('matches', matches);
+		
+		await timeout(1000);
+	}
+	res.sendStatus(200);
+	
+	function timeout(time) {
+		return new Promise((resolve, reject) => {
+			setTimeout(resolve, time);
+		});
+	}
+}))
+
+router.get('/oprs', wrap(async (req, res) => {
+	
+	const events = await utilities.find('events', {year: 2019});
+	
+	for (let event of events) {
+		let key = event.key;
+		let url = `event/${key}/oprs`
+		logger.debug(`url=${url}`)
+		
+		var data = await utilities.requestTheBlueAlliance(url);
+		var oprs = JSON.parse(data);
+		if (oprs) {
+			oprs.event_key = key;
+			
+			await utilities.remove('oprs', {event_key: key});
+			await utilities.insert('oprs', oprs);
+			await timeout(750);
+		}
+		
+	}
+	res.sendStatus(200)
+	
+	function timeout(time) {
+		return new Promise((resolve, reject) => {
+			setTimeout(resolve, time);
+		});
+	}
+}))
+*/
 /**
  * POST: Admin page to update match information for a given event.
  * @url POST: /admin/externaldata/matches
