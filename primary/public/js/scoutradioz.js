@@ -6,7 +6,7 @@ if(!$){
 
 $(() => {
 	if (Cookies.get('accepted') != 'true') {
-		var cookiesMessage = new NotificationCard('Scoutradioz uses cookies to operate. By using this website, you consent to the use of cookies.',
+		var cookiesMessage = new NotificationCard('Scoutradioz uses some cookies in order to operate. We do not use third party cookies or tracking cookies.',
 			{ttl: 0, exitable: true, onexit: function(){
 				Cookies.set('accepted', 'true', {expires: 1000});
 			}});
