@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const _ = require('lodash');
 const multer = require('multer');
 const logger = require('log4js').getLogger('upload');
 const S3Storage = require('../helpers/S3Storage');
@@ -84,8 +83,8 @@ var fileFilter = function (req, file, cb) {
 	
 	//supported image file mimetypes
 	var allowedMimes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'];
-
-	if (_.includes(allowedMimes, file.mimetype)) {
+	
+	if (allowedMimes.includes(file.mimetype)) {
 		// allow supported image files
 		cb(null, true);
 	}

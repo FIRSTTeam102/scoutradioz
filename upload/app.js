@@ -54,6 +54,9 @@ logger.level = 'debug';
 //Create app
 const app = express();
 
+//Must be the very first app.use
+app.use(utilities.refreshTier);
+
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
