@@ -28,7 +28,7 @@ block content
 		//-teamSelect dropdown for intel and upcoming pages.
 		if teams && teams[0]
 			label(class="")
-				select#teamSelect(class="gear-btn theme-input w3-btn")
+				select#teamSelect(class="gear-btn theme-input-link w3-btn")
 					option(value="") Team #
 					each team in teams
 						option(value=team.team_number class="w3-bar-item") #{team.team_number}
