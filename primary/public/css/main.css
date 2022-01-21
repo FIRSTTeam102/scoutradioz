@@ -1,37 +1,22 @@
+/* Main styles that are year independent */
+:root {
+	color-scheme: dark;
 
-/* 2020 THEME COLORS */
-:root{
-	/* FRC's season colors */
-	/* These define the raw color values for FRC's color palette. */
-	--frc-orange: #FAB74F;
-	--frc-yellow: #FFF041;
-	--frc-cyan: #00C0DD;
-	--frc-blue: #005CB8;
-	--frc-blue2: #0D90F0;
-	--frc-darkblue: #003A5D;
-	--frc-black: #000000;
-	
+	/* FIRST colors */
+	--first-red: #ed1c24;
+	--first-blue: #005fa8;
+	--first-gray: #9f9c9a;
+
 	/* universal colors */
 	--white: #fff;
 	--light: #c8c8c8;
 	--grey: #888;
 	--dark: #454b4e;
 	--black: #000;
-	
-	/* 2020 theme colors */
-	/* This is a list of theme color variables, which can be defined by raw color values predefined variables for FRC color palette. */
-	--primary: var(--frc-orange);
-	--secondary: var(--frc-blue);
-	--trim: var(--frc-cyan);
-	--highlight: var(--frc-yellow);
-	
+
 	--text-primary: var(--white);
 	--text-secondary: var(--light);
-	--button-primary: var(--frc-orange);
-	--button-secondary: var(--frc-yellow);
-	
-	/* Coordinate "background" with the image as defined in the 'layout.pug'! */
-	--background: #000;
+
 	--header: var(--trim);
 	--footer: var(--black);
 	--placeholder-color: #bbb;
@@ -55,12 +40,12 @@
 	--sprites-url: url('/images/sprites.png');
 }
 
-/* 2019 background colors */
 .theme-link{color: var(--black)!important; background-color: var(--button-primary)!important}
-.theme-input{color: var(--text-primary)!important; background-color: var(--secondary)!important}
+.theme-input{color: var(--black)!important; background-color: var(--secondary)!important}
+.theme-input-link{color: var(--black)!important; background-color: var(--button-primary)!important}
 .theme-dim,.theme-grey{color:var(--text-primary)!important;background-color:var(--dark)!important}
 .theme-submit{color:var(--black)!important;background-color:var(--button-secondary)!important}
-.theme-red{color:#fff!important;background-color:#be0020!important}
+.theme-red{color:#fff!important;background-color:var(--first-red)!important}
 
 .theme-text{color:var(--text-primary)!important;}
 .theme-text-secondary{color:var(--text-secondary)!important;}
@@ -87,7 +72,7 @@
 .header{background-color: var(--header);}
 .footer{background-color: var(--footer);}
 
-/*For sprites*/
+/* For sprites */
 .sprite.sp-4{--size:4px;}
 .sprite.sp-8{--size:8px;}
 .sprite.sp-12{--size:12px;}
@@ -193,9 +178,6 @@ a.link{
 
 /* For background */
 .background{
-	--fixed-gradient-radius: farthest-corner;
-	background: radial-gradient(circle var(--fixed-gradient-radius) at bottom,rgba(29,107,137,0.5) 0%, rgba(0,0,0,0) 100%),
-		linear-gradient(45deg, rgba(0,20,50,0.8) 0%, rgba(0,0,0,0) 100%);
 	position:fixed;
 	top:0px;
 	left:0px;
@@ -204,9 +186,6 @@ a.link{
 	z-index:-1;
 }
 body{
-	--bottom-gradient-radius: 900px;
-	background: radial-gradient(circle var(--bottom-gradient-radius) at bottom, 
-	rgb(44, 134, 170) 0%, rgba(29,107,137,1) 10%, rgba(0,0,0,0) 100%);
 	display: flex;
 	min-height: 100%;
 }
@@ -215,13 +194,6 @@ html{
 	background-color: var(--background);
 }
 #page{
-	/*Background-image URL is overriden in layout.pug with S3 url*/
-	background-image: url('/images/backgrounds/city-light.png');
-	background-size: auto 240px;
-	background-position-y: bottom;
-	background-position-x: left;
-	background-repeat: repeat-x;
-	
 	min-height: 100%;
 	min-width: 100%;
 }
@@ -231,9 +203,6 @@ html{
 	height: 240px;
 }
 @media(max-width: 600px){
-	.background{--fixed-gradient-radius: farthest-corner;}
-	body{--bottom-gradient-radius: 400px;}
-	#page{background-position-x: -50px; background-size: auto 160px;}
 	#page::after{height: 160px;}
 }
 
@@ -281,7 +250,6 @@ input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
 .theme-input:-ms-input-placeholder {color:var(--placeholder-color);}
 .theme-input::-ms-input-placeholder {color:var(--placeholder-color);}
 .theme-input::placeholder {color:var(--placeholder-color);}
-
 
 /* For tables that contain spacers */
 .theme-contains-spacer{
