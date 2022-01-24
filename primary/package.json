@@ -54,7 +54,7 @@
     "express-async-handler": "^1.1.4",
     "express-session": "^1.17.1",
     "express-useragent": "^1.0.15",
-    "log4js": "^6.3.0",
+    "log4js": "^6.4.0",
     "mongodb": "^3.6.6",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
