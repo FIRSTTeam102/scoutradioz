@@ -32,6 +32,11 @@ a:hover.text-link{text-decoration: underline;}
 	box-shadow: none!important;
 }
 
+.w3-disabled, .w3-btn:disabled, .w3-button:disabled {
+	opacity: unset;
+	filter: brightness(0.5);
+}
+
 .rounded-large{border-radius:18px;}
 .rounded{border-radius:12px;}
 .rounded-small{border-radius:6px;}
