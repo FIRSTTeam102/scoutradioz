@@ -17,22 +17,32 @@ router.all('/*', wrap(async (req, res, next) => {
  * @views /manage/adminindex
  */
 router.get('/', wrap(async (req, res) => {
+	const thisFuncName = 'manage.index[get]: ';
+	
+	// for events search
+	const eventListYear = parseInt(req.query.eventListYear) || new Date().getFullYear();
+	logger.debug(`${thisFuncName} eventListYear=${eventListYear}`);
 	
 	const org = await utilities.findOne('orgs', 
 		{org_key: req.user.org_key}, {},
 		{allowCache: true}
 	);
 	const events = await utilities.find('events', 
-		{year: new Date().getFullYear()}, 
+		{year: eventListYear}, 
 		{sort: {start_date: 1}},
 		{allowCache: true}
 	);
+	
+	// Read unique list of years in DB
+	const distinctYears = await utilities.distinct('events', 'year');
+	const uniqueYears = distinctYears.sort();
 	
 	res.render('./manage/index', { 
 		title: `Manage ${org.nickname}`,
 		org: org,
 		current: req.event.key,
 		events: events,
+		years: uniqueYears,
 	});
 	
 	//utilities.dumpCache();
@@ -56,7 +66,7 @@ router.post('/setdefaultpassword', wrap(async (req, res) => {
  */
 router.post('/setcurrent', wrap(async (req, res) => {
 	
-	var thisFuncName = 'adminindex.setcurrent[post]: ';
+	var thisFuncName = 'manage.setcurrent[post]: ';
 	var eventKey = req.body.event_key;
 	logger.info(thisFuncName + 'ENTER eventKey=' + eventKey);
 

@@ -7,18 +7,14 @@
 		'/admin/externaldata/events'
 	//
 extends ../../layout
+include ../../mixins/yearsSelect
 block content
 	style html{overflow-x: visible;}
 	form#updateForYear(name="updateForYear" method="post" action="/admin/externaldata/events")
-		- if (selectedYear == null) selectedYear = (new Date()).getFullYear();
-		if locals.years
+		if years
 			div(class="w3-show-inline-block w3-padding-small")
 				select#yearSelect(class="theme-input w3-no-border theme-inline-padding" name="selectedYear" onChange="submitForYear()")
-					each year in years
-						- if (year == selectedYear)
-							option(value=year selected)= year
-						- else
-							option(value=year)= year
+					+yearsSelect(years, selectedYear)
 		//div(class="w3-show-inline-block w3-padding-small")
 			input#setyear(class="theme-input w3-no-border theme-inline-padding" placeholder="Enter year to update" type="text", name="year")
 		//div(class="w3-show-inline-block w3-padding-small")

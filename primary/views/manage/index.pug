@@ -4,6 +4,7 @@
 		'/manage'
 	//
 extends ../layout
+include ../mixins/yearsSelect
 block content
 	style.
 		.events-container{
@@ -72,8 +73,12 @@ block content
 		div(class="w3-container w3-section")
 			h4 Set current event
 			form#setCurrentEvent(name="setCurrentEvent" method="post" action="/manage/setcurrent")
-				div(class="w3-padding-small w3-threequarter")
-					input#setEvent(class="theme-input w3-no-border theme-inline-padding w3-block" placeholder="Search for events from this year" type="text", name="event_key")
+				div(class="w3-threequarter")
+					div(class="w3-left w3-padding-small")
+						select(class="theme-input w3-left" id="eventYearSelect")
+							+yearsSelect(years, null)
+					div(class="w3-rest w3-padding-small")
+						input#setEvent(class="theme-input w3-rest w3-no-border theme-inline-padding w3-block" placeholder="Search for events from this year" type="text", name="event_key")
 				div(class="w3-padding-small w3-rest")
 					button#btnSubmit(class="theme-submit w3-btn w3-block" type="submit") Set current event key
 			hr 
@@ -96,6 +101,13 @@ block content
 				const value = ev.target.value;
 				w3.filterHTML('#events', '.item', value);
 			});
+			
+			// Refresh the table with the selected year
+			$('#eventYearSelect').on('change', (ev) => {
+				const value = ev.target.value;
+				location.hash = 'setCurrentEvent';
+				location.search = 'eventListYear=' + ev.target.value;
+			})
 		});
 		
 		function fillSetEvent(value){

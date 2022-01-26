@@ -1,0 +1,8 @@
+//- List of years (must be inside a select element)
+mixin yearsSelect(years, selectedYear)
+	- if (selectedYear == null) selectedYear = (new Date()).getFullYear();
+	each year in years
+		- if (year == selectedYear)
+			option(value=year selected)= year
+		- else
+			option(value=year)= year
