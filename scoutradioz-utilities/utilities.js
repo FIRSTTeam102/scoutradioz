@@ -70,10 +70,10 @@ function dbLock() {
 			resolve();
 		}
 		else {
-			logger.trace('Awaiting DB lock...')
+			logger.trace('Awaiting DB lock...');
 			dbLockPromiseResolves.push(resolve);
 		}
-	})
+	});
 }
 
 /**
@@ -310,6 +310,9 @@ utilities.whenReady = function(cb) {
 
 /**
  * Express middleware function to refresh the active tier of utilities.js.
+ * Usage:
+ * 	const app = express();
+ * 	app.use(utilities.refreshTier);
  */
 utilities.refreshTier = function(req, res, next) {
 //	logger.addContext('funcName', 'refreshTier');
