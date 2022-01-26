@@ -45,9 +45,11 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	logger.debug('url=' + url);
 	
 	//Submit request to TBA
-	var eventData = await utilities.requestTheBlueAlliance(url);
-		
-	var events = JSON.parse(eventData);
+	var events = await utilities.requestTheBlueAlliance(url);
+	
+	if (typeof events === 'string')
+		events = JSON.parse(events);
+	
 	//if request was invalid, redirect to admin page with alert message
 	if(events.length == undefined || events.length == 0) {
 		return res.send('ERROR events not loaded');
@@ -77,13 +79,16 @@ router.get('/resyncevents', wrap(async (req, res) => {
 					}
 		
 					if (readSuccess) {
-						thisTeamKeys = JSON.parse(thisTeamKeysData);
+						thisTeamKeys = thisTeamKeysData;
+						if (typeof thisTeamKeys === 'string') thisTeamKeys = JSON.parse(thisTeamKeys);
 						retries = -1;
 					}
 				}
 				thisEvent['team_keys'] = thisTeamKeys;
 		
 				enrichedEvents.push(thisEvent);
+				
+				await promiseTimeout(200); // Wait a short bit
 			}
 		}
 	}
@@ -272,5 +277,12 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	//2020-03-27 (security hole) removed res.render(admin) and switched with res.send
 	res.send('SUCCESS');
 }));
+
+
+function promiseTimeout(time) {
+	return new Promise((resolve, reject) => {
+		setTimeout(resolve, time);
+	});
+}
 
 module.exports = router;
