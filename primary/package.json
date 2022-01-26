@@ -20,7 +20,7 @@
     "win-sync-test": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/test --acl public-read",
     "win-sync-qa": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/qa --acl public-read",
     "win-sync-prod": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/prod --acl public-read",
-    "win-sync-all": "npm run sync-test && npm run sync-qa && npm run sync-prod",
+    "win-sync-all": "npm run win-sync-test && npm run win-sync-qa && npm run win-sync-prod",
     "win-upload-test": "node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
     "win-upload-qa": "node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
     "win-promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
