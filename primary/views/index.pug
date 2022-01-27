@@ -23,7 +23,7 @@ block content
 							- var orglabel = org.nickname;
 							if (org.team_number)
 								- orglabel = org.team_number + ' - ' + org.nickname;
-							div(class="theme-hover-light-gray theme-submit w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=orglabel
+							div(class="theme-link w3-btn w3-block" onclick=`submitOrg("${org.org_key}")`)=orglabel
 							if (org.event_label)
 								- var eventLabel = '@ ' + org.event_label;
 								p(class="theme-text-secondary")=eventLabel

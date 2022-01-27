@@ -48,3 +48,7 @@
 	background-position: 0 0;
 	background-repeat: repeat;
 }
+
+.theme-submit, .theme-input {
+	color: var(--white)!important;
+}
