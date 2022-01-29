@@ -94,8 +94,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 	var rankingUrl = 'event/' + eventKey + '/rankings';
 	logger.debug(thisFuncName + 'rankingUrl=' + rankingUrl);
 
-	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
-	var rankinfo = rankData;
+	var rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankArr = [];
 	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
@@ -127,8 +126,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 	// Reload the match data from TBA
 	var url = 'match/' + matchId;
 	logger.debug(thisFuncName + 'url=' + url);
-	var matchData = await utilities.requestTheBlueAlliance(url);
-	var match = matchData;
+	var match = await utilities.requestTheBlueAlliance(url);
 	// stick it in an array so the insert will work later
 	var array = [];
 	array.push(match);
@@ -175,8 +173,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 	var rankingUrl = 'event/' + eventKey + '/rankings';
 	logger.debug(thisFuncName + 'rankingUrl=' + rankingUrl);
 
-	var rankingData = await utilities.requestTheBlueAlliance(rankingUrl);
-	var rankinfo = rankingData;
+	var rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankArr = [];
 	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
@@ -200,8 +197,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 	var url = 'event/' + eventKey + '/matches';
 	logger.debug(thisFuncName + 'url=' + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
-	var array = matchData;
-	var arrayLength = array.length;
+	var arrayLength = matchData.length;
 	if (arrayLength == null) {
 		logger.debug(thisFuncName + 'Whoops, there was an error!');
 		logger.debug(thisFuncName + 'data=' + matchData);
@@ -214,7 +210,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 		// First delete existing match data for the given event
 		await utilities.remove('matches', {'event_key': eventKey});
 		// Now, insert the new data
-		await utilities.insert('matches', array);
+		await utilities.insert('matches', matchData);
 		// Then read it back in order
 		//var matches = await utilities.find("matches", {"event_key": eventKey},{sort: {"time": 1}});
 			

@@ -47,9 +47,6 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	//Submit request to TBA
 	var events = await utilities.requestTheBlueAlliance(url);
 	
-	if (typeof events === 'string')
-		events = JSON.parse(events);
-	
 	//if request was invalid, redirect to admin page with alert message
 	if(events.length == undefined || events.length == 0) {
 		return res.send('ERROR events not loaded');
@@ -124,9 +121,8 @@ router.get('/resyncteams', wrap(async (req, res) => {
 		logger.debug('url=' + url);
 		
 		//Submit request to TBA
-		var teamData = await utilities.requestTheBlueAlliance(url);
-			
-		var teams = JSON.parse(teamData);
+		var teams = await utilities.requestTheBlueAlliance(url);
+		
 		//if request was invalid, redirect to admin page with alert message
 		if(teams.length == undefined || teams.length == 0) {
 			// presumably we've reached the end of the data

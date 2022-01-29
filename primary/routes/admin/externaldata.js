@@ -201,8 +201,7 @@ router.post('/matches', wrap(async (req, res) => {
 	logger.debug('url=' + url);
 	
 	//Request from TBA
-	var eventData = await utilities.requestTheBlueAlliance(url);
-	var matches = JSON.parse(eventData);
+	var matches = await utilities.requestTheBlueAlliance(url);
 	logger.debug(`matches= ${JSON.stringify(matches)}`);
 
 	//if request was invalid, redirect to admin page with alert message
@@ -255,8 +254,7 @@ router.get('/teams', wrap(async (req, res) => {
 		var url = `event/${eventKey}/teams/simple`;
 		
 		//perform api call
-		var teamsData = await utilities.requestTheBlueAlliance(url);
-		teams = JSON.parse(teamsData);
+		teams = await utilities.requestTheBlueAlliance(url);
 		
 		//sort list of teams by number
 		teams.sort(function(a, b) {
