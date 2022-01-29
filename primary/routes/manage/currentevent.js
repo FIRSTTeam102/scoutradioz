@@ -41,8 +41,7 @@ router.get('/getcurrentteams', wrap(async (req, res) => {
 
 	// Refresh the teams list from TBA
 	var eventTeamsUrl = `event/${event_key}/teams/keys`;
-	var thisTeamKeysData = await utilities.requestTheBlueAlliance(eventTeamsUrl);
-	var thisTeamKeys = JSON.parse(thisTeamKeysData);
+	var thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
 	await utilities.update( 'events', {'key': event_key}, {$set: {'team_keys': thisTeamKeys}} );
 
 	res.redirect('/manage?alert=Updated team keys for the current event successfully.');
@@ -96,7 +95,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 	logger.debug(thisFuncName + 'rankingUrl=' + rankingUrl);
 
 	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
-	var rankinfo = JSON.parse(rankData);
+	var rankinfo = rankData;
 	var rankArr = [];
 	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
@@ -129,7 +128,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 	var url = 'match/' + matchId;
 	logger.debug(thisFuncName + 'url=' + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
-	var match = JSON.parse(matchData);
+	var match = matchData;
 	// stick it in an array so the insert will work later
 	var array = [];
 	array.push(match);
@@ -177,7 +176,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 	logger.debug(thisFuncName + 'rankingUrl=' + rankingUrl);
 
 	var rankingData = await utilities.requestTheBlueAlliance(rankingUrl);
-	var rankinfo = JSON.parse(rankingData);
+	var rankinfo = rankingData;
 	var rankArr = [];
 	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
@@ -201,7 +200,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 	var url = 'event/' + eventKey + '/matches';
 	logger.debug(thisFuncName + 'url=' + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
-	var array = JSON.parse(matchData);
+	var array = matchData;
 	var arrayLength = array.length;
 	if (arrayLength == null) {
 		logger.debug(thisFuncName + 'Whoops, there was an error!');
