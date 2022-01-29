@@ -3,4 +3,8 @@
 **/public/js/**
 **/public/lib/**
 **/public/uploads/**
+**/lodash/_*.js
+*.map
 *.zip
+*.ts
+*.md
