@@ -1,10 +1,14 @@
 'use strict';
 //const file_system = require('fs');
 const path = require('path');
-const archiver = require('archiver');
+const fs = require('fs');
 const aws = require('aws-sdk');
+const retry = require('oh-no-i-insist');
+const glob = require('glob');
+const minimatch = require('minimatch');
+const archiver = require('archiver');
 const concat = require('concat-stream');
-const retry = require("oh-no-i-insist");
+
 const lambda = new aws.Lambda({
 	region: 'us-east-1'
 });
@@ -206,7 +210,7 @@ async function waitUntilNotPending(lambda, functionName, timeout, retries) {
 			return lambda.getFunctionConfiguration({FunctionName: functionName}).promise()
 				.then(result => {					
 					if (result.state === 'Failed') {
-						throw `Lambda resource update failed`;
+						throw 'Lambda resource update failed';
 					}
 					if (result.state === 'Pending') {
 						throw 'Pending';
@@ -218,7 +222,7 @@ async function waitUntilNotPending(lambda, functionName, timeout, retries) {
 		failure => failure === 'Pending',
 		() => console.log('Lambda function is in Pending state, waiting...'),
 	);
-};
+}
 
 function makeZip(folder, cb) {
 	//if (file_system.existsSync(zipPath)) {
@@ -242,6 +246,7 @@ function makeZip(folder, cb) {
 			console.log('Size: ' + sizeBytes / 1000 + ' KB');
 		}
 		
+		// fs.writeFileSync('output.zip', data); // **for debugging**
 		cb(null, data);
 	});
 	
@@ -259,6 +264,71 @@ function makeZip(folder, cb) {
 	console.log(`Directory: "${folderPath}"`);
 	console.log('Zipping directory...');
 	archive.pipe(output);
-	archive.directory(folderPath + '/', false);
-	archive.finalize();
+	
+	
+	getFileListWithIgnore(folderPath)
+		.catch(err => {
+			console.error(err);
+			process.exit(1);
+		})
+		.then(paths => {
+			for (let file of paths) {
+				archive.file(file, {name: path.relative(folderPath, file)});
+			}
+		
+			// finalize the archive (ie we are done appending files but streams have to finish yet)
+			// 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
+			archive.finalize();
+		});
+}
+
+// Get a complete file list of the archive including the contents of a .archiveignore file.
+// Minimatch is a bit finnicky, so if you have slashes in the glob, make sure to preface it with **/
+// 	for example: **/public/css/**
+function getFileListWithIgnore(pathToArchive) {
+	return new Promise((resolve, reject) => {
+		var ignoreFile = path.join(pathToArchive, '.archiveignore');
+		var ignoreString;
+		if (fs.existsSync(ignoreFile)) {
+			ignoreString = fs.readFileSync(ignoreFile, 'utf-8');
+			ignoreString = ignoreString.replace(/\r/g, ''); // remove carriage return
+		}
+		var ignoreGlobs = (ignoreString) ? ignoreString.split('\n') : ['*.zip'];
+		ignoreGlobs.push('.archiveignore');
+		
+		console.log(`Ignoring the following glob(s): ${(ignoreGlobs.join(', '))}`);
+		
+		var filteredMatches = [];
+		
+		new glob.Glob(path.join(pathToArchive, '**'), 
+			{dot: true}, 
+			(err, matches) => {
+				if (err) return reject(err); 
+				
+				var minimatchOpts = {
+					matchBase: true,
+				};
+				
+				console.log(ignoreGlobs);
+				
+				for (let match of matches) {
+					let doAdd = true;
+					// Check if it matches any of the ignore patterns
+					for (let glob of ignoreGlobs) {
+						if (minimatch(match, glob, minimatchOpts)) {
+							doAdd = false;
+							// console.log(`Skipping ${match} because of rule ${glob}`);
+						}
+					}
+					if (doAdd) {
+						let relativePath = path.relative(pathToArchive, match);
+						if (relativePath) filteredMatches.push(match); // to remove the "base folder" match
+					}
+				}
+				console.log(`${String(matches.length - filteredMatches.length - 1)} files skipped.\n`);
+				
+				resolve(filteredMatches);
+			}
+		);
+	});
 }

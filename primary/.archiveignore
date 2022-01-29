@@ -1,0 +1,6 @@
+**/public/css/**
+**/public/images/**
+**/public/js/**
+**/public/lib/**
+**/public/uploads/**
+*.zip
