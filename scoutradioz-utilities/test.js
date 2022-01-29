@@ -54,14 +54,14 @@ async function testMultipleDbs(){
 	process.env.TIER = 'dev';
 	utilities.refreshTier();
 	
-	var teams = await utilities.find('teams', {team_number: 102});
+	teams = await utilities.find('teams', {team_number: 102});
 	logger.info(`dev: teamFind=${JSON.stringify(teams)}`);
 	
 	//app second time
 	process.env.TIER = 'app';
 	utilities.refreshTier();
 	
-	var teams = await utilities.find('teams', {team_number: 102});
+	teams = await utilities.find('teams', {team_number: 102});
 	logger.info(`app: teamFind=${JSON.stringify(teams)}`);
 	
 	//test insert
@@ -76,7 +76,7 @@ async function testMultipleDbs(){
 	
 	process.env.TIER = 'app';
 	utilities.refreshTier();
-	var obj = await utilities.findOne('test', {'foo': 'bar'});
+	obj = await utilities.findOne('test', {'foo': 'bar'});
 	logger.info(`In app: ${obj}`);
 	
 	process.env.TIER = 'dev';
@@ -85,6 +85,7 @@ async function testMultipleDbs(){
 	var delResult = await utilities.remove('test', {'foo': 'bar'});
 	logger.info(`delResult: ${delResult}`);
 	
+	logger.info('Done');
 }
 
 testMultipleDbs();

@@ -1,6 +1,10 @@
+/* eslint-disable guard-for-in */
+/* eslint-disable no-async-promise-executor */
 /* eslint-disable global-require */
 'use strict';
-const monk = require('@firstteam102/monk-fork');
+const mongodb = require('mongodb');
+const ObjectId = mongodb.ObjectId;
+const MongoClient = mongodb.MongoClient;
 const crypto = require('crypto');
 const NodeCache = require('node-cache');
 var logger;
@@ -10,6 +14,7 @@ try {
 catch(err) {
 	logger = require('@log4js-node/log4js-api').getLogger('utilities');
 }
+logger.level = process.env.LOG_LEVEL || 'info';
 
 var utilities = module.exports =  {
 	activeTier: null,
@@ -27,7 +32,7 @@ var utilities = module.exports =  {
 };
 
 // cached DB reference
-var dbRefs = {}, urls = {};
+var dbRefs = {}, urls = {}, clients = {};
 var lastRequestTime = {};
 var refMaxAge = 60000;
 var debugTimes = {};
@@ -76,6 +81,40 @@ function dbLock() {
 	});
 }
 
+function open(url) {
+	return new Promise((resolve, reject) => {
+		MongoClient.connect(url, (err, client) => {
+			if (err) return reject(err);
+			var db = client.db();
+			resolve([client, db]);
+		});
+	});
+}
+
+/**
+ * Fix filter queries by replacing String IDs with the proper ObjectID
+ * @param {object} query Query with or without _id
+ * @returns {object} Query with _id replaced with an ObjectId
+ */
+function castID(query) {
+	if (typeof query !== 'object') return query;
+	
+	if (typeof query._id === 'string') {
+		query._id = ObjectId(query._id);
+	}
+	return query;
+}
+
+/**
+ * Create a MongoDB ObjectID, either from a string or a random new one
+ * @param {string} [str] ID-like string
+ * @returns {ObjectId} MongoDB Object ID
+ */
+utilities.id = function (str) {
+	if (str == null) return ObjectId();
+	return typeof str === 'string' ? ObjectId.createFromHexString(str) : str;
+};
+
 /**
  * (Required) Configure utilities with database config file.
  * @param {object} databaseConfig JSON object for database config (use require('databases.json') for security)
@@ -110,7 +149,7 @@ utilities.config = function(databaseConfig, options){
 
 /**
  * Function that first caches, then returns the cached database for the server process.
- * @returns {monk.IMonkManager} Monk database manager
+ * @returns {mongo.Db} Database ref
  */
 utilities.getDB = function(){
 	
@@ -121,26 +160,32 @@ utilities.getDB = function(){
 		
 		var tier = this.activeTier;
 		var dbRef = dbRefs[tier];
+		var client = clients[tier];
 		var url = urls[tier];
 		// logger.trace(`(getDB) tier=${tier} dbRef=${dbRef} url=${url}`);
 		
 		//2020-03-23 JL: one db ref for every tier
-		if (!dbRef || !url) {
+		if (!dbRef || !client || !url) {
 			enterDbLock();
 			
 			logger.info(`(getDB) Creating db ref for ${tier}`);
 			url = await this.getDBurl();
-			dbRef = monk(url);
+			urls[tier] = url;
+			
 			logger.trace(`(getDB) Got url, url=${url}, tier=${tier} this.activeTier=${this.activeTier}`);
 			
-			dbRef.then(result => {
-				logger.info('(getDB) Connected!');
-				leaveDbLock(); // unlock
-			}).catch(err => {
-				logger.error(JSON.stringify(err));
-			});
-			urls[tier] = url;
-			dbRefs[tier] = dbRef;
+			open(url)
+				.then(([client, db]) => {
+					logger.info('(getDB) Connected!');
+					
+					// Resolve client & db, then unlock db
+					clients[tier] = client;
+					dbRefs[tier] = db;
+					leaveDbLock(); 
+				})
+				.catch(err => {
+					logger.error(JSON.stringify(err));
+				});
 		}
 		
 		//if ref has aged past its prime, then close and reopen it
@@ -149,52 +194,45 @@ utilities.getDB = function(){
 			enterDbLock(); // Lock the database until a new connection has been achieved
 			
 			logger.info('(getDB) Ref has aged too much; Reconnecting');
-			try {
-				dbRef.close();
-				dbRef = monk(url);
-			}
-			catch (err) {
-				logger.error(err);
-				dbRef = monk(url);
-			}
 			
 			// lastRequestTime must be refreshed immediately (not after connection) 
 			//	to avoid multiple reconnect attempts
 			lastRequestTime[tier] = Date.now();
 			
-			dbRef.then(result => {
-				db = dbRef;
-				dbRefs[tier] = dbRef;
-				logger.info('(getDB) Connected!');
-				
-				leaveDbLock(); // Unlock the database
-				resolve({db});
-			}).catch(err => {
-				logger.error(JSON.stringify(err));
-				// Resolve with old db (even if it's closed) (this shouldn't occur)
-				logger.error('(getDB) Error connecting');
-				
-				reject(err);
-				leaveDbLock();
-			});
+			client.close();
+			open(url)
+				.then(([client, db]) => {
+					clients[tier] = client;
+					dbRefs[tier] = db;
+					logger.info('(getDB) Connected!');
+					
+					leaveDbLock(); // Unlock the database
+					resolve(db);
+				})
+				.catch(err => {
+					logger.error(JSON.stringify(err));
+					// Resolve with old db (even if it's closed) (this shouldn't occur)
+					logger.error('(getDB) Error connecting');
+					
+					reject(err);
+					leaveDbLock();
+				});
 		}
 		else {
 			
 			await dbLock();
 			
 			// Reload the db ref in case it has been reconnected
-			var dbRef = dbRefs[tier];
-			var url = urls[tier];
+			db = dbRefs[tier];
 		
 			//renew lastRequestTime
 			lastRequestTime[tier] = Date.now();
-			db = dbRef;
 			
 			logger.trace('(getDB) returning db');
 			
 			//Must use object destructuring becasue for SOME reason,
 			// returning monk from an async function hangs the process
-			resolve({db});
+			resolve(db);
 		}
 	});
 };
@@ -235,55 +273,6 @@ utilities.getDBurl = function(){
 			logger.removeContext('funcName');
 		});
 	});
-	/*
-	var url;
-	//Check if db has been configured
-	if(this.dbConfig) {
-		
-		//Grab process tier 
-		var thisProcessTier = process.env.TIER;
-				
-		//If a process tier is specified, then attempt to read db URL from that tier.
-		if(thisProcessTier){
-			
-			var thisDBinfo = this.dbConfig[thisProcessTier];
-			
-			//If there is an object inside databases for process tier, proceed with connecting to db.
-			if(thisDBinfo){
-				//Connect to db with specified url.
-				logger.info(`Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
-				url = thisDBinfo.url;
-			}
-			//If there is no object in databases for process tier, throw an error.
-			else{
-				throw new Error(`No database specified for process tier ${thisProcessTier} in databases`);
-			}
-		}
-		//If there is no process tier, then connect to specified default db
-		else{
-			
-			var thisDBinfo = this.dbConfig["default"];
-			
-			//If default db exists, proceed with connecting to db.
-			if(thisDBinfo){
-				//Connect to db with specified url.
-				logger.info(`Connecting to tier: ${thisProcessTier}: "${thisDBinfo.url.substring(0, 23)}..."`);
-				url = thisDBinfo.url;
-			}
-			//If there is no object in databases for default, throw an error.
-			else{
-				throw new Error(`No default database URL specified in databases`);
-			}
-		}
-	}
-	//If there is no databases file, then connect to localhost
-	else {
-		logger.warn("utilities: No databases file found; Defaulting to localhost:27017/app");
-		url = "mongodb://localhost:27017/app";
-	}
-	
-	return url;
-	*/
 };
 
 /**
@@ -315,8 +304,8 @@ utilities.whenReady = function(cb) {
  * 	app.use(utilities.refreshTier);
  */
 utilities.refreshTier = function(req, res, next) {
-//	logger.addContext('funcName', 'refreshTier');
-//	logger.trace('ENTER')
+	// logger.addContext('funcName', 'refreshTier');
+	// logger.trace('ENTER')
 	
 	//set this.ready to true
 	utilities.ready = true;
@@ -360,6 +349,7 @@ utilities.find = async function(collection, query, options, cacheOptions){
 	if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
 	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
+	query = castID(query);
 	
 	logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
 	var timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
@@ -389,9 +379,8 @@ utilities.find = async function(collection, query, options, cacheOptions){
 			logger.trace(`Caching request (find:${collection})`);
 			
 			//Request db
-			let {db} = await this.getDB();
-			logger.warn('====after await thisgetdb===');
-			cachedRequest = await db.get(collection).find(query, options);
+			let db = await this.getDB();
+			cachedRequest = await db.collection(collection).find(query, options).toArray();
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
@@ -405,9 +394,9 @@ utilities.find = async function(collection, query, options, cacheOptions){
 	else {
 		
 		//Must use object destructuring because returning monk from an async function hangs the process
-		let {db} = await this.getDB();
+		let db = await this.getDB();
 		//Request db
-		var data = await db.get(collection).find(query, options);
+		var data = await db.collection(collection).find(query, options).toArray();
 		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
@@ -445,6 +434,7 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 	if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
 	if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 	if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
+	query = castID(query);
 	
 	logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
 	var timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
@@ -474,8 +464,8 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 			logger.trace(`Caching request (findOne:${collection})`);
 			
 			//Request db
-			let {db} = await this.getDB();
-			cachedRequest = await db.get(collection).findOne(query, options);
+			let db = await this.getDB();
+			cachedRequest = await db.collection(collection).findOne(query, options);
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
@@ -487,10 +477,9 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 	}
 	//If cache is not enabled
 	else {
-		
 		//Request db
-		let {db} = await this.getDB();
-		data = await db.get(collection).findOne(query, options);
+		let db = await this.getDB();
+		data = await db.collection(collection).findOne(query, options);
 		logger.trace(`Not cached (findOne:${collection})`);
 		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
@@ -523,6 +512,7 @@ utilities.update = async function(collection, query, update, options){
 	//Query options filter
 	if (!options) options = {};
 	if (typeof options != 'object') throw new TypeError('Utilities.update: Options must be of type object');
+	query = castID(query);
 	
 	logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
 	var timeLogName = `update: ${collection}`;
@@ -538,8 +528,8 @@ utilities.update = async function(collection, query, update, options){
 	
 	//Remove in collection with query
 	var writeResult = new WriteResult();
-	let {db} = await this.getDB();
-	writeResult = await db.get(collection).update(query, update, options);
+	let db = await this.getDB();
+	writeResult = await db.collection(collection).update(query, update, options);
 	
 	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	consoleTimeEnd(timeLogName);
@@ -601,8 +591,8 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 			logger.trace(`Caching request (aggregate:${collection})`);
 			
 			//Request db
-			let {db} = await this.getDB();
-			cachedRequest = await db.get(collection).aggregate(pipeline);
+			let db = await this.getDB();
+			cachedRequest = await db.collection(collection).aggregate(pipeline);
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
@@ -616,8 +606,8 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 	else {
 	
 		//Aggregate
-		let {db} = await this.getDB();
-		data = await db.get(collection).aggregate(pipeline);
+		let db = await this.getDB();
+		data = await db.collection(collection).aggregate(pipeline);
 		
 		logger.trace(`Not cached (aggregate:${collection})`);
 		logger.trace(`result: ${JSON.stringify(data)}`);
@@ -675,24 +665,19 @@ utilities.distinct = async function(collection, field, query){
 	
 	//If the collection is not specified and is not a String, throw an error.
 	//This would obly be caused by a programming error.
-	if(typeof(collection) != 'string'){
-		throw new TypeError('Utilities.distinct: Collection must be specified.');
-	}
-	if(typeof(field) != 'string'){
-		throw new TypeError('Utilities.distinct: Field string must be specified.');
-	}
+	if(typeof(collection) != 'string') throw new TypeError('Utilities.distinct: Collection must be specified.');
+	if(typeof(field) != 'string') throw new TypeError('Utilities.distinct: Field string must be specified.');
 	//If query filter are not set, create an empty object for the DB call.
 	if(!query) query = {};
 	//If query exists and is not an object, throw an error. 
-	if(typeof(query) != 'object'){
-		throw new TypeError('Utilities.distinct: query must be of type object');
-	}
+	if(typeof(query) != 'object') throw new TypeError('Utilities.distinct: query must be of type object'); 
+	query = castID(query);
 	
 	logger.trace(`${collection}, ${JSON.stringify(query)}`);
 	
 	//Find in collection with query and options
-	let {db} = await this.getDB();
-	var data = await db.get(collection).distinct(field, query);
+	let db = await this.getDB();
+	var data = await db.collection(collection).distinct(field, query);
 	
 	logger.trace(`result: ${JSON.stringify(data)}`);
 	
@@ -733,8 +718,8 @@ utilities.bulkWrite = async function(collection, operations, options){
 
 	//Update in collection with options
 	var writeResult = new WriteResult();
-	let {db} = await this.getDB();
-	writeResult = await db.get(collection).bulkWrite(operations, options);
+	let db = await this.getDB();
+	writeResult = await db.collection(collection).bulkWrite(operations, options);
 	
 	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
@@ -759,13 +744,14 @@ utilities.remove = async function(collection, query){
 	if(!query) query = {};
 	//If query exists and is not an object, throw an error. 
 	if(typeof query != 'object') throw new TypeError('utilities.remove: query must be of type object');
+	query = castID(query);
 	
 	logger.trace(`${collection}, param: ${JSON.stringify(query)}`);
 	
 	//Remove in collection with query
 	var writeResult = new WriteResult();
-	var {db} = await this.getDB();
-	writeResult = await db.get(collection).remove(query);
+	var db = await this.getDB();
+	writeResult = await db.collection(collection).deleteMany(query);
 	
 	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
@@ -793,8 +779,15 @@ utilities.insert = async function(collection, elements){
 	
 	//Insert in collection
 	var writeResult = new WriteResult();
-	let {db} = await this.getDB();
-	writeResult = await db.get(collection).insert(elements);
+	let db = await this.getDB();
+	// if array, insertMany
+	if (elements instanceof Array) {
+		writeResult = await db.collection(collection).insertMany(elements);
+	}
+	// otherwise, insertOne
+	else {
+		writeResult = await db.collection(collection).insertMany(elements);
+	}
 	
 	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
@@ -831,7 +824,7 @@ utilities.requestTheBlueAlliance = async function(url){
 			//If newline characters are not deleted, then CloudWatch logs get spammed
 			let str = tbaData.toString().replace(/\n/g, '');
 			
-			logger.debug(`TBA response: ${str.substring(0, 1000)}...`);
+			logger.debug(`TBA response: ${str.substring(0, 200)}...`);
 			logger.trace(`Full TBA response: ${str}`);
 			
 			logger.removeContext('funcName');

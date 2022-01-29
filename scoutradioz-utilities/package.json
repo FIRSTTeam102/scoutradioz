@@ -1,6 +1,6 @@
 {
   "name": "@firstteam102/scoutradioz-utilities",
-  "version": "1.0.51",
+  "version": "1.1.1",
   "description": "Database utilities package for Scoutradioz",
   "main": "utilities.js",
   "scripts": {
@@ -20,11 +20,12 @@
     "log4js": "^6.1.2"
   },
   "peerDependencies": {
-    "@firstteam102/monk-fork": "^0.0.3-test1"
+	  "mongodb": "~4.1.0"
   },
+  "files": ["utilities.js"],
   "dependencies": {
     "@log4js-node/log4js-api": "^1.0.2",
-    "node-rest-client": "^3.1.0",
+    "@firstteam102/node-rest-client": "^3.1.1",
     "node-cache": "~5.1.2"
   }
 }
