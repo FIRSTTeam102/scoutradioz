@@ -10,17 +10,19 @@ block content
 	h6
 		i Make sure to click or tap "Update" when you modify each member.
 	div(class="w3-container w3-section")
-		div(class="w3-row")
-			div(class="w3-col m3 w3-padding-small") Actions
-			div(class="w3-col m2 w3-padding-small") Name
-			div(class="w3-col m2 w3-padding-small") Subteam
-			div(class="w3-col m2 w3-padding-small") Class
-			div(class="w3-col m2 w3-padding-small") Role
-			div(class="w3-col m1 w3-padding-small") Years on Team
+		div(class="w3-row w3-hide-small" id="title-row")
+			div(class="w3-col m3 w3-padding-small" id="actions") Actions
+			div(class="w3-rest")
+				div(class="w3-col m4 w3-padding-small") Name
+				div(class="w3-col m3 w3-padding-small") Subteam
+				div(class="w3-col m2 w3-padding-small") Class
+				div(class="w3-col m2 w3-padding-small") Role
+				div(class="w3-col m1 w3-padding-small") Years on Team
 		each members, role in membersByRole
 			div(class="w3-row")
-				br 
 				h4=role
+			if members.length == 0
+				i No members of this type.
 			each member in members
 				div(class="w3-row")
 					div(class="w3-col s12 m0")
@@ -28,49 +30,52 @@ block content
 					form(id=`deleteMember${member._id}` action="/manage/members/deletemember" method="post")
 						input(type="hidden" name="memberId" value=member._id)
 					//delete button
-					div(class="w3-col s5 m1 w3-padding-small")
+					div(class="w3-col s5 mauto w3-padding-small" data-delete-button)
 						//-2019-09-26 JL: Added str.replace to member.name in case there are apostrophes in the name
-						button(class="w3-btn theme-red w3-block" style="padding: 8px 0px" onclick=`confirmDelete("${member.name}", "${member._id}")`) Delete
+						button(class="w3-btn theme-red w3-block" onclick=`confirmDelete("${member.name}", "${member._id}")`)
+							span(class="sprite sp-24 sp-inline no-margin sp-delete")
 					//-updateMember submits to javascript func.
 					form(id=`updateMember${member._id}` action=`javascript:updateMember('${member._id}')` method="post")
 						input(type="hidden" name="memberId" value=member._id)
 						//update button
-						div(class="w3-col s7 m2 w3-padding-small")
+						div(class="w3-col s7 mauto w3-padding-small" data-update-button)
 							button(class="w3-btn theme-submit w3-block" type="submit") Update
-						//name
-						div(class="w3-col m2 w3-padding-small")
-							input(type="text" value=member.name name="name" class="w3-input theme-input w3-no-border theme-inline-padding")
-						//subteam
-						div(class="w3-col s6 m2 w3-padding-small")
-							select(class="w3-select theme-input w3-no-border" name="subteam_key")
-								//- 2019-9-26 JL: Now cycles through configured member "subteam" names, and gives options based on the configuration.
-								- subteams = config.subteams;
-								each option in subteams
-									- if (member.org_info.subteam_key == option.subteam_key)
-										option(value=option.subteam_key selected)= option.label
-									- else
-										option(value=option.subteam_key)= option.label
-						//class
-						div(class="w3-col s6 m2 w3-padding-small")
-							select(class="w3-select theme-input w3-no-border" name="class_key")
-								//- 2019-9-26 JL: Now cycles through configured member "class" names, and gives options based on the configured class names.
-								- classes = config.classes;
-								each option in classes
-									- if (member.org_info.class_key == option.class_key)
-										option(value=option.class_key selected)= option.label
-									- else
-										option(value=option.class_key)= option.label
-						//role
-						div(class="w3-col s6 m2 w3-padding-small")
-							select(name="role_key" class="w3-select theme-input w3-no-border")
-								each role in roles
-									- if (member.role_key == role.role_key)
-										option(value=role.role_key selected)= role.label
-									- else
-										option(value=role.role_key)= role.label
-						//years
-						div(class="w3-col s6 m1 w3-padding-small")
-							input(type="number" value=member.org_info.years name="years" placeholder="Yrs. on team" class="w3-input theme-input w3-no-border theme-inline-padding")
+						div(class="w3-mobile w3-rest")
+							//name
+							div(class="w3-col m4 w3-padding-small")
+								input(type="text" value=member.name name="name" class="w3-input theme-input w3-no-border theme-inline-padding")
+							//subteam
+							div(class="w3-col s6 m3 w3-padding-small")
+								select(class="w3-select theme-input w3-no-border" name="subteam_key")
+									//- 2019-9-26 JL: Now cycles through configured member "subteam" names, and gives options based on the configuration.
+									- subteams = config.subteams;
+									each option in subteams
+										- if (member.org_info.subteam_key == option.subteam_key)
+											option(value=option.subteam_key selected)= option.label
+										- else
+											option(value=option.subteam_key)= option.label
+							//class
+							div(class="w3-col s6 m2 w3-padding-small")
+								select(class="w3-select theme-input w3-no-border" name="class_key")
+									//- 2019-9-26 JL: Now cycles through configured member "class" names, and gives options based on the configured class names.
+									- classes = config.classes;
+									each option in classes
+										- if (member.org_info.class_key == option.class_key)
+											option(value=option.class_key selected)= option.label
+										- else
+											option(value=option.class_key)= option.label
+							//role
+							div(class="w3-col s6 m2 w3-padding-small")
+								select(name="role_key" class="w3-select theme-input w3-no-border")
+									each role in roles
+										- if (member.role_key == role.role_key)
+											option(value=role.role_key selected)= role.label
+										- else
+											option(value=role.role_key)= role.label
+							//years
+							div(class="w3-col s6 m1 w3-padding-small")
+								input(type="number" value=member.org_info.years name="years" placeholder="Yrs. on team" class="w3-input theme-input w3-no-border theme-inline-padding")
+			br 
 		hr
 		//new member
 		div(class="w3-row")
@@ -137,3 +142,13 @@ block content
 				}, 1000);
 			})
 		}
+		
+		onResize(() => {
+			let btnDelete = $('[data-delete-button]');
+			let btnUpdate = $('[data-update-button]');
+			let width = btnDelete.outerWidth() + btnUpdate.outerWidth();
+			console.log(width);
+			$('#actions').css({
+				width: width
+			});
+		})

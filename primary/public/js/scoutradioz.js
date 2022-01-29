@@ -14,45 +14,92 @@ $(() => {
 	}
 });
 
-var debugLogger = document.createElement('div');
-$(debugLogger).css({
-	'background-color': 'white',
-	'color': 'black',
-	'z-index': '99',
-	'position': 'absolute',
-	'top': '0',
-	'width': '25%',
-	'padding': '8px 16px',
-});
-
-function debugToHTML(message) {
+(() => {
 	
-	var text;
 	
-	switch (typeof message) {
-		case 'string':
-		case 'number':
-			text = message;
-			break;
-		case 'object':
-		case 'array':
-			text = JSON.stringify(message);
-			break;
-		default:
-			text = message;
-	}
+	const resizeCallbacks = [];
 	
-	//if logger is not already added to document.body, add it now
-	if ( !$(debugLogger).parent()[0] ) {
+	/**
+	 * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
+	 * @param {function} cb Callback to run on a resize event.
+	 */
+	window.onResize = function(cb) {
+		resizeCallbacks.push(cb);
+		cb(); // Run the callback once
+	};
+	
+	let ticking = false;
+	$(window).on('resize', () => {
+		if (resizeCallbacks.length > 0) {
+			if (!ticking) {
+				ticking = true;
+				setTimeout(() => {
+					requestAnimationFrame(() => {
+						for (let cb of resizeCallbacks) {
+							cb();
+						}
+					});
+				}, 50);
+			}
+		}
+	});
+	
+	/**
+	 * Assert a condition & display an error message to the user.
+	 * @param {boolean} condition Condition
+	 * @param {string} message Message to display
+	 */
+	window.assert = function (condition, message) {
+		if (!condition) {
+			var x = new Error();
+			NotificationCard.error(
+				`ERROR: ${message}\nPlease report as an issue on our GitHub page.\n\nCall stack: ${x.stack}`, 
+				{exitable: true, ttl: 0}
+			);
+		}
+	};
+	
+	var debugLogger = document.createElement('div');
+	$(debugLogger).css({
+		'background-color': 'white',
+		'color': 'black',
+		'z-index': '99',
+		'position': 'absolute',
+		'top': '0',
+		'width': '25%',
+		'padding': '8px 16px',
+	});
+	
+	window.debugToHTML = function(message) {
 		
-		$(document.body).append(debugLogger);
-	}
-	
-	var newTextElem = document.createElement('pre');
-	$(newTextElem).text(text);
-	
-	$(debugLogger).append(newTextElem);
-}
+		var text;
+		
+		switch (typeof message) {
+			case 'string':
+			case 'number':
+				text = message;
+				break;
+			case 'object':
+			case 'array':
+				text = JSON.stringify(message);
+				break;
+			default:
+				text = message;
+		}
+		
+		//if logger is not already added to document.body, add it now
+		if ( !$(debugLogger).parent()[0] ) {
+			
+			$(document.body).append(debugLogger);
+		}
+		
+		var newTextElem = document.createElement('pre');
+		$(newTextElem).text(text);
+		
+		$(debugLogger).append(newTextElem);
+	};
+})();
+
 
 function share(orgKey) {
 	

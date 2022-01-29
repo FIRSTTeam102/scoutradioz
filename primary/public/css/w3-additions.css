@@ -37,6 +37,8 @@ a:hover.text-link{text-decoration: underline;}
 	filter: brightness(0.5);
 }
 
+.w3-padding-xsmall{padding: 2px 4px!important}
+
 .rounded-large{border-radius:18px;}
 .rounded{border-radius:12px;}
 .rounded-small{border-radius:6px;}
@@ -175,10 +177,12 @@ pre{
 @media (min-width:993px){
 	.w3-col.l0{display:none;}
 	.w3-col.m0{display:inherit;}
+	.w3-col.sauto{width: auto;}
 }
 
 @media (min-width: 601px){
 	.w3-col.m0{display:none;}
+	.w3-col.mauto{width: auto;}
 	.w3-label{
 		text-align: right;
 		padding-right: 8px;
@@ -192,6 +196,7 @@ pre{
 	.w3-col.m0.l4,.w3-col.m0.l5,.w3-col.m0.l6,
 	.w3-col.m0.l7,.w3-col.m0.l8,.w3-col.m0.l9,
 	.w3-col.m0.l10,.w3-col.m0.l11,.w3-col.m0.l12{display:inherit;}
+	.w3-col.lauto{width: auto;}
 }
 
 @media (max-width: 600px){

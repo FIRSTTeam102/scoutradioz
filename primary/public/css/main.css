@@ -79,6 +79,7 @@
 .sprite.sp-16{--size:16px;}
 .sprite.sp-18{--size:18px;}
 .sprite.sp-20{--size:20px;}
+.sprite.sp-22{--size:22px;}
 .sprite.sp-24{--size:24px;}
 .sprite.sp-32{--size:32px;}
 .sprite.sp-48{--size:48px;}
@@ -104,10 +105,16 @@
 .sprite.sp-gearheads{--position: -16;}
 .sprite.sp-download{--position: -17;}
 .sprite.sp-edit{--position: -18;}
+.sprite.sp-delete{--position: -19;}
 
 .sprite.sp-black{-webkit-filter: invert(100%);filter: invert(100%);}
 
-.sprite.sp-inline{vertical-align: middle; margin-left: 4px; margin-right: 4px; margin-top: -4px;}
+.sprite.sp-inline{
+	vertical-align: middle; 
+	margin-left: calc(var(--size) / 4); 
+	margin-right: calc(var(--size) / 4); 
+	margin-top: calc(var(--size) / -4);
+}
 
 /* USAGE: <span class="sprite sp-(SIZE) sp-(TYPE)"></span> */
 .sprite{
