@@ -39,25 +39,22 @@
   "dependencies": {
     "@firstteam102/http-errors": "^1.0.2",
     "@firstteam102/scoutradioz-helpers": "^1.0.10",
-    "@firstteam102/scoutradioz-utilities": "^1.0.51-test2",
-    "@firstteam102/monk-fork": "^0.0.3-test2",
+    "@firstteam102/scoutradioz-utilities": "^1.1.1",
     "aws-serverless-express": "^3.4.0",
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.19.0",
     "colors": "^1.4.0",
     "connect-mongo": "~4.6.0",
-    "cookie-parser": "^1.4.5",
+    "cookie-parser": "^1.4.6",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "express-async-handler": "^1.1.4",
-    "express-session": "^1.17.1",
+    "express-async-handler": "^1.2.0",
+    "express-session": "^1.17.2",
     "express-useragent": "^1.0.15",
     "log4js": "^6.4.0",
     "mongodb": "~4.1.0",
-    "passport": "^0.4.1",
-    "passport-local": "^1.0.0",
+    "passport": "^0.5.2",
     "pug": "^3.0.2",
     "serve-favicon": "^2.5.0",
-    "web-push": "^3.4.4"
+    "web-push": "^3.4.5"
   }
 }

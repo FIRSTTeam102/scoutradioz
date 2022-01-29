@@ -1,4 +1,3 @@
-const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const express = require('express');
 const log4js = require('log4js');
@@ -58,8 +57,8 @@ const options = {
 		if (hash != hmac) throw Error('X-TBA-HMAC not verified.');
 	}
 };
-webhook.use(bodyParser.json(options));
-webhook.use(bodyParser.urlencoded(options));
+webhook.use(express.json(options));
+webhook.use(express.urlencoded(options));
 
 //ROUTER
 const router = express.Router();
@@ -379,14 +378,13 @@ async function handleScheduleUpdated( data ) {
 	var url = 'event/' + event_key + '/matches';
 	logger.debug('url=' + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
-	var array = JSON.parse(matchData);
-	if (array && array.length && array.length > 0) {
+	if (matchData && matchData.length && matchData.length > 0) {
 		//var arrayLength = array.length;
 
 		// First delete existing match data for the given event
 		await utilities.remove('matches', {'event_key': event_key});
 		// Now, insert the new data
-		await utilities.insert('matches', array);
+		await utilities.insert('matches', matchData);
 	}
 
 	// Synchronize the rankings (just in case)
@@ -410,11 +408,10 @@ async function syncRankings(event_key) {
 	logger.info('rankingUrl=' + rankingUrl);
 
 	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
-	var rankinfo = JSON.parse(rankData);
 	var rankArr = [];
-	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
+	if (rankData && rankData.rankings && rankData.rankings.length > 0) {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-		var thisRankings = rankinfo.rankings;
+		var thisRankings = rankData.rankings;
 		for (var i in thisRankings) {
 			var thisRank = thisRankings[i];
 			thisRank['event_key'] = event_key;

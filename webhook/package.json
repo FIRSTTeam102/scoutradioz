@@ -13,10 +13,6 @@
     "folder": "webhook"
   },
   "scripts": {
-    "sync-test": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/test --acl public-read",
-    "sync-qa": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/qa --acl public-read",
-    "sync-prod": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/prod --acl public-read",
-    "sync-all": "npm run sync-test && npm run sync-qa && npm run sync-prod",
     "upload-test": "node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
     "upload-qa": "node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
     "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
@@ -28,9 +24,8 @@
     "@firstteam102/scoutradioz-helpers": "^1.0.10",
     "@firstteam102/scoutradioz-utilities": "^1.0.45",
     "aws-serverless-express": "^3.3.8",
-    "body-parser": "^1.19.0",
     "dotenv": "^6.2.0",
-    "express": "^4.17.1",
+    "express": "^4.17.2",
     "express-async-handler": "^1.1.4",
     "log4js": "^6.4.0",
     "web-push": "^3.4.3"

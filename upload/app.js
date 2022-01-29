@@ -1,6 +1,5 @@
 const express = require('express');						//main express shiz
 const path = require('path');							//for filesystem
-const bodyParser = require('body-parser');				//parses http request information
 const useragent = require('express-useragent');			//for info on connected users
 const log4js = require('log4js');						//for extensive logging functionality
 
@@ -41,7 +40,7 @@ var log4jsConfig = {
 		},
 	} } },
 	categories: { default: { appenders: ['out'], level: 'info' } }
-}
+};
 if( process.env.COLORIZE_LOGS == 'true'){
 	//Colored pattern layout
 	log4jsConfig.appenders.out.layout.pattern = '%[[%d{hh:mm:ss}] [%x{tier}] [%p] %c.%x{funcName} - %]%m';
@@ -63,8 +62,8 @@ app.set('view engine', 'pug');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 //User agent for logging
 app.use(useragent.express());
@@ -75,8 +74,8 @@ app.use(async function(req, res, next){
 	
 	//Set headers to allow cross-site requests
 	res.set({
-		"Access-Control-Allow-Origin" : "*", // Required for CORS support to work
-		"Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS 
+		'Access-Control-Allow-Origin' : '*', // Required for CORS support to work
+		'Access-Control-Allow-Credentials' : true // Required for cookies, authorization headers with HTTPS 
 	});
 	
 	next();
@@ -92,7 +91,7 @@ var generate = require('./routes/generate');
 app.use((req, res, next) => {
 	logger.removeContext('funcName');
 	next();
-})
+});
 
 app.use((req, res, next) => {
 	logger.addContext('funcName', 'urlParser');
@@ -122,8 +121,8 @@ app.use((req, res, next) => {
 });
 
 //CONNECT URLS TO ROUTES
-app.use(`/`, upload);
-app.use(`/generate`, generate)
+app.use('/', upload);
+app.use('/generate', generate);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);

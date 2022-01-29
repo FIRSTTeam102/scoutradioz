@@ -1,7 +1,6 @@
 const express = require('express');						//main express shiz
 const path = require('path');							//for filesystem
 const favicon = require('serve-favicon');				//serves favicon
-const bodyParser = require('body-parser');				//parses http request information
 const session = require('express-session');				//session middleware
 const cookieParser = require('cookie-parser');			//cookies
 const MongoStore = require('connect-mongo');			//Alternative session storage
@@ -44,7 +43,7 @@ if( process.env.COLORIZE_LOGS == 'true'){
 log4js.configure(log4jsConfig);
 
 const logger = log4js.getLogger();
-logger.level = 'debug';
+logger.level = process.env.LOG_LEVEL || 'debug';
 
 //load custom middleware
 const usefunctions = require('./helpers/usefunctions');
@@ -80,8 +79,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon(path.join(__dirname, 'public', 'icon-32.png')));
 
 app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 //Session
 console.log('app.js: app.use(session({... - START');

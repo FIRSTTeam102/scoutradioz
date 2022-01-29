@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const monk = require('@firstteam102/monk-fork');
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
@@ -337,7 +336,7 @@ router.post('/updatepresent', wrap(async (req, res) => {
 	var allPresentMembers = [];
 	//eslint-disable-next-line
 	for(var i in req.body) {
-		allPresentMembers.push(monk.id(i));
+		allPresentMembers.push(utilities.id(i));
 	}
 	
 	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
