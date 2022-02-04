@@ -181,7 +181,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		});
 	}
 	
-	logger.debug(`user: ${JSON.stringify(user)}`);
+	logger.trace(`user: ${JSON.stringify(user)}`);
 	
 	//Get role information from database, and compare to access role for a scouter
 	var role_key = user.role_key;
@@ -286,7 +286,6 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	var org_password = req.body.org_password;
 	
 	logger.debug(`userID=${userID}`);
-	logger.debug(`password=${userPassword}`);
 	
 	//If we don't have organization info, redirect user to login
 	if(!org_key || !org_password){
@@ -338,7 +337,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	//Compare passwords
 	var userComparison = await bcrypt.compare( userPassword, user.password );
 	
-	logger.debug(`user=${JSON.stringify(user)}, password comparison:${userComparison}`);
+	logger.trace(`password comparison:${userComparison}`);
 	
 	if(userComparison){
 		
@@ -469,7 +468,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	
 	var writeResult = await utilities.update('users', {_id: userID}, {$set: {password: hash}});
 	
-	logger.debug(`${p1} -> ${hash}`);
+	// logger.debug(`${p1} -> ${hash}`);
 	logger.debug('createpassword: ' + JSON.stringify(writeResult, 0, 2));
 	
 	req.logIn(user, function(err){
@@ -738,7 +737,6 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 			{allowCache: true}
 		);
 		var thisConfig = thisOrg.config;
-		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
 		if (!thisConfig) {
 			thisConfig = {};
 			thisOrg['config'] = thisConfig;

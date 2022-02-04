@@ -241,7 +241,11 @@ router.get('/', wrap(async (req, res) => {
 
 	// 2020-03-07, M.O'C: Allowing for scouts assigned to matches but NOT to pits
 	if (assignedTeams.length == 0) {
-		var assignedMatches = await utilities.find('matchscouting', {org_key: org_key, event_key: eventKey, assigned_scorer: thisUserName});
+		var assignedMatches = await utilities.find('matchscouting', {
+			org_key: org_key, 
+			event_key: eventKey, 
+			assigned_scorer: thisUserName
+		});
 		if (assignedMatches.length > 0)
 			noAssignments = false;		
 	}
@@ -321,7 +325,15 @@ router.get('/', wrap(async (req, res) => {
 		
 	// Get all the UNRESOLVED matches where they're set to score
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoringMatches = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'assigned_scorer': thisUserName, 'time': { $gte: earliestTimestamp }}, { limit: 10, sort: {'time': 1} });
+	var scoringMatches = await utilities.find('matchscouting', {
+		'org_key': org_key, 
+		'event_key': eventKey, 
+		'assigned_scorer': thisUserName, 
+		'time': { $gte: earliestTimestamp }
+	}, { 
+		limit: 10, 
+		sort: {'time': 1} 
+	});
 
 	for (var matchesIdx = 0; matchesIdx < scoringMatches.length; matchesIdx++)
 		logger.trace('scoringMatch[' + matchesIdx + ']: num,team=' + scoringMatches[matchesIdx].match_number + ',' + scoringMatches[matchesIdx].team_key);
@@ -424,7 +436,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		//add $group > groupClause (Layout w/ data)
 		aggQuery.push({ $group: groupClause });
 		//add $sort > sort request
-		aggQuery.push({ $sort: { rank: 1 } });
+		// aggQuery.push({ $sort: { rank: 1 } }); JL: Unneeded sort (rank is not an element of these objects)
 		
 		//Aggregate with this query we made
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
