@@ -115,6 +115,16 @@ utilities.id = function (str) {
 	return typeof str === 'string' ? ObjectId.createFromHexString(str) : str;
 };
 
+// Doing this on a timeout to avoid stalling current
+utilities.flushCache = function () {
+	if (!this._cacheFlushTimeout) {
+		this._cacheFlushTimeout = setTimeout(() => {
+			this.cache.flushAll();
+			this._cacheFlushTimeout = null;
+		}, 5);
+	}
+};
+
 /**
  * (Required) Configure utilities with database config file.
  * @param {object} databaseConfig JSON object for database config (use require('databases.json') for security)
@@ -149,7 +159,7 @@ utilities.config = function(databaseConfig, options){
 
 /**
  * Function that first caches, then returns the cached database for the server process.
- * @returns {mongo.Db} Database ref
+ * @returns {mongodb.Db} Database ref
  */
 utilities.getDB = function(){
 	
@@ -529,7 +539,7 @@ utilities.update = async function(collection, query, update, options){
 	//Remove in collection with query
 	var writeResult = new WriteResult();
 	let db = await this.getDB();
-	writeResult = await db.collection(collection).update(query, update, options);
+	writeResult = await db.collection(collection).updateMany(query, update, options);
 	
 	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	consoleTimeEnd(timeLogName);
@@ -592,7 +602,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 			
 			//Request db
 			let db = await this.getDB();
-			cachedRequest = await db.collection(collection).aggregate(pipeline);
+			cachedRequest = await db.collection(collection).aggregate(pipeline).toArray();
 			//Cache response (Including maxAge before automatic deletion)
 			this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 			
@@ -607,7 +617,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 	
 		//Aggregate
 		let db = await this.getDB();
-		data = await db.collection(collection).aggregate(pipeline);
+		data = await db.collection(collection).aggregate(pipeline).toArray();
 		
 		logger.trace(`Not cached (aggregate:${collection})`);
 		logger.trace(`result: ${JSON.stringify(data)}`);
@@ -786,8 +796,9 @@ utilities.insert = async function(collection, elements){
 	}
 	// otherwise, insertOne
 	else {
-		writeResult = await db.collection(collection).insertMany(elements);
+		writeResult = await db.collection(collection).insertOne(elements);
 	}
+	this.flushCache();
 	
 	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	
@@ -815,7 +826,7 @@ utilities.requestTheBlueAlliance = async function(url){
 	//Create promise first
 	var thisPromise = new Promise(function(resolve, reject){
 		
-		var Client = require('node-rest-client').Client;
+		var Client = require('@firstteam102/node-rest-client').Client;
 		var client = new Client();
 		
 		//Inside promise function, perform client request
