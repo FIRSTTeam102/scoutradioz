@@ -14,7 +14,7 @@ passport.deserializeUser(async function(id, done) {
 	
 	logger.trace('deserializeUser: ' + id);
 	
-	var user = await utilities.findOne('users', { '_id': id }, {});
+	var user = await utilities.findOne('users', { '_id': id }, {}, {allowCache: true});
 	
 	if(!user){
 		console.error('User not found in db: deserializeUser ' + id);
