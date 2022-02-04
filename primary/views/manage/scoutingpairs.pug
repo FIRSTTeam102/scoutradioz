@@ -7,25 +7,15 @@
 extends ../layout
 block content
 	table(class="w3-table")
-		th programming
-		th mechanical
-		th electrical
+		each subteam in subteams
+			th(class="w3-center")=subteam.label
 		tr
-			td
-				ul(class="w3-ul w3-card")
-					each member, i in prog
-						li(class="w3-no-border")
-							button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
-			td
-				ul(class="w3-ul")
-					each member, i in mech
-						li(class="w3-no-border")
-							button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
-			td
-				ul(class="w3-ul")
-					each member, i in elec
-						li(class="w3-no-border")
-							button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
+			each subteam in subteams
+				td 
+					ul(class="w3-ul")
+						each member in subteam.members
+							li(class="w3-no-border")
+								button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
 	form#setmemberpair(name="setmemberpair" method="post" action="/manage/scoutingpairs/setscoutingpair")
 		input#setmemberpairdata(type="hidden", name="data")
 	button(class="w3-btn w3-block theme-submit" onclick="submitPair()") Submit selected members as a new scouting group
@@ -46,14 +36,14 @@ block content
 	form(method="post" action="/manage/scoutingpairs/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
 	hr 
-	div( onclick="promptPass('WARNING: Erases existing SCOUTING data for current event.', '/manage/scoutingpairs/generateteamallocations');")
+	div( onclick="promptPass('*WARNING:* Erases existing SCOUTING data for the current event.', '/manage/scoutingpairs/generateteamallocations');")
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams to PIT SCOUTING members
 	br
-	div( onclick="promptPass('WARNING: Erases existing SCORING data for current event.', '/manage/scoutingpairs/generatematchallocations');")
+	div( onclick="promptPass('*WARNING:* Erases existing SCORING data for the current event.', '/manage/scoutingpairs/generatematchallocations');")
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams@matches to MATCH SCORING members
 	br 
 	br 
-	div( onclick="promptPass('WARNING: Erases MATCH SCORING ASSIGNMENTS for current event.', '/manage/scoutingpairs/clearmatchallocations');")
+	div( onclick="promptPass('*WARNING:* Erases MATCH SCORING ASSIGNMENTS for the current event.', '/manage/scoutingpairs/clearmatchallocations');")
 		button(class="w3-btn theme-red strong" type="submit") Clear all MATCH SCORING assignments
 	hr 
 	h2 Team@Match Allocation v2.0
@@ -81,16 +71,26 @@ block content
 		
 		function promptPass(message, url){
 			
-			var pass = prompt(message + "\nTo continue, enter password.");
-			
-			$.post(url, {
-				password: pass
-			}, 
-			function( data, status ){
-				console.log(data);
-				if(data && data.alert)
-					alert(data.alert);
-			});
+			// Prompt user for their password
+			PasswordPrompt.show(message + "\n\nTo continue, enter your password.")
+				.then(result => {
+					if (result.cancelled === false) {
+						// Send request if the user didn't cancel
+						$.post(url, {
+							password: result.password
+						}, 
+						function( data, status ){
+							if(data && data.alert) {
+								// error
+								if (data.status && data.status >= 400)
+									NotificationCard.error(data.alert);
+								// success/message
+								else
+									NotificationCard.show(data.alert);
+							}
+						});
+					}
+				});
 		}
 		
 		var selectedDict = {};

@@ -293,15 +293,15 @@ class NotificationCard{
 			.text(text);
 		
 		//Enrich text with predetermined keys
-		enrichedText = this._enrichWithClosingTags(enrichedText.html(), '*', '<b>', '</b>');
-		enrichedText = this._enrichWithClosingTags(enrichedText.html(), '_', '<i>', '</i>');
-		enrichedText = this._enrichWithSelfClosingTags(enrichedText.html(), '\n', '</br>');
-		enrichedText = this._enrichWithSelfClosingTags(enrichedText.html(), '/n', '</br>');
+		enrichedText = NotificationCard._enrichWithClosingTags(enrichedText.html(), '*', '<b>', '</b>');
+		enrichedText = NotificationCard._enrichWithClosingTags(enrichedText.html(), '_', '<i>', '</i>');
+		enrichedText = NotificationCard._enrichWithSelfClosingTags(enrichedText.html(), '\n', '</br>');
+		enrichedText = NotificationCard._enrichWithSelfClosingTags(enrichedText.html(), '/n', '</br>');
 		
 		return enrichedText;
 	}
 	
-	_enrichWithClosingTags(html, key, openTag, closeTag) {
+	static _enrichWithClosingTags(html, key, openTag, closeTag) {
 		
 		//Get all locations of the key
 		var locationsOfKey = [];
@@ -332,7 +332,7 @@ class NotificationCard{
 		return enrichedText;
 	}
 	
-	_enrichWithSelfClosingTags(html, key, tag) {
+	static _enrichWithSelfClosingTags(html, key, tag) {
 		
 		//Get all locations of the key
 		var locationsOfKey = [];

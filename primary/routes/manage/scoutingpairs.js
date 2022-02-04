@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const logger = require('log4js').getLogger();
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
+const e = require('@firstteam102/http-errors');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
@@ -18,43 +19,63 @@ router.all('/*', wrap(async (req, res, next) => {
  */
 router.get('/', wrap(async (req, res) => {
 	
-	var thisFuncName = 'scoutingpairs.scoutingpairs(root): ';
-	var startTime = Date.now();
-	var org_key = req.user.org_key;
+	const thisFuncName = 'scoutingpairs.scoutingpairs(root): ';
+	const startTime = Date.now();
+	const org_key = req.user.org_key;
 	
 	//Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
 	logger.debug(thisFuncName + 'Requesting all members from db');
 	
+	if (!req.user.org.config.members.subteams) throw new e.InternalServerError(`Could not get list of subteams from org config: ${org_key}`);
+	const subteams = req.user.org.config.members.subteams;
+	
+	let pitScoutSubteams = []; // for use in the view
+	let pitScoutSubteamKeys = []; // for use in the db query
+	for (let subteam of subteams) {
+		if (subteam.pit_scout) {
+			pitScoutSubteams.push(subteam);
+			pitScoutSubteamKeys.push(subteam.subteam_key);
+		}
+	}
+	if (pitScoutSubteams.length == 0) throw new e.InternalServerError('Org config error: No subteams have "pit scout" enabled');
+	
+	let dbPromises = [];
+	for (let key of pitScoutSubteamKeys) {
+		dbPromises.push(
+			utilities.find('users', 
+				{'org_info.subteam_key': key, 'event_info.present': true, 'event_info.assigned':false}, 
+				{sort: {'name': 1}}
+			)
+		);
+	}
+	//Any team members that are not on a subteam, but are unassigned and present.
+	dbPromises.push( utilities.find('users', {'event_info.assigned': false, 'event_info.present': true}, {sort: {'name': 1}}) );
 	//Get all "present but not assigned" members
 	var progTeamPromise = utilities.find('users', {'org_info.subteam_key':'prog', 'event_info.present':true, 'event_info.assigned':false}, {sort: {'name': 1}});
 	var mechTeamPromise = utilities.find('users', {'org_info.subteam_key':'mech', 'event_info.present':true, 'event_info.assigned':false}, {sort: {'name': 1}});
 	var elecTeamPromise = utilities.find('users', {'org_info.subteam_key':'elec', 'event_info.present':true, 'event_info.assigned':false}, {sort: {'name': 1}});
-	//Any team members that are not on a subteam, but are unassigned and present.
-	var availablePromise = utilities.find('users', {'event_info.assigned': false, 'event_info.present': true}, {sort: {'name': 1}});
 	
 	logger.debug(thisFuncName + 'Requesting scouting pairs from db');
 	
 	//Get all already-assigned pairs
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
-	var assignedPromise = utilities.find('scoutingpairs', {'org_key': org_key});
+	dbPromises.push( utilities.find('scoutingpairs', {'org_key': org_key}) );
 	
 	logger.trace(thisFuncName + 'Awaiting all db requests');
 	
 	var preAwaitTime = Date.now() - startTime;
 	
 	//Await every promise in parallel.
-	Promise.all([
-		progTeamPromise, mechTeamPromise, 
-		elecTeamPromise, availablePromise, assignedPromise
-	])
+	Promise.all(dbPromises)
 		.then(values => {
-		//Get the resulting values from the array returned by Promise.all.
-			var progTeam = values[0];
-			var mechTeam = values[1];
-			var elecTeam = values[2];
-			var available = values[3];
-			var assigned = values[4];
+			// Get the resulting values from the array returned by Promise.all.
+			for (let i = 0; i < pitScoutSubteams.length; i++) {
+				// the values array will be ordered the same as pitScoutSubteams & pitScoutSubteamKeys
+				pitScoutSubteams[i].members = values[i]; 
+			}
+			var available = values[values.length - 2]; // second to last
+			var assigned = values[values.length - 1]; // last
 		
 			var postAwaitTime = Date.now() - startTime - preAwaitTime;
 			logger.trace(`preAwaitTime: ${preAwaitTime}ms, postAwaitTime: ${postAwaitTime}ms`);
@@ -63,16 +84,11 @@ router.get('/', wrap(async (req, res) => {
 		
 			res.render('./manage/scoutingpairs', {
 				title: 'Scouting Pairs',
-				prog: progTeam,
-				mech: mechTeam,
-				elec: elecTeam,
+				subteams: pitScoutSubteams,
 				assigned: assigned,
 				available: available
 			});
 		});
-	
-	//Everything below is legacy, pre-rewrite.
-	return;
 }));
 
 /* POST to Set scoutingPair Service */
