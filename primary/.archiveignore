@@ -8,3 +8,11 @@
 *.zip
 *.ts
 *.md
+LICENSE
+LICENSE.*
+README
+node_modules/**/*.jpg
+*.flow
+*.mem
+**/test/**
+bson.*.js
