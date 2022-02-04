@@ -697,7 +697,7 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 			//	(currently only home, but made it a regex to make it easier to add more in the future)
 			//	/\b(?:home|foo|bar)/;
 			var redirectExceptions = /\b(?:home)/;
-			if (!req.body.redirectURL.includes(redirectExceptions)) {
+			if (!redirectExceptions.test(req.body.redirectURL)) {
 				redirectURL = req.body.redirectURL;
 			}
 		}
