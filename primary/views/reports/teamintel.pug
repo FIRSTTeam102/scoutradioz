@@ -150,10 +150,12 @@ block content
 						border-color: #dfe1e9!important;
 					}
 				h2(class="theme-text") Previous matches
-
+				//- for the comments
+				- let isScouter = false; 
+				- if (user && user.role.access_level >= process.env.ACCESS_SCOUTER) isScouter = true;
 				if (matches && matches.length > 0)		
 					each match in matches
-						if (match.scoringdata && user)
+						if (match.scoringdata && isScouter)
 							each element in scorelayout
 								case element.type
 									when "textblock"
@@ -170,7 +172,7 @@ block content
 					each match in matches
 						//include templates/completedMatch
 						+completedMatch(match)
-						if (match.scoringdata && user)
+						if (match.scoringdata && isScouter)
 							each element in scorelayout
 								case element.type
 									when "textblock"
