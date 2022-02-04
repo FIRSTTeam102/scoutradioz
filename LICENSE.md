@@ -1,3 +1,8 @@
+Some scripts within this repository may be written by another party
+and as such, a different license may apply to them. Unless otherwise
+stated at the top of a file, code within this repository is provided
+with the following license.
+
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
