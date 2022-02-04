@@ -43,6 +43,7 @@ router.get('/', wrap(async (req, res) => {
 		current: req.event.key,
 		events: events,
 		years: uniqueYears,
+		eventListYear: eventListYear
 	});
 	
 	//utilities.dumpCache();
