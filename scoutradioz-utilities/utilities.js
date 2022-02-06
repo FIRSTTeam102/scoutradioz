@@ -792,10 +792,17 @@ utilities.insert = async function(collection, elements){
 	let db = await this.getDB();
 	// if array, insertMany
 	if (elements instanceof Array) {
-		writeResult = await db.collection(collection).insertMany(elements);
+		if (this.options.debug) logger.debug(`Array; doing insertMany, length=${elements.length}`);
+		if (elements.length == 0) {
+			logger.warn('Array is empty!! Doing nothing.');
+		}
+		else {
+			writeResult = await db.collection(collection).insertMany(elements);
+		}
 	}
 	// otherwise, insertOne
 	else {
+		if (this.options.debug) logger.debug('Object; doing insertOne');
 		writeResult = await db.collection(collection).insertOne(elements);
 	}
 	this.flushCache();
