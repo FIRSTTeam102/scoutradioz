@@ -53,9 +53,10 @@ router.post('/resetmatches', wrap(async (req, res) => {
 	var thisFuncName = 'currentevent.resetmatches[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
-	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
-		return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
-	}
+	// Issue #45 
+	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
+	// }
 	
 	// var matchCol = db.get("matches");
 	
@@ -74,9 +75,10 @@ router.post('/updatematch', wrap(async (req, res) => {
 	var thisFuncName = 'currentevent.updatematch[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
-	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
-		return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
-	}
+	// Issue #45 
+	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
+	// }
 	
 	var matchId = req.body.matchId;
 
@@ -127,12 +129,9 @@ router.post('/updatematch', wrap(async (req, res) => {
 	var url = 'match/' + matchId;
 	logger.debug(thisFuncName + 'url=' + url);
 	var match = await utilities.requestTheBlueAlliance(url);
-	// stick it in an array so the insert will work later
-	var array = [];
-	array.push(match);
 	
 	// Now, insert the new object
-	await utilities.insert('matches', array);
+	await utilities.insert('matches', match);
 	//2020-03-29 JL: Removed the part where matches are re-pulled from DB because it was unnecessary
 	//
 	// 2019-03-21, M.O'C: Adding in recalculation of aggregation data
@@ -145,7 +144,8 @@ router.post('/updatematch', wrap(async (req, res) => {
 	await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
 	
 	//and we're done!
-	res.redirect('/manage/currentevent/matches');
+	if (match && !match.score_breakdown) res.redirect(`/manage/currentevent/matches?alert=Score not found for this match.&type=warn`);
+	else res.redirect('/manage/currentevent/matches');
 }));
 
 router.post('/updatematches', wrap(async (req, res) => {
@@ -153,9 +153,10 @@ router.post('/updatematches', wrap(async (req, res) => {
 	var thisFuncName = 'currentevent.updatematches[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
-	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
-		return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
-	}
+	// Issue #45 
+	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
+	// }
 	
 	// var matchCol = db.get("matches");
 	// var rankCol = db.get("currentrankings");
@@ -217,7 +218,8 @@ router.post('/updatematches', wrap(async (req, res) => {
 		// call out to aggrange recalculator
 		await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, eventKey);
 		
-		res.redirect('/manage/currentevent/matches');
+		if (arrayLength == 0) res.redirect(`/manage/currentevent/matches?alert=Match data not found.&type=warn`);
+		else res.redirect('/manage/currentevent/matches');
 	}
 }));
 
