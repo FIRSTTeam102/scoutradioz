@@ -147,6 +147,7 @@ class NotificationCard{
 		var text = $(document.createElement('div'))
 			.addClass('notification-card-content')
 			.html(enrichedText);
+		this._textContent = text;
 		//Add exit button if exitable option is enabled
 		if (this.opts.exitable) {
 			//Create exit button
@@ -157,10 +158,6 @@ class NotificationCard{
 				.click(() => {
 					//Onclick handler for exit button.
 					this.remove();
-					//remove screen darkener if applicable
-					if (this.opts.darken && this.darkener) {
-						$(this.darkener).remove();
-					}
 					//Execute onexit callback
 					if (this.opts.onexit) {
 						this.opts.onexit();
@@ -193,6 +190,17 @@ class NotificationCard{
 	}
 	
 	/**
+	 * Change the text of the notification card.
+	 * @param {string} newText New text to show.
+	 */
+	setText(newText) {
+		this.text = newText;
+		var enrichedText = this._enrichText();
+		
+		this._textContent.html(enrichedText);
+	}
+	
+	/**
 	 * Remove the card from the document.
 	 * @param {Number} time (Optional) Fade-out card with given time interval. (Default: 0ms, no fade)
 	 */
@@ -208,6 +216,10 @@ class NotificationCard{
 			$(this.card).css('opacity', 0);
 			setTimeout(() => {
 				$(this.card).remove();
+				//remove screen darkener if applicable
+				if (this.opts.darken && this.darkener) {
+					$(this.darkener).remove();
+				}
 			}, removeTime);
 		}
 		

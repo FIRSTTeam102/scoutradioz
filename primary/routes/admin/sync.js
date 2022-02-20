@@ -10,6 +10,60 @@ router.all('/*', wrap(async (req, res, next) => {
 	next();
 }));
 
+// Gets the list of events without enriching 
+router.post('/resynceventlist', wrap(async (req, res) => {
+	logger.addContext('funcName', 'resynceventlist[post]');
+	logger.info('ENTER');	
+	
+	// Get the year from the URL (or default to the current year)
+	const year = parseInt(req.query.year || req.body.year || new Date().getFullYear());
+	
+	logger.debug(`Getting event list, year=${year}`);
+	
+	// Events with simple data
+	var url = `events/${year}/simple`;
+	var events = await utilities.requestTheBlueAlliance(url);
+	// Events with full data
+	url = `events/${year}`;
+	var eventsFull = await utilities.requestTheBlueAlliance(url);
+	// Properties of the full event list to add to the simple event list
+	var keysToAdd = ['timezone'];
+	
+	for (let i in events) {
+		let thisEvent = events[i];
+		let thisEventFull;
+		// if the indices match between eventsFull & events, we don't have to search
+		if (eventsFull[i].key === thisEvent.key) {
+			thisEventFull = eventsFull[i];
+		}
+		else {
+			// search for the appropriate event
+			logger.debug('Need to search for an event in the whole list');
+			for (let event of eventsFull) 
+				if (event.key === thisEvent.key) {
+					thisEventFull = event;
+					break;
+				}
+		}
+		// Enrich the event with our desired extra keys
+		for (let key of keysToAdd) {
+			thisEvent[key] = thisEventFull[key];
+		}
+	}
+	
+	logger.info(`Enriched ${events.length} events with the following keys: ${keysToAdd.join(', ')}`);
+	
+	//Remove matching existing events
+	console.log({year: year});
+	let removeResult = await utilities.remove('events', { year: year });
+	//Now insert new events list
+	let insertResult = await utilities.insert('events', events);
+	
+	logger.info(`${removeResult.deletedCount} removed, ${insertResult.insertedCount} inserted`);
+	
+	res.send({message: `Found ${events.length} events.`, length: events.length});
+}));
+
 // Function to refresh the list of events for the current year (and) to refresh all teams data
 router.get('/resyncevents', wrap(async (req, res) => {
 	logger.addContext('funcName', 'resyncevents[get]');
@@ -44,65 +98,52 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	var url = `events/${year}/simple`;
 	logger.debug('url=' + url);
 	
-	//Submit request to TBA
-	var events = await utilities.requestTheBlueAlliance(url);
+	const keyFilter = { $and: [{'key': {$gt: queryStart}}, {'key': {$lt: queryEnd}}] };
 	
-	//if request was invalid, redirect to admin page with alert message
-	if(events.length == undefined || events.length == 0) {
-		return res.send('ERROR events not loaded');
+	// 2022-02-19 JL: Events now retrieved from TBA in /resynceventlist
+	var events = await utilities.find('events', keyFilter, {sort: {key: 1}});
+	
+	// if no events were found in db, that just means there are none starting with that letter
+	if(events.length == 0) {
+		return res.send(`SUCCESS ${year} updated 0`);
 	}
+	
+	var updatedNum = 0;
 	
 	// 2020-02-08, M.O'C: Need to track which teams are at each event, by event key - pull team keys for each event & store in the event
-	var enrichedEvents = [];
-	for (var i in events) {
-		if (events[i]) {
-			var thisEvent = events[i];
-			var thisEventKey = thisEvent.key;
-	
-			if ( thisEventKey > queryStart && thisEventKey < queryEnd)  {
-				var eventTeamsUrl = `event/${thisEventKey}/teams/keys`;
-				var thisTeamKeys = [];
+	// 2022-02-19 JL: Cleaned up event resync, switched to update statement instead of delete/insert
+	for (let event of events) {
+		let thisEventKey = event.key;
 		
-				var retries = 3;
-				while (retries > 0) {
-					var readSuccess = false;
-					try {
-						var thisTeamKeysData = await utilities.requestTheBlueAlliance(eventTeamsUrl);
-						readSuccess = true;
-					}
-					catch(err) {
-						console.log('Problem reading team keys for ' + thisEventKey + ' - ' + err.message);
-						retries -= 1;
-					}
+		let eventTeamsUrl = `event/${thisEventKey}/teams/keys`;
+		let thisTeamKeys = [];
 		
-					if (readSuccess) {
-						thisTeamKeys = thisTeamKeysData;
-						if (typeof thisTeamKeys === 'string') thisTeamKeys = JSON.parse(thisTeamKeys);
-						retries = -1;
-					}
-				}
-				thisEvent['team_keys'] = thisTeamKeys;
-		
-				enrichedEvents.push(thisEvent);
-				
-				await promiseTimeout(200); // Wait a short bit
+		let retries = 3;
+		while (retries > 0) {
+			var readSuccess = false;
+			try {
+				thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
+				readSuccess = true;
+			}
+			catch (err) {
+				console.log('Problem reading team keys for ' + thisEventKey + ' - ' + err.message);
+				retries -= 1;
+			}
+			
+			if (readSuccess) {
+				break;
 			}
 		}
+		
+		let writeResult = await utilities.update('events', {key: thisEventKey}, {$set: {team_keys: thisTeamKeys}});
+		logger.debug(`Updated for ${thisEventKey}, writeResult=${writeResult}`);
+		updatedNum += 1;
+		
+		await promiseTimeout(200); // Wait a short bit
 	}
-
-	console.log('enrichedEvents.length=' + enrichedEvents.length);
 	
-	//Find existing events list for year & query brackets
-	var dbEvents = await utilities.find('events', { $and: [{'key': {$gt: queryStart}}, {'key': {$lt: queryEnd}}] }, {'key': 1} );
-	console.log('removing dbEvents.length=' + dbEvents.length);
-
-	//Remove matching existing events
-	await utilities.remove('events', { $and: [{'key': {$gt: queryStart}}, {'key': {$lt: queryEnd}}] });
-	//Now insert new events list
-	await utilities.insert('events', enrichedEvents);
-
 	//return a simple SUCCESS message if it works
-	return res.send('SUCCESS ' + year + ' removed ' + dbEvents.length + ' inserted ' + enrichedEvents.length);
+	return res.send('SUCCESS ' + year + ' updated ' + updatedNum);
 }));
 
 // Function to refresh all teams data
@@ -155,64 +196,6 @@ router.get('/resyncteams', wrap(async (req, res) => {
 
 	//redirect back to events page
 	return res.send('SUCCESS inserted ' + teamsArray.length);
-
-	/* Moved into its own method
-
-	////// Events sync
-
-    // Get the current year
-	var now = new Date();
-	var year = now.getFullYear();
-
-	//Set up TBA url
-	var url = `events/${year}/simple`;
-	logger.debug("url=" + url);
-	
-	//Submit request to TBA
-	var eventData = await utilities.requestTheBlueAlliance(url);
-		
-	var events = JSON.parse(eventData);
-	//if request was invalid, redirect to admin page with alert message
-	if(events.length == undefined || events.length == 0) {
-		return res.send("ERROR events not loaded");
-	}
-	
-	// 2020-02-08, M.O'C: Need to track which teams are at each event, by event key - pull team keys for each event & store in the event
-	var enrichedEvents = [];
-	for (var i in events) {
-		var thisEvent = events[i];
-		var thisEventKey = thisEvent.key;
-
-		var eventTeamsUrl = `event/${thisEventKey}/teams/keys`;
-		var thisTeamKeys = [];
-
-		var retries = 3;
-		while (retries > 0) {
-			var readSuccess = false;
-			try {
-				var thisTeamKeysData = await utilities.requestTheBlueAlliance(eventTeamsUrl);
-				readSuccess = true;
-			} catch(err) {
-				console.log("Problem reading team keys for " + thisEventKey + " - " + err.message);
-				retries -= 1;
-			}
-
-			if (readSuccess) {
-				thisTeamKeys = JSON.parse(thisTeamKeysData);
-				retries = -1;
-			}
-		}
-		thisEvent['team_keys'] = thisTeamKeys;
-		
-		enrichedEvents.push(thisEvent);
-	}
-
-	//Remove existing events list for year
-	await utilities.remove("events", { "year": year });
-	//Now insert new events list for year
-	//await utilities.insert("events", events);
-	await utilities.insert("events", enrichedEvents);
-	*/
 }));
 
 // Function to recalculate all derived data for the current team & current event
@@ -250,12 +233,25 @@ router.get('/recalcderived', wrap(async (req, res) => {
 				var derivedMetric = NaN;
 				switch (thisItem.operator) {
 					case 'sum':
+						// operands: [id1, id2, id3, ...]
 						// add up the operands
 						var sum = 0;
 						//eslint-disable-next-line
 						for (var metricId in thisItem.operands)
 							sum += thisScored.data[thisItem.operands[metricId]];
 						derivedMetric = sum;
+						break;
+					case 'multiselect':
+						// operands: [{id: 'multiselectId', quantifiers: {multiselectValue: numericalValue}}]
+						// 	or [{id: 'multiselectId', numerical: true] to simply parse a number
+						var operand = thisItem.operands[0];
+						if (operand.numerical) {
+							derivedMetric = parseFloat(thisScored.data[operand.id]);
+						}
+						else {
+							var key = thisScored.data[operand.id];
+							derivedMetric = operand.quantifiers[key];
+						}
 						break;
 				}
 				thisScored.data[thisItem.id] = derivedMetric;

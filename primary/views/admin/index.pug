@@ -14,11 +14,14 @@ block content
 		a(href="/admin/sync/recalcderived") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Recalc derived metrics
-		form(action="/admin/sync/resyncevents" method="GET")
+		//- form(action="/admin/sync/resyncevents" method="GET")
 			input(type="text" class="theme-input" name="year" value="2020")
 			input(type="text" class="theme-input" style="width: 50px" name="start" value="m")
 			input(type="text" class="theme-input" style="width: 50px"  name="end" value="n")
 			input(type="submit" class="theme-submit w3-btn" value="Resync events")
+		div
+			input(type="text" class="theme-input w3-margin-right" name="year" value=new Date().getFullYear())
+			div(class="theme-submit w3-btn" id="btnResync") Resync events
 		a(href="/admin/dngn3") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Use Case 3
@@ -44,6 +47,58 @@ block content
 		button(class="gear-btn w3-btn w3-section theme-submit" onclick="submitHook()") Submit webhook
 
 	script.
+		$('#btnResync').on('click', resyncEvents);
+	
+		function resyncEvents() {
+			//- var alphabet = 'abcdefghijklmnopqrstuvwxyz';
+			var alphabet = 'vwxyz';
+			const year = $('input[name=year]').val();
+			const appender = ' _X to cancel_'
+			var cancelled = false;
+			
+			
+			var card = new NotificationCard('Retrieving events...' + appender, {
+				exitable: true, 
+				ttl: 0,
+				darken: true,
+				onexit: () => {
+					cancelled = true;
+				}
+			});
+			card.show();
+			
+			$.post('/admin/sync/resynceventlist', {year: year})
+				.done(async data => {
+					card.setText(data.message + appender); // show message
+					let numCompleted = 0;
+					let totalEvents = data.length;
+					for (let letter of alphabet) {
+						if (cancelled) return;
+						
+						let url = `/admin/sync/resyncevents?year=${year}&start=${letter}&end=${letter}`;
+						let result = await promisify(url);
+						//- sanity check
+						if (!result.includes('SUCCESS')) {
+							card.remove();
+							NotificationCard.error(`Sync not successful. Message: ${result}`, {ttl: 0, exitable: true});
+							return;
+						}
+						//- get number of events enriched
+						let number = parseInt(result.replace(/SUCCESS.*updated /g, ''));
+						numCompleted += number;
+						card.setText(`Getting teams for events... [${numCompleted} of ${totalEvents}] ${appender}`);
+					}
+					card.remove();
+					NotificationCard.good(`Done syncing events: ${numCompleted} of ${totalEvents}`, {ttl: 0, exitable: true})
+				}
+			);
+			function promisify(url) {
+				return new Promise((resolve, reject) => {
+					$.get(url).done(resolve).fail(reject);
+				})
+			}
+		}
+	
 		function submitHook()
 		{
 			//console.log(selectedArray.toString());
