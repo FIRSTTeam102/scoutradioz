@@ -6,6 +6,7 @@
 			title		[String] Title of page; if doesn't exist, will be replaced by "Untitled Page"
 			alert		[String] (Optional) When page loads, create JS alert with message.
 	//
+- function resolveToValue(prop, params) { if (typeof prop == 'function') return property(params); return prop; } // For nav, but may be useful in other places
 doctype html
 html
 	head
@@ -37,7 +38,7 @@ html
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
 		script(src=`${fileRoot}/js/scoutradioz.js?v=6`)
 		script(src=`${fileRoot}/js/FormSubmission.js`)
-		script(src=`${fileRoot}/js/NotificationCard.js?v=3`)
+		script(src=`${fileRoot}/js/NotificationCard.js?v=4`)
 		script(src=`${fileRoot}/js/NavMenu.js?v=2`)
 		if alert && alert != "undefined"
 			script.

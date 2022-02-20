@@ -2,6 +2,44 @@
 	Slide-in navigation menu.
 	Included by layout.pug.
 	//
+//- The following mixins are for dynamically creating sliding menu items. See helpers/nav.js for the nav menu creation process.
+- const bracketsRegex = /\[\[(.*)\]\]/g; // For "unimportant text" in a label, put it inside [[]]
+mixin mmenuLabel(item)
+	span
+		if item.sprite
+			span(class=`sprite sp-24 menu-sprite sp-${resolveToValue(item.sprite)}`)
+		else 
+			span(class="sprite sp-24 menu-sprite")
+		//- Replace [[text]] with faded out text
+		- let label = resolveToValue(item.label);
+		- let match = bracketsRegex.exec(label);
+		if match
+			span=label.replace(match[0], '')
+			span(class="theme-text-secondary") &nbsp;#{match[1]}
+		else
+			span=label
+//- Resulting markup example:
+	li 
+		a(href=/foo/bar)
+			span Label
+	li
+		span Label2
+		ul
+			li
+				a(href=/foo/bar/baz)
+mixin mmenuItem(item)
+	li
+		- let href = resolveToValue(item.href);
+		if href
+			a(href=href)
+				+mmenuLabel(item)
+		else
+			+mmenuLabel(item)
+		if item.submenu
+			- let submenu = resolveToValue(item.submenu);
+			ul
+				for subitem in submenu
+					+mmenuItem(subitem)
 div(style="overflow-x: hidden;")
 	div(id="headerbar" class="w3-card header")
 		//- Hamburger menu button
@@ -44,145 +82,9 @@ div(style="display: none;" class="slidein-overlay" id="overlay")
 div(style="display: none;" id="menuParent")
 	nav(id="menu" class="slidein-menu")
 		ul
-			li
-				a(href="/home")
-					span(class="sprite sp-24 sp-home menu-sprite")
-					span Home
-			//- Below: Shows up to anyone who has selected an organization
-			if user
-				//- Reports pages for current event
-				li 
-					span
-						span(class="sprite sp-24 sp-info menu-sprite")
-						span Info and Reports:&nbsp; 
-						span(class="theme-text-secondary theme-strong") #{eventName}
-					ul 
-						if teams && teams[0]
-							li
-								span Teams
-								ul 
-									each team in teams
-										li
-											span #{team.team_number}: #{team.nickname}
-											ul 
-												li 
-													a(href=`/reports/upcoming?team_key=${team.key}`) Upcoming Matches
-												li 
-													a(href=`/reports/teamintel?team_key=${team.key}`) Team Statistics
-												li 
-													a(href=`/reports/teamintelhistory?team_key=${team.key}`) Complete Statistics for #{new Date().getFullYear()}
-						li 
-							a(href="/reports/rankings") Current Rankings
-						li 
-							a(href="/reports/upcoming") Upcoming Matches
-						li 
-							a(href="/reports/finishedmatches") Completed Matches
-						li 
-							a(href="/reports/allteammetrics") Stats for All Teams
-						li
-							span 
-								span(class="sprite sp-24 sp-download menu-sprite")
-								span Export to CSV
-							ul
-								li
-									a(href="/reports/exportdata?type=matchscouting")
-										span(class="sprite sp-24 sp-download menu-sprite")
-										span Export match scouting data
-								li
-									a(href="/reports/exportdata?type=pitscouting") 
-										span(class="sprite sp-24 sp-download menu-sprite")
-										span Export pit scouting data
-				li 
-					a(href="/dashboard/driveteam") 
-						span(class="sprite sp-24 sp-wheel menu-sprite")
-						span Drive Team Dashboard
-				li
-					a(href=`/user/preferences/reportcolumns?redirectURL=${url}`)
-						span(class="sprite sp-24 sp-sheet menu-sprite")
-						span Configure report columns
-				//- Below: Shows up to anyone who has "logged in"
-				if user.name != 'default_user'
-					//- Below: If user has VIEWER ACCESS (and is "logged in")
-					if user.role.access_level >= process.env.ACCESS_VIEWER
-						//No logged-in viewer-level pages yet
-					//- Below: If user has SCOUTER access
-					if user.role.access_level >= process.env.ACCESS_SCOUTER 
-						li 
-							a(href="/dashboard")
-								span(class="sprite sp-24 sp-radio menu-sprite") 
-								span Scouting
-							ul 
-								li 
-									a(href="/dashboard/pits") Pit Scouting
-								li 
-									a(href="/dashboard/matches") Match Scouting
-					//- Below: If user has TEAM ADMIN access
-					if user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
-						li
-							a(href="/manage")
-								span(class="sprite sp-24 sp-settings menu-sprite")
-								span Manage:&nbsp; 
-								span(class="theme-text-secondary") #{user.org && user.org.nickname ? user.org.nickname : 'Organization'}
-							ul 
-								li 
-									span Members
-									ul 
-										li 
-											a(href="/manage/members") Member List
-										li 
-											a(href="/manage/scoutingaudit") Scouting Audit
-										li 
-											a(href="/manage/scoutingpairs") Scouting Pairs
-										li 
-											a(href="/manage/scoutingpairs/swapmembers") Swap in/out match scouts
-										li 
-											a(href="/manage/members/present") Set Present
-										li 
-											a(href="/manage/user/resetpassword") Reset User Password
-								li 
-									span Current Event 
-									ul 
-										li 	
-											a(href="/manage/currentevent/matches") Matches 
-										li 
-											a(href="/manage/allianceselection") Alliance Selection Data
-										li 
-											a(href="/manage/currentevent/getcurrentteams") Update List of Current Teams
-					//- Below: If user has GLOBAL ADMIN access
-					if user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
-						li 
-							a(href="/admin")
-								span(class="sprite sp-24 sp-scoutradioz menu-sprite")
-								span Admin
-					//- Below: (Logged-in users): User-specific links (e.g. logout/change password)
-					li 
-						span
-							span(class="sprite sp-user sp-24 menu-sprite")
-							span User:&nbsp; 
-							span(class="theme-text-secondary") #{user.name}
-						ul 
-							li 
-								a(href='/user/logout') Log Out
-							li 
-								a(href='/user/changepassword') Change Password
-				//- Below: (Anyone who selected an org) Org-related links (e.g. Switch Org/log in)
-				if user.org 
-					li 
-						span
-							span(class="sprite sp-org sp-24 menu-sprite") 
-							span Org:&nbsp; 
-							span(class="theme-text-secondary") #{user.org.nickname}
-						ul 
-							li 
-								a(href='/user/switchorg') Change Organization
-							if user.name == 'default_user'
-								li 
-									a(href='/user/login') Log In
-			li 
-				a(href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki")
-					span(class="sprite sp-help sp-24 menu-sprite")
-					span Need help? Check our wiki!
-			
+			if navcontents
+				for item in navcontents
+					+mmenuItem(item)
 - var navMenuTitle;
 if user
 	if user.name != 'default_user'

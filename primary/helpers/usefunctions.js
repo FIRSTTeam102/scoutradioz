@@ -1,5 +1,6 @@
 const logger = require('log4js').getLogger('usefunctions');
 const utilities = require('@firstteam102/scoutradioz-utilities');
+const navHelpers = require('./nav');
 
 require('colors');
 
@@ -79,6 +80,9 @@ functions.authenticate = function(req, res, next) {
 	next();
 };
 
+// Constant, no need to re-get each time
+const navcontents = navHelpers.getNavContents();
+
 //View engine locals variables
 //IMPORTANT: Must be called LAST, because it may rely on other usefunctions data
 functions.setViewVariables = async function(req, res, next){
@@ -118,6 +122,9 @@ functions.setViewVariables = async function(req, res, next){
 		req.shortagent.browser == 'Safari'
 		|| req.shortagent.os == 'OS X'
 	) ? true : false;
+	
+	// Compile the navcontents according to the current user's state
+	res.locals.navcontents = navHelpers.compileNavcontents(navcontents, req, res);
 	
 	logger.debug('EXIT');
 	logger.removeContext('funcName');
@@ -248,6 +255,22 @@ functions.requestLogger = function(req, res, next){
 };
 
 /**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ */
+functions.fixRedirect = function(req, res, next) {
+	
+	res.redirect = (function() {
+		var cached_function = res.redirect;
+		
+		return function(arg1, arg2) {
+		};
+	});
+};
+
+/**
  * Extra logging for res.render and res.redirect
  */
 functions.renderLogger = function(req, res, next){
@@ -277,16 +300,34 @@ functions.renderLogger = function(req, res, next){
 		};
 	}());
 	
-	res.redirect = (function(url, status){
+	res.redirect = (function(){
 		var cached_function = res.redirect;
 		
-		return function(url, status){
+		return function(arg1, arg2){
 			
 			//stores pre-render post-request time
 			let completedRouteTime = Date.now() - req.requestTime;
 			
-			//applies render function
-			let result = cached_function.apply(this, arguments);
+			// res.redirect supports either (string) or (code, string)
+			let url, status;
+			if (arg1 && arg2) {
+				url = arg2;
+				status = arg1;
+			}
+			else {
+				url = arg1;
+			}
+			console.log(url);
+			// Replace any instances of ? with & *after* the first
+			// 	To avoid issues like /dashboard/driveteam?team_key=frc102?alert=Saved%20column%20preferences%20successfully.&type=success&autofade=true
+			let idx = 0;
+			url = url.replace(/\?/g, (match) => ++idx >= 2 ? '&' : match);
+			
+			
+			// Apply the render function with modified URL
+			let result;
+			if (status) result = cached_function.apply(this, [status, url]);
+			else result = cached_function.apply(this, [url]);
 			
 			//logger.info(`Completed ${res.req.url} in ${(completedRouteTime).toString().yellow} ms; Redirecting to ${(typeof url == 'string' ? url : ' ').yellow + (typeof status == 'string' ? status : ' ').yellow}`);
 			logger.info(`Completed route in ${(completedRouteTime).toString().yellow} ms \t[Route: ${res.req.originalUrl.brightGreen} Redirecting to: ${(typeof url == 'string' ? url : ' ').yellow + (typeof status == 'string' ? status : ' ').yellow}]`);
