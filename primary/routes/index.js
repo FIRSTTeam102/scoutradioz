@@ -35,28 +35,29 @@ router.get('/', wrap(async (req, res) => {
 	}
 	else{
 		
-		//Get list of participating organizations.
-		var orgs = await utilities.find('orgs', {}, {sort: {team_number: 1, org_key: 1}},
-			{allowCache: true}
-		);
-		logger.trace(JSON.stringify(orgs));
+		// 2022-02-19 JL: Replaced all that timely/expensive eventMap stuff with a single aggregate call
+		const aggPipeline = [
+			{$sort: {team_number: 1, org_key: 1}},
+			{$lookup: {
+				from: 'events',
+				localField: 'event_key',
+				foreignField: 'key',
+				as: 'event'
+			}},
+			{$set: {
+				event_label: {$concat: [
+					{ $toString: { $arrayElemAt: ['$event.year', 0]}},
+					' ',
+					{ $arrayElemAt: ['$event.name', 0]},
+				]} 
+			}},
+			{$project: {
+				event: 0
+			}}
+		];
 		
-		// Get all events - only get key, year, & name
-		var events = await utilities.find('events', 
-			{}, ['key', 'year', 'name', {sort: {event_key: 1}}],
-			{allowCache: true}
-		);
-		logger.trace(JSON.stringify(events));
-
-		// Create a map of year+name by key
-		var eventMap = {};
-		for (var i in events) {
-			if (events[i].key) {
-				var thisEvent = events[i];
-				eventMap[thisEvent.key] = thisEvent.year + ' ' + thisEvent.name;
-			}
-		}
-
+		const orgs = await utilities.aggregate('orgs', aggPipeline, {allowCache: true});
+		
 		// TODO: currently hard-coded to US English
 		var i18n = await utilities.findOne('i18n',
 			{language: 'en_US'}, {},
@@ -64,13 +65,6 @@ router.get('/', wrap(async (req, res) => {
 		);
 		logger.trace(JSON.stringify(i18n));
 		
-		// Enrich the organizations
-		for (let j in orgs) {
-			if (orgs[j].event_key)
-				if (eventMap[orgs[j].event_key])
-					orgs[j].event_label = eventMap[orgs[j].event_key];
-		}
-
 		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 		var redirectURL = req.query.redirectURL;
 		if( redirectURL == 'undefined' ) redirectURL = undefined;
