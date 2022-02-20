@@ -172,7 +172,7 @@ navHelpers.getNavContents = () => {
 							href: '/manage/scoutingaudit'
 						},
 						{
-							label: 'Scouting Pairs',
+							label: 'Scouting Assignments',
 							href: '/manage/scoutingpairs'
 						},
 						{
@@ -203,6 +203,10 @@ navHelpers.getNavContents = () => {
 						{
 							label: 'Update List of Teams',
 							href: '/manage/currentevent/getcurrentteams'
+						},
+						{
+							label: 'Recalculate Derived Metrics',
+							href: '/admin/sync/recalcderived'
 						},
 					]
 				}

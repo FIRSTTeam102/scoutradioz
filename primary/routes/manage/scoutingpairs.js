@@ -40,21 +40,18 @@ router.get('/', wrap(async (req, res) => {
 	}
 	if (pitScoutSubteams.length == 0) throw new e.InternalServerError('Org config error: No subteams have "pit scout" enabled');
 	
+	// Get all "present but not assigned" members for each subteam
 	let dbPromises = [];
 	for (let key of pitScoutSubteamKeys) {
 		dbPromises.push(
 			utilities.find('users', 
-				{'org_info.subteam_key': key, 'event_info.present': true, 'event_info.assigned':false}, 
+				{'org_info.subteam_key': key, 'event_info.present': true, 'event_info.assigned': false, org_key: org_key}, 
 				{sort: {'name': 1}}
 			)
 		);
 	}
 	//Any team members that are not on a subteam, but are unassigned and present.
-	dbPromises.push( utilities.find('users', {'event_info.assigned': false, 'event_info.present': true}, {sort: {'name': 1}}) );
-	//Get all "present but not assigned" members
-	var progTeamPromise = utilities.find('users', {'org_info.subteam_key':'prog', 'event_info.present':true, 'event_info.assigned':false}, {sort: {'name': 1}});
-	var mechTeamPromise = utilities.find('users', {'org_info.subteam_key':'mech', 'event_info.present':true, 'event_info.assigned':false}, {sort: {'name': 1}});
-	var elecTeamPromise = utilities.find('users', {'org_info.subteam_key':'elec', 'event_info.present':true, 'event_info.assigned':false}, {sort: {'name': 1}});
+	dbPromises.push( utilities.find('users', {'event_info.assigned': false, 'event_info.present': true, org_key: org_key}, {sort: {'name': 1}}) );
 	
 	logger.debug(thisFuncName + 'Requesting scouting pairs from db');
 	
@@ -83,7 +80,7 @@ router.get('/', wrap(async (req, res) => {
 			logger.trace(thisFuncName + 'Rendering');
 		
 			res.render('./manage/scoutingpairs', {
-				title: 'Scouting Pairs',
+				title: 'Scouting Assignments',
 				subteams: pitScoutSubteams,
 				assigned: assigned,
 				available: available
@@ -102,20 +99,6 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 
 	// Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
-
-	// Set our internal DB variable
-	/*
-    var db = req.db;
-
-	if(db._state == 'closed'){ //If database does not exist, send error
-		res.render('./error',{
-			message: "Database error: Offline",
-			error: {status: "If the database is running, try restarting the Node server."}
-		});
-	}
-	*/
-
-	//logger.debug(thisFuncName + data);
 	
 	// The javascript Object was JSON.stringify() on the client end; we need to re-hydrate it with JSON.parse()
 	var selectedMembers = JSON.parse(data);
