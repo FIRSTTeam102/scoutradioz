@@ -273,7 +273,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 	// Build teamID->primary/secondar/tertiary lookup
 	var scoutDataByTeam = {};
 	var scoutDataLen = scoutDataArray.length;
-	for (var i = 0; i < scoutDataLen; i++) {
+	for (let i = 0; i < scoutDataLen; i++) {
 		scoutDataByTeam[scoutDataArray[i].team_key] = scoutDataArray[i];
 		//logger.debug(thisFuncName + "Scout data: For team " + scoutDataArray[i].team_key + ", array is " + JSON.stringify(scoutDataArray[i]));
 	}
@@ -285,7 +285,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 	var matchScouts = await utilities.find('users', {$or: [{'name': {$in: availableArray}}, {'event_info.assigned': true}]}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
 	var matchScoutsLen = matchScouts.length;
 	logger.trace(thisFuncName + '*** Assigned + available, by seniority:');
-	for (var i = 0; i < matchScoutsLen; i++)
+	for (let i = 0; i < matchScoutsLen; i++)
 		logger.trace(thisFuncName + 'member['+i+'] = ' + matchScouts[i].name);
 
 	// who is "first" in line in the 'queue'
@@ -327,7 +327,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 		if (matchBlockCounter >= matchBlockSize) {
 			// Pull off the next 6 scouts
 			scoutArray = [];
-			for (var i = 0; i < 6; i++) {
+			for (let i = 0; i < 6; i++) {
 				scoutArray.push(matchScouts[scoutPointer].name);
 				scoutPointer++;
 				if (scoutPointer >= matchScoutsLen)
@@ -341,7 +341,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 		
 		// reset the scout available map
 		scoutAvailableMap = {};
-		for (var i = 0; i < 6; i++)
+		for (let i = 0; i < 6; i++)
 			scoutAvailableMap[scoutArray[i]] = scoutArray[i];
 		
 		
@@ -356,12 +356,12 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 		var teamArray = [];
 		var teamScoutMatchMap = {};
 		if (redBlueToggle == 0)
-			for (var i = 0; i < 3; i++) {
+			for (let i = 0; i < 3; i++) {
 				teamArray.push(comingMatches[matchesIdx].alliances.red.team_keys[i]);
 				teamArray.push(comingMatches[matchesIdx].alliances.blue.team_keys[i]);
 			}
 		else
-			for (var i = 0; i < 3; i++) {
+			for (let i = 0; i < 3; i++) {
 				teamArray.push(comingMatches[matchesIdx].alliances.blue.team_keys[i]);
 				teamArray.push(comingMatches[matchesIdx].alliances.red.team_keys[i]);
 			}
@@ -380,7 +380,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 			var thisRole = roleArray[roleIdx];
 
 			// Cycle through teams
-			for (var i = 0; i < 6; i++) {
+			for (let i = 0; i < 6; i++) {
 				var thisTeamKey = teamArray[i];
 				// Assigned yet? If not...
 				if (teamScoutMap[thisTeamKey] == null) {
@@ -412,8 +412,8 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 
 		// cycle through teams, find the ones without assignees
 		var leftoverPointer = 0;
-		for (var i = 0; i < 6; i++) {
-			var thisTeamKey = teamArray[i];
+		for (let i = 0; i < 6; i++) {
+			let thisTeamKey = teamArray[i];
 			// Assigned yet? If not...
 			if (teamScoutMap[thisTeamKey] == null) {
 				// Grab the next available scout & increment the pointer
@@ -424,7 +424,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 
 		// show all the team-scout assignments
 		var assignmentPromisesArray = [];
-		for (var property in teamScoutMap) {
+		for (let property in teamScoutMap) {
 			if (teamScoutMap.hasOwnProperty(property)) {
 				// Write the assignment to the DB!
 				var thisMatchTeamKey = thisMatchKey + '_' + property;
@@ -652,7 +652,7 @@ async function generateMatchAllocations(req, res){
 	// Build teamID->primary/secondar/tertiary lookup
 	var scoutDataByTeam = {};
 	var scoutDataLen = scoutDataArray.length;
-	for (var i = 0; i < scoutDataLen; i++){
+	for (let i = 0; i < scoutDataLen; i++){
 		scoutDataByTeam[scoutDataArray[i].team_key] = scoutDataArray[i];
 	}
 	
@@ -704,7 +704,7 @@ async function generateMatchAllocations(req, res){
 			var thisRole = roleArray[roleIdx];
 			// Cycle through the scoring data, looking for blank assignees
 			for (var thisMatchIdx = 0; thisMatchIdx < thisMatchLen; thisMatchIdx++) {
-				var thisScoreData = thisMatchDataArray[thisMatchIdx];
+				let thisScoreData = thisMatchDataArray[thisMatchIdx];
 				//logger.debug(thisFuncName + "thisScoreData=" + thisScoreData);
 				// Not yet assigned?
 				if( !(thisScoreData.assigned_scorer) ){
@@ -792,24 +792,24 @@ async function generateTeamAllocations(req, res){
 	var scoutingAssignedArray = [];
 	
 	var pairsLen = scoutingpairs.length;
-	for (var i = 0; i < pairsLen; i++) {
+	for (let i = 0; i < pairsLen; i++) {
 		var thisPair = scoutingpairs[i];
 		if (thisPair.member3) {
-			var set1 = {}; set1.primary = thisPair.member1; set1.secondary = thisPair.member2; set1.tertiary = thisPair.member3; primaryAndBackupMap[set1.primary] = set1;
+			let set1 = {}; set1.primary = thisPair.member1; set1.secondary = thisPair.member2; set1.tertiary = thisPair.member3; primaryAndBackupMap[set1.primary] = set1;
 			scoutingAssignedArray.push(set1.primary);
-			var set2 = {}; set2.primary = thisPair.member2; set2.secondary = thisPair.member3; set2.tertiary = thisPair.member1; primaryAndBackupMap[set2.primary] = set2;
+			let set2 = {}; set2.primary = thisPair.member2; set2.secondary = thisPair.member3; set2.tertiary = thisPair.member1; primaryAndBackupMap[set2.primary] = set2;
 			scoutingAssignedArray.push(set2.primary);
-			var set3 = {}; set3.primary = thisPair.member3; set3.secondary = thisPair.member1; set3.tertiary = thisPair.member2; primaryAndBackupMap[set3.primary] = set3;
+			let set3 = {}; set3.primary = thisPair.member3; set3.secondary = thisPair.member1; set3.tertiary = thisPair.member2; primaryAndBackupMap[set3.primary] = set3;
 			scoutingAssignedArray.push(set3.primary);
 		}
 		else if (thisPair.member2) {
-			var set1 = {}; set1.primary = thisPair.member1; set1.secondary = thisPair.member2; primaryAndBackupMap[set1.primary] = set1;
+			let set1 = {}; set1.primary = thisPair.member1; set1.secondary = thisPair.member2; primaryAndBackupMap[set1.primary] = set1;
 			scoutingAssignedArray.push(set1.primary);
-			var set2 = {}; set2.primary = thisPair.member2; set2.secondary = thisPair.member1; primaryAndBackupMap[set2.primary] = set2;
+			let set2 = {}; set2.primary = thisPair.member2; set2.secondary = thisPair.member1; primaryAndBackupMap[set2.primary] = set2;
 			scoutingAssignedArray.push(set2.primary);
 		}
 		else {
-			var set1 = {}; set1.primary = thisPair.member1; primaryAndBackupMap[set1.primary] = set1;
+			let set1 = {}; set1.primary = thisPair.member1; primaryAndBackupMap[set1.primary] = set1;
 			scoutingAssignedArray.push(set1.primary);
 		}
 	}
@@ -839,7 +839,7 @@ async function generateTeamAllocations(req, res){
 	var teamassignments = [];
 	var teamassignmentsByTeam = {};
 	var assigneePointer = 0;
-	for (var i = 0; i < teamArrayLen; i++) {
+	for (let i = 0; i < teamArrayLen; i++) {
 		var thisTbaTeam = teamArray[i];
 		var thisTeammemberName = teammembers[assigneePointer].name;
 		var thisPrimaryAndBackup = primaryAndBackupMap[thisTeammemberName];
@@ -882,7 +882,7 @@ async function generateTeamAllocations(req, res){
 		teamassignmentsByTeam[thisTbaTeam.key] = thisAssignment;
 	}
 	logger.trace(thisFuncName + '****** New/updated teamassignments:');
-	for (var i = 0; i < teamArrayLen; i++)
+	for (let i = 0; i < teamArrayLen; i++)
 		logger.trace(thisFuncName + 'team,primary,secondary,tertiary=' + teamassignments[i].team_key + ' ~> ' + teamassignments[i].primary + ',' + teamassignments[i].secondary + ','  + teamassignments[i].tertiary);
 	
 	// Delete ALL the old elements first for the 'current' event
