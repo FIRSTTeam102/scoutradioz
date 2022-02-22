@@ -74,9 +74,8 @@ block content
 			input#teamkey(type="hidden", name="teamkey", value=`${key}`)
 			div(class="w3-auto")
 				each element in layout
-					- var answer = ""
-					- if (pitData) answer = pitData[element.id]
-					- //console.log("element.id, answer="+element.id+","+answer)
+					- let answer = "";
+					- if (pitData) answer = pitData[element.id];
 					
 					case element.type
 						when "checkbox"
@@ -85,6 +84,8 @@ block content
 							include templates/formCounterTextInput
 						when "badcounter"
 							include templates/formBadCounter
+						when "slider"
+							include templates/formSlider
 						when "multiselect"
 							include templates/formMultiselect
 						when "textblock"

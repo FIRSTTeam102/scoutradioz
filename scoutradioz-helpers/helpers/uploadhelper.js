@@ -1,5 +1,12 @@
+/* eslint-disable global-require */
 'use strict';
-const logger = require('@log4js-node/log4js-api').getLogger('helpers.upload');
+var logger;
+try {
+	logger = require('log4js').getLogger('helpers.upload');
+}
+catch(err) {
+	logger = require('@log4js-node/log4js-api').getLogger('helpers.upload');
+}
 /*const logger = {
 	debug: console.log,
 	info: console.log,
@@ -10,7 +17,7 @@ var uploadHelper = module.exports = {};
 
 uploadHelper.config = function(utilitiesModule){
 	utilities = utilitiesModule;
-}
+};
 
 /**
  * Find upload links for a given team.
@@ -26,21 +33,21 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 	if (!(typeof year == 'number')) throw new TypeError('year must be number');
 	if (!(typeof teamKey == 'string')) throw new TypeError('teamKey must be string');
 	
-	logger.debug(`Finding list of images`)
+	logger.debug('Finding list of images');
 	//Sorted by inverse of upload time
-	var uploads = await utilities.find("uploads", 
+	var uploads = await utilities.find('uploads', 
 		{org_key: orgKey, year: year, team_key: teamKey, removed: false}, 
-		{sort: {"index": 1, "uploader.upload_time": -1}},
+		{sort: {'index': 1, 'uploader.upload_time': -1}},
 		{allowCache: true}
 	);
 	var imageKeys = {};
 	var imageLinks = new ImageLinks();
 	
-	logger.debug(`uploads=${JSON.stringify(uploads)}`)
+	logger.debug(`uploads=${JSON.stringify(uploads)}`);
 	
 	if (uploads[0]) {
 		for (var upload of uploads) {
-			if (upload.hasOwnProperty("index")) {
+			if (upload.hasOwnProperty('index')) {
 				const key = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${upload.s3_key}`;
 				//Assign FIRST MATCHING s3 key to corresponding image type
 				switch (upload.index) {
@@ -65,17 +72,17 @@ uploadHelper.findTeamImages = async (orgKey, year, teamKey) => {
 	//For main, a, b, and c, set links to _sm, _md, and _lg respectively
 	for (var prop in imageKeys) {
 		imageLinks[prop] = {
-			sm: imageKeys[prop] + "_sm.jpg",
-			md: imageKeys[prop] + "_md.jpg",
-			lg: imageKeys[prop] + "_lg.jpg",
-		}
+			sm: imageKeys[prop] + '_sm.jpg',
+			md: imageKeys[prop] + '_md.jpg',
+			lg: imageKeys[prop] + '_lg.jpg',
+		};
 	}
 	
 	logger.debug(`imageLinks=${JSON.stringify(imageLinks)}`);
 	
 	logger.removeContext('funcName');
 	return imageLinks;
-}
+};
 
 /**
  * Return ImageLinks from an upload object.
@@ -97,7 +104,7 @@ uploadHelper.getLinks = (upload) => {
 	
 	logger.removeContext('funcName');
 	return imageLinks;
-}
+};
 
 /**
  * Find upload links for a given team.
@@ -113,12 +120,12 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 	if (!(typeof year == 'number')) throw new TypeError('year must be number');
 	if (!(typeof teamKeys == 'object')) throw new TypeError('teamKey must be array');
 	
-	logger.debug(`Finding list of images`);
+	logger.debug('Finding list of images');
 	
 	//Sorted by inverse of upload time
-	var uploads = await utilities.find("uploads",
+	var uploads = await utilities.find('uploads',
 		{org_key: orgKey, year: year, team_key: {$in: teamKeys}, removed: false}, 
-		{sort: {"index": 1, "uploader.upload_time": -1}},
+		{sort: {'index': 1, 'uploader.upload_time': -1}},
 		{allowCache: true}
 	);
 	
@@ -160,7 +167,7 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 			}
 			//uploadTeamNum should never < teamNum
 			else {
-				console.error("WARNING uploadTeamNum < teamNum");
+				console.error('WARNING uploadTeamNum < teamNum');
 				break;
 			}
 		}
@@ -173,7 +180,7 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 		//Now, go through each upload for this team and get its corresponding link
 		if (thisTeamUploads[0]) {
 			for (var upload of thisTeamUploads) {
-				if (upload.hasOwnProperty("index")) {
+				if (upload.hasOwnProperty('index')) {
 					const key = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${upload.s3_key}`;
 					//Assign FIRST MATCHING s3 key to corresponding image type
 					switch (upload.index) {
@@ -196,10 +203,10 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 		//For main, a, b, and c, set links to _sm, _md, and _lg respectively
 		for (var prop in imageKeys) {
 			imageLinks[prop] = {
-				sm: imageKeys[prop] + "_sm.jpg",
-				md: imageKeys[prop] + "_md.jpg",
-				lg: imageKeys[prop] + "_lg.jpg",
-			}
+				sm: imageKeys[prop] + '_sm.jpg',
+				md: imageKeys[prop] + '_md.jpg',
+				lg: imageKeys[prop] + '_lg.jpg',
+			};
 		}
 		
 		imageLinksArr.push(imageLinks);
@@ -209,7 +216,7 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 	
 	logger.removeContext('funcName');
 	return imageLinksArr;
-}
+};
 
 class ImageLinks{
 	/**

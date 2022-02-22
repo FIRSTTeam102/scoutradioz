@@ -12,5 +12,5 @@ helpers.matchData = require('./helpers/matchdatahelper');
 helpers.config = function(utilities){
 	this.upload.config(utilities);
 	this.matchData.config(utilities);
-}
+};
 module.exports = helpers;

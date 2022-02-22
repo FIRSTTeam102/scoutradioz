@@ -1,0 +1,19 @@
+//- Only one instance needed for all slider elements
+script.
+	var sliders = $('input[type=range].slider');
+	sliders.on('input', sliderOnChange);
+	// Run the handler once on start to update the slider's appearance to the appropriate starting value
+	sliders.trigger('input'); 
+	
+	function sliderOnChange() {
+		const _this = $(this);
+		let val = parseFloat(_this.val());
+		let min = parseFloat(_this.attr('min'));
+		let max = parseFloat(_this.attr('max'));
+		let percentage = (val - min) / (max - min) * 100;
+		let name = _this.attr('name');
+		$(`[before][slider-name=${name}]`).css({
+			width: `${percentage}%`
+		});
+		$(`label[slider-name=${name}]`).text(val);
+	}

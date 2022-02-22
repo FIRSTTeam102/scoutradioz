@@ -2,7 +2,7 @@ const router = require('express').Router();
 const logger = require('log4js').getLogger('scouting');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
-const {upload: uploadHelper} = require('@firstteam102/scoutradioz-helpers');
+const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
 const e = require('@firstteam102/http-errors');
 
 router.all('/*', wrap(async (req, res, next) => {
@@ -109,11 +109,8 @@ router.post('/match/submit', wrap(async (req, res) => {
 	//logger.debug('matchData=' + JSON.stringify(matchData));
 
 	// Get the 'layout' so we know types of data elements
-	// var scoreCol = db.get("scoringlayout");
-	// var matchCol = db.get('scoringdata');
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	var layout = await utilities.find('layout', 
 		{org_key: org_key, year: parseInt(event_year), form_type: 'matchscouting'}, 
 		{sort: {'order': 1}},
@@ -153,28 +150,8 @@ router.post('/match/submit', wrap(async (req, res) => {
 	}
 	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(matchData));
 
-	// Calculate derived metrics [SEE ALSO INDEXADMIN.JS]
-	// read in the 'derived' metrics from the matchscouting layout, use to process data
-	var derivedLayout = await utilities.find('layout', 
-		{org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
-
-	for (var thisItem of derivedLayout) {
-		var derivedMetric = NaN;
-		switch (thisItem.operator) {
-			case 'sum':
-				// add up the operands
-				var sum = 0;
-				// eslint-disable-next-line
-				for (var metricId in thisItem.operands)
-					sum += matchData[thisItem.operands[metricId]];
-				derivedMetric = sum;
-				break;
-		}
-		matchData[thisItem.id] = derivedMetric;
-	}
+	// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
+	matchData = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
 	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(matchData));
 
 	// Post modified data to DB

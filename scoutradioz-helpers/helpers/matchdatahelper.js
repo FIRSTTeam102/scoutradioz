@@ -1,5 +1,12 @@
+/* eslint-disable global-require */
 'use strict';
-const logger = require('@log4js-node/log4js-api').getLogger('helpers.matchData');
+var logger;
+try {
+	logger = require('log4js').getLogger('helpers.matchData');
+}
+catch(err) {
+	logger = require('@log4js-node/log4js-api').getLogger('helpers.matchData');
+}
 var utilities = null;
 var matchDataHelper = module.exports = {};
 
@@ -21,6 +28,7 @@ matchDataHelper.isQuantifiableType = function(type) {
 		case 'counter':
 		case 'badcounter':
 		case 'derived':
+		case 'slider':
 			isQuantifiable = true;
 			break;
 		default:
@@ -50,6 +58,60 @@ matchDataHelper.isMetric = function(type) {
 	}
 	
 	return isMetric;
+};
+
+/**
+ * Calculate derived metrics for a provided array of match data items.
+ * @param {string} org_key Org key
+ * @param {number} event_year Year of event
+ * @param {Object} matchData Scouting data ("data" field in the db)
+ * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
+ */
+matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, matchData) {
+	
+	// Just derived fields from the org's match scouting layout for this year
+	var derivedLayout = await utilities.find('layout', 
+		{org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived'}, 
+		{sort: {'order': 1}},
+		{allowCache: true}
+	);
+
+	for (let thisItem of derivedLayout) {
+		var derivedMetric = NaN;
+		switch (thisItem.operator) {
+			case 'sum':
+				// operands: [id1, id2, id3, ...]
+				// add up the operands
+				var sum = 0;
+				// eslint-disable-next-line
+				for (var metricId in thisItem.operands)
+					sum += matchData[thisItem.operands[metricId]];
+				derivedMetric = sum;
+				break;
+			case 'multiselect':
+				// operands: [{id: 'multiselectId', quantifiers: {multiselectValue: numericalValue}}]
+				// 	or [{id: 'multiselectId', numerical: true] to simply parse a number
+				var operand = thisItem.operands[0];
+				if (typeof operand !== 'object') throw new Error(`Invalid derived operand for: ${JSON.stringify(thisItem)}`);
+				if (!operand.id) throw new Error(`Multiselect operand must have an ID: ${JSON.stringify(thisItem)}`);
+				if (!operand.numerical && typeof operand.quantifiers !== 'object') 
+					throw new Error(`Multiselect operand must have either numerical (bool) or quantifiers (object): ${JSON.stringify(thisItem)}`);
+					
+				if (operand.numerical) {
+					derivedMetric = parseFloat(matchData[operand.id]);
+					if (isNaN(derivedMetric)) derivedMetric = 0; // Default to 0. Example: Empty string is the default for multiselects
+				}
+				else {
+					var key = matchData[operand.id];
+					derivedMetric = operand.quantifiers[key];
+				}
+				break;
+		}
+		// Insert the newly derived metric into 
+		matchData[thisItem.id] = derivedMetric;
+	}
+	
+	return matchData;
 };
 
 /**

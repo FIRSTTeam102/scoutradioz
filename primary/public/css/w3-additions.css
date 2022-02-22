@@ -67,38 +67,6 @@ a:hover.text-link{text-decoration: underline;}
 .w3-no-border{border:none!important}
 .w3-no-focus,.w3-no-outline:focus {outline:0;}
 
-.gear-btn{ 
-	min-width:100px; 
-	margin: 15px 8px 0px 8px;
-}
-
-.scouting-counter{
-	font-weight:bold;
-	box-sizing:content-box;
-	width:30px;
-	height:30px;
-	padding:8px;
-	border-radius:30px;
-	margin-top: -12.5px;
-	font-family: "Tahoma, Geneva, sans-serif";
-    font-size: 20px;
-}
-.scouting-counter .minus{
-	margin-top: -4px;
-	font-size: 25px;
-}
-
-.audit-card{
-	font-weight:bold;
-	box-sizing:content-box;
-	width: 20px;
-	height: 20px;
-	padding: 12px;
-	margin: 2px 2px;
-	font-family: "Tahoma, Geneva, sans-serif";
-	font-size: 20px;
-}
-
 .theme-header{
 	margin: 0px;
 }

@@ -24,9 +24,8 @@ block content
 		input#match_team_key(type="hidden", name="match_team_key", value=`${key}`)
 		div(style="text-align:center")
 			each element in layout
-				- var answer = ""
-				- if (answers) answer = answers[element.id]
-				- //console.log("element.id, answer="+element.id+","+answer)
+				- let answer = "";
+				- if (answers) answer = answers[element.id];
 				
 				case element.type
 					when "checkbox"
@@ -35,6 +34,8 @@ block content
 						include templates/formCounter
 					when "badcounter"
 						include templates/formBadCounter
+					when "slider"
+						include templates/formSlider
 					when "multiselect"
 						include templates/formMultiselect
 					when "textblock"
@@ -53,3 +54,4 @@ block content
 		case element.type
 			when "checkbox"
 				include templates/scriptCheckbox
+	include templates/scriptSliders

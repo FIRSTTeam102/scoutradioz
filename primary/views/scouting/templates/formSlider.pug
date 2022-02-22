@@ -1,0 +1,11 @@
+h5=element.label
+div(class="w3-half" style="float: none; margin: auto;")
+	div(class="slider-container")
+		input(type="range" class="slider no-outline" name=element.id min=element.options.min max=element.options.max step=element.options.step value=(answer || element.options.min))
+		div(class="slider-before" before slider-name=element.id)
+	div(class="slider-labels")
+		label(class="slider-label-left")=element.options.min
+		label(class="slider-label-center" slider-name=element.id)=element.options.min
+		label(class="slider-label-right")=element.options.max
+	br 
+	br 

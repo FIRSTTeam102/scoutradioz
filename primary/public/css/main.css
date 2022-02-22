@@ -46,6 +46,7 @@
 .theme-dim,.theme-grey{color:var(--text-primary)!important;background-color:var(--dark)!important}
 .theme-submit{color:var(--black)!important;background-color:var(--button-secondary)!important}
 .theme-red{color:#fff!important;background-color:var(--first-red)!important}
+.gear-btn{min-width:100px;margin: 15px 8px 0px 8px;}
 
 .theme-text{color:var(--text-primary)!important;}
 .theme-text-secondary{color:var(--text-secondary)!important;}
@@ -250,13 +251,87 @@ hr{
 	padding:9px;
 }
 textarea{padding:8px 12px;}
-input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
+input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rgb(118, 118, 151)!important}
 .theme-input::-webkit-input-placeholder {color:var(--placeholder-color);}
 .theme-input:-moz-placeholder {color:var(--placeholder-color);opacity:1;}
 .theme-input::-moz-placeholder {color:var(--placeholder-color);opacity:  1;}
 .theme-input:-ms-input-placeholder {color:var(--placeholder-color);}
 .theme-input::-ms-input-placeholder {color:var(--placeholder-color);}
 .theme-input::placeholder {color:var(--placeholder-color);}
+
+/* For scouting form elements */
+.scouting-counter{
+	font-weight:bold;
+	box-sizing:content-box;
+	width:30px;
+	height:30px;
+	padding:8px;
+	border-radius: 50%!important;
+	margin-top: -12.5px;
+	font-family: "Tahoma, Geneva, sans-serif";
+    font-size: 20px;
+}
+.scouting-counter .minus{
+	margin-top: -4px;
+	font-size: 25px;
+}
+
+.slider-container {
+	position: relative;
+	--height: 24px;
+	--thickness: 5px;
+	height: var(--height);
+}
+
+.slider {
+	-webkit-appearance: none;  /* Override default CSS styles */
+	appearance: none;
+	width: 100%;
+	height: var(--thickness);
+	background: #ffffff80; /* todo: make this a variable */
+	border-radius: 2px;
+}
+.slider-before {
+	width: 0%;
+	height: var(--thickness);
+	background: var(--highlight);
+	border-radius: 2px;
+	position: absolute;
+	top: calc(var(--height) / 2 - var(--thickness) / 2);
+	pointer-events: none;
+}
+.slider-labels {
+	margin-top: 8px;
+}
+.slider-label-left{float: left; opacity: 0.5;}
+.slider-label-right{float: right; opacity: 0.5;}
+.slider-label-center{}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none; 
+	appearance: none;
+	width: var(--height);
+	height: var(--height);
+	background: var(--highlight);
+	border-radius: 50%;
+}
+.slider::-moz-range-thumb {
+	width: var(--height);
+	height: var(--height);
+	background: var(--highlight);
+	border-radius: 50%;
+}
+
+.audit-card{
+	font-weight:bold;
+	box-sizing:content-box;
+	width: 20px;
+	height: 20px;
+	padding: 12px;
+	margin: 2px 2px;
+	font-family: "Tahoma, Geneva, sans-serif";
+	font-size: 20px;
+}
 
 /* For tables that contain spacers */
 .theme-contains-spacer{

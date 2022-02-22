@@ -3,6 +3,8 @@ const logger = require('log4js').getLogger('sync');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const router = express.Router();
+const matchDataHelper = require('@firstteam102/scoutradioz-helpers').matchData;
+const e = require('@firstteam102/http-errors');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -209,12 +211,6 @@ router.get('/recalcderived', wrap(async (req, res) => {
 
 	logger.info('ENTER org_key=' + org_key + ',event_key=' + event_key);
 
-	// read in the 'derived' metrics from the matchscouting layout
-	var matchLayout = await utilities.find('layout', {org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived'}, {sort: {'order': 1}});
-	// logger.debug("matchLayout[0]" + JSON.stringify(matchLayout[0]));
-	// for (var z in matchLayout[0].operands)
-	// 	logger.debug("operands[" + z + "]=" + matchLayout[0].operands[z]);
-
 	// read in existing match scouting data
 	var scored = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} }, { sort: {'time': 1} });
 	// logger.debug("scored[0].data=" + JSON.stringify(scored[0].data));
@@ -226,36 +222,8 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	//var debugCountdown = 0;
 	for (var i in scored) {
 		if (scored[i].data) {
-			var thisScored = scored[i];
-			for (var thisItem of matchLayout) {
-				//var thisItem = matchLayout[j];
-				
-				var derivedMetric = NaN;
-				switch (thisItem.operator) {
-					case 'sum':
-						// operands: [id1, id2, id3, ...]
-						// add up the operands
-						var sum = 0;
-						//eslint-disable-next-line
-						for (var metricId in thisItem.operands)
-							sum += thisScored.data[thisItem.operands[metricId]];
-						derivedMetric = sum;
-						break;
-					case 'multiselect':
-						// operands: [{id: 'multiselectId', quantifiers: {multiselectValue: numericalValue}}]
-						// 	or [{id: 'multiselectId', numerical: true] to simply parse a number
-						var operand = thisItem.operands[0];
-						if (operand.numerical) {
-							derivedMetric = parseFloat(thisScored.data[operand.id]);
-						}
-						else {
-							var key = thisScored.data[operand.id];
-							derivedMetric = operand.quantifiers[key];
-						}
-						break;
-				}
-				thisScored.data[thisItem.id] = derivedMetric;
-			}	
+			// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
+			var thisScored = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, scored[i]);
 			updatedScored.push(thisScored);
 		}
 	}
