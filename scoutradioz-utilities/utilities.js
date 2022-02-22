@@ -833,7 +833,7 @@ utilities.requestTheBlueAlliance = async function(url){
 	//Create promise first
 	var thisPromise = new Promise(function(resolve, reject){
 		
-		var Client = require('@firstteam102/node-rest-client').Client;
+		var Client = require('node-rest-client').Client;
 		var client = new Client();
 		
 		//Inside promise function, perform client request
@@ -862,7 +862,7 @@ utilities.requestTheBlueAlliance = async function(url){
 utilities.getTBAKey = async function(){
 	logger.addContext('funcName', 'getTBAKey');
 	
-	var tbaArgs = await utilities.findOne('passwords', {name: 'tba-api-headers'});
+	var tbaArgs = await utilities.findOne('passwords', {name: 'tba-api-headers'}, {}, {allowCache: true});
 	
 	if(tbaArgs){
 		var headers = tbaArgs.headers;
@@ -898,9 +898,13 @@ class WriteResult{
 	 * @param {number} writeConcernError.code An integer value identifying the write concern error.
 	 * @param {any} writeConcernError.errInfo A document identifying the write concern setting related to the error.
 	 * @param {string} writeConcernError.errmsg A description of the error.
+	 * @param {number} insertedCount Number of documents inserted [bulkWrite]
+	 * @param {ArrayLike} insertedIds List of inserted IDs [bulkWrite]
 	 */
-	constructor(nInserted, nMatched, nModified, nUpserted, _id, nRemoved, writeError, writeConcernError){
+	constructor(nInserted, nMatched, nModified, nUpserted, _id, nRemoved, writeError, writeConcernError, insertedCount, insertedIds){
 		this.nInserted = nInserted;
+		this.insertedCount = insertedCount;
+		this.insertedIds = insertedIds;
 		this.nMatched = nMatched;
 		this.nModified = nModified;
 		this.nUpserted = nUpserted;
