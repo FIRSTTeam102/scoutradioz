@@ -88,7 +88,7 @@ block content
 						
 						//if alert, then send alert prompt
 						if(response.alert){
-							alert(response.alert);
+							NotificationCard.error(response.alert);
 						}
 						
 						//if redirect, then redirect
@@ -98,7 +98,7 @@ block content
 					});
 				}
 				else{
-					alert("Both new password forms must be equal.");
+					NotificationCard.error("Both new password forms must be equal.");
 				}
 			}
 			//If password is needed and has been entered, submit to /withpassword
@@ -120,7 +120,7 @@ block content
 					
 					//if alert, then send alert prompt
 					if(response.alert){
-						alert(response.alert);
+						NotificationCard.error(response.alert);
 					}
 					
 					//if redirect, then redirect
