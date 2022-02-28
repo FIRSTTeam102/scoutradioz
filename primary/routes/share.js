@@ -48,6 +48,8 @@ router.get('/*', wrap(async (req, res, next) => {
 				else {
 					redirectURL += '?alert=' + alert;
 				}
+				// 2022-02-27 JL: URL-encoding ? and & for the alert+redirect so it can be passed without parsing issues (? = %3f, & = %26) (note: further down the chain, Express parses them anyways)
+				redirectURL = redirectURL.replace(/\?/g, '%3f').replace(/\&/g, '%26');
 				
 				res.redirect(`/selectorg?org_key=${orgKey}&redirectURL=${redirectURL}`);
 			}
@@ -66,6 +68,7 @@ router.get('/*', wrap(async (req, res, next) => {
 		//if there is a trailing url, set it as redirect
 		if (urlBits.length > 0) {
 			redirectURL = '/' + urlBits.join('/');
+			redirectURL = redirectURL.replace(/\?/g, '%3f').replace(/\&/g, '%26'); // 2022-02-27 JL: URL encoding ? and & for redirect
 			res.redirect(`/?redirectURL=${redirectURL}`);
 		}
 		//If no trailing url, just go to home screen

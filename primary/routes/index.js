@@ -145,10 +145,16 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 		//now, once default user is logged in, redirect to index
 		logger.debug('User is now logged in, redirecting');
 		
-		if (req.body.redirectURL || req.query.redirectURL) {
-			
-			logger.debug(`redirect: ${req.body.redirectURL || req.query.redirectURL}`);
-			res.redirect(req.body.redirectURL || req.query.redirectURL);
+		let redirectURL = req.body.redirectURL || req.query.redirectURL;
+		
+		if (redirectURL) {
+			logger.debug(`redirect: ${redirectURL}`);
+			if (req.query.alert) {
+				// 2022-02-27 JL: fixing alert not showing up on login redirects
+				if (redirectURL.includes('?')) redirectURL += '&alert=' + req.query.alert;
+				else redirectURL += '?alert=' + req.query.alert;
+			}
+			res.redirect(redirectURL);
 		}
 		else {
 			res.redirect('/home');
