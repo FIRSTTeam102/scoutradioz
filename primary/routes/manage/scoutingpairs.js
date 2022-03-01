@@ -45,13 +45,19 @@ router.get('/', wrap(async (req, res) => {
 	for (let key of pitScoutSubteamKeys) {
 		dbPromises.push(
 			utilities.find('users', 
-				{'org_info.subteam_key': key, 'event_info.present': true, 'event_info.assigned': false, org_key: org_key}, 
+				{
+					'org_info.subteam_key': key, 'event_info.present': true, 'event_info.assigned': false, 
+					org_key: org_key, visible: true,
+				}, 
 				{sort: {'name': 1}}
 			)
 		);
 	}
 	//Any team members that are not on a subteam, but are unassigned and present.
-	dbPromises.push( utilities.find('users', {'event_info.assigned': false, 'event_info.present': true, org_key: org_key}, {sort: {'name': 1}}) );
+	dbPromises.push(utilities.find('users', 
+		{'event_info.assigned': false, 'event_info.present': true, org_key: org_key, visible: true}, 
+		{sort: {'name': 1}}
+	));
 	
 	logger.debug(thisFuncName + 'Requesting scouting pairs from db');
 	
@@ -120,7 +126,7 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 		selectedUpdates.push(selectedMembers.member3);
 	logger.trace(thisFuncName + 'selectedUpdates=' + JSON.stringify(selectedUpdates));
 
-	var query = {'name': {$in: selectedUpdates}};
+	var query = {'name': {$in: selectedUpdates}}; // TODO 2: Use _id, not name, because names can be modified!
 	var update = {$set: {'event_info.assigned': true}};
 	
 	await utilities.update('users', query, update, {multi: true, castIds: true});
@@ -157,7 +163,8 @@ router.post('/deletescoutingpair', wrap(async (req, res) => {
 	if (thisPair.member3)
 		nameList.push(thisPair.member3);
 	logger.trace('nameList=' + JSON.stringify(nameList));
-
+	
+	// TODO: Use _id, not name, because names can be modified!
 	await utilities.bulkWrite('users', [{updateMany:{filter:{ 'name': {$in: nameList }}, update:{ $set: { 'event_info.assigned' : false } }}}]);
 
 	//teamCol.bulkWrite([{updateMany:{filter:{ "name": {$in: nameList }}, update:{ $set: { "assigned" : "false" } }}}], function(e, docs){
@@ -184,6 +191,8 @@ router.post('/generateteamallocations', wrap(async (req, res) => {
 	// Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + 'ENTER');
 
+	// TODO: Use _id, not name, because names can be modified!
+	//	also, change to findOne instead of doing stuff with user[0] and whatever
 	var user = await utilities.find('users', { name: req.user.name });
 
 	if(!user[0]){
@@ -265,6 +274,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
 	// - matchscouts is the "queue"; need a pointer to indicate where we are
+	// TODO: Use _id, not name, because names can be modified!
 	var matchScouts = await utilities.find('users', {$or: [{'name': {$in: availableArray}}, {'event_info.assigned': true}]}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
 	var matchScoutsLen = matchScouts.length;
 	logger.trace(thisFuncName + '*** Assigned + available, by seniority:');
@@ -440,6 +450,7 @@ router.post('/clearmatchallocations', wrap(async (req, res) => {
 		return res.send({status: 401, alert: 'No password entered.'});
 	}
 	
+	// TODO: Use _id, not name, because names can be modified!
 	var user = await utilities.find('users', { name: req.user.name }, {});
 
 	if(!user[0]){
@@ -495,6 +506,8 @@ router.post('/generatematchallocations', wrap(async (req, res) => {
 		return res.send({status: 401, alert: 'No password entered.'});
 	}
 	
+	// TODO: Use _id, not name, because names can be modified!
+	//	also change to findOne
 	var user = await utilities.find('users', { name: req.user.name }, {});
 
 	if(!user[0]){
@@ -543,7 +556,7 @@ router.get('/swapmembers', wrap(async (req, res) => {
 	console.log(thisFuncName + 'distinct assigned_scorers: ' + JSON.stringify(scorers));
 
 	// Get list of all users for this org
-	var users = await utilities.find('users', {org_key: org_key}, {sort:{ 'name': 1 }});
+	var users = await utilities.find('users', {org_key: org_key, visible: true}, {sort:{ 'name': 1 }});
 
 	// Go to a Pug to show two lists & a button to do the swap - form with button
 	res.render('./manage/swapmembers', {
@@ -801,6 +814,7 @@ async function generateTeamAllocations(req, res){
 	//
 	// Read all present members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
+	// TODO: Use _id, not name, because names can be modified!
 	var teammembers = await utilities.find('users', { 'name': {$in: scoutingAssignedArray }}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
 	var teammembersLen = teammembers.length;
 

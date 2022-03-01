@@ -330,7 +330,7 @@ router.post('/updatepresent', wrap(async (req, res) => {
 	//2019-11-20 JL: updated to only work with members of the right organization.
 	const orgKey = req.user.org_key;
 	
-	await utilities.update('users', {org_key: orgKey}, { $set: { 'event_info.present' : 'false' } }, {multi: true});
+	await utilities.update('users', {org_key: orgKey, visible: true}, { $set: { 'event_info.present' : 'false' } }, {multi: true});
 	
 	//Get a list of all present member IDs.
 	var allPresentMembers = [];
