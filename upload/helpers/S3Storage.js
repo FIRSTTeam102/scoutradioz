@@ -11,23 +11,29 @@ var parallel = require('run-parallel');
 const Jimp = require('jimp');
 const concat = require('concat-stream');
 const logger = require('log4js').getLogger('S3Storage');
+const { Upload } = require('@aws-sdk/lib-storage');
+const { S3Client } = require('@aws-sdk/client-s3');
+
+logger.level = process.env.LOG_LEVEL || 'debug';
 
 function staticValue (value) {
 	return function (req, file, cb) {
 		cb(null, value);
 	};
 }
+	
+const sizes = ['lg', 'md', 'sm'];
 
 var defaultAcl = staticValue('private');
 var defaultContentType = staticValue('application/octet-stream');
 
 //from multer-s3
-var defaultMetadata = staticValue(null);
-var defaultCacheControl = staticValue(null);
-var defaultContentDisposition = staticValue(null);
+var defaultMetadata = staticValue(undefined);
+var defaultCacheControl = staticValue(undefined);
+var defaultContentDisposition = staticValue(undefined);
 var defaultStorageClass = staticValue('STANDARD');
-var defaultSSE = staticValue(null);
-var defaultSSEKMS = staticValue(null);
+var defaultSSE = staticValue(undefined);
+var defaultSSEKMS = staticValue(undefined);
 //from AvatarStorage
 var defaultOutput = staticValue('png');
 var defaultGreyscale = staticValue(false);
@@ -123,8 +129,6 @@ function processImage (opts, cb) {
 	logger.trace(opts);
 	
 	let batch = [];
-	
-	const sizes = ['lg', 'md', 'sm'];
 	const key = opts.key;
 		
 	const concatFile = concat(imageData => {
@@ -249,11 +253,17 @@ function processImage (opts, cb) {
 }
 
 function S3Storage (opts) {
-
-	switch (typeof opts.s3) {
-		case 'object': this.s3 = opts.s3; break;
-		default: throw new TypeError('Expected opts.s3 to be object');
-	}
+	
+	// 2022-02-28 JL: Updating to aws-sdk v3, it needs to be constructed differently
+	// 	https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/index.html
+	// 	https://github.com/aws/aws-sdk-js-v3/blob/main/lib/lib-storage/README.md
+	// switch (typeof opts.s3) {
+	// 	case 'object': this.s3 = opts.s3; break;
+	// 	default: throw new TypeError('Expected opts.s3 to be object');
+	// }
+	this.s3 = new S3Client({
+		region: process.env.S3_REGION
+	});
 
 	switch (typeof opts.bucket) {
 		case 'function': this.getBucket = opts.bucket; break;
@@ -384,12 +394,16 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 			
 			logger.debug(`files=${JSON.stringify(files).substring(0,200)}`);
 			
+			// 2022-03-01 JL: Upload no longer returns the object location... so we have to piece it together ourselves
+			var returnResult = [];
+			
 			for(var file of files){
 				
 				logger.info(`uploading image, key=${file.key}`);
 				
 				var currentSize = 0;
-
+				
+				// https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/modules/putobjectrequest.html
 				var params = {
 					Bucket: opts.bucket,
 					Key: file.key,
@@ -407,7 +421,11 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 					params.ContentDisposition = opts.contentDisposition;
 				}
 				
-				let upload = this.s3.upload(params);
+				// let upload = this.s3.upload(params);
+				let upload = new Upload({
+					client: this.s3,
+					params: params
+				});
 				
 				upload.on('httpUploadProgress', function (ev) {
 					if (ev.total) currentSize = ev.total;
@@ -415,9 +433,20 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 				});
 				
 				//Async function that returns S3 upload promise when run
-				//var sendUpload = upload.promise;
-				
 				uploadBatch.push(upload);
+				
+				returnResult.push({
+					size: currentSize,
+					bucket: opts.bucket,
+					key: opts.key,
+					acl: opts.acl,
+					contentType: opts.contentType,
+					contentDisposition: opts.contentDisposition,
+					storageClass: opts.storageClass,
+					serverSideEncryption: opts.serverSideEncryption,
+					metadata: opts.metadata,
+					location: `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${file.key}`
+				});
 			}
 			
 			logger.debug('Got batch of upload functions, going to run them in parallel now');
@@ -426,7 +455,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 			
 			//Run every upload function and create array of promises
 			for(let upload of uploadBatch){
-				uploadPromises.push( upload.promise() );
+				uploadPromises.push( upload.done() );
 			}
 			
 			logger.debug(`uploadPromises=${JSON.stringify(uploadPromises)}`);
@@ -434,27 +463,9 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 			//Resolve all promises
 			Promise.all(uploadPromises)
 				.then(results => {
-					var finalResult = [];
-					
-					for(var result of results){
-						finalResult.push({
-							size: currentSize,
-							bucket: opts.bucket,
-							key: opts.key,
-							acl: opts.acl,
-							contentType: opts.contentType,
-							contentDisposition: opts.contentDisposition,
-							storageClass: opts.storageClass,
-							serverSideEncryption: opts.serverSideEncryption,
-							metadata: opts.metadata,
-							location: result.Location,
-							etag: result.ETag,
-							versionId: result.VersionId,
-						});
-					}
-					
-					logger.debug(`Upload done! ${JSON.stringify(finalResult)}`);
-					cb(null, finalResult);
+								
+					logger.debug(`Upload done! ${JSON.stringify(returnResult)}`);
+					cb(null, returnResult);
 				})
 				.catch(cb);
 		});

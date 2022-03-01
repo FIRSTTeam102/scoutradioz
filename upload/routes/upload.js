@@ -6,15 +6,16 @@ const S3Storage = require('../helpers/S3Storage');
 const crypto = require('crypto');
 const wrap = require('express-async-handler');
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
+logger.level = process.env.LOG_LEVEL || 'debug';
+// const AWS = require('aws-sdk');
+// const s3 = new AWS.S3();
+
 
 const utilities = require('@firstteam102/scoutradioz-utilities');
 
 logger.warn('Images will be uploaded to S3.');
 
 var storage = S3Storage({
-	s3: s3,
 	bucket: process.env.S3_BUCKET,
 	contentType: S3Storage.AUTO_CONTENT_TYPE,
 	

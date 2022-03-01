@@ -246,7 +246,7 @@ function makeZip(folder, cb) {
 			console.log('Size: ' + sizeBytes / 1000 + ' KB');
 		}
 		
-		// fs.writeFileSync('output.zip', data); // **for debugging**
+		// fs.writeFileSync('output.zip', data); return cb('debuggin'); // **for debugging**
 		cb(null, data);
 	});
 	

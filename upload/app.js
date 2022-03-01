@@ -48,7 +48,7 @@ if( process.env.COLORIZE_LOGS == 'true'){
 log4js.configure(log4jsConfig);
 
 const logger = log4js.getLogger('app.js');
-logger.level = 'debug';
+logger.level = process.env.LOG_LEVEL || 'debug';
 
 //Create app
 const app = express();
