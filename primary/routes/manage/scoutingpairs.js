@@ -275,7 +275,8 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 	//
 	// - matchscouts is the "queue"; need a pointer to indicate where we are
 	// TODO: Use _id, not name, because names can be modified!
-	var matchScouts = await utilities.find('users', {$or: [{'name': {$in: availableArray}}, {'event_info.assigned': true}]}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
+	// 2022-03-01, M.O'C: Adding 'org_key': org_key into the 2nd part of the "or" clause
+	var matchScouts = await utilities.find('users', {$or: [{'name': {$in: availableArray}}, {'event_info.assigned': true, 'org_key': org_key}]}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
 	var matchScoutsLen = matchScouts.length;
 	logger.trace(thisFuncName + '*** Assigned + available, by seniority:');
 	for (let i = 0; i < matchScoutsLen; i++)
