@@ -141,6 +141,10 @@ app.use(usefunctions.authenticate);
 //IMPORTANT: Must be called last, because it may rely on other useFunctions data
 app.use(usefunctions.setViewVariables);
 
+//SCOUTRADIOZ ADMIN ROUTE FOR SYNCING - PLACED FIRST TO ENABLE UNAUTHENTICATED AUTOMATED CALLS
+var sync = require('./routes/admin/sync');
+app.use('/admin/sync', sync);
+
 //USER ROUTES
 var index = require('./routes/index');
 var user = require('./routes/user');
@@ -161,7 +165,6 @@ var scoutingpairs = require('./routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
 var adminindex = require('./routes/admin/indexadmin');
 var externaldata = require('./routes/admin/externaldata');
-var sync = require('./routes/admin/sync');
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
@@ -181,7 +184,6 @@ app.use('/manage/scoutingaudit', scoutingaudit);
 app.use('/manage/manualdata', manualdata);
 
 app.use('/admin', adminindex);
-app.use('/admin/sync', sync);
 app.use('/admin/externaldata', externaldata);
 
 app.use('/', share);
