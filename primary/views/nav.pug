@@ -3,7 +3,7 @@
 	Included by layout.pug.
 	//
 //- The following mixins are for dynamically creating sliding menu items. See helpers/nav.js for the nav menu creation process.
-- const bracketsRegex = /\[\[(.*)\]\]/g; // For "unimportant text" in a label, put it inside [[]]
+- const bracketsRegex = /\[\[(.*)\]\]/; // For "unimportant text" in a label, put it inside [[]]
 mixin mmenuLabel(item)
 	span
 		if item.sprite

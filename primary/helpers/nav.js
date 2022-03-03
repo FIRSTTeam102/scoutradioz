@@ -168,6 +168,15 @@ navHelpers.getNavContents = () => {
 							href: '/manage/members'
 						},
 						{
+							label: 'Audit/Reset Member Passwords',
+							href: '/manage/user/resetpassword'
+						},
+					]
+				},
+				{
+					label: (req, res) => req.event ? `Scouters: [[${req.event.name}]]` : 'Scouters',
+					submenu: [
+						{
 							label: 'Scouting Audit',
 							href: '/manage/scoutingaudit'
 						},
@@ -183,14 +192,10 @@ navHelpers.getNavContents = () => {
 							label: 'Set Present',
 							href: '/manage/members/present'
 						},
-						{
-							label: 'Audit/Reset Member Passwords',
-							href: '/manage/user/resetpassword'
-						},
 					]
 				},
 				{
-					label: 'Current Event',
+					label: (req, res) => req.event ? `Event Data: [[${req.event.name}]]` : 'Event Data',
 					submenu: [
 						{
 							label: 'Matches',
