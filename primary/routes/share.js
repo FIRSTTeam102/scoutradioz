@@ -42,14 +42,14 @@ router.get('/*', wrap(async (req, res, next) => {
 				
 				var alert = `You are viewing ${org.nickname}.\nTo change the organization you wish to view, click *Org: ${org.nickname}* in the menu and select *Change Organization*.&type=good&autofade=true`;
 				
+				// 2022-03-02 JL: We only need to fix the redirectURL if it includes a ? - otherwise, the /page?alert= would turn into /page%3falert= and throw a 404
 				if (redirectURL.includes('?')) {
 					redirectURL += '&alert=' + alert;
+					redirectURL = req.fixRedirectURL(redirectURL);
 				}
 				else {
 					redirectURL += '?alert=' + alert;
 				}
-				// 2022-02-27 JL: URL-encoding ? and & for the alert+redirect so it can be passed without parsing issues (? = %3f, & = %26) (note: further down the chain, Express parses them anyways)
-				redirectURL = redirectURL.replace(/\?/g, '%3f').replace(/\&/g, '%26');
 				
 				res.redirect(`/selectorg?org_key=${orgKey}&redirectURL=${redirectURL}`);
 			}
@@ -68,7 +68,7 @@ router.get('/*', wrap(async (req, res, next) => {
 		//if there is a trailing url, set it as redirect
 		if (urlBits.length > 0) {
 			redirectURL = '/' + urlBits.join('/');
-			redirectURL = redirectURL.replace(/\?/g, '%3f').replace(/\&/g, '%26'); // 2022-02-27 JL: URL encoding ? and & for redirect
+			redirectURL = req.fixRedirectURL(redirectURL); // 2022-02-27 JL: URL encoding ? and & for redirect
 			res.redirect(`/?redirectURL=${redirectURL}`);
 		}
 		//If no trailing url, just go to home screen

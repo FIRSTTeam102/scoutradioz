@@ -66,13 +66,11 @@ router.get('/', wrap(async (req, res) => {
 		logger.trace(JSON.stringify(i18n));
 		
 		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
-		var redirectURL = req.query.redirectURL;
-		if( redirectURL == 'undefined' ) redirectURL = undefined;
 		
 		res.render('./index', {
 			title: 'Select an Organization',
 			orgs: orgs,
-			redirectURL: redirectURL,
+			redirectURL: req.getRedirectURL(),
 			isOrgSelectScreen: true,
 			lang: i18n.labels
 		});
@@ -108,7 +106,7 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 			res.clearCookie('org_key');
 		}
 		//Redirect to home, without the invalid org_key query parameter
-		return res.redirect(`/?redirectURL=${req.query.redirectURL}`);
+		return res.redirect(`/?redirectURL=${req.getRedirectURL()}`);
 	}
 	
 	//Now, sign in to organization's default user
@@ -145,7 +143,7 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 		//now, once default user is logged in, redirect to index
 		logger.debug('User is now logged in, redirecting');
 		
-		let redirectURL = req.body.redirectURL || req.query.redirectURL;
+		let redirectURL = req.getRedirectURL();
 		
 		if (redirectURL) {
 			logger.debug(`redirect: ${redirectURL}`);
