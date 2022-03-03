@@ -35,7 +35,7 @@ block content
 						button(class="w3-btn theme-red w3-block" onclick=`confirmDelete("${member.name}", "${member._id}")`)
 							span(class="sprite sp-24 sp-inline no-margin sp-delete")
 					//-updateMember submits to javascript func.
-					form(id=`updateMember${member._id}` action=`javascript:updateMember('${member._id}')` method="post")
+					form(id=`updateMember_${member._id}` action=`javascript:updateMember('${member._id}')` method="post")
 						input(type="hidden" name="memberId" value=member._id)
 						//update button
 						div(class="w3-col s7 mauto w3-padding-small" data-update-button)
@@ -110,6 +110,7 @@ block content
 			i If you create a Team Admin user, please make sure they log in and create a secure password for themselves. Otherwise, a student could log in as them.
 			i 
 				a(href='/manage/members/passwords' class="link") Check here to see if they have set a password.
+		input(type="hidden" name="selfUserId" value=user._id)
 	script.
 		
 		function confirmDelete(memberName, memberId){
@@ -121,20 +122,25 @@ block content
 		
 		function updateMember( memberId ){
 			
-			var memberForm = $(`#updateMember${memberId}`);
+			//- If the user is updating their own information
+			if (memberId === $('input[name="selfUserId"]').val()) {
+				if (!confirm("Are you sure you want to edit yourself?")) {
+					return;
+				}
+			}
+			
+			var memberForm = $(`#updateMember_${memberId}`);
 			
 			var memberFormContents = memberForm.serialize();
 			
 			$.post( '/manage/members/updatemember', memberFormContents, function(response){
 				
 				//This is the page-determined response status code
-				switch( response.status ){
-					case 401:
-						NotificationCard.error(response.message);
-						break;
-					case 200:
-						NotificationCard.show(response.message);
-						break;
+				if (response.status == 200) {
+					NotificationCard.show(response.message);
+				}
+				else {
+					NotificationCard.error(response.message);
 				}
 				
 				setTimeout(function(){
@@ -147,7 +153,6 @@ block content
 			let btnDelete = $('[data-delete-button]');
 			let btnUpdate = $('[data-update-button]');
 			let width = btnDelete.outerWidth() + btnUpdate.outerWidth();
-			console.log(width);
 			$('#actions').css({
 				width: width
 			});

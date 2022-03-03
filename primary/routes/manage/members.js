@@ -130,13 +130,13 @@ router.post('/updatemember', wrap(async (req, res) => {
 	var thisFuncName = 'members.updatemember[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
-	var org_key = req.user.org_key;
-	var memberId = req.body.memberId;
-	var name = req.body.name;
-	var subteam_key = req.body.subteam_key;
-	var class_key = req.body.class_key;
-	var years = req.body.years;
-	var role_key = req.body.role_key;
+	const org_key = req.user.org_key;
+	const memberId = req.body.memberId;
+	const name = req.body.name;
+	const subteam_key = req.body.subteam_key;
+	const class_key = req.body.class_key;
+	const years = req.body.years;
+	const role_key = req.body.role_key;
 	
 	// recalculate seniority
 	var seniority = years;
@@ -162,7 +162,12 @@ router.post('/updatemember', wrap(async (req, res) => {
 			seniority += '.0';
 	}
 	
-	var existingUserPreEdit = await utilities.findOne('users', {_id: memberId});
+	// 2022-03-02 JL: Needed to shuffle the logic a bit so that the final update query only uses _id (not org_key) so that utilities cache is cleared for that query
+	var existingUserPreEdit = await utilities.findOne('users', {org_key: org_key, _id: memberId});
+	if (!existingUserPreEdit) return res.send({
+		status: 400,
+		message: 'The requested user does not exist inside your organization.'
+	});
 	var existingUserRole = await utilities.findOne('roles', {role_key: existingUserPreEdit.role_key});
 	
 	//Check the role of the user they're trying to edit, and see if they are authorized to edit that user
@@ -202,7 +207,7 @@ router.post('/updatemember', wrap(async (req, res) => {
 			//log it
 			logger.debug(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
 			
-			var writeResult = await utilities.update('users', {org_key: org_key, _id: memberId}, updateQuery);
+			var writeResult = await utilities.update('users', {_id: memberId}, updateQuery);
 			
 			console.log(writeResult);
 			
