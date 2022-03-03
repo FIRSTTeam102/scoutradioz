@@ -50,6 +50,7 @@ block content
 					h1 Pit Scouting Info
 					- var changeCount = -0.5;
 					each element in layout
+						- element.label = resolveLabelTemplate(element.label, team.key)
 						case element.type
 							when "checkbox"
 								- if (data[element.id] != 0 && data[element.id] != '' && data[element.id] != null)
@@ -160,6 +161,7 @@ block content
 								case element.type
 									when "textblock"
 										if (match.scoringdata[element.id])
+											- element.label = resolveLabelTemplate(element.label, teamKey)
 											h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 				
 				if (matches && matches.length > 0)		

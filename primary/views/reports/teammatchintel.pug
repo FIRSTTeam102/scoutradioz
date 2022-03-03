@@ -10,10 +10,11 @@ block content
 		h2(class="theme-text")
 			a(href=`/reports/teamintel?team_key=${teammatch.team_key}`)= teammatch.team_key.replace('frc','Team ')
 		p
-		h3 Match ##{teammatch.match_number} - #{teammatch.alliance} alliance 
+		h3 Match ##{teammatch.match_number} - #{teammatch.alliance[0].toUpperCase()+teammatch.alliance.substr(1)} alliance 
 		hr
 		if (data)
 			each element in layout
+				- element.label = resolveLabelTemplate(element.label, teamKey)
 				case element.type
 					when "checkbox"
 						- var boolVal = 'Yes';
@@ -24,7 +25,7 @@ block content
 					when "derived"
 					when "multiselect"
 					when "textblock"
-						h4(class="theme-text") #{element.label}: <strong>#{data[element.id]}</strong>
+						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{data[element.id]}</strong>
 					when "h2"
 						h2 #{element.label}
 					when "h3"
@@ -34,17 +35,17 @@ block content
 		else
 			h4(class="theme-text") 
 				i
-					span No match scouting data available for team
+					span No match scouting data available for team&nbsp;
 					span=teamKey.substring(3)
-					span for match 
+					span &nbsp;for match 
 					span=teammatch.match_number
 					span .
 	else
 		h4(class="theme-text") 
 			i
-				span No match scouting data available for team 
+				span No match scouting data available for team&nbsp;
 				span=teamKey.substring(3)
-				span  for this match.
+				span &nbsp;for this match.
 		h4
 			a(class="gear-btn theme-link w3-btn" href=`/reports/teamintel?team_key=${teamKey}`) View this team's intel page.
 		

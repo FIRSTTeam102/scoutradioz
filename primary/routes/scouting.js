@@ -76,6 +76,7 @@ router.get('/match*', wrap(async (req, res) => {
 		key: matchTeamKey,
 		alliance: alliance,
 		answers: answers,
+		teamKey: teamKey,
 		images: images
 	});
 }));
@@ -200,6 +201,7 @@ router.get('/pit*', wrap(async (req, res) => {
 		pitData: pitData, 
 		key: teamKey,
 		uploadURL: uploadURL,
+		teamKey: teamKey,
 		images: images
 	});
 }));

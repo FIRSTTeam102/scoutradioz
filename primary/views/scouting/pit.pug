@@ -76,6 +76,7 @@ block content
 				each element in layout
 					- let answer = "";
 					- if (pitData) answer = pitData[element.id];
+					- if (element.label) element.label = resolveLabelTemplate(element.label, teamKey);
 					
 					case element.type
 						when "checkbox"

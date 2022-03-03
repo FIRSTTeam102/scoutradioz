@@ -26,6 +26,7 @@ block content
 			each element in layout
 				- let answer = "";
 				- if (answers) answer = answers[element.id];
+				- element.label = resolveLabelTemplate(element.label, teamKey);
 				
 				case element.type
 					when "checkbox"
