@@ -330,7 +330,7 @@ class NavigationBar{
 	}
 	
 	menuClose(){
-		console.log('menuClose');
+		// console.log('menuClose');
 		
 		this.moving = true;
 		//Get final positions
