@@ -24,6 +24,8 @@ block content
 	div#passwordCreationContainer(class="w3-contaner w3-padding-16 w3-hide")
 		h6
 			i Please create a new password.
+			span(class="sprite sp-info sp-24 sp-inline w3-tooltip")
+				span(class="w3-tooltiptext") You have elevated permissions in your organization, so you must set a password to ensure that others cannot log in as you.
 		div(class="w3-container w3-padding-16")
 			div(class="w3-quarter w3-label theme-inline-padding")
 				label New Password: 
@@ -152,11 +154,22 @@ block content
 					else if(response.create_password){
 						createPasswordNeeded = true;
 						$("#passwordCreationContainer").removeClass("w3-hide");
+						// if they change the dropdown, then hide the new password prompt & clear the new password fields
+						$('select[name=user]').on('change', () => {
+							$("#passwordCreationContainer").addClass("w3-hide");
+							$("input[name=newPassword1]").val('');
+							$("input[name=newPassword2]").val('');
+						});
 					}
 					//finally, if password is needed, then show password prompt.
 					else if(response.password_needed == true){
 						passwordNeeded = true;
 						$("#passwordContainer").removeClass("w3-hide");
+						// if they change the dropdown, then hide the password prompt & clear the password field
+						$('select[name=user]').on('change', () => {
+							$("#passwordContainer").addClass("w3-hide");
+							$("input[name=password]").val('');
+						});
 					}
 				});
 			}
