@@ -154,6 +154,7 @@ block content
 					else if(response.create_password){
 						createPasswordNeeded = true;
 						$("#passwordCreationContainer").removeClass("w3-hide");
+						$("input[name=newPassword1]").focus();
 						// if they change the dropdown, then hide the new password prompt & clear the new password fields
 						$('select[name=user]').on('change', () => {
 							$("#passwordCreationContainer").addClass("w3-hide");
@@ -165,6 +166,7 @@ block content
 					else if(response.password_needed == true){
 						passwordNeeded = true;
 						$("#passwordContainer").removeClass("w3-hide");
+						$("input[name=password]").focus();
 						// if they change the dropdown, then hide the password prompt & clear the password field
 						$('select[name=user]').on('change', () => {
 							$("#passwordContainer").addClass("w3-hide");

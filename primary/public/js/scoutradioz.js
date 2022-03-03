@@ -159,8 +159,9 @@ class PasswordPrompt {
 		this.card.animate({opacity: 1}, this.animateDuration);
 		this.darkener.animate({opacity: 1}, this.animateDuration);
 		
+		passwordField.focus();
+		
 		this.promise = new Promise((resolve, reject) => {
-			console.log(this);
 			this.resolvePromise = resolve;
 		});
 		return this.promise;
