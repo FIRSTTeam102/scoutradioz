@@ -271,8 +271,7 @@ router.get('/passwords', wrap(async (req, res) => {
 	}		
 	
 	res.render('./manage/members/passwords', { 
-		title: 'Organization Members',
-		//members: orgMembers,
+		title: 'Manage Member Passwords',
 		membersByRole: membersByRole,
 		roles: roles
 	});

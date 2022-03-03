@@ -23,7 +23,7 @@ select{
 a:link{text-decoration: none;}
 
 a{color: inherit;}
-a:hover.text-link{text-decoration: underline;}
+a:hover.hover-link{text-decoration: underline;}
 
 /* For rounded corners */
 .w3-btn{

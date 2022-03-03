@@ -184,7 +184,7 @@ navHelpers.getNavContents = () => {
 							href: '/manage/members/present'
 						},
 						{
-							label: 'Reset User Password',
+							label: 'Audit/Reset Member Passwords',
 							href: '/manage/user/resetpassword'
 						},
 					]
