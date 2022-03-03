@@ -21,13 +21,13 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@firstteam102/scoutradioz-helpers": "^1.0.10",
-    "@firstteam102/scoutradioz-utilities": "^1.0.45",
-    "aws-serverless-express": "^3.3.8",
-    "dotenv": "^6.2.0",
-    "express": "^4.17.2",
-    "express-async-handler": "^1.1.4",
-    "log4js": "^6.4.0",
-    "web-push": "^3.4.3"
+    "@firstteam102/scoutradioz-helpers": "^1.0.12",
+    "@firstteam102/scoutradioz-utilities": "^1.1.5",
+    "aws-serverless-express": "^3.4.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.3",
+    "express-async-handler": "^1.2.0",
+    "log4js": "^6.4.2",
+    "web-push": "^3.4.5"
   }
 }

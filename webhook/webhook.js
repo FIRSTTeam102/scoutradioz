@@ -36,12 +36,20 @@ module.exports = webhook;
 
 //utilities tier refresh
 webhook.use(utilities.refreshTier);
+
+// Grab TBA secret key from db and save it in req
+webhook.use(wrap(async (req, res, next) => {
+	const secretDoc = await utilities.findOne('passwords', {name: 'tba-webhook-secret'}, {}, {allowCache: true, maxCacheAge: 900});
+	if (!secretDoc) throw new Error('Could not find tba-webhook-secret in database!!! tier=' + process.env.TIER);
+	req.tba_secret = secretDoc.secret_key;
+	next();
+}));
 //bodyParser config
 const options = {
 	extended: false,
 	verify: function(req, res, buf, encoding) {
 		
-		const secret = process.env.tba_secret;
+		const secret = req.tba_secret;
 		
 		//Generate hash to compare with TBA's hmac hash.
 		const hash = crypto.createHmac('sha256', secret)
@@ -117,6 +125,18 @@ router.get('/', wrap(async (req, res) => {
 	logger.info(JSON.stringify(req.query));
 	
 	res.send(req.query);
+}));
+
+// Test TBA's REST API
+router.get('/test-tba-api', wrap(async (req, res) => {
+	var result = await utilities.requestTheBlueAlliance('events/2022/simple');
+	res.send(result);
+}));
+
+router.get('/flush-cache', wrap(async (req, res) => {
+	
+	utilities.flushCache();
+	res.status(200).send();
 }));
 
 router.post('/', wrap(async (req, res) => {
