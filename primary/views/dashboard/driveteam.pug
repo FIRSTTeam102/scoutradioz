@@ -17,235 +17,247 @@ block content
 		}
 	include ../reports/templates/heatmap
 	
-	h2 Drive Team Dashboard
-	br 
-	//- Dashboard for other teams
-	div(class="w3-section")
-		-// 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
-		-// form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
-		form(name="driveDashboardTeam" method="get" action="/dashboard/driveteam")
-			select(class="theme-input" style="min-width: 100;" name="team_key")
-				each team in teams 
-					if team.key == selectedTeam
-						option(selected value=team.key)=team.team_number
-					else 
-						option(value=team.key)=team.team_number
-				if selectedTeam == 'all'
-					option(selected value='all') All
-				else
-					option(value='all') All
-			button(class="w3-btn theme-submit w3-margin-left" type="submit") View dashboard for selected team
-	br
-	if selectedTeam == 'all'
-		h4 Next Match:
-	else
-		h4 Next Match for Team #{selectedTeam.substring(3)}:
-	//- View first match
-	- var match = matches[0];
-	//include ../reports/templates/upcomingMatch
-	+upcomingMatch(match)
-	hr 
-	//-Radar
-	div(class="w3-section w3-auto")
-		h4 Relative Strengths
-		h6 <i>Click on a legend to hide/show that team</i>
-		div(class="")
-			div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
-				h5 Blue Alliance
-				canvas(id="RadarBlueAlliance" class="radar-canvas" width="250" height="215")
-			div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
-				h5 Red Alliance
-				canvas(id="RadarRedAlliance" class="radar-canvas" width="250" height="215")
-	//-Table
-	div(class="w3-section")
-		h4 Raw Data
-		div
-			span Show:  
-			input(type="radio" id="showAvg" name="sel" onclick="showAvg();" checked)
-			label(for="showAvg")  Averages    
-			input(type="radio" id="showMax" name="sel" onclick="showMax();")
-			label(for="showMax")  Maximums 
+	if !teams || !teams[0]
+		h3 No teams were found for this tournament.
+	else 
+		h3=title
 		p
-		- var aggRangeMap = [];
-		for scoreItem in currentAggRanges
-			- aggRangeMap[scoreItem.key] = scoreItem;
-		div#avgSect(class="w3-auto")
-			if (avgdata)
-				table(class="w3-table")
-					tr
-						th(style="padding-left: 0;") Metric (Avg)
-						for team in teamList
-							if team == 0
-								th 
-							else 
-								th(class="w3-center" style="padding: 8px 4px; width: 11%;")
-									u
-										a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
-					each agg in avgdata
-						tr
-							- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-							td(class="w3-text-light-gray w3-small" style="padding-left: 0;")
-								a(href=`/reports/metricintel?key=${agg.key}`)= result2
-							for team in teamList
-								if team == 0
-									th 
-								else 
-									- var valueCol = 'w3-center w3-text-white'
-									- if (agg[team] == 0) valueCol = 'w3-center w3-text-gray'
-									if (aggRangeMap[agg.key])
-										td(class=`${valueCol}` style=`padding: 8px 0px; background-color: rgb(${getValR(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg[team])},${getValG(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg[team])},${getValB(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg[team])})`)= agg[team]
-									else
-										td(class=`${valueCol}`)= agg[team]
-		div#maxSect(class="w3-auto")
-			if (maxdata)
-				table(class="w3-table")
-					tr
-						th(style="padding-left: 0;") Metric (Max)
-						for team in teamList
-							if team == 0
-								th 
-							else 
-								th(class="w3-center" style="padding: 8px 4px; width: 11%;")
-									u
-										a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
-					each agg in maxdata
-						tr
-							- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-							td(class="w3-text-light-gray w3-small" style="padding-left: 0;")
-								a(href=`/reports/metricintel?key=${agg.key}`)= result2
-							for team in teamList
-								if team == 0
-									td 
-								else 
-									- var valueCol = 'w3-center w3-text-white'
-									- if (agg[team] == 0) valueCol = 'w3-center w3-text-gray'
-									if (aggRangeMap[agg.key])
-										td(class=`${valueCol}` style=`padding: 8px 0px; background-color: rgb(${getValR(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])},${getValG(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])},${getValB(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])})`)= agg[team]
-									else
-										td(class=`${valueCol}`)= agg[team]
-				
-	hr
-	if selectedTeam == 'all'
-		h4 Future Matches:
-	else
-		h4 Future Matches for Team #{selectedTeam.substring(3)}:
-	each match, i in matches
-		//-Skip first match
-		if (i > 0)
+			if noMatchesFoundForTeam
+				i No matches were found for team #{selectedTeam.substr(3)}.
+				- selectedTeam = 'all';
+			else 
+				br 
+		//- Dashboard for other teams
+		div(class="w3-section")
+			-// 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
+			-// form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
+			form(name="driveDashboardTeam" method="get" action="/dashboard/driveteam")
+				select(class="theme-input" style="min-width: 100;" name="team_key")
+					each team in teams 
+						if team.key == selectedTeam
+							option(selected value=team.key)=team.team_number
+						else 
+							option(value=team.key)=team.team_number
+					if selectedTeam == 'all'
+						option(selected value='all') All
+					else
+						option(value='all') All
+				button(class="w3-btn theme-submit w3-margin-left" type="submit") View dashboard for selected team
+		br
+		if selectedTeam == 'all'
+			h4 Next Match:
+		else
+			h4 Next Match for Team #{selectedTeam.substring(3)}:
+		//- Check if there are any matches
+		if !matches || !matches[0]
+			h3 No upcoming matches for this tournament.
+		else
+			//- View first match
+			- var match = matches[0];
 			//include ../reports/templates/upcomingMatch
 			+upcomingMatch(match)
 			hr 
+			//-Radar
+			div(class="w3-section w3-auto")
+				h4 Relative Strengths
+				h6 <i>Click on a legend to hide/show that team</i>
+				div(class="")
+					div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
+						h5 Blue Alliance
+						canvas(id="RadarBlueAlliance" class="radar-canvas" width="250" height="215")
+					div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
+						h5 Red Alliance
+						canvas(id="RadarRedAlliance" class="radar-canvas" width="250" height="215")
+			//-Table
+			div(class="w3-section")
+				h4 Raw Data
+				div
+					span Show:  
+					input(type="radio" id="showAvg" name="sel" onclick="showAvg();" checked)
+					label(for="showAvg")  Averages    
+					input(type="radio" id="showMax" name="sel" onclick="showMax();")
+					label(for="showMax")  Maximums 
+				p
+				- var aggRangeMap = [];
+				for scoreItem in currentAggRanges
+					- aggRangeMap[scoreItem.key] = scoreItem;
+				div#avgSect(class="w3-auto")
+					if (avgdata)
+						table(class="w3-table")
+							tr
+								th(style="padding-left: 0;") Metric (Avg)
+								for team in teamList
+									if team == 0
+										th 
+									else 
+										th(class="w3-center" style="padding: 8px 4px; width: 11%;")
+											u
+												a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
+							each agg in avgdata
+								tr
+									- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+									td(class="w3-text-light-gray w3-small" style="padding-left: 0;")
+										a(href=`/reports/metricintel?key=${agg.key}`)= result2
+									for team in teamList
+										if team == 0
+											th 
+										else 
+											- var valueCol = 'w3-center w3-text-white'
+											- if (agg[team] == 0) valueCol = 'w3-center w3-text-gray'
+											if (aggRangeMap[agg.key])
+												td(class=`${valueCol}` style=`padding: 8px 0px; background-color: rgb(${getValR(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg[team])},${getValG(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg[team])},${getValB(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg[team])})`)= agg[team]
+											else
+												td(class=`${valueCol}`)= agg[team]
+				div#maxSect(class="w3-auto")
+					if (maxdata)
+						table(class="w3-table")
+							tr
+								th(style="padding-left: 0;") Metric (Max)
+								for team in teamList
+									if team == 0
+										th 
+									else 
+										th(class="w3-center" style="padding: 8px 4px; width: 11%;")
+											u
+												a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
+							each agg in maxdata
+								tr
+									- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+									td(class="w3-text-light-gray w3-small" style="padding-left: 0;")
+										a(href=`/reports/metricintel?key=${agg.key}`)= result2
+									for team in teamList
+										if team == 0
+											td 
+										else 
+											- var valueCol = 'w3-center w3-text-white'
+											- if (agg[team] == 0) valueCol = 'w3-center w3-text-gray'
+											if (aggRangeMap[agg.key])
+												td(class=`${valueCol}` style=`padding: 8px 0px; background-color: rgb(${getValR(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])},${getValG(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])},${getValB(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])})`)= agg[team]
+											else
+												td(class=`${valueCol}`)= agg[team]
+						
+			hr
+			if selectedTeam == 'all'
+				h4 Future Matches:
+			else
+				h4 Future Matches for Team #{selectedTeam.substring(3)}:
+			each match, i in matches
+				//-Skip first match
+				if (i > 0)
+					//include ../reports/templates/upcomingMatch
+					+upcomingMatch(match)
+					hr 
 
-	script var chartData = JSON.parse('!{dataForChartJS}');
-	script.
-		console.log(JSON.parse(JSON.stringify(chartData)));
-	script.
-		Chart.defaults.global.defaultFontStyle = 'bold';
-		Chart.defaults.global.defaultFontColor = '#DDD';
-		
-		var redData = {
-			labels: chartData.labels,
-			datasets: [
-				{
-					data: chartData.datasets.avg.red[0],
-					label: chartData.items.red[0].label,
-					backgroundColor: chartData.items.red[0].backgroundColor,
-					borderColor: chartData.items.red[0].borderColor,
-				},
-				{
-					data: chartData.datasets.avg.red[1],
-					label: chartData.items.red[1].label,
-					backgroundColor: chartData.items.red[1].backgroundColor,
-					borderColor: chartData.items.red[1].borderColor,
-				},
-				{
-					data: chartData.datasets.avg.red[2],
-					label: chartData.items.red[2].label,
-					backgroundColor: chartData.items.red[2].backgroundColor,
-					borderColor: chartData.items.red[2].borderColor,
-				},
-			],
-		};
-		var blueData = {
-			labels: chartData.labels,
-			datasets: [
-				{
-					data: chartData.datasets.avg.blue[0],
-					label: chartData.items.blue[0].label,
-					backgroundColor: chartData.items.blue[0].backgroundColor,
-					borderColor: chartData.items.blue[0].borderColor,
-				},
-				{
-					data: chartData.datasets.avg.blue[1],
-					label: chartData.items.blue[1].label,
-					backgroundColor: chartData.items.blue[1].backgroundColor,
-					borderColor: chartData.items.blue[1].borderColor,
-				},
-				{
-					data: chartData.datasets.avg.blue[2],
-					label: chartData.items.blue[2].label,
-					backgroundColor: chartData.items.blue[2].backgroundColor,
-					borderColor: chartData.items.blue[2].borderColor,
-				},
-			],
-		};
-		
-		var redCtx = $('#RadarRedAlliance')[0].getContext('2d');
-		var blueCtx = $('#RadarBlueAlliance')[0].getContext('2d');
-		
-		var redRadar = new Chart(redCtx, {
-			type: 'radar',
-			data: redData,
-			options: chartData.options
-		});
-		var blueRadar = new Chart(blueCtx, {
-			type: 'radar',
-			data: blueData,
-			options: chartData.options
-		});
-		
-		showAvg();
-
-		function showAvg() {
-			var avg = document.getElementById('avgSect');
-			avg.style.display = "block";
-			var max = document.getElementById('maxSect');
-			max.style.display = "none";
-			
-			for (var i in redRadar.data.datasets) {
-				var set = redRadar.data.datasets[i];
-				if (set.hasOwnProperty("data")) {
-					set.data = chartData.datasets.avg.red[i];
-				}
-			}
-			redRadar.update();		
-			for (var i in blueRadar.data.datasets) {
-				var set = blueRadar.data.datasets[i];
-				if (set.hasOwnProperty("data")) {
-					set.data = chartData.datasets.avg.blue[i];
-				}
-			}
-			blueRadar.update();			
-		}
-
-		function showMax() {
-			var avg = document.getElementById('avgSect');
-			avg.style.display = "none";
-			var max = document.getElementById('maxSect');
-				max.style.display = "block";
+			script var chartData = JSON.parse('!{dataForChartJS}');
+			script.
+				console.log(JSON.parse(JSON.stringify(chartData)));
+			script.
+				Chart.defaults.global.defaultFontStyle = 'bold';
+				Chart.defaults.global.defaultFontColor = '#DDD';
 				
-			for (var i in redRadar.data.datasets) {
-				var set = redRadar.data.datasets[i];
-				if (set.hasOwnProperty("data")) {
-					set.data = chartData.datasets.max.red[i];
+				var redData = {
+					labels: chartData.labels,
+					datasets: [
+						{
+							data: chartData.datasets.avg.red[0],
+							label: chartData.items.red[0].label,
+							backgroundColor: chartData.items.red[0].backgroundColor,
+							borderColor: chartData.items.red[0].borderColor,
+						},
+						{
+							data: chartData.datasets.avg.red[1],
+							label: chartData.items.red[1].label,
+							backgroundColor: chartData.items.red[1].backgroundColor,
+							borderColor: chartData.items.red[1].borderColor,
+						},
+						{
+							data: chartData.datasets.avg.red[2],
+							label: chartData.items.red[2].label,
+							backgroundColor: chartData.items.red[2].backgroundColor,
+							borderColor: chartData.items.red[2].borderColor,
+						},
+					],
+				};
+				var blueData = {
+					labels: chartData.labels,
+					datasets: [
+						{
+							data: chartData.datasets.avg.blue[0],
+							label: chartData.items.blue[0].label,
+							backgroundColor: chartData.items.blue[0].backgroundColor,
+							borderColor: chartData.items.blue[0].borderColor,
+						},
+						{
+							data: chartData.datasets.avg.blue[1],
+							label: chartData.items.blue[1].label,
+							backgroundColor: chartData.items.blue[1].backgroundColor,
+							borderColor: chartData.items.blue[1].borderColor,
+						},
+						{
+							data: chartData.datasets.avg.blue[2],
+							label: chartData.items.blue[2].label,
+							backgroundColor: chartData.items.blue[2].backgroundColor,
+							borderColor: chartData.items.blue[2].borderColor,
+						},
+					],
+				};
+				
+				var redCtx = $('#RadarRedAlliance')[0].getContext('2d');
+				var blueCtx = $('#RadarBlueAlliance')[0].getContext('2d');
+				
+				var redRadar = new Chart(redCtx, {
+					type: 'radar',
+					data: redData,
+					options: chartData.options
+				});
+				var blueRadar = new Chart(blueCtx, {
+					type: 'radar',
+					data: blueData,
+					options: chartData.options
+				});
+				
+				showAvg();
+
+				function showAvg() {
+					var avg = document.getElementById('avgSect');
+					avg.style.display = "block";
+					var max = document.getElementById('maxSect');
+					max.style.display = "none";
+					
+					for (var i in redRadar.data.datasets) {
+						var set = redRadar.data.datasets[i];
+						if (set.hasOwnProperty("data")) {
+							set.data = chartData.datasets.avg.red[i];
+						}
+					}
+					redRadar.update();		
+					for (var i in blueRadar.data.datasets) {
+						var set = blueRadar.data.datasets[i];
+						if (set.hasOwnProperty("data")) {
+							set.data = chartData.datasets.avg.blue[i];
+						}
+					}
+					blueRadar.update();			
 				}
-			}
-			redRadar.update();
-			for (var i in blueRadar.data.datasets) {
-				var set = blueRadar.data.datasets[i];
-				if (set.hasOwnProperty("data")) {
-					set.data = chartData.datasets.max.blue[i];
+
+				function showMax() {
+					var avg = document.getElementById('avgSect');
+					avg.style.display = "none";
+					var max = document.getElementById('maxSect');
+						max.style.display = "block";
+						
+					for (var i in redRadar.data.datasets) {
+						var set = redRadar.data.datasets[i];
+						if (set.hasOwnProperty("data")) {
+							set.data = chartData.datasets.max.red[i];
+						}
+					}
+					redRadar.update();
+					for (var i in blueRadar.data.datasets) {
+						var set = blueRadar.data.datasets[i];
+						if (set.hasOwnProperty("data")) {
+							set.data = chartData.datasets.max.blue[i];
+						}
+					}
+					blueRadar.update();
 				}
-			}
-			blueRadar.update();
-		}

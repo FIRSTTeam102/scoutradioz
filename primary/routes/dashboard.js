@@ -23,6 +23,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
 	var teamKey;
+	var noMatchesFoundForTeam = false; // 2022-03-02 JL: To let view know if matches were not found for the team
 	
 	//set teamKey to query or org default
 	if (req.query.team_key) {
@@ -39,14 +40,30 @@ router.get('/driveteam', wrap(async (req, res) => {
 	
 	// Get upcoming match data for the specified team (or "all" if no default & none specified)
 	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey);
-	// Data for the upcoming matches portion
-	var teamRanks = upcomingData.teamRanks;
-	var teamNumbers = upcomingData.teamNumbers;
 	
 	// Pull out the first match (if it exists), get the team keys from the alliances
 	var matches = upcomingData.matches;
 	
-	if (!matches || !matches[0]) throw Error('There are no upcoming matches for team ' + teamKey);
+	// 2022-03-02 JL: Don't want to throw an error if the current team has no matches; Instead, default to "all"
+	if (!matches || !matches[0] && teamKey !== 'all') {
+		logger.debug(`No matches found for team ${teamKey}; attempting "all"`);
+		noMatchesFoundForTeam = true;
+		upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, 'all');
+		matches = upcomingData.matches;
+	}
+	// If there are still no matches, then render the page with an error
+	if (!matches || !matches[0]) {
+		logger.debug('No matches found at all for the event');
+		return res.render('./dashboard/driveteam', {
+			title: 'Drive Team Dashboard',
+			teams: req.event.teams,
+			selectedTeam: 'all',
+		});
+	}
+	
+	// Data for the upcoming matches portion
+	var teamRanks = upcomingData.teamRanks;
+	var teamNumbers = upcomingData.teamNumbers;
 	
 	var firstMatch = matches[0];
 	
@@ -199,6 +216,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 		teamRanks: teamRanks,
 		selectedTeam: teamKey,
 		teamNumbers: teamNumbers,
+		noMatchesFoundForTeam: noMatchesFoundForTeam,
 		dataForChartJS: JSON.stringify(dataForChartJS)
 	});
 }));

@@ -24,6 +24,19 @@ functions.initialMiddleware = async function(req, res, next){
 	// from one method that DOES set it to another method that does NOT set it
 	logger.removeContext('funcName');
 	
+	// Gets the redirectURL, automatically with ? and & encoded
+	req.getRedirectURL = function() {
+		let str = this.body.redirectURL || this.query.redirectURL;
+		return this.fixRedirectURL(str);
+	};
+	
+	// Function to fix redirectURL by urlencoding ? and &, and clearing it if it's "undefined"
+	req.fixRedirectURL = function(str) {
+		if (typeof str !== 'string') return str;
+		else if (str === 'undefined') return undefined;
+		else return str.replace(/\?/g, '%3f').replace(/\&/g, '%26');
+	};
+	
 	next();
 };
 
@@ -254,21 +267,6 @@ functions.requestLogger = function(req, res, next){
 	next();
 };
 
-/**
- * 
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
- */
-functions.fixRedirect = function(req, res, next) {
-	
-	res.redirect = (function() {
-		var cached_function = res.redirect;
-		
-		return function(arg1, arg2) {
-		};
-	});
-};
 
 /**
  * Extra logging for res.render and res.redirect
@@ -317,7 +315,6 @@ functions.renderLogger = function(req, res, next){
 			else {
 				url = arg1;
 			}
-			console.log(url);
 			// Replace any instances of ? with & *after* the first
 			// 	To avoid issues like /dashboard/driveteam?team_key=frc102?alert=Saved%20column%20preferences%20successfully.&type=success&autofade=true
 			let idx = 0;
