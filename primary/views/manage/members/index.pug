@@ -15,18 +15,22 @@ block content
 			span Increment # years
 	div(class="w3-container w3-section")
 		each members, role in membersByRole
+			hr 
 			div(class="w3-row")
 				h4=role
-				div(class="w3-row w3-hide-small" id="title-row")
-					div(class="w3-col m3 w3-padding-small actions") Actions
-					div(class="w3-rest")
-						div(class="w3-col m4 w3-padding-small") Name
-						div(class="w3-col m3 w3-padding-small") Subteam
-						div(class="w3-col m2 w3-padding-small") Class
-						div(class="w3-col m2 w3-padding-small") Role
-						div(class="w3-col m1 w3-padding-small") Years on team
-			if members.length == 0
-				i No members of this type.
+				br.w3-hide-small
+				if members.length == 0
+					i No members of this type.
+				else 
+					//- Only show "table" headers if there are members to show
+					div(class="w3-row w3-hide-small" id="title-row")
+						div(class="w3-col m3 w3-padding-small actions") Actions
+						div(class="w3-rest")
+							div(class="w3-col m4 w3-padding-small") Name
+							div(class="w3-col m3 w3-padding-small") Subteam
+							div(class="w3-col m2 w3-padding-small") Class
+							div(class="w3-col m2 w3-padding-small") Role
+							div(class="w3-col m1 w3-padding-small") Years on team
 			each member in members
 				div(class="w3-row")
 					div(class="w3-col s12 m0")

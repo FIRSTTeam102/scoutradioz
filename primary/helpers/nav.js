@@ -169,7 +169,7 @@ navHelpers.getNavContents = () => {
 						},
 						{
 							label: 'Audit/Reset Member Passwords',
-							href: '/manage/user/resetpassword'
+							href: '/manage/members/passwords'
 						},
 					]
 				},
