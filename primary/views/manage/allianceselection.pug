@@ -13,7 +13,9 @@ block content
 		}
 	include ../reports/templates/heatmap
 	h2 Alliance Selection Data
-	p.i The two buttons on the left help you keep track of preferred (and undesirable) teams for use during Alliance Selection.<br>The numbers under the "V" will be visible to your scouting lead in the Alliance Selection dashboard page.
+	p.i.
+		The two buttons on the left can keep track of preferred (and otherwise) teams for Alliance Selection.
+		<br>Numbers under the "V" are visible and sortable by your scouting lead on the <a class="link" href="/dashboard/allianceselection" target="_blank">Alliance Selection dashboard</a>.
 	p.i Don't pull your punches! Only people who have logged in to your organization can see these numbers.
 	if (aggdata)
 		- var aggRangeMap = [];
@@ -21,7 +23,7 @@ block content
 			- aggRangeMap[scoreItem.key] = scoreItem;
 		table(class="w3-table" id="metricTable")
 			tr
-				th(colspan=2) Priority
+				th(colspan=2 no-sort) Priority
 				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") V
 				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')") Team
 				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')") Rank
@@ -58,9 +60,6 @@ block content
 		{
 			console.log("teamKey " + teamKey + ", value " + value);
 			
-			document.getElementById("updatekey").value = teamKey;
-			document.getElementById("updatevalue").value = value;
-			
 			$.post('/manage/allianceselection/updateteamvalue', {key: teamKey, value: value})
 				.done(msg => {
 					//- Update the row with the team's new value
@@ -80,7 +79,7 @@ block content
 				});
 		}
 
-		$('th').click(function(){
+		$('th:not([no-sort])').click(function(){
 			var table = $(this).parents('table').eq(0)
 			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index() + 1 /* the "Priority" header takes up 2 */))
 			this.asc = !this.asc
