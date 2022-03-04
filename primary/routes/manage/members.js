@@ -252,6 +252,57 @@ router.post('/deletemember', wrap(async (req, res) => {
 	}
 }));
 
+/* TODO JL: Increment/decrement # years on team
+router.post('/batch', wrap(async (req, res) => {
+	logger.addContext('funcName', 'root[get]');
+	logger.debug('ENTER');
+	
+	var orgKey = req.user.org_key;
+	
+	// Get a list of all users with access level <= the logged-in user
+	var users = await utilities.aggregate('users', [
+		{$match: {org_key: orgKey, visible: true}},
+		{$lookup: {
+			from: 'roles',
+			localField: 'role_key',
+			foreignField: 'role_key',
+			as: 'role'
+		}},
+		{$match: {
+			'role.access_level': {$lte: req.user.role.access_level}
+		}},
+		{$project: {name: 1}},
+	]);
+	
+	// Get an array of just the IDs
+	var userIDs = [];
+	for (let user of users) {
+		userIDs.push(user._id);
+	}
+	
+	var writeResult;
+	
+	if (req.query.action === 'incrementYears') {
+		logger.info(`Incrementing # years for ${userIDs.length} users`);
+		writeResult = await utilities.update('users', {
+			org_key: orgKey, 
+			visible: true, 
+			_id: {$in: userIDs}
+		}, {
+			$inc: {'org_info.years': 1}
+		});
+	}
+	else if (req.query.action === 'decrementYears') {
+		logger.info(`Decrementing # years for ${userIDs.length} users`);
+	}
+	else {
+		logger.debug('Invalid action ' + req.query.action);
+		return res.send('Invalid action ' + req.query.action);
+	}
+	logger.debug('Done, writeResult=' + JSON.stringify(writeResult));
+}));
+*/
+
 router.get('/passwords', wrap(async (req, res) => {
 	
 	var orgKey = req.user.org_key;

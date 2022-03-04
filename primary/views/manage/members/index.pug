@@ -9,18 +9,22 @@ block content
 	h3 Organization Members
 	h6
 		i Make sure to click or tap "Update" when you modify each member.
+	//- div(class="w3-section") TODO JL: Increment/decrement # years on team
+		h4 Batch actions
+		div(class="gear-btn theme-submit w3-btn" id="incrementYears")
+			span Increment # years
 	div(class="w3-container w3-section")
-		div(class="w3-row w3-hide-small" id="title-row")
-			div(class="w3-col m3 w3-padding-small" id="actions") Actions
-			div(class="w3-rest")
-				div(class="w3-col m4 w3-padding-small") Name
-				div(class="w3-col m3 w3-padding-small") Subteam
-				div(class="w3-col m2 w3-padding-small") Class
-				div(class="w3-col m2 w3-padding-small") Role
-				div(class="w3-col m1 w3-padding-small") Years on Team
 		each members, role in membersByRole
 			div(class="w3-row")
 				h4=role
+				div(class="w3-row w3-hide-small" id="title-row")
+					div(class="w3-col m3 w3-padding-small actions") Actions
+					div(class="w3-rest")
+						div(class="w3-col m4 w3-padding-small") Name
+						div(class="w3-col m3 w3-padding-small") Subteam
+						div(class="w3-col m2 w3-padding-small") Class
+						div(class="w3-col m2 w3-padding-small") Role
+						div(class="w3-col m1 w3-padding-small") Years on team
 			if members.length == 0
 				i No members of this type.
 			each member in members
@@ -35,7 +39,7 @@ block content
 						button(class="w3-btn theme-red w3-block" onclick=`confirmDelete("${member.name}", "${member._id}")`)
 							span(class="sprite sp-24 sp-inline no-margin sp-delete")
 					//-updateMember submits to javascript func.
-					form(id=`updateMember_${member._id}` action=`javascript:updateMember('${member._id}')` method="post")
+					form(id=`updateMember_${member._id}` update-member-form action=`javascript:updateMember('${member._id}')` method="post")
 						input(type="hidden" name="memberId" value=member._id)
 						//update button
 						div(class="w3-col s7 mauto w3-padding-small" data-update-button)
@@ -112,6 +116,20 @@ block content
 				a(href='/manage/members/passwords' class="link") Check here to see if they have set a password.
 		input(type="hidden" name="selfUserId" value=user._id)
 	script.
+		$('#incrementYears').on('click', () => {
+			doBatch('incrementYears', "Are you sure you want to perform this batch action (incrementing # years by 1)? THE PAGE WILL REFRESH AND YOUR CURRENT CHANGES WILL BE LOST.");
+		});
+		
+		function doBatch(key, question) {
+			let doProceed = true;
+			if (question) {
+				doProceed = confirm(question);
+			}
+			$.post('/manage/members/batch?action=' + key)
+				.done(message => {
+					console.log(message);
+				})
+		}
 		
 		function confirmDelete(memberName, memberId){
 			if(confirm('Delete member: "' + memberName + '"?')){
@@ -153,7 +171,7 @@ block content
 			let btnDelete = $('[data-delete-button]');
 			let btnUpdate = $('[data-update-button]');
 			let width = btnDelete.outerWidth() + btnUpdate.outerWidth();
-			$('#actions').css({
+			$('.actions').css({
 				width: width
 			});
 		})
