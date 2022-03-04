@@ -452,8 +452,24 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		}
 		//add $group > groupClause (Layout w/ data)
 		aggQuery.push({ $group: groupClause });
-		//add $sort > sort request
-		// aggQuery.push({ $sort: { rank: 1 } }); JL: Unneeded sort (rank is not an element of these objects)
+		
+		// 2022-03-03 JL: Looking up team values in the aggregate query
+		aggQuery.push({ $lookup: {
+			from: 'orgteamvalues',
+			let: {team_key: '$_id'},
+			pipeline: [
+				{$match: {$expr: {$and: [
+					{$eq: ['$team_key', '$$team_key']},
+					{$eq: ['$org_key', org_key]},
+					{$eq: ['$event_key', event_key]},
+				]}}},
+				{$project: {_id: 0, team_key: 0, event_key: 0, org_key: 0}}
+			],
+			as: 'value'
+		}});
+		// The lookup returns an array of elements, so turn value: [{value: 1}] into value: 1
+		aggQuery.push({ $set: {'value': {$first: '$value'}} });
+		aggQuery.push({ $set: {'value': '$value.value'} });
 		
 		//Aggregate with this query we made
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -479,7 +495,6 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			}
 			if(rankMap[thisAgg._id]){
 				thisAgg['rank'] = rankMap[thisAgg._id].rank;
-				thisAgg['value'] = rankMap[thisAgg._id].value;
 				aggArray[aggIdx] = thisAgg;
 			}
 		}

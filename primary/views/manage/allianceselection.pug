@@ -5,17 +5,23 @@ block content
 		html{
 			overflow: visible;
 		}
+		.unwanted-team{
+			text-decoration: line-through;
+		}
+		.wanted-team{
+			font-weight: 800;
+		}
 	include ../reports/templates/heatmap
-	h2(class="theme-text") Alliance Selection Data
+	h2 Alliance Selection Data
+	p.i The two buttons on the left help you keep track of preferred (and undesirable) teams for use during Alliance Selection.<br>The numbers under the "V" will be visible to your scouting lead in the Alliance Selection dashboard page.
+	p.i Don't pull your punches! Only people who have logged in to your organization can see these numbers.
 	if (aggdata)
 		- var aggRangeMap = [];
 		for scoreItem in currentAggRanges
 			- aggRangeMap[scoreItem.key] = scoreItem;
 		table(class="w3-table" id="metricTable")
 			tr
-				th
-				th
-				th
+				th(colspan=2) Priority
 				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") V
 				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')") Team
 				th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')") Rank
@@ -28,20 +34,13 @@ block content
 						- colIdx++
 			for row in aggdata
 				tr
-					td
-						button(class="w3-button theme-red scouting-counter w3-tiny w3-padding-small" onclick=`setValue('${row._id}', -1)` type="button") -
-					td
-						button(class="w3-button w3-hover-dark-grey w3-dark-grey scouting-counter w3-tiny w3-padding-small" onclick=`setValue('${row._id}', '')` type="button") &nbsp;
-					td
-						button(class="w3-button w3-hover-green theme-submit scouting-counter w3-tiny w3-padding-small" onclick=`setValue('${row._id}', 1)` type="button") +
-					td(class="w3-center")= row.value
-					if (row.value == -1)
-						td(class="w3-center")
-							strike= row._id.substring(3)
-					else if (row.value == 1)
-						td(class="w3-center" style="font-weight:800")= row._id.substring(3)
-					else
-						td(class="w3-center")= row._id.substring(3)
+					td(style="padding: 2px!important;")
+						button(class="w3-button theme-red scouting-counter sc-small" onclick=`setValue('${row._id}', -1)` type="button") -
+					td(style="padding: 2px!important;")
+						button(class="w3-button w3-hover-green theme-submit scouting-counter sc-small" onclick=`setValue('${row._id}', 1)` type="button") +
+					td(class="w3-center" team-value key=row._id)= row.value
+					//- Change the team number's class depending on the row value
+					td(class="w3-center" team-number key=row._id class=(row.value > 0 ? 'wanted-team' : row.value < 0 ? 'unwanted-team' : ''))= row._id.substr(3)
 					td(class="w3-right-align")= row.rank
 					for item in layout
 						-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
@@ -54,9 +53,6 @@ block content
 								td(class=`${valStyle}`)= row[item.key]
 	else
 		p <i>Insufficient data at this time, come back later!</i>
-	form#updateteamvalue(name="updateteamvalue" method="post" action="/manage/allianceselection/updateteamvalue")
-		input#updatekey(type="hidden", name="key")
-		input#updatevalue(type="hidden", name="value")
 	script.
 		function setValue(teamKey, value)
 		{
@@ -65,19 +61,36 @@ block content
 			document.getElementById("updatekey").value = teamKey;
 			document.getElementById("updatevalue").value = value;
 			
-			document.getElementById("updateteamvalue").submit();
+			$.post('/manage/allianceselection/updateteamvalue', {key: teamKey, value: value})
+				.done(msg => {
+					//- Update the row with the team's new value
+					var newValue = msg.value;
+					if (msg.value == 0) newValue = '';
+					
+					$(`td[team-value][key="${msg.team_key}"]`).text(newValue);
+					if (newValue == 0)
+						$(`td[team-number][key="${msg.team_key}"]`).removeClass('wanted-team', 'unwanted-team');
+					else if (newValue > 0)
+						$(`td[team-number][key="${msg.team_key}"]`).removeClass('unwanted-team').addClass('wanted-team');
+					else
+						$(`td[team-number][key="${msg.team_key}"]`).removeClass('wanted-team').addClass('unwanted-team');
+				})
+				.fail(err => {
+					NotificationCard.error(err.statusText);
+				});
 		}
 
 		$('th').click(function(){
 			var table = $(this).parents('table').eq(0)
-			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index() + 1 /* the "Priority" header takes up 2 */))
 			this.asc = !this.asc
 			if (!this.asc){rows = rows.reverse()}
 			for (var i = 0; i < rows.length; i++){table.append(rows[i])}
 		})
 		function comparer(index) {
 			return function(a, b) {
-				var valA = getCellValue(a, index), valB = getCellValue(b, index)
+				var valA = getCellValue(a, index), valB = getCellValue(b, index);
+				if (valA === '') valA = 0; if (valB === '') valB = 0; // Treat empty as 0 for sorting the "V" column
 				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
 			}
 		}

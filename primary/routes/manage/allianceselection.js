@@ -60,8 +60,27 @@ router.get('/', wrap(async (req, res) => {
 			groupClause[thisLayout.id] = {$avg: '$data.' + thisLayout.id};
 	}
 	aggQuery.push({ $group: groupClause });
+	
+	// 2022-03-03 JL: Looking up team values in the aggregate query
+	aggQuery.push({ $lookup: {
+		from: 'orgteamvalues',
+		let: {team_key: '$_id'},
+		pipeline: [
+			{$match: {$expr: {$and: [
+				{$eq: ['$team_key', '$$team_key']},
+				{$eq: ['$org_key', org_key]},
+				{$eq: ['$event_key', event_key]},
+			]}}},
+			{$project: {_id: 0, team_key: 0, event_key: 0, org_key: 0}}
+		],
+		as: 'value'
+	}});
+	// The lookup returns an array of elements, so turn value: [{value: 1}] into value: 1
+	aggQuery.push({ $set: {'value': {$first: '$value'}} });
+	aggQuery.push({ $set: {'value': '$value.value'} });
+	
 	aggQuery.push({ $sort: { _id: 1 } });
-	//logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery));
+	// logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery, 0, 2));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggArray = await utilities.aggregate('matchscouting', aggQuery);
@@ -73,7 +92,6 @@ router.get('/', wrap(async (req, res) => {
 		var thisAgg = aggArray[aggIdx];
 		for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
 				thisAgg[thisLayout.id] = roundedVal;
@@ -81,7 +99,7 @@ router.get('/', wrap(async (req, res) => {
 		}
 		if(rankMap[thisAgg._id]){
 			thisAgg['rank'] = rankMap[thisAgg._id].rank;
-			thisAgg['value'] = rankMap[thisAgg._id].value;
+			// thisAgg['value'] = rankMap[thisAgg._id].value; 2022-03-03 JL: Value now saved in other document
 			aggArray[aggIdx] = thisAgg;
 		}
 	}
@@ -101,6 +119,14 @@ router.get('/', wrap(async (req, res) => {
 	});
 }));
 
+/*
+{
+	org_key: string,
+	team_key: string,
+	event_key: string,
+	value: non-zero number
+}
+*/
 router.post('/updateteamvalue', wrap(async (req, res) => {
 	//Check authentication for team admin level
 	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
@@ -108,26 +134,50 @@ router.post('/updateteamvalue', wrap(async (req, res) => {
 	var thisFuncName = 'allianceselection.updateteamvalue[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
-	throw new e.TooEarlyError('updateteamvalue is not currently available');
-
-	// var db = rq.db;    was req
+	const team_key = req.body.key;
+	const valueToAdd = parseInt(req.body.value);
+	const org_key = req.user.org_key;
+	const event_key = req.event.key;
 	
-	// if(db._state == 'closed'){ //If database does not exist, send error
-	// 	res.render('./error',{
-	// 		message: "Database error: Offline",
-	// 		error: {status: "If the database is running, try restarting the Node server."}
-	// 	});
-	// }
+	if (!team_key || !valueToAdd) throw new e.UserError('Provide a team_key and a value.');
 	
-	// var rankCol = db.get("currentrankings");
+	var currentTeamValue = await utilities.findOne('orgteamvalues', {org_key: org_key, team_key: team_key, event_key: event_key});
 	
-	//var teamKey = req.body.key;
-	//var value = req.body.value;
-
-	// 2020-02-08, M.O'C: Disabling this for now; later, move this data into a different collection (and update other related calls)
-	//await utilities.update("currentrankings", {"team_key": teamKey}, {$set: {"value": value}});
-
-	res.redirect('./');
+	var newValue;
+	
+	if (currentTeamValue) {
+		newValue = currentTeamValue.value + valueToAdd;
+		
+		logger.debug(`Setting ${team_key}'s value to ${newValue} for org ${org_key}`);
+		// If the value to set is 0, then just delete the record
+		if (newValue === 0) {
+			logger.debug('Deleting record');
+			await utilities.remove('orgteamvalues', {_id: currentTeamValue._id});
+		}
+		else {
+			await utilities.update('orgteamvalues', {_id: currentTeamValue._id}, {$set: {value: newValue}});
+		}
+	}
+	// If there's no team in the values collection, create it
+	else {
+		newValue = valueToAdd;
+		logger.debug(`Creating entry for ${team_key} for org ${org_key}, value=${newValue}`);
+		
+		let newEntry = {
+			org_key: org_key, 
+			team_key: team_key,
+			event_key: event_key,
+			value: newValue
+		};
+		
+		let writeResult = await utilities.insert('orgteamvalues', newEntry);
+		
+		logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+	}
+	res.send({
+		team_key: team_key,
+		value: newValue
+	});
 }));
 
 module.exports = router;
