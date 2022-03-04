@@ -56,7 +56,6 @@ router.get('/driveteam', wrap(async (req, res) => {
 		logger.debug('No matches found at all for the event');
 		return res.render('./dashboard/driveteam', {
 			title: 'Drive Team Dashboard',
-			teams: req.event.teams,
 			selectedTeam: 'all',
 		});
 	}

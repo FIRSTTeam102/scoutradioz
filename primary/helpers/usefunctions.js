@@ -155,7 +155,6 @@ functions.getEventInfo = async function(req, res, next) {
 		key: 'undefined',
 		name: 'undefined',
 		year: 'undefined',
-		teams: null,
 	};
 	
 	// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
@@ -209,7 +208,7 @@ functions.getEventInfo = async function(req, res, next) {
 				);
 				
 				logger.debug(`teams: length(${teams.length})`);
-				//Set teams list to req.event.teams
+				//Set teams list to its own variable
 				req.teams = teams;
 				res.locals.teams = teams;
 			}

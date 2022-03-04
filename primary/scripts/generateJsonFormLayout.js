@@ -1,7 +1,7 @@
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const readline = require('readline');
 
-process.env.TIER = 'qa';
+process.env.TIER = 'dev';
 utilities.config(require('../databases.json'), {
 	cache: {
 		enable: false,
@@ -70,7 +70,7 @@ const matchGearheads2022 = [
 	['h3', 'lblAutoLowerHub', 'Lower Hub'],
 	['counter', 'autoLowScored', 'Cargo scored by robot'],
 	['badcounter', 'autoLowMissed', 'Cargo missed by robot'],
-	['checkbox', 'autoHumanMadeShot', 'Did the human player score? (Only check this if you KNOW HP is from Team {{team_number}}!)'],
+	['checkbox', 'autoHumanMadeShot', 'Did the human player score? (Only check this if the human player is from Team {{team_number}}!)'],
 	['spacer'],
 	['h2', 'teleopLabel', 'Teleop'],
 	['h3', 'lblTeleUpperHub', 'Upper Hub'],
@@ -98,9 +98,9 @@ const pitGearheads2022 = [
 	['h2', 'lblRobotConstruction', 'Robot construction'],
 	['textblock', 'driveTrain', 'Describe the robot\'s drive train:'],
 	['spacer'],
-	['h2', 'lblControls', 'Controls'],
-	['multiselect', 'controls', 'What kind of controls does the driver use?', ['Game controller (Xbox/PS4/etc.)', 'One joystick', 'Two joysticks', 'Other']],
-	['textblock', 'controlNotes', 'Other info: Any special notes on driving? Are there operator controls? What does the operator use? Etc.'],
+	// ['h2', 'lblControls', 'Controls'],
+	// ['multiselect', 'controls', 'What kind of controls does the driver use?', ['Game controller (Xbox/PS4/etc.)', 'One joystick', 'Two joysticks', 'Other']],
+	// ['textblock', 'controlNotes', 'Other info: Any special notes on driving? Are there operator controls? What does the operator use? Etc.'],
 	['h2', 'lblAuto', 'Autonomous period'],
 	['checkbox', 'doAuto', 'Can they move during the autonomous period?'],
 	['slider', 'autoHowManyCargo', 'How many cargo can they shoot during autonomous?', null, [0, 5, 1]],
@@ -120,6 +120,8 @@ const pitGearheads2022 = [
 	['checkbox', 'canClimbHigh', 'Can they climb to the High bar?'],
 	['checkbox', 'canClimbTraversal', 'Can they climb to the Traversal bar?'],
 	['textblock', 'climbNotes', 'Describe the robot\'s climb mechanism/strategy:'],
+	['spacer'],
+	['textblock', 'preferredStrategy', 'What is their preferred strategy?'],
 ];
 
 const matchDerivedAthenian2022 = [
