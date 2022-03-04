@@ -1,4 +1,4 @@
-![Scoutradioz logo](https://scoutradioz.s3.amazonaws.com/prod/images/brand-logos/scoutradioz-black-md.png)
+![Scoutradioz logo](https://scoutradioz.s3.amazonaws.com/prod/images/brand-logos/scoutradioz-black-border-md.png)
 ## [scoutradioz.com](https://scoutradioz.com)
 Multi-year FRC Scouting app developed by The Gearheads, designed for AWS Serverless.
 
