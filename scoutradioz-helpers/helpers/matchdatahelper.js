@@ -7,6 +7,8 @@ try {
 catch(err) {
 	logger = require('@log4js-node/log4js-api').getLogger('helpers.matchData');
 }
+logger.level = process.env.LOG_LEVEL || 'debug';
+
 var utilities = null;
 var matchDataHelper = module.exports = {};
 
@@ -77,38 +79,106 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 	);
 
 	for (let thisItem of derivedLayout) {
-		var derivedMetric = NaN;
-		switch (thisItem.operator) {
-			case 'sum':
-				// operands: [id1, id2, id3, ...]
-				// add up the operands
-				var sum = 0;
-				// eslint-disable-next-line
-				for (var metricId in thisItem.operands)
-					sum += matchData[thisItem.operands[metricId]];
-				derivedMetric = sum;
-				break;
-			case 'multiselect':
-				// operands: [{id: 'multiselectId', quantifiers: {multiselectValue: numericalValue}}]
-				// 	or [{id: 'multiselectId', numerical: true] to simply parse a number
-				var operand = thisItem.operands[0];
-				if (typeof operand !== 'object') throw new Error(`Invalid derived operand for: ${JSON.stringify(thisItem)}`);
-				if (!operand.id) throw new Error(`Multiselect operand must have an ID: ${JSON.stringify(thisItem)}`);
-				if (!operand.numerical && typeof operand.quantifiers !== 'object') 
-					throw new Error(`Multiselect operand must have either numerical (bool) or quantifiers (object): ${JSON.stringify(thisItem)}`);
+		let derivedMetric = NaN;
+		// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
+		//	Error checking should be done at the time of creating the layout. (TODO: error checking :] )
+		//	The very last operator must NOT have an "as", and every consequent operator should probably have an "as"
+		let operations = thisItem.operations;
+		let variables = {};
+		let length = operations.length;
+		
+		for (let i = 0; i < length; i++) {
+			let thisOp = operations[i];
+			let operands = thisOp.operands;
+			switch (thisOp.operator) {
+				// sum operands: [a, b, c, ...]
+				case 'sum': {
+					let sum = 0;
+					for (let key of operands) {
+						if (typeof key === 'number') sum += key;
+						else if (key.startsWith('$')) sum += variables[key]; // local "as" variable higher in the chain
+						else sum += parseNumber(matchData[key]);
+					}
+					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = sum;
+					else derivedMetric = sum;
+					//logger.trace(`Sum: ${sum} -> ${thisOp.as || ''}`);
+					break;
+				}
+				// multiply operands: [a, b, c, ...]
+				case 'multiply': {
+					let product = 1;
+					for (let key of operands) {
+						if (typeof key === 'number') product *= key;
+						else if (key.startsWith('$')) product *= variables[key];
+						else product *= parseNumber(matchData[key]);
+					}
+					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = product;
+					else derivedMetric = product;
+					//logger.trace(`Multiply: ${product} -> ${thisOp.as || ''}`);
+					break;
+				}
+				// subtract operands: [minuend, subtrahend] (a - b -> [a, b])
+				case 'subtract': {
+					let minuendKey = operands[0];
+					let subtrahendKey = operands[1];
+					let difference;
 					
-				if (operand.numerical) {
-					derivedMetric = parseFloat(matchData[operand.id]);
-					if (isNaN(derivedMetric)) derivedMetric = 0; // Default to 0. Example: Empty string is the default for multiselects
+					if (typeof minuendKey === 'number') difference = minuendKey;
+					else if (minuendKey.startsWith('$')) difference = variables[minuendKey];
+					else difference = parseNumber(matchData[minuendKey]);
+					
+					if (typeof subtrahendKey === 'number') difference -= subtrahendKey;
+					else if (subtrahendKey.startsWith('$')) difference -= variables[subtrahendKey];
+					else difference -= parseNumber(matchData[subtrahendKey]);
+					
+					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = difference;
+					else derivedMetric = difference;
+					//logger.trace(`Subtract: ${difference} -> ${thisOp.as || ''}`);
+					break;
 				}
-				else {
-					var key = matchData[operand.id];
-					derivedMetric = operand.quantifiers[key];
+				// divide operands: [dividend, divisor] (a/b -> [a, b])
+				case 'divide': {
+					let dividendKey = operands[0];
+					let divisorKey = operands[1];
+					let dividend, divisor, quotient;
+					
+					if (typeof dividendKey === 'number') dividend = dividendKey;
+					else if (dividendKey.startsWith('$')) dividend = variables[dividendKey];
+					else dividend = parseNumber(matchData[divisorKey]);
+					
+					if (typeof divisorKey === 'number') divisor = divisorKey;
+					if (divisorKey.startsWith('$')) divisor = variables[divisorKey];
+					else divisor = parseNumber(matchData[divisorKey]);
+					
+					if (divisor === 0) quotient = 0;
+					else quotient = dividend / divisor;
+					
+					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = quotient;
+					else derivedMetric = quotient;
+					//logger.trace(`Divide: ${quotient} -> ${thisOp.as || ''}`);
+					break;
 				}
-				break;
+				// multiselect quantifiers: {option1: value1, option2: value2, ...}; variables not supported
+				case 'multiselect': {
+					let key = matchData[thisOp.id];
+					let value = parseNumber(thisOp.quantifiers[key]);
+					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = value;
+					else derivedMetric = value;
+					//logger.trace(`Multiselect: ${value} -> ${thisOp.as || ''}`);
+					break;
+				}
+			}
 		}
+		logger.trace(`Final metric: ${derivedMetric} - Label: ${thisItem.label}`);
 		// Insert the newly derived metric into 
 		matchData[thisItem.id] = derivedMetric;
+	}
+	
+	// Turns checkboxes into 0 and 1
+	function parseNumber(item) {
+		if (item === 'true') return 1;
+		else if (item === 'false') return 0;
+		else return parseFloat(item);
 	}
 	
 	return matchData;
@@ -145,7 +215,7 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
 			{org_key: org_key}, {},
 			{allowCache: true}
 		);
-		//logger.debug("thisOrg=" + JSON.stringify(thisOrg));
+		////logger.trace("thisOrg=" + JSON.stringify(thisOrg));
 		var thisConfig = thisOrg.config;
 		logger.trace('thisConfig=' + JSON.stringify(thisConfig));
 		
@@ -165,7 +235,7 @@ matchDataHelper.getModifiedMatchScoutingLayout = async function(org_key, event_y
 
 		if (defaultSet) {
 			colCookie = defaultSet;
-			logger.debug('Using org default cookies=' + colCookie);
+			//logger.trace('Using org default cookies=' + colCookie);
 		}
 	}
 	
@@ -332,7 +402,7 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 	);
 	var teams = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
-		logger.debug('thisEvent.team_keys=' + JSON.stringify(thisEvent.team_keys));
+		//logger.trace('thisEvent.team_keys=' + JSON.stringify(thisEvent.team_keys));
 		teams = await utilities.find('teams', 
 			{'key': {$in: thisEvent.team_keys}}, 
 			{sort: {team_number: 1}},
@@ -419,7 +489,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 	var teams = teams_list;
 
 	var teamList = teams.split(',');
-	logger.debug('teamList=' + JSON.stringify(teamList));
+	//logger.trace('teamList=' + JSON.stringify(teamList));
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	var cookie_key = org_key + '_' + event_year + '_cols';
@@ -488,7 +558,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 	for (let i in avgTable) {
 		if (avgTable[i]) {
 			var thisAvg = avgTable[i];
-			//logger.debug("i=" + i + ",key=" + thisAvg.key);
+			////logger.trace("i=" + i + ",key=" + thisAvg.key);
 			var min = 9e9;
 			var max = -9e9;
 			var theseKeys = Object.keys(thisAvg);
@@ -528,7 +598,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 	for (let i in maxTable) {
 		if (maxTable[i]) {
 			var thisMax = maxTable[i];
-			//logger.debug("i=" + i + ",key=" + thisMax.key);
+			////logger.trace("i=" + i + ",key=" + thisMax.key);
 			let min = 9e9;
 			let max = -9e9;
 			let theseKeys = Object.keys(thisMax);

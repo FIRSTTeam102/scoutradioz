@@ -33,12 +33,17 @@
     "upload-qa": "node ../scripts/uploadversion.js --alias qa --folder $npm_package_config_folder --function-name $npm_package_config_functionFullName",
     "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name $npm_package_config_functionFullName",
     "promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name $npm_package_config_functionFullName",
-    "rollback-prod": "node ../scripts/rollbackversion.js --function-name $npm_package_config_functionFullName"
+    "rollback-prod": "node ../scripts/rollbackversion.js --function-name $npm_package_config_functionFullName",
+    "---readme2---": "Use the link-x and unlink-x scripts to test development versions of our associated NPM packages without having to publish many test versions. Make sure to run the unlink script before uploading to Lambda, because it'll break.",
+    "win-link-helpers": "cd ../scoutradioz-helpers && npm link && npm install && cd ../primary && npm link @firstteam102/scoutradioz-helpers",
+    "win-unlink-helpers": "npm unlink @firstteam102/scoutradioz-helpers && npm i @firstteam102/scoutradioz-helpers",
+    "win-link-utilities": "cd ../scoutradioz-utilities && npm link && npm install && cd ../primary && npm link @firstteam102/scoutradioz-utilities",
+    "win-unlink-utilities": "npm unlink @firstteam102/scoutradioz-utilities && npm i @firstteam102/scoutradioz-utilities"
   },
   "license": "Apache-2.0",
   "dependencies": {
     "@firstteam102/http-errors": "^1.0.2",
-    "@firstteam102/scoutradioz-helpers": "^1.0.12",
+    "@firstteam102/scoutradioz-helpers": "^1.0.13",
     "@firstteam102/scoutradioz-utilities": "^1.1.5",
     "aws-serverless-express": "^3.4.0",
     "bcryptjs": "^2.4.3",

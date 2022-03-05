@@ -218,24 +218,33 @@ router.get('/recalcderived', wrap(async (req, res) => {
 
 	// cycle through each scored match & [re]calculate derived metrics - push into new array 'updatedScored'
 	// [SEE ALSO SCOUTING.JS]
-	var updatedScored = [];
+	var writeQueries = [];
 	//var debugCountdown = 0;
 	for (var i in scored) {
 		if (scored[i].data) {
 			// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-			var thisScored = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, scored[i]);
-			updatedScored.push(thisScored);
+			var thisScored = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, scored[i].data);
+			writeQueries.push({
+				updateOne: {
+					filter: {_id: scored[i]._id},
+					update: {$set: {data: thisScored}}
+				}
+			});
 		}
 	}
+	
+	// 2022-03-04 JL: fixed bug & put the update stuff into a bulkWrite
+	let writeResult = await utilities.bulkWrite('matchscouting', writeQueries);
+	res.send('SUCCESS - writeResult = ' + JSON.stringify(writeResult));
 
 	// Delete the old scored data
-	await utilities.remove('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} });
+	// await utilities.remove('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} });
 
-	// Insert the revised scored data
-	await utilities.insert('matchscouting', updatedScored);
+	// // Insert the revised scored data
+	// await utilities.insert('matchscouting', updatedScored);
 	
 	//2020-03-27 (security hole) removed res.render(admin) and switched with res.send
-	res.send('SUCCESS');
+	// res.send('SUCCESS');
 }));
 
 

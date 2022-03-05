@@ -1,7 +1,15 @@
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const readline = require('readline');
 
-process.env.TIER = 'dev';
+let tier = process.argv[2];
+let orgkey = process.argv[3];
+
+if (!tier || !orgkey) {
+	console.log('Usage: node generateJsonFormLayout.js <database tier> <org key>');
+	process.exit(1);
+}
+
+process.env.TIER = tier;
 utilities.config(require('../databases.json'), {
 	cache: {
 		enable: false,
@@ -64,6 +72,7 @@ const pitAthenian2022 = [
 // type, id, label, multiselectOptions, [sliderMin, sliderMax, sliderStep]
 const matchGearheads2022 = [
 	['h2', 'lblAuto', 'Autonomous'],
+	['checkbox', 'didTaxi', 'Did they taxi (move out from the tarmac)?'],
 	['h3', 'lblAutoUpperHub', 'Upper Hub'],
 	['counter', 'autoHighScored', 'Cargo scored by robot'],
 	['badcounter', 'autoHighMissed', 'Cargo missed by robot'],
@@ -74,15 +83,15 @@ const matchGearheads2022 = [
 	['spacer'],
 	['h2', 'teleopLabel', 'Teleop'],
 	['h3', 'lblTeleUpperHub', 'Upper Hub'],
-	['counter', 'teleHighScored', 'Cargo scored'],
-	['badcounter', 'teleHighMissed', 'Cargo missed'],
+	['counter', 'teleopHighScored', 'Cargo scored'],
+	['badcounter', 'teleopHighMissed', 'Cargo missed'],
 	['h3', 'lblTeleLowerHub', 'Lower Hub'],
 	['counter', 'teleopLowScored', 'Cargo scored'],
 	['badcounter', 'teleopLowMissed', 'Cargo missed'],
 	['spacer'],
 	['h2', 'endgameLabel', 'End game'],
-	['multiselect', 'attemptedClimb', 'Attempted climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	['multiselect', 'successfulClimb', 'Successful climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
+	['multiselect', 'attemptedClimb', 'Attempted climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	['slider', 'climbTimeSeconds', 'Approximately how long did it take them to climb? (seconds)', null, [10, 90, 10]],
 	['spacer'],
 	['h2', 'generalLabel', 'General'],
@@ -91,6 +100,7 @@ const matchGearheads2022 = [
 	['checkbox', 'diedDuringMatch', 'Died during the match (or never started)?'],
 	['checkbox', 'recoveredFromFreeze', 'Recovered from freeze?'],
 	['spacer'],
+	['checkbox', 'outstandingPerformance', 'Outstanding performance? (If so, definitely explain why!)'],
 	['textblock', 'otherNotes', 'Other comments and notes:'],
 ];
 
@@ -129,8 +139,8 @@ const matchDerivedAthenian2022 = [
 		order: 520,
 		label: 'Climb points',
 		id: 'climbPoints',
-		operator: 'multiselect',
-		operands: [{
+		operations: [{
+			operator: 'multiselect',
 			id: 'climb',
 			quantifiers: {
 				0: 0,
@@ -144,12 +154,147 @@ const matchDerivedAthenian2022 = [
 ];
 
 const matchDerivedGearheads2022 = [
-	
+	{
+		order: 500,
+		label: 'Climb points',
+		id: 'climbPoints',
+		operations: [{
+			operator: 'multiselect',
+			id: 'successfulClimb',
+			quantifiers: {
+				'None': 0,
+				'Low': 4,
+				'Mid': 6,
+				'High': 10,
+				'Traversal': 15,
+			}
+		}]
+	}, {
+		order: 510,
+		label: 'Autonomous accuracy',
+		id: 'autoAccuracy',
+		operations: [
+			{
+				operator: 'sum',
+				operands: ['autoLowScored', 'autoLowMissed', 'autoHighScored', 'autoHighMissed'],
+				as: 'totalShots',	// "as" lets you use it as a $variable later down the calculation chain
+			}, {
+				operator: 'sum',
+				operands: ['autoLowScored', 'autoHighScored'],
+				as: 'successes',
+			}, {
+				operator: 'divide',
+				operands: ['$successes', '$totalShots'] // divide operands: [dividend, divisor] (a/b -> [a, b])
+			}
+		],
+		display_percentage: true,
+	}, {
+		order: 520,
+		label: 'Teleop accuracy',
+		id: 'teleopAccuracy',
+		operations: [
+			{
+				operator: 'sum',
+				operands: ['teleopLowScored', 'teleopLowMissed', 'teleopHighScored', 'teleopHighMissed'],
+				as: 'totalShots',
+			}, {
+				operator: 'sum',
+				operands: ['teleopLowScored', 'teleopHighScored'],
+				as: 'successes',
+			}, {
+				operator: 'divide',
+				operands: ['$successes', '$totalShots'] // divide operands: [dividend, divisor] (a/b -> [a, b])
+			}
+		],
+		display_percentage: true,
+	}, {
+		order: 530,
+		label: 'Climb accuracy',
+		id: 'climbAccuracy',
+		operations: [
+			{
+				operator: 'multiselect',
+				id: 'successfulClimb',
+				quantifiers: {
+					'None': 0,
+					'Low': 1,
+					'Mid': 2,
+					'High': 3,
+					'Traversal': 4,
+				},
+				as: 'climbSuccess'
+			}, {
+				operator: 'multiselect',
+				id: 'attemptedClimb',
+				quantifiers: {
+					'None': 0,
+					'Low': 1,
+					'Mid': 2,
+					'High': 3,
+					'Traversal': 4,
+				},
+				as: 'climbAttempt'
+			}, {
+				operator: 'divide',
+				operands: ['$climbSuccess', '$climbAttempt']
+				/* 	Attempt 4, get 4 -> 100%
+					Attempt 4, get 3 -> (4 - 1) / 4 = 3/4 = 75% - (4 - (4 - 3)) / 4
+					Attempt 3, get 1 -> (3 - 2) / 3 = 1/3 = 33% - (3 - (3 - 1)) / 3
+					Attempt 2, get 1 -> (2 - 1) / 2 = 1/2 = 50%
+					oh, it's literally just success / attempt (note: need to add an exception for div by 0)
+				*/
+			}
+		],
+		display_percentage: true,
+	}, {
+		order: 540,
+		label: 'Total contributed points',
+		id: 'contributedPoints',
+		operations: [
+			{
+				operator: 'multiply',
+				operands: ['didTaxi', 2], // note to self: treat "true"/"false" as 0 and 1
+				as: 'taxi'
+			}, {
+				operator: 'multiply',
+				operands: ['autoHighScored', 4],
+				as: 'autoHigh'
+			}, {
+				operator: 'multiply',
+				operands: ['autoLowScored', 2],
+				as: 'autoLow'
+			}, {
+				operator: 'multiply',
+				operands: ['teleopHighScored', 2],
+				as: 'teleopHigh'
+			}, {
+				operator: 'multiply',
+				operands: ['teleopLowScored', 1],
+				as: 'teleopLow'
+			}, {
+				// I think it would take a lot of extra code to allow derived metrics to depend on other
+				//	derived metrics. I'd rather do a teensy bit of extra calculations than have to deal with all that extra code.
+				operator: 'multiselect',
+				id: 'successfulClimb',
+				quantifiers: {
+					'None': 0,
+					'Low': 4,
+					'Mid': 6,
+					'High': 10,
+					'Traversal': 15,
+				},
+				as: 'climbPoints'
+			}, {
+				operator: 'sum',
+				operands: ['$taxi', '$autoHigh', '$autoLow', '$teleopHigh', '$teleopLow', '$climbPoints']
+			}
+		],
+	}
 ];
 
 const year = 2022;
 // const org_key = 'frc852';
-const org_key = 'frc102';
+const org_key = orgkey;
 
 let layoutArr = [];
 
@@ -188,14 +333,13 @@ function fixArray(arr, derived, formType) {
 			year: year,
 			order: item.order,
 			type: 'derived',
-			operator: item.operator,
+			operations: item.operations,
+			display_percentage: !!item.display_percentage, // TODO: Display percentages as percentages
 			label: item.label,
 			id: item.id,
 			form_type: formType,
 			org_key: org_key
 		};
-		if (item.operands) newItem.operands = item.operands;
-		if (item.numerical) newItem.numerical = item.numerical;
 		ret.push(newItem);
 	}
 	return ret;
@@ -207,8 +351,12 @@ async function main() {
 	
 	if (org_key === 'frc852')
 		layoutArr = [...fixArray(matchAthenian2022, matchDerivedAthenian2022, 'matchscouting'), ...fixArray(pitAthenian2022, [], 'pitscouting')];
-	else if (org_key === 'frc102')
+	else if (org_key === 'frc102' || org_key === 'demo')
 		layoutArr = [...fixArray(matchGearheads2022, matchDerivedGearheads2022, 'matchscouting'), ...fixArray(pitGearheads2022, [], 'pitscouting')];
+	else {
+		console.log('Sorry, not supported yet');
+		process.exit(1);
+	}
 	
 	let existing = await utilities.find('layout', {org_key: org_key, year: year});
 	let proceed, writeResult;
