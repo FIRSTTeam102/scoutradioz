@@ -166,6 +166,7 @@
 .team-image-md{max-height: 225px; margin: 4px;}
 .team-image-lg{max-height: 350px; margin: 8px;}
 
+p.i{font-style: italic;}
 p.indented{
 	text-indent: 20px;
 }
@@ -258,6 +259,8 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 .theme-input:-ms-input-placeholder {color:var(--placeholder-color);}
 .theme-input::-ms-input-placeholder {color:var(--placeholder-color);}
 .theme-input::placeholder {color:var(--placeholder-color);}
+.no-padding{padding: 0!important;}
+
 
 /* For scouting form elements */
 .scouting-counter{
@@ -265,7 +268,7 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	box-sizing:content-box;
 	width:30px;
 	height:30px;
-	padding:8px;
+	padding:8px!important;
 	border-radius: 50%!important;
 	margin-top: -12.5px;
 	font-family: "Tahoma, Geneva, sans-serif";
@@ -274,6 +277,15 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 .scouting-counter .minus{
 	margin-top: -4px;
 	font-size: 25px;
+}
+.scouting-counter.sc-small{
+    width: 18px;
+    height: 18px;
+    padding: 8px!important;
+    font-size: 16px;
+    margin-top: 0;
+    position: relative;
+	top: -4px;
 }
 
 .slider-container {
