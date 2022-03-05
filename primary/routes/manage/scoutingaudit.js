@@ -119,7 +119,7 @@ router.get('/uploads', wrap(async (req, res) => {
 	var orgKey = req.user.org_key;
 	
 	var uploads = await utilities.find('uploads', 
-		{org_key: orgKey, removed: false},
+		{org_key: orgKey, removed: false, year: req.event.year},
 		{},
 	);
 	
