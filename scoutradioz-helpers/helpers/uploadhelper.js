@@ -129,12 +129,6 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 		{allowCache: true}
 	);
 	
-	var imageKeys = {};
-	var imageLinks = new ImageLinks();
-	
-	//console.log(uploads);
-	//logger.debug(`uploads=${JSON.stringify(uploads)}`);
-	
 	//Sort results by team number
 	uploads.sort((a, b) => {
 		if (a.hasOwnProperty('team_key') && b.hasOwnProperty('team_key')) {
@@ -179,7 +173,7 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 		
 		//Now, go through each upload for this team and get its corresponding link
 		if (thisTeamUploads[0]) {
-			for (var upload of thisTeamUploads) {
+			for (let upload of thisTeamUploads) {
 				if (upload.hasOwnProperty('index')) {
 					const key = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${upload.s3_key}`;
 					//Assign FIRST MATCHING s3 key to corresponding image type
@@ -201,7 +195,7 @@ uploadHelper.findTeamImagesMultiple = async (orgKey, year, teamKeys) => {
 		}
 		
 		//For main, a, b, and c, set links to _sm, _md, and _lg respectively
-		for (var prop in imageKeys) {
+		for (let prop in imageKeys) {
 			imageLinks[prop] = {
 				sm: imageKeys[prop] + '_sm.jpg',
 				md: imageKeys[prop] + '_md.jpg',
