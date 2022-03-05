@@ -12,7 +12,7 @@ block content
 		h4(style="font-style:italic")= thisPair
 		hr 
 		if assignedTeams.length > 0
-			h3(class="theme-text") Scouting assignments
+			h3(class="theme-text") Pit scouting assignments
 			each team in assignedTeams
 				if team.data
 					a(href=`/scouting/pit?team_key=${team.team_key}`) 
@@ -24,7 +24,7 @@ block content
 							span= team.team_key.substring(3)
 			hr 
 		if backupTeams.length > 0
-			h3(class="theme-text") Partner(s) scouting assignments
+			h3(class="theme-text") Partner(s) pit scouting
 			each team in backupTeams
 				if team.data
 					a(href=`/scouting/pit?team_key=${team.team_key}`) 
@@ -36,7 +36,7 @@ block content
 							span= team.team_key.substring(3)
 			hr 
 		if scoringMatches.length > 0
-			h3(class="theme-text") Upcoming matches to be scored
+			h3(class="theme-text") Upcoming matches to be scouted
 			br 
 			each match in scoringMatches
 				- match.alliance = (match.alliance == "red") ? "Red" : "Blue";
