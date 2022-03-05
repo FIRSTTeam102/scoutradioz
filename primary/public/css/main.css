@@ -268,7 +268,7 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	padding:8px;
 	border-radius: 50%!important;
 	margin-top: -12.5px;
-	font-family: "Tahoma, Geneva, sans-serif";
+	font-family: Tahoma, Geneva, sans-serif;
     font-size: 20px;
 }
 .scouting-counter .minus{
@@ -329,7 +329,7 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	height: 20px;
 	padding: 12px;
 	margin: 2px 2px;
-	font-family: "Tahoma, Geneva, sans-serif";
+	font-family: Tahoma, Geneva, sans-serif;
 	font-size: 20px;
 }
 
