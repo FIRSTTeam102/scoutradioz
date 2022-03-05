@@ -12,7 +12,7 @@ block content
 	- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');
 	- var btnColor = (alliance == "Red") ? "alliance-red" : "alliance-blue"
 	p
-	if images
+	if images && images.main
 		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
 			img(src=images.main.md alt="" class="w3-image team-image-lg")
 	br
