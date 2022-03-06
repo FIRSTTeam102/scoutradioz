@@ -36,14 +36,14 @@ block content
 	form(method="post" action="/manage/scoutingpairs/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
 	hr 
-	div( onclick="promptPass('*WARNING:* Erases existing SCOUTING data for the current event.', '/manage/scoutingpairs/generateteamallocations');")
+	div( onclick="promptPass('*WARNING:* Erases existing PIT SCOUTING data for the current event.', '/manage/scoutingpairs/generateteamallocations');")
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams to PIT SCOUTING members
 	br
-	div( onclick="promptPass('*WARNING:* Erases existing SCORING data for the current event.', '/manage/scoutingpairs/generatematchallocations');")
+	div( onclick="promptPass('*WARNING:* Erases existing MATCH SCOUTING data for the current event.', '/manage/scoutingpairs/generatematchallocations');")
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams@matches to MATCH SCORING members
 	br 
 	br 
-	div( onclick="promptPass('*WARNING:* Erases MATCH SCORING ASSIGNMENTS for the current event.', '/manage/scoutingpairs/clearmatchallocations');")
+	div( onclick="promptPass('*WARNING:* Erases MATCH SCOUTING ASSIGNMENTS for the current event.', '/manage/scoutingpairs/clearmatchallocations');")
 		button(class="w3-btn theme-red strong" type="submit") Clear all MATCH SCORING assignments
 	hr 
 	h2 Team@Match Allocation v2.0

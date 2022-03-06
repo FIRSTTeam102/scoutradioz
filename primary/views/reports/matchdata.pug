@@ -37,11 +37,20 @@ block content
 							th(class="w3-right-align theme-text")
 								u
 									a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
+								//- 2022-03-06 JL: Added edit button so we can view/edit the match form
+								if user && user.role >= process.env.ACCESS_SCOUTER
+									span &nbsp;
+									a(href=`/scouting/match?key=${match.key}_${team}&alliance=blue`)
+										span(class="sprite sp-edit sp-16") &nbsp;
 						th
 						for team in match.alliances.blue.team_keys
 							th(class="w3-right-align theme-text")
 								u
 									a(href=`/reports/teamintel?team_key=${team}`)= team.substring(3)
+								if user && user.role >= process.env.ACCESS_SCOUTER
+									span &nbsp;
+									a(href=`/scouting/match?key=${match.key}_${team}&alliance=red`)
+										span(class="sprite sp-edit sp-16") &nbsp;
 					each item in scoreLayout
 						case item.type
 							when "checkbox"
