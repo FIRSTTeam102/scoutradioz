@@ -3,7 +3,7 @@
 	color-scheme: dark;
 
 	/* FIRST colors */
-	--first-red: #ed1c24;
+	--first-red: #D5181E;
 	--first-blue: #005fa8;
 	--first-gray: #9f9c9a;
 
@@ -16,6 +16,10 @@
 
 	--text-primary: var(--white);
 	--text-secondary: var(--light);
+	
+	--animation-time: 0.2s;
+	--long-animation-time: 1.4s;
+	--animate: all var(--animation-time) ease-in-out;
 
 	--header: var(--trim);
 	--footer: var(--black);
@@ -72,6 +76,8 @@
 
 .header{background-color: var(--header);}
 .footer{background-color: var(--footer);}
+
+.animate{transition: var(--animate); -webkit-transition: var(--animate);}
 
 /* For sprites */
 .sprite.sp-4{--size:4px;}
@@ -287,7 +293,63 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
     position: relative;
 	top: -4px;
 }
+.scouting-counter.sc-good{
+	background-color: var(--first-blue);
+}
+.scouting-counter.sc-bad{
+	background-color: var(--first-red);
+	border-radius: 25%!important;
+}
 
+/* Toggle switches */
+/* The switch - the box around the slider */
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 28px;
+}
+.switch.theme-inline-padding { top: 4px; /* to make the switch inline with labels */ }
+.switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+  
+/* The slider */
+.switch .toggle {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	border-radius: 28px;
+}
+.switch .toggle.animate:before {
+	-webkit-transition: var(--animate);
+	transition: var(--animate);
+}
+.switch .toggle:before {
+	position: absolute;
+	content: "";
+	height: 20px;
+	width: 20px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	border-radius: 20px;
+}
+.switch input:checked + .toggle { background-color: var(--button-primary); }
+.switch input:focus + .toggle { box-shadow: 0 0 1px var(--button-primary); }
+.switch input:checked + .toggle:before {
+	-webkit-transform: translateX(32px);
+	-ms-transform: translateX(32px);
+	transform: translateX(32px);
+}
+
+/* Range sliders */
 .slider-container {
 	position: relative;
 	--height: 24px;
@@ -317,7 +379,6 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 }
 .slider-label-left{float: left; opacity: 0.5;}
 .slider-label-right{float: right; opacity: 0.5;}
-.slider-label-center{}
 
 .slider::-webkit-slider-thumb {
 	-webkit-appearance: none; 
