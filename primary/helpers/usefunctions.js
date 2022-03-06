@@ -27,6 +27,7 @@ functions.initialMiddleware = async function(req, res, next){
 	// Gets the redirectURL, automatically with ? and & encoded
 	req.getRedirectURL = function() {
 		let str = this.body.redirectURL || this.query.redirectURL;
+		if (str instanceof Array) str = str[str.length-1]; // this can happen if some weird edgecase leads to redirectURL=a&redirectURL=b
 		return this.fixRedirectURL(str);
 	};
 	

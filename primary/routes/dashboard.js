@@ -3,6 +3,7 @@ const logger = require('log4js').getLogger('dashboard');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
+const e = require('@firstteam102/http-errors');
 //const matchDataHelper = require('../../scoutradioz-helpers/helpers/matchdatahelper');
 //const uploadHelper = require('../../scoutradioz-helpers/helpers/uploadhelper');
 
@@ -605,7 +606,10 @@ router.get('/pits', wrap(async (req, res) => {
 
 	// Add data to 'teams' data
 	for (let teamIdx = 0; teamIdx < teams.length; teamIdx++) {
-		//logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
+		// logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
+		if (!teamKeyMap[teams[teamIdx].team_key]) {
+			throw new e.InternalServerError(`Couldn't find details for team ${teams[teamIdx].team_key}. Has the team list changed since you created the scouting assignments?`);
+		}
 		teams[teamIdx].nickname = teamKeyMap[teams[teamIdx].team_key].nickname;
 	}
 	//Add a call to the database for populating menus in pit scouting

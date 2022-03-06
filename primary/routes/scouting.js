@@ -17,9 +17,6 @@ router.all('/*', wrap(async (req, res, next) => {
 router.get('/match*', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match[get]');
 	logger.info('ENTER');
-	
-	// var scoringLayoutCol = db.get("scoringlayout");
-	// var scoringDataCol = db.get("scoringdata");
 
 	var eventYear = req.event.year;
 	var thisUser = req.user;
@@ -27,6 +24,7 @@ router.get('/match*', wrap(async (req, res) => {
 	var matchTeamKey = req.query.key;
 	var alliance = req.query.alliance;
 	var orgKey = req.user.org_key;
+	if (!matchTeamKey) return res.redirect('/dashboard?alert=No match key was set for scouting.'); // 2022-03-06 JL: Redirect user if they 
 	var teamKey = matchTeamKey.split('_')[2];
 	
 	logger.debug(`match_team_key: ${matchTeamKey} alliance: ${alliance} user: ${thisUserName} teamKey=${teamKey}`);
@@ -213,21 +211,16 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
 	
-	//logger.debug('req.body=' + JSON.stringify(req.body));
-	
 	var pitData = req.body;
-	logger.debug(req.body);
 	var teamKey = pitData.teamkey;
 	delete pitData.teamkey;
 	logger.debug('teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
 	logger.debug('pitData=' + JSON.stringify(pitData));
 
-	// var pitCol = db.get('scoutingdata');
-
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
 
-	//res.redirect("/dashboard");
+	// TODO: Verify pit data against layout, to avoid malicious/bogus data inserted into db?
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	await utilities.update('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, { $set: { 'data' : pitData, 'actual_scouter': thisUserName, useragent: req.shortagent } });
