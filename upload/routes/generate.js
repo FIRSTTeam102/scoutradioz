@@ -5,6 +5,8 @@ const Jimp = require('jimp');
 
 var imageTemplate, pointerTemplate, headerFont, teamFont;
 
+const Y = 56; // Y offset
+
 router.get('/upcomingmatch', async (req, res, next) => {
 	
 	//all parameters from query
@@ -45,25 +47,25 @@ router.get('/upcomingmatch', async (req, res, next) => {
 	var x1, y1, x2, y2;
 	switch (assigned) {
 		case 'blue1':
-			x1 = 115, y1 = 123, x2 = 274, y2 = 123;
+			x1 = 115, y1 = 123+Y, x2 = 274, y2 = 123+Y;
 			break;
 		case 'blue2':
-			x1 = 115, y1 = 177, x2 = 274, y2 = 177;
+			x1 = 115, y1 = 177+Y, x2 = 274, y2 = 177+Y;
 			break;
 		case 'blue3':
-			x1 = 115, y1 = 231, x2 = 274, y2 = 231;
+			x1 = 115, y1 = 231+Y, x2 = 274, y2 = 231+Y;
 			break;
 		case 'red1':
-			x1 = 525, y1 = 123, x2 = 684, y2 = 123;
+			x1 = 525, y1 = 123+Y, x2 = 684, y2 = 123+Y;
 			break;
 		case 'red2':
-			x1 = 525, y1 = 177, x2 = 684, y2 = 177;
+			x1 = 525, y1 = 177+Y, x2 = 684, y2 = 177+Y;
 			break;
 		case 'red3':
-			x1 = 525, y1 = 231, x2 = 684, y2 = 231;
+			x1 = 525, y1 = 231+Y, x2 = 684, y2 = 231+Y;
 			break;
 		default:
-			x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+			x1 = 0, y1 = 0+Y, x2 = 0, y2 = 0+Y;
 	}
 	
 	const startTime = Date.now();
@@ -76,39 +78,39 @@ router.get('/upcomingmatch', async (req, res, next) => {
 	//Await all text-printing
 	await Promise.all([
 		//Header
-		image.print(headerFont, 0, 0, {
+		image.print(headerFont, 0, 0+Y, {
 			text: headerText,
 			alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
 			alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
 		}, 820, 80),
 		//Blue teams
-		image.print(teamFont, 0, 0, {
+		image.print(teamFont, 0, 0+Y, {
 			text: blue[0],
 			alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
 			alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
 		}, 410, 160),
-		image.print(teamFont, 0, 0, {
+		image.print(teamFont, 0, 0+Y, {
 			text: blue[1],
 			alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
 			alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
 		}, 410, 214),
-		image.print(teamFont, 0, 0, {
+		image.print(teamFont, 0, 0+Y, {
 			text: blue[2],
 			alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
 			alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
 		}, 410, 268),
 		//Red teams
-		image.print(teamFont, 410, 0, {
+		image.print(teamFont, 410, 0+Y, {
 			text: red[0],
 			alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
 			alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
 		}, 410, 160),
-		image.print(teamFont, 410, 0, {
+		image.print(teamFont, 410, 0+Y, {
 			text: red[1],
 			alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
 			alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
 		}, 410, 214),
-		image.print(teamFont, 410, 0, {
+		image.print(teamFont, 410, 0+Y, {
 			text: red[2],
 			alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
 			alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
