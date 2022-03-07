@@ -42,7 +42,7 @@ block content
 						button(class="w3-button w3-hover-green theme-submit scouting-counter sc-small" onclick=`setValue('${row._id}', 1)` type="button") +
 					td(class="w3-center" team-value key=row._id)= row.value
 					//- Change the team number's class depending on the row value
-					td(class="w3-center" team-number key=row._id class=(row.value > 0 ? 'wanted-team' : row.value < 0 ? 'unwanted-team' : ''))= row._id.substr(3)
+					td(class="w3-center" team-number key=row._id class=(row.value > 0 ? 'wanted-team' : row.value < 0 ? 'unwanted-team' : ''))= row._id.substring(3)
 					td(class="w3-right-align")= row.rank
 					for item in layout
 						-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')

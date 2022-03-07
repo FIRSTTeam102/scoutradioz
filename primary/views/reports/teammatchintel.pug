@@ -10,7 +10,7 @@ block content
 		h2(class="theme-text")
 			a(href=`/reports/teamintel?team_key=${teammatch.team_key}`)= teammatch.team_key.replace('frc','Team ')
 		p
-		h3 Match ##{teammatch.match_number} - #{teammatch.alliance[0].toUpperCase()+teammatch.alliance.substr(1)} alliance 
+		h3 Match ##{teammatch.match_number} - #{teammatch.alliance[0].toUpperCase()+teammatch.alliance.substring(1)} alliance 
 		hr
 		if (data)
 			each element in layout

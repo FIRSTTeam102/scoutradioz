@@ -594,7 +594,7 @@ router.get('/teamdata', wrap(async (req, res) =>  {
 	var currentAggRanges = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	res.render('./reports/teamdata', {
-		title: 'Match Scouting Data for Team #' + teamKey.substr(3),
+		title: 'Match Scouting Data for Team #' + teamKey.substring(3),
 		layout: scoreLayout,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
