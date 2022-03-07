@@ -109,7 +109,7 @@ app.use(session({
 		//Use same URL that utilities uses for database
 		clientPromise: clientPromise,
 		//client: sessionDb,
-		ttl: 3 * 24 * 60 * 60, // Time-to-live, in seconds.
+		ttl: 7 * 24 * 60 * 60, // Time-to-live, in seconds. 2022-03-07 JL: Increased from 3 days to 7 days.
 		autoRemove: 'interval',
 		autoRemoveInterval: 10, // In minutes. Default
 		touchAfter: 24 * 3600, // time period in seconds for lazy loading session

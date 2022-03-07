@@ -846,8 +846,16 @@ utilities.requestTheBlueAlliance = async function(url){
 			logger.trace(`Full TBA response: ${str}`);
 			
 			logger.removeContext('funcName');
-			//Inside client callback, resolve promise
-			resolve(tbaData);
+			
+			if (tbaData.hasOwnProperty('Errors') || tbaData.hasOwnProperty('Error')) {
+				// 2022-03-06 JL: If there are errors, don't resolve the data
+				logger.error(`Error when requesting ${url}: ${JSON.stringify(tbaData)}`);
+				reject(tbaData);
+			}
+			else {
+				//Inside client callback, resolve promise
+				resolve(tbaData);
+			}
 		});
 	});
 	

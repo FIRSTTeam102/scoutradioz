@@ -1,6 +1,9 @@
 h5=element.label
 select(class="theme-input theme-inline-padding w3-no-border w3-half" style="float: none" type="text" name=element.id)
-	option
+	//- 2022-03-06 JL: Only show a blank dropdown as default if it's part of PIT SCOUTING layout
+	//-		This is to prevent NaNs from appearing in metrics!!
+	if element.form_type === 'pitscouting'
+		option
 	each option, i in element.options
 		if( answer == option )
 			option(value=option class="w3-bar-item" selected) #{option}
