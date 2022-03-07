@@ -10,6 +10,7 @@ block content
 		h2(class="theme-text")= user.name
 		h4(style="font-style:italic") Scouting group:
 		h4(style="font-style:italic")= thisPair
+		include templates/notifications 
 		hr 
 		if assignedTeams.length > 0
 			h3(class="theme-text") Pit scouting assignments

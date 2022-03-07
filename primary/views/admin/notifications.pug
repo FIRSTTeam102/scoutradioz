@@ -1,0 +1,64 @@
+//-
+	Test notification page.
+		notifications.js
+		'/notifications'
+	//
+extends ../layout
+block content
+		div(class="w3-auto")
+			form(action="/notifications/sendtest" method="post" name="send-form")
+				div.w3-section
+					label Match key:
+					select(class="theme-input gear-btn" name="matchKey" id="matchKey")
+						each match in matches
+							option=match.key
+					label.w3-margin-left Assigned team:
+					select(class="theme-input gear-btn" name="assignedMatchTeam" id="assignedTeam")
+						option 
+				button(class="w3-btn gear-btn theme-submit" id="btn-sendnotif") Send Notifications
+		table.w3-table
+			tr 
+				th Org
+				th Name
+				th Role
+			each user in users
+				tr 
+					td=user.org_key
+					td=user.name
+					td=user.role_key
+		script.
+			
+			var matches = JSON.parse('!{JSON.stringify(matches)}');
+			
+			$('#matchKey').on('change', function (e) {
+				let matchKey = $('#matchKey').val();
+				let selectedMatch;
+				for (let match of matches) {
+					if (match.key === matchKey) {
+						selectedMatch = match;
+						break;
+					}
+				}
+				if (selectedMatch) {
+					console.log(selectedMatch);
+					let html = '';
+					for (let i = 0; i < selectedMatch.alliances.red.team_keys.length; i++) {
+						let teamKey = selectedMatch.alliances.red.team_keys[i];
+						html += `<option value="${matchKey}_${teamKey}">${teamKey} (red${i+1})</option>`;
+					}
+					for (let i = 0; i < selectedMatch.alliances.blue.team_keys.length; i++) {
+						let teamKey = selectedMatch.alliances.blue.team_keys[i];
+						html += `<option value="${matchKey}_${teamKey}">${teamKey} (blue${i+1})</option>`;
+					}
+					$('#assignedTeam').html(html);
+				}
+			})
+			
+			if (navigator.serviceWorker) {
+				navigator.serviceWorker.addEventListener('message', function(event) {
+					console.log('Received a message from service worker: ', event.data);
+					
+					var message = event.data.ifFocused.message;
+					NotificationCard.show(message);
+				});
+			}

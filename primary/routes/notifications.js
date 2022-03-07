@@ -5,51 +5,38 @@ const webpush = require('web-push');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 
 router.all('/*', wrap(async (req, res, next) => {
+	//check if user is logged in as a scouter
+	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	next();
-}));
-
-router.get('/', wrap(async (req, res) => {
-	
-	res.render('./notifications', {
-		title: 'Subscribing to a notification'
-	});
 }));
 
 router.post('/save-subscription', wrap(async (req, res) => {
 	logger.addContext('funcName', 'save-subscription[post]');
 	logger.info('ENTER');
 	
-	//check if user is logged in as a scouter
-	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
 	//check if it's a valid save request
-	if (!await isValidSaveRequest(req, res)) {
-		res.setHeader('Content-Type', 'application/json');
-		return res.send({data: {success: false}});
-	}
+	if (!await isValidSaveRequest(req, res)) return;
 	
 	logger.info(`Request to save push notification subscription for ${req.user.name}`);
 	logger.debug(`body: ${JSON.stringify(req.body)}`);
 	
 	var pushSubscription = req.body;
 	
-	var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: pushSubscription}});
+	try {
 	
-	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
+		var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: pushSubscription}});
 	
-	//if user has been updated w/ push subscription, then send a success message
-	if (writeResult.ok){
-		
-		logger.debug('Success');
+		logger.debug(`writeResult: ${JSON.stringify(writeResult)}`);
 		
 		res.cookie('enable_notifications', 1);
 		
 		res.setHeader('Content-Type', 'application/json');
-		res.send({data: {success: true}});
+		res.send({success: true});
 	}
-	//if write result failed, then error out and send fail response
-	else {
+	catch (err) {
+		
 		logger.error('The subscription was received but we were unable to save it to our database.');
 		
 		res.status(500);
@@ -67,7 +54,7 @@ router.post('/disable-subscription', wrap(async (req, res) => {
 	logger.addContext('funcName', 'disable-subscription[post]');
 	logger.info('ENTER');
 	
-	var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: {}}});
+	var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: null}});
 	
 	logger.debug(JSON.stringify(writeResult));
 	logger.info('Success');
@@ -75,7 +62,34 @@ router.post('/disable-subscription', wrap(async (req, res) => {
 	res.clearCookie('enable_notifications');
 	
 	res.setHeader('Content-Type', 'application/json');
-	res.send({data: {success: true}});
+	res.send({success: true});
+}));
+
+/* 
+	BELOW: ADMIN TESTING FUNCTIONS
+*/
+
+router.all('/*', wrap(async (req, res, next) => {
+	//check if user is logged in as a scouter
+	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) return;
+	//Must remove from logger context to avoid unwanted persistent funcName.
+	logger.removeContext('funcName');
+	next();
+}));
+
+router.get('/', wrap(async (req, res) => {
+	var usersWithPushNotifs = await utilities.find('users', 
+		{push_subscription: {$ne: null}},
+		{sort: {org_key: 1, role_key: 1, name: 1}}
+	);
+	
+	var matches = await utilities.find('matches', {event_key: req.event.key}, {sort: {predicted_time: 1}});
+	
+	res.render('./admin/notifications', {
+		title: 'Notifications testing page',
+		users: usersWithPushNotifs,
+		matches: matches,
+	});
 }));
 
 router.post('/sendtest', wrap(async (req, res) => {
@@ -88,29 +102,74 @@ router.post('/sendtest', wrap(async (req, res) => {
 	const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});	
 	webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
 	
-	const notificationBody = req.body.content != '' ? req.body.content : 'Hello world!';
+	const matchKey = req.body.matchKey;
+	const matchTeamKey = req.body.assignedMatchTeam;
+	if (!matchKey || !matchTeamKey) return res.redirect('/notifications?alert=No match & match team key');
+	const teamKey = matchTeamKey.split('_')[2];
+	
+	// Get the match from db & prepare the variables for the url
+	const match = await utilities.findOne('matches', {key: matchKey});
+	if (!match) return res.redirect('/notifications?alert=Match not found');
+	
+	let blue = match.alliances.blue.team_keys;
+	let red = match.alliances.red.team_keys;
+	let assignedTeam, alliance, blue1, blue2, blue3, red1, red2, red3;
+	
+	blue1 = blue[0].substring(3);
+	blue2 = blue[1].substring(3);
+	blue3 = blue[2].substring(3);
+	red1 = red[0].substring(3);
+	red2 = red[1].substring(3);
+	red3 = red[2].substring(3);
+	
+	for (let i = 0; i < 3; i++) {
+		if (blue[i] === teamKey) {
+			assignedTeam = 'blue' + (i + 1);
+			alliance = 'blue';
+		}
+	}
+	for (let i = 0; i < 3; i++) {
+		if (red[i] === teamKey) {
+			assignedTeam = 'red' + (i + 1);
+			alliance = 'red';
+		}
+	}
+	
+	let imageURL = process.env.UPLOAD_URL + '/' + process.env.TIER + '/generate/upcomingmatch?' +
+		`match_number=${match.match_number}&comp_level=${match.comp_level}&set_number=${match.set_number}&blue1=${blue1}&blue2=${blue2}&blue3=${blue3}&red1=${red1}&red2=${red2}&red3=${red3}&assigned=${assignedTeam}`;
+	let title = `Match ${match.match_number} is about to start`;
+	let body = `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`;
+	let ifFocusedMessage = `Don't forget, Match ${match.match_number} is about to start!`;
+		
+	logger.debug(`assignedTeam=${assignedTeam}, matchteam=${matchTeamKey}, imageURL=${imageURL}`);
+	
+	let scoutMatchURL = `${req.protocol}://${req.get('host')}/scouting/match?key=${matchTeamKey}&alliance=${alliance}`;
+	
+	const users = await utilities.find('users', {push_subscription: {$ne: null}});
 	
 	const pushSubscription = req.user.push_subscription;
 	
 	if (pushSubscription){
 		
 		const notificationContent = JSON.stringify({
-			title: 'Match 24 is about to start',
+			title: title,
 			options: {
-				body: 'You\'re assigned to team 4261 on the red alliance.',
-				badge: '/images/brand-logos/monochrome-badge.png',
-				icon: '/images/brand-logos/FIRST-logo.png',
-				image: 'https://upload.scoutradioz.com/app/generate/upcomingmatch?match_number=24&comp_level=qm&set_number=2&blue1=225&blue2=102&blue3=1676&red1=11&red2=2590&red3=4261&assigned=red3',
+				body: body,
+				badge: res.locals.fileRoot + '/images/brand-logos/monochrome-badge.png',
+				icon: res.locals.fileRoot + '/images/brand-logos/FIRST-logo.png',
+				// image: 'https://upload.scoutradioz.com/prod/generate/upcomingmatch?match_number=24&comp_level=qm&set_number=2&blue1=225&blue2=102&blue3=1676&red1=11&red2=2590&red3=4261&assigned=red3',
+				image: imageURL,
 				actions: [
 					{
-						action: 'scout-match',
+						action: scoutMatchURL,
 						title: 'Scout Match',
 						//icon: '',
 					}
-				]
+				],
+				timestamp: Date.now(),
 			},
 			ifFocused: {
-				message: 'Don\'t forget! This is a reminder!'
+				message: ifFocusedMessage,
 			},
 		});
 		// https://web-push-book.gauntface.com/demos/notification-examples/ 
@@ -145,7 +204,6 @@ async function sendPushMessage (subscription, dataToSend) {
 }
 
 async function isValidSaveRequest (req, res) {
-	
 	// Check the request body has at least an endpoint
 	if (!req.body || !req.body.endpoint) {
 		// Not a valid subscription.
@@ -155,7 +213,8 @@ async function isValidSaveRequest (req, res) {
 			error: {
 				id: 'no-endpoint',
 				message: 'Subscription must have an endpoint.'
-			}
+			},
+			success: false
 		}));
 		return false;
 	}

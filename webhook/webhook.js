@@ -1,3 +1,4 @@
+require('dotenv').config();
 const crypto = require('crypto');
 const express = require('express');
 const log4js = require('log4js');
@@ -10,13 +11,13 @@ const matchDataHelper = require('@firstteam102/scoutradioz-helpers').matchData;
 utilities.config(require('./databases.json'));
 
 //log4js config
-log4js.configure({
+var log4jsConfig = {
 	appenders: { out: { type: 'stdout', layout: {
 		type: 'pattern',
 		//Non-colored pattern layout (default)
 		pattern: '[%x{tier}] [%p] %c.%x{funcName} - %m',
 		tokens: {
-			'tier': logEvent => process.env.ALIAS,
+			'tier': logEvent => (process.env.ALIAS || process.env.TIER || '').toUpperCase(),
 			'funcName': logEvent => {
 				if (logEvent.context && logEvent.context.funcName) {
 					return logEvent.context.funcName;
@@ -26,9 +27,14 @@ log4js.configure({
 		},
 	} } },
 	categories: { default: { appenders: ['out'], level: 'info' } }
-});
+};
+if( process.env.COLORIZE_LOGS == 'true'){
+	//Colored pattern layout
+	log4jsConfig.appenders.out.layout.pattern = '%[[%d{hh:mm:ss}] [%x{tier}] [%p] %c.%x{funcName} - %]%m';
+}
+log4js.configure(log4jsConfig);
 const logger = log4js.getLogger('webhook');
-logger.level = 'trace';
+logger.level = process.env.LOG_LEVEL || 'debug';
 
 //EXPRESS APP SETUP
 const webhook = express();
@@ -59,10 +65,10 @@ const options = {
 		
 		//Log both hashes
 		logger.info(`X-TBA-HMAC: ${hmac}`);
-		console.log(`Our hash: ${hash}`);
+		logger.info(`Our hash: ${hash}`);
 		
 		//If comparison failed, then we need to throw an error to stop code
-		if (hash != hmac) throw Error('X-TBA-HMAC not verified.');
+		// if (hash != hmac) throw Error('X-TBA-HMAC not verified.'); TEMPORARILY DISABLED FOR TESTING
 	}
 };
 webhook.use(express.json(options));
@@ -82,18 +88,18 @@ webhook.use((req, res, next) => {
 	logger.debug(splitUrl);
 	
 	if (splitUrl[1] == tier) {
-		logger.info('URL includes tier. Cutting it out of url.');
+		logger.trace('URL includes tier. Cutting it out of url.');
 		//Remove tier from url
 		splitUrl.splice(1, 1);
 		req.url = splitUrl.join('/');
 		//if url does not start with a slash, add a slash to avoid breaking something
 		if (req.url[0] != '/') req.url = '/' + req.url;
-		logger.info(`new req.url=${req.url}`);
+		logger.trace(`new req.url=${req.url}`);
 		next();
 	}
 	//If current tier is not in the url, send a 404
 	else {
-		logger.info('URL does not include tier. Sending 404.');
+		logger.warn('URL does not include tier. Sending 404.');
 		res.status(404).send('Not found. Must include process tier in URL.');
 	}
 });
@@ -119,6 +125,8 @@ router.all('/*', wrap(async (req, res, next) => {
 }));
 
 //Routing
+
+// Debugging/testing methods
 router.get('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[get]');
 	
@@ -127,18 +135,18 @@ router.get('/', wrap(async (req, res) => {
 	res.send(req.query);
 }));
 
+router.get('/flush-cache', wrap(async (req, res) => {
+	utilities.flushCache();
+	res.status(200).send();
+}));
+
 // Test TBA's REST API
 router.get('/test-tba-api', wrap(async (req, res) => {
 	var result = await utilities.requestTheBlueAlliance('events/2022/simple');
 	res.send(result);
 }));
 
-router.get('/flush-cache', wrap(async (req, res) => {
-	
-	utilities.flushCache();
-	res.status(200).send();
-}));
-
+// Main TBA handler
 router.post('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[post]');
 	
@@ -180,22 +188,45 @@ router.post('/', wrap(async (req, res) => {
 	res.status(200).send('thanks!');
 }));
 
+router.get('/upcoming', wrap(async (req, res) => {
+	let matchKey = req.query.key;
+	let match = await utilities.findOne('matches', {key: matchKey});
+	if (!match) return res.send('No match found');
+	else {
+		let data = {
+			event_key: match.event_key,
+			match_key: match.key,
+			team_keys: [...match.alliances.blue.team_keys, ...match.alliances.red.team_keys]
+		};
+		try {
+			await handleUpcomingMatch(data);
+			res.send(JSON.stringify(data, 0, 2));
+		}
+		catch (err) {
+			res.send(JSON.stringify(err, 0, 2));
+		}
+	}
+}));
+
 ////////// Type handlers
 
 //TBA push handlers
-async function handleUpcomingMatch( data ) {
+async function handleUpcomingMatch( data, req, res ) {
 	logger.addContext('funcName', 'handleUpcomingMatch');
 
 	var match_key = data.match_key;
 	var event_key = match_key.split('_')[0];
 	var event_year = parseInt(event_key.substring(0, 4));
 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
+	
+	var match = await utilities.findOne('matches', {key: match_key});
+	if (!match) return logger.error(`Match not found: ${match_key}`);
 
 	// Synchronize the rankings (just in case)
-	await syncRankings(event_key);
+	// await syncRankings(event_key);
 
 	// push notifications
-	if (process.env.disablePushNotifications != 'true') {
+	if (process.env.DISABLE_PUSH_NOTIFICATIONS !== 'true') {
 	
 		logger.debug('Configuring web-push');
 		const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
@@ -205,90 +236,128 @@ async function handleUpcomingMatch( data ) {
 		const matchNumberKey = data.match_key.split('_')[1];
 		logger.debug(`matchNumberKey: ${matchNumberKey}, teamKeys: ${JSON.stringify(teamKeys)}`);
 		
-		for (var teamKey of teamKeys) {
-			//find assignee of this team key
-			const alliance = 'red';
-			const assigneeID = '5d9cd6951c4f783330139549';
-			const user = await utilities.findOne('users', {_id: assigneeID});
-			
-			logger.info(`Asignee: ${JSON.stringify(user)}`);
-			
-			//if user is found in the db, proceed
-			if (user) {
-				//if user has a push subscription, then send to that subscription
-				if (user.push_subscription) {
-					const pushSubscription = user.push_subscription;
-					
-					var titleIdentifier;
-					var matchNumber, compLevel;
-					var setNumber = '';
-					
-					//comp_level isn't available in upcoming_match notification, so we have to find it ourselves
-					if (matchNumberKey.substring(0, 2) == 'qm') {
-						compLevel = 'qm';
-						matchNumber = matchNumberKey.substring(2);
-						titleIdentifier = `Match ${matchNumber}`;
-					}
-					else if (matchNumberKey.substring(0, 2) == 'qf') {
-						compLevel = 'qf';
-						setNumber = matchNumberKey.substring(2, 3);
-						matchNumber = matchNumberKey.substring(4);
-						titleIdentifier = `Quarterfinal ${setNumber} Match ${matchNumber}`;
-					}
-					else if (matchNumberKey.substring(0, 2) == 'sf') {
-						compLevel = 'sf';
-						setNumber = matchNumberKey.substring(2, 3);
-						matchNumber = matchNumberKey.substring(4);
-						titleIdentifier = `Semifinal ${setNumber} Match ${matchNumber}`;
-					}
-					else if (matchNumberKey.substring(0, 1) == 'f') {
-						compLevel = 'f';
-						matchNumber = matchNumberKey.substring(3);
-						titleIdentifier = `Final Match ${matchNumber}`;
-					} 
-					else {
-						throw new Error('Unexpected matchKey comp_level identifier');
-					}
-					
-					var imageHref = 'https://upload.scoutradioz.com/app/generate/upcomingmatch?'
-						+ `match_number=${matchNumber}&comp_level=${compLevel}&set_number=${setNumber}`
-						+ `&blue1=${teamKeys[0].substring(3)}`
-						+ `&blue2=${teamKeys[1].substring(3)}`
-						+ `&blue3=${teamKeys[2].substring(3)}`
-						+ `&red1=${teamKeys[3].substring(3)}`
-						+ `&red2=${teamKeys[4].substring(3)}`
-						+ `&red3=${teamKeys[5].substring(3)}`
-						+ '&assigned=red1';
-					
-					const notificationContent = JSON.stringify({
-						title: `${titleIdentifier} will start soon`,
-						options: {
-							body: `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`,
-							badge: '/images/brand-logos/monochrome-badge.png',
-							icon: '/images/brand-logos/FIRST-logo.png',
-							image: imageHref,
-							actions: [
-								{
-									action: 'scout-match',
-									title: 'Scout Match',
-									//icon: '',
-								}
-							]
-						},
-						ifFocused: {
-							message: 'Don\'t forget! This is a reminder!'
-						},
-					});
-					// https://web-push-book.gauntface.com/demos/notification-examples/ 
-					
-					await sendPushMessage(pushSubscription, notificationContent);
-				}
-				else {
-					logger.debug(`Push subscription not available for ${user.name}`);
-			
+		let scoutPromises = [];
+		for (let teamKey of teamKeys) {
+			scoutPromises.push(utilities.find('matchscouting', {match_team_key: match_key + '_' + teamKey}));
+		}
+		
+		let scoutAssignments = await Promise.all(scoutPromises);
+		logger.debug(`scoutAssignments = ${JSON.stringify(scoutAssignments)}`);
+		
+		let userPromises = [];
+		for (let scoutAssignmentList of scoutAssignments) {
+			for (let assignment of scoutAssignmentList) {
+				// note: There can be assignments from multiple orgs, so I can't assume there are a max of 6 assignments. Have to tie the teamKey to the user object.
+				if (assignment) {
+					userPromises.push(utilities.aggregate('users', [
+						{$match: {org_key: assignment.org_key, name: assignment.assigned_scorer}},
+						{$set: {assigned_team: assignment.team_key}}
+					]));
+					// userPromises[i] = utilities.findOne('users', {org_key: assignment.org_key, name: assignment.assigned_scorer});
 				}
 			}
 		}
+		
+		let users = await Promise.all(userPromises);
+		logger.debug('users=', JSON.stringify(users));
+		
+		for (let userArr of users) {			
+			if (userArr && userArr[0]) {
+				const user = userArr[0]; // Aggregate returns an array, get first element instead
+				const teamKey = user.assigned_team; // from the aggregate statement above
+				
+				// All the code below was written based on a for-i-in-teamKeys loop, so here we can recreate i
+				let i;
+				for (let j = 0; j < teamKeys.length; j++) if (teamKeys[j] === teamKey) i = j;
+				
+				logger.info(`Asignee: ${user.name} from ${user.org_key}`);
+				
+				if (!user.push_subscription) {
+					logger.debug(`Push subscription not available for ${user.name}`);
+					continue;
+				}
+				
+				let alliance = (i <= 2) ? 'blue' : 'red'; // first three keys are blue, last three are red
+				let assignedTeam = alliance + (i<=2 ? i+1 : i-2); // 0-2 -> blue1-3, 3-5: red1-3
+				let titleIdentifier;
+				let matchNumber, compLevel;
+				let setNumber = '';
+				
+				//comp_level isn't available in upcoming_match notification, so we have to find it ourselves
+				if (matchNumberKey.substring(0, 2) == 'qm') {
+					compLevel = 'qm';
+					matchNumber = matchNumberKey.substring(2);
+					titleIdentifier = `Match ${matchNumber}`;
+				}
+				else if (matchNumberKey.substring(0, 2) == 'qf') {
+					compLevel = 'qf';
+					setNumber = matchNumberKey.substring(2, 3);
+					matchNumber = matchNumberKey.substring(4);
+					titleIdentifier = `Quarterfinal ${setNumber} Match ${matchNumber}`;
+				}
+				else if (matchNumberKey.substring(0, 2) == 'sf') {
+					compLevel = 'sf';
+					setNumber = matchNumberKey.substring(2, 3);
+					matchNumber = matchNumberKey.substring(4);
+					titleIdentifier = `Semifinal ${setNumber} Match ${matchNumber}`;
+				}
+				else if (matchNumberKey.substring(0, 1) == 'f') {
+					compLevel = 'f';
+					matchNumber = matchNumberKey.substring(3);
+					titleIdentifier = `Final Match ${matchNumber}`;
+				} 
+				else {
+					throw new Error('Unexpected matchKey comp_level identifier');
+				}
+				
+				let matchTeamKey = match_key + '_' + teamKey;
+				let body = `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`;
+				let ifFocusedMessage = `Don't forget, Match ${match.match_number} is about to start!`;
+				let scoutMatchURL = `https://scoutradioz.com/scouting/match?key=${matchTeamKey}&alliance=${alliance}`;
+				
+				let imageHref = process.env.UPLOAD_URL + '/' + process.env.TIER + '/generate/upcomingmatch?'
+					+ `match_number=${matchNumber}&comp_level=${compLevel}&set_number=${setNumber}`
+					+ '&blue1=' + teamKeys[0].substring(3)
+					+ '&blue2=' + teamKeys[1].substring(3)
+					+ '&blue3=' + teamKeys[2].substring(3)
+					+ '&red1=' + teamKeys[3].substring(3)
+					+ '&red2=' + teamKeys[4].substring(3)
+					+ '&red3=' + teamKeys[5].substring(3)
+					+ '&assigned=' + assignedTeam;
+				
+				let baseUrl; // Serve static files from primary func ONLY IF LOCAL
+				if (process.env.local) baseUrl = '';
+				else baseUrl = process.env.S3_BASE_URL + '/' + process.env.TIER;
+				
+				logger.debug(`assignedTeam=${assignedTeam}, matchteam=${matchTeamKey}, imageURL=${imageHref}`);
+				
+				const notificationContent = JSON.stringify({
+					title: `${titleIdentifier} will start soon`,
+					options: {
+						body: body,
+						badge: baseUrl + '/images/brand-logos/monochrome-badge.png',
+						icon: baseUrl + '/images/brand-logos/FIRST-logo.png',
+						image: imageHref,
+						actions: [
+							{
+								action: scoutMatchURL,
+								title: 'Scout Match',
+								//icon: '',
+							}
+						]
+					},
+					ifFocused: {
+						message: ifFocusedMessage
+					},
+				});
+				// https://web-push-book.gauntface.com/demos/notification-examples/ 
+				
+				await sendPushMessage(user.push_subscription, notificationContent);
+			}
+		}
+	}
+	else {
+		logger.debug('Push notifications disabled!');
 	}
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
