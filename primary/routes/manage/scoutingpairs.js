@@ -494,6 +494,22 @@ router.post('/clearmatchallocations', wrap(async (req, res) => {
 	});
 }));
 
+router.post('/setallunassigned', wrap(async (req, res) => {
+	
+	const org_key = req.user.org_key;
+	
+	logger.info(`Setting everyone under ${org_key} to assigned=false`);
+	
+	let writeResult = await utilities.bulkWrite('users', [{updateMany: {
+		filter: {org_key: org_key},
+		update: {$set: {'event_info.assigned': false}}
+	}}]);
+	
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+	
+	return res.send({status: 200, alert: 'Set everyone as unassigned successfully.'});
+}));
+
 //////////// Match allocating by team assignment
 
 router.post('/generatematchallocations', wrap(async (req, res) => {

@@ -66,8 +66,31 @@ block content
 		label &nbsp;matches
 		p
 		button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
-	
+	hr 
+	h3 Debugging
+	br
+	div
+		button(onclick="setUnassigned()" class="w3-btn theme-red") Set everyone as unassigned
 	script.
+		
+		function setUnassigned() {
+			Confirm.show('Set everyone to unassigned?\n(This should *only* be necessary if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)')
+				.then(response => {
+					if (!response.cancelled) {
+						$.post('/manage/scoutingpairs/setallunassigned', {})
+							.done(resp => {
+								//- Show card then refresh page
+								NotificationCard.show(resp.alert);
+								setTimeout(() => {
+									window.location.href = window.location.href;
+								}, 2000);
+							})
+							.fail(err => {
+								NotificationCard.error(`Error: ${err.statusText || err.responseText}`);
+							});
+					}
+				})
+		}
 		
 		function promptPass(message, url){
 			
