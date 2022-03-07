@@ -62,6 +62,8 @@ matchDataHelper.isMetric = function(type) {
 	return isMetric;
 };
 
+// const {performance} = require('perf_hooks');
+
 /**
  * Calculate derived metrics for a provided array of match data items.
  * @param {string} org_key Org key
@@ -70,13 +72,14 @@ matchDataHelper.isMetric = function(type) {
  * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
  */
 matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, matchData) {
-	
+	// let st = performance.now();
 	// Just derived fields from the org's match scouting layout for this year
 	var derivedLayout = await utilities.find('layout', 
 		{org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived'}, 
 		{sort: {'order': 1}},
 		{allowCache: true}
 	);
+	// let dt = performance.now();
 
 	for (let thisItem of derivedLayout) {
 		let derivedMetric = NaN;
@@ -150,7 +153,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					if (divisorKey.startsWith('$')) divisor = variables[divisorKey];
 					else divisor = parseNumber(matchData[divisorKey]);
 					
-					if (divisor === 0) quotient = 0;
+					if (divisor === 0) quotient = 0; // Making divisions by 0 equal to 0 provides more helpful metrics, even if it doesn't make mathematical sense
 					else quotient = dividend / divisor;
 					
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = quotient;
@@ -169,7 +172,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 				}
 			}
 		}
-		logger.trace(`Final metric: ${derivedMetric} - Label: ${thisItem.label}`);
+		// logger.trace(`Final metric: ${derivedMetric} - Label: ${thisItem.label}`);
 		// Insert the newly derived metric into 
 		matchData[thisItem.id] = derivedMetric;
 	}
@@ -180,6 +183,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 		else if (item === 'false') return 0;
 		else return parseFloat(item);
 	}
+	// console.log(`${dt - st}, ${performance.now() - dt}`);
 	
 	return matchData;
 };

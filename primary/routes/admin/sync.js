@@ -217,8 +217,8 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	// logger.debug("scored[0].data[matchLayout[0].operands[2]]=" + JSON.stringify(scored[0].data[matchLayout[0].operands[2]]));
 
 	// cycle through each scored match & [re]calculate derived metrics - push into new array 'updatedScored'
-	// [SEE ALSO SCOUTING.JS]
 	var writeQueries = [];
+	var startTime = Date.now(); // JL: to check performance
 	//var debugCountdown = 0;
 	for (var i in scored) {
 		if (scored[i].data) {
@@ -235,7 +235,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	
 	// 2022-03-04 JL: fixed bug & put the update stuff into a bulkWrite
 	let writeResult = await utilities.bulkWrite('matchscouting', writeQueries);
-	res.send('SUCCESS - writeResult = ' + JSON.stringify(writeResult));
+	res.send(`SUCCESS - done in ${Date.now() - startTime} ms - writeResult = ${JSON.stringify(writeResult)}`);
 
 	// Delete the old scored data
 	// await utilities.remove('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} });
