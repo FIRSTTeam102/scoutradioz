@@ -35,20 +35,31 @@ function prompt(question) {
 // type, id, label, multiselectOptions, [sliderMin, sliderMax, sliderStep]
 const matchAthenian2022 = [
 	['h2', 'autoLabel', 'Autonomous'],
-	['counter', 'autoBallScored', 'Balls scored'],
-	['checkbox', 'autoHumanMadeShot', 'Human Player made shot'],
+	['checkbox', 'didTaxi', 'Did they taxi (move out from the tarmac)?'],
+	['h3', 'lblAutoUpperHub', 'Upper Hub'],
+	['counter', 'autoHighScored', 'Cargo scored by robot'],
+	['badcounter', 'autoHighMissed', 'Cargo missed by robot'],
+	['h3', 'lblAutoLowerHub', 'Lower Hub'],
+	['counter', 'autoLowScored', 'Cargo scored by robot'],
+	['badcounter', 'autoLowMissed', 'Cargo missed by robot'],
+	['checkbox', 'autoHumanMadeShot', 'Did the human player score? (Only check this if the human player is from Team {{team_number}}!)'],
 	['textblock', 'autoDescription', 'Auto description'],
 	['spacer'],
 	['h2', 'teleopLabel', 'Teleop'],
-	['counter', 'teleopBallsScored', 'Balls scored'],
-	['checkbox', 'defensePlayed', 'Defense played'],
-	['checkbox', 'counterDefensePlayed', 'Counter defense played'],
+	['h3', 'lblTeleUpperHub', 'Upper Hub'],
+	['counter', 'teleopHighScored', 'Cargo scored'],
+	['badcounter', 'teleopHighMissed', 'Cargo missed'],
+	['h3', 'lblTeleLowerHub', 'Lower Hub'],
+	['counter', 'teleopLowScored', 'Cargo scored'],
+	['badcounter', 'teleopLowMissed', 'Cargo missed'],
+	['checkbox', 'defensePlayed', 'Defended (stopped or delayed at least one score)?'],
+	['checkbox', 'counterDefensePlayed', 'Attempted to stop or deflect a defender?'],
 	['spacer'],
 	['h2', 'endgameLabel', 'End game'],
-	['multiselect', 'climb', 'Climb', [0, 'Low', 'Mid', 'High', 'Traversal']],
+	['multiselect', 'climb', 'Climb', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	['spacer'],
 	['h2', 'generalLabel', 'General'],
-	['slider', 'shooterConsistency', 'Shooter consistency', null, [1, 10, 1]],
+	// ['slider', 'shooterConsistency', 'Shooter consistency', null, [1, 10, 1]],
 	['slider', 'agilityOnField', 'Agility on the field', null, [1, 5, 1]],
 	['checkbox', 'diedOnField', 'Died on field'],
 	['spacer'],
@@ -134,28 +145,256 @@ const pitGearheads2022 = [
 	['textblock', 'preferredStrategy', 'What is their preferred strategy?'],
 ];
 
+const autoAccuracy2022 = {
+	order: 510,
+	label: 'Autonomous accuracy',
+	id: 'autoAccuracy',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoLowScored', 'autoLowMissed', 'autoHighScored', 'autoHighMissed'],
+			as: 'totalShots',	// "as" lets you use it as a $variable later down the calculation chain
+		}, {
+			operator: 'sum',
+			operands: ['autoLowScored', 'autoHighScored'],
+			as: 'successes',
+		}, {
+			operator: 'divide',
+			operands: ['$successes', '$totalShots']
+		}
+	],
+	display_percentage: true,
+};
+const teleopAccuracy2022 = {
+	order: 515,
+	label: 'Teleop accuracy',
+	id: 'teleopAccuracy',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['teleopLowScored', 'teleopLowMissed', 'teleopHighScored', 'teleopHighMissed'],
+			as: 'totalShots',
+		}, {
+			operator: 'sum',
+			operands: ['teleopLowScored', 'teleopHighScored'],
+			as: 'successes',
+		}, {
+			operator: 'divide',
+			operands: ['$successes', '$totalShots'] 
+		}
+	],
+	display_percentage: true,
+};
+const lowerHubAccuracy2022 = {
+	order: 520,
+	label: 'Lower Hub accuracy',
+	id: 'lowerAccuracy',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoLowScored', 'autoLowMissed', 'teleopLowScored', 'teleopLowMissed'],
+			as: 'totalShots',
+		}, {
+			operator: 'sum',
+			operands: ['autoLowScored', 'teleopLowScored'],
+			as: 'successes',
+		}, {
+			operator: 'divide',
+			operands: ['$successes', '$totalShots']
+		}
+	],
+	display_percentage: true,
+};
+const upperHubAccuracy2022 = {
+	order: 525,
+	label: 'Upper Hub accuracy',
+	id: 'upperAccuracy',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoHighScored', 'autoHighMissed', 'teleopHighScored', 'teleopHighMissed'],
+			as: 'totalShots',
+		}, {
+			operator: 'sum',
+			operands: ['autoHighScored', 'teleopHighScored'],
+			as: 'successes',
+		}, {
+			operator: 'divide',
+			operands: ['$successes', '$totalShots']
+		}
+	],
+	display_percentage: true,
+};
+const cargoAccuracy2022 = {
+	order: 530,
+	label: 'Overall Cargo accuracy',
+	id: 'cargoAccuracy',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['teleopLowScored', 'teleopLowMissed', 'teleopHighScored', 'teleopHighMissed', 'autoLowScored', 'autoLowMissed', 'autoHighScored', 'autoHighMissed'],
+			as: 'totalShots',
+		}, {
+			operator: 'sum',
+			operands: ['teleopLowScored', 'teleopHighScored', 'autoLowScored', 'teleopLowScored'],
+			as: 'successes',
+		}, {
+			operator: 'divide',
+			operands: ['$successes', '$totalShots'] 
+		}
+	]
+};
+const ratioUpperLower2022 = {
+	order: 540,
+	label: 'Percentage: Upper Hub attempts',
+	id: 'upperHubPercentage',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoHighScored', 'autoHighMissed', 'teleopHighScored', 'teleopHighMissed', 'autoLowScored', 'autoLowMissed', 'teleopLowScored', 'teleopLowMissed'],
+			as: 'allShots',
+		}, {
+			operator: 'sum',
+			operands: ['autoHighScored', 'autoHighMissed', 'teleopHighScored', 'teleopHighMissed'],
+			as: 'highShots',
+		}, {
+			operator: 'divide',
+			operands: ['$highShots', '$allShots'],
+		}
+	]
+};
+const autoPoints2022 = {
+	order: 550,
+	label: 'Autonomous points',
+	id: 'autoPoints',
+	operations: [
+		{
+			operator: 'multiply',
+			operands: ['didTaxi', 2],
+			as: 'taxi'
+		}, {
+			operator: 'multiply',
+			operands: ['autoHighScored', 4],
+			as: 'autoHigh'
+		}, {
+			operator: 'multiply',
+			operands: ['autoLowScored', 2],
+			as: 'autoLow'
+		}, {
+			operator: 'sum',
+			operands: ['$taxi', '$autoHigh', '$autoLow']
+		}
+	],
+};
+const teleopPoints2022 = {
+	order: 555,
+	label: 'Teleop points',
+	id: 'teleopPoints',
+	operations: [
+		{
+			operator: 'multiply',
+			operands: ['teleopHighScored', 2],
+			as: 'teleopHigh'
+		}, {
+			operator: 'multiply',
+			operands: ['teleopLowScored', 1],
+			as: 'teleopLow'
+		}, {
+			operator: 'multiselect',
+			id: 'climb',
+			quantifiers: {
+				'None': 0,
+				'Low': 4,
+				'Mid': 6,
+				'High': 10,
+				'Traversal': 15,
+			},
+			as: 'climbPoints'
+		}, {
+			operator: 'sum',
+			operands: ['$teleopHigh', '$teleopLow', '$climbPoints']
+		}
+	],
+};
+const contributedPoints2022 = {
+	order: 560,
+	label: 'Total contributed points',
+	id: 'contributedPoints',
+	operations: [
+		{
+			operator: 'multiply',
+			operands: ['didTaxi', 2],
+			as: 'taxi'
+		}, {
+			operator: 'multiply',
+			operands: ['autoHighScored', 4],
+			as: 'autoHigh'
+		}, {
+			operator: 'multiply',
+			operands: ['autoLowScored', 2],
+			as: 'autoLow'
+		}, {
+			operator: 'multiply',
+			operands: ['teleopHighScored', 2],
+			as: 'teleopHigh'
+		}, {
+			operator: 'multiply',
+			operands: ['teleopLowScored', 1],
+			as: 'teleopLow'
+		}, {
+			operator: 'multiselect',
+			id: 'climb',
+			quantifiers: {
+				'None': 0,
+				'Low': 4,
+				'Mid': 6,
+				'High': 10,
+				'Traversal': 15,
+			},
+			as: 'climbPoints'
+		}, {
+			operator: 'sum',
+			operands: ['$taxi', '$autoHigh', '$autoLow', '$teleopHigh', '$teleopLow', '$climbPoints']
+		}
+	],
+};
+
 const matchDerivedAthenian2022 = [
 	{
-		order: 520,
+		order: 499,
 		label: 'Climb points',
 		id: 'climbPoints',
 		operations: [{
 			operator: 'multiselect',
 			id: 'climb',
 			quantifiers: {
-				0: 0,
+				'None': 0,
 				'Low': 4,
 				'Mid': 6,
 				'High': 10,
 				'Traversal': 15,
 			}
 		}]
-	},
+	}, 
+	autoAccuracy2022, 
+	teleopAccuracy2022, 
+	upperHubAccuracy2022, 
+	lowerHubAccuracy2022,
+	ratioUpperLower2022,
+	cargoAccuracy2022,
+	contributedPoints2022, 
+	autoPoints2022, 
+	teleopPoints2022 
 ];
+// x 0 , 0 = nan 
+// x default to first value dropdown
+// x Upper and Lower accuracy, overall accuracy
+// % time upper vs lower (attempts)
+// Auto points, Teleop points
 
 const matchDerivedGearheads2022 = [
 	{
-		order: 500,
+		order: 499,
 		label: 'Climb points',
 		id: 'climbPoints',
 		operations: [{
@@ -169,46 +408,13 @@ const matchDerivedGearheads2022 = [
 				'Traversal': 15,
 			}
 		}]
-	}, {
-		order: 510,
-		label: 'Autonomous accuracy',
-		id: 'autoAccuracy',
-		operations: [
-			{
-				operator: 'sum',
-				operands: ['autoLowScored', 'autoLowMissed', 'autoHighScored', 'autoHighMissed'],
-				as: 'totalShots',	// "as" lets you use it as a $variable later down the calculation chain
-			}, {
-				operator: 'sum',
-				operands: ['autoLowScored', 'autoHighScored'],
-				as: 'successes',
-			}, {
-				operator: 'divide',
-				operands: ['$successes', '$totalShots'] // divide operands: [dividend, divisor] (a/b -> [a, b])
-			}
-		],
-		display_percentage: true,
-	}, {
-		order: 520,
-		label: 'Teleop accuracy',
-		id: 'teleopAccuracy',
-		operations: [
-			{
-				operator: 'sum',
-				operands: ['teleopLowScored', 'teleopLowMissed', 'teleopHighScored', 'teleopHighMissed'],
-				as: 'totalShots',
-			}, {
-				operator: 'sum',
-				operands: ['teleopLowScored', 'teleopHighScored'],
-				as: 'successes',
-			}, {
-				operator: 'divide',
-				operands: ['$successes', '$totalShots'] // divide operands: [dividend, divisor] (a/b -> [a, b])
-			}
-		],
-		display_percentage: true,
-	}, {
-		order: 530,
+	}, 
+	autoAccuracy2022, 
+	teleopAccuracy2022,
+	upperHubAccuracy2022,
+	lowerHubAccuracy2022,
+	{
+		order: 570,
 		label: 'Climb accuracy',
 		id: 'climbAccuracy',
 		operations: [
@@ -246,54 +452,10 @@ const matchDerivedGearheads2022 = [
 			}
 		],
 		display_percentage: true,
-	}, {
-		order: 540,
-		label: 'Total contributed points',
-		id: 'contributedPoints',
-		operations: [
-			{
-				operator: 'multiply',
-				operands: ['didTaxi', 2], // note to self: treat "true"/"false" as 0 and 1
-				as: 'taxi'
-			}, {
-				operator: 'multiply',
-				operands: ['autoHighScored', 4],
-				as: 'autoHigh'
-			}, {
-				operator: 'multiply',
-				operands: ['autoLowScored', 2],
-				as: 'autoLow'
-			}, {
-				operator: 'multiply',
-				operands: ['teleopHighScored', 2],
-				as: 'teleopHigh'
-			}, {
-				operator: 'multiply',
-				operands: ['teleopLowScored', 1],
-				as: 'teleopLow'
-			}, {
-				// I think it would take a lot of extra code to allow derived metrics to depend on other
-				//	derived metrics. I'd rather do a teensy bit of extra calculations than have to deal with all that extra code.
-				operator: 'multiselect',
-				id: 'successfulClimb',
-				quantifiers: {
-					'None': 0,
-					'Low': 4,
-					'Mid': 6,
-					'High': 10,
-					'Traversal': 15,
-				},
-				as: 'climbPoints'
-			}, {
-				operator: 'sum',
-				operands: ['$taxi', '$autoHigh', '$autoLow', '$teleopHigh', '$teleopLow', '$climbPoints']
-			}
-		],
-	}
+	}, autoPoints2022, teleopPoints2022, contributedPoints2022, 
 ];
 
 const year = 2022;
-// const org_key = 'frc852';
 const org_key = orgkey;
 
 let layoutArr = [];
