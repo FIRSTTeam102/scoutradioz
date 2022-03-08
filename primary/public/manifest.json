@@ -1,0 +1,42 @@
+{
+	"name": "Scoutradioz",
+	"description": "Scoutradioz enables multiple teams/organizations to gather their own customized intel at FIRST Robotics competitions",
+	"theme_color": "#ff7200",
+	"background_color": "#333",
+	"display": "standalone",
+	"start_url": "/",
+	"orientation": "portrait-primary",
+	"icons": [
+		{
+			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-32.png",
+			"sizes": "32x32"
+		},
+		{
+			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-64.png",
+			"sizes": "64x64"
+		},
+		{
+			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-128.png",
+			"sizes": "128x128"
+		},
+		{
+			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-maskable-512.png",
+			"sizes": "512x512",
+			"purpose": "any maskable"
+		}
+	],
+	"shortcuts": [
+		{
+			"name": "Scouting Dashboard",
+			"url": "/dashboard"
+		},
+		{
+			"name": "Drive Team Dashboard",
+			"url": "/dashboard/driveteam"
+		},
+		{
+			"name": "All Upcoming Matches",
+			"url": "/reports/upcoming"
+		}
+	]
+}
