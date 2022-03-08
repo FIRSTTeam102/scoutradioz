@@ -28,15 +28,33 @@
 	"shortcuts": [
 		{
 			"name": "Scouting Dashboard",
-			"url": "/dashboard"
+			"short_name": "Scouting",
+			"url": "/dashboard",
+			"icons": [{
+				"src": "https://scoutradioz.s3.amazonaws.com/prod/images/shortcuts/scouting.png",
+				"sizes": "192x192",
+				"purpose": "any maskable"
+			}]
 		},
 		{
 			"name": "Drive Team Dashboard",
-			"url": "/dashboard/driveteam"
+			"short_name": "Drive Team",
+			"url": "/dashboard/driveteam",
+			"icons": [{
+				"src": "https://scoutradioz.s3.amazonaws.com/prod/images/shortcuts/drive.png",
+				"sizes": "192x192",
+				"purpose": "any maskable"
+			}]
 		},
 		{
 			"name": "All Upcoming Matches",
-			"url": "/reports/upcoming"
+			"short_name": "Upcoming",
+			"url": "/reports/upcoming",
+			"icons": [{
+				"src": "https://scoutradioz.s3.amazonaws.com/prod/images/shortcuts/info.png",
+				"sizes": "192x192",
+				"purpose": "any maskable"
+			}]
 		}
 	]
 }
