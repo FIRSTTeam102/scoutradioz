@@ -8,19 +8,19 @@
 	"orientation": "portrait-primary",
 	"icons": [
 		{
-			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-32.png",
+			"src": "/icon-32.png",
 			"sizes": "32x32"
 		},
 		{
-			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-64.png",
+			"src": "/icon-64.png",
 			"sizes": "64x64"
 		},
 		{
-			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-128.png",
+			"src": "/icon-128.png",
 			"sizes": "128x128"
 		},
 		{
-			"src": "https://scoutradioz.s3.amazonaws.com/prod/icon-maskable-512.png",
+			"src": "/icon-maskable-512.png",
 			"sizes": "512x512",
 			"purpose": "any maskable"
 		}
@@ -31,7 +31,7 @@
 			"short_name": "Scouting",
 			"url": "/dashboard",
 			"icons": [{
-				"src": "https://scoutradioz.s3.amazonaws.com/prod/images/shortcuts/scouting.png",
+				"src": "/images/shortcuts/scouting.png",
 				"sizes": "192x192",
 				"purpose": "any maskable"
 			}]
@@ -41,7 +41,7 @@
 			"short_name": "Drive Team",
 			"url": "/dashboard/driveteam",
 			"icons": [{
-				"src": "https://scoutradioz.s3.amazonaws.com/prod/images/shortcuts/drive.png",
+				"src": "/images/shortcuts/drive.png",
 				"sizes": "192x192",
 				"purpose": "any maskable"
 			}]
@@ -51,7 +51,7 @@
 			"short_name": "Upcoming",
 			"url": "/reports/upcoming",
 			"icons": [{
-				"src": "https://scoutradioz.s3.amazonaws.com/prod/images/shortcuts/info.png",
+				"src": "/images/shortcuts/info.png",
 				"sizes": "192x192",
 				"purpose": "any maskable"
 			}]

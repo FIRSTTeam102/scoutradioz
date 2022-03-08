@@ -98,6 +98,8 @@ $(() => {
 		
 		$(debugLogger).append(newTextElem);
 	};
+
+	if ('serviceWorker' in navigator) navigator.serviceWorker.register('/pwa.js');
 })();
 
 class Confirm {
