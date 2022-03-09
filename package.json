@@ -17,8 +17,8 @@
     "archiver": "^5.3.0",
     "aws-sdk": "^2.1066.0",
     "concat-stream": "^2.0.0",
-    "oh-no-i-insist": "^1.1.1",
-	"minimatch": "~3.0.4",
-	"glob": "~7.2.0"
+    "glob": "~7.2.0",
+    "minimatch": "~3.0.4",
+    "oh-no-i-insist": "^1.1.1"
   }
 }

@@ -129,7 +129,7 @@ navHelpers.getNavContents = () => {
 		},
 		{
 			label: 'Configure report columns',
-			href: (req, res) => `/user/preferences/reportcolumns?redirectURL=${req.url.replace(/alert=.*$/g, '')}`,
+			href: (req, res) => `/user/preferences/reportcolumns?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`,
 			sprite: 'sheet',
 			visible: userLoggedIn
 		},

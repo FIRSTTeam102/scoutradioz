@@ -113,6 +113,8 @@
 .sprite.sp-download{--position: -17;}
 .sprite.sp-edit{--position: -18;}
 .sprite.sp-delete{--position: -19;}
+.sprite.sp-discord{--position: -20;}
+.sprite.sp-github{--position: -21;}
 
 .sprite.sp-black{-webkit-filter: invert(100%);filter: invert(100%);}
 
@@ -173,6 +175,8 @@
 .team-image-lg{max-height: 350px; margin: 8px;}
 
 p.i{font-style: italic;}
+p.b{font-weight: bold;}
+p.u{text-decoration: underline;}
 p.indented{
 	text-indent: 20px;
 }
@@ -189,6 +193,11 @@ p.hanging-indent{
 }
 a.link{
 	text-decoration: underline!important;
+}
+
+.centered-half{
+	width: 50%;
+	margin: auto;
 }
 
 /* For background */
@@ -489,5 +498,8 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 @media(max-width: 600px) {
 	.password-prompt-content {
 		min-width: unset;
+	}
+	.centered-half {
+		width: 100%;
 	}
 }

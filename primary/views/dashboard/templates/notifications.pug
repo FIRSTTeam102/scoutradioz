@@ -87,14 +87,14 @@ div(class="w3-auto")
 						return true;
 					}
 					else {
-						NotificationCard.warn("Something might have gone wrong. Data: " + JSON.stringify(data));
+						NotificationCard.warn("Something might have gone wrong. Data: " + JSON.stringify(data), {exitable: true, ttl: 0});
 						return false;
 					}
 				}
 				catch (err){
 					console.error(err);
 					card.remove();
-					NotificationCard.show("An error occurred: " + err, {type: "bad"});
+					NotificationCard.error("An error occurred: " + err, {exitable: true, ttl: 0});
 				}
 			}
 			

@@ -32,6 +32,8 @@ a:hover.hover-link{text-decoration: underline;}
 	box-shadow: none!important;
 }
 
+.w3-medium{font-size: 16px!important}
+
 .w3-disabled, .w3-btn:disabled, .w3-button:disabled {
 	opacity: unset;
 	filter: brightness(0.5);

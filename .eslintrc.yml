@@ -9,6 +9,11 @@ plugins:
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
+  NotificationCard: writable
+  Confirm: writable
+  PasswordPrompt: writable
+  $: readonly
+  window: writable
 parserOptions:
   ecmaVersion: 2018
 rules:
@@ -16,9 +21,9 @@ rules:
     - error
     - tab
     - SwitchCase: 1
-  linebreak-style:
-    - error
-    - windows
+  # linebreak-style:
+  #   - error
+  #   - windows
   quotes:
     - error
     - single
@@ -36,8 +41,8 @@ rules:
     - error
     - stroustrup
     - allowSingleLine: true
-  guard-for-in: 
-    - warn
+  # guard-for-in: 
+  #   - warn
   no-useless-escape: 0
   scoutradioz-eslint/res-render-require-title:
     - error

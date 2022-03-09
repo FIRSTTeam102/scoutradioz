@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 $(function(){
 	
-	Cookies.set('preprocessImages', '0'); // Preprocessing images temporarily disabled until it can be properly tested
+	Cookies.remove('preprocessImages'); // Preprocessing images temporarily disabled until it can be properly tested
 	
 	if (Cookies.get('preprocessImages') == '1') {
 		$('input[name=chkPreprocess]').prop('checked', true);
