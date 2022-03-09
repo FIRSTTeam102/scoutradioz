@@ -30,7 +30,7 @@ router.get('/login', wrap(async (req, res) => {
 	
 	//If there is no user logged in, send them to select-org page
 	if( !req.user ){
-		return res.redirect('/??alert=Please select an organization to sign in to.');
+		return res.redirect('/?alert=Please select an organization to sign in to.');
 	}
 	//If the user logged in is NOT default_user, then send them to index.
 	else if( req.user.name != 'default_user' ){
@@ -53,7 +53,7 @@ router.get('/login', wrap(async (req, res) => {
 	
 	res.render('./user/login', {
 		title: `Log In to ${selectedOrg.nickname}`,
-		redirectURL: req.getRedirectURL()
+		redirectURL: req.getFixedRedirectURL()
 	});
 }));
 
@@ -80,7 +80,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	
 	//Make sure that form is filled
 	if(!org_key || !org_password || org_key == '' || org_password == ''){
-		return res.redirect('/user/login?alert=Please select an organization and enter your organization\'s password.');
+		return res.redirect('/user/login?alert=Please enter your organization\'s password. To go back, open the navigation on the top left.&rdr=' + req.getFixedRedirectURL());
 	}
 	
 	//If form is filled, then proceed.
@@ -118,7 +118,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	}
 	//If failed, then redirect with alert
 	else{
-		res.redirect(`/user/login?alert=Incorrect password for organization ${selectedOrg.nickname}`);
+		res.redirect(`/user/login?alert=Incorrect password for organization ${selectedOrg.nickname}&rdr=${req.getFixedRedirectURL()}`);
 	}
 }));
 
@@ -618,7 +618,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	var orgKey = req.user.org_key;
 	var thisOrg = req.user.org;
 	var thisOrgConfig = thisOrg.config;
-	var redirectURL = req.query.redirectURL;
+	var redirectURL = req.getFixedRedirectURL(); //////////////////////////////
 	
 	// read in the list of form options
 	var matchlayout = await utilities.find('layout', 
@@ -682,7 +682,6 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 	var cookieKey = orgKey + '_' + eventYear + '_cols';
 	
 	//2020-04-04 JL: Added redirectURL to take user back to previous page
-	var redirectURL = '/user/preferences/reportcolumns';
 	var setOrgDefault = false;
 	
 	logger.trace('req.body=' + JSON.stringify(req.body));
@@ -693,13 +692,14 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 			setOrgDefault = true;
 		}
 		else if (key == 'redirectURL') {
-			//2020-04-04 JL: Added exceptions to redirectURL 
+			// 2020-04-04 JL: Added exceptions to redirectURL 
+			// 2022-03-09 JL: Removed exceptions to redirectURL to make the behavior more consistent
 			//	(currently only home, but made it a regex to make it easier to add more in the future)
 			//	/\b(?:home|foo|bar)/;
-			var redirectExceptions = /\b(?:home)/;
-			if (!redirectExceptions.test(req.body.redirectURL)) {
-				redirectURL = req.body.redirectURL;
-			}
+			// var redirectExceptions = /\b(?:home)/;
+			// if (!redirectExceptions.test(req.body.redirectURL)) {
+			// 	redirectURL = req.body.redirectURL;
+			// }
 		}
 		else {
 			columnArray.push(key);
@@ -754,6 +754,9 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 		await utilities.update('orgs', {org_key: orgKey}, {$set: {'config.columnDefaults': theseColDefaults}});
 		
 	}
+	
+	var redirectURL = req.getRedirectURL();
+	logger.debug(`Redirect: ${redirectURL}`);
 
 	res.redirect(redirectURL + '?alert=Saved column preferences successfully.&type=success&autofade=true');
 }));

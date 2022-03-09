@@ -24,18 +24,27 @@ functions.initialMiddleware = async function(req, res, next){
 	// from one method that DOES set it to another method that does NOT set it
 	logger.removeContext('funcName');
 	
-	// Gets the redirectURL, automatically with ? and & encoded
-	req.getRedirectURL = function() {
-		let str = this.body.redirectURL || this.query.redirectURL;
+	// Gets the redirectURL WITHOUT encoding ? and & (for performing the actual redirection)
+	req.getRedirectURL = function () {
+		let str = this.body.rdr || this.query.rdr || this.body.redirectURL || this.query.redirectURL; // 2022-03-09 JL: Adding support for "rdr" field, which is more concise than redirectURL
 		if (str instanceof Array) str = str[str.length-1]; // this can happen if some weird edgecase leads to redirectURL=a&redirectURL=b
+		return str;
+	};
+	
+	// Gets the redirectURL, automatically with ? and & encoded
+	req.getFixedRedirectURL = function() {
+		let str = this.getRedirectURL();
 		return this.fixRedirectURL(str);
 	};
 	
 	// Function to fix redirectURL by urlencoding ? and &, and clearing it if it's "undefined"
 	req.fixRedirectURL = function(str) {
 		if (typeof str !== 'string') return str;
-		else if (str === 'undefined') return undefined;
-		else return str.replace(/\?/g, '%3f').replace(/\&/g, '%26');
+		else if (str === 'undefined' || str === 'null') return undefined;
+		else {
+			if (!str.startsWith('/')) str = '/' + str; // We always want a redirect to start with a slash (unless in the future we want to redirect to external sites)
+			return str.replace(/\?/g, '%3f').replace(/\&/g, '%26');
+		}
 	};
 	
 	next();

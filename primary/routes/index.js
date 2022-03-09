@@ -65,13 +65,14 @@ router.get('/', wrap(async (req, res) => {
 		);
 		logger.trace(JSON.stringify(i18n));
 		
-		//redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
+		const selectedButton = req.cookies['homepageButton']; // Previously-selected "Are you:" button on the homepage
 		
 		res.render('./index', {
 			title: 'Select an Organization',
 			orgs: orgs,
-			redirectURL: req.getRedirectURL(),
+			redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 			isOrgSelectScreen: true,
+			selectedButton: selectedButton,
 			lang: i18n.labels
 		});
 	}
@@ -83,6 +84,80 @@ router.get('/', wrap(async (req, res) => {
 router.all('/selectorg', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'selectorg[all]');
 	logger.debug('ENTER');
+	
+	doSelectOrg(req, res, () => {
+		//now, once default user is logged in, redirect to index
+		logger.debug('User is now in an org, redirecting');
+		
+		let redirectURL = req.getRedirectURL();
+		
+		if (redirectURL) {
+			logger.debug(`redirect: ${redirectURL}`);
+			if (req.query.alert) {
+				// 2022-02-27 JL: fixing alert not showing up on login redirects
+				if (redirectURL.includes('?')) redirectURL += '&alert=' + req.query.alert;
+				else redirectURL += '?alert=' + req.query.alert;
+			}
+			res.redirect(redirectURL);
+		}
+		else {
+			res.redirect('/home');
+		}
+	});
+}));
+
+router.all('/selectorg-login', wrap(async (req, res) => {
+	//http://localhost:3000/?redirectURL=/scouting/pit%3fteam_key=frc58%26foo=bar
+	
+	logger.addContext('funcName', 'selectorg[all]');
+	logger.debug('ENTER');
+	
+	doSelectOrg(req, res, () => {
+		logger.debug('User is now in an org, taking them to the login page');
+		
+		let redirect = req.getFixedRedirectURL();
+		res.redirect(`/user/login?rdr=${redirect}`);
+	});
+}));
+
+/**
+ * Main homepage.
+ * @url /
+ * @view /index
+ */
+router.get('/home', wrap(async (req, res) =>  {
+	logger.addContext('funcName', 'home[get]');
+	logger.debug('ENTER');
+	
+	let redirect = req.getRedirectURL();
+	if (redirect) {
+			
+		logger.debug(`redirect: ${redirect}`);
+		res.redirect(redirect);
+	}
+	else if (!req.user) res.redirect('/');
+	else {
+		res.render('./home', { 
+			title: 'Home',
+		});
+	}
+}));
+
+router.get('/throwanerror', wrap(async (req, res) => {
+	logger.addContext('funcName', 'throwanerror[get]');
+	
+	throw new e.InternalServerError('This was on purpose.');
+	
+}));
+
+router.get('/usererror', wrap(async (req, res) => {
+	logger.addContext('funcName', 'usererror[get]');
+	
+	throw new e.UserError();
+}));
+
+// Moved the select-org process into a helper function so I can do it with the standard selectorg and & one which immediately takes you to the login screen
+async function doSelectOrg(req, res, cb) {
 	
 	var org_key = req.body.org_key || req.query.org_key;
 	logger.debug(`org_key=${org_key}`);
@@ -106,7 +181,7 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 			res.clearCookie('org_key');
 		}
 		//Redirect to home, without the invalid org_key query parameter
-		return res.redirect(`/?redirectURL=${req.getRedirectURL()}`);
+		return res.redirect(`/?redirectURL=${req.getFixedRedirectURL()}`);
 	}
 	
 	//Now, sign in to organization's default user
@@ -138,62 +213,11 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 		res.cookie('org_key', org_key, {maxAge: 30E9});
 			
 		//If error, then log and return an error
-		if(err){ console.error(err); return res.status(500).send({alert: err}); }
+		if(err){ logger.error(err); return res.status(500).send({alert: err}); }
 		
-		//now, once default user is logged in, redirect to index
-		logger.debug('User is now logged in, redirecting');
-		
-		let redirectURL = req.getRedirectURL();
-		
-		if (redirectURL) {
-			logger.debug(`redirect: ${redirectURL}`);
-			if (req.query.alert) {
-				// 2022-02-27 JL: fixing alert not showing up on login redirects
-				if (redirectURL.includes('?')) redirectURL += '&alert=' + req.query.alert;
-				else redirectURL += '?alert=' + req.query.alert;
-			}
-			res.redirect(redirectURL);
-		}
-		else {
-			res.redirect('/home');
-		}
+		cb();
 	});
-}));
-
-/**
- * Main homepage.
- * @url /
- * @view /index
- */
-router.get('/home', wrap(async (req, res) =>  {
-	logger.addContext('funcName', 'home[get]');
-	logger.debug('ENTER');
-	
-	if (req.body.redirectURL || req.query.redirectURL) {
-			
-		logger.debug(`redirect: ${req.body.redirectURL || req.query.redirectURL}`);
-		res.redirect(req.body.redirectURL || req.query.redirectURL);
-	}
-	else if (!req.user) res.redirect('/');
-	else {
-		res.render('./home', { 
-			title: 'Home',
-		});
-	}
-}));
-
-router.get('/throwanerror', wrap(async (req, res) => {
-	logger.addContext('funcName', 'throwanerror[get]');
-	
-	throw new e.InternalServerError('This was on purpose.');
-	
-}));
-
-router.get('/usererror', wrap(async (req, res) => {
-	logger.addContext('funcName', 'usererror[get]');
-	
-	throw new e.UserError();
-}));
+}
 
 
 module.exports = router;

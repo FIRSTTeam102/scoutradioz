@@ -40,7 +40,7 @@ router.get('/*', wrap(async (req, res, next) => {
 			if (urlBits.length > 0) {
 				redirectURL = '/' + urlBits.join('/');
 				
-				var alert = `You are viewing ${org.nickname}.\nTo change the organization you wish to view, click *Org: ${org.nickname}* in the menu and select *Change Organization*.&type=good&autofade=true`;
+				var alert = `You are viewing ${org.nickname}.\nTo change the organization you wish to view, click *Org: ${org.nickname}* in the menu and select *Change Organization*.`;
 				
 				// 2022-03-02 JL: We only need to fix the redirectURL if it includes a ? - otherwise, the /page?alert= would turn into /page%3falert= and throw a 404
 				if (redirectURL.includes('?')) {
