@@ -12,6 +12,10 @@ $(() => {
 			}});
 		// cookiesMessage.show();	2021-08-03 JL: Disabled cookie message because we probably don't need to show the message for the time being
 	}
+	// JL TODO: Override Cookies.set() method to allow for a simple global cookie enable/disable switch?
+	//		We can't disable Cookies.org_key, but we can disable non necessary ones like report columns and the selected "Are you:" button on the chooseorg page
+	//		Possible text: "Before you reject the use of non-necessary cookies, please take a look at our cookie policy, where we explain what each is used for. We do not use third party cookies or tracking cookies."
+	Cookies.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
 });
 
 (() => {

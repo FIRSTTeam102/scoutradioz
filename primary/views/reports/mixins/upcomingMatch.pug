@@ -16,14 +16,8 @@ mixin upcomingMatch(match, includeHr=false)
 		- match.teams[i + 3] = teamKey.substring(3);
 		//-isRed for setting thick border of alliance div when a team is selected
 		- if( teamKey.substring(3) == team ) isRed = true;
-	- var date = new Date( match.time * 1000 )
-	- if (match.predicted_time) date = new Date( match.predicted_time * 1000 );
-	- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-	- var day = days[date.getDay()];
-	- var hour = date.getHours();
-	- var minute = date.getMinutes();
-	- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
-
+	
+	- let timeString = ' ' + zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORTER);
 	div(class="w3-row")
 		//-Title for small screens
 		div(class="w3-col s12 m0 rounded theme-dim w3-border")
@@ -31,8 +25,8 @@ mixin upcomingMatch(match, includeHr=false)
 				div
 					- var matchPrefix = "";
 					- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-					span #{matchPrefix.toUpperCase()}&nbsp;Match&nbsp;#{match.match_number}
-					span  #{day} @ #{hour}:#{minute}
+					span #{matchPrefix.toUpperCase()}&nbsp;Match&nbsp;#{match.match_number}:
+					span= timeString
 			div(class="w3-col s3")
 				a(href=`/reports/matchmetrics?key=${match.key}`)
 					div(class="w3-padding-small w3-right-align w3-small theme-hover-light-gray rounded-br rounded-tr" style="padding-right: 18px!important;")
@@ -43,7 +37,7 @@ mixin upcomingMatch(match, includeHr=false)
 				- var matchPrefix = "";
 				- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 				div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
-				div(class="w3-padding")  #{day} @ #{hour}:#{minute}
+				div(class="w3-padding")= timeString
 				a(href=`/reports/matchmetrics?key=${match.key}`)
 					div(class="w3-padding-16 w3-small theme-hover-light-gray rounded-bottom") 
 						i Compare alliances

@@ -19,22 +19,13 @@ block content
 				span Photo Uploads Audit
 	div(class="w3-auto")
 		each match in audit
-			- //get date info
-			- var date = new Date( match[0].time * 1000 )
-			- if (match[0].time) date = new Date( match[0].time * 1000 );
-			- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-			- var day = days[date.getDay()];
-			- var hour = date.getHours();
-			- var minute = date.getMinutes();
-			- //make minute 2 digits
-			- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
 			div(class="w3-container")
 				div(class="w3-btn w3-block theme-dim")
 					- var matchPrefix = "";
 					- var comp_level = match[0].match_key.split("_")[1].substring(0,2)
 					- if (comp_level != 'qm') matchPrefix = "" + comp_level + "" + match.match_number + " ";
-					span #{matchPrefix.toUpperCase()} Match #{match[0].match_number}
-					span  #{day} @ #{hour}:#{minute}
+					span #{matchPrefix.toUpperCase()} Match #{match[0].match_number}: 
+					span= ' ' + zoneTime(match[0].time * 1000).toLocaleString(DateTime.DATETIME_SHORTER)
 			div(class="w3-row w3-padding")
 				each match_team in match
 					div(class="w3-third w3-padding")

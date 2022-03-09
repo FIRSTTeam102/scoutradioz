@@ -34,9 +34,9 @@ block content
 				tr
 					td= match.comp_level
 					td= match.match_number
-					td= new Date(1000*match.time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")
+					td=zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORT)
 					if match.actual_time
-						td= new Date(1000*match.actual_time - 1000*60*60*5).toISOString().substring(5,16).replace("T"," ").replace("-","/")
+						td=zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORT)
 					else
 						td
 					td= match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3)

@@ -1,7 +1,11 @@
 const logger = require('log4js').getLogger('usefunctions');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const navHelpers = require('./nav');
-
+// Luxon lets us handle timezones and localization
+const luxon = require('luxon');
+const DateTime = luxon.DateTime;
+// There are some pages where we don't want the year, but the rest of the string is good
+DateTime.DATETIME_SHORTER = {month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'};
 require('colors');
 
 var functions = module.exports = {};
@@ -106,8 +110,12 @@ functions.authenticate = function(req, res, next) {
 // Constant, no need to re-get each time
 const navcontents = navHelpers.getNavContents();
 
-//View engine locals variables
-//IMPORTANT: Must be called LAST, because it may rely on other usefunctions data
+/**
+ * View engine locals variables - IMPORTANT: Must be called LAST, because it may rely on other usefunctions data
+ * @param {Express.Request} req 
+ * @param {Express.Response} res 
+ * @param {function} next 
+ */
 functions.setViewVariables = async function(req, res, next){
 	logger.addContext('funcName', 'setViewVariables');
 	logger.debug('ENTER');
@@ -149,6 +157,45 @@ functions.setViewVariables = async function(req, res, next){
 	// Compile the navcontents according to the current user's state
 	res.locals.navcontents = navHelpers.compileNavcontents(navcontents, req, res);
 	
+	// BELOW: LOCALIZATION
+	
+	// expose Luxon DateTime to views
+	res.locals.DateTime = DateTime;
+	
+	let timezoneString;
+	if (req.cookies['timezone']) {
+		logger.debug(`Setting user timezone ${req.cookies['timezone']}`);
+		timezoneString = req.cookies['timezone'];
+	}
+	else if (req.event.timezone) {
+		logger.debug(`Setting event timezone ${req.event.timezone}`);
+		timezoneString = req.event.timezone;
+	}
+	else {
+		logger.debug('Setting default timezone');
+		timezoneString = 'America/New_York'; // Default to EST/EDT because we're MAR-centered
+	}
+	logger.debug(`Timezone fixed offset: ${getFixedZone(timezoneString).offset()}`);
+	
+	// Attempt to get the user's locale
+	let localeString = 'en-US';
+	let acceptLang = req.get('accept-language');
+	if (acceptLang) {
+		try {
+			let firstLang = acceptLang.split(',')[0];
+			let locale = new Intl.Locale(firstLang);
+			localeString = locale.baseName;
+		}
+		catch (err) {
+			logger.debug(`Couldn't parse locale: ${err}`);
+		}
+	}
+	
+	// Method for views to get the offset time w/o having to do DateTime.whatever
+	res.locals.zoneTime = function (millis) {
+		return DateTime.fromMillis(millis, {zone: getFixedZone(timezoneString), locale: localeString});
+	};
+	
 	logger.debug('EXIT');
 	logger.removeContext('funcName');
 	next();
@@ -165,6 +212,7 @@ functions.getEventInfo = async function(req, res, next) {
 		key: 'undefined',
 		name: 'undefined',
 		year: 'undefined',
+		timezone: 'UTC',
 	};
 	
 	// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
@@ -201,12 +249,11 @@ functions.getEventInfo = async function(req, res, next) {
 			{allowCache: true, maxCacheAge: 60},
 		);
 		
-		//logger.debug(`currentEvent: ${JSON.stringify(currentEvent)}`)
-		
 		if (currentEvent) {
 			//Set current event info to req.event and res.locals
 			res.locals.eventName = currentEvent.year + ' ' + currentEvent.name;
 			req.event.name = currentEvent.name;
+			if (currentEvent.timezone) req.event.timezone = currentEvent.timezone;
 			
 			//If a list of teams exists, find team info in teams db.
 			if (currentEvent.team_keys && currentEvent.team_keys.length > 0) {
@@ -408,3 +455,21 @@ functions.errorHandler = function(err, req, res, next) {
 	
 	logger.removeContext('funcName');
 };
+
+/**
+ * Get the CURRENT timezone offset for the timezone string, then save it as a static-offset zone.
+ * This runs way faster than calculating the offset for 200 timezones, at the cost of accuracy in the off-season.
+ * Creating Luxon IANAZones is very time consuming, so we can cache their offset time to save even more processing time.
+ */
+const cachedFixedZones = {};
+function getFixedZone(timezone) {
+	if (cachedFixedZones[timezone]) {
+		return cachedFixedZones[timezone];
+	}
+	else {
+		let IANAZone = new luxon.IANAZone(timezone);
+		let fixedZone = new luxon.FixedOffsetZone(IANAZone.offset(Date.now()));
+		cachedFixedZones[timezone] = fixedZone;
+		return fixedZone;
+	}
+}

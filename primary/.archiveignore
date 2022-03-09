@@ -12,6 +12,11 @@ LICENSE
 LICENSE.*
 README
 node_modules/**/*.jpg
+node_modules/luxon/src/**
+node_modules/luxon/build/amd/**
+node_modules/luxon/build/cjs-browser/**
+node_modules/luxon/build/es6/**
+node_modules/luxon/build/global/**
 *.flow
 *.mem
 **/test/**

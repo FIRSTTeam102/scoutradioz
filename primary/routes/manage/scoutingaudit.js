@@ -143,6 +143,18 @@ router.get('/uploads', wrap(async (req, res) => {
 		}
 	});
 	
+	// 2022-03-08 JL: Previous logic didn't work, it always left out at least one document
+	var uploadsByTeamKey = {};
+	for (let upload of uploads) {
+		upload.links = uploadHelper.getLinks(upload);
+		if (upload.hasOwnProperty('team_key')) {
+			let key = upload.team_key;
+			if (!uploadsByTeamKey[key]) uploadsByTeamKey[key] = [];
+			uploadsByTeamKey[key].push(upload);
+		}
+	}
+	
+	/*
 	//Sort into groups of teams
 	var uploadsByTeam = [];
 	var thisTeamKey, thisTeamUploads = [];
@@ -165,10 +177,11 @@ router.get('/uploads', wrap(async (req, res) => {
 	}
 	//get rid of first empty array (due to the way my loop was structured)
 	uploadsByTeam.splice(0, 1);
+	*/
 	
 	res.render('./manage/audit/uploads', {
 		title: 'Uploads Audit',
-		uploadsByTeam: uploadsByTeam
+		uploadsByTeam: uploadsByTeamKey
 	});
 }));
 

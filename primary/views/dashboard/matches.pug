@@ -26,19 +26,10 @@ block content
 				- if( i % 6 == 0 )
 					- var assignments = [matches[i], matches[i+1], matches[i+2], matches[i+3], matches[i+4], matches[i+5]];
 					
-					- var date = new Date( match.time * 1000 )
-					- if (match.predicted_time) date = new Date( match.predicted_time * 1000 );
-					- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-					- var day = days[date.getDay()];
-					- var hour = date.getHours();
-					- var minute = date.getMinutes();
-					- //makes minute crap 2 digits
-					- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
-					
 					div(class="w3-col m6 l4 w3-padding")
 						hr
 						div(class="w3-col w3-padding")
-							span Match #{match.match_number} <br/> #{day} @ #{hour}:#{minute}
+							span Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORTER)}
 						each assignment, j in assignments
 							- assignment.alliance = (assignment.alliance == "red") ? "Red" : "Blue";
 							div(class="w3-col" style="height: 55px; display: flex;")

@@ -43,17 +43,7 @@ block content
 				- match.alliance = (match.alliance == "red") ? "Red" : "Blue";
 				- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 				
-				- //gets date crap
-				- var date = new Date( match.time * 1000 )
-				- if (match.predicted_time) date = new Date( match.predicted_time * 1000 );
-				- var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-				- var day = days[date.getDay()];
-				- var hour = date.getHours();
-				- var minute = date.getMinutes();
-				- //makes minute crap 2 digits
-				- minute = (minute.toString().length==1) ? "0".concat(minute.toString()) : minute;
-				
-				h4 Match #{match.match_number} <br/> #{day} @ #{hour}:#{minute} 
+				h4 Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORTER)} 
 					if match.data
 						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
 							div(class="gear-btn theme-dim w3-btn w3-section w3-margin-left w3-margin-right")
