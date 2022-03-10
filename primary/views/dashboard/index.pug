@@ -43,7 +43,7 @@ block content
 				- match.alliance = (match.alliance == "red") ? "Red" : "Blue";
 				- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 				
-				h4 Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORTER)} 
+				h4 Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')} 
 					if match.data
 						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
 							div(class="gear-btn theme-dim w3-btn w3-section w3-margin-left w3-margin-right")

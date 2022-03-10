@@ -17,7 +17,7 @@ mixin upcomingMatch(match, includeHr=false)
 		//-isRed for setting thick border of alliance div when a team is selected
 		- if( teamKey.substring(3) == team ) isRed = true;
 	
-	- let timeString = ' ' + zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORTER);
+	- let timeString = ' ' + zoneTime(match.time * 1000).toFormat('cccc @ t');
 	div(class="w3-row")
 		//-Title for small screens
 		div(class="w3-col s12 m0 rounded theme-dim w3-border")

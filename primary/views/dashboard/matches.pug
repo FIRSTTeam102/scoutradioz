@@ -29,7 +29,7 @@ block content
 					div(class="w3-col m6 l4 w3-padding")
 						hr
 						div(class="w3-col w3-padding")
-							span Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toLocaleString(DateTime.DATETIME_SHORTER)}
+							span Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')}
 						each assignment, j in assignments
 							- assignment.alliance = (assignment.alliance == "red") ? "Red" : "Blue";
 							div(class="w3-col" style="height: 55px; display: flex;")
