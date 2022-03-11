@@ -12,7 +12,7 @@ module.exports = {
 	meta: {
 		type: 'problem',
 		docs: {
-			description: "Require a 'title' or 'fulltitle' parameter in Express res.render calls.",
+			description: "Require a 'description' parameter in Express res.render calls.",
 			category: "Fill me in",
 			recommended: false
 		},
@@ -104,21 +104,21 @@ module.exports = {
 					//if leftParen and rightParen are defined == if this is a valid res.render call
 					if (leftParen && rightParen) {
 						
-						var includesTitle = false;
+						var includesDescription = false;
 						
 						for (var i = leftParen; i < rightParen; i++) {
 							var thisToken = tokens[i];
 							var nextToken = tokens[i + 1];
-							if (thisToken.value === 'title' || thisToken.value === 'fulltitle') {
+							if (thisToken.value == 'description') {
 								//we have to make sure the following token is :
 								//	because we don't want res.render('', {foo: title})
 								if (nextToken.type == 'Punctuator' && nextToken.value == ':'){
-									includesTitle = true;
+									includesDescription = true;
 								}
 							}
 						}
 						
-						if (includesTitle == false) {
+						if (includesDescription == false) {
 							locEnd = tokens[rightParen].loc.end;
 							
 							loc = {
@@ -143,7 +143,7 @@ module.exports = {
 			
 			context.report({
 				node: node,
-				message: "Res.render must include a title",
+				message: "Res.render must include a description",
 				data: {
 				},
 				loc: loc,

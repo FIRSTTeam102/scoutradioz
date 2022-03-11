@@ -12,18 +12,27 @@ doctype html
 html
 	head
 		base(href="/")
-		if !title
-			- title = "Untitled Page"
-		title #{title} | Scoutradioz
+		if fulltitle
+			title= fulltitle
+		else
+			if !title
+				- title = "Untitled Page"
+			title #{title} | Scoutradioz
+		if description
+			if description == 'default'
+				meta(name="description" content="Scoutradioz is a free platform that empowers FIRST Robotics teams to gather their own, customized intel at competitions.")
+			else 
+				meta(name="description" content=description)
 		meta(name="keywords" content="first robotics,frc,first robotics competition,somerville,new jersey,102,team 102,gearheads,gearheads 102,the gearheads,scoring,scoring app,standings,match standings,team 102 scoring app,scouting,gearheads scouting,team 102 scouting")
 		meta(name="theme-color" content="#333")
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
+		link(rel="manifest" href=`${fileRoot}/manifest.json`)
 		link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/w3.css`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mmenu.css`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mburger.css`)
-		link(rel="stylesheet" href=`${fileRoot}/css/main.css?v=2`)
+		link(rel="stylesheet" href=`${fileRoot}/css/main.css?v=3`)
 		link(rel="stylesheet" href=`${fileRoot}/css/theme-2022.css`)
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=7`)
 		style.
@@ -41,7 +50,7 @@ html
 		script(src=`${fileRoot}/js/FormSubmission.js`)
 		script(src=`${fileRoot}/js/NotificationCard.js?v=4`)
 		script(src=`${fileRoot}/js/NavMenu.js?v=2`)
-		//- script(src="https://moment.github.io/luxon/global/luxon.min.js") uncomment if you want to test luxon stuff
+		//- script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
 		if alert && alert != "undefined"
 			script.
 				$(function(){

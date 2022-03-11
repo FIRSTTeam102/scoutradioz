@@ -68,7 +68,7 @@ router.get('/', wrap(async (req, res) => {
 		const selectedButton = req.cookies['homepageButton']; // Previously-selected "Are you:" button on the homepage
 		
 		res.render('./index', {
-			title: 'Select an Organization',
+			fulltitle: 'Scoutradioz: FRC Scouting as a Service',
 			orgs: orgs,
 			redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 			isOrgSelectScreen: true,
