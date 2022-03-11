@@ -275,6 +275,12 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 .theme-input::-ms-input-placeholder {color:var(--placeholder-color);}
 .theme-input::placeholder {color:var(--placeholder-color);}
 .no-padding{padding: 0!important;}
+.no-select{
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
 
 
 /* For scouting form elements */
@@ -306,7 +312,7 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	background-color: var(--first-blue);
 }
 .scouting-counter.sc-bad{
-	background-color: var(--first-red);
+	background-color: #af1d22;
 	border-radius: 25%!important;
 }
 
@@ -383,11 +389,24 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	top: calc(var(--height) / 2 - var(--thickness) / 2);
 	pointer-events: none;
 }
+.slider.reversed, .slider.reversed::-webkit-slider-thumb {
+	direction: rtl;
+}
 .slider-labels {
 	margin-top: 8px;
+	position: relative;
 }
 .slider-label-left{float: left; opacity: 0.5;}
 .slider-label-right{float: right; opacity: 0.5;}
+.slider-label-center{
+	font-size: 1.1em;
+	top: -2px;
+	position: absolute;
+	display: block;
+	width: 100%;
+	text-align: center;
+	line-height: 0.85;
+}
 
 .slider::-webkit-slider-thumb {
 	-webkit-appearance: none; 

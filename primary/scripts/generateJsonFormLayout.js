@@ -56,7 +56,7 @@ const matchAthenian2022 = [
 	['checkbox', 'counterDefensePlayed', 'Attempted to stop or deflect a defender?'],
 	['spacer'],
 	['h2', 'endgameLabel', 'End game'],
-	['multiselect', 'climb', 'Climb', ['None', 'Low', 'Mid', 'High', 'Traversal']],
+	['multiselect', 'successfulClimb', 'Climb', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	['spacer'],
 	['h2', 'generalLabel', 'General'],
 	// ['slider', 'shooterConsistency', 'Shooter consistency', null, [1, 10, 1]],
@@ -80,7 +80,7 @@ const pitAthenian2022 = [
 	['textblock', 'other', 'Other'],
 ];
 
-// type, id, label, multiselectOptions, [sliderMin, sliderMax, sliderStep]
+// type, id, label, multiselectOptions, [sliderMin, sliderMax, sliderStep] - if slider step is negative, it is reversed
 const matchGearheads2022 = [
 	['h2', 'lblAuto', 'Autonomous'],
 	['checkbox', 'didTaxi', 'Did they taxi (move out from the tarmac)?'],
@@ -103,7 +103,9 @@ const matchGearheads2022 = [
 	['h2', 'endgameLabel', 'End game'],
 	['multiselect', 'successfulClimb', 'Successful climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	['multiselect', 'attemptedClimb', 'Attempted climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
-	['slider', 'climbTimeSeconds', 'Approximately how long did it take them to climb? (seconds)', null, [10, 90, 10]],
+	// ['slider', 'climbTimeSeconds', 'Approximately how long did it take them to climb? (seconds)', null, [10, 90, -10]],
+	['timeslider', 'climbTimeStart', 'How much time was on the clock when they started climbing?', null, [0, 120, -5]],
+	['timeslider', 'climbTimeEnd', 'How much time was on the clock when they stopped climbing?', null, [0, 90, -5]],
 	['spacer'],
 	['h2', 'generalLabel', 'General'],
 	['checkbox', 'defended', 'Defended (stopped or delayed at least one score)?'],
@@ -163,7 +165,7 @@ const autoAccuracy2022 = {
 			operands: ['$successes', '$totalShots']
 		}
 	],
-	display_percentage: true,
+	display_as: 'percentage',
 };
 const teleopAccuracy2022 = {
 	order: 515,
@@ -183,7 +185,7 @@ const teleopAccuracy2022 = {
 			operands: ['$successes', '$totalShots'] 
 		}
 	],
-	display_percentage: true,
+	display_as: 'percentage',
 };
 const lowerHubAccuracy2022 = {
 	order: 520,
@@ -203,7 +205,7 @@ const lowerHubAccuracy2022 = {
 			operands: ['$successes', '$totalShots']
 		}
 	],
-	display_percentage: true,
+	display_as: 'percentage',
 };
 const upperHubAccuracy2022 = {
 	order: 525,
@@ -223,7 +225,7 @@ const upperHubAccuracy2022 = {
 			operands: ['$successes', '$totalShots']
 		}
 	],
-	display_percentage: true,
+	display_as: 'percentage',
 };
 const cargoAccuracy2022 = {
 	order: 530,
@@ -301,7 +303,7 @@ const teleopPoints2022 = {
 			as: 'teleopLow'
 		}, {
 			operator: 'multiselect',
-			id: 'climb',
+			id: 'successfulClimb',
 			quantifiers: {
 				'None': 0,
 				'Low': 4,
@@ -343,7 +345,7 @@ const contributedPoints2022 = {
 			as: 'teleopLow'
 		}, {
 			operator: 'multiselect',
-			id: 'climb',
+			id: 'successfulClimb',
 			quantifiers: {
 				'None': 0,
 				'Low': 4,
@@ -366,7 +368,7 @@ const matchDerivedAthenian2022 = [
 		id: 'climbPoints',
 		operations: [{
 			operator: 'multiselect',
-			id: 'climb',
+			id: 'successfulClimb',
 			quantifiers: {
 				'None': 0,
 				'Low': 4,
@@ -451,10 +453,43 @@ const matchDerivedGearheads2022 = [
 				*/
 			}
 		],
-		display_percentage: true,
-	}, autoPoints2022, teleopPoints2022, contributedPoints2022, 
+		display_as: 'percentage',
+	}, 
+	{
+		order: 575,
+		label: 'Climb time',
+		id: 'climbTime',
+		operations: [
+			{
+				operator: 'subtract',
+				operands: ['climbTimeStart', 'climbTimeEnd'],
+				as: 'climbTimeDelta'
+			}, {
+				operator: 'multiselect',
+				id: 'attemptedClimb',
+				quantifiers: {
+					'None': true,
+					'Low': false,
+					'Mid': false,
+					'High': false,
+					'Traversal': false, 
+				},
+				as: 'botheredToClimb'
+			}, {
+				operator: 'condition',
+				operands: ['$botheredToClimb', '$climbTimeDelta', null]
+			}
+		],
+		display_as: 'time',
+	},
+	autoPoints2022, teleopPoints2022, contributedPoints2022, 
 ];
-
+/*
+{
+	operator: 'condition',
+	operands: ['$variableIfTrue', '$variableIfFalse', '$myBoolean']
+}
+*/
 const year = 2022;
 const org_key = orgkey;
 
@@ -496,7 +531,7 @@ function fixArray(arr, derived, formType) {
 			order: item.order,
 			type: 'derived',
 			operations: item.operations,
-			display_percentage: !!item.display_percentage, // TODO: Display percentages as percentages
+			display_as: item.display_as || 'number', // TODO: Display percentages as percentages
 			label: item.label,
 			id: item.id,
 			form_type: formType,

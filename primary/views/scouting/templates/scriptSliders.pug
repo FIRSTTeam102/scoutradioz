@@ -15,5 +15,12 @@ script.
 		$(`[before][slider-name=${name}]`).css({
 			width: `${percentage}%`
 		});
-		$(`label[slider-name=${name}]`).text(val);
+		if (typeof _this.attr('time-slider') !== 'undefined') {
+			let minutes = Math.floor(val / 60);
+			let seconds = String(val % 60).padStart(2, '0');
+			$(`label[slider-name=${name}]`).html(`${minutes}:${seconds}<br><span class="theme-text-secondary w3-small">${val} s</span>`);
+		}
+		else {
+			$(`label[slider-name=${name}]`).text(val);
+		}
 	}
