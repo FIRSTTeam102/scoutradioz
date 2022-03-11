@@ -81,40 +81,39 @@ block content
 			hr 
 		div(id="selectorg" style=learnMoreInvisible)
 			h3 Please select an organization.
-			form#selectorg-form(method="post" action="/selectorg-login")
-				div(class="w3-container w3-auto w3-padding")
-					each org, i in orgs
-						div.w3-padding 
-							- let orglabel = org.nickname;
-							h4= orglabel
-							if org.event_label
-							p.theme-text-secondary @ #{org.event_label}
-							//- JL: Making the "view" buttons links to the "share" feature so that web crawlers can be somewhat aware of our site structure (/frc102/home instead of /selectorg?redirectURL=home)
-							div(class="org-view" style=viewDataVisible)
-								- if (!redirectURL) redirectURL = '/home';
-								a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) View
-							div(class="org-login" style=scoutVisible)
-								a(class="theme-link w3-btn gear-btn" href=`/selectorg-login?org_key=${org.org_key}&rdr=${redirectURL}`) Log in
-								//- if redirectURL
-								//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) Log in
-								//- else 
-								//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}/home`) Log in
-						//- div(class="w3-col")
-							div(class="w3-quarter w3-hide-small") &nbsp;
-							div(class="w3-half w3-padding")
-								- var orglabel = org.nickname;
-								if (org.team_number)
-									- orglabel = org.team_number + ' - ' + org.nickname;
-								if redirectURL
-									a(class="theme-link w3-btn w3-block" href=`/${org.org_key}${redirectURL}`)=orglabel
-								else 
-									a(class="theme-link w3-btn w3-block" href=`/${org.org_key}/home`)=orglabel
-								if (org.event_label)
-									- var eventLabel = '@ ' + org.event_label;
-									p(class="theme-text-secondary")=eventLabel
-							div(class="w3-quarter w3-hide-small") &nbsp;
-				if redirectURL
-					input(type="hidden" name="redirectURL" value=redirectURL)
+			div(class="w3-container w3-auto w3-padding")
+				each org, i in orgs
+					div.w3-padding 
+						- let orglabel = org.nickname;
+						- if (org.team_numbers) { orglabel = org.team_numbers.join(' & ') + ' - ' + org.nickname }
+						- else if (org.team_number) orglabel = org.team_number + ' - ' + org.nickname;
+						h4= orglabel
+						if org.event_label
+						p.theme-text-secondary @ #{org.event_label}
+						//- JL: Making the "view" buttons links to the "share" feature so that web crawlers can be somewhat aware of our site structure (/frc102/home instead of /selectorg?redirectURL=home)
+						div(class="org-view" style=viewDataVisible)
+							- if (!redirectURL) redirectURL = '/home';
+							a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) View
+						div(class="org-login" style=scoutVisible)
+							a(class="theme-link w3-btn gear-btn" href=`/selectorg-login?org_key=${org.org_key}&rdr=${redirectURL}`) Log in
+							//- if redirectURL
+							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) Log in
+							//- else 
+							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}/home`) Log in
+					//- div(class="w3-col")
+						div(class="w3-quarter w3-hide-small") &nbsp;
+						div(class="w3-half w3-padding")
+							- var orglabel = org.nickname;
+							if (org.team_number)
+								- orglabel = org.team_number + ' - ' + org.nickname;
+							if redirectURL
+								a(class="theme-link w3-btn w3-block" href=`/${org.org_key}${redirectURL}`)=orglabel
+							else 
+								a(class="theme-link w3-btn w3-block" href=`/${org.org_key}/home`)=orglabel
+							if (org.event_label)
+								- var eventLabel = '@ ' + org.event_label;
+								p(class="theme-text-secondary")=eventLabel
+						div(class="w3-quarter w3-hide-small") &nbsp;
 		script.
 			$('input[name=customer]').on('change', function (e) {
 				requestAnimationFrame(() => {
