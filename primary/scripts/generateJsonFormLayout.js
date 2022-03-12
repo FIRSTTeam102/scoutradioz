@@ -101,11 +101,11 @@ const matchGearheads2022 = [
 	['badcounter', 'teleopLowMissed', 'Cargo missed'],
 	['spacer'],
 	['h2', 'endgameLabel', 'End game'],
+	['timeslider', 'climbTimeStart', 'How much time was on the clock when they started climbing?', null, [0, 90, -5]],
+	['timeslider', 'climbTimeEnd', 'How much time was on the clock when they stopped climbing?', null, [0, 90, -5]],
 	['multiselect', 'successfulClimb', 'Successful climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	['multiselect', 'attemptedClimb', 'Attempted climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	// ['slider', 'climbTimeSeconds', 'Approximately how long did it take them to climb? (seconds)', null, [10, 90, -10]],
-	['timeslider', 'climbTimeStart', 'How much time was on the clock when they started climbing?', null, [0, 120, -5]],
-	['timeslider', 'climbTimeEnd', 'How much time was on the clock when they stopped climbing?', null, [0, 90, -5]],
 	['spacer'],
 	['h2', 'generalLabel', 'General'],
 	['checkbox', 'defended', 'Defended (stopped or delayed at least one score)?'],
@@ -301,20 +301,9 @@ const teleopPoints2022 = {
 			operator: 'multiply',
 			operands: ['teleopLowScored', 1],
 			as: 'teleopLow'
-		}, {
-			operator: 'multiselect',
-			id: 'successfulClimb',
-			quantifiers: {
-				'None': 0,
-				'Low': 4,
-				'Mid': 6,
-				'High': 10,
-				'Traversal': 15,
-			},
-			as: 'climbPoints'
-		}, {
+		},{
 			operator: 'sum',
-			operands: ['$teleopHigh', '$teleopLow', '$climbPoints']
+			operands: ['$teleopHigh', '$teleopLow']
 		}
 	],
 };
@@ -360,24 +349,146 @@ const contributedPoints2022 = {
 		}
 	],
 };
-
-const matchDerivedAthenian2022 = [
-	{
-		order: 499,
-		label: 'Climb points',
-		id: 'climbPoints',
-		operations: [{
+const climbPoints2022 = {
+	order: 499,
+	label: 'Climb points',
+	id: 'climbPoints',
+	operations: [{
+		operator: 'multiselect',
+		id: 'successfulClimb',
+		quantifiers: {
+			'None': 0,
+			'Low': 4,
+			'Mid': 6,
+			'High': 10,
+			'Traversal': 15,
+		}
+	}]
+};
+const climbAccuracy2022 = {
+	order: 570,
+	label: 'Climb accuracy',
+	id: 'climbAccuracy',
+	operations: [
+		{
 			operator: 'multiselect',
 			id: 'successfulClimb',
+			quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
+			as: 'climbSuccess'
+		}, {
+			operator: 'multiselect',
+			id: 'attemptedClimb',
+			quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
+			as: 'climbAttempt'
+		}, {
+			operator: 'divide',
+			operands: ['$climbSuccess', '$climbAttempt']
+			/* 	Attempt 4, get 4 -> 100%
+				Attempt 4, get 3 -> (4 - 1) / 4 = 3/4 = 75% - (4 - (4 - 3)) / 4
+				Attempt 3, get 1 -> (3 - 2) / 3 = 1/3 = 33% - (3 - (3 - 1)) / 3
+				Attempt 2, get 1 -> (2 - 1) / 2 = 1/2 = 50%
+				oh, it's literally just success / attempt (note: need to add an exception for div by 0)
+			*/
+		}
+	],
+	display_as: 'percentage',
+};
+const climbAccuracy2022b = {
+	order: 570,
+	label: 'Climb accuracy',
+	id: 'climbGoalRate',
+	operations: [
+		{
+			operator: 'multiselect',
+			id: 'successfulClimb',
+			quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
+			as: 'climbSuccess'
+		}, {
+			operator: 'multiselect',
+			id: 'attemptedClimb',
+			quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
+			as: 'climbAttempt'
+		}, {
+			operator: 'ne',
+			operands: ['$climbSuccess', '$climbAttempt'],
+			as: 'ne'
+		}, {
+			operator: 'subtract',
+			operands: [1, '$ne']
+		}
+	],
+	display_as: 'percentage',
+};
+const climbTime2022 = {
+	order: 575,
+	label: 'Climb time',
+	id: 'climbTime',
+	operations: [
+		{
+			operator: 'subtract',
+			operands: ['climbTimeStart', 'climbTimeEnd'],
+			as: 'climbTimeDelta'
+		}, {
+			operator: 'multiselect',
+			id: 'attemptedClimb',
 			quantifiers: {
-				'None': 0,
-				'Low': 4,
-				'Mid': 6,
-				'High': 10,
-				'Traversal': 15,
-			}
-		}]
-	}, 
+				'None': false,
+				'Low': true,
+				'Mid': true,
+				'High': true,
+				'Traversal': true, 
+			},
+			as: 'botheredToClimb'
+		}, {
+			operator: 'condition',
+			operands: ['$botheredToClimb', '$climbTimeDelta', null]
+		}
+	],
+	display_as: 'time',
+};
+const reliabilityFactor2022 = {
+	order: 580,
+	label: 'Reliability factor',
+	id: 'reliabilityFactor',
+	operations: [
+		{
+			operator: 'multiply',
+			operands: [0.5, 'recoveredFromFreeze'],
+			as: 'recover'
+		},
+		{
+			operator: 'subtract',
+			operands: [1, 'diedDuringMatch'],
+			as: '1minusdied'
+		}, {
+			operator: 'sum',
+			operands: ['$1minusdied', '$recover']
+		}
+	]
+};
+const successfulClimb2022 = {
+	order: 499,
+	label: 'Climb points',
+	id: 'successfulClimbIndex',
+	operations: [{
+		operator: 'multiselect',
+		id: 'successfulClimb',
+		quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, }
+	}]
+};
+const attemptedClimb2022 = {
+	order: 499,
+	label: 'Climb points',
+	id: 'attemptedClimbIndex',
+	operations: [{
+		operator: 'multiselect',
+		id: 'attemptedClimb',
+		quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, }
+	}]
+};
+
+const matchDerivedAthenian2022 = [
+	climbPoints2022, 
 	autoAccuracy2022, 
 	teleopAccuracy2022, 
 	upperHubAccuracy2022, 
@@ -395,95 +506,67 @@ const matchDerivedAthenian2022 = [
 // Auto points, Teleop points
 
 const matchDerivedGearheads2022 = [
-	{
-		order: 499,
-		label: 'Climb points',
-		id: 'climbPoints',
-		operations: [{
-			operator: 'multiselect',
-			id: 'successfulClimb',
-			quantifiers: {
-				'None': 0,
-				'Low': 4,
-				'Mid': 6,
-				'High': 10,
-				'Traversal': 15,
-			}
-		}]
-	}, 
+	climbPoints2022, 
 	autoAccuracy2022, 
 	teleopAccuracy2022,
 	upperHubAccuracy2022,
 	lowerHubAccuracy2022,
+	climbAccuracy2022b, 
+	climbTime2022,
+	attemptedClimb2022,
+	successfulClimb2022,
+	autoPoints2022, teleopPoints2022, contributedPoints2022, 
+	reliabilityFactor2022,
 	{
-		order: 570,
-		label: 'Climb accuracy',
-		id: 'climbAccuracy',
+		order: 9991,
+		label: '',
+		id: 'recoverWithoutFreeze🚩',
+		operations: [
+			{
+				operator: 'subtract',
+				operands: ['recoveredFromFreeze', 'diedDuringMatch'],
+				as: 'recMinusDied'
+			},
+			{
+				operator: 'gt',
+				operands: ['$recMinusDied', 0]
+			}
+		]
+	}, {
+		order: 9992,
+		label: '',
+		id: 'climbAttemptLtSuccess🚩',
 		operations: [
 			{
 				operator: 'multiselect',
 				id: 'successfulClimb',
-				quantifiers: {
-					'None': 0,
-					'Low': 1,
-					'Mid': 2,
-					'High': 3,
-					'Traversal': 4,
-				},
+				quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
 				as: 'climbSuccess'
 			}, {
 				operator: 'multiselect',
 				id: 'attemptedClimb',
-				quantifiers: {
-					'None': 0,
-					'Low': 1,
-					'Mid': 2,
-					'High': 3,
-					'Traversal': 4,
-				},
+				quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
 				as: 'climbAttempt'
-			}, {
-				operator: 'divide',
-				operands: ['$climbSuccess', '$climbAttempt']
-				/* 	Attempt 4, get 4 -> 100%
-					Attempt 4, get 3 -> (4 - 1) / 4 = 3/4 = 75% - (4 - (4 - 3)) / 4
-					Attempt 3, get 1 -> (3 - 2) / 3 = 1/3 = 33% - (3 - (3 - 1)) / 3
-					Attempt 2, get 1 -> (2 - 1) / 2 = 1/2 = 50%
-					oh, it's literally just success / attempt (note: need to add an exception for div by 0)
-				*/
+			},
+			{
+				operator: 'lt',
+				operands: ['$climbAttempt', '$climbSuccess']
 			}
-		],
-		display_as: 'percentage',
+		]
 	}, 
 	{
-		order: 575,
-		label: 'Climb time',
-		id: 'climbTime',
+		order: 9993,
+		label: '',
+		id: 'negativeClimbTime🚩',
 		operations: [
 			{
-				operator: 'subtract',
-				operands: ['climbTimeStart', 'climbTimeEnd'],
-				as: 'climbTimeDelta'
-			}, {
-				operator: 'multiselect',
-				id: 'attemptedClimb',
-				quantifiers: {
-					'None': true,
-					'Low': false,
-					'Mid': false,
-					'High': false,
-					'Traversal': false, 
-				},
-				as: 'botheredToClimb'
-			}, {
-				operator: 'condition',
-				operands: ['$botheredToClimb', '$climbTimeDelta', null]
+				operator: 'lt',
+				operands: ['climbTimeStart', 'climbTimeEnd']
 			}
-		],
-		display_as: 'time',
-	},
-	autoPoints2022, teleopPoints2022, contributedPoints2022, 
+		]
+	}
 ];
+
 /*
 {
 	operator: 'condition',
@@ -492,6 +575,24 @@ const matchDerivedGearheads2022 = [
 */
 const year = 2022;
 const org_key = orgkey;
+
+// Moving the order of derived metrics based on the calculated order of our scouting form
+if (org_key == 'frc102' || org_key == 'demo') {
+	contributedPoints2022.order = -10;
+	autoPoints2022.order = -9; // was 71
+	teleopPoints2022.order = -8; // was 161
+	climbPoints2022.order = -7; // was 224
+	
+	autoAccuracy2022.order = 72;
+	teleopAccuracy2022.order = 162;
+	upperHubAccuracy2022.order = 163;
+	lowerHubAccuracy2022.order = 164;
+	successfulClimb2022.order = 221;
+	attemptedClimb2022.order = 222;
+	climbAccuracy2022b.order = 223;
+	climbTime2022.order = 225;
+	reliabilityFactor2022.order = 281;
+}
 
 let layoutArr = [];
 
