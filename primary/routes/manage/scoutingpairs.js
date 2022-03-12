@@ -446,6 +446,8 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 
 router.post('/clearmatchallocations', wrap(async (req, res) => {
 	
+	const org_key = req.user.org_key;
+	
 	var thisFuncName = 'scoutingpairs.clearmatchallocations[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 
@@ -518,6 +520,8 @@ router.post('/setallunassigned', wrap(async (req, res) => {
 
 router.post('/generatematchallocations', wrap(async (req, res) => {
 	
+	const org_key = req.user.org_key;
+
 	var thisFuncName = 'scoutingpairs.generatematchallocations[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 
