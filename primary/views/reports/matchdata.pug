@@ -67,9 +67,9 @@ block content
 											- var valueCol = 'w3-right-align w3-text-white'
 											- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
 											if (aggRangeMap[item.id])
-												td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= matchMap[team].data[item.id]
+												td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= displayReportMetric(matchMap[team].data[item.id])
 											else
-												td(class=`${valueCol}`)= matchMap[team].data[item.id]
+												td(class=`${valueCol}`)= displayReportMetric(matchMap[team].data[item.id])
 										else
 											td
 									td
@@ -78,9 +78,9 @@ block content
 											- var valueCol = 'w3-right-align w3-text-white'
 											- if (matchMap[team].data[item.id] == 0) valueCol = 'w3-right-align w3-text-gray'
 											if (aggRangeMap[item.id])
-												td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= matchMap[team].data[item.id]
+												td(class=`${valueCol}` style=`background-color: rgb(${getValR(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValG(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])},${getValB(aggRangeMap[item.id].MINmin, aggRangeMap[item.id].MAXmax, matchMap[team].data[item.id])})`)= displayReportMetric(matchMap[team].data[item.id])
 											else
-												td(class=`${valueCol}`)= matchMap[team].data[item.id]
+												td(class=`${valueCol}`)= displayReportMetric(matchMap[team].data[item.id])
 										else
 											td
 			div(class="w3-col s0 m4") &nbsp;

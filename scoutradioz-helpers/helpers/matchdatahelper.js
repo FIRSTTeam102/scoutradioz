@@ -31,6 +31,7 @@ matchDataHelper.isQuantifiableType = function(type) {
 		case 'badcounter':
 		case 'derived':
 		case 'slider':
+		// case 'timeslider': // JL: Timesliders are a bit broken atm
 			isQuantifiable = true;
 			break;
 		default:
@@ -95,7 +96,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 			let operands = thisOp.operands;
 			switch (thisOp.operator) {
 				// sum operands: [a, b, c, ...]
-				case 'sum': {
+				case 'sum': case 'add': {
 					let sum = 0;
 					for (let key of operands) {
 						if (typeof key === 'number') sum += key;
@@ -104,7 +105,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					}
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = sum;
 					else derivedMetric = sum;
-					//logger.trace(`Sum: ${sum} -> ${thisOp.as || ''}`);
+					// console.log(`Sum: ${sum} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// multiply operands: [a, b, c, ...]
@@ -117,7 +118,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					}
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = product;
 					else derivedMetric = product;
-					//logger.trace(`Multiply: ${product} -> ${thisOp.as || ''}`);
+					// console.log(`Multiply: ${product} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// subtract operands: [minuend, subtrahend] (a - b -> [a, b])
@@ -136,7 +137,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = difference;
 					else derivedMetric = difference;
-					//logger.trace(`Subtract: ${difference} -> ${thisOp.as || ''}`);
+					// console.log(`Subtract: ${difference} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// divide operands: [dividend, divisor] (a/b -> [a, b])
@@ -158,7 +159,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = quotient;
 					else derivedMetric = quotient;
-					//logger.trace(`Divide: ${quotient} -> ${thisOp.as || ''}`);
+					// console.log(`Divide: ${quotient} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// multiselect quantifiers: {option1: value1, option2: value2, ...}; variables not supported
@@ -167,20 +168,92 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					let value = parseNumber(thisOp.quantifiers[key]);
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = value;
 					else derivedMetric = value;
-					//logger.trace(`Multiselect: ${value} -> ${thisOp.as || ''}`);
+					// console.log(`Multiselect: key=${key} ${value} -> ${thisOp.as || ''}`);
+					break;
+				}
+				// condition operands: [boolean, valueIfTrue, valueIfFalse]
+				case 'condition': {
+					let conditionKey = operands[0];
+					// ifTrue and ifFalse can either be a string (therefore being a variable/metric key) or a value, which can be either a number or explicitly null
+					let ifTrueKey = operands[1]; 
+					let ifFalseKey = operands[2];
+					let condition, value;
+					
+					// Condition must be a variable or metric value, otherwise there's no reason to use this operation
+					if (conditionKey.startsWith('$')) condition = parseBoolean(variables[conditionKey]);
+					else condition = parseBoolean(matchData[conditionKey]);
+					
+					if (isNaN(condition)) {
+						value = NaN; // We must be cautious in the case where gt/gte/etc has NaN as a result
+					}
+					else if (condition) {
+						if (typeof ifTrueKey === 'string') {
+							if (ifTrueKey.startsWith('$')) value = variables[ifTrueKey];
+							else value = parseNumber(matchData[ifTrueKey]);
+						}
+						// If it's not a string, then just take the value as provided
+						//	Doing this differently than above because typeof null returns 'object'
+						else value = ifTrueKey;
+					}
+					else {
+						if (typeof ifFalseKey === 'string') {
+							if (ifFalseKey.startsWith('$')) value = variables[ifFalseKey];
+							else value = parseNumber(matchData[ifFalseKey]);
+						}
+						else value = ifFalseKey;
+					}
+					
+					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = value;
+					else derivedMetric = value;
+					// console.log(`Condition: ${condition}, true=${ifTrueKey} false=${ifFalseKey}, ${value} -> ${thisOp.as || ''}`);
+					break;
+				}
+				// Comparison operations all act basically the same, except with a different operator, so we can share the same code
+				//	Future note for building an error checking script: Make sure that the output of any of these operators is NOT used in sum, multiply, etc. Only in conditionals.
+				//	operands ex: gt: [a, b] -> true if a > b, false if a <= b
+				case 'gt': case 'gte': case 'lt': case 'lte': case 'eq': case 'ne': {
+					let aKey = operands[0];
+					let bKey = operands[1];
+					let a, b, result;
+					
+					if (typeof aKey === 'number') a = aKey;
+					else if (aKey.startsWith('$')) a = variables[aKey];
+					else a = parseNumber(matchData[aKey]);
+					
+					if (typeof bKey === 'number') b = bKey;
+					else if (bKey.startsWith('$')) b = variables[bKey];
+					else b = parseNumber(matchData[bKey]);
+					
+					// Yes, we can have switch statements inside another switch statement :D
+					switch (thisOp.operator) {
+						case 'gt': result = a > b; 	 break;
+						case 'gte': result = a >= b; break;
+						case 'lt': result = a < b;   break;
+						case 'lte': result = a <= b; break;
+						case 'eq': result = a === b; break;
+						case 'ne': result = a !== b; break;
+					}
+					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
+					else derivedMetric = result ? 1 : 0; // If it's an output, then return a 1 or 0 instead of true or false (even though we can do math on true & false)
+					// console.log(`${thisOp.operator}: a=${aKey}->${a}, b=${bKey}->${b}; ${result} -> ${thisOp.as || ''}`);
 					break;
 				}
 			}
 		}
-		// logger.trace(`Final metric: ${derivedMetric} - Label: ${thisItem.label}`);
+		// console.log(`Final metric: ${derivedMetric} - Label: ${thisItem.label} / ${thisItem.id}`);
 		// Insert the newly derived metric into 
 		matchData[thisItem.id] = derivedMetric;
 	}
 	
+	function parseBoolean(item) {
+		if (item === 'false') return false;
+		else return !!item;
+	}
+	
 	// Turns checkboxes into 0 and 1
 	function parseNumber(item) {
-		if (item === 'true') return 1;
-		else if (item === 'false') return 0;
+		if (item === 'true' || item === true) return 1;
+		else if (item === 'false' || item === false) return 0;
 		else return parseFloat(item);
 	}
 	// console.log(`${dt - st}, ${performance.now() - dt}`);

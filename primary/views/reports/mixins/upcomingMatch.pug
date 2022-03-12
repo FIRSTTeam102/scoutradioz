@@ -26,7 +26,7 @@ mixin upcomingMatch(match, includeHr=false)
 					- var matchPrefix = "";
 					- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 					span #{matchPrefix.toUpperCase()}&nbsp;Match&nbsp;#{match.match_number}:
-					span= timeString
+					span.theme-text-secondary= timeString
 			div(class="w3-col s3")
 				a(href=`/reports/matchmetrics?key=${match.key}`)
 					div(class="w3-padding-small w3-right-align w3-small theme-hover-light-gray rounded-br rounded-tr" style="padding-right: 18px!important;")
@@ -37,7 +37,7 @@ mixin upcomingMatch(match, includeHr=false)
 				- var matchPrefix = "";
 				- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
 				div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
-				div(class="w3-padding")= timeString
+				div(class="w3-padding theme-text-secondary")= timeString
 				a(href=`/reports/matchmetrics?key=${match.key}`)
 					div(class="w3-padding-16 w3-small theme-hover-light-gray rounded-bottom") 
 						i Compare alliances
