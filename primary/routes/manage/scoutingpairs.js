@@ -193,7 +193,7 @@ router.post('/generateteamallocations', wrap(async (req, res) => {
 
 	// TODO: Use _id, not name, because names can be modified!
 	//	also, change to findOne instead of doing stuff with user[0] and whatever
-	var user = await utilities.find('users', { name: req.user.name });
+	var user = await utilities.find('users', { name: req.user.name, 'org_key': org_key });
 
 	if(!user[0]){
 		res.send({status: 500, alert:'Passport error: no user found in db?'});
@@ -456,7 +456,7 @@ router.post('/clearmatchallocations', wrap(async (req, res) => {
 	}
 	
 	// TODO: Use _id, not name, because names can be modified!
-	var user = await utilities.find('users', { name: req.user.name }, {});
+	var user = await utilities.find('users', { name: req.user.name, 'org_key': org_key }, {});
 
 	if(!user[0]){
 		res.send({status: 500, alert:'Passport error: no user found in db?'});
@@ -529,7 +529,7 @@ router.post('/generatematchallocations', wrap(async (req, res) => {
 	
 	// TODO: Use _id, not name, because names can be modified!
 	//	also change to findOne
-	var user = await utilities.find('users', { name: req.user.name }, {});
+	var user = await utilities.find('users', { name: req.user.name, 'org_key': org_key }, {});
 
 	if(!user[0]){
 		res.send({status: 500, alert:'Passport error: no user found in db?'});
@@ -836,7 +836,7 @@ async function generateTeamAllocations(req, res){
 	// Read all present members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
 	// TODO: Use _id, not name, because names can be modified!
-	var teammembers = await utilities.find('users', { 'name': {$in: scoutingAssignedArray }}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
+	var teammembers = await utilities.find('users', { 'name': {$in: scoutingAssignedArray }, 'org_key': org_key}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
 	var teammembersLen = teammembers.length;
 
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
