@@ -4,6 +4,11 @@
 		match [db Object] TBA data for a completed match.
 		includeHr [boolean] Whether to include an hr at the bottom.
 mixin completedMatch(match, includeHr=false)
+	- let timeString = '', shortTimeString = '';
+	if match.actual_time
+		- let time = zoneTime(match.actual_time * 1000);
+		- timeString = time.toFormat('ccc t');
+		- shortTimeString = time.toFormat('t');
 	div(class="w3-row")
 		- outcome = "Tie";
 		- if (match.winning_alliance == 'red') 
@@ -16,8 +21,8 @@ mixin completedMatch(match, includeHr=false)
 				div(class="")
 					- var matchPrefix = "";
 					- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-					span #{matchPrefix.toUpperCase()} Match #{match.match_number}: 
-					span #{outcome}
+					span(class="w3-left") #{matchPrefix.toUpperCase()} Match #{match.match_number}: #{outcome}
+					span(class="w3-right theme-text-secondary")= shortTimeString
 			div(class="w3-col s6")
 				a(href=`/reports/matchdata?key=${match.key}`)
 					div(class="w3-padding w3-small w3-border-right w3-border-top w3-border-gray theme-hover-white rounded-bl")
@@ -32,7 +37,8 @@ mixin completedMatch(match, includeHr=false)
 			div(class="w3-col rounded theme-dim w3-border")
 				- var matchPrefix = "";
 				- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-				div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
+				div(class="w3-padding w3-rest") #{matchPrefix.toUpperCase()} Match #{match.match_number}: 
+					span.theme-text-secondary #{timeString}
 				div(class="w3-padding") #{outcome}
 				div(class="w3-col m6")
 					a(href=`/reports/matchdata?key=${match.key}`)
