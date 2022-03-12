@@ -180,7 +180,7 @@ router.post('/deletescoutingpair', wrap(async (req, res) => {
 router.post('/generateteamallocations', wrap(async (req, res) => {
 	
 	var thisFuncName = 'scoutingpairs.generateteamallocations[post]: ';
-
+	var org_key = req.user.org_key;
 	var passCheckSuccess;
 		
 	if( !req.body.password || req.body.password == ''){
@@ -447,7 +447,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 router.post('/clearmatchallocations', wrap(async (req, res) => {
 	
 	const org_key = req.user.org_key;
-	
+
 	var thisFuncName = 'scoutingpairs.clearmatchallocations[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 
