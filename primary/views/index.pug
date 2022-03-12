@@ -9,6 +9,7 @@ block content
 		.gear-btn{margin: 0;}
 		.theme-link .sprite{position: relative; top: 1px;} /* Sprites on the links are just ever so slightly too high */
 		.w3-radio{top: -3px;}
+		.theme-link{white-space: normal;}
 	//- If there's no selected-button cookie, default to selected button
 	- if (!['viewData', 'loginScout', 'learnMore'].includes(selectedButton)) selectedButton = 'viewData';
 	//- Inline style tags for showing and hiding elements based on the selectedButton cookie
@@ -61,20 +62,20 @@ block content
 					li.w3-margin <b>Advanced</b> reports and metrics
 					li.w3-margin Event management tools such as auditing match assignments, swapping scouters in and out, and managing a list of members
 					li.w3-margin And of course, it's <b>completely free!</b>
-				div.w3-center.w3-padding-small
+				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki" target="_blank")
 						span(class="sprite sp-22 sp-black sp-github sp-inline")
 						span See our code &amp; documentation on GitHub
-				div.w3-center.w3-padding-small 
+				div.w3-center.w3-margin-top 
 					a(class="theme-link w3-btn gear-btn" href="https://discord.gg/kw4NaYgxuV" target="_blank")
 						span(class="sprite sp-22 sp-black sp-discord sp-inline")
 						span Join our Discord
-				div.w3-center.w3-padding-small
+				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://forms.gle/vRqkS5w4HpKNdLYp9" target="_blank")
 						span(class="sprite sp-22 sp-black sp-org sp-inline")
 						span Apply to be an Early-Access partner
 				br 
-				div.w3-center.w3-padding-small
+				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://www.firstinspires.org/robotics/frc" target="_blank")
 						span(class="sprite sp-22 sp-black sp-first sp-inline")
 						span More on <i>FIRST</i> and FRC
