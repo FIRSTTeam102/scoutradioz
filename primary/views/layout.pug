@@ -7,7 +7,7 @@
 			alert		[String] (Optional) When page loads, create JS alert with message.
 	//
 - function resolveToValue(prop, params) { if (typeof prop == 'function') return property(params); return prop; } // For nav, but may be useful in other places
-- function resolveLabelTemplate(str, teamKey) { if (!str) return; if (teamKey) str = str.replace(/\{\{team_number\}\}/g, teamKey.substring(3)); return str; } // for scouting, currently only supports {{team_number}}
+- function resolveLabelTemplate(str, teamKey) { if (!str) return ''; if (teamKey) str = str.replace(/\{\{team_number\}\}/g, teamKey.substring(3)); return str; } // for scouting, currently only supports {{team_number}}
 - function displayReportMetric(num, displayType) { 
 -	if (isNaN(num) || num == null) return num; /*Can't work on undefined, NaN, or null*/
 -	if (Number.isInteger(num)) return num; else return num.toFixed(2); } /*TODO: Incorporate display_as into here, e.g. percentage & time (may require modifying aggregate queries) */
