@@ -11,6 +11,7 @@
 - function displayReportMetric(num, displayType) { 
 -	if (isNaN(num) || num == null) return num; /*Can't work on undefined, NaN, or null*/
 -	if (Number.isInteger(num)) return num; else return num.toFixed(2); } /*TODO: Incorporate display_as into here, e.g. percentage & time (may require modifying aggregate queries) */
+include mixins/noDataFound
 doctype html
 html
 	head
