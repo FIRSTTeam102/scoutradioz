@@ -12,6 +12,7 @@ globals:
   NotificationCard: writable
   Confirm: writable
   PasswordPrompt: writable
+  FormSubmission: writable
   $: readonly
   window: writable
 parserOptions:

@@ -10,7 +10,8 @@
 - function resolveLabelTemplate(str, teamKey) { if (!str) return ''; if (teamKey) str = str.replace(/\{\{team_number\}\}/g, teamKey.substring(3)); return str; } // for scouting, currently only supports {{team_number}}
 - function displayReportMetric(num, displayType) { 
 -	if (isNaN(num) || num == null) return num; /*Can't work on undefined, NaN, or null*/
--	if (Number.isInteger(num)) return num; else return num.toFixed(2); } /*TODO: Incorporate display_as into here, e.g. percentage & time (may require modifying aggregate queries) */
+-	if (Number.isInteger(num)) return num; else return (num < 1) ? num.toFixed(2) : (num < 10) ? num.toFixed(1) : parseInt(num); } /*TODO: Incorporate display_as into here, e.g. percentage & time (may require modifying aggregate queries) */
+include mixins/noDataFound
 doctype html
 html
 	head
@@ -35,7 +36,7 @@ html
 		link(rel="stylesheet" href=`${fileRoot}/lib/w3.css`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mmenu.css`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mburger.css`)
-		link(rel="stylesheet" href=`${fileRoot}/css/main.css?v=3`)
+		link(rel="stylesheet" href=`${fileRoot}/css/main.css?v=3.1`)
 		link(rel="stylesheet" href=`${fileRoot}/css/theme-2022.css`)
 		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=7`)
 		style.
@@ -49,7 +50,7 @@ html
 		script(src=`${fileRoot}/lib/jscookie-2.2.1.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
-		script(src=`${fileRoot}/js/scoutradioz.js?v=7`)
+		script(src=`${fileRoot}/js/scoutradioz.js?v=8`)
 		script(src=`${fileRoot}/js/FormSubmission.js`)
 		script(src=`${fileRoot}/js/NotificationCard.js?v=4`)
 		script(src=`${fileRoot}/js/NavMenu.js?v=2`)

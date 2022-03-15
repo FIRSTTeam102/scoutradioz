@@ -94,9 +94,11 @@ router.get('/teamintel', wrap(async (req, res) => {
 	var eventKey = req.event.key;
 	var eventYear = req.event.year;
 	var orgKey = req.user.org_key;
+	
 	logger.debug('event_year=' + eventYear);
 	
 	var teamKey = req.query.team_key;
+	var expandSection = req.query.expand; // 2022-03-12 JL: adding a way to auto expand a section
 	if (!teamKey) throw Error('Please specify a team_key.');
 	
 	logger.debug('teamKey=' + teamKey);
@@ -267,7 +269,8 @@ router.get('/teamintel', wrap(async (req, res) => {
 		matches: matches,
 		matchDataHelper: matchDataHelper,
 		images: images,
-		rankingPoints: rankingPoints
+		rankingPoints: rankingPoints,
+		expandSection: expandSection
 	});
 }));
 
@@ -1093,6 +1096,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	var aggArray = [];
 	if (aggR)
 		aggArray = aggR;
+	console.log(aggQuery);
 		
 	//logger.debug('rankMap=' + rankMap);
 	

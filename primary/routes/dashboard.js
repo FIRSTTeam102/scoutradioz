@@ -406,7 +406,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		//var rankings = await utilities.find("currentrankings", {}, {});
 		var rankings = await utilities.find('rankings', {'event_key': event_key}, {});
 		if(!rankings[0])
-			throw 'Couldn\'t find rankings in allianceselection';
+			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
 		
 		var alliances = [];
 		for(let i = 0; i < 8; i++){
@@ -447,9 +447,12 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			thisLayout.key = thisLayout.id;
 			scoreLayout[scoreIdx] = thisLayout;
 			//if it is a valid data type, add this layout's ID to groupClause
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-			if (matchDataHelper.isQuantifiableType(thisLayout.type))
-				groupClause[thisLayout.id] = {$avg: '$data.' + thisLayout.id};
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+				// 2022-03-13 JL: Unlike on other pages like allteammetrics, the main focus of these data are the averages (instead of being switchable). 
+				//	Therefore, keeping the avg as .id and adding MAX as an "option" (to be displayed small on the table)
+				groupClause[thisLayout.id] = 		 {$avg: '$data.' + thisLayout.id}; 
+				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			}
 		}
 		//add $group > groupClause (Layout w/ data)
 		aggQuery.push({ $group: groupClause });
@@ -486,8 +489,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				let thisLayout = scoreLayout[scoreIdx];
 				//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-					var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
-					thisAgg[thisLayout.id] = roundedVal;
+					let roundedAvg = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
+					thisAgg[thisLayout.id] = roundedAvg;
 				}
 			}
 			if(!rankMap[thisAgg._id] || !rankMap[thisAgg._id].value){
@@ -679,25 +682,10 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.trace('DEBUG getting nicknames next?');
 
 	// read in team list for data
-	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	//var teamArray = await utilities.find("currentteams", {},{ sort: {team_number: 1} });
-	var thisEvent = await utilities.findOne('events', 
-		{'key': eventKey}, {},
-		{allowCache: true}
-	);
-	if (!thisEvent) throw 'Could not find event in db';
+	var teamArray = req.teams; // 2022-03-13 JL: Removed copied code for identifying the current event & teams
 	
-	var teamArray;
-	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
-		logger.debug('thisEvent.team_keys=' + JSON.stringify(thisEvent.team_keys));
-		teamArray = await utilities.find('teams', 
-			{'key': {$in: thisEvent.team_keys}}, 
-			{sort: {team_number: 1}},
-			{allowCache: true}
-		);
-	}
-	if (!teamArray) throw Error('Could not find list of teams at this event');
-		
+	if (!teamArray) throw new e.InternalServerError('Could not find list of teams at this event. Please ask your organization manager to update the list of current teams.');
+	
 	// Build map of team_key -> team data
 	var teamKeyMap = {};
 	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++) {

@@ -41,7 +41,7 @@ block content
 		br 
 		//-Pit scouting section
 		div(class="w3-padding-small")
-			button#PitScoutingButton(onClick="toggle('PitScoutingSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
+			button#PitScoutingButton(onClick="toggle('PitScoutingSection', this)" for="PitScoutingSection" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 				span(class="w3-left") &#9660;&nbsp;
 				span Show 
 				span Pit Scouting
@@ -90,7 +90,7 @@ block content
 					h6 No pit scouting data yet - check back later
 		//-Statistics section
 		div(class="w3-padding-small")
-			button#StatisticsButton(onClick="toggle('StatisticsSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
+			button#StatisticsButton(onClick="toggle('StatisticsSection', this)" for="StatisticsSection" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 				span(class="w3-left") &#9660;&nbsp;
 				span Show 
 				span Statistics
@@ -138,7 +138,7 @@ block content
 								td(style="padding:0;")
 		//-Previous matches section
 		div(class="w3-padding-small")
-			button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
+			button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" for="PreviousMatchesSection" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
 				span(class="w3-left") &#9660;&nbsp;
 				span Show 
 				span Previous Matches
@@ -168,7 +168,7 @@ block content
 					h6 <i>Click team number for match scouting details</i>
 					h6 <i>Click match button for overall alliance performances</i>
 					h6(class="theme-text")
-						a(class="gear-btn theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key) Match Scouting data for all Team #{team.key.substring(3)} matches
+						a(class="theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key) Match Scouting data for all Team #{team.key.substring(3)} matches
 					hr 
 					
 					each match in matches
@@ -200,3 +200,6 @@ block content
 			caret.innerText = (caret.innerText[0] == "▼") ? "▲\xa0" : "▼\xa0";
 			
 		}
+	if expandSection
+		script.
+			toggle("#{expandSection}", $("[for=#{expandSection}]")[0]);

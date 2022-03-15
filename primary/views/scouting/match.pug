@@ -8,7 +8,61 @@
 	//
 extends ../layout
 block content
-	script(src=`${fileRoot}/js/script-matchscouting.js?v=2`)
+	label(class="switch theme-inline-padding")
+		input(type="checkbox" id="toggleSticky")
+		span(class="toggle" id="toggleStickyToggle")
+	label(class="w3-show-inline-block theme-inline-padding" for="toggleSticky")
+		span Enable dynamic scrolling
+	script.
+		// Check if the sticky bar is enabled/disabled before the page renders
+		window.stickyBarEnabled = true;
+		if (localStorage.getItem('disableStickyBar') == '1') {
+			window.stickyBarEnabled = false;
+		}
+		$('#toggleSticky').prop('checked', window.stickyBarEnabled);
+	style.
+		.sticky-bar {
+			position: fixed;
+			bottom: 0px;
+			left: 0px;
+			right: 0px;
+			width: 100%;
+			font-size: 2em;
+		}
+		.sticky-bar-left {
+			position: relative;
+			float: left;
+			left: 0px;
+			bottom: 0px;
+			padding: 8px 16px;
+			z-index: 10;
+		}
+		.sticky-bar-right {
+			position: relative;
+			float: right;
+			right: 0px;
+			bottom: 0px;
+			padding: 8px 16px;
+			z-index: 10;
+		}
+		.sticky-bar-title {
+			position: absolute;
+			left: 0;
+			right: 0;
+			padding: 8px 0px;
+			z-index: 1;
+		}
+		.disabled-form{
+			opacity: 0.7;
+			filter: blur(2px);
+		}
+		/*
+		If we want it to be prettier, we can add this; but it might lead to worse performance on low end phones
+		#matchform > *{
+			transition: filter 0.2s, opacity 0.2s;
+		}
+		*/
+	script(src=`${fileRoot}/js/script-matchscouting.js?v=3`)
 	- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');
 	- var btnColor = alliance ? ((alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
 	p
@@ -20,34 +74,35 @@ block content
 		div(class=`${btnColor} w3-btn`)
 			span= titlePortion
 	p
-	form#matchform(name="matchform")
+	form#matchform(name="matchform" class="w3-centered")
 		input#match_team_key(type="hidden", name="match_team_key", value=`${key}`)
-		div(style="text-align:center")
-			each element in layout
-				- let answer = "";
-				- if (answers) answer = answers[element.id];
-				- element.label = resolveLabelTemplate(element.label, teamKey);
-				
-				case element.type
-					when "checkbox"
-						include templates/formCheckbox
-					when "counter"
-						include templates/formCounter
-					when "badcounter"
-						include templates/formBadCounter
-					when "slider"
-					when "timeslider"
-						include templates/formSlider
-					when "multiselect"
-						include templates/formMultiselect
-					when "textblock"
-						include templates/formTextBlock
-					when "h2"
-						include templates/formHeader
-					when "h3"
-						include templates/formSubHeader
-					when "spacer"
-						include templates/formSpacer
+		- var headerList = []; // for sticky bar
+		each element in layout
+			- let answer = "";
+			- if (answers) answer = answers[element.id];
+			- element.label = resolveLabelTemplate(element.label, teamKey);
+			
+			case element.type
+				when "checkbox"
+					include templates/formCheckbox
+				when "counter"
+					include templates/formCounter
+				when "badcounter"
+					include templates/formBadCounter
+				when "slider"
+				when "timeslider"
+					include templates/formSlider
+				when "multiselect"
+					include templates/formMultiselect
+				when "textblock"
+					include templates/formTextBlock
+				when "h2"
+					include templates/formHeader
+					- headerList.push(element.id);
+				when "h3"
+					include templates/formSubHeader
+				when "spacer"
+					include templates/formSpacer
 	br 
 	center
 		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit") Submit
@@ -57,3 +112,11 @@ block content
 			when "checkbox"
 				include templates/scriptCheckbox
 	include templates/scriptSliders
+	div.sticky-bar.header.w3-card(id="stickyBar")
+		div(id="stickyBarLeft" class="sticky-bar-left no-select") &#9664;
+		div(class="sticky-bar-title") 
+			span(id="stickyBarTitle") 
+		div(id="stickyBarRight" class="sticky-bar-right no-select") &#9654;
+	script.
+		window.headerList = JSON.parse('!{JSON.stringify(headerList)}');
+		if (!window.stickyBarEnabled) $('.sticky-bar.header').hide();

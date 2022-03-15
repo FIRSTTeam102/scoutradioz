@@ -55,7 +55,7 @@
 .theme-text{color:var(--text-primary)!important;}
 .theme-text-secondary{color:var(--text-secondary)!important;}
 .theme-text-dark{color:#1E1E23!important;}
-.theme-text-gray,.theme-text-grey{color:#222!important;}
+.theme-text-gray,.theme-text-grey{color:#2e2e2e!important;}
 .theme-text-white{color:#eee!important;}
 .theme-text-black{color:#111!important;}
 
@@ -78,6 +78,9 @@
 .footer{background-color: var(--footer);}
 
 .animate{transition: var(--animate); -webkit-transition: var(--animate);}
+
+.unimportant{opacity: 70%;}
+.very-unimportant{opacity: 30%;}
 
 /* For sprites */
 .sprite.sp-4{--size:4px;}
@@ -174,9 +177,9 @@
 .team-image-md{max-height: 225px; margin: 4px;}
 .team-image-lg{max-height: 350px; margin: 8px;}
 
-p.i{font-style: italic;}
-p.b{font-weight: bold;}
-p.u{text-decoration: underline;}
+.i{font-style: italic;}
+.b{font-weight: bold;}
+.u{text-decoration: underline;}
 p.indented{
 	text-indent: 20px;
 }

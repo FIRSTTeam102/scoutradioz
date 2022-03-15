@@ -43,8 +43,8 @@ if (aggdata)
 			for item in layout
 				-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
 				if (matchDataHelper.isQuantifiableType(item.type))
-					th(class="w3-small" style="font-weight: 100") 
-						span(class="w3-left" style="margin-top: 3px;") Max 
+					th(style="font-weight: 100") 
+						span(class="w3-left w3-tiny" style="margin-top: 5px;") Max 
 						span(class="w3-right w3-medium") Avg
 		for row in aggdata
 			tr(id=`row_${row._id}` style="background-color: #b0b0c057")
@@ -66,7 +66,7 @@ if (aggdata)
 						if (aggRangeMap[item.key])
 							td(class=`${valStyle}` style=`background-color: rgb(${getValR(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValG(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValB(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])})`)
 								//-span(class="w3-left") MAX DATA HERE
-								span(class="w3-left w3-small" style="margin-top:2px;") 1
+								span(class="w3-left w3-tiny unimportant" style="margin-top:3px;")= displayReportMetric(row[item.key + 'MAX'])
 								span(class="w3-right")= row[item.key]
 						else
 							td(class=`${valStyle}`)= row[item.key]

@@ -6,7 +6,9 @@
 	//
 extends ../layout
 block content
-	if matches.length > 0
+	if matches.length === 0
+		+noDataFound("There are no match scouting assignments in the system now", "Please check back later")
+	else
 		h3(class="theme-text w3-margin-bottom") Match Scouting
 		div(class="w3-col w3-container")
 			div(class="w3-col m6 l4 w3-padding strong")

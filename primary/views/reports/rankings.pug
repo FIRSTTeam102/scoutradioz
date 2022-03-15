@@ -14,9 +14,11 @@ block content
 			padding: 8px 16px;
 			margin-left: -80px;
 		}
-	if (rankings)
+	if (rankings.length === 0)
+		+noDataFound("There are no rankings in the system yet", "Please check back later")
+	else
 		h2(class="theme-text") Current event rankings
-		h6 <i>Click on a team to see intel on that team</i>
+		h6.i Click on a team to see intel on that team
 		div(class="w3-auto")
 			table(class="w3-table")
 				tr
@@ -39,6 +41,3 @@ block content
 						td(class="theme-text-secondary w3-center")= team.dq
 						td(class="theme-text-secondary w3-center")= team.matches_played
 						td(class="theme-text-secondary w3-center")= team.extra_stats[0]
-	else
-		h2(class="theme-text") <i>There are no rankings in the system yet</i>
-		h6 Please check back later

@@ -42,6 +42,7 @@ $(() => {
 						for (let cb of resizeCallbacks) {
 							cb();
 						}
+						ticking = false;
 					});
 				}, 50);
 			}
@@ -103,6 +104,12 @@ $(() => {
 		$(debugLogger).append(newTextElem);
 	};
 })();
+
+function scrollToId(id) {
+	var elem = document.getElementById(id);
+	if (elem) elem.scrollIntoView({behavior: 'smooth'});
+	else console.error(`Element with id ${id} not found.`);
+}
 
 class Confirm {
 	constructor(text, yesText, noText) {
