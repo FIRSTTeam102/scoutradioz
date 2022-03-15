@@ -417,11 +417,11 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 				var roundedVarVal = (Math.round(thisAgg[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
 				var roundedMaxVal = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
 
-				if (roundedMinVal < MINmin) MINmin = roundedMinVal; if (roundedMinVal > MINmax) MINmax = roundedMinVal; 
-				if (roundedAvgVal < AVGmin) AVGmin = roundedAvgVal; if (roundedAvgVal > AVGmax) AVGmax = roundedAvgVal; 
-				if (roundedVarVal < VARmin) VARmin = roundedVarVal; if (roundedVarVal > VARmax) VARmax = roundedVarVal; 
-				if (roundedMaxVal < MAXmin) MAXmin = roundedMaxVal; if (roundedMaxVal > MAXmax) MAXmax = roundedMaxVal; 
-			}
+				if (parseFloat(roundedMinVal) < MINmin) MINmin = parseFloat(roundedMinVal); if (parseFloat(roundedMinVal) > MINmax) MINmax = parseFloat(roundedMinVal);
+                if (parseFloat(roundedAvgVal) < AVGmin) AVGmin = parseFloat(roundedAvgVal); if (parseFloat(roundedAvgVal) > AVGmax) AVGmax = parseFloat(roundedAvgVal);
+                if (parseFloat(roundedVarVal) < VARmin) VARmin = parseFloat(roundedVarVal); if (parseFloat(roundedVarVal) > VARmax) VARmax = parseFloat(roundedVarVal);
+				if (parseFloat(roundedMaxVal) < MAXmin) MAXmin = parseFloat(roundedMaxVal); if (parseFloat(roundedMaxVal) > MAXmax) MAXmax = parseFloat(roundedMaxVal);
+ 			}
 
 			thisMinMax['key'] = thisLayout.key;
 			thisMinMax['MINmin'] = MINmin; thisMinMax['MINmax'] = MINmax;
