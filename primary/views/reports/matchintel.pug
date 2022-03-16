@@ -11,13 +11,13 @@ block content
 			h2 Match #{match.match_number} - Winner: #{match.winning_alliance}
 			- var thisObj = {};
 
-			h4 Blue team: #{match.alliances.blue.score} points
-			- var blueTeams = match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3);
-			h4 <i>#{blueTeams}</i>
-			p
 			h4 Red team: #{match.alliances.red.score} points
 			- var redTeams = match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3);
-			h4 <i>#{redTeams}</i>
+			h4.i= redTeams
+			p
+			h4 Blue team: #{match.alliances.blue.score} points
+			- var blueTeams = match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3);
+			h4.i blueTeams
 			if (match.videos)
 				if (match.videos[0])
 					if (match.videos[0].type == "youtube")
@@ -28,8 +28,8 @@ block content
 			table(class="w3-table w3-auto" style="width: 80%")
 				tr
 					th(style="width: 33%") Attribute
-					th(style="width: 33%") Blue
 					th(style="width: 33%") Red
+					th(style="width: 33%") Blue
 				- blueObj = match.score_breakdown.blue;
 				- redObj = match.score_breakdown.red;
 				- for (var property in blueObj)
@@ -37,12 +37,12 @@ block content
 						tr
 							- var text = property; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
 							td(class="w3-small") #{result2}:
-							- var blueProp = blueObj[property].toString().match(/[A-Z][a-z]+/g);
-							- if (blueProp) var blueFinal = blueProp.join(" "); else var blueFinal = blueObj[property];
-							td <b>#{blueFinal}</b>
 							- var redProp = redObj[property].toString().match(/[A-Z][a-z]+/g);
 							- if (redProp) var redFinal = redProp.join(" "); else var redFinal = redObj[property];
-							td <b>#{redFinal}</b>
+							td.b= redFinal
+							- var blueProp = blueObj[property].toString().match(/[A-Z][a-z]+/g);
+							- if (blueProp) var blueFinal = blueProp.join(" "); else var blueFinal = blueObj[property];
+							td.b= blueFinal
 	else 
 		h4
 			i No data available for this match yet. Please check back later.

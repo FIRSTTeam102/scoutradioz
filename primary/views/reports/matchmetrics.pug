@@ -22,19 +22,19 @@ block content
 		- var allTeamKeys = match.alliances.red.team_keys[0]+','+match.alliances.red.team_keys[1]+','+match.alliances.red.team_keys[2]+',0,'+match.alliances.blue.team_keys[0]+','+match.alliances.blue.team_keys[1]+','+match.alliances.blue.team_keys[2]
 		a(class="gear-btn theme-link w3-btn" href=`/reports/alliancestats?teams=${allTeamKeys}`) Stats for BOTH alliances
 		div(class="w3-section")
-			div(class="alliance-red alliance-hover-red w3-btn" style="min-width: 200px;")
-				a(href=`/reports/alliancestats?teams=${redTeamKeys}`) Stats for Red: #{redTeams}
+			a(class="alliance-red alliance-hover-red w3-btn" style="min-width: 200px;" href=`/reports/alliancestats?teams=${redTeamKeys}`)
+				span Stats for Red: #{redTeams}
 		div(class="w3-section")
-			div(class="alliance-blue alliance-hover-blue w3-btn" style="min-width: 200px;")
-				a(href=`/reports/alliancestats?teams=${blueTeamKeys}`) Stats for Blue: #{blueTeams}
+			a(class="alliance-blue alliance-hover-blue w3-btn" style="min-width: 200px;" href=`/reports/alliancestats?teams=${blueTeamKeys}`)
+				span Stats for Blue: #{blueTeams}
 		h6 <i>Click on a metric to compare event teams</i>
 		
 		if (aggdata)
 			table(class="w3-table w3-mobile" style="width: 75%")
 				tr
 					th(class="w3-right-align" style="width: 33%") Metric
-					th(class="w3-right-align gear-text-blue") Blue<br/>Avg&nbsp;
 					th(class="w3-right-align gear-text-red") Red<br/>Avg
+					th(class="w3-right-align gear-text-blue") Blue<br/>Avg
 				each agg in aggdata
 					tr
 						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
@@ -45,10 +45,10 @@ block content
 						- var redCol = 'w3-right-align w3-text-white'
 						- if (agg.red == 0) redCol = 'w3-right-align w3-text-gray'
 						if (aggRangeMap[agg.key])
-							td(class=`${blueCol}` style=`background-color: rgb(${getValR(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.blue)},${getValG(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.blue)},${getValB(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.blue)})`)= agg.blue
 							td(class=`${redCol}` style=`background-color: rgb(${getValR(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.red)},${getValG(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.red)},${getValB(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.red)})`)= agg.red
+							td(class=`${blueCol}` style=`background-color: rgb(${getValR(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.blue)},${getValG(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.blue)},${getValB(aggRangeMap[agg.key].AVGmin, aggRangeMap[agg.key].AVGmax, agg.blue)})`)= agg.blue
 						else
-							td(class=`${blueCol}`)= agg.blue
 							td(class=`${redCol}`)= agg.red
+							td(class=`${blueCol}`)= agg.blue
 			a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') <b>Overall ranked event data</b>
 
