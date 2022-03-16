@@ -27,10 +27,11 @@ router.get('/driveteam', wrap(async (req, res) => {
 	var noMatchesFoundForTeam = false; // 2022-03-02 JL: To let view know if matches were not found for the team
 	
 	//set teamKey to query or org default
-	if (req.query.team_key) {
+	// 2022-03-16 JL: Adding an "all" button
+	if (req.query.team_key && !req.query.all) {
 		teamKey = req.query.team_key;
 	}
-	else if (req.user.org.team_key) {
+	else if (req.user.org.team_key && !req.query.all) {
 		teamKey = req.user.org.team_key;
 	}
 	else {

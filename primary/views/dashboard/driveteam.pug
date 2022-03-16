@@ -29,20 +29,26 @@ block content
 				br 
 		//- Dashboard for other teams
 		div(class="w3-section")
-			-// 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
-			-// form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
+			//- 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
+			//- form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
 			form(name="driveDashboardTeam" method="get" action="/dashboard/driveteam")
+				label(class="w3-label") View dashboard for...
 				select(class="theme-input" style="min-width: 100;" name="team_key")
+					noscript
+						if selectedTeam == 'all'
+							option(selected value='all') [Choose a team]
+						//- else
+							option(value='all') All teams
 					each team in teams 
 						if team.key == selectedTeam
 							option(selected value=team.key)=team.team_number
 						else 
 							option(value=team.key)=team.team_number
-					if selectedTeam == 'all'
-						option(selected value='all') All
-					else
-						option(value='all') All
-				button(class="w3-btn theme-submit w3-margin-left" type="submit") View dashboard for selected team
+				noscript
+					//- JL: I made the multiselect auto-submit on change, but to make it still work in browsers with JS disabled, this submit button will act in its place.
+					button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true") Selected team
+				label(class="w3-label w3-margin-left") or...
+				button(class="w3-btn theme-submit" type="submit" name="all" value="true") All teams
 		br
 		if selectedTeam == 'all'
 			h4 Next Match:
@@ -261,3 +267,8 @@ block content
 					}
 					blueRadar.update();
 				}
+				
+				//- Multiselect for selecting team_key - Auto submit when it changes
+				$('select[name=team_key]').on('change', () => {
+					$('form[name=driveDashboardTeam]').submit();
+				});
