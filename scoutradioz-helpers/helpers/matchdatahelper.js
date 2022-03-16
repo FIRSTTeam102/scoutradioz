@@ -412,16 +412,22 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 			// cycle through all the per-team aggregated data
 			for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
 				var thisAgg = aggArray[aggIdx];
-				var roundedMinVal = (Math.round(thisAgg[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
-				var roundedAvgVal = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-				var roundedVarVal = (Math.round(thisAgg[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-				var roundedMaxVal = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+				var roundedMinVal = parseFloat(thisAgg[thisLayout.id + 'MIN']);
+				var roundedAvgVal = parseFloat(thisAgg[thisLayout.id + 'AVG']);
+				var roundedVarVal = parseFloat(thisAgg[thisLayout.id + 'VAR']);
+				var roundedMaxVal = parseFloat(thisAgg[thisLayout.id + 'MAX']);
 
-				if (parseFloat(roundedMinVal) < MINmin) MINmin = parseFloat(roundedMinVal); if (parseFloat(roundedMinVal) > MINmax) MINmax = parseFloat(roundedMinVal);
-                if (parseFloat(roundedAvgVal) < AVGmin) AVGmin = parseFloat(roundedAvgVal); if (parseFloat(roundedAvgVal) > AVGmax) AVGmax = parseFloat(roundedAvgVal);
-                if (parseFloat(roundedVarVal) < VARmin) VARmin = parseFloat(roundedVarVal); if (parseFloat(roundedVarVal) > VARmax) VARmax = parseFloat(roundedVarVal);
-				if (parseFloat(roundedMaxVal) < MAXmin) MAXmin = parseFloat(roundedMaxVal); if (parseFloat(roundedMaxVal) > MAXmax) MAXmax = parseFloat(roundedMaxVal);
- 			}
+				if (roundedMinVal < MINmin) MINmin = roundedMinVal; if (roundedMinVal > MINmax) MINmax = roundedMinVal;
+				if (roundedAvgVal < AVGmin) AVGmin = roundedAvgVal; if (roundedAvgVal > AVGmax) AVGmax = roundedAvgVal;
+				if (roundedVarVal < VARmin) VARmin = roundedVarVal; if (roundedVarVal > VARmax) VARmax = roundedVarVal;
+				if (roundedMaxVal < MAXmin) MAXmin = roundedMaxVal; if (roundedMaxVal > MAXmax) MAXmax = roundedMaxVal;
+			}
+			
+			// 2022-03-15 JL: While parsing the metrics into 1-decimal floats is completely unnecessary as they're just used for comparison, it looks nicer when checking things in the database.
+			MINmin = parseFloat(MINmin.toFixed(1)); MINmax = parseFloat(MINmax.toFixed(1));
+			AVGmin = parseFloat(AVGmin.toFixed(1)); AVGmax = parseFloat(AVGmax.toFixed(1));
+			VARmin = parseFloat(VARmin.toFixed(1)); VARmax = parseFloat(VARmax.toFixed(1));
+			MAXmin = parseFloat(MAXmin.toFixed(1)); MAXmax = parseFloat(MAXmax.toFixed(1));
 
 			thisMinMax['key'] = thisLayout.key;
 			thisMinMax['MINmin'] = MINmin; thisMinMax['MINmax'] = MINmax;
@@ -738,13 +744,17 @@ class AllianceStatsData {
 	 * @param {array} currentAggRanges currentAggRanges
 	 * @param {array} avgdata avgTable
 	 * @param {array} maxdata maxTable
+	 * @param {array} avgNorms
+	 * @param {array} maxNorms
 	 */
-	constructor(teams, teamList, currentAggRanges, avgdata, maxdata) {
+	constructor(teams, teamList, currentAggRanges, avgdata, maxdata, avgNorms, maxNorms) {
 		this.teams = teams;
 		this.teamList = teamList;
 		this.currentAggRanges = currentAggRanges;
-		this.avgdata = avgdata;
-		this.maxdata = maxdata;
+		this.avgTable = avgdata;
+		this.maxTable = maxdata;
+		this.avgNorms = avgNorms;
+		this.maxNorms = maxNorms;
 	}
 }
 
