@@ -38,7 +38,11 @@ block content
 								//- Assigned scorer
 								div(class="w3-col s3 w3-right-align w3-padding-16")
 									div(style="height: 10px;")
-										span= assignment.assigned_scorer
+										//- Serve bold when it's the logged in user
+										if user && user.name === assignment.assigned_scorer 
+											span.b= assignment.assigned_scorer
+										else
+											span= assignment.assigned_scorer
 								//- Link to team
 								div(class="w3-col s4 w3-padding")
 									//-here is if the match has been completed

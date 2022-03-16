@@ -16,12 +16,12 @@ block content
 				th Photo
 			each team, i in teamAssignments
 				if( user.name == team.primary )
-					- color = "gear-text-orange";
+					- style = "strong";
 				else
-					- color = "theme-text";
-				tr(class=`w3-margin ${color}`)
+					- style = "";
+				tr(class=`w3-margin ${style}`)
 					td(class="theme-spacer")
-						h4(class=`${color}`) #{team.primary}
+						h4(class=`${style}`) #{team.primary}
 					td(class="theme-spacer")
 						if team.data
 							a(href=`/scouting/pit?team_key=${team.team_key}`) 
@@ -32,16 +32,13 @@ block content
 								div(class="gear-btn theme-link w3-btn w3-section")
 									span= team.team_key.substring(3)
 					td(class='w3-left-align theme-spacer')
-						h4(class=`${color}`) #{team.nickname}
+						h4(class=`${style}`) #{team.nickname}
 					if images
 						td(class="theme-spacer")
 							//- console.log(images[i])
 							- if (images[i] && images[i].main)
 								a(href=images[i].main.lg target="_blank")
 									img(src=images[i].main.sm alt="" style="max-height:80px; max-width: 50px;")
-					//- if (pics)
-						td(class="theme-spacer")
-							img(src=`${fileRoot}/uploads/responsive/${user.org_key}/${event_year}_${team.team_key}_sm.jpg` alt="" class="w3-image" style="max-height:80px;max-width:50px;")
 		h6
 			a(class="gear-btn theme-link w3-btn" href=`/dashboard/pits?loadPhotos=1`) Refresh with team photos
 
