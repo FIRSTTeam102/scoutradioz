@@ -2,8 +2,6 @@ body {
 	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-.strong{font-weight: bold}
-
 .canvas{
 	z-index: -1;
 	position: fixed;

@@ -451,7 +451,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				// 2022-03-13 JL: Unlike on other pages like allteammetrics, the main focus of these data are the averages (instead of being switchable). 
 				//	Therefore, keeping the avg as .id and adding MAX as an "option" (to be displayed small on the table)
-				groupClause[thisLayout.id] = 		 {$avg: '$data.' + thisLayout.id}; 
+				groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 			}
 		}
@@ -488,15 +488,12 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			var thisAgg = aggArray[aggIdx];
 			for (let scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
 				let thisLayout = scoreLayout[scoreIdx];
-				//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-					let roundedAvg = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
-					thisAgg[thisLayout.id] = roundedAvg;
+					var roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+					var roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+					thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
+					thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 				}
-			}
-			if(!rankMap[thisAgg._id] || !rankMap[thisAgg._id].value){
-				//return res.redirect("/?alert=Make sure that team rankings have been pulled from TheBlueAlliance");
-				logger.trace(`Gonna crash w/ id ${thisAgg._id}`);
 			}
 			if(rankMap[thisAgg._id]){
 				thisAgg['rank'] = rankMap[thisAgg._id].rank;

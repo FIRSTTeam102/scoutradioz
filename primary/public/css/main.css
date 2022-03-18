@@ -177,9 +177,11 @@
 .team-image-md{max-height: 225px; margin: 4px;}
 .team-image-lg{max-height: 350px; margin: 8px;}
 
-.i{font-style: italic;}
-.b{font-weight: bold;}
-.u{text-decoration: underline;}
+.i, .italic{font-style: italic;}
+.b, .strong{font-weight: bold;}
+.stronger{font-weight: 1000;}
+.u, .underline{text-decoration: underline;}
+.strike{text-decoration: line-through;}
 p.indented{
 	text-indent: 20px;
 }

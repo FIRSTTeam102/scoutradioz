@@ -279,14 +279,14 @@ function cloneState(){
 }
 
 function highlightRow(teamKey){
-	$(`#row_${teamKey}`).css({
+	$(`.row_${teamKey}`).css({
 		'background-color': ROW_HIGHLIGHT_COLOR,
 		'color': '#000000'
 	}).attr({
 		'selectable': 'false'
 	});
 
-	var children = $(`#row_${teamKey}`).children();
+	var children = $(`.row_${teamKey}`).children();
 
 	let targetR = 240, targetG = 240, targetB = 255;
 
@@ -314,12 +314,12 @@ function highlightRow(teamKey){
 }
 
 function unHighlightRow(teamKey){
-	$(`#row_${teamKey}`).attr({
+	$(`.row_${teamKey}`).attr({
 		'selectable' : 'true',
 		'style' : 'background-color:' + ROW_BASE_COLOR
 	});
 
-	var children = $(`#row_${teamKey}`).children();
+	var children = $(`.row_${teamKey}`).children();
 
 	let targetR = 240, targetG = 240, targetB = 255;
 
@@ -338,7 +338,7 @@ function unHighlightRow(teamKey){
 
 function grayOutRow(teamKey){
 	
-	const thisRow = $(`#row_${teamKey}`);
+	const thisRow = $(`.row_${teamKey}`);
 	
 	thisRow.css({
 		'background-color': 'rgba(67, 66, 66, 0.41)',
@@ -382,7 +382,7 @@ function lerp(a, b, t) {
 
 function unGrayOutRow(teamKey){
 	
-	const thisRow = $(`#row_${teamKey}`);
+	const thisRow = $(`.row_${teamKey}`);
 
 	thisRow.css({
 		'background-color': ROW_BASE_COLOR,
