@@ -105,7 +105,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					}
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = sum;
 					else derivedMetric = sum;
-					// console.log(`Sum: ${sum} -> ${thisOp.as || ''}`);
+					logger.trace(`Sum: ${sum} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// multiply operands: [a, b, c, ...]
@@ -118,7 +118,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					}
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = product;
 					else derivedMetric = product;
-					// console.log(`Multiply: ${product} -> ${thisOp.as || ''}`);
+					logger.trace(`Multiply: ${product} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// subtract operands: [minuend, subtrahend] (a - b -> [a, b])
@@ -137,7 +137,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = difference;
 					else derivedMetric = difference;
-					// console.log(`Subtract: ${difference} -> ${thisOp.as || ''}`);
+					logger.trace(`Subtract: ${difference} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// divide operands: [dividend, divisor] (a/b -> [a, b])
@@ -159,7 +159,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = quotient;
 					else derivedMetric = quotient;
-					// console.log(`Divide: ${quotient} -> ${thisOp.as || ''}`);
+					logger.trace(`Divide: ${quotient} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// multiselect quantifiers: {option1: value1, option2: value2, ...}; variables not supported
@@ -168,7 +168,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					let value = parseNumber(thisOp.quantifiers[key]);
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = value;
 					else derivedMetric = value;
-					// console.log(`Multiselect: key=${key} ${value} -> ${thisOp.as || ''}`);
+					logger.trace(`Multiselect: key=${key} ${value} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// condition operands: [boolean, valueIfTrue, valueIfFalse]
@@ -205,7 +205,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = value;
 					else derivedMetric = value;
-					// console.log(`Condition: ${condition}, true=${ifTrueKey} false=${ifFalseKey}, ${value} -> ${thisOp.as || ''}`);
+					logger.trace(`Condition: ${condition}, true=${ifTrueKey} false=${ifFalseKey}, ${value} -> ${thisOp.as || ''}`);
 					break;
 				}
 				// Comparison operations all act basically the same, except with a different operator, so we can share the same code
@@ -235,12 +235,12 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 					}
 					if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
 					else derivedMetric = result ? 1 : 0; // If it's an output, then return a 1 or 0 instead of true or false (even though we can do math on true & false)
-					// console.log(`${thisOp.operator}: a=${aKey}->${a}, b=${bKey}->${b}; ${result} -> ${thisOp.as || ''}`);
+					logger.trace(`${thisOp.operator}: a=${aKey}->${a}, b=${bKey}->${b}; ${result} -> ${thisOp.as || ''}`);
 					break;
 				}
 			}
 		}
-		// console.log(`Final metric: ${derivedMetric} - Label: ${thisItem.label} / ${thisItem.id}`);
+		logger.trace(`Final metric: ${derivedMetric} - Label: ${thisItem.label} / ${thisItem.id}`);
 		// Insert the newly derived metric into 
 		matchData[thisItem.id] = derivedMetric;
 	}
@@ -256,7 +256,7 @@ matchDataHelper.calculateDerivedMetrics = async function(org_key, event_year, ma
 		else if (item === 'false' || item === false) return 0;
 		else return parseFloat(item);
 	}
-	// console.log(`${dt - st}, ${performance.now() - dt}`);
+	// logger.trace(`${dt - st}, ${performance.now() - dt}`);
 	
 	return matchData;
 };
@@ -505,7 +505,7 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	var rankings = await utilities.find('rankings', 
 		{'event_key': event_key}, 
-		{sort:{rank: 1}}
+		// {sort:{rank: 1}}
 	);
 	if(rankings)
 		for(let i = 0; i < rankings.length; i++){
@@ -526,7 +526,7 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 		var query = {
 			$and: [
 				{ event_key: event_key },
-				{ 'alliances.blue.score': -1 },
+				{ 'alliances.red.score': -1 },
 				{
 					$or: [
 						{ 'alliances.blue.team_keys': teamKey },
@@ -594,7 +594,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 		}
 	}
 	aggQuery.push({ $group: groupClause });
-	logger.trace('aggQuery=' + JSON.stringify(aggQuery));
+	// logger.trace('aggQuery=' + JSON.stringify(aggQuery,0,2));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate('matchscouting', aggQuery);
@@ -640,18 +640,18 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 	var avgNorms = [];
 	for (let i in avgTable) {
 		if (avgTable[i]) {
-			var thisAvg = avgTable[i];
+			let thisAvg = avgTable[i];
 			////logger.trace("i=" + i + ",key=" + thisAvg.key);
-			var min = 9e9;
-			var max = -9e9;
-			var theseKeys = Object.keys(thisAvg);
+			let min = 0; // 2022-03-18 JL: Making the norm calculations keep 0 as 0 so spider charts are more easy to understand
+			let max = -9e9;
+			let theseKeys = Object.keys(thisAvg);
 			// Find the minimum & maximum from this range
 			for (let j in theseKeys) {
 				if (thisAvg.hasOwnProperty(theseKeys[j])) {
 					let thisVal = thisAvg[theseKeys[j]];
 					if (thisVal != thisAvg.key) {
 						let numVal = parseFloat(thisVal);
-						if (numVal < min) min = numVal;
+						// if (numVal < min) min = numVal;
 						if (numVal > max) max = numVal;
 					}
 				}
@@ -682,7 +682,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 		if (maxTable[i]) {
 			var thisMax = maxTable[i];
 			////logger.trace("i=" + i + ",key=" + thisMax.key);
-			let min = 9e9;
+			let min = 0; // 2022-03-18 JL: Making the norm calculations keep 0 as 0 so spider charts are more easy to understand
 			let max = -9e9;
 			let theseKeys = Object.keys(thisMax);
 			// Find the minimum & maximum from this range
@@ -691,7 +691,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 					let thisVal = thisMax[theseKeys[j]];
 					if (thisVal != thisMax.key) {
 						let numVal = parseFloat(thisVal);
-						if (numVal < min) min = numVal;
+						// if (numVal < min) min = numVal;
 						if (numVal > max) max = numVal;
 					}
 				}
