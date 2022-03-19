@@ -132,19 +132,21 @@ router.get('/driveteam', wrap(async (req, res) => {
 			sum: {red: [], blue: []},
 		},
 		options: {
-			scale: {
-				ticks: {
-					showLabelBackdrop: false,
-					suggestedMin: 0,
-					suggestedMax: 1,
-					display: false,
-				},
-				angleLines: {
-					display: true,
-					color: 'rgb(128, 128, 128)',
-				},
-				gridLines: {
-					color: 'rgb(64, 64, 64)',
+			scales: {
+				r: {	
+					ticks: {
+						showLabelBackdrop: false,
+						suggestedMin: 0,
+						suggestedMax: 1,
+						display: false,
+					},
+					angleLines: {
+						display: true,
+						color: 'rgb(128, 128, 128)',
+					},
+					grid: {
+						color: 'rgb(64, 64, 64)',
+					}
 				}
 			}
 		}
@@ -165,6 +167,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 			var text = agg.key.replace( /([A-Z])/g, ' $1' ); 
 			var label = (text.charAt(0).toUpperCase() + text.slice(1)).split(' ');
 			dataForChartJS.labels.push(label);
+			// console.log(agg);
 		}
 	}
 	
@@ -176,12 +179,13 @@ router.get('/driveteam', wrap(async (req, res) => {
 				//red
 				if (i < 3) {
 					let thisDatum = agg[team];
-					dataForChartJS.datasets.avg.red[i].push(thisDatum);
+					dataForChartJS.datasets.avg.red[i].push(thisDatum * 100);
+					// 2022-03-19 JL: Multiplying the data by 100 to show them as a sort of percent
 				}
 				//blue
 				else {
 					let thisDatum = agg[team];
-					dataForChartJS.datasets.avg.blue[i - 4].push(thisDatum);
+					dataForChartJS.datasets.avg.blue[i - 4].push(thisDatum * 100);
 				}
 			}
 		}
@@ -194,16 +198,16 @@ router.get('/driveteam', wrap(async (req, res) => {
 				//red
 				if (i < 3) {
 					let thisDatum = agg[team];
-					dataForChartJS.datasets.max.red[i].push(thisDatum);
+					dataForChartJS.datasets.max.red[i].push(thisDatum * 100);
 				}
 				//blue
 				else {
 					let thisDatum = agg[team];
-					dataForChartJS.datasets.max.blue[i - 4].push(thisDatum);
+					dataForChartJS.datasets.max.blue[i - 4].push(thisDatum * 100);
 				}
 			}
 		}
-	}	
+	}
 	
 	res.render('./dashboard/driveteam', {
 		title: 'Drive Team Dashboard',
@@ -664,7 +668,8 @@ router.get('/matches', wrap(async (req, res) => {
 
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 60, sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
+	// 2022-03-17 JL: Reversed alliance sorting order to show red first
+	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 60, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
 
 	if(!scoreData)
 		return logger.error('mongo error at dashboard/matches');

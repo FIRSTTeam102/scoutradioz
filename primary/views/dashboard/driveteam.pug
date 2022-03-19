@@ -14,7 +14,9 @@ block content
 			overflow-x: visible;
 		}
 		.radar-canvas{
-			
+			/* 2022-03-19 JL: Not sure what changed from chartjs v2.9 to v3.7, but to keep the same 
+			 	aspect ratio as before, we need to give the canvases some horizontal padding */
+			margin: 0 6%;
 		}
 	include ../reports/templates/heatmap
 	
@@ -90,9 +92,9 @@ block content
 					- aggRangeMap[scoreItem.key] = scoreItem;
 				div#avgSect(class="w3-auto")
 					if (avgdata)
-						table(class="w3-table")
+						table(class="w3-table" style="max-width: 80%;")
 							tr
-								th(style="padding-left: 0;") Metric (Avg)
+								th(style="padding-left: 0; width: 25%;" class="w3-right-align") Metric (Avg)
 								for team in teamList
 									if team == 0
 										th 
@@ -103,7 +105,7 @@ block content
 							each agg in avgdata
 								tr
 									- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-									td(class="w3-text-light-gray w3-small" style="padding-left: 0;")
+									td(class="w3-text-light-gray w3-small w3-right-align" style="padding-left: 0;")
 										a(href=`/reports/metricintel?key=${agg.key}`)= result2
 									for team in teamList
 										if team == 0
@@ -117,9 +119,9 @@ block content
 												td(class=`${valueCol}`)= agg[team]
 				div#maxSect(class="w3-auto")
 					if (maxdata)
-						table(class="w3-table")
+						table(class="w3-table" style="max-width: 80%;")
 							tr
-								th(style="padding-left: 0;") Metric (Max)
+								th(style="padding-left: 0; width: 25%;" class="w3-right-align") Metric (Max)
 								for team in teamList
 									if team == 0
 										th 
@@ -130,7 +132,7 @@ block content
 							each agg in maxdata
 								tr
 									- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-									td(class="w3-text-light-gray w3-small" style="padding-left: 0;")
+									td(class="w3-text-light-gray w3-small  w3-right-align" style="padding-left: 0;")
 										a(href=`/reports/metricintel?key=${agg.key}`)= result2
 									for team in teamList
 										if team == 0
@@ -159,8 +161,10 @@ block content
 			script.
 				console.log(JSON.parse(JSON.stringify(chartData)));
 			script.
-				Chart.defaults.global.defaultFontStyle = 'bold';
-				Chart.defaults.global.defaultFontColor = '#DDD';
+				//- Chart.defaults.global.defaultFontStyle = 'bold';
+				//- Chart.defaults.global.defaultFontColor = '#DDD';
+				Chart.defaults.font.weight = 'bold';
+				Chart.defaults.color = '#DDD';
 				
 				var redData = {
 					labels: chartData.labels,
@@ -251,7 +255,7 @@ block content
 					var avg = document.getElementById('avgSect');
 					avg.style.display = "none";
 					var max = document.getElementById('maxSect');
-						max.style.display = "block";
+					max.style.display = "block";
 						
 					for (var i in redRadar.data.datasets) {
 						var set = redRadar.data.datasets[i];
