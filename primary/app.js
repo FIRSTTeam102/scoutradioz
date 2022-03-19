@@ -68,6 +68,27 @@ if(process.env.NODE_ENV == 'production') logger.info('Pug caching will be enable
 //Create app
 const app = express();
 
+// Redirect www.scoutradioz.com to scoutradioz.com
+//	Credit: https://stackoverflow.com/questions/17898183/
+app.get('/*', (req, res, next) => {
+	let host = req.headers.host;
+	let href;
+
+	// no www. present, nothing to do here
+	if (!/^www\./i.test(host)) {
+		return next();
+	}
+
+	// remove www.
+	host = host.replace(/^www\./i, '');
+	href = req.protocol + '://' + host + req.url;
+	res.statusCode = 301;
+	res.setHeader('Location', href);
+	res.write('Redirecting to ' + host + req.url + '');
+	logger.info('Redirecting user from www.* to ' + host + req.url + '');
+	res.end();
+});
+
 //Must be the very first app.use
 app.use(utilities.refreshTier);
 
