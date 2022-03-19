@@ -56,7 +56,7 @@ router.get('/finishedmatches', wrap(async (req, res) => {
 	
 	//logger.debug('matches=' + JSON.stringify(matches));
 	res.render('./reports/finishedmatches', {
-		title: 'Matches',
+		title: 'Completed Matches',
 		matches: matches,
 		rankingPoints: rankingPoints
 	});
@@ -537,7 +537,7 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 	var currentAggRanges = allianceStatsData.currentAggRanges;
 	var avgTable = allianceStatsData.avgTable;
 	var maxTable = allianceStatsData.maxTable;
-	var avgNorms = allianceStatsData.avgNorms;
+	// var avgNorms = allianceStatsData.avgNorms;
 	var maxNorms = allianceStatsData.maxNorms;
 
 	res.render('./reports/alliancestats', {
@@ -547,7 +547,7 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 		currentAggRanges: currentAggRanges,
 		avgdata: avgTable,
 		maxdata: maxTable,
-		avgnorms: avgNorms,
+		// avgnorms: avgNorms, 2022-03-18 JL: avgNorms not used on alliancestats page; Modifying the way it calculates the norms for the spider chart on drive team dashboard
 		maxnorms: maxNorms
 	});
 }));
@@ -1096,7 +1096,6 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	var aggArray = [];
 	if (aggR)
 		aggArray = aggR;
-	console.log(aggQuery);
 		
 	//logger.debug('rankMap=' + rankMap);
 	

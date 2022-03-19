@@ -25,8 +25,8 @@ block content
 
 	//- h2(class="theme-text") Statistics for teams</br>#{teams.replace(/,/g, ', ').replace(/frc/g, '')}
 	h2(class="theme-text") Match data for match ##{match.match_number}
-	h6 <i>Click on a team number for intel on that team</i>
-	h6 <i>Click on a metric to compare all event teams</i>
+	h6.i Click on a team number for intel on that team
+	h6.i Click on a metric to compare all event teams
 	
 	if (matches)
 		div(class="w3-auto w3-content")
@@ -85,5 +85,5 @@ block content
 											td
 			div(class="w3-col s0 m4") &nbsp;
 		p(class="w3-col")
-			a(class="gear-btn theme-link w3-btn" href=('/reports/matchmetrics?key=' + match.key)) <b>Comparative metrics for these alliances</b>
-			a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') <b>Overall ranked event data</b>
+			a(class="gear-btn theme-link w3-btn strong" href=('/reports/matchmetrics?key=' + match.key)) Compare alliance metrics
+			a(class="gear-btn theme-link w3-btn strong" href='/reports/metricsranked') Overall ranked event data

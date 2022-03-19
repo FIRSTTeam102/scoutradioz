@@ -57,8 +57,7 @@ router.post('/events', wrap(async (req, res) => {
 	
 	/*
 	var thisFuncName = "externaldata.events[post]: ";
-	
-	// var eventCol = db.get("events");
+
 	
     // Get our form value(s)
     var year = req.body.year;
@@ -188,9 +187,6 @@ router.get('/oprs', wrap(async (req, res) => {
 router.post('/matches', wrap(async (req, res) => {
 	logger.addContext('funcName', 'matches[post]');
 	logger.info('ENTER');
-	
-	// var matchCol = db.get("matches");
-	// var eventCol = db.get("events");
 
 	// Get our form value(s)
 	var eventKey = req.body.eventKey;
@@ -230,9 +226,7 @@ router.get('/teams', wrap(async (req, res) => {
 	logger.addContext('funcName', 'teams[get]');
 	logger.info('ENTER');
 	
-	// var teamCol = db.get("teams");
 	var teams;
-	//return res.send(req.query.eventKey);
 	
 	//if no event is specified send page with all teams
 	if(req.query.eventKey == '' || req.query.eventKey == undefined){
