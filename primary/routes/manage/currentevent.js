@@ -1,10 +1,11 @@
 const router = require('express').Router();
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('currentevent');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const matchDataHelper = require('@firstteam102/scoutradioz-helpers').matchData;
 
 router.all('/*', wrap(async (req, res, next) => {
+	logger.removeContext('funcName');
 	//Require team-admin-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
 		next();
@@ -12,9 +13,8 @@ router.all('/*', wrap(async (req, res, next) => {
 }));
 
 router.get('/matches', wrap(async (req, res) => {
-
-	var thisFuncName = 'currentevent.matches[get]: ';
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'matches[get]');
+	logger.info('ENTER');
 	
 	var eventKey = req.event.key;
 		
@@ -23,14 +23,13 @@ router.get('/matches', wrap(async (req, res) => {
 		
 	res.render('./manage/currentevent/matches', {
 		title: 'Matches',
-		'matches': matches
+		matches: matches,
 	});
 }));
 
 router.get('/getcurrentteams', wrap(async (req, res) => {
-
-	var thisFuncName = 'currentevent.getcurrentteams[get]: ';
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'getcurrentteams[get]');
+	logger.info('ENTER');
 
 	// 2020-02-09, M.O'C: Refactoring to just update the team_keys for the current event
 	var event_key = req.event.key;
@@ -49,31 +48,46 @@ router.get('/getcurrentteams', wrap(async (req, res) => {
 }));
 
 router.post('/resetmatches', wrap(async (req, res) => {
-	
-	var thisFuncName = 'currentevent.resetmatches[post]: ';
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'resetmatches[post]');
+	logger.info('ENTER');
 	
 	// Issue #45 
 	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
 	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
 	// }
 	
-	// var matchCol = db.get("matches");
-	
 	var eventKey = req.event.key;
 	
 	// update all matches - set 'actualtime' to null/"", and team scores to -1
-	await utilities.bulkWrite('matches', [{updateMany:{filter:{'event_key': eventKey}, update:{ $set: { 'actual_time' : '', 'winning_alliance' : '', 'alliances.blue.score': -1, 'alliances.red.score': -1 } }}}]);
-
-	// reread the data & render
-	//var matches = await utilities.find('matches', {'event_key': eventKey},{sort: {'time': 1}});
+	var writeResult = await utilities.bulkWrite('matches', [{updateMany:{
+		filter: {event_key: eventKey}, 
+		update: {$set: {actual_time : '', winning_alliance : '', 'alliances.blue.score': -1, 'alliances.red.score': -1 }}}
+	}]);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
 	
 	res.redirect('/manage/currentevent/matches?alert=Reset matches successfully.');
 }));
 
+router.post('/resetmatch', wrap(async (req, res) => {
+	logger.addContext('funcName', 'resetmatch[post]');
+	
+	var matchKey = req.body.matchId;
+	
+	if (!matchKey) return res.redirect('/manage/currentevent/matches?alert=Match not specified.&type=warn');
+	logger.info(`Resetting match ${matchKey}`);
+	
+	var writeResult = await utilities.update('matches', 
+		{key: matchKey}, 
+		{$set: { actual_time: '', winning_alliance: '', 'alliances.blue.score': -1, 'alliances.red.score': -1 }}
+	);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+	
+	res.redirect('/manage/currentevent/matches');
+}));
+
 router.post('/updatematch', wrap(async (req, res) => {
-	var thisFuncName = 'currentevent.updatematch[post]: ';
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'updatematch[post]');
+	logger.info('ENTER');
 	
 	// Issue #45 
 	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
@@ -94,7 +108,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 
 	// Reload the rankings from TBA
 	var rankingUrl = 'event/' + eventKey + '/rankings';
-	logger.debug(thisFuncName + 'rankingUrl=' + rankingUrl);
+	logger.debug('rankingUrl=' + rankingUrl);
 
 	var rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankArr = [];
@@ -106,11 +120,11 @@ router.post('/updatematch', wrap(async (req, res) => {
 			rankArr.push(thisRank);
 		}
 	}
-	//logger.debug(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	//logger.debug('rankArr=' + JSON.stringify(rankArr));
 
 	var rankMap = {};
 	for (var rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
-		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+		//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankArr[rankIdx].team_key] = rankArr[rankIdx];
 	}
 
@@ -127,7 +141,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 
 	// Reload the match data from TBA
 	var url = 'match/' + matchId;
-	logger.debug(thisFuncName + 'url=' + url);
+	logger.debug('url=' + url);
 	var match = await utilities.requestTheBlueAlliance(url);
 	
 	// Now, insert the new object
@@ -136,7 +150,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 	//
 	// 2019-03-21, M.O'C: Adding in recalculation of aggregation data
 	//
-	logger.debug(thisFuncName + 'About to start in on updating min/maxes of agg data');
+	logger.debug('About to start in on updating min/maxes of agg data');
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 
@@ -144,22 +158,18 @@ router.post('/updatematch', wrap(async (req, res) => {
 	await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
 	
 	//and we're done!
-	if (match && !match.score_breakdown) res.redirect(`/manage/currentevent/matches?alert=Score not found for this match.&type=warn`);
+	if (match && !match.score_breakdown) res.redirect('/manage/currentevent/matches?alert=Score not found for this match.&type=warn');
 	else res.redirect('/manage/currentevent/matches');
 }));
 
 router.post('/updatematches', wrap(async (req, res) => {
-	
-	var thisFuncName = 'currentevent.updatematches[post]: ';
-	logger.info(thisFuncName + 'ENTER');
+	logger.addContext('funcName', 'updatematches[post]');
+	logger.info('ENTER');
 	
 	// Issue #45 
 	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
 	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
 	// }
-	
-	// var matchCol = db.get("matches");
-	// var rankCol = db.get("currentrankings");
 	
 	//var matchId = req.body.matchId;
 	var eventKey = req.event.key;
@@ -172,7 +182,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 
 	// Reload the rankings from TBA
 	var rankingUrl = 'event/' + eventKey + '/rankings';
-	logger.debug(thisFuncName + 'rankingUrl=' + rankingUrl);
+	logger.debug('rankingUrl=' + rankingUrl);
 
 	var rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
 	var rankArr = [];
@@ -184,7 +194,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 			rankArr.push(thisRank);
 		}
 	}
-	logger.trace(thisFuncName + 'rankArr=' + JSON.stringify(rankArr));
+	logger.trace('rankArr=' + JSON.stringify(rankArr));
 
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	// Delete the current rankings
@@ -196,17 +206,17 @@ router.post('/updatematches', wrap(async (req, res) => {
 
 	// Get matches data from TBA
 	var url = 'event/' + eventKey + '/matches';
-	logger.debug(thisFuncName + 'url=' + url);
+	logger.debug('url=' + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
 	var arrayLength = matchData.length;
 	if (arrayLength == null) {
-		logger.debug(thisFuncName + 'Whoops, there was an error!');
-		logger.debug(thisFuncName + 'data=' + matchData);
+		logger.debug('Whoops, there was an error!');
+		logger.debug('data=' + matchData);
 		
 		res.redirect('/manage/currentevent/matches?alert=An error occurred. arrayLength==null.&alertType=error');
 	}
 	else {
-		logger.debug(thisFuncName + 'Found ' + arrayLength + ' data for event ' + eventKey);
+		logger.debug('Found ' + arrayLength + ' data for event ' + eventKey);
 		
 		// First delete existing match data for the given event
 		await utilities.remove('matches', {'event_key': eventKey});
@@ -218,7 +228,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 		// call out to aggrange recalculator
 		await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, eventKey);
 		
-		if (arrayLength == 0) res.redirect(`/manage/currentevent/matches?alert=Match data not found.&type=warn`);
+		if (arrayLength == 0) res.redirect('/manage/currentevent/matches?alert=Match data not found.&type=warn');
 		else res.redirect('/manage/currentevent/matches');
 	}
 }));

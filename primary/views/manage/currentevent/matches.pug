@@ -8,11 +8,15 @@
 	//
 extends ../../layout
 block content
-	style html{overflow-x: visible;}
+	style.
+		html {
+			overflow-x: visible;
+		}
 	form#updatematches(name="updatematches" method="post" action="/manage/currentevent/updatematches")
 		button#btnSubmit(type="submit" class="w3-button theme-hover-white theme-submit w3-text-white") Update all matches
+	p.info.w3-center To re-scout a replay match, click "Reset" on the match in the list.
 	br
-	if locals.matches
+	if matches
 		table(class="w3-table")
 			tr
 				th Lvl
@@ -25,6 +29,7 @@ block content
 				th Score
 				th Won?
 				th Update
+				th Reset
 			each match in matches
 				tr
 					td= match.comp_level
@@ -47,17 +52,26 @@ block content
 					td= match.winning_alliance
 					td
 						button(class="w3-button theme-submit" onClick=`updateMatch('${match.key}')`) Update
+					td
+						button(class="w3-button theme-red" onClick=`resetMatch('${match.key}')`) Reset
 	br
 	form#resetmatches(name="resetmatches" method="post" action="/manage/currentevent/resetmatches")
 		button#btnSubmit(type="submit" class="w3-button theme-red strong w3-text-white") RESET ALL MATCHES
 	form#updatematchdata(name="updatematchdata" method="post" action="/manage/currentevent/updatematch")
-		input#matchId(type="hidden", name="matchId")
+		input#updateMatchId(type="hidden", name="matchId")
+	form#resetmatchdata(name="updatematchdata" method="post" action="/manage/currentevent/resetmatch")
+		input#resetMatchId(type="hidden", name="matchId")
 	br 
 	script.
 		function updateMatch(matchId)
 		{
 			console.log('matchId='+matchId);
-			document.getElementById("matchId").value = matchId;
+			document.getElementById("updateMatchId").value = matchId;
 			document.getElementById("updatematchdata").submit();
 		}
-		
+		function resetMatch(matchId)
+		{
+			console.log('matchId='+matchId);
+			document.getElementById("resetMatchId").value = matchId;
+			document.getElementById("resetmatchdata").submit();
+		}
