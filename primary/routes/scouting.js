@@ -66,6 +66,8 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	
 	const images = await uploadHelper.findTeamImages(orgKey, eventYear, teamKey);
+	
+	const team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 
 	//render page
 	res.render('./scouting/match', {
@@ -75,7 +77,8 @@ router.get('/match*', wrap(async (req, res) => {
 		alliance: alliance,
 		answers: answers,
 		teamKey: teamKey,
-		images: images
+		images: images,
+		team: team,
 	});
 }));
 
@@ -193,6 +196,8 @@ router.get('/pit*', wrap(async (req, res) => {
 	
 	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
 	
+	const team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	
 	res.render('./scouting/pit', {
 		title: 'Pit Scouting',
 		layout: layout,
@@ -200,7 +205,8 @@ router.get('/pit*', wrap(async (req, res) => {
 		key: teamKey,
 		uploadURL: uploadURL,
 		teamKey: teamKey,
-		images: images
+		images: images,
+		team: team,
 	});
 }));
 

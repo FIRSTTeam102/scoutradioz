@@ -35,7 +35,9 @@ $(function () {
 	const stickyBarTitle = $('#stickyBarTitle');
 	const stickyBarLeft  = $('#stickyBarLeft');
 	const stickyBarRight = $('#stickyBarRight');
-				
+	
+	var currentHeaderID = '';
+	
 	handleScroll();
 				
 	var ticking = false;
@@ -48,8 +50,6 @@ $(function () {
 		}
 		ticking = true;
 	});
-				
-	var currentHeaderID = '';
 				
 	function handleScroll() {
 		if (!window.stickyBarEnabled) return;
@@ -100,7 +100,7 @@ $(function () {
 		let index = headerElements.indexOf(currentHeader);
 		let prevHeader = headerElements[index - 1];
 		if (prevHeader) {
-			window.scrollToId(prevHeader.id);
+			window.scrollToId('dynamicscroll_' + prevHeader.id);
 		}
 	});
 				
@@ -109,7 +109,7 @@ $(function () {
 		let index = headerElements.indexOf(currentHeader);
 		let nextHeader = headerElements[index + 1];
 		if (nextHeader) {
-			window.scrollToId(nextHeader.id);
+			window.scrollToId('dynamicscroll_' + nextHeader.id);
 		}
 	});
 				

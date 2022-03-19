@@ -19,6 +19,8 @@ block content
 	script(src=`${fileRoot}/lib/jimp.min.js`)
 	script(src=`${fileRoot}/js/script-pitscouting.js?v=10`)
 	h3= key.replace('frc','Team #')
+	h5 #{team.nickname}, 
+		span(class="unimportant") from #{team.city}, #{team.state_prov}
 	p
 	if images
 		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")

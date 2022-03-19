@@ -21,6 +21,12 @@ block content
 		}
 		$('#toggleSticky').prop('checked', window.stickyBarEnabled);
 	style.
+		.dynamicscroll-header {
+			width: 0;
+			height: 0;
+			position: relative;
+			top: -24px;
+		}
 		.sticky-bar {
 			position: fixed;
 			bottom: 0px;
@@ -57,12 +63,12 @@ block content
 			filter: blur(2px);
 		}
 		/*
-		If we want it to be prettier, we can add this; but it might lead to worse performance on low end phones
+		If we want it to be prettier, we can add this; but it might lead to worse battery performance on low end phones
 		#matchform > *{
 			transition: filter 0.2s, opacity 0.2s;
 		}
 		*/
-	script(src=`${fileRoot}/js/script-matchscouting.js?v=3`)
+	script(src=`${fileRoot}/js/script-matchscouting.js?v=4`)
 	- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');
 	- var btnColor = alliance ? ((alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
 	p
@@ -72,7 +78,9 @@ block content
 	br
 	h3
 		div(class=`${btnColor} w3-btn`)
-			span= titlePortion
+			span= titlePortion 
+	h5 #{team.nickname}, 
+		span(class="unimportant") from #{team.city}, #{team.state_prov}
 	p
 	form#matchform(name="matchform" class="w3-centered")
 		input#match_team_key(type="hidden", name="match_team_key", value=`${key}`)
