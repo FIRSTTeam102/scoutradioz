@@ -19,7 +19,8 @@ $(function () {
 				'bottom': -60
 			}, 200);
 			// Clear the "disabled-form" class from all elements
-			$('.disabled-form').removeClass('disabled-form');
+			$('.disabled-form').removeClass('disabled-form').removeAttr('disabled')
+				.find('input, button').removeAttr('disabled'); // and its children which are inputs
 			// Save the fact that it's disabled
 			localStorage.setItem('disableStickyBar', '1');
 		}
@@ -81,6 +82,11 @@ $(function () {
 				header.classList.remove('disabled-form');
 				while(thisSibling && thisSibling !== nextHeader) {
 					thisSibling.classList.remove('disabled-form');
+					// Attempt to un-disable an input element within the sibling; also un-disable the sibling itself
+					let thisSibInputs = thisSibling.querySelectorAll('input, button');
+					// if (thisSiblingInput) thisSiblingInput.disabled = false;
+					if (thisSibInputs) thisSibInputs.forEach(itm => itm.disabled = false);
+					else thisSibling.disabled = false;
 					thisSibling = thisSibling.nextElementSibling;
 				}
 			}
@@ -88,6 +94,10 @@ $(function () {
 				header.classList.add('disabled-form');
 				while(thisSibling && thisSibling !== nextHeader) {
 					thisSibling.classList.add('disabled-form');
+					// Attempt to disable an input element within the sibling; also disable the sibling itself
+					let thisSibInputs = thisSibling.querySelectorAll('input, button');
+					if (thisSibInputs) thisSibInputs.forEach(itm => itm.disabled = true);
+					else thisSibling.disabled = true;
 					thisSibling = thisSibling.nextElementSibling;
 				}
 			}

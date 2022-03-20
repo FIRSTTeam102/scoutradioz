@@ -321,6 +321,9 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	background-color: #af1d22;
 	border-radius: 25%!important;
 }
+.scouting-counter:disabled{
+	cursor: default;
+}
 
 /* Toggle switches */
 /* The switch - the box around the slider */
