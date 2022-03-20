@@ -964,7 +964,7 @@ router.get('/metricintel', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	var metricKey = req.query.key;
-	if (!metricKey) throw Error('No metric key specified.');
+	if (!metricKey) throw new Error('No metric key specified.');
 	
 	logger.debug('metricKey=' + metricKey);
 	

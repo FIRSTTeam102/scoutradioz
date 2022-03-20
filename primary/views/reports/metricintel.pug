@@ -5,6 +5,12 @@
 			QUERY: key (Metric key, e.g. totalPieces)
 extends ../layout
 block content
+	style.
+		.w3-tooltip .w3-tooltiptext{
+			width: 120px;
+			padding: 8px 16px;
+			margin-left: -60px;
+		}
 	include templates/heatmap
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
@@ -20,18 +26,22 @@ block content
 			div(class="w3-show-inline-block")
 				table(class="w3-table")
 					tr
-						th(class="w3-right-align") <i>R</i>
+						th(class="w3-right-align w3-tooltip") 
 					each agg, i in aggdata
 						tr
 							td(class="w3-right-align")= i+1
 			div(class="w3-show-inline-block")
 				table(class="w3-table" id="metricTable")
 					tr
-						th(class="w3-center" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(1)')") Team
-						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(2)')")  Min
-						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(3)')")  Avg
-						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(4)')")  Var
-						th(class="w3-right-align" onclick="w3.sortHTML('#metricTable','.item', 'td:nth-child(5)')")  Max
+						th(class="w3-center") Team
+						th(class="w3-right-align w3-tooltip")  Min
+							span.w3-tooltiptext Minimum
+						th(class="w3-right-align w3-tooltip")  Avg
+							span.w3-tooltiptext Average
+						th(class="w3-right-align w3-tooltip")  Var
+							span.w3-tooltiptext Variance
+						th(class="w3-right-align w3-tooltip")  Max
+							span.w3-tooltiptext Maximum
 					each agg, i in aggdata
 						tr
 							td(class="w3-text-light-gray w3-center")
@@ -55,13 +65,13 @@ block content
 								td(class=`${avgCol}`)= agg[key+"VAR"]
 								td(class=`${maxCol}`)= agg[key+"MAX"]
 	script.
-		$('th').click(function(){
+		$('th').on('click', function() {
 			var table = $(this).parents('table').eq(0)
 			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
 			this.asc = !this.asc
 			if (!this.asc){rows = rows.reverse()}
 			for (var i = 0; i < rows.length; i++){table.append(rows[i])}
-		})
+		});
 		function comparer(index) {
 			return function(a, b) {
 				var valA = getCellValue(a, index), valB = getCellValue(b, index)
