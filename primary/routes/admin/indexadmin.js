@@ -42,6 +42,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/dashboard/unassigned': 'Exclusive to \'unassigned\" scouters- Provides links to \'one-off\" pit/match scouting',
 			'/dashboard/allianceselection': 'Alliance/team \"pick-list\", to follow along with the alliance selection process',
 			'/dashboard/pits': 'List of teams for pit scouting, plus scouter assignments',
+			'/dashboard/pits?loadPhotos=1': 'Pit scouting with team photos',
 			'/dashboard/matches': 'List of upcoming matches, plus scouter assignments to each team',
 			'/dashboard/driveteam': 'Drive team dashboard: Shows intel for upcoming match',
 			'/dashboard/driveteam?team_key=frc3201': 'Drive team dashboard for specific team',
