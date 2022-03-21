@@ -89,19 +89,21 @@ mixin upcomingMatch(match, includeHr=false)
 								i Rank #{teamRanks[blue3]}
 							span=blue3.substring(3)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
-	if match.predictive
-		- var redA = match.predictive.redAVG.toFixed(0); var redS = match.predictive.redSTD.toFixed(0); 
-		- var blueA = match.predictive.blueAVG.toFixed(0); var blueS = match.predictive.blueSTD.toFixed(0); 
-		i Predicted scores: Red #{redA} ± #{redS}, Blue #{blueA} ± #{blueS} 
-		br
-		if match.predictive.chanceOfRed > 0.5
-			- var percentChance = (match.predictive.chanceOfRed * 100).toFixed(0);
-			i #{percentChance}% chance Red wins
+	if match.hasPredictive
+		if match.predictive
+			- var redA = match.predictive.redAVG.toFixed(0); var redS = match.predictive.redSTD.toFixed(0); 
+			- var blueA = match.predictive.blueAVG.toFixed(0); var blueS = match.predictive.blueSTD.toFixed(0); 
+			if match.predictive.chanceOfRed > 0.5
+				- var percentChance = (match.predictive.chanceOfRed * 100).toFixed(0);
+				i #{percentChance}% chance Red wins
+			else
+				- var percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
+				i #{percentChance}% chance Blue wins
+			i  (based on #{match.predictive.totalCNT} reports)
+			br
+			i Predicted scores: Red #{redA} ± #{redS}, Blue #{blueA} ± #{blueS}
 		else
-			- var percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
-			i #{percentChance}% chance Blue wins
-	else
-		i Not enough data to make prediction
+			i Not enough data to make prediction
 	//- Put a horizontal rule if requested
 	if (includeHr == true)
 		hr 
