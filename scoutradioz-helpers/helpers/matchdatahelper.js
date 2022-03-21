@@ -580,22 +580,17 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 	// TESTING! TODO REMOVE THIS vvv
 	//aggFind.pop();  // kick off a team just so we have at least one team with zero (0) datapoints
 	// TESTING! TODO REMOVE THIS ^^^
-	for (var i = 0; i < aggFind.length; i++) {
-		// if any team does NOT have a 'contributedPointsAVG' value, we're not going to show anything
-		if (aggFind[i]['contributedPointsAVG'] == null) {
-			returnData.hasPredictive = false;
-		} else {
-			// special case: normally StdDev of 1 point is zero (0); in our case, override to be 1/2 of the contributed points
-			if (aggFind[i]['dataCount'] == 1)
-				aggFind[i]['contributedPointsSTD'] = aggFind[i]['contributedPointsAVG'] / 2.0;
-			aggDict[aggFind[i]['_id']] = aggFind[i];
-		}
+	for (let i = 0; i < aggFind.length; i++) {
+		// special case: normally StdDev of 1 point is zero (0); in our case, override to be 1/2 of the contributed points
+		if (aggFind[i]['dataCount'] == 1)
+			aggFind[i]['contributedPointsSTD'] = aggFind[i]['contributedPointsAVG'] / 2.0;
+		aggDict[aggFind[i]['_id']] = aggFind[i];
 	}
 	//console.log('aggDict=' + JSON.stringify(aggDict));
 	//console.log('aggDict[frc102]=' + JSON.stringify(aggDict['frc102']))
 
 	// go through the matches, get the alliances; update with predictive info
-	for (var i = 0; i < returnData.matches.length; i++) {
+	for (let i = 0; i < returnData.matches.length; i++) {
 		//console.log('blue=' + JSON.stringify(returnData.matches[i].alliances.blue.team_keys)
 		//+ ',red=' + JSON.stringify(returnData.matches[i].alliances.red.team_keys));
 
@@ -606,41 +601,43 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 		var predictiveBlock = {};
 		var foundDataForEach = true;
 		var blueAVG = 0; var blueSTD = 0; var blueCNT = 0;
-		for (var j = 0; j < returnData.matches[i].alliances.blue.team_keys.length; j++) {
-			var foundMatch = aggDict[returnData.matches[i].alliances.blue.team_keys[j]];
+		for (let j = 0; j < returnData.matches[i].alliances.blue.team_keys.length; j++) {
+			let foundMatch = aggDict[returnData.matches[i].alliances.blue.team_keys[j]];
 			if (foundMatch) {
 				blueAVG += foundMatch['contributedPointsAVG'];
 				blueSTD += foundMatch['contributedPointsSTD'];
 				blueCNT += foundMatch['dataCount'];
-			} else {
+			}
+			else {
 				foundDataForEach = false;
 			}
 		}
 		var redAVG = 0; var redSTD = 0; var redCNT = 0;
-		for (var j = 0; j < returnData.matches[i].alliances.red.team_keys.length; j++) {
-			var foundMatch = aggDict[returnData.matches[i].alliances.red.team_keys[j]];
+		for (let j = 0; j < returnData.matches[i].alliances.red.team_keys.length; j++) {
+			let foundMatch = aggDict[returnData.matches[i].alliances.red.team_keys[j]];
 			if (foundMatch) {
 				redAVG += foundMatch['contributedPointsAVG'];
 				redSTD += foundMatch['contributedPointsSTD'];
 				redCNT += foundMatch['dataCount'];
-			} else {
+			}
+			else {
 				foundDataForEach = false;
 			}
 		}
 
 		if (foundDataForEach) {
 			var zscore = (redAVG - blueAVG) / Math.sqrt(redSTD*redSTD + blueSTD*blueSTD);
-			//console.log('zscore=' + zscore)
-			var chanceOfRed = ztable(zscore) 
+			var chanceOfRed = ztable(zscore); 
 			//console.log('blueAVG=' + blueAVG + ',blueSTD=' + blueSTD + ',blueCNT=' + blueCNT + ',redAVG=' + redAVG + ',redSTD=' + redSTD + ',redCNT=' + redCNT + '...chanceOfRed=' + chanceOfRed);
-			predictiveBlock['blueAVG'] = blueAVG; predictiveBlock['blueSTD'] = blueSTD
-			predictiveBlock['redAVG'] = redAVG; predictiveBlock['redSTD'] = redSTD
-			predictiveBlock['totalCNT'] = blueCNT + redCNT
+			predictiveBlock['blueAVG'] = blueAVG; predictiveBlock['blueSTD'] = blueSTD;
+			predictiveBlock['redAVG'] = redAVG; predictiveBlock['redSTD'] = redSTD;
+			predictiveBlock['totalCNT'] = blueCNT + redCNT;
 			predictiveBlock['chanceOfRed'] = chanceOfRed;
 			logger.debug('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
 
 			returnData.matches[i]['predictive'] = predictiveBlock;
-		} else {
+		}
+		else {
 			logger.debug('match#=' + returnData.matches[i].match_number + ' ... At least one zero data team');
 		}
 	}
