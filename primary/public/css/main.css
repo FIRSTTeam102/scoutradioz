@@ -118,6 +118,7 @@
 .sprite.sp-delete{--position: -19;}
 .sprite.sp-discord{--position: -20;}
 .sprite.sp-github{--position: -21;}
+.sprite.sp-paper{--position: -22;}
 
 .sprite.sp-black{-webkit-filter: invert(100%);filter: invert(100%);}
 

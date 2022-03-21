@@ -173,7 +173,7 @@ pre{
 		display: none!important;
 	}
 	/* Tooltip */
-	.w3-tooltip .w3-tooltiptext{
+	.w3-tooltip .w3-tooltiptext:not(.no-mobile-tweak){
 		width: 100%;
 		margin-left: 0px;
 		left: 0px; 
