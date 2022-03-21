@@ -89,21 +89,24 @@ mixin upcomingMatch(match, includeHr=false)
 								i Rank #{teamRanks[blue3]}
 							span=blue3.substring(3)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
-	if match.hasPredictive
-		if match.predictive
-			- var redA = match.predictive.redAVG.toFixed(0); var redS = match.predictive.redSTD.toFixed(0); 
-			- var blueA = match.predictive.blueAVG.toFixed(0); var blueS = match.predictive.blueSTD.toFixed(0); 
-			if match.predictive.chanceOfRed > 0.5
-				- var percentChance = (match.predictive.chanceOfRed * 100).toFixed(0);
-				i #{percentChance}% chance Red wins
-			else
-				- var percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
-				i #{percentChance}% chance Blue wins
-			i  (based on #{match.predictive.totalCNT} reports)
-			br
-			i Predicted scores: Red #{redA} ± #{redS}, Blue #{blueA} ± #{blueS}
+	if match.hasPredictive && match.predictive
+		- let redA, redS, blueA, blueS, percentChance, winningTeam;
+		- redA = match.predictive.redAVG.toFixed(0); redS = match.predictive.redSTD.toFixed(0);
+		- blueA = match.predictive.blueAVG.toFixed(0); blueS = match.predictive.blueSTD.toFixed(0); 
+		if match.predictive.chanceOfRed > 0.5
+			- percentChance = (match.predictive.chanceOfRed * 100).toFixed(0);
+			- winningTeam = 'Red';
 		else
-			i Not enough data to make prediction
+			- percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
+			- winningTeam = 'Blue';
+		i #{percentChance}% chance #{winningTeam} wins
+		span(class="w3-tooltip")
+			span(class="sprite sp-info sp-16 sp-inline") &nbsp;
+			span(class="w3-tooltiptext no-mobile-tweak" style="width: 140px; margin-left: -70px;") Based on #{match.predictive.totalCNT} total reports
+		br
+		i Predicted scores: Red #{redA} ± #{redS}, Blue #{blueA} ± #{blueS}
+	else
+		i Not enough data to make prediction
 	//- Put a horizontal rule if requested
 	if (includeHr == true)
 		hr 
