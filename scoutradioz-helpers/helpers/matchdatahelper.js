@@ -9,6 +9,8 @@ catch(err) {
 }
 logger.level = process.env.LOG_LEVEL || 'debug';
 
+var ztable = require('ztable');
+
 var utilities = null;
 var matchDataHelper = module.exports = {};
 
@@ -464,10 +466,11 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
  * @param {string} [team_key] Team key (can be 'all' or null)
  * @returns {MatchData} Data blob containing matches, teamRanks, team, and teamList
  */
-matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
+matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_key) {
 	logger.addContext('funcName', 'getUpcomingMatchData');
-	logger.info('ENTER event_key=' + event_key + ',team_key=' + team_key);
-	
+	logger.info('ENTER event_key=' + event_key + ',team_key=' + team_key + ',org_key=' + org_key);
+	//console.log('ENTER event_key=' + event_key + ',team_key=' + team_key + ',org_key=' + org_key);
+
 	var returnData = new MatchData();
 
 	var teamKey = team_key;
@@ -550,6 +553,86 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key) {
 		returnData.matches = matches;
 	}	
 	
+	// 2022-03-20, M.O'C: Adding in predictive statistics
+	// 1. Get aggregation query; for each team, get Avg, StdDevSamp, and count of data points for 'contributedPoints'
+	// 2. Iterate through the matches; for each one, for each alliance, get the data for each time for Avg and +/- StdDev
+	// 2b. If at least one team has zero (0) available data, skip overall
+	// 2c. Any team with 1 data point, reset StdDev to 1/2 of the one 'contributedPoints'
+	// 3. Add the avgs & stddevs of the teams in each alliance for a combined avg & stddev
+	// 4. Use those to calculate probability of one distribution over the other (z-table for lookup)
+
+	// get aggregations for all teams
+	var aggQuery = [];
+	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': org_key, 'event_key': event_key } });
+	var groupClause = {};
+	groupClause['_id'] = '$team_key';
+	groupClause['contributedPointsAVG'] = {$avg: '$data.contributedPoints'};
+	groupClause['contributedPointsSTD'] = {$stdDevSamp: '$data.contributedPoints'};
+	groupClause['dataCount'] = {$sum: 1};
+	aggQuery.push({ $group: groupClause });
+
+	var aggFind = await utilities.aggregate('matchscouting', aggQuery);
+	var aggDict = {};
+	// TESTING! TODO REMOVE THIS vvv
+	//aggFind.pop();  // kick off a team just so we have at least one team with zero (0) datapoints
+	// TESTING! TODO REMOVE THIS ^^^
+	for (var i = 0; i < aggFind.length; i++) {
+		// special case: normally StdDev of 1 point is zero (0); in our case, override to be 1/2 of the contributed points
+		if (aggFind[i]['dataCount'] == 1)
+			aggFind[i]['contributedPointsSTD'] = aggFind[i]['contributedPointsAVG'] / 2.0;
+		aggDict[aggFind[i]['_id']] = aggFind[i];
+	}
+	//console.log('aggDict=' + JSON.stringify(aggDict));
+	//console.log('aggDict[frc102]=' + JSON.stringify(aggDict['frc102']))
+
+	// go through the matches, get the alliances; update with predictive info
+	for (var i = 0; i < returnData.matches.length; i++) {
+		//console.log('blue=' + JSON.stringify(returnData.matches[i].alliances.blue.team_keys)
+		//+ ',red=' + JSON.stringify(returnData.matches[i].alliances.red.team_keys));
+
+		var predictiveBlock = {};
+		var foundDataForEach = true;
+		var blueAVG = 0; var blueSTD = 0; var blueCNT = 0;
+		for (var j = 0; j < returnData.matches[i].alliances.blue.team_keys.length; j++) {
+			var foundMatch = aggDict[returnData.matches[i].alliances.blue.team_keys[j]];
+			if (foundMatch) {
+				blueAVG += foundMatch['contributedPointsAVG'];
+				blueSTD += foundMatch['contributedPointsSTD'];
+				blueCNT += foundMatch['dataCount'];
+			} else {
+				foundDataForEach = false;
+			}
+		}
+		var redAVG = 0; var redSTD = 0; var redCNT = 0;
+		for (var j = 0; j < returnData.matches[i].alliances.red.team_keys.length; j++) {
+			var foundMatch = aggDict[returnData.matches[i].alliances.red.team_keys[j]];
+			if (foundMatch) {
+				redAVG += foundMatch['contributedPointsAVG'];
+				redSTD += foundMatch['contributedPointsSTD'];
+				redCNT += foundMatch['dataCount'];
+			} else {
+				foundDataForEach = false;
+			}
+		}
+
+		if (foundDataForEach) {
+			var zscore = (redAVG - blueAVG) / Math.sqrt(redSTD*redSTD + blueSTD*blueSTD);
+			var chanceOfRed = ztable(zscore) 
+			//console.log('blueAVG=' + blueAVG + ',blueSTD=' + blueSTD + ',blueCNT=' + blueCNT + ',redAVG=' + redAVG + ',redSTD=' + redSTD + ',redCNT=' + redCNT + '...chanceOfRed=' + chanceOfRed);
+			predictiveBlock['blueAVG'] = blueAVG; predictiveBlock['blueSTD'] = blueSTD
+			predictiveBlock['redAVG'] = redAVG; predictiveBlock['redSTD'] = redSTD
+			predictiveBlock['totalCNT'] = blueCNT + redCNT
+			predictiveBlock['chanceOfRed'] = chanceOfRed;
+			logger.debug('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
+
+			returnData.matches[i]['predictive'] = predictiveBlock;
+		} else {
+			logger.debug('match#=' + returnData.matches[i].match_number + ' ... At least one zero data team');
+		}
+	}
+
+	//console.log('returnData.matches=' + JSON.stringify(returnData.matches));
+
 	logger.removeContext('funcName');
 	return returnData;	
 };

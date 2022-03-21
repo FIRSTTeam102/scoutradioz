@@ -69,9 +69,11 @@ router.get('/upcoming', wrap(async (req, res) => {
 	var eventKey = req.event.key;
 	var teamKey = req.query.team_key || 'all';
 	// 2020-03-21 JL: Changed query.team to query.team_key
+	// 2022-03-20, M.O'C: Need org_key for predictive metrics
+	var orgKey = req.user.org_key;
 
 	// use helper function
-	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey);
+	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey, orgKey);
 	
 	var matches = upcomingData.matches;
 	var teamRanks = upcomingData.teamRanks;

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
   "dependencies": {
-    "@log4js-node/log4js-api": "^1.0.2"
+    "@log4js-node/log4js-api": "^1.0.2",
+    "ztable": "^1.0.7"
   }
 }

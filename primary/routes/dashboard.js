@@ -41,7 +41,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 	logger.debug(`eventKey=${eventKey} orgKey=${orgKey} teamKey=${teamKey}`);
 	
 	// Get upcoming match data for the specified team (or "all" if no default & none specified)
-	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey);
+	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey, orgKey);
 	
 	// Pull out the first match (if it exists), get the team keys from the alliances
 	var matches = upcomingData.matches;
@@ -50,7 +50,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 	if (!matches || !matches[0] && teamKey !== 'all') {
 		logger.debug(`No matches found for team ${teamKey}; attempting "all"`);
 		noMatchesFoundForTeam = true;
-		upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, 'all');
+		upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, 'all', orgKey);
 		matches = upcomingData.matches;
 	}
 	// If there are still no matches, then render the page with an error
