@@ -14,3 +14,6 @@
 This is a merge from our ScoringApp-2018 with AWS Labs' Express basic-starter example. (https://github.com/awslabs/aws-serverless-express/tree/master/examples/basic-starter)
 
 Currently the project is bare-bones. We need to slowly add functionality as we rework our routes, to make sure they work with Lambda.
+
+## Static files
+See the **public-src** subfolder to view info on compiling static files.

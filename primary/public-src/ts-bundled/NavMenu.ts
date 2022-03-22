@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
 'use strict';
 var navMenu;
 
@@ -9,6 +7,28 @@ $(() => {
 
 
 class NavigationBar{
+	
+	opened: boolean;
+	moving: boolean;
+	panning: boolean;
+	pendingAnimationFrame: boolean;
+	menuElem: JQuery;
+	barElem: JQuery;
+	overlayElem: JQuery;
+	title: string;
+	footerContents: Array<string>;
+	opts: {
+		openingInterval: number,
+		fastTransitionTime: number,
+		slowTransitionTime: number,
+		slowTransition: string,
+		fastTransition: string,
+		panThreshold: number,
+	}
+	// mmenu.js doesn't provide a typescript version; Not gonna bother updating the mmenu minified js to typescript
+	menu: any;
+	api: any;
+	
 	
 	constructor(){
 		//Options and ID names are hard-coded. I'm not THAT much of a masochist!
@@ -31,9 +51,9 @@ class NavigationBar{
 		this.overlayElem = $('#overlay');
 		//Take menu title & footer branding variables from inline script in nav.pug
 		
-		if (navMenuTitle) this.title = navMenuTitle;
+		if (typeof navMenuTitle === 'string') this.title = navMenuTitle;
 		else this.title = 'Menu';
-		if (footerContents) this.footerContents = footerContents;
+		if (footerContents instanceof Array) this.footerContents = footerContents;
 		else this.footerContents = [];
 		
 		//Create Mmenu object
@@ -105,7 +125,172 @@ class NavigationBar{
 				}, this.opts.openingInterval);
 			}
 		});
+	}
+	
+	preMenuOpen(){
+		//console.log('preMenuOpen');
+		//Get fully-closed positions
+		const positions = this.calculateTransformPosition(0);
+		//Menu element: Make visible, place off-canvas way to the left, set transition time
+		this.menuElem.css({
+			display: 'flex',
+			transform: `translate3d(${positions.menu}, 0, 0)`,
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
+		//Bar element: Set transition time
+		this.barElem.css({
+			transform: `translate3d(${positions.bar}, 0, 0)`,
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
+		//Overlay: Make visible, 0 opacity, set transition time
+		this.overlayElem.css({
+			display: 'flex',
+			opacity: 0,
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
+	}
+	
+	menuOpen(){
+		//console.log('menuOpen');
 		
+		this.moving = true;
+		//Get fully-opened positions
+		const positions = this.calculateTransformPosition(1);
+		
+		requestAnimationFrame(() => {
+			//Menu element: Ending position
+			this.menuElem.css({
+				transform: `translate3d(${positions.menu}, 0, 0)`,
+			});
+			//Bar element: Ending position
+			this.barElem.css({
+				transform: `translate3d(${positions.bar}, 0, 0)`,
+			});
+			//Overlay element: Full opacity
+			this.overlayElem.css({
+				opacity: 1,
+			});
+		});
+		
+		//Add class for mburger to animate opening
+		$('#burger').addClass('mm-wrapper_opened');
+		//Call postMenuOpen after full opening interval
+		setTimeout(() => {
+			this.postMenuOpen();
+		}, this.opts.slowTransitionTime);
+	}
+	
+	postMenuOpen(){
+		//console.log('postMenuOpen');
+		//Menu is now fully open
+		this.opened = true;
+		this.moving = false;
+	}
+	
+	preMenuClose(){
+		//console.log('preMenuClose');
+		//Set transition for all elements
+		this.menuElem.css({
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
+		this.barElem.css({
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
+		this.overlayElem.css({
+			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
+		});
+	}
+	
+	menuClose(){
+		// console.log('menuClose');
+		
+		this.moving = true;
+		//Get final positions
+		const positions = this.calculateTransformPosition(0);
+		
+		requestAnimationFrame(() => {
+			//Menu element: Ending position
+			this.menuElem.css({
+				transform: `translate3d(${positions.menu}, 0, 0)`,
+			});
+			//Bar element: Ending position
+			this.barElem.css({
+				transform: `translate3d(${positions.bar}, 0, 0)`,
+			});
+			//Overlay: element: Fully transparent
+			this.overlayElem.css({
+				opacity: 0,
+			});
+		});
+		
+		//Remove class for mburger to animate closing
+		$('#burger').removeClass('mm-wrapper_opened');
+		//Call postMenuClose after full closing interval
+		setTimeout(() => {
+			this.postMenuClose();
+		}, this.opts.slowTransitionTime);
+	}
+	
+	postMenuClose(){
+		//console.log('postMenuClose');
+		
+		this.opened = false;
+		this.moving = false;
+		//Menu element: Reset transition and position, and set display:none
+		this.menuElem.css({
+			display: 'none',
+			transform: '',
+			transition: '',
+		});
+		//Bar element: Reset transform and position
+		this.barElem.css({
+			transform: '',
+			transition: '',
+		});
+		//Overlay element: Reset transform and position
+		this.overlayElem.css({
+			opacity: '',
+			display: 'none',
+		});
+	}
+	
+	calculateTransformPosition(percentageOpened: number): TransformPosition{
+		//filter percentageOpened to not be greater than 1 or less than 0
+		if (percentageOpened > 1) percentageOpened = 1;
+		if (percentageOpened < 0) percentageOpened = 0;
+		
+		const windowWidth = window.innerWidth;
+		var positions: TransformPosition;
+		
+		//If 80% of the screen is lower than 440px, use percentages instead of pixels
+		if (windowWidth < 550) {
+			positions = {
+				menu: -80 * (1 - percentageOpened) + 'vw',
+				bar: 80 * percentageOpened + 'vw'
+			}
+		}
+		//if 80% of screen is greater than 440px, use pixels
+		else {
+			positions = {
+				menu: Math.floor( (1- percentageOpened) * -440) + 'px', 
+				bar: Math.floor( (percentageOpened) * 440) + 'px'
+			}
+		}
+		
+		return positions;
+	}
+}
+
+declare class TransformPosition {
+	menu: string;
+	bar: string;
+}
+
+// Initialized in pug
+declare var navMenuTitle: string | undefined;
+declare var footerContents: Array<string> | undefined;
+declare var Mmenu: any;
+
 		/*
 		//Hammer.js - Native-like touch interfaces
 		var hammertime = new Hammer.Manager(document.body, {
@@ -253,157 +438,3 @@ class NavigationBar{
 			}
 		});
 		*/
-	}
-	
-	preMenuOpen(){
-		//console.log('preMenuOpen');
-		//Get fully-closed positions
-		const positions = this.calculateTransformPosition(0);
-		//Menu element: Make visible, place off-canvas way to the left, set transition time
-		this.menuElem.css({
-			display: 'flex',
-			transform: `translate3d(${positions.menu}, 0, 0)`,
-			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
-		});
-		//Bar element: Set transition time
-		this.barElem.css({
-			transform: `translate3d(${positions.bar}, 0, 0)`,
-			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
-		});
-		//Overlay: Make visible, 0 opacity, set transition time
-		this.overlayElem.css({
-			display: 'flex',
-			opacity: 0,
-			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
-		});
-	}
-	
-	menuOpen(){
-		//console.log('menuOpen');
-		
-		this.moving = true;
-		//Get fully-opened positions
-		const positions = this.calculateTransformPosition(1);
-		
-		requestAnimationFrame(() => {
-			//Menu element: Ending position
-			this.menuElem.css({
-				transform: `translate3d(${positions.menu}, 0, 0)`,
-			});
-			//Bar element: Ending position
-			this.barElem.css({
-				transform: `translate3d(${positions.bar}, 0, 0)`,
-			});
-			//Overlay element: Full opacity
-			this.overlayElem.css({
-				opacity: 1,
-			});
-		});
-		
-		//Add class for mburger to animate opening
-		$('#burger').addClass('mm-wrapper_opened');
-		//Call postMenuOpen after full opening interval
-		setTimeout(() => {
-			this.postMenuOpen();
-		}, this.opts.slowTransitionTime);
-	}
-	
-	postMenuOpen(){
-		//console.log('postMenuOpen');
-		//Menu is now fully open
-		this.opened = true;
-		this.moving = false;
-	}
-	
-	preMenuClose(){
-		//console.log('preMenuClose');
-		//Set transition for all elements
-		this.menuElem.css({
-			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
-		});
-		this.barElem.css({
-			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
-		});
-		this.overlayElem.css({
-			transition: `${this.opts.slowTransitionTime}ms ${this.opts.slowTransition}`,
-		});
-	}
-	
-	menuClose(){
-		// console.log('menuClose');
-		
-		this.moving = true;
-		//Get final positions
-		const positions = this.calculateTransformPosition(0);
-		
-		requestAnimationFrame(() => {
-			//Menu element: Ending position
-			this.menuElem.css({
-				transform: `translate3d(${positions.menu}, 0, 0)`,
-			});
-			//Bar element: Ending position
-			this.barElem.css({
-				transform: `translate3d(${positions.bar}, 0, 0)`,
-			});
-			//Overlay: element: Fully transparent
-			this.overlayElem.css({
-				opacity: 0,
-			});
-		});
-		
-		//Remove class for mburger to animate closing
-		$('#burger').removeClass('mm-wrapper_opened');
-		//Call postMenuClose after full closing interval
-		setTimeout(() => {
-			this.postMenuClose();
-		}, this.opts.slowTransitionTime);
-	}
-	
-	postMenuClose(){
-		//console.log('postMenuClose');
-		
-		this.opened = false;
-		this.moving = false;
-		//Menu element: Reset transition and position, and set display:none
-		this.menuElem.css({
-			display: 'none',
-			transform: '',
-			transition: '',
-		});
-		//Bar element: Reset transform and position
-		this.barElem.css({
-			transform: '',
-			transition: '',
-		});
-		//Overlay element: Reset transform and position
-		this.overlayElem.css({
-			opacity: '',
-			display: 'none',
-		});
-	}
-	
-	calculateTransformPosition(percentageOpened){
-		//filter percentageOpened to not be greater than 1 or less than 0
-		if (percentageOpened > 1) percentageOpened = 1;
-		if (percentageOpened < 0) percentageOpened = 0;
-		
-		const windowWidth = window.innerWidth;
-		const positions = {};
-		var menuWidth;
-		
-		//If 80% of the screen is lower than 440px, use percentages instead of pixels
-		if (windowWidth < 550) {
-			positions.menu = -80 * (1 - percentageOpened) + 'vw';
-			positions.bar = 80 * percentageOpened + 'vw';
-		}
-		//if 80% of screen is greater than 440px, use pixels
-		else {
-			positions.menu = Math.floor( (1- percentageOpened) * -440) + 'px', 
-			positions.bar = Math.floor( (percentageOpened) * 440) + 'px';
-		}
-		
-		//console.log(`calculateTransformPosition: menu: ${positions.menu} bar: ${positions.bar}`);
-		
-		return positions;
-	}
-}

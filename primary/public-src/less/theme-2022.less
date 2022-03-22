@@ -1,4 +1,37 @@
 /* 2022 THEME COLORS */
+
+/* FRC's season colors */
+/* These define the raw color values for FRC's color palette. */
+@frc-green-dark: #3C7B3B;
+@frc-green-medium: #A5CA18;
+@frc-green-light: #CFE385;
+@frc-blue-dark: #1E5AA8;
+@frc-blue-medium: #68C3E2;
+@frc-blue-light: #C8E9F5;
+@frc-blue: #009cd7;
+@frc-black: #000000;
+
+/* FIRST FORWARD colors */
+@ff-smoke: #e6e6e6;
+@ff-terra: #dab045;
+@ff-flora: #5dbca1;
+@ff-pacific: #314c77;
+@ff-space: #0f1328;
+
+@primary: @frc-blue-dark;
+@secondary: @frc-blue-dark;
+@trim: @frc-green-dark;
+@highlight: @frc-blue-light;
+
+@button-primary: @frc-blue;
+@button-secondary: @frc-blue-dark;
+
+/* Coordinate "background" with the image as defined in the 'layout.pug'! */
+@background: @ff-space;
+@header: @frc-blue-dark;
+@footer: @black;
+
+
 :root{
 	/* FRC's season colors */
 	/* These define the raw color values for FRC's color palette. */
@@ -50,5 +83,5 @@
 }
 
 .theme-submit, .theme-input {
-	color: var(--white)!important;
+	color: @white!important;
 }

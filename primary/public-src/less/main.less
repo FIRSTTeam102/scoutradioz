@@ -1,0 +1,268 @@
+/* Main styles that are year independent */
+@first-red: #D5181E;
+@first-blue: #005fa8;
+@first-gray: #9f9c9a;
+
+/* universal colors */
+@white: #fff;
+@light: #c8c8c8;
+@grey: #888;
+@dark: #454b4e;
+@black: #000;
+
+@text-primary: @white;
+@text-secondary: @light;
+
+@animation-time: 0.2s;
+@long-animation-time: 1.4s;
+@animate: all @animation-time ease-in-out;
+
+@header: @trim;
+@footer: @black;
+@placeholder-color: #bbb;
+
+:root {
+	color-scheme: dark;
+
+	/* FIRST colors */
+	--first-red: #D5181E;
+	--first-blue: #005fa8;
+	--first-gray: #9f9c9a;
+	
+	/* MMenu customization */
+	--mm-color-background: #444;
+	--mm-color-background-emphasis: #666; /* Selected menu item. */
+	--mm-color-background-highlight: #77777777; /* Submenu dropdown. */ 
+	--mm-color-border: #aaa;
+	--mm-color-button: #eee;
+	--mm-color-text: #eee;
+	--mm-color-text-dimmed: #ccc;
+	
+	/* MBurger (animated hamburger logo) customization */
+	--mb-animate-timeout: 0s;
+	--mb-button-size: 45px;
+	--mb-bar-width: 0.6;
+	--mb-bar-height: 3px;
+	--mb-bar-spacing: 8px;
+	
+	--sprites-url: url('/images/sprites.png');
+}
+
+.theme-link{color: @black!important; background-color: @button-primary!important}
+.theme-input{color: @black!important; background-color: @secondary!important}
+.theme-input-link{color: @black!important; background-color: @button-primary!important}
+.theme-dim,.theme-grey{color:@text-primary!important;background-color:@dark!important}
+.theme-submit{color:@black!important;background-color:@button-secondary!important}
+.theme-red{color:#fff!important;background-color:@first-red!important}
+.gear-btn{min-width:100px;margin: 15px 8px 0px 8px;}
+
+.theme-text{color:@text-primary!important;}
+.theme-text-secondary{color:@text-secondary!important;}
+.theme-text-dark{color:#1E1E23!important;}
+.theme-text-gray,.theme-text-grey{color:#2e2e2e!important;}
+.theme-text-white{color:#eee!important;}
+.theme-text-black{color:#111!important;}
+
+/* 2019 hover background colors */
+.theme-link:hover{color:rgb(22, 21, 20)!important;background-color:@white!important}
+.theme-hover-white:hover{color:#000!important;background-color:@white!important}
+.theme-hover-light-gray:hover,.theme-hover-light-grey:hover{color:#1E1E23!important;background-color:#b9b9c9!important}
+.theme-submit:hover{color:@dark!important;background-color:@light!important}
+.theme-hover-red:hover{color:#fff!important;background-color:#ff6d85!important}
+
+/* For alliance colors */
+.alliance-red{color:#fff!important;background-color:#EC0D00!important}
+.alliance-border-red{border: 1px solid hsl(2, 100%, 88%)!important}
+.alliance-hover-red:hover{color:rgb(43, 16, 16)!important;background-color:rgb(235, 144, 140)!important}
+.alliance-blue{color:#fff!important;background-color:#2623B8!important}
+.alliance-border-blue{border: 1px solid hsl(242, 100%, 89%)!important}
+.alliance-hover-blue:hover{color:rgb(14, 13, 32)!important;background-color:rgb(134, 132, 235)!important}
+
+.header{background-color: @header;}
+.footer{background-color: @footer;}
+
+.animate{transition: @animate; -webkit-transition: @animate;}
+
+.unimportant{opacity: 70%;}
+.very-unimportant{opacity: 30%;}
+
+
+.team-image-sm{max-height: 100px; margin: 4px;}
+.team-image-md{max-height: 225px; margin: 4px;}
+.team-image-lg{max-height: 350px; margin: 8px;}
+
+.i, .italic{font-style: italic;}
+.b, .strong{font-weight: bold;}
+.stronger{font-weight: 1000;}
+.u, .underline{text-decoration: underline;}
+.strike{text-decoration: line-through;}
+p.indented{
+	text-indent: 20px;
+}
+p.hanging-indent{
+	text-indent: -40px;
+	margin-left: 40px;
+}
+.info{
+	font-style: italic;
+	width: 50%;
+	text-align: left;
+	margin: 1em auto;
+	color: @text-secondary;
+}
+a.link{
+	text-decoration: underline!important;
+}
+
+.centered-half{
+	width: 50%;
+	margin: auto;
+}
+
+/* For background */
+.background{
+	position:fixed;
+	top:0px;
+	left:0px;
+	width:100%;
+	height:110%;
+	z-index:-1;
+}
+body{
+	display: flex;
+	min-height: 100%;
+}
+html{
+	height: 100%;
+	background-color: @background;
+}
+#page{
+	min-height: 100%;
+	min-width: 100%;
+}
+#page::after{
+	content: "";
+	display: block;
+	height: 240px;
+}
+@media(max-width: 600px){
+	#page::after{height: 160px;}
+}
+
+/* For templates/upcomingMatch.pug */
+.thick-border{
+	border-width: 6.5px!important;
+	margin-top: -5.5px;
+	border-radius: 10px;
+}
+.upcoming-rank{
+	margin-top: 2.5px;
+	min-width: 50px;
+}
+@media(max-width: 400px) {
+	.upcoming-rank{
+		display: block;
+		width: 100%;
+	}
+}
+
+/* For spacers */
+.theme-spacer{
+	border-collapse: collapse;
+	border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+}
+hr{
+	border: 0;
+	border-top: 2px solid rgba(255, 255, 255, 0.25);
+	margin: 20px 0;
+}
+
+
+/* For tables that contain spacers */
+.theme-contains-spacer{
+	border-collapse: collapse;
+}
+
+/* For elements that need to be in-line with input elements, but don't line up */
+.theme-inline-padding {min-height:18px;padding:9px}
+
+/* Screen darkener for page submission */
+.theme-darkener{
+	width: 100%;
+	height: 100%;
+	background-color: rgba(36, 36, 36, 0.5);
+	z-index: 2;
+}
+
+/* For notification cards */
+.notification-card-container{
+	position: fixed;
+	z-index: 2;
+	width: 100%;
+	top: 45px;
+	left: 0px;
+}
+
+.notification-card{
+	z-index: 3;
+	position: relative;
+	width: 100%;
+	box-sizing: border-box;
+	background-color: rgb(255, 179, 179);
+	margin: 16px 0px;
+	transition: opacity 2s;
+	transition-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+	
+	border-bottom-style: solid;
+	border-bottom-width: 4px;
+}
+
+.notification-card .notification-card-content{
+	font-size: 1.1em;
+	text-align: center;
+	word-wrap: break-word;
+	font-family: Verdana, Geneva, sans-serif;
+	
+	padding: 12px 32px;
+}
+
+.notification-card .notification-card-exit{
+	font-size: 1.2em;
+	text-align: center;
+	font-family: monospace;
+	transform: scaleX(1.3);
+	
+	float: right;
+	padding: 12px 24px;
+}
+
+.notification-card .notification-card-exit:hover{
+	cursor: pointer;
+}
+
+.password-prompt {
+	z-index: 4;
+	position: fixed;
+	top: 25%;
+	left: 16px;
+	right: 16px;
+}
+
+.password-prompt-content {
+	margin: auto;
+	background-color: #f0f5ff;
+	color: @black;
+	padding: 8px 16px;
+	min-width: 400px;
+	max-width: 800px;
+	width: 50%;
+}
+
+@media(max-width: 600px) {
+	.password-prompt-content {
+		min-width: unset;
+	}
+	.centered-half {
+		width: 100%;
+	}
+}

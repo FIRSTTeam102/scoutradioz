@@ -34,11 +34,21 @@
     "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name $npm_package_config_functionFullName",
     "promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name $npm_package_config_functionFullName",
     "rollback-prod": "node ../scripts/rollbackversion.js --function-name $npm_package_config_functionFullName",
+	
+	
     "---readme2---": "Use the link-x and unlink-x scripts to test development versions of our associated NPM packages without having to publish many test versions. Make sure to run the unlink script before uploading to Lambda, because it'll break.",
     "win-link-helpers": "cd ../scoutradioz-helpers && npm link && npm install && cd ../primary && npm link @firstteam102/scoutradioz-helpers",
     "win-unlink-helpers": "npm unlink @firstteam102/scoutradioz-helpers && npm i @firstteam102/scoutradioz-helpers",
     "win-link-utilities": "cd ../scoutradioz-utilities && npm link && npm install && cd ../primary && npm link @firstteam102/scoutradioz-utilities",
-    "win-unlink-utilities": "npm unlink @firstteam102/scoutradioz-utilities && npm i @firstteam102/scoutradioz-utilities"
+    "win-unlink-utilities": "npm unlink @firstteam102/scoutradioz-utilities && npm i @firstteam102/scoutradioz-utilities",
+	
+	"---readme3---": "",
+	"postinstall": "cd .. && npm install",
+	"compile-less": "echo \"Compiling & minifying LESS\" && npx lessc public-src/less/base.less public/css/style.css --clean-css=\"--s1 --advanced --compatibility=ie8\"",
+	"compile-less-dev": "echo \"Compiling LESS\" &&npx lessc public-src/less/base.less public/css/style.css",
+	"compile-ts": "echo \"Compiling TypeScript\" &&cd public-src/ts && npx tsc && cd ../ts-bundled && npx tsc",
+	"compile-static": "npm run compile-less && npm run compile-ts",
+	"start": "nodemon --ext js,json,less www"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -62,5 +72,8 @@
     "pug": "^3.0.2",
     "serve-favicon": "^2.5.0",
     "web-push": "^3.4.5"
+  }, 
+  "devDependencies": {
+	"@types/jquery": "3.5.14"
   }
 }

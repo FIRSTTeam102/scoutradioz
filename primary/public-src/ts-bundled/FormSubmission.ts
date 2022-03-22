@@ -1,15 +1,17 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
 'use strict';
 class FormSubmission{
 	
+	data: Dictionary<any>;
+	url: string;
+	key: string;
+	
 	/**
 	 * Generic form submission that uses NotificationCards.
-	 * @param {HTMLFormElement} form Form to submit
+	 * @param {HTMLFormElement|JQuery} form Form to submit
 	 * @param {String} url POST URL to submit to
 	 * @param {String} key Name of form (any)
 	 */
-	constructor(form, url, key){
+	constructor(form: HTMLFormElement|JQuery, url: string, key: string){
 		
 		if (form && url && key) {
 			this.data = this._getFormData(form);
@@ -25,9 +27,9 @@ class FormSubmission{
 	
 	/**
 	 * Submit the formsubmission.
-	 * @param {Function} cb Callback function. (err, message)
+	 * @param {StringCallback} cb Callback function. (err, message)
 	 */
-	submit(cb){
+	submit(cb: StringCallback){
 		
 		var dataString = this._getFromLocalStorage();
 		
@@ -60,7 +62,6 @@ class FormSubmission{
 						this.submit(cb);
 					}, 3000);
 				});
-			
 		}
 		//if data isn't found
 		else{
@@ -76,14 +77,22 @@ class FormSubmission{
 		localStorage.setItem(this.key, JSON.stringify(this.data));
 	}
 	
-	_getFormData(form){
+	_getFormData(form: HTMLFormElement|JQuery){
 		var unIndexedData = $(form).serializeArray();
-		var indexedData = {};
+		var indexedData: Dictionary<string> = {};
 	
 		$.map(unIndexedData, function(n, i){
-			indexedData[n['name']] = n['value'];
+			indexedData[n.name] = n.value;
 		});
 		
 		return indexedData;
 	}
+}
+
+interface StringCallback {
+	(error: Error|string|null, message?: string): void;
+}
+
+interface Dictionary<T> {
+    [Key: string]: T;
 }

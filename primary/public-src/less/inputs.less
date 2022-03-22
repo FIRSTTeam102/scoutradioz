@@ -1,0 +1,146 @@
+
+
+
+/* Toggle switches */
+/* The switch - the box around the slider */
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 28px;
+	&.theme-inline-padding { top: 4px; /* to make the switch inline with labels */ }
+	& input {
+		opacity: 0;
+		width: 0;
+		height: 0;
+	}
+	
+	/* The slider */
+	& .toggle {
+		position: absolute;
+		cursor: pointer;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: #ccc;
+		border-radius: 28px;
+	}
+	& .toggle.animate:before {
+		-webkit-transition: @animate;
+		transition: @animate;
+	}
+	& .toggle:before {
+		position: absolute;
+		content: "";
+		height: 20px;
+		width: 20px;
+		left: 4px;
+		bottom: 4px;
+		background-color: white;
+		border-radius: 20px;
+	}
+	& input:checked + .toggle { background-color: @button-primary; }
+	& input:focus + .toggle { box-shadow: 0 0 1px @button-primary; }
+	& input:checked + .toggle:before {
+		-webkit-transform: translateX(32px);
+		-ms-transform: translateX(32px);
+		transform: translateX(32px);
+	}
+}
+
+/* Range sliders */
+.slider-container {
+	position: relative;
+	--height: 24px;
+	--thickness: 5px;
+	height: var(--height);
+}
+
+.slider {
+	-webkit-appearance: none;  /* Override default CSS styles */
+	appearance: none;
+	width: 100%;
+	height: var(--thickness);
+	background: #ffffff80; /* todo: make this a variable */
+	border-radius: 2px;
+}
+.slider-before {
+	width: 0%;
+	height: var(--thickness);
+	background: var(--highlight);
+	border-radius: 2px;
+	position: absolute;
+	top: calc(var(--height) / 2 - var(--thickness) / 2);
+	pointer-events: none;
+}
+.slider.reversed, .slider.reversed::-webkit-slider-thumb {
+	direction: rtl;
+}
+.slider-labels {
+	margin-top: 8px;
+	position: relative;
+}
+.slider-label-left{float: left; opacity: 0.5;}
+.slider-label-right{float: right; opacity: 0.5;}
+.slider-label-center{
+	font-size: 1.1em;
+	top: -2px;
+	position: absolute;
+	display: block;
+	width: 100%;
+	text-align: center;
+	line-height: 0.85;
+}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none; 
+	appearance: none;
+	width: var(--height);
+	height: var(--height);
+	background: var(--highlight);
+	border-radius: 50%;
+}
+.slider::-moz-range-thumb {
+	width: var(--height);
+	height: var(--height);
+	background: var(--highlight);
+	border-radius: 50%;
+}
+
+.audit-card{
+	font-weight:bold;
+	box-sizing:content-box;
+	width: 20px;
+	height: 20px;
+	padding: 12px;
+	margin: 2px 2px;
+	font-family: Tahoma, Geneva, sans-serif;
+	font-size: 20px;
+}
+
+
+
+/* For input elements */
+.theme-input{
+	border-radius:12px;
+	border: 0;
+	transition:0.2s;
+	min-height:18px;
+	padding:9px;
+}
+textarea{padding:8px 12px;}
+input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rgb(118, 118, 151)!important}
+.theme-input::-webkit-input-placeholder {color:@placeholder-color;}
+.theme-input:-moz-placeholder {color:@placeholder-color;opacity:1;}
+.theme-input::-moz-placeholder {color:@placeholder-color;opacity:  1;}
+.theme-input:-ms-input-placeholder {color:@placeholder-color;}
+.theme-input::-ms-input-placeholder {color:@placeholder-color;}
+.theme-input::placeholder {color:@placeholder-color;}
+.no-padding{padding: 0!important;}
+.no-select{
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
