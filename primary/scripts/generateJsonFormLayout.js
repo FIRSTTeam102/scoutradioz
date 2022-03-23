@@ -52,16 +52,20 @@ const matchAthenian2022 = [
 	['h3', 'lblTeleLowerHub', 'Lower Hub'],
 	['counter', 'teleopLowScored', 'Cargo scored'],
 	['badcounter', 'teleopLowMissed', 'Cargo missed'],
-	['checkbox', 'defensePlayed', 'Defended (stopped or delayed at least one score)?'],
-	['checkbox', 'counterDefensePlayed', 'Attempted to stop or deflect a defender?'],
+	['checkbox', 'defended', 'Defended (stopped or delayed at least one score)?'],
+	['checkbox', 'playedCounterDefense', 'Attempted to stop or deflect a defender?'],
 	['spacer'],
 	['h2', 'endgameLabel', 'End game'],
-	['multiselect', 'successfulClimb', 'Climb', ['None', 'Low', 'Mid', 'High', 'Traversal']],
+	['timeslider', 'climbTimeStart', 'How much time was on the clock when they started climbing?', null, [0, 90, -5]],
+	['timeslider', 'climbTimeEnd', 'How much time was on the clock when they stopped climbing?', null, [0, 90, -5]],
+	['multiselect', 'successfulClimb', 'Successful climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
+	['multiselect', 'attemptedClimb', 'Attempted climb level:', ['None', 'Low', 'Mid', 'High', 'Traversal']],
 	['spacer'],
 	['h2', 'generalLabel', 'General'],
 	// ['slider', 'shooterConsistency', 'Shooter consistency', null, [1, 10, 1]],
 	['slider', 'agilityOnField', 'Agility on the field', null, [1, 5, 1]],
-	['checkbox', 'diedOnField', 'Died on field'],
+	['checkbox', 'diedDuringMatch', 'Died during the match (or never started)?'],
+	['checkbox', 'recoveredFromFreeze', 'Recovered from freeze?'],
 	['spacer'],
 	['textblock', 'otherNotes', 'Other comments and notes:'],
 ];
@@ -227,10 +231,10 @@ const upperHubAccuracy2022 = {
 	],
 	display_as: 'percentage',
 };
-const cargoAccuracy2022 = {
+const overallAccuracy2022 = {
 	order: 530,
 	label: 'Overall Cargo accuracy',
-	id: 'cargoAccuracy',
+	id: 'overallAccuracy',
 	operations: [
 		{
 			operator: 'sum',
@@ -486,6 +490,55 @@ const attemptedClimb2022 = {
 		quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, }
 	}]
 };
+const flagRecoverWithoutFreeze2022 = {
+	order: 9991,
+	label: '',
+	id: 'recoverWithoutFreeze🚩',
+	operations: [
+		{
+			operator: 'subtract',
+			operands: ['recoveredFromFreeze', 'diedDuringMatch'],
+			as: 'recMinusDied'
+		},
+		{
+			operator: 'gt',
+			operands: ['$recMinusDied', 0]
+		}
+	]
+};
+const flagClimbAttemptLtSuccess2022 = {
+	order: 9992,
+	label: '',
+	id: 'climbAttemptLtSuccess🚩',
+	operations: [
+		{
+			operator: 'multiselect',
+			id: 'successfulClimb',
+			quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
+			as: 'climbSuccess'
+		}, {
+			operator: 'multiselect',
+			id: 'attemptedClimb',
+			quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
+			as: 'climbAttempt'
+		},
+		{
+			operator: 'lt',
+			operands: ['$climbAttempt', '$climbSuccess']
+		}
+	]
+};
+const flagNegativeClimbTime2022 = {
+	order: 9993,
+	label: '',
+	id: 'negativeClimbTime🚩',
+	operations: [
+		{
+			operator: 'lt',
+			operands: ['climbTimeStart', 'climbTimeEnd']
+		}
+	]
+};
 
 const matchDerivedAthenian2022 = [
 	climbPoints2022, 
@@ -494,10 +547,15 @@ const matchDerivedAthenian2022 = [
 	upperHubAccuracy2022, 
 	lowerHubAccuracy2022,
 	ratioUpperLower2022,
-	cargoAccuracy2022,
+	overallAccuracy2022,
 	contributedPoints2022, 
+	climbTime2022,
+	attemptedClimb2022,
+	successfulClimb2022,
 	autoPoints2022, 
-	teleopPoints2022 
+	teleopPoints2022,
+	reliabilityFactor2022,
+	flagRecoverWithoutFreeze2022, flagClimbAttemptLtSuccess2022, flagNegativeClimbTime2022,
 ];
 // x 0 , 0 = nan 
 // x default to first value dropdown
@@ -517,54 +575,7 @@ const matchDerivedGearheads2022 = [
 	successfulClimb2022,
 	autoPoints2022, teleopPoints2022, contributedPoints2022, 
 	reliabilityFactor2022,
-	{
-		order: 9991,
-		label: '',
-		id: 'recoverWithoutFreeze🚩',
-		operations: [
-			{
-				operator: 'subtract',
-				operands: ['recoveredFromFreeze', 'diedDuringMatch'],
-				as: 'recMinusDied'
-			},
-			{
-				operator: 'gt',
-				operands: ['$recMinusDied', 0]
-			}
-		]
-	}, {
-		order: 9992,
-		label: '',
-		id: 'climbAttemptLtSuccess🚩',
-		operations: [
-			{
-				operator: 'multiselect',
-				id: 'successfulClimb',
-				quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
-				as: 'climbSuccess'
-			}, {
-				operator: 'multiselect',
-				id: 'attemptedClimb',
-				quantifiers: { 'None': 0, 'Low': 1, 'Mid': 2, 'High': 3, 'Traversal': 4, },
-				as: 'climbAttempt'
-			},
-			{
-				operator: 'lt',
-				operands: ['$climbAttempt', '$climbSuccess']
-			}
-		]
-	}, 
-	{
-		order: 9993,
-		label: '',
-		id: 'negativeClimbTime🚩',
-		operations: [
-			{
-				operator: 'lt',
-				operands: ['climbTimeStart', 'climbTimeEnd']
-			}
-		]
-	}
+	flagRecoverWithoutFreeze2022, flagClimbAttemptLtSuccess2022, flagNegativeClimbTime2022,
 ];
 
 /*
@@ -592,6 +603,26 @@ if (org_key == 'frc102' || org_key == 'demo') {
 	climbAccuracy2022b.order = 223;
 	climbTime2022.order = 225;
 	reliabilityFactor2022.order = 281;
+}
+if (org_key == 'frc852') {
+	contributedPoints2022.order = -10;
+	autoPoints2022.order = -9; // was 71
+	teleopPoints2022.order = -8; // was 161
+	climbPoints2022.order = -7; // was 224
+	
+	autoAccuracy2022.order = 72;
+	teleopAccuracy2022.order = 172;
+	overallAccuracy2022.order = 173;
+	ratioUpperLower2022.order = 174;
+	upperHubAccuracy2022.order = 175;
+	lowerHubAccuracy2022.order = 176;
+	
+	successfulClimb2022.order = 211;
+	attemptedClimb2022.order = 212;
+	// climbAccuracy2022b.order = 223;
+	climbTime2022.order = 215;
+	reliabilityFactor2022.order = 302;
+	
 }
 
 let layoutArr = [];
