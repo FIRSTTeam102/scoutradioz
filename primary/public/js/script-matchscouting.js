@@ -178,6 +178,9 @@ $(function(){
 	
 	$('#submit').on('click', function(){
 		
+		// JL: Disabled inputs are only for visual assistance in dynamic scrolling, but they might be ignored in the form submission if they remain disabled
+		$('input[disabled]').removeAttr('disabled'); 
+		
 		var matchForm = $('form[name=matchform]');
 		
 		var matchSubmission = new FormSubmission(matchForm, '/scouting/match/submit', 'matchScouting');

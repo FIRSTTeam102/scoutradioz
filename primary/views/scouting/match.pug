@@ -68,7 +68,7 @@ block content
 			transition: filter 0.2s, opacity 0.2s;
 		}
 		*/
-	script(src=`${fileRoot}/js/script-matchscouting.js?v=6`)
+	script(src=`${fileRoot}/js/script-matchscouting.js?v=7`)
 	- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');
 	- var btnColor = alliance ? ((alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
 	p
@@ -114,6 +114,7 @@ block content
 	br 
 	center
 		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit") Submit
+	br 
 	br 
 	each element in layout
 		case element.type
