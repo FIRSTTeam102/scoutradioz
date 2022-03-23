@@ -33,7 +33,7 @@ matchDataHelper.isQuantifiableType = function(type) {
 		case 'badcounter':
 		case 'derived':
 		case 'slider':
-		// case 'timeslider': // JL: Timesliders are a bit broken atm
+		case 'timeslider':
 			isQuantifiable = true;
 			break;
 		default:
@@ -41,6 +41,40 @@ matchDataHelper.isQuantifiableType = function(type) {
 	}
 	
 	return isQuantifiable;
+};
+
+/**
+ * Adjusts the data type of a given datum based on its layout type. Numerical elements are transformed into numbers, checkboxes are transformed into 0/1, and others are kept as strings.
+ * Use to "sanitize" the input from HTML forms into the database.
+ * @param {string|number} value The metric/datum to fix
+ * @param {string} type The type of the element, e.g. checkbox/counter/slider.
+ * @return {string|number} 
+ */
+matchDataHelper.fixDatumType = function(value, type) {
+	
+	var newVal;
+	
+	// Note: Derived metrics are always returned as numbers (but this method should not be called for derived metrics)
+	switch (type) {
+		case 'checkbox': {
+			if (value === 'true' || value === true) newVal = 1;
+			else newVal = 0;
+			break;
+		}
+		case 'counter':
+		case 'badcounter':
+		case 'slider':
+		case 'timeslider': {
+			newVal = -1;
+			let parsedVal = parseInt(value);
+			if (!isNaN(parsedVal)) newVal = parsedVal;
+			break;
+		}
+		default:
+			newVal = value;
+	}
+	
+	return newVal;
 };
 
 /**

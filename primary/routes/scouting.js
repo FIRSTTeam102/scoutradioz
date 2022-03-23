@@ -132,6 +132,9 @@ router.post('/match/submit', wrap(async (req, res) => {
 	for (let property in matchData) {
 		if (layoutTypeById.hasOwnProperty(property)) {
 			var thisType = layoutTypeById[property];
+			// 2022-03-22 JL: Moving the data-type parsing into a helper function, which can easily be updated later as more form types are added
+			matchData[property] = matchDataHelper.fixDatumType(matchData[property], thisType);
+			/*
 			//logger.debug(property + " :: " + matchData[property] + " ~ is a " + thisType);
 			if ('counter' == thisType || 'badcounter' == thisType) {
 				//logger.debug("...converting " + matchData[property] + " to a number");
@@ -148,6 +151,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 				let newVal = (matchData[property] == 'true' || matchData[property] == true) ? 1 : 0;
 				matchData[property] = newVal;
 			}
+			*/
 		}
 	}
 	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(matchData));
