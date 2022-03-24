@@ -199,9 +199,9 @@ $(function(){
 			}
 		});
 		
-		window.onbeforeunload = function() {
-			return 'Leaving this page will lose match scouting data.';
-		};
 	});
 	
+	window.onbeforeunload = function() {
+		return 'Leaving this page will lose match scouting data.';
+	};
 });
