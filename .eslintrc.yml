@@ -17,6 +17,9 @@ globals:
   window: writable
 parserOptions:
   ecmaVersion: 2018
+ignorePatterns: 
+  - bundle.js
+  - primary/public/js/*
 rules:
   indent:
     - error
@@ -47,4 +50,3 @@ rules:
   no-useless-escape: 0
   scoutradioz-eslint/res-render-require-title:
     - error
-  ignorePatterns: bundle.js
