@@ -220,7 +220,7 @@ async function handleUpcomingMatch( data, req, res ) {
 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
 	
 	var match = await utilities.findOne('matches', {key: match_key});
-	if (!match) return logger.error(`Match not found: ${match_key}`);
+	if (!match) return logger.error(`Match not found: ${match_key}`), res.send(`Match not found: ${match_key}`);
 
 	// Synchronize the rankings (just in case)
 	// await syncRankings(event_key);
@@ -468,12 +468,15 @@ async function handleScheduleUpdated( data ) {
 	logger.debug('url=' + url);
 	var matchData = await utilities.requestTheBlueAlliance(url);
 	if (matchData && matchData.length && matchData.length > 0) {
-		//var arrayLength = array.length;
+		logger.debug(`Matches received: ${matchData.length}`);
 
 		// First delete existing match data for the given event
 		await utilities.remove('matches', {'event_key': event_key});
 		// Now, insert the new data
 		await utilities.insert('matches', matchData);
+	}
+	else {
+		logger.warn('No matches found!');
 	}
 
 	// Synchronize the rankings (just in case)
