@@ -68,6 +68,7 @@ if(process.env.NODE_ENV == 'production') logger.info('Pug caching will be enable
 //Create app
 const app = express();
 
+/*
 // Redirect www.scoutradioz.com to scoutradioz.com
 //	Credit: https://stackoverflow.com/questions/17898183/
 app.get('/*', (req, res, next) => {
@@ -88,6 +89,7 @@ app.get('/*', (req, res, next) => {
 	logger.info('Redirecting user from www.* to ' + host + req.url + '');
 	res.end();
 });
+*/
 
 //Must be the very first app.use
 app.use(utilities.refreshTier);
