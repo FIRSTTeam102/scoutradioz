@@ -5,10 +5,12 @@ const log4js = require('log4js');
 const wrap = require('express-async-handler');
 const webpush = require('web-push');
 const utilities = require('@firstteam102/scoutradioz-utilities');
-const matchDataHelper = require('@firstteam102/scoutradioz-helpers').matchData;
+const helpers = require('@firstteam102/scoutradioz-helpers');
+const matchDataHelper = helpers.matchData;
 
 //utililties config
 utilities.config(require('./databases.json'));
+helpers.config(utilities); // pass the utilities db object to helpers
 
 //log4js config
 var log4jsConfig = {
@@ -114,7 +116,7 @@ webhook.use((req, res, next) => {
 webhook.use((err, req, res, next) => {
 	logger.addContext('funcName', 'error');
 	
-	logger.error(err.message || err, JSON.stringify(err.stack));
+	logger.error(err);
 	
 	res.status(err.status || 500).send(err);
 });

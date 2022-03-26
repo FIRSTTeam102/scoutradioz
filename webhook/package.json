@@ -13,11 +13,17 @@
     "folder": "webhook"
   },
   "scripts": {
-    "upload-test": "node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
-    "upload-qa": "node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
-    "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
-    "promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name %npm_package_config_functionFullName%",
-    "rollback-prod": "node ../scripts/rollbackversion.js --function-name %npm_package_config_functionFullName%"
+    "win-upload-test": "node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
+    "win-upload-qa": "node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
+    "win-promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
+    "win-promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name %npm_package_config_functionFullName%",
+    "win-rollback-prod": "node ../scripts/rollbackversion.js --function-name %npm_package_config_functionFullName%",
+	
+    "upload-test": "node ../scripts/uploadversion.js --alias test --folder $npm_package_config_folder --function-name $npm_package_config_functionFullName",
+    "upload-qa": "node ../scripts/uploadversion.js --alias qa --folder $npm_package_config_folder --function-name $npm_package_config_functionFullName",
+    "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name $npm_package_config_functionFullName",
+    "promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name $npm_package_config_functionFullName",
+    "rollback-prod": "node ../scripts/rollbackversion.js --function-name $npm_package_config_functionFullName"
   },
   "license": "Apache-2.0",
   "dependencies": {
