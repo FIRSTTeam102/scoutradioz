@@ -4,6 +4,7 @@ const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
 const e = require('@firstteam102/http-errors');
+const bcrypt = require('bcryptjs');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -242,6 +243,60 @@ router.get('/', wrap(async (req, res) => {
 	
 	//redirect to pits dashboard
 	res.redirect('/dashboard/pits');
+}));
+
+// (Org manager only) - Deletes the scouting data from a given match. Requires a password.
+router.post('/match/delete-data', wrap(async (req, res) => {
+	if (!await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+		return;
+	}
+	logger.addContext('funcName', 'match/delete-data[post]');
+	
+	const password = req.body.password;
+	const match_team_key = req.body.match_team_key;
+	const org_key = req.user.org_key;
+	
+	const user = await utilities.findOne('users', {_id: req.user._id});
+	
+	logger.info(`User ${req.user.name} is requesting to delete scouting data for match ${match_team_key}!`);
+	
+	const comparison = await bcrypt.compare(password, user.password);
+	
+	if (comparison === true) {
+		
+		let entry = await utilities.findOne('matchscouting', {org_key: org_key, match_team_key: match_team_key});
+		if (entry) {
+			if (entry.data)
+				logger.info(`Previous data: ${JSON.stringify(entry.data)}`);
+			else 
+				logger.info('Data not present in DB anyways.');
+			
+			let writeResult = await utilities.update('matchscouting', 
+				{org_key: org_key, match_team_key: match_team_key},
+				{$set: {data: null}}
+			);
+			
+			logger.debug(`Done; writeResult=${JSON.stringify(writeResult)}`);
+			res.send({
+				success: true,
+				message: 'Deleted data successfully. You will not be redirected away from the page, in case you wish to re-submit the data on screen.'
+			});
+		}
+		else {
+			logger.info('Entry not found in database!');
+			res.send({
+				success: false,
+				message: 'Invalid match requested.'
+			});
+		}
+	}
+	else {
+		logger.info('Authentication failed');
+		res.send({
+			success: false,
+			message: 'Password incorrect.'
+		});
+	}
 }));
 
 module.exports = router;
