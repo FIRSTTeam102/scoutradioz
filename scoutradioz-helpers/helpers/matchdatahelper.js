@@ -11,9 +11,14 @@ logger.level = process.env.LOG_LEVEL || 'debug';
 
 var ztable = require('ztable');
 
+/** @type import('../../scoutradioz-utilities/utilities') */ 
 var utilities = null;
 var matchDataHelper = module.exports = {};
 
+/**
+ * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
+ * @param {import('../../scoutradioz-utilities/utilities')} utilitiesModule 
+ */
 matchDataHelper.config = function(utilitiesModule){
 	utilities = utilitiesModule;
 };
@@ -555,7 +560,18 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 	
 	returnData.teamRanks = teamRanks;
 	returnData.teamNumbers = teamNumbers;
-
+	
+	const mostRecentScoredMatch = await utilities.findOne('matches', 
+		{event_key: event_key, 'alliances.red.score': {$gte: 0}},
+		{sort: {time: -1}},
+		{allowCache: true}
+	);
+	
+	var earliestTimestamp = 0;
+	if (mostRecentScoredMatch) {
+		earliestTimestamp = mostRecentScoredMatch.time;
+	}
+	
 	var matches = [];
 	if(teamKey != 'all'){
 		
@@ -564,6 +580,7 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 			$and: [
 				{ event_key: event_key },
 				{ 'alliances.red.score': -1 },
+				{ time: {$gte: earliestTimestamp} },
 				{
 					$or: [
 						{ 'alliances.blue.team_keys': teamKey },
@@ -582,7 +599,7 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 	//if teamKey is 'all'
 	else {
 		//find all matches for this event that have not been completed
-		matches = await utilities.find('matches', {event_key: event_key, 'alliances.blue.score': -1}, {sort: {time: 1}});
+		matches = await utilities.find('matches', {event_key: event_key, 'alliances.blue.score': -1, time: {$gte: earliestTimestamp}}, {sort: {time: 1}});
 
 		returnData.matches = matches;
 	}	
@@ -614,11 +631,17 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 	// TESTING! TODO REMOVE THIS vvv
 	//aggFind.pop();  // kick off a team just so we have at least one team with zero (0) datapoints
 	// TESTING! TODO REMOVE THIS ^^^
-	for (let i = 0; i < aggFind.length; i++) {
-		// special case: normally StdDev of 1 point is zero (0); in our case, override to be 1/2 of the contributed points
-		if (aggFind[i]['dataCount'] == 1)
-			aggFind[i]['contributedPointsSTD'] = aggFind[i]['contributedPointsAVG'] / 2.0;
-		aggDict[aggFind[i]['_id']] = aggFind[i];
+	for (var i = 0; i < aggFind.length; i++) {
+		// if any team does NOT have a 'contributedPointsAVG' value, we're not going to show anything
+		if (aggFind[i]['contributedPointsAVG'] == null) {
+			returnData.hasPredictive = false;
+		}
+		else {
+			// special case: normally StdDev of 1 point is zero (0); in our case, override to be 1/2 of the contributed points
+			if (aggFind[i]['dataCount'] == 1)
+				aggFind[i]['contributedPointsSTD'] = aggFind[i]['contributedPointsAVG'] / 2.0;
+			aggDict[aggFind[i]['_id']] = aggFind[i];
+		}
 	}
 	//console.log('aggDict=' + JSON.stringify(aggDict));
 	//console.log('aggDict[frc102]=' + JSON.stringify(aggDict['frc102']))

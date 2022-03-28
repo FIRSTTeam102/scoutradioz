@@ -27,7 +27,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@firstteam102/scoutradioz-helpers": "^1.0.12",
+    "@firstteam102/scoutradioz-helpers": "^1.0.23",
     "@firstteam102/scoutradioz-utilities": "^1.1.5",
     "aws-serverless-express": "^3.4.0",
     "dotenv": "^8.2.0",
