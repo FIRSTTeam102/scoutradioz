@@ -81,7 +81,7 @@ block content
 						select(class="theme-input w3-left" id="eventYearSelect")
 							+yearsSelect(years, eventListYear)
 					div(class="w3-rest w3-padding-small")
-						input#setEvent(class="theme-input w3-rest w3-no-border theme-inline-padding w3-block" placeholder="Search for events from this year" type="text", name="event_key")
+						input#setEvent(class="theme-input w3-rest w3-no-border theme-inline-padding w3-block" placeholder="Search for events from this year, or enter an event key directly" type="text", name="event_key")
 				div(class="w3-padding-small w3-rest")
 					button#btnSubmit(class="theme-submit w3-btn w3-block" type="submit") Set current event key
 			hr 
@@ -93,7 +93,7 @@ block content
 						th Key
 					each event in events
 						tr(class="w3-hover-white event-row item" onclick=`fillSetEvent('${event.key}')`)
-							td(class="w3-padding-16")=event.name 
+							td(class="w3-padding-16" event-name-for=event.key)=event.name 
 							td(class="w3-padding-16")=event.start_date
 							td(class="w3-padding-16")=event.key
 							td(style="display: none;")=event.city
@@ -113,9 +113,15 @@ block content
 			})
 		});
 		
-		function fillSetEvent(value){
-			$("#setEvent").val(value);
-			$("#setEvent").trigger('input');
+		async function fillSetEvent(value){
+			//- 2022-03-26 JL: Clicking on the header will now show a prompt & submit the form instead of just populating the key input
+			var eventName = $(`[event-name-for=${value}]`).text();
+			var result = await Confirm.show(`Set *${eventName}* as the current event?`);
+			if (result.cancelled === false) {
+				$("#setEvent").val(value);
+				//- $("#setEvent").trigger('input');
+				$('form[name=setCurrentEvent]').submit();
+			}
 		}
 		
 		function confirmSetDefaultPassword(){
