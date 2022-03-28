@@ -44,11 +44,11 @@
 	
 	"---readme3---": "",
 	"postinstall": "cd .. && npm install",
-	"compile-less": "echo \"Compiling & minifying LESS\" && npx lessc public-src/less/base.less public/css/style.css --clean-css=\"--s1 --advanced --compatibility=ie8\"",
-	"compile-less-dev": "echo \"Compiling LESS\" &&npx lessc public-src/less/base.less public/css/style.css",
-	"compile-ts": "echo \"Compiling TypeScript\" &&cd public-src/ts && npx tsc && cd ../ts-bundled && npx tsc",
+	"compile-less": "echo 'Compiling and minifying LESS' && npx lessc public-src/less/base.less public/css/style.css --clean-css=\"--s1 --advanced --compatibility=ie8\"",
+	"compile-less-dev": "echo 'Compiling LESS' &&npx lessc public-src/less/base.less public/css/style.css",
+	"compile-ts": "echo 'Compiling TypeScript' && cd public-src/ts-bundled && npx tsc && cd ../ts && npx tsc",
 	"compile-static": "npm run compile-less && npm run compile-ts",
-	"start": "nodemon --ext js,json,less www"
+	"watch-staticfiles": "node ./helpers/watch-staticfiles.js"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -75,5 +75,8 @@
   }, 
   "devDependencies": {
 	"@types/jquery": "3.5.14"
+  },
+  "nodemonConfig": {
+	  "ignore": ["public/*", "public-src/*"]
   }
 }
