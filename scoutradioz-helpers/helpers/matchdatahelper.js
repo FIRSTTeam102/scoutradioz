@@ -684,15 +684,20 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 
 		if (foundDataForEach) {
 			var zscore = (redAVG - blueAVG) / Math.sqrt(redSTD*redSTD + blueSTD*blueSTD);
-			var chanceOfRed = ztable(zscore); 
-			//console.log('blueAVG=' + blueAVG + ',blueSTD=' + blueSTD + ',blueCNT=' + blueCNT + ',redAVG=' + redAVG + ',redSTD=' + redSTD + ',redCNT=' + redCNT + '...chanceOfRed=' + chanceOfRed);
-			predictiveBlock['blueAVG'] = blueAVG; predictiveBlock['blueSTD'] = blueSTD;
-			predictiveBlock['redAVG'] = redAVG; predictiveBlock['redSTD'] = redSTD;
-			predictiveBlock['totalCNT'] = blueCNT + redCNT;
-			predictiveBlock['chanceOfRed'] = chanceOfRed;
-			logger.debug('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
-
-			returnData.matches[i]['predictive'] = predictiveBlock;
+			if (!isNaN(zscore)) {
+				var chanceOfRed = ztable(zscore); 
+				//console.log('blueAVG=' + blueAVG + ',blueSTD=' + blueSTD + ',blueCNT=' + blueCNT + ',redAVG=' + redAVG + ',redSTD=' + redSTD + ',redCNT=' + redCNT + '...chanceOfRed=' + chanceOfRed);
+				predictiveBlock['blueAVG'] = blueAVG; predictiveBlock['blueSTD'] = blueSTD;
+				predictiveBlock['redAVG'] = redAVG; predictiveBlock['redSTD'] = redSTD;
+				predictiveBlock['totalCNT'] = blueCNT + redCNT;
+				predictiveBlock['chanceOfRed'] = chanceOfRed;
+				logger.debug('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
+	
+				returnData.matches[i]['predictive'] = predictiveBlock;
+			}
+			else {
+				logger.warn(`Zscore is NaN! redAVG=${redAVG}, blueAVG=${blueAVG}, redSTD=${redSTD}, blueSTD=${blueSTD}, match_number=${returnData.matches[i].match_number}`);
+			}
 		}
 		else {
 			logger.debug('match#=' + returnData.matches[i].match_number + ' ... At least one zero data team');
