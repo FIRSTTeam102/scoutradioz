@@ -306,3 +306,5 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 		});
 	}
 }));
+
+module.exports = router;
