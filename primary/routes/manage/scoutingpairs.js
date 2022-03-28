@@ -185,7 +185,7 @@ router.post('/generateteamallocations', wrap(async (req, res) => {
 		
 	if( !req.body.password || req.body.password == ''){
 		
-		return res.send({status: 401, alert: 'No password entered.'});
+		return res.send({status: 401, message: 'No password entered.'});
 	}
 
 	// Log message so we can see on the server side when we enter this
@@ -196,7 +196,7 @@ router.post('/generateteamallocations', wrap(async (req, res) => {
 	var user = await utilities.find('users', { name: req.user.name, 'org_key': org_key });
 
 	if(!user[0]){
-		res.send({status: 500, alert:'Passport error: no user found in db?'});
+		res.send({status: 500, message:'Passport error: no user found in db?'});
 		return logger.error('no user found? generateteamallocations');
 	}
 	
@@ -206,7 +206,7 @@ router.post('/generateteamallocations', wrap(async (req, res) => {
 		if(out == true)
 			passCheckSuccess = true;
 		else
-			return res.send({status: 401, alert: 'Password incorrect.'});
+			return res.send({status: 401, message: 'Password incorrect.'});
 		
 		if(passCheckSuccess){
 			generateTeamAllocations(req, res);
@@ -242,8 +242,9 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 	logger.trace(thisFuncName + '*** Tagged as available:');
 	for(var i in req.body) {
 		if (i == 'blockSize') {
-			logger.trace(thisFuncName + "skipping 'blocksize'");
-		} else {
+			logger.trace(thisFuncName + 'skipping \'blocksize\'');
+		}
+		else {
 			logger.trace(thisFuncName + i);
 			availableArray.push(i);
 		}
@@ -341,7 +342,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 		scoutAvailableMap = {};
 		for (let i = 0; i < 6; i++)
 			scoutAvailableMap[scoutArray[i]] = scoutArray[i];
-		logger.trace(thisFuncName + 'scoutAvailablemap: ' + JSON.stringify(scoutAvailableMap))
+		logger.trace(thisFuncName + 'scoutAvailablemap: ' + JSON.stringify(scoutAvailableMap));
 		
 		var matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
@@ -454,14 +455,14 @@ router.post('/clearmatchallocations', wrap(async (req, res) => {
 	var passCheckSuccess;
 	
 	if( !req.body.password || req.body.password == ''){
-		return res.send({status: 401, alert: 'No password entered.'});
+		return res.send({status: 401, message: 'No password entered.'});
 	}
 	
 	// TODO: Use _id, not name, because names can be modified!
 	var user = await utilities.find('users', { name: req.user.name, 'org_key': org_key }, {});
 
 	if(!user[0]){
-		res.send({status: 500, alert:'Passport error: no user found in db?'});
+		res.send({status: 500, message:'Passport error: no user found in db?'});
 		return console.error('no user found? clearmatchallocations');
 	}
 		
@@ -471,7 +472,7 @@ router.post('/clearmatchallocations', wrap(async (req, res) => {
 		if(out == true)
 			passCheckSuccess = true;
 		else
-			return res.send({status: 401, alert: 'Password incorrect.'});
+			return res.send({status: 401, message: 'Password incorrect.'});
 		
 		if(passCheckSuccess){
 			/* Begin regular code ----------------------------------------------------------- */
@@ -493,27 +494,34 @@ router.post('/clearmatchallocations', wrap(async (req, res) => {
 			// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 			await utilities.bulkWrite('matchscouting', [{updateMany:{filter:{ 'org_key': org_key, 'event_key': event_key }, update:{ $unset: { 'assigned_scorer' : '' } }}}]);
 
-			return res.send({status: 200, alert: 'Cleared existing match scouting assignments successfully.'});
+			return res.send({status: 200, message: 'Cleared existing match scouting assignments successfully.'});
 		
 			/* End regular code ----------------------------------------------------------- */
 		}
 	});
 }));
 
-router.post('/setallunassigned', wrap(async (req, res) => {
+// Originally named /setallunassigned, but now also deletes all scouting pairs, for ease of use
+router.post('/clearscoutingpairs', wrap(async (req, res) => {
+	logger.addContext('funcName', 'clearscoutingpairs[post]');
+	logger.debug('ENTER');
 	
 	const org_key = req.user.org_key;
 	
+	logger.info(`Deleting all scouting pairs under ${org_key}`);
+	
+	let writeResult = await utilities.remove('scoutingpairs', {org_key: org_key});
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+	
 	logger.info(`Setting everyone under ${org_key} to assigned=false`);
 	
-	let writeResult = await utilities.bulkWrite('users', [{updateMany: {
+	writeResult = await utilities.bulkWrite('users', [{updateMany: {
 		filter: {org_key: org_key},
 		update: {$set: {'event_info.assigned': false}}
 	}}]);
-	
 	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
 	
-	return res.send({status: 200, alert: 'Set everyone as unassigned successfully.'});
+	return res.send({status: 200, message: 'Cleared scouting pairs successfully.'});
 }));
 
 //////////// Match allocating by team assignment
@@ -528,7 +536,7 @@ router.post('/generatematchallocations', wrap(async (req, res) => {
 	var passCheckSuccess;
 	
 	if( !req.body.password || req.body.password == ''){
-		return res.send({status: 401, alert: 'No password entered.'});
+		return res.send({status: 401, message: 'No password entered.'});
 	}
 	
 	// TODO: Use _id, not name, because names can be modified!
@@ -536,7 +544,7 @@ router.post('/generatematchallocations', wrap(async (req, res) => {
 	var user = await utilities.find('users', { name: req.user.name, 'org_key': org_key }, {});
 
 	if(!user[0]){
-		res.send({status: 500, alert:'Passport error: no user found in db?'});
+		res.send({status: 500, message:'Passport error: no user found in db?'});
 		return logger.error('no user found? generatematchallocations');
 	}
 	
@@ -546,7 +554,7 @@ router.post('/generatematchallocations', wrap(async (req, res) => {
 		if(out == true)
 			passCheckSuccess = true;
 		else
-			return res.send({status: 401, alert: 'Password incorrect.'});
+			return res.send({status: 401, message: 'Password incorrect.'});
 		
 		if(passCheckSuccess){
 			generateMatchAllocations(req, res);
@@ -779,7 +787,7 @@ async function generateMatchAllocations(req, res){
 	
 	logger.info(thisFuncName + 'EXIT');
 	// Done!
-	res.send({status: 200, alert: 'Generated team allocations successfully.'});
+	res.send({status: 200, message: 'Generated team allocations successfully.'});
 	
 	//All code below is legacy.
 	return;
@@ -916,7 +924,7 @@ async function generateTeamAllocations(req, res){
 	await utilities.insert('pitscouting', teamassignments);
 	// scoutDataCol.insert(teamassignments, function(e, docs) {
 	// 	//res.redirect("./");	
-	return res.send({status: 200, alert: 'Generated team allocations successfully.'});
+	return res.send({status: 200, message: 'Generated team allocations successfully.'});
 
 /* End regular code ----------------------------------------------------------- */
 }

@@ -20,8 +20,8 @@ block content
 		input#setmemberpairdata(type="hidden", name="data")
 	button(class="w3-btn w3-block theme-submit" onclick="submitPair()") Submit selected members as a new scouting group
 
+	hr 
 	if assigned.length > 0
-		hr 
 		h2 Scouting pairs
 	ul(class="w3-ul w3-left-align")
 		each pair in assigned
@@ -33,6 +33,7 @@ block content
 				- thisButtonLabel = selectedArray.toString();
 				button(onclick=`deletePair("${pairId}")` class="w3-btn theme-red") Delete pair
 				|	#{thisButtonLabel}
+	button(onclick="clearScoutingPairs()" class="w3-btn theme-red") Clear all scouting pairs
 	form(method="post" action="/manage/scoutingpairs/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
 	hr 
@@ -51,8 +52,8 @@ block content
 		each member in available
 			div(class="w3-container" style="max-width:300px;margin:auto;")
 				div(class="w3-left w3-margin-left")
-					input(type="checkbox" class="w3-check" name=member.name id=member.name)
-					label(class="w3-text-white" for=member.name) &nbsp;#{member.name} (#{member.org_info.subteam_key})
+					input(type="checkbox" class="w3-check" name=member.name id='chk_'+member.name)
+					label(class="w3-text-white" for='chk_'+member.name) &nbsp;#{member.name} (#{member.org_info.subteam_key})
 					br
 		- var defaultBlockSize = 5;
 		p
@@ -66,21 +67,16 @@ block content
 		label &nbsp;matches
 		p
 		button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
-	hr 
-	h3 Debugging
-	br
-	div
-		button(onclick="setUnassigned()" class="w3-btn theme-red") Set everyone as unassigned
 	script.
-		
-		function setUnassigned() {
-			Confirm.show('Set everyone to unassigned?\n(This should *only* be necessary if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)')
+	
+		function clearScoutingPairs() {
+			Confirm.show('Clear all scouting pairs? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)')
 				.then(response => {
 					if (!response.cancelled) {
-						$.post('/manage/scoutingpairs/setallunassigned', {})
+						$.post('/manage/scoutingpairs/clearscoutingpairs', {})
 							.done(resp => {
 								//- Show card then refresh page
-								NotificationCard.show(resp.alert);
+								NotificationCard.show(resp.message);
 								setTimeout(() => {
 									window.location.href = window.location.href;
 								}, 2000);
@@ -103,13 +99,13 @@ block content
 							password: result.password
 						}, 
 						function( data, status ){
-							if(data && data.alert) {
+							if(data && data.message) {
 								// error
 								if (data.status && data.status >= 400)
-									NotificationCard.error(data.alert);
+									NotificationCard.error(data.message);
 								// success/message
 								else
-									NotificationCard.show(data.alert);
+									NotificationCard.show(data.message);
 							}
 						});
 					}
