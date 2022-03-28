@@ -53,6 +53,7 @@ router.get('/login', wrap(async (req, res) => {
 	
 	res.render('./user/login', {
 		title: `Log In to ${selectedOrg.nickname}`,
+		org: selectedOrg,
 		redirectURL: req.getFixedRedirectURL()
 	});
 }));
