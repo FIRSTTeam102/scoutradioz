@@ -85,13 +85,13 @@ block content
 				NotificationCard.error("An error occurred: " + err.responseText, {ttl: 3000});
 			});
 		}
-		function deleteUpload(id) {
+		async function deleteUpload(id) {
 			var deleteCard = new NotificationCard(`Deleting upload...`);
-			deleteCard.show();
 			
-			var confirmation = confirm("Do you really want to delete this image?")
+			var confirmation = await Confirm.show("Do you really want to delete this image?")
 			
-			if (confirmation) {
+			if (confirmation.cancelled === false) {
+				deleteCard.show();
 				$.post('/manage/scoutingaudit/uploads/delete',
 					{'id': id}
 				)
@@ -101,6 +101,8 @@ block content
 					
 					console.log($(`#row_${id}`));
 					$(`#row_${id}`).hide();
+					
+					updateRecycleBin();
 				})
 				.fail(err => {
 					console.error(err);
@@ -108,4 +110,16 @@ block content
 					NotificationCard.error("An error occurred: " + err.responseText, {ttl: 3000});
 				});
 			}
+		}
+		
+		//- Send a request to upload.scoutradioz.com to prune uploads that have been removed in db but not removed from AWS
+		function updateRecycleBin() {
+			console.log('Sending to recycle bin in the background...');
+			$.post('#{process.env.UPLOAD_URL}/#{process.env.TIER}/manage/update-recycle-bin')
+				.done(data => {
+					console.log('Response: ', data);
+				})
+				.fail(err => {
+					console.error(err);
+				});
 		}

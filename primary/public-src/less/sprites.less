@@ -1,0 +1,64 @@
+// Sprites heavily depend on CSS variables to display, so they won't appear in IE.
+// 	However, they only exist as visual flair, so they are not strictly necessary.
+
+
+/* USAGE: <span class="sprite sp-(SIZE) sp-(TYPE)"></span> */
+.sprite{
+	display: inline-block;
+	width:var(--size);
+	height:var(--size);
+	background: var(--sprites-url) 0 calc(var(--position) * var(--size));
+	// background-image: var(--sprites-url);
+	// background-position-x: 0;
+	// background-position-y: calc(var(--position) * var(--size));
+	background-size: var(--size) auto;
+	// Inverted version
+	&.sp-black {
+		-webkit-filter: invert(100%);
+		filter: invert(100%);
+	}
+	// In-line with text
+	&.sp-inline{
+		vertical-align: middle; 
+		margin-left: calc(var(--size) / 4); 
+		margin-right: calc(var(--size) / 4); 
+		margin-top: calc(var(--size) / -4);
+	}
+	
+	&.sp-4{--size:4px;}
+	&.sp-8{--size:8px;}
+	&.sp-12{--size:12px;}
+	&.sp-16{--size:16px;}
+	&.sp-18{--size:18px;}
+	&.sp-20{--size:20px;}
+	&.sp-22{--size:22px;}
+	&.sp-24{--size:24px;}
+	&.sp-32{--size:32px;}
+	&.sp-48{--size:48px;}
+	&.sp-64{--size:64px;}
+	&.sp-128{--size:128px;}
+
+	&.sp-first{--position: 0;}
+	&.sp-scoutradioz{--position: -1;}
+	&.sp-tba{--position: -2;}
+	&.sp-radio{--position: -3;}
+	&.sp-i18n{--position: -4;}
+	&.sp-share-android{--position: -5;}
+	&.sp-share-ios{--position: -6;}
+	&.sp-home{--position: -7;}
+	&.sp-user{--position: -8;}
+	&.sp-org{--position: -9;}
+	&.sp-settings{--position: -10;}
+	&.sp-wheel{--position: -11;}
+	&.sp-sheet{--position: -12;}
+	&.sp-info{--position: -13;}
+	&.sp-help{--position: -14;}
+	&.sp-warn{--position: -15;}
+	&.sp-gearheads{--position: -16;}
+	&.sp-download{--position: -17;}
+	&.sp-edit{--position: -18;}
+	&.sp-delete{--position: -19;}
+	&.sp-discord{--position: -20;}
+	&.sp-github{--position: -21;}
+	&.sp-paper{--position: -22;}
+}

@@ -26,6 +26,12 @@
 //			until the card is removed. Default: false.
 class NotificationCard{
 	
+	text: string;
+	opts: any;
+	card: JQuery;
+	_textContent: JQuery|undefined;
+	darkener: JQuery|undefined;
+	
 	/**
 	 * @param {string} text Text to display on notification card
 	 * @param {object} [options] Optional settings
@@ -35,7 +41,7 @@ class NotificationCard{
 	 * @param {boolean} [options.exitable=false] Whether card has an exit button.
 	 * @param {function} [options.onexit=undefined] Callback for when a user clicks the exit button.
 	 */
-	constructor(text, options){
+	constructor(text: string, options?: object){
 		
 		if (!options) options = {};
 		
@@ -49,6 +55,8 @@ class NotificationCard{
 		}
 		
 		this.opts = this._filterOptions(options);
+		
+		this.card = $();
 	}
 	
 	/**
@@ -62,7 +70,7 @@ class NotificationCard{
 	 * @param {function} [options.onexit=undefined] Callback for when a user clicks the exit button.
 	 * @return {NotificationCard} The new NotificationCard object.
 	 */
-	static show(text, opts){
+	static show(text: string, opts?: NotificationCardOptions|any){
 		
 		var newCard = new NotificationCard(text, opts);
 		
@@ -76,7 +84,7 @@ class NotificationCard{
 	 * @param {string} text Text to display.
 	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
-	static error(text, opts){
+	static error(text: string, opts?: NotificationCardOptions|any){
 		
 		if (!opts) opts = {};
 		opts.type = 'error';
@@ -89,7 +97,7 @@ class NotificationCard{
 	 * @param {string} text Text to display.
 	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
-	static good(text, opts){
+	static good(text: string, opts?: NotificationCardOptions|any){
 		
 		if (!opts) opts = {};
 		opts.type = 'good';
@@ -102,7 +110,7 @@ class NotificationCard{
 	 * @param {string} text Text to display.
 	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
-	static warn(text, opts){
+	static warn(text: string, opts?: NotificationCardOptions|any){
 		
 		if (!opts) opts = {};
 		opts.type = 'warn';
@@ -146,7 +154,7 @@ class NotificationCard{
 		//Create text element
 		var text = $(document.createElement('div'))
 			.addClass('notification-card-content')
-			.html(enrichedText);
+			.html(enrichedText.html());
 		this._textContent = text;
 		//Add exit button if exitable option is enabled
 		if (this.opts.exitable) {
@@ -155,7 +163,7 @@ class NotificationCard{
 				.addClass('notification-card-exit')
 				.css({})
 				.text('X')
-				.click(() => {
+				.on('click', () => {
 					//Onclick handler for exit button.
 					this.remove();
 					//Execute onexit callback
@@ -193,18 +201,18 @@ class NotificationCard{
 	 * Change the text of the notification card.
 	 * @param {string} newText New text to show.
 	 */
-	setText(newText) {
+	setText(newText: string) {
 		this.text = newText;
 		var enrichedText = this._enrichText();
 		
-		this._textContent.html(enrichedText);
+		if (this._textContent) this._textContent.html(enrichedText.html());
 	}
 	
 	/**
 	 * Remove the card from the document.
 	 * @param {Number} time (Optional) Fade-out card with given time interval. (Default: 0ms, no fade)
 	 */
-	remove(time){
+	remove(time?: number){
 		
 		var removeTime = 0;
 		
@@ -215,7 +223,7 @@ class NotificationCard{
 		if (this.card) {
 			$(this.card).css('opacity', 0);
 			setTimeout(() => {
-				$(this.card).remove();
+				this.card.remove();
 				//remove screen darkener if applicable
 				if (this.opts.darken && this.darkener) {
 					$(this.darkener).remove();
@@ -226,15 +234,9 @@ class NotificationCard{
 		return this;
 	}
 	
-	_filterOptions(options){
+	_filterOptions(options: any){
 		
-		var defaultOpts = {
-			type: 'normal',
-			ttl: 2000,
-			exitable: false,
-			darken: false,
-			onexit: null,
-		};
+		var defaultOpts = new NotificationCardOptions();
 		
 		var opts = defaultOpts;
 		
@@ -296,7 +298,7 @@ class NotificationCard{
 		return opts;
 	}
 	
-	_enrichText() {
+	_enrichText(): JQuery {
 		
 		var text = this.text;
 		
@@ -313,7 +315,7 @@ class NotificationCard{
 		return enrichedText;
 	}
 	
-	static _enrichWithClosingTags(html, key, openTag, closeTag) {
+	static _enrichWithClosingTags(html: string, key: string, openTag: string, closeTag: string) {
 		
 		//Get all locations of the key
 		var locationsOfKey = [];
@@ -329,8 +331,10 @@ class NotificationCard{
 			
 			//Add length of openTag/closeTag to indices so the indices don't get messed up
 			var lengthAddition = numIterations * (openTag.length + closeTag.length - 2 * key.length);
-			var thisIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
-			var nextIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
+			var thisIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
+			var nextIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
+			// var thisIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
+			// var nextIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
 			//Splice html together with opening and closing tags
 			html = html.slice(0, thisIndex) + openTag + html.slice(thisIndex + key.length, nextIndex) + closeTag + html.slice(nextIndex + key.length);
 						
@@ -344,7 +348,7 @@ class NotificationCard{
 		return enrichedText;
 	}
 	
-	static _enrichWithSelfClosingTags(html, key, tag) {
+	static _enrichWithSelfClosingTags(html: string, key: string, tag: string) {
 		
 		//Get all locations of the key
 		var locationsOfKey = [];
@@ -360,7 +364,7 @@ class NotificationCard{
 			
 			//Add length of tag to indices so the indices don't get messed up
 			var lengthAddition = numIterations * (tag.length - key.length);
-			var thisIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
+			var thisIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
 			
 			//Splice html together with opening and closing tags
 			html = html.slice(0, thisIndex) + tag + html.slice(thisIndex + key.length);
@@ -373,5 +377,25 @@ class NotificationCard{
 			.html(html);
 		
 		return enrichedText;
+	}
+}
+
+class NotificationCardOptions {
+	type: string|undefined|null;
+	ttl: number|undefined|null;
+	exitable: boolean|undefined|null;
+	darken: false|undefined|null;
+	onexit: Function|undefined|null;
+	
+	color: string|undefined|null;
+	borderColor: string|undefined|null;
+	textColor: string|undefined|null;
+	
+	constructor() {
+		this.type = 'normal';
+		this.ttl = 2000;
+		this.exitable = false;
+		this.darken = false;
+		this.onexit = null;
 	}
 }

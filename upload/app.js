@@ -47,7 +47,7 @@ if( process.env.COLORIZE_LOGS == 'true'){
 }
 log4js.configure(log4jsConfig);
 
-const logger = log4js.getLogger('app.js');
+const logger = log4js.getLogger(); // 2022-03-23 JL: Has to be empty to get the log level to be persistent across other routes
 logger.level = process.env.LOG_LEVEL || 'debug';
 
 //Create app
@@ -85,8 +85,9 @@ app.use(async function(req, res, next){
 app.use(usefunctions.logger);
 
 //USER ROUTES
-var upload = require('./routes/upload');
-var generate = require('./routes/generate');
+const upload = require('./routes/upload');
+const generate = require('./routes/generate');
+const manage = require('./routes/manage');
 
 app.use((req, res, next) => {
 	logger.removeContext('funcName');
@@ -122,6 +123,7 @@ app.use((req, res, next) => {
 
 //CONNECT URLS TO ROUTES
 app.use('/', upload);
+app.use('/manage', manage);
 app.use('/generate', generate);
 
 // catch 404 and forward to error handler

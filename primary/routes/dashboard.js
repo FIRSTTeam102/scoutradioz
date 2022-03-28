@@ -13,7 +13,7 @@ router.all('/*', wrap(async (req, res, next) => {
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate (process.env.ACCESS_VIEWER)) {
 		next();
-	}
+	} 
 }));
 
 router.get('/driveteam', wrap(async (req, res) => {

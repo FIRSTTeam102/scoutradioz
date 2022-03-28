@@ -33,12 +33,13 @@ html
 		link(rel="manifest" href=`${fileRoot}/manifest.json`)
 		link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
-		link(rel="stylesheet" href=`${fileRoot}/lib/w3.css`)
+		//- link(rel="stylesheet" href=`${fileRoot}/lib/w3.css`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mmenu.css`)
 		link(rel="stylesheet" href=`${fileRoot}/lib/mmenu/mburger.css`)
-		link(rel="stylesheet" href=`${fileRoot}/css/main.css?v=3.141`)
-		link(rel="stylesheet" href=`${fileRoot}/css/theme-2022.css`)
-		link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=8`)
+		//- link(rel="stylesheet" href=`${fileRoot}/css/main.css?v=3.141`)
+		//- link(rel="stylesheet" href=`${fileRoot}/css/theme-2022.css`)
+		//- link(rel="stylesheet" href=`${fileRoot}/css/w3-additions.css?v=8`)
+		link(rel="stylesheet" href=`${fileRoot}/style.css?v=1`)
 		style.
 			#page{ background-image: url('#{fileRoot}/images/backgrounds/2022-grid.svg');}
 			.sprite{ --sprites-url: url('#{fileRoot}/images/sprites.png?v=4');}
@@ -51,10 +52,7 @@ html
 		//- script(src=`${fileRoot}/lib/chart.min.js`) 2022-03-18 JL: Taking chart.js out of the required scripts for all pages & putting it only where needed (as of today, only Drive Team)
 		//- script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
-		script(src=`${fileRoot}/js/scoutradioz.js?v=8`)
-		script(src=`${fileRoot}/js/FormSubmission.js`)
-		script(src=`${fileRoot}/js/NotificationCard.js?v=4`)
-		script(src=`${fileRoot}/js/NavMenu.js?v=2`)
+		script(src=`${fileRoot}/js/bundle.js`)
 		if alert && alert != "undefined"
 			script.
 				$(function(){

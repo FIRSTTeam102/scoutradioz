@@ -22,22 +22,22 @@ router.get('/match*', wrap(async (req, res) => {
 	var eventYear = req.event.year;
 	var thisUser = req.user;
 	var thisUserName = thisUser.name;
-	var matchTeamKey = req.query.key;
+	var match_team_key = req.query.key;
 	var alliance = req.query.alliance;
-	var orgKey = req.user.org_key;
-	if (!matchTeamKey) return res.redirect('/dashboard?alert=No match key was set for scouting.'); // 2022-03-06 JL: Redirect user if they 
-	var teamKey = matchTeamKey.split('_')[2];
+	var org_key = req.user.org_key;
+	if (!match_team_key) return res.redirect('/dashboard?alert=No match key was set for scouting.'); // 2022-03-06 JL: Redirect user if they don't have a match key set in the url
+	var teamKey = match_team_key.split('_')[2];
 	
-	logger.debug(`match_team_key: ${matchTeamKey} alliance: ${alliance} user: ${thisUserName} teamKey=${teamKey}`);
+	logger.debug(`match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName} teamKey=${teamKey}`);
 	
-	if (!matchTeamKey) {
+	if (!match_team_key) {
 		res.redirect('/dashboard');
 		return;
 	}
 	
 	//check if there is already data for this match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoringdata = await utilities.find('matchscouting', {'org_key': orgKey, 'year' : eventYear, 'match_team_key': matchTeamKey}, {sort: {'order': 1}});
+	var scoringdata = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
 		
 	//scouting answers for this match are initialized as null for visibility
 	var answers = null;
@@ -60,13 +60,13 @@ router.get('/match*', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	var layout = await utilities.find('layout', 
-		{org_key: orgKey, year: parseInt(eventYear), form_type: 'matchscouting'}, 
+		{org_key: org_key, year: parseInt(eventYear), form_type: 'matchscouting'}, 
 		{sort: {'order': 1}},
 		{allowCache: true}
 	);
 	
 	
-	const images = await uploadHelper.findTeamImages(orgKey, eventYear, teamKey);
+	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
 	
 	const team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 
@@ -74,7 +74,7 @@ router.get('/match*', wrap(async (req, res) => {
 	res.render('./scouting/match', {
 		title: 'Match Scouting',
 		layout: layout,
-		key: matchTeamKey,
+		key: match_team_key,
 		alliance: alliance,
 		answers: answers,
 		teamKey: teamKey,
@@ -165,7 +165,15 @@ router.post('/match/submit', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	await utilities.update('matchscouting', { 'org_key': org_key, 'match_team_key' : match_team_key }, { $set: { 'data' : matchData, 'actual_scorer': thisUserName, useragent: req.shortagent } });
 
-	return res.send({message: 'Submitted data successfully.', status: 200});
+	// Simply to check if the user is assigned (2022-03-24 JL)
+	const oneAssignedMatch = await utilities.findOne('matchscouting', {
+		org_key: org_key, 
+		event_key: req.event.key, 
+		assigned_scorer: thisUserName
+	});
+	var assigned = !!oneAssignedMatch;
+	
+	return res.send({message: 'Submitted data successfully.', status: 200, assigned: assigned});
 }));
 
 router.get('/pit*', wrap(async (req, res) => {
@@ -298,5 +306,3 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 		});
 	}
 }));
-
-module.exports = router;

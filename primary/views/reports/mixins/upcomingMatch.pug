@@ -3,21 +3,38 @@
 	PARAM
 		match [db Object] TBA data for a completed match.
 		includeHr [boolean] Whether to include an hr at the bottom.
-mixin upcomingMatch(match, includeHr=false)
-	- if (selectedTeam) var team = selectedTeam.substring(3);
-	//- console.log(team);
+mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
+	- if (selectedTeam) var team = selectedTeam.substring(3);	// selectedTeam: frc###
 	- match.teams = [];
-	- var isBlue = false, isRed = false;
-	each teamKey, i in match.alliances.blue.team_keys
+	//- - var isBlue = false, isRed = false;
+	//- each teamKey, i in match.alliances.blue.team_keys
 		- match.teams[i] = teamKey.substring(3);
 		//-isBlue for setting thick border of alliance div when a team is selected
 		- if( teamKey.substring(3) == team ) isBlue = true;
-	each teamKey, i in match.alliances.red.team_keys
+	//- each teamKey, i in match.alliances.red.team_keys
 		- match.teams[i + 3] = teamKey.substring(3);
 		//-isRed for setting thick border of alliance div when a team is selected
 		- if( teamKey.substring(3) == team ) isRed = true;
-	
 	- let timeString = ' ' + zoneTime(match.time * 1000).toFormat('cccc @ t');
+	
+	-
+		// 2022-03-26 JL: Calculating winner at the top, so that we can highlight the predicted winner
+		let redA, redS, blueA, blueS, percentChance, winningTeam;
+		if (match.hasPredictive && match.predictive) {
+			
+			redA = match.predictive.redAVG.toFixed(0); redS = match.predictive.redSTD.toFixed(0);
+			blueA = match.predictive.blueAVG.toFixed(0); blueS = match.predictive.blueSTD.toFixed(0); 
+			if (match.predictive.chanceOfRed > 0.5) {
+				percentChance = (match.predictive.chanceOfRed * 100).toFixed(0);
+				winningTeam = 'Red';
+			}
+			else {
+				percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
+				winningTeam = 'Blue';
+			}
+		}
+	
+	
 	div(class="w3-row")
 		//-Title for small screens
 		div(class="w3-col s12 m0 rounded theme-dim w3-border")
@@ -44,32 +61,36 @@ mixin upcomingMatch(match, includeHr=false)
 		//-Alliances
 		div(class="w3-col s12 m9 w3-padding-small")
 			div(class="w3-col s6 w3-padding-small")
-				//- set shorthands for each team key
-				- var blue = match.alliances.blue.team_keys, red = match.alliances.red.team_keys;
-				- var blue1 = blue[0], blue2 = blue[1], blue3 = blue[2];
-				- var red1 = red[0], red2 = red[1], red3 = red[2];
-				//- set classes for alliance window
-				- var blueClass = "alliance-blue alliance-border-blue rounded-small";
-				- var redClass = "alliance-red alliance-border-red rounded-small";
-				- if( isBlue ) blueClass += " thick-border";
-				- else if( isRed ) redClass += " thick-border";
+				-
+					// set shorthands for each team key
+					var blue = match.alliances.blue.team_keys, red = match.alliances.red.team_keys;
+					var blue1 = blue[0], blue2 = blue[1], blue3 = blue[2];
+					var red1 = red[0], red2 = red[1], red3 = red[2];
+				
+					//- set classes for alliance window
+					var blueClass = "alliance-blue alliance-border-blue rounded-small";
+					var redClass = "alliance-red alliance-border-red rounded-small";
+					if (winningTeam == 'Blue') 
+						blueClass += " semi-thick-border";
+					else if (winningTeam == 'Red') 
+						redClass += " semi-thick-border";
 				div(class=redClass)
 					//- not doing this with a loop because border needs to be specified
 					a(href=`/reports/teamintel?team_key=${red1}`)
 						div(class="w3-padding alliance-hover-red rounded-small-top")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[red1]}
-							span=match.alliances.red.team_keys[0].substring(3)
+							span(class=(selectedTeam==red1?'upcoming-highlighted-team':''))=red1.substring(3)
 					a(href=`/reports/teamintel?team_key=${red2}`)
 						div(class="w3-padding alliance-hover-red")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[red2]}
-							span=match.alliances.red.team_keys[1].substring(3)
+							span(class=(selectedTeam==red2?'upcoming-highlighted-team':''))=red2.substring(3)
 					a(href=`/reports/teamintel?team_key=${red3}`)
 						div(class="w3-padding alliance-hover-red rounded-small-bottom")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[red3]}
-							span=match.alliances.red.team_keys[2].substring(3)
+							span(class=(selectedTeam==red3?'upcoming-highlighted-team':''))=red3.substring(3)
 			div(class="w3-col s6 w3-padding-small")
 				div(class=blueClass)
 					//- not doing this with a loop because border needs to be specified
@@ -77,36 +98,28 @@ mixin upcomingMatch(match, includeHr=false)
 						div(class="w3-padding alliance-hover-blue rounded-small-top")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[blue1]}
-							span=blue1.substring(3)
+							span(class=(selectedTeam==blue1?'upcoming-highlighted-team':''))=blue1.substring(3)
 					a(href=`/reports/teamintel?team_key=${blue2}`)
 						div(class="w3-padding alliance-hover-blue")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[blue2]}
-							span=blue2.substring(3)
+							span(class=(selectedTeam==blue2?'upcoming-highlighted-team':''))=blue2.substring(3)
 					a(href=`/reports/teamintel?team_key=${blue3}`)
 						div(class="w3-padding alliance-hover-blue rounded-small-bottom")
 							span(class="w3-left w3-small theme-text upcoming-rank") 
 								i Rank #{teamRanks[blue3]}
-							span=blue3.substring(3)
+							span(class=(selectedTeam==blue3?'upcoming-highlighted-team':''))=blue3.substring(3)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
-	if match.hasPredictive && match.predictive
-		- let redA, redS, blueA, blueS, percentChance, winningTeam;
-		- redA = match.predictive.redAVG.toFixed(0); redS = match.predictive.redSTD.toFixed(0);
-		- blueA = match.predictive.blueAVG.toFixed(0); blueS = match.predictive.blueSTD.toFixed(0); 
-		if match.predictive.chanceOfRed > 0.5
-			- percentChance = (match.predictive.chanceOfRed * 100).toFixed(0);
-			- winningTeam = 'Red';
+	if match.hasPredictive 
+		if match.predictive
+			i #{percentChance}% chance #{winningTeam} wins
+			span(class="w3-tooltip")
+				span(class="sprite sp-info sp-16 sp-inline") &nbsp;
+				span(class="w3-tooltiptext no-mobile-tweak" style="width: 140px; margin-left: -70px;") Based on #{match.predictive.totalCNT} total reports
+			br
+			i Predicted scores: Red #{redA} ± #{redS}, Blue #{blueA} ± #{blueS}
 		else
-			- percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
-			- winningTeam = 'Blue';
-		i #{percentChance}% chance #{winningTeam} wins
-		span(class="w3-tooltip")
-			span(class="sprite sp-info sp-16 sp-inline") &nbsp;
-			span(class="w3-tooltiptext no-mobile-tweak" style="width: 140px; margin-left: -70px;") Based on #{match.predictive.totalCNT} total reports
-		br
-		i Predicted scores: Red #{redA} ± #{redS}, Blue #{blueA} ± #{blueS}
-	else
-		i Not enough data to make prediction
+			i Not enough data to make prediction
 	//- Put a horizontal rule if requested
 	if (includeHr == true)
 		hr 

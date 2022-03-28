@@ -17,6 +17,9 @@ globals:
   window: writable
 parserOptions:
   ecmaVersion: 2018
+ignorePatterns: 
+  - bundle.js
+  - primary/public/js/*
 rules:
   indent:
     - error
