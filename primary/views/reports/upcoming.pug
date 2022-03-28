@@ -30,7 +30,7 @@ block content
 		section
 			each match in matches
 				//include templates/upcomingMatch 
-				+upcomingMatch(match, true)
+				+upcomingMatch(match, true, teamKey)
 	script.
 		$("#teamSelect").change(function(){
 			doTeamSelectChange(this);

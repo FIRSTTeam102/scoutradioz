@@ -243,6 +243,12 @@ html{
 	margin-top: -5.5px;
 	border-radius: 10px;
 }
+.semi-thick-border{
+	border-width: 3px!important;
+	margin-top: -2px;
+	border-radius: 9px;
+	border-color: #dfe1e9!important;
+}
 .upcoming-rank{
 	margin-top: 2.5px;
 	min-width: 50px;
@@ -343,4 +349,34 @@ input:focus,select:focus{outline: 2px solid rgb(118, 118, 151)!important}
 
 .notification-card .notification-card-exit:hover{
 	cursor: pointer;
+}
+
+// Shows little triangles to indicate a focused team.
+.upcoming-highlighted-team {
+	&::before, &::after {
+		content: '';
+		border-width: 7px;
+		border-style: solid;
+		font-size: 0;
+		position: relative;
+		top: -5px;
+	}
+	&::before {
+		right: 8px;
+		border-color: transparent transparent transparent white;
+	}
+	&::after {
+		left: 8px;
+    	border-color: transparent white transparent transparent;
+	}
+}
+
+// Change the text color to black on hover.
+.alliance-hover-blue:hover, .alliance-hover-red:hover {
+	& .upcoming-highlighted-team::before {
+		border-color: transparent transparent transparent black;
+	}
+	& .upcoming-highlighted-team::after {
+		border-color: transparent black transparent transparent;
+	}
 }
