@@ -13,4 +13,70 @@
 	Matchscouting:
 		- org_key: 1, event_key: -1, team_key: 1 (compound)
 
- */
+*/
+
+const colIndexes = {
+	rankings: [
+		[{
+			event_key: -1,
+			rank: 1
+		}, {
+			name: 'event+rank',
+		}]
+	],
+	matches: [
+		[{
+			event_key: -1,
+			'alliances.red.score': 1
+		}, {
+			name: 'event+score',
+		}]
+	],
+	matchscouting: [
+		[{
+			org_key: 1,
+			event_key: -1,
+			team_key: 1
+		}, {
+			name: 'org+event+team',
+		}]
+	]
+};
+		
+
+process.env.TIER = 'dev';
+
+const utilities = require('@firstteam102/scoutradioz-utilities');
+const readline = require('./readline');
+
+utilities.config(require('../databases.json'), {
+	cache: {
+		enable: false,
+	},
+	debug: true,
+});
+
+utilities.refreshTier();
+
+(async () => {
+	
+	let tier = await readline.ask('Enter the database tier on which to operate: ');
+	process.env.TIER = tier;
+	utilities.refreshTier();
+	
+	let db = await utilities.getDB();
+	
+	for (let colName in colIndexes) {
+		let col = db.collection(colName);
+		console.log(`Dropping indexes for ${colName}`);
+		col.dropIndexes();
+		let indexes = colIndexes[colName];
+		for (let index of indexes) {
+			let fields = index[0];
+			let options = index[1];
+			let indexName = await col.createIndex(fields, options);
+			console.log('Created index ' + indexName);
+		}
+	}
+	process.exit(0);
+})();

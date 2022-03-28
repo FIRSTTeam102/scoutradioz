@@ -1,5 +1,5 @@
 const passport = require('passport');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('passport');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 
 // Creates the data necessary to store in the session cookie
@@ -17,7 +17,7 @@ passport.deserializeUser(async function(id, done) {
 	var user = await utilities.findOne('users', { '_id': id }, {}, {allowCache: true});
 	
 	if(!user){
-		console.error('User not found in db: deserializeUser ' + id);
+		logger.error('User not found in db: deserializeUser ' + id);
 		done('User not found in db: deserializeUser ' + id, null);
 	}
 	else

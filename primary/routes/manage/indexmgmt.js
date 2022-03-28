@@ -86,11 +86,17 @@ router.post('/setcurrent', wrap(async (req, res) => {
 			await utilities.update( 'orgs', {'org_key': thisOrgKey}, {$set: {'event_key': eventKey}} );
 			logger.debug(thisFuncName + 'Inserted current');
 			
-			res.redirect(`/manage?alert=Set current event ${eventKey} successfuly.`);
+			res.redirect(`/manage?alert=Set current event to *${event.name}* successfuly.`);
+			
+			// 2022-03-26 JL: In the background, update list of teams when setting the current event, so the team admin doesn't have to do it manually
+			var eventTeamsUrl = `event/${eventKey}/teams/keys`;
+			var thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
+			logger.info(`Updating list of team keys, event=${eventKey} team_keys.length=${thisTeamKeys.length}`);
+			await utilities.update( 'events', {'key': eventKey}, {$set: {'team_keys': thisTeamKeys}} );
 		}
 		//If invalid, send an error
 		else {
-			res.redirect(`/manage?alert=Invalid event key: '${eventKey}'. Click on an event in the list to get its key.&type=error`);
+			res.redirect(`/manage?alert=Invalid event key: '${eventKey}'. Click on an event in the list to set it automatically.&type=error`);
 		}
 	}
 
