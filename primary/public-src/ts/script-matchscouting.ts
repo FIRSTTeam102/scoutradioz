@@ -191,20 +191,27 @@ $(function(){
 	
 	$('#submit').on('click', function(){
 		
+		// JL: Disabled inputs are only for visual assistance in dynamic scrolling, but they might be ignored in the form submission if they remain disabled
+		$('input[disabled]').removeAttr('disabled'); 
+		
 		var matchForm = $('form[name=matchform]');
 		
 		var matchSubmission = new FormSubmission(matchForm, '/scouting/match/submit', 'matchScouting');
 		
-		matchSubmission.submit((err, message) => {
+		matchSubmission.submit((err, response) => {
+			let message = response.message;
 			if (err || !message) {
 				NotificationCard.error('An error occurred. Please retry.');
 			}
 			else{
 				NotificationCard.show(message, {darken: true, type: 'good', ttl: 0});
 				
+				// 2022-03-24 JL: Send assigned scouters back to dashboard, send unassigned scouters back to dashboard/matches 
+				let newHref = (response.assigned) ? '/dashboard' : '/dashboard/matches';
+				
 				setTimeout(() => {
 					window.onbeforeunload = null;
-					window.location.href = '/dashboard/matches';
+					window.location.href = newHref;
 				}, 1000);
 			}
 		});

@@ -114,7 +114,7 @@ class FormSubmission {
                 cardSubmit.remove(0);
             })
                 .done((response) => {
-                cb(null, response.message);
+                cb(null, response);
             })
                 .fail(() => {
                 console.warn('failed');

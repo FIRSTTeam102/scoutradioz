@@ -151,17 +151,20 @@ $(function () {
 });
 $(function () {
     $('#submit').on('click', function () {
+        $('input[disabled]').removeAttr('disabled');
         var matchForm = $('form[name=matchform]');
         var matchSubmission = new FormSubmission(matchForm, '/scouting/match/submit', 'matchScouting');
-        matchSubmission.submit((err, message) => {
+        matchSubmission.submit((err, response) => {
+            let message = response.message;
             if (err || !message) {
                 NotificationCard.error('An error occurred. Please retry.');
             }
             else {
                 NotificationCard.show(message, { darken: true, type: 'good', ttl: 0 });
+                let newHref = (response.assigned) ? '/dashboard' : '/dashboard/matches';
                 setTimeout(() => {
                     window.onbeforeunload = null;
-                    window.location.href = '/dashboard/matches';
+                    window.location.href = newHref;
                 }, 1000);
             }
         });

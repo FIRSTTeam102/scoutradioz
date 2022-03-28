@@ -27,11 +27,12 @@ $(function () {
         console.log(pitForm);
         var pitSubmission = new FormSubmission(pitForm, '/scouting/pit/submit', 'pitScouting');
         console.log(pitSubmission);
-        pitSubmission.submit((err, message) => {
-            if (err || !message) {
+        pitSubmission.submit((err, response) => {
+            if (err || !response) {
                 NotificationCard.error('An error occurred. Please retry.');
             }
             else {
+                let message = response.message;
                 NotificationCard.show(message, { darken: true, type: 'good', ttl: 0 });
                 setTimeout(() => {
                     window.location.href = '/dashboard';

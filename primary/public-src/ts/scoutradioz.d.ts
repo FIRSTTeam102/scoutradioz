@@ -1,6 +1,3 @@
-/// <reference path="../ts-bundled/FormSubmission.ts"/>
-/// <reference path="../ts-bundled/NotificationCard.ts"/>
-
 declare class Cookies {
 	static get(key: string): any;
 	static set(key: string, value: any, value2?: any): any;

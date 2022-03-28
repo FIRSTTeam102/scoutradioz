@@ -27,9 +27,9 @@ class FormSubmission{
 	
 	/**
 	 * Submit the formsubmission.
-	 * @param {StringCallback} cb Callback function. (err, message)
+	 * @param {ObjectCallback} cb Callback function. (err, message)
 	 */
-	submit(cb: StringCallback){
+	submit(cb: ObjectCallback){
 		
 		var dataString = this._getFromLocalStorage();
 		
@@ -52,7 +52,7 @@ class FormSubmission{
 				})
 				.done((response) => {
 				
-					cb(null, response.message);
+					cb(null, response);
 				})
 				.fail(() => {
 					console.warn('failed');
@@ -85,12 +85,12 @@ class FormSubmission{
 			indexedData[n.name] = n.value;
 		});
 		
-		return indexedData;
+		return indexedData;  
 	}
 }
 
-interface StringCallback {
-	(error: Error|string|null, message?: string): void;
+interface ObjectCallback {
+	(error: Error|string|null, response?: any): void;
 }
 
 interface Dictionary<T> {
