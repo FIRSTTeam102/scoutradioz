@@ -233,7 +233,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 		}
 	}
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 	var groupClause = {};
@@ -247,7 +247,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
@@ -438,7 +438,7 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 		}
 	}
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 	var groupClause = {};
@@ -452,7 +452,7 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
@@ -784,7 +784,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 		}
 	}
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 	var groupClause = {};
@@ -797,7 +797,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -923,7 +923,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 		}
 	}
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 	var groupClause = {};
@@ -936,7 +936,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -1137,7 +1137,7 @@ router.get('/metricintel', wrap(async (req, res) => {
 	outputClause[metricKey + 'EMA'] = thisEMAclause;
 
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 
 	var groupClause = {};
@@ -1147,7 +1147,7 @@ router.get('/metricintel', wrap(async (req, res) => {
 	groupClause[metricKey + 'MIN'] = {$min: '$data.' + metricKey};
 	// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 	// groupClause[metricKey + 'AVG'] = {$avg: '$data.' + metricKey};
-	groupClause[metricKey + 'AVG'] = {$last: '$' + metricKey + 'EMA'}
+	groupClause[metricKey + 'AVG'] = {$last: '$' + metricKey + 'EMA'};
 	groupClause[metricKey + 'VAR'] = {$stdDevSamp: '$data.' + metricKey};
 	groupClause[metricKey + 'MAX'] = {$max: '$data.' + metricKey};
 
@@ -1258,7 +1258,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 		}
 	}
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 	var groupClause = {};
@@ -1270,7 +1270,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
