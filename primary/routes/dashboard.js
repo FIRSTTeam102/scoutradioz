@@ -440,6 +440,37 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		var aggQuery = [];
 		//add $match > event_key
 		aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
+
+		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+		//get the alpha from the process.env
+		var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+		//initialize setWindowFieldsClause
+		var setWindowFieldsClause = {};
+		setWindowFieldsClause['partitionBy'] = '$team_key';
+		var sortField = {};
+		sortField['time'] = 1;
+		setWindowFieldsClause['sortBy'] = sortField;
+		var outputClause = {};
+		//iterate through scoringlayout
+		for (let scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
+			//pull this layout element from score layout
+			let thisLayout = scoreLayout[scoreIdx];
+			thisLayout.key = thisLayout.id;
+			scoreLayout[scoreIdx] = thisLayout;
+			//if it is a valid data type, add this layout's ID to groupClause
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+				let thisEMAclause = {};
+				let thisEMAinner = {};
+				thisEMAinner['alpha'] = emaAlpha;
+				thisEMAinner['input'] = '$data.' + thisLayout.id;
+				thisEMAclause['$expMovingAvg'] = thisEMAinner;
+				outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+			}
+		}
+		setWindowFieldsClause['output'] = outputClause;
+		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+		aggQuery.push({$setWindowFields: setWindowFieldsClause});
+		
 		//initialize groupClause
 		var groupClause = {};
 		//group teams for 1 row per team
@@ -455,7 +486,9 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				// 2022-03-13 JL: Unlike on other pages like allteammetrics, the main focus of these data are the averages (instead of being switchable). 
 				//	Therefore, keeping the avg as .id and adding MAX as an "option" (to be displayed small on the table)
-				groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+				groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
 				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 			}
 		}

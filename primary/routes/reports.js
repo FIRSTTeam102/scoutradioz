@@ -205,6 +205,37 @@ router.get('/teamintel', wrap(async (req, res) => {
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey, 'team_key': teamKey } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		//pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		//if it is a valid data type, add this layout's ID to groupClause
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause = {};
+			let thisEMAinner = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
 	var groupClause = {};
 	groupClause['_id'] = '$team_key';
 
@@ -214,8 +245,10 @@ router.get('/teamintel', wrap(async (req, res) => {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'VAR'] = {$stdDevPop: '$data.' + thisLayout.id};
+			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
@@ -377,6 +410,37 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'team_key': teamKey, 'year': eventYear } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		//pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		//if it is a valid data type, add this layout's ID to groupClause
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause = {};
+			let thisEMAinner = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
 	var groupClause = {};
 	groupClause['_id'] = '$team_key';
 
@@ -386,8 +450,10 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'VAR'] = {$stdDevPop: '$data.' + thisLayout.id};
+			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
@@ -690,15 +756,49 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	var aggQuery = [];
 	var redAllianceArray = match.alliances.red.team_keys;
 	aggQuery.push({ $match : { 'team_key': {$in: redAllianceArray}, 'org_key': orgKey, 'event_key': eventKey } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		//pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		//if it is a valid data type, add this layout's ID to groupClause
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause = {};
+			let thisEMAinner = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
 	var groupClause = {};
-	// group teams for 1 row per event (we're doing this twice, once for red & once for blue)
-	groupClause['_id'] = '$event_key';
+	groupClause['_id'] = '$team_key';
 
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
-		if (matchDataHelper.isQuantifiableType(thisLayout.type))
-			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
+			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+		}
 	}
 	aggQuery.push({ $group: groupClause });
 	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
@@ -795,8 +895,38 @@ router.get('/metricsranked', wrap(async (req, res) => {
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		//pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		//if it is a valid data type, add this layout's ID to groupClause
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause = {};
+			let thisEMAinner = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
 	var groupClause = {};
-	// group teams for 1 row per team
 	groupClause['_id'] = '$team_key';
 
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
@@ -804,10 +934,9 @@ router.get('/metricsranked', wrap(async (req, res) => {
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
-			//groupClause[thisLayout.id + "MIN"] = {$min: "$data." + thisLayout.id};
-			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
-			//groupClause[thisLayout.id + "VAR"] = {$stdDevPop: "$data." + thisLayout.id};
-			//groupClause[thisLayout.id + "MAX"] = {$max: "$data." + thisLayout.id};
+			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -839,7 +968,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 				// Recompute VAR first = StdDev/Mean
 				//aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 				
-				var thisAvg = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				var thisAvg = parseFloat( (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1) );
 				if (thisAvg > aggRow['avg']) {
 					aggRow['team'] = aggresult['_id'];
 					aggRow['avg'] = thisAvg;
@@ -914,8 +1043,9 @@ router.get('/metrics', wrap(async (req, res) => {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			// 2022-03-28, M.O'C: Leave this as flat $avg (and not exponential moving average) because the data is '2-dimensional' (not just 1D time)
 			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'VAR'] = {$stdDevPop: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
@@ -986,13 +1116,39 @@ router.get('/metricintel', wrap(async (req, res) => {
 	// ] );						
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+
+	let thisEMAclause = {};
+	let thisEMAinner = {};
+	thisEMAinner['alpha'] = emaAlpha;
+	thisEMAinner['input'] = '$data.' + metricKey;
+	thisEMAclause['$expMovingAvg'] = thisEMAinner;
+	outputClause[metricKey + 'EMA'] = thisEMAclause;
+
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+
 	var groupClause = {};
 	// group on team for multiple rows
 	groupClause['_id'] = '$team_key';
 
 	groupClause[metricKey + 'MIN'] = {$min: '$data.' + metricKey};
-	groupClause[metricKey + 'AVG'] = {$avg: '$data.' + metricKey};
-	groupClause[metricKey + 'VAR'] = {$stdDevPop: '$data.' + metricKey};
+	// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+	// groupClause[metricKey + 'AVG'] = {$avg: '$data.' + metricKey};
+	groupClause[metricKey + 'AVG'] = {$last: '$' + metricKey + 'EMA'}
+	groupClause[metricKey + 'VAR'] = {$stdDevSamp: '$data.' + metricKey};
 	groupClause[metricKey + 'MAX'] = {$max: '$data.' + metricKey};
 
 	var sortKey = metricKey + 'AVG';
@@ -1074,18 +1230,47 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// Build the aggregation data
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'org_key': orgKey, 'event_key': eventKey } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		//pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		//if it is a valid data type, add this layout's ID to groupClause
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause = {};
+			let thisEMAinner = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
 	var groupClause = {};
-	// group teams for 1 row per team
 	groupClause['_id'] = '$team_key';
 
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
-		thisLayout.key = thisLayout.id;
-		scorelayout[scoreIdx] = thisLayout;
-		// 2020-02-15, M.O'C: Leverage column selection cookies
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
+			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}

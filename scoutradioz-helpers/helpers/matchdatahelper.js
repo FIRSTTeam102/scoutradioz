@@ -411,19 +411,50 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
     
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		//pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		//if it is a valid data type, add this layout's ID to groupClause
+		if (this.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause = {};
+			let thisEMAinner = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
 	var groupClause = {};
-	// group teams for 1 row per team
 	groupClause['_id'] = '$team_key';
 
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
-		thisLayout.key = thisLayout.id;
-		scorelayout[scoreIdx] = thisLayout;
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
+		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (this.isQuantifiableType(thisLayout.type)) {
+			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'VAR'] = {$stdDevPop: '$data.' + thisLayout.id};
+			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
@@ -615,12 +646,39 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 	// get aggregations for all teams
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': org_key, 'event_key': event_key } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+
+	let thisEMAclause = {};
+	let thisEMAinner = {};
+	thisEMAinner['alpha'] = emaAlpha;
+	thisEMAinner['input'] = '$data.contributedPoints';
+	thisEMAclause['$expMovingAvg'] = thisEMAinner;
+	outputClause['contributedPointsEMA'] = thisEMAclause;
+
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+
 	var groupClause = {};
 	groupClause['_id'] = '$team_key';
-	groupClause['contributedPointsAVG'] = {$avg: '$data.contributedPoints'};
+	// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+	//groupClause['contributedPointsAVG'] = {$avg: '$data.contributedPoints'};
+	groupClause['contributedPointsAVG'] = {$last: '$contributedPointsEMA'}
 	groupClause['contributedPointsSTD'] = {$stdDevSamp: '$data.contributedPoints'};
 	groupClause['dataCount'] = {$sum: 1};
 	aggQuery.push({ $group: groupClause });
+
+	//console.log('aggQuery=' + JSON.stringify(aggQuery));
 
 	var aggFind = await utilities.aggregate('matchscouting', aggQuery);
 	var aggDict = {};
@@ -737,6 +795,37 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 
 	var aggQuery = [];
 	aggQuery.push({ $match : { 'team_key': {$in: teamList}, 'org_key': org_key, 'event_key': event_key } });
+
+	// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
+	//get the alpha from the process.env
+	var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+	//initialize setWindowFieldsClause
+	var setWindowFieldsClause = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	var sortField = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	var outputClause = {};
+	//iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		//pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		//if it is a valid data type, add this layout's ID to groupClause
+		if (this.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause = {};
+			let thisEMAinner = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
 	var groupClause = {};
 	// group by individual teams
 	groupClause['_id'] = '$team_key';
@@ -745,10 +834,13 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (this.isQuantifiableType(thisLayout.type)) {
-			groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id};
+			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
+			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
+
 	aggQuery.push({ $group: groupClause });
 	// logger.trace('aggQuery=' + JSON.stringify(aggQuery,0,2));
 
