@@ -468,7 +468,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			}
 		}
 		setWindowFieldsClause['output'] = outputClause;
-		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 		
 		//initialize groupClause
@@ -488,7 +488,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				//	Therefore, keeping the avg as .id and adding MAX as an "option" (to be displayed small on the table)
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-				groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+				groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 			}
 		}

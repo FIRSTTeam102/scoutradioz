@@ -439,7 +439,7 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 		}
 	}
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 	var groupClause = {};
@@ -453,7 +453,7 @@ matchDataHelper.calculateAndStoreAggRanges = async function(org_key, event_year,
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
@@ -666,14 +666,14 @@ matchDataHelper.getUpcomingMatchData = async function (event_key, team_key, org_
 	outputClause['contributedPointsEMA'] = thisEMAclause;
 
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 
 	var groupClause = {};
 	groupClause['_id'] = '$team_key';
 	// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 	//groupClause['contributedPointsAVG'] = {$avg: '$data.contributedPoints'};
-	groupClause['contributedPointsAVG'] = {$last: '$contributedPointsEMA'}
+	groupClause['contributedPointsAVG'] = {$last: '$contributedPointsEMA'};
 	groupClause['contributedPointsSTD'] = {$stdDevSamp: '$data.contributedPoints'};
 	groupClause['dataCount'] = {$sum: 1};
 	aggQuery.push({ $group: groupClause });
@@ -823,7 +823,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 		}
 	}
 	setWindowFieldsClause['output'] = outputClause;
-	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause))
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 	var groupClause = {};
@@ -836,7 +836,7 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 		if (this.isQuantifiableType(thisLayout.type)) {
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
-			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'}
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 		}
 	}
@@ -916,8 +916,8 @@ matchDataHelper.getAllianceStatsData = async function ( event_year, event_key, o
 						let normVal = Math.sign(Math.abs(max));
 						if (max != min) {
 							normVal = (numVal - min) / (max - min);
-							thisNorm[theseKeys[j]] = (Math.round(normVal * 10)/10).toFixed(1);
 						}
+						thisNorm[theseKeys[j]] = (normVal).toFixed(1);
 					}
 				}
 			}
