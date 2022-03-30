@@ -588,7 +588,7 @@ const year = 2022;
 const org_key = orgkey;
 
 // Moving the order of derived metrics based on the calculated order of our scouting form
-if (org_key == 'frc102' || org_key == 'demo') {
+if (org_key == 'frc102' || org_key == 'demo' || org_key == 'frc8024') {
 	contributedPoints2022.order = -10;
 	autoPoints2022.order = -9; // was 71
 	teleopPoints2022.order = -8; // was 161
@@ -680,7 +680,7 @@ async function main() {
 	
 	if (org_key === 'frc852')
 		layoutArr = [...fixArray(matchAthenian2022, matchDerivedAthenian2022, 'matchscouting'), ...fixArray(pitAthenian2022, [], 'pitscouting')];
-	else if (org_key === 'frc102' || org_key === 'demo')
+	else if (org_key === 'frc102' || org_key === 'demo' || org_key === 'frc8024')
 		layoutArr = [...fixArray(matchGearheads2022, matchDerivedGearheads2022, 'matchscouting'), ...fixArray(pitGearheads2022, [], 'pitscouting')];
 	else {
 		console.log('Sorry, not supported yet');
