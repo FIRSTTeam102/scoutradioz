@@ -155,11 +155,11 @@ block content
 				//-Skip first match
 				if (i > 0)
 					//include ../reports/templates/upcomingMatch
-					+upcomingMatch(match)
+					+upcomingMatch(match, undefined, selectedTeam)
 					hr 
 
 			script var chartData = JSON.parse('!{dataForChartJS}');
-			script.
+			//- script.
 				console.log(JSON.parse(JSON.stringify(chartData)));
 			script.
 				//- Chart.defaults.global.defaultFontStyle = 'bold';
