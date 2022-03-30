@@ -805,10 +805,6 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR = await utilities.aggregate('matchscouting', aggQuery);
-	var aggresult = {};
-	if (aggR && aggR[0])
-		aggresult = aggR[0];
-	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	var aggTable = [];
@@ -818,7 +814,12 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			var aggRow = {};
 			aggRow['key'] = thisLayout.id;
-			aggRow['red'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+			// 2022-03-30 JL: Compute the average from all three teams
+			let sum = 0;
+			for (let aggresult of aggR) {
+				sum += aggresult[thisLayout.id + 'AVG'];
+			}
+			aggRow['red'] = (sum / aggR.length).toFixed(1);
 			aggTable.push(aggRow);
 		}
 	}
@@ -835,10 +836,6 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	var aggR2 = await utilities.aggregate('matchscouting', aggQuery);
-	aggresult = {};
-	if (aggR2 && aggR2[0])
-		aggresult = aggR2[0];
-	//logger.debug('aggresult=' + JSON.stringify(aggresult));
 
 	// Unspool single row of aggregate results into tabular form
 	// Utilize pointer to aggTable to line up data
@@ -847,7 +844,12 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			aggTable[aggTablePointer].blue = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+			// 2022-03-30 JL: Compute the average from all three teams
+			let sum = 0;
+			for (let aggresult of aggR2) {
+				sum += aggresult[thisLayout.id + 'AVG'];
+			}
+			aggTable[aggTablePointer].blue = (sum / aggR2.length).toFixed(1);
 			aggTablePointer++;
 		}
 	}
