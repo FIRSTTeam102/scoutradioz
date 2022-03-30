@@ -3,6 +3,9 @@
 @first-blue: #005fa8;
 @first-gray: #9f9c9a;
 
+@alliance-red: #EC0D00;
+@alliance-blue: #2623B8;
+
 /* universal colors */
 @white: #fff;
 @light: #c8c8c8;
@@ -71,31 +74,42 @@
 .theme-hover-red:hover{color:#fff!important;background-color:#ff6d85!important}
 
 /* For alliance colors */
-.alliance-red{color:#fff!important;background-color:#EC0D00!important}
-.alliance-border-red{border: 1px solid hsl(2, 100%, 88%)!important}
-.alliance-hover-red:hover{color:rgb(43, 16, 16)!important;background-color:rgb(235, 144, 140)!important}
-.alliance-blue{color:#fff!important;background-color:#2623B8!important}
-.alliance-border-blue{border: 1px solid hsl(242, 100%, 89%)!important}
-.alliance-hover-blue:hover{color:rgb(14, 13, 32)!important;background-color:rgb(134, 132, 235)!important}
+.alliance-red{
+	color: white!important;
+	background-color: @alliance-red!important;
+}
+.alliance-blue{
+	color: white!important;
+	background-color: @alliance-blue!important;
+}
 
-.header{background-color: @header;}
-.footer{background-color: @footer;}
+.alliance-border-red{
+	border: 1px solid desaturate(lighten(@alliance-red, 20%), 50%);
+}
+.alliance-border-blue{
+	border: 1px solid desaturate(lighten(@alliance-blue, 20%), 50%);
+}
+
+.alliance-hover-red:hover{
+	// color: desaturate(darken(@alliance-red, 30%), 10%)!important;
+	color: black!important;
+	background-color: desaturate(lighten(@alliance-red, 30%), 20%)!important;
+}
+.alliance-hover-blue:hover{
+	// color: desaturate(darken(@alliance-blue, 30%), 10%)!important;
+	color: black!important;
+	background-color: desaturate(lighten(@alliance-blue, 30%), 20%)!important;
+}
 
 .animate{transition: @animate; -webkit-transition: @animate;}
 
 .unimportant{opacity: 70%;}
 .very-unimportant{opacity: 30%;}
 
-
 .team-image-sm{max-height: 100px; margin: 4px;}
 .team-image-md{max-height: 225px; margin: 4px;}
 .team-image-lg{max-height: 350px; margin: 8px;}
 
-.i, .italic{font-style: italic;}
-.b, .strong{font-weight: bold;}
-.stronger{font-weight: 1000;}
-.u, .underline{text-decoration: underline;}
-.strike{text-decoration: line-through;}
 p.indented{
 	text-indent: 20px;
 }

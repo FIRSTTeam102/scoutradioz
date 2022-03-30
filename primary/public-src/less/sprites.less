@@ -7,11 +7,14 @@
 	display: inline-block;
 	width:var(--size);
 	height:var(--size);
-	background: var(--sprites-url) 0 calc(var(--position) * var(--size));
-	// background-image: var(--sprites-url);
-	// background-position-x: 0;
-	// background-position-y: calc(var(--position) * var(--size));
+	// background: ~"var(--sprites-url) 0 calc(var(--position) * var(--size))";
+	background-image: var(--sprites-url);
+	background-position-x: 0;
+	background-position-y: calc(var(--position) * var(--size));
 	background-size: var(--size) auto;
+	// Note: By setting no background repeat & defaulting the --position variable to be off screen, no sprite will display unless the sprite type is specified
+	background-repeat: no-repeat;
+	--position: 1;
 	// Inverted version
 	&.sp-black {
 		-webkit-filter: invert(100%);
