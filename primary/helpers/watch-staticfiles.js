@@ -8,7 +8,7 @@ require('colors');
 
 const pathToPublicSrc = path.join(__dirname, '../public-src');
 
-var child, isWorking;
+var child, isWorking, startTime;
 
 function kill() {
 	if (child) child.kill();
@@ -17,6 +17,7 @@ function kill() {
 
 function start(command) {
 	isWorking = true;
+	startTime = Date.now();
 	
 	child = spawn('npm', [
 		'run',
@@ -32,7 +33,7 @@ function start(command) {
 	});
 	
 	child.on('exit', function (data) {
-		console.log('Done! (Waiting for files to change...)'.yellow);
+		console.log(`Done! [${Date.now() - startTime} ms] (Waiting for files to change...)`.yellow);
 		isWorking = false;
 	});
 }

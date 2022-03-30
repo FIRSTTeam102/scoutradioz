@@ -49,7 +49,8 @@
 		"compile-less-dev": "echo 'Compiling LESS' &&npx lessc public-src/less/base.less public/css/style.css",
 		"compile-ts": "echo 'Compiling TypeScript' && cd public-src/ts-bundled && npx tsc && cd ../ts && npx tsc",
 		"compile-static": "npm run compile-less && npm run compile-ts",
-		"watch-staticfiles": "node ./helpers/watch-staticfiles.js"
+		"watch-staticfiles": "node ./helpers/watch-staticfiles.js",
+		"watch-static": "npm run watch-staticfiles"
 	},
 	"license": "Apache-2.0",
 	"dependencies": {
