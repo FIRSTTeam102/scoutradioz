@@ -827,6 +827,8 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	aggQuery = [];
 	var blueAllianceArray = match.alliances.blue.team_keys;
 	aggQuery.push({ $match : { 'team_key': {$in: blueAllianceArray}, 'org_key': orgKey, 'event_key': eventKey } });
+	// 2022-03-30, M.O'C: Also reuse prior setWindowFields clause
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	// reuse prior groupClause
 	aggQuery.push({ $group: groupClause });
 	//logger.debug('aggQuery=' + JSON.stringify(aggQuery));
