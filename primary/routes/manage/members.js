@@ -60,9 +60,10 @@ router.post('/addmember', wrap(async (req, res) => {
 	var org_key = req.user.org_key;
 	
 	if(!name || name == ''){
-		return res.send({
-			status: 400, message: 'User must have a name.'
-		});
+		return res.redirect('/manage/members?alert=User must have a name.&type=error');
+	}
+	if (name.toLowerCase() === 'default_user') {
+		return res.redirect('/manage/members?alert=You cannot create a user with that name.&type=error');
 	}
 	
 	var requestedRole = await utilities.findOne('roles', {role_key: role_key});
@@ -137,6 +138,18 @@ router.post('/updatemember', wrap(async (req, res) => {
 	const class_key = req.body.class_key;
 	const years = req.body.years;
 	const role_key = req.body.role_key;
+	
+	
+	if(!name || name == ''){
+		return res.send({
+			status: 400, message: 'User must have a name.'
+		});
+	}
+	if (name.toLowerCase() === 'default_user') {
+		return res.send({
+			status: 400, message: 'You cannot give a user that name.'
+		});
+	}
 	
 	// recalculate seniority
 	var seniority = years;
