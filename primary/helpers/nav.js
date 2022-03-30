@@ -223,6 +223,7 @@ navHelpers.getNavContents = () => {
 			sprite: 'scoutradioz',
 			visible: (req, res) => !!req.user && req.user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN,
 		},
+		// User when signed in
 		{
 			label: (req, res) => `User: [[${req.user ? req.user.name : ''}]]`,
 			sprite: 'user',
@@ -238,22 +239,36 @@ navHelpers.getNavContents = () => {
 				}
 			]
 		},
+		// User login when not signed in
 		{
-			label: (req, res) => `Org: [[${req.user.org.nickname}]]`,
+			label: (req, res) => `Log In: [[${req.user.org.nickname}]]`,
+			sprite: 'user',
+			visible: (req, res) => !!req.user && req.user.name === 'default_user',
+			href: '/user/login'
+		},
+		// Change org
+		{
+			label: 'Change Organization',
 			sprite: 'org',
 			visible: userLoggedIn,
-			submenu: [
-				{
-					label: 'Change Organization',
-					href: '/user/switchorg',
-				},
-				{
-					label: 'Log In',
-					href: '/user/login',
-					visible: (req, res) => req.user.name === 'default_user',
-				}
-			]
+			href: '/user/switchorg'
 		},
+		// {
+		// 	label: (req, res) => `Org: [[${req.user.org.nickname}]]`,
+		// 	sprite: 'org',
+		// 	visible: userLoggedIn,
+		// 	submenu: [
+		// 		{
+		// 			label: 'Change Organization',
+		// 			href: '/user/switchorg',
+		// 		},
+		// 		{
+		// 			label: 'Log In',
+		// 			href: '/user/login',
+		// 			visible: (req, res) => req.user.name === 'default_user',
+		// 		}
+		// 	]
+		// },
 		{
 			label: 'Need help? Check our wiki!',
 			sprite: 'help',
