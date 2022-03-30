@@ -225,7 +225,7 @@ async function handleUpcomingMatch( data, req, res ) {
 	if (!match) return logger.error(`Match not found: ${match_key}`), res.send(`Match not found: ${match_key}`);
 
 	// Synchronize the rankings (just in case)
-	// await syncRankings(event_key);
+	await syncRankings(event_key);
 
 	// push notifications
 	if (process.env.DISABLE_PUSH_NOTIFICATIONS !== 'true') {
