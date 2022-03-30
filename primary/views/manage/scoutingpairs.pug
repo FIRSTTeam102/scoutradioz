@@ -37,10 +37,10 @@ block content
 	form(method="post" action="/manage/scoutingpairs/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
 	hr 
-	div( onclick="promptPass('*WARNING:* Erases existing PIT SCOUTING data for the current event.', '/manage/scoutingpairs/generateteamallocations');")
+	div( onclick=`promptPass('*WARNING:* Erases existing PIT SCOUTING data for the current event.', '/manage/scoutingpairs/generateteamallocations', ${pitScoutingCount});`)
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams to PIT SCOUTING members
 	br
-	div( onclick="promptPass('*WARNING:* Erases existing MATCH SCOUTING data for the current event.', '/manage/scoutingpairs/generatematchallocations');")
+	div( onclick=`promptPass('*WARNING:* Erases existing MATCH SCOUTING data for the current event.', '/manage/scoutingpairs/generatematchallocations', ${matchScoutingCount});`)
 		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams@matches to MATCH SCORING members
 	br 
 	br 
@@ -88,28 +88,50 @@ block content
 				})
 		}
 		
-		function promptPass(message, url){
+		function promptPass(message, url, numberDeleting){
 			
 			// Prompt user for their password
 			PasswordPrompt.show(message + "\n\nTo continue, enter your password.")
 				.then(result => {
 					if (result.cancelled === false) {
-						// Send request if the user didn't cancel
-						$.post(url, {
-							password: result.password
-						}, 
-						function( data, status ){
-							if(data && data.message) {
-								// error
-								if (data.status && data.status >= 400)
-									NotificationCard.error(data.message);
-								// success/message
-								else
-									NotificationCard.show(data.message);
-							}
-						});
+						
+						if (numberDeleting && numberDeleting > 0) {
+							setTimeout(() => {
+								//- make ABSOLUTE SURE THEY WANNA PROCEED if they're actually gonna delete data
+								Confirm.show(`By proceeding, you will be *permanently deleting* the data from *${numberDeleting}* scouting assignments from _#{eventName}_. Are you sure you want to continue?`, {
+									yesText: 'Yes, proceed',
+									noText: 'Cancel',
+									yesTimeout: 2000
+								})
+									.then(result2 => {
+										if (result2.cancelled === false) {
+											doPostWithPassword(url, result.password);
+										}
+									})
+							}, 350);
+						}
+						else {
+							// Send request immediately if the user didn't cancel & there's nothing to delete
+							doPostWithPassword(url, result.password)
+						}
 					}
 				});
+		}
+		
+		function doPostWithPassword(url, password) {
+			$.post(url, {
+				password: password
+			}, 
+			function( data, status ){
+				if(data && data.message) {
+					// error
+					if (data.status && data.status >= 400)
+						NotificationCard.error(data.message);
+					// success/message
+					else
+						NotificationCard.show(data.message);
+				}
+			});
 		}
 		
 		var selectedDict = {};

@@ -5,25 +5,29 @@ class Confirm {
 	yesText: string;
 	noText: string;
 	animateDuration: number;
+	yesTimeout: number; // Time, in ms, before allowing the user to click "yes"
 	card: JQuery;
 	darkener: JQuery;
 	promise: Promise<{cancelled: boolean}> | undefined;
 	resolvePromise: Function | undefined;
 	
-	constructor(text: string, yesText?: string, noText?: string) {
+	constructor(text: string, options?: ConfirmOptions) {
+		if (!options) options = {};
 		if (typeof text !== 'string') throw new TypeError('PasswordPrompt: text must be string.');
-		if (!yesText) yesText = 'YES';
-		if (!noText) noText = 'NO';
+		if (!options.yesText) options.yesText = 'YES';
+		if (!options.noText) options.noText = 'NO';
+		if (!options.yesTimeout) options.yesTimeout = -1;
 		this.text = text;
-		this.yesText = yesText;
-		this.noText = noText;
+		this.yesText = options.yesText;
+		this.noText = options.noText;
+		this.yesTimeout = options.yesTimeout;
 		this.animateDuration = 200;
 		this.card = $();
 		this.darkener = $();
 	}
 	
-	static show(text: string, yesText?: string, noText?: string) {
-		var newConfirm = new Confirm(text, yesText, noText);
+	static show(text: string, options?: ConfirmOptions) {
+		var newConfirm = new Confirm(text, options);
 		var promise = newConfirm.show();
 		return promise;
 	}
@@ -54,6 +58,14 @@ class Confirm {
 			.appendTo(btnParent);
 			
 		this.card = card;
+		
+		// If there is a yesTimeout, then disable the yes button for the duration
+		if (this.yesTimeout > 0) {
+			yesBtn.attr('disabled', 1);
+			setTimeout(() => {
+				yesBtn.removeAttr('disabled');
+			}, this.yesTimeout);
+		}
 		
 		NotificationCard.container().append(card);
 		// Borrow the NotificationCard container
@@ -111,4 +123,10 @@ class Confirm {
 		
 		return enrichedText;
 	}
+}
+
+declare class ConfirmOptions {
+	yesText?: string;
+	noText?: string;
+	yesTimeout?: number;
 }

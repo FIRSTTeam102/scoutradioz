@@ -22,6 +22,7 @@ router.get('/', wrap(async (req, res) => {
 	const thisFuncName = 'scoutingpairs.scoutingpairs(root): ';
 	const startTime = Date.now();
 	const org_key = req.user.org_key;
+	const event_key = req.event.key;
 	
 	//Log message so we can see on the server side when we enter this
 	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
@@ -53,6 +54,10 @@ router.get('/', wrap(async (req, res) => {
 			)
 		);
 	}
+	// Find the number of pit & match assignments WITH data
+	dbPromises.push(utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}}));
+	dbPromises.push(utilities.find('pitscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}}));
+	
 	//Any team members that are not on a subteam, but are unassigned and present.
 	dbPromises.push(utilities.find('users', 
 		{'event_info.assigned': false, 'event_info.present': true, org_key: org_key, visible: true}, 
@@ -77,8 +82,10 @@ router.get('/', wrap(async (req, res) => {
 				// the values array will be ordered the same as pitScoutSubteams & pitScoutSubteamKeys
 				pitScoutSubteams[i].members = values[i]; 
 			}
-			var available = values[values.length - 2]; // second to last
-			var assigned = values[values.length - 1]; // last
+			var matchScoutingCount = values[values.length - 4].length; // fourth to last
+			var pitScoutingCount = values[values.length - 3].length;	// third to last
+			var available = values[values.length - 2]; 					// second to last
+			var assigned = values[values.length - 1]; 					// last
 		
 			var postAwaitTime = Date.now() - startTime - preAwaitTime;
 			logger.trace(`preAwaitTime: ${preAwaitTime}ms, postAwaitTime: ${postAwaitTime}ms`);
@@ -89,7 +96,9 @@ router.get('/', wrap(async (req, res) => {
 				title: 'Scouting Assignments',
 				subteams: pitScoutSubteams,
 				assigned: assigned,
-				available: available
+				available: available,
+				matchScoutingCount: matchScoutingCount,
+				pitScoutingCount: pitScoutingCount
 			});
 		});
 }));
