@@ -149,22 +149,6 @@ html{
 	#page::after{height: 160px;}
 }
 
-/* For templates/upcomingMatch.pug */
-.thick-border{
-	border-width: 6.5px!important;
-	margin-top: -5.5px;
-	border-radius: 10px;
-}
-.upcoming-rank{
-	margin-top: 2.5px;
-	min-width: 50px;
-}
-@media(max-width: 400px) {
-	.upcoming-rank{
-		display: block;
-		width: 100%;
-	}
-}
 
 /* For spacers */
 .theme-spacer{
@@ -240,29 +224,58 @@ hr{
 	cursor: pointer;
 }
 
-.password-prompt {
-	z-index: 4;
-	position: fixed;
-	top: 25%;
-	left: 16px;
-	right: 16px;
-}
 
-.password-prompt-content {
-	margin: auto;
-	background-color: #f0f5ff;
-	color: @black;
-	padding: 8px 16px;
-	min-width: 400px;
-	max-width: 800px;
-	width: 50%;
+/* For templates/upcomingMatch.pug */
+.thick-border{
+	border-width: 6.5px!important;
+	margin-top: -5.5px;
+	border-radius: 10px;
 }
-
-@media(max-width: 600px) {
-	.password-prompt-content {
-		min-width: unset;
-	}
-	.centered-half {
+.semi-thick-border{
+	border-width: 3px!important;
+	margin-top: -2px;
+	border-radius: 9px;
+	border-color: #dfe1e9!important;
+}
+.upcoming-rank{
+	margin-top: 2.5px;
+	min-width: 50px;
+	.w3-left;
+	.w3-small;
+}
+@media(max-width: 400px) {
+	.upcoming-rank{
+		display: block;
 		width: 100%;
+	}
+}
+
+// Shows little triangles to indicate a focused team.
+.upcoming-highlighted-team {
+	&::before, &::after {
+		content: '';
+		border-width: 7px;
+		border-style: solid;
+		font-size: 0;
+		position: relative;
+		top: -5px;
+	}
+	&::before {
+		right: 8px;
+		border-color: transparent transparent transparent white;
+	}
+	&::after {
+		left: 8px;
+    	border-color: transparent white transparent transparent;
+	}
+}
+
+// Change the text color to black on hover.
+.alliance-hover-blue:hover, .alliance-hover-red:hover {
+	& .upcoming-highlighted-team::before {
+		border-color: transparent transparent transparent black;
+	}
+	& .upcoming-highlighted-team::after {
+		border-color: transparent black transparent transparent;
 	}
 }

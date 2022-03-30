@@ -78,17 +78,17 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 					//- not doing this with a loop because border needs to be specified
 					a(href=`/reports/teamintel?team_key=${red1}`)
 						div(class="w3-padding alliance-hover-red rounded-small-top")
-							span(class="w3-left w3-small theme-text upcoming-rank") 
+							span(class="upcoming-rank") 
 								i Rank #{teamRanks[red1]}
 							span(class=(selectedTeam==red1?'upcoming-highlighted-team':''))=red1.substring(3)
 					a(href=`/reports/teamintel?team_key=${red2}`)
 						div(class="w3-padding alliance-hover-red")
-							span(class="w3-left w3-small theme-text upcoming-rank") 
+							span(class="upcoming-rank") 
 								i Rank #{teamRanks[red2]}
 							span(class=(selectedTeam==red2?'upcoming-highlighted-team':''))=red2.substring(3)
 					a(href=`/reports/teamintel?team_key=${red3}`)
 						div(class="w3-padding alliance-hover-red rounded-small-bottom")
-							span(class="w3-left w3-small theme-text upcoming-rank") 
+							span(class="upcoming-rank") 
 								i Rank #{teamRanks[red3]}
 							span(class=(selectedTeam==red3?'upcoming-highlighted-team':''))=red3.substring(3)
 			div(class="w3-col s6 w3-padding-small")
@@ -96,17 +96,17 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 					//- not doing this with a loop because border needs to be specified
 					a(href=`/reports/teamintel?team_key=${blue1}`)
 						div(class="w3-padding alliance-hover-blue rounded-small-top")
-							span(class="w3-left w3-small theme-text upcoming-rank") 
+							span(class="upcoming-rank") 
 								i Rank #{teamRanks[blue1]}
 							span(class=(selectedTeam==blue1?'upcoming-highlighted-team':''))=blue1.substring(3)
 					a(href=`/reports/teamintel?team_key=${blue2}`)
 						div(class="w3-padding alliance-hover-blue")
-							span(class="w3-left w3-small theme-text upcoming-rank") 
+							span(class="upcoming-rank") 
 								i Rank #{teamRanks[blue2]}
 							span(class=(selectedTeam==blue2?'upcoming-highlighted-team':''))=blue2.substring(3)
 					a(href=`/reports/teamintel?team_key=${blue3}`)
 						div(class="w3-padding alliance-hover-blue rounded-small-bottom")
-							span(class="w3-left w3-small theme-text upcoming-rank") 
+							span(class="upcoming-rank") 
 								i Rank #{teamRanks[blue3]}
 							span(class=(selectedTeam==blue3?'upcoming-highlighted-team':''))=blue3.substring(3)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
