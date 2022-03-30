@@ -24,34 +24,35 @@ block content
 		h3 No teams were found for this tournament.
 	else 
 		h3=title
-		p
-			if noMatchesFoundForTeam
-				i No matches were found for team #{selectedTeam.substring(3)}.
-				- selectedTeam = 'all';
-			else 
-				br 
+		if noMatchesFoundForTeam
+			p.i No matches were found for team #{selectedTeam.substring(3)}.
+			- selectedTeam = 'all';
+		else 
+			br 
 		//- Dashboard for other teams
 		div(class="w3-section")
 			//- 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
 			//- form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
 			form(name="driveDashboardTeam" method="get" action="/dashboard/driveteam")
-				label(class="w3-label") View dashboard for...
-				select(class="theme-input" style="min-width: 100;" name="team_key")
+				span(class="w3-mobile w3-margin-top")
+					label(class="w3-label" style="padding-right: 8px") View dashboard for...
+					select(class="theme-input" style="min-width: 100;" name="team_key")
+						noscript
+							if selectedTeam == 'all'
+								option(selected value='all') [Choose a team]
+							//- else
+								option(value='all') All teams
+						each team in teams 
+							if team.key == selectedTeam
+								option(selected value=team.key)=team.team_number
+							else 
+								option(value=team.key)=team.team_number
 					noscript
-						if selectedTeam == 'all'
-							option(selected value='all') [Choose a team]
-						//- else
-							option(value='all') All teams
-					each team in teams 
-						if team.key == selectedTeam
-							option(selected value=team.key)=team.team_number
-						else 
-							option(value=team.key)=team.team_number
-				noscript
-					//- JL: I made the multiselect auto-submit on change, but to make it still work in browsers with JS disabled, this submit button will act in its place.
-					button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true") Selected team
-				label(class="w3-label w3-margin-left") or...
-				button(class="w3-btn theme-submit" type="submit" name="all" value="true") All teams
+						//- JL: I made the multiselect auto-submit on change, but to make it still work in browsers with JS disabled, this submit button will act in its place.
+						button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true") Selected team
+				span(class="w3-mobile w3-margin-top")
+					label(class="w3-label w3-margin-left" style="padding-right: 8px") or...
+					button(class="w3-btn theme-submit" type="submit" name="all" value="true") All teams
 		br
 		if selectedTeam == 'all'
 			h4 Next Match:
