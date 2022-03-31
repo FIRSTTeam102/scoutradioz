@@ -163,7 +163,7 @@ router.post('/', wrap(async (req, res) => {
 	//Delegate data handling to separate functions.
 	switch(messageType){
 		case 'upcoming_match':
-			await handleUpcomingMatch( messageData );
+			await handleUpcomingMatch( messageData, req, res );
 			break;
 		// 2020-02-20, adding 'match_video' - appears to be the same data as 'match_score'
 		case 'match_score':
@@ -201,7 +201,7 @@ router.get('/upcoming', wrap(async (req, res) => {
 			team_keys: [...match.alliances.blue.team_keys, ...match.alliances.red.team_keys]
 		};
 		try {
-			await handleUpcomingMatch(data);
+			await handleUpcomingMatch(data, req, res);
 			res.send(JSON.stringify(data, 0, 2));
 		}
 		catch (err) {
