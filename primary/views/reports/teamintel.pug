@@ -173,7 +173,7 @@ block content
 					
 					each match in matches
 						//include templates/completedMatch
-						+completedMatch(match)
+						+completedMatch(match, undefined, team.key)
 						if (match.scoringdata && isScouter)
 							each element in scorelayout
 								case element.type

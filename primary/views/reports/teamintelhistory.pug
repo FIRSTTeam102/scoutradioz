@@ -92,7 +92,7 @@ block content
 								h4(class="theme-text") #{thisEventKey}
 							hr 
 						//include templates/completedMatch
-						+completedMatch(match)
+						+completedMatch(match, undefined, team.key)
 						if (match.scoringdata && user && user.role.access_level >= process.env.ACCESS_SCOUTER)
 							each element in scorelayout
 								case element.type

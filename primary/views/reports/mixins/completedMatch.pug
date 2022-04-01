@@ -3,8 +3,8 @@
 	PARAM
 		match [db Object] TBA data for a completed match.
 		includeHr [boolean] Whether to include an hr at the bottom.
-mixin completedMatch(match, includeHr=false)
-	- let timeString = '', shortTimeString = '';
+mixin completedMatch(match, includeHr=false, selectedTeam=null)
+	- let timeString = '', shortTimeString = ''; console.log(selectedTeam)
 	if match.actual_time
 		- let time = zoneTime(match.actual_time * 1000);
 		- timeString = time.toFormat('ccc t');
@@ -64,22 +64,13 @@ mixin completedMatch(match, includeHr=false)
 						//- not doing this with a loop because border needs to be specified
 						a(href=`/reports/teammatchintel?key=${match.key}_${red1}`)
 							div(class="w3-padding alliance-hover-red rounded-small-tl")
-								if team && team.key == red1
-									strong=red1.substring(3)
-								else
-									span=red1.substring(3)
+								span(class=(selectedTeam==red1?'upcoming-highlighted-team':''))=red1.substring(3)
 						a(href=`/reports/teammatchintel?key=${match.key}_${red2}`)
 							div(class="w3-padding alliance-hover-red")
-								if team && team.key == red2
-									strong=red2.substring(3)
-								else
-									span=red2.substring(3)
+								span(class=(selectedTeam==red2?'upcoming-highlighted-team':''))=red2.substring(3)
 						a(href=`/reports/teammatchintel?key=${match.key}_${red3}`)
 							div(class="w3-padding alliance-hover-red rounded-small-bl")
-								if team && team.key == red3
-									strong=red3.substring(3)
-								else
-									span=red3.substring(3)
+								span(class=(selectedTeam==red3?'upcoming-highlighted-team':''))=red3.substring(3)
 					div(class="w3-col s5 m6 l4 rounded-small tr rounded-small br")
 						div(class="w3-padding-8 rounded-small-tr")
 							span Score:
@@ -107,22 +98,13 @@ mixin completedMatch(match, includeHr=false)
 						//- not doing this with a loop because border needs to be specified
 						a(href=`/reports/teammatchintel?key=${match.key}_${blue1}`)
 							div(class="w3-padding alliance-hover-blue rounded-small-tl")
-								if team && team.key == blue1
-									strong=blue1.substring(3)
-								else
-									span=blue1.substring(3)
+								span(class=(selectedTeam==blue1?'upcoming-highlighted-team':''))=blue1.substring(3)
 						a(href=`/reports/teammatchintel?key=${match.key}_${blue2}`)
 							div(class="w3-padding alliance-hover-blue")
-								if team && team.key == blue2
-									strong=blue2.substring(3)
-								else
-									span=blue2.substring(3)
+								span(class=(selectedTeam==blue2?'upcoming-highlighted-team':''))=blue2.substring(3)
 						a(href=`/reports/teammatchintel?key=${match.key}_${blue3}`)
 							div(class="w3-padding alliance-hover-blue rounded-small-bl")
-								if team && team.key == blue3
-									strong=blue3.substring(3)
-								else
-									span=blue3.substring(3)
+								span(class=(selectedTeam==blue3?'upcoming-highlighted-team':''))=blue3.substring(3)
 					//-breakdown
 					div(class="w3-col s5 m6 l4 rounded-small tr rounded-small br")
 						div(class="w3-padding-8 rounded-small-tr")
