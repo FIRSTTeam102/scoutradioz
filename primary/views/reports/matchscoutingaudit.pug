@@ -1,0 +1,97 @@
+//-
+	Hack-job for 2022 scoring audits - TODO make this flexible for multiple orgs & multiple years
+		reports.js
+		'/reports/matchscoutingaudit'
+			QUERY: lookbackto (the match # to look back to; if omitted, will show & calculate across all matches so far at the current event
+extends ../layout
+block content
+	style.
+		.w3-tooltip .w3-tooltiptext{
+			width: 120px;
+			padding: 8px 16px;
+			margin-left: -60px;
+		}
+
+	h2(class="theme-text") Per-match auditing
+
+	div(class="w3-show-inline-block")
+		table(class="w3-table")
+			tr
+				th(class="w3-center") Match/scouts
+				th(class="w3-right-align w3-tooltip") Point diff
+					span.w3-tooltiptext Count of matches scouted
+				th(class="w3-right-align w3-tooltip") Err Ratio
+					span.w3-tooltiptext Average points difference
+				th(class="w3-right-align w3-tooltip") Total Points
+					span.w3-tooltiptext Average ratio of error
+				th(class="w3-right-align w3-tooltip") Auto Points
+					span.w3-tooltiptext Total cumulative difference
+				th(class="w3-right-align w3-tooltip") Teleop Points
+					span.w3-tooltiptext Total cumulative error
+				th(class="w3-right-align w3-tooltip") Climb Points
+					span.w3-tooltiptext Total cumulative error
+				th(class="w3-right-align w3-tooltip") Taxied
+					span.w3-tooltiptext Total cumulative error
+				th(class="w3-right-align w3-tooltip") Auto Low
+					span.w3-tooltiptext Total cumulative error
+				th(class="w3-right-align w3-tooltip") Auto High
+					span.w3-tooltiptext Total cumulative error
+				th(class="w3-right-align w3-tooltip") Teleop Low
+					span.w3-tooltiptext Total cumulative error
+				th(class="w3-right-align w3-tooltip") Teleop High
+					span.w3-tooltiptext Total cumulative error
+			each matchall, i in compareTable
+				tr
+					td(class="w3-text-light-gray w3-center")= matchall[0]
+					td(class="w3-text-light-gray w3-center")= matchall[1]
+					td(class="w3-text-light-gray w3-center")= Math.round(matchall[2]*10)/10
+					td(class="w3-text-light-gray w3-center")= matchall[3]
+					td(class="w3-text-light-gray w3-center")= matchall[4]
+					td(class="w3-text-light-gray w3-center")= matchall[5]
+					td(class="w3-text-light-gray w3-center")= matchall[6]
+					td(class="w3-text-light-gray w3-center")= matchall[7]
+					td(class="w3-text-light-gray w3-center")= matchall[8]
+					td(class="w3-text-light-gray w3-center")= matchall[9]
+					td(class="w3-text-light-gray w3-center")= matchall[10]
+					td(class="w3-text-light-gray w3-center")= matchall[11]
+
+	h2(class="theme-text") Scouter scores
+	h6 <i>Click on a column header to sort by that column's information (click again to change sort direction)</i>
+
+	div(class="w3-show-inline-block")
+		table(class="w3-table" id="metricTable")
+			tr
+				th(class="w3-center") Scout
+				th(class="w3-right-align w3-tooltip")  Count
+					span.w3-tooltiptext Count of matches scouted
+				th(class="w3-right-align w3-tooltip")  AvgDiff
+					span.w3-tooltiptext Average points difference
+				th(class="w3-right-align w3-tooltip")  AvgRatio
+					span.w3-tooltiptext Average ratio of error
+				th(class="w3-right-align w3-tooltip")  TotalDiff
+					span.w3-tooltiptext Total cumulative difference
+				th(class="w3-right-align w3-tooltip")  TotalRatio
+					span.w3-tooltiptext Total cumulative error
+			each scout, i in scouterScoring
+				tr
+					td(class="w3-text-light-gray w3-center")= i
+					td(class="w3-text-light-gray w3-center")= scout.count
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.avgDiff*10)/10
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.avgRatio*10)/10
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.totDiff*10)/10
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.totRatio*10)/10
+	script.
+		$('th').on('click', function() {
+			var table = $(this).parents('table').eq(0)
+			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+			this.asc = !this.asc
+			if (!this.asc){rows = rows.reverse()}
+			for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+		});
+		function comparer(index) {
+			return function(a, b) {
+				var valA = getCellValue(a, index), valB = getCellValue(b, index)
+				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+			}
+		}
+		function getCellValue(row, index){ return $(row).children('td').eq(index).text() }

@@ -17,7 +17,7 @@ block content
 			p
 			h4 Blue team: #{match.alliances.blue.score} points
 			- var blueTeams = match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3);
-			h4.i blueTeams
+			h4.i= blueTeams
 			if (match.videos)
 				if (match.videos[0])
 					if (match.videos[0].type == "youtube")
