@@ -51,6 +51,35 @@ functions.initialMiddleware = async function(req, res, next){
 		}
 	};
 	
+	// 2022-04-04 JL: Moving timezoneString calculations into initialMiddleware
+	if (req.cookies['timezone']) {
+		logger.trace(`Setting user timezone ${req.cookies['timezone']}`);
+		req.timezoneString = req.cookies['timezone'];
+	}
+	else if (req.event.timezone) {
+		logger.trace(`Setting event timezone ${req.event.timezone}`);
+		req.timezoneString = req.event.timezone;
+	}
+	else {
+		logger.trace('Setting default timezone');
+		req.timezoneString = 'America/New_York'; // Default to EST/EDT because we're MAR-centered
+	}
+	
+	// Attempt to get the user's locale
+	let localeString = 'en-US';
+	let acceptLang = req.get('accept-language');
+	if (acceptLang) {
+		try {
+			let firstLang = acceptLang.split(',')[0];
+			let locale = new Intl.Locale(firstLang);
+			localeString = locale.baseName;
+		}
+		catch (err) {
+			logger.debug(`Couldn't parse locale: ${err}`);
+		}
+	}
+	req.localeString = localeString;
+	
 	next();
 };
 
@@ -162,34 +191,10 @@ functions.setViewVariables = async function(req, res, next){
 	// expose Luxon DateTime to views
 	res.locals.DateTime = DateTime;
 	
-	let timezoneString;
-	if (req.cookies['timezone']) {
-		logger.debug(`Setting user timezone ${req.cookies['timezone']}`);
-		timezoneString = req.cookies['timezone'];
-	}
-	else if (req.event.timezone) {
-		logger.debug(`Setting event timezone ${req.event.timezone}`);
-		timezoneString = req.event.timezone;
-	}
-	else {
-		logger.debug('Setting default timezone');
-		timezoneString = 'America/New_York'; // Default to EST/EDT because we're MAR-centered
-	}
+	// 2022-04-04 JL: Moving timezoneString calculations into initialMiddleware
+	let timezoneString = req.timezoneString; 
 	logger.debug(`Timezone fixed offset: ${getFixedZone(timezoneString).offset()}`);
-	
-	// Attempt to get the user's locale
-	let localeString = 'en-US';
-	let acceptLang = req.get('accept-language');
-	if (acceptLang) {
-		try {
-			let firstLang = acceptLang.split(',')[0];
-			let locale = new Intl.Locale(firstLang);
-			localeString = locale.baseName;
-		}
-		catch (err) {
-			logger.debug(`Couldn't parse locale: ${err}`);
-		}
-	}
+	let localeString = req.localeString;
 	
 	// Method for views to get the offset time w/o having to do DateTime.whatever
 	res.locals.zoneTime = function (millis) {
@@ -312,7 +317,9 @@ functions.requestLogger = function(req, res, next){
 		+ req.shortagent.os
 		+ '|'
 		+ req.shortagent.browser
-		+ ' to '
+		+ ' ('
+		+ (req.timezoneString + ', ' + req.localeString).yellow
+		+ ') to '
 		+ (req.url).cyan
 		+ ' at '
 		+ formattedReqTime);
