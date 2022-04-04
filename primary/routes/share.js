@@ -12,7 +12,6 @@ router.all('/*', wrap(async (req, res, next) => {
 router.get('/*', wrap(async (req, res, next) => {
 	logger.addContext('funcName', 'root[get]');
 	
-	logger.info(req.url);
 	var url = req.url;
 	var urlBits = url.split('/');
 	var redirectURL;
@@ -21,7 +20,7 @@ router.get('/*', wrap(async (req, res, next) => {
 	if (urlBits[0] == '') {
 		urlBits.shift(0, 1);
 	}
-	logger.info(urlBits);
+	logger.debug(`url=${req.url}, urlBits=${JSON.stringify(urlBits)}`);
 	
 	//Get orgKey and remove it from urlBits
 	var orgKey = urlBits.shift(0, 1);
@@ -31,7 +30,7 @@ router.get('/*', wrap(async (req, res, next) => {
 		
 		var org = await utilities.findOne('orgs', 
 			{org_key: orgKey}, {},
-			{allowCache: true, maxCacheAge: 180},
+			{allowCache: true, maxCacheAge: 300},
 		);
 		
 		//If org was found

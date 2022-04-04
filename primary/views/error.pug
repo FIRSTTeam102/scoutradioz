@@ -7,17 +7,19 @@ extends layout
 block content
 	h2.i Error: #{error.message}
 	h6 #{error.status} #{error.statusMessage}
-	div(class="w3-left-align w3-margin-left")
-		div.w3-large
-			p
-				span(class="sprite sp-18 sp-inline sp-scoutradioz") &nbsp;
-				span To help us fix this error, please:
-			ol
-				li Take a screenshot of this error message,
-				li Copy the full URL of this page by clicking on "Share" at the top of the page,
-				li Post the screenshot in either our Discord server or our 
-					span(class="sprite sp-18 sp-inline sp-github") &nbsp;
-					<a class="link" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/issues" target="_blank">GitHub page</a>, including relevant information, such as the link you clicked to get to this error.
-		if error.stack
-			p.w3-large Stack trace:
-			pre(class="" style="text-shadow: 1px 1px 2px #000000")= error.stack
+	//- 2022-04-04 JL: Don't show the wordy message on Not Found errors
+	if error.status != 404
+		div(class="w3-left-align w3-margin-left")
+			div.w3-large
+				p
+					span(class="sprite sp-18 sp-inline sp-scoutradioz") &nbsp;
+					span To help us fix this error, please:
+				ol
+					li Take a screenshot of this error message,
+					li Copy the full URL of this page by clicking on "Share" at the top of the page,
+					li Post the screenshot in either our Discord server or our 
+						span(class="sprite sp-18 sp-inline sp-github") &nbsp;
+						<a class="link" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/issues" target="_blank">GitHub page</a>, including relevant information, such as the link you clicked to get to this error.
+			if error.stack
+				p.w3-large Stack trace:
+				pre(class="" style="text-shadow: 1px 1px 2px #000000")= error.stack
