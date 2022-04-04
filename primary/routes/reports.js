@@ -1349,8 +1349,9 @@ router.get('/exportdata', wrap(async (req, res) => {
 		res.redirect('/?alert=No data type specified for export.');
 		return;
 	}
+	var dataSpan = req.query.span;
 
-	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',req.shortagent=' + JSON.stringify(req.shortagent));
+	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',dataSpan=' + dataSpan + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
 	var matchLayout = await utilities.find('layout', 
@@ -1387,7 +1388,14 @@ router.get('/exportdata', wrap(async (req, res) => {
 	}
 	
 	// read in all data
-	var scored = await utilities.find(dataType, {'org_key': orgKey, 'event_key': eventKey, 'data': {$exists: true} }, sortOptions);
+	var queryJson = {'org_key': orgKey, 'event_key': eventKey, 'data': {$exists: true} };
+	if (dataSpan == 'all') {
+		queryJson = {'org_key': orgKey, 'data': {$exists: true} };
+		queryJson['event_key'] = {$regex: '^' + eventYear};
+	}
+	logger.debug('queryJson=' + JSON.stringify(queryJson));
+	//var scored = await utilities.find(dataType, {'org_key': orgKey, 'event_key': eventKey, 'data': {$exists: true} }, sortOptions);
+	var scored = await utilities.find(dataType, queryJson, sortOptions);
 	
 	// Since team_key sort is string based, we need to manually sort by team number
 	if (sortKey == 'team_key') {
@@ -1475,7 +1483,11 @@ router.get('/exportdata', wrap(async (req, res) => {
 
 	// Send back simple text
 	res.setHeader('Content-Type', 'text/csv');
-	res.setHeader('Content-Disposition', 'attachment; filename="' + dataType + '_' + orgKey + '_' + eventKey + '_' + Date.now() + '.csv"');
+	if (dataSpan == 'all') {
+		res.setHeader('Content-Disposition', 'attachment; filename="' + dataType + '_' + orgKey + '_' + eventYear + '_' + Date.now() + '.csv"');
+	} else {
+		res.setHeader('Content-Disposition', 'attachment; filename="' + dataType + '_' + orgKey + '_' + eventKey + '_' + Date.now() + '.csv"');
+	}
 	return res.send(fullCSVoutput);
 }));
 
