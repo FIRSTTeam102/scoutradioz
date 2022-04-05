@@ -643,6 +643,103 @@ router.post('/swapmembers', wrap(async (req, res) => {
 	res.redirect('/dashboard/matches');
 }));
 
+router.get('/swappitassignments', wrap(async (req, res) => {
+
+	logger.addContext('funcName', 'swappitassignments[get]');
+	logger.info('ENTER');
+	
+	// for later querying by event_key
+	var event_key = req.event.key;
+	var org_key = req.user.org_key;
+
+	// who is the scout we're querying (if specified)
+	var scoutId = req.query.scoutId;
+
+	// Two sets of teams - one for each select control
+	var teams1 = [];
+	var teams2 = [];
+	if (scoutId) {
+		// find teams which have the specified scout in primary OR secondary OR tertiary
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
+		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, primary: {$not: new RegExp('^'+scoutId+'$')}, secondary: {$not: new RegExp('^'+scoutId+'$')}, tertiary: {$not: new RegExp('^'+scoutId+'$')} }, { });
+	} else {
+		// just get two sets of all teams
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
+	}
+	//sort teams lists by number
+	teams1.sort(function(a, b) {
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
+		return aNum - bNum;
+	});
+	teams2.sort(function(a, b) {
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
+		return aNum - bNum;
+	});
+	logger.debug('teams1.length=' + teams1.length);
+	logger.debug('teams2.length=' + teams2.length);
+
+	// get the list of assigned scouts
+	var pitScouts = await utilities.distinct('pitscouting', 'primary', {'org_key': org_key, 'event_key': event_key});
+	logger.debug('distinct pitScouts=' + JSON.stringify(pitScouts));
+
+	res.render('./manage/swappitassignments', {
+		title: 'Team Assignments',
+		teams1: teams1,
+		teams2: teams2,
+		pitScouts: pitScouts,
+		scoutId: scoutId
+	});	
+}));
+
+router.post('/swappitassignments', wrap(async (req, res) => {
+	
+	var thisFuncName = 'scoutingpairs.swappitassignments[post]: ';
+	
+	// for later querying by event_key
+	var event_key = req.event.key;
+	var org_key = req.user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
+	
+	var scoutId = req.body.scoutId;
+	// Extract 'from' & 'to' from req
+	var team_key1 = req.body.team1;
+	var team_key2 = req.body.team2;
+	var team_key2_temp = team_key2 + 'SWAP'
+	logger.info(thisFuncName + 'team_key1=' + team_key1 + ',team_key2=' + team_key2 + ';scoutId=' + scoutId);
+
+	// updates
+	// set team1 record key to team2+SWAP
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key1 },
+		{ $set: { 'team_key': team_key2_temp } }
+	);
+	// set team2 record key to team1
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key2 },
+		{ $set: { 'team_key': team_key1 } }
+	);
+	// set team1 record key to team2+SWAP
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key2_temp },
+		{ $set: { 'team_key': team_key2 } }
+	);
+
+	var redirect = '/manage/scoutingpairs/swappitassignments';
+	if (scoutId) {
+		redirect = redirect + '?scoutId=' + scoutId;
+	}
+	res.redirect(redirect);
+}));
+
 async function generateMatchAllocations(req, res){
 	/* Begin regular code ----------------------------------------------------------- */
 	

@@ -1,0 +1,36 @@
+//-
+	Org mgmt page to swap members between/in/out of pairs.
+		PARAM
+			teams1		[Array] pitscouting objects (may contain a specific member)
+			teams2		[Array] pitscouting objects (may AVOID a specific member)
+		manage/swappitassignments.js	
+		'/manage/swappitassignments'
+	//
+extends ../layout
+block content
+	h2 Swap Pit Scouts
+	p All the scouts (primary, secondary, and tertiary [if secondary or tertiary are defined]) will be swapped between the two teams
+	form#swap-form(name="swap-form" method="post" action="")
+		div(class="w3-container w3-padding-16")
+			label(class="w3-quarter w3-label") Team #1 to be swapped: 
+			select(class="w3-half w3-border-light-grey" type="text" name="team1")
+				option
+				each team, i in teams1
+					- var teamNum = team.team_key
+					- var optionStr = teamNum + ' - ' + team.primary
+					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary }
+					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary }
+					option(value=teamNum class="w3-bar-item") #{optionStr}
+		div(class="w3-container w3-padding-16")
+			label(class="w3-quarter w3-label") Team #2 to be swapped: 
+			select(class="w3-half w3-border-light-grey" type="text" name="team2")
+				option
+				each team, i in teams2
+					- var teamNum = team.team_key
+					- var optionStr = teamNum + ' - ' + team.primary
+					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary }
+					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary }
+					option(value=teamNum class="w3-bar-item") #{optionStr}
+		input#scoutId(type="hidden", name="scoutId", value=scoutId)
+		div(class="w3-padding-16")
+			input(type="submit" class="gear-btn theme-link w3-btn" value="Submit")
