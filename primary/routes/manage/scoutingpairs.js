@@ -713,13 +713,12 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 	logger.info('ENTER org_key=' + org_key);
 	
 	var scoutId = req.body.scoutId || req.query.scoutId;
-	// Extract 'from' & 'to' from req
-	var team_key1 = req.body.team1;
-	var team_key2 = req.body.team2;
-	var team_key2_temp = team_key2 + 'SWAP';
-	logger.info('team_key1=' + team_key1 + ',team_key2=' + team_key2 + ';scoutId=' + scoutId);
+	// Extract from req the two teams to be swapped
+	var team1 = req.body.team1;
+	var team2 = req.body.team2;
+	logger.info('team1=' + team1 + ',team2=' + team2 + ';scoutId=' + scoutId);
 	
-	if (!team_key1 || !team_key2) {
+	if (!team1 || !team2) {
 		let redirect = req.getURLWithQueryParameters('/manage/scoutingpairs/swappitassignments', {
 			scoutId: scoutId,
 			alert: 'Please specify two teams to be swapped.',
@@ -728,6 +727,12 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 		return res.redirect(redirect);
 	}
 	
+	// create keys from the team values
+	var team_key1 = 'frc' + team1;
+	var team_key2 = 'frc' + team2;
+	// use a temporary value during the swapping process
+	var team_key2_temp = team_key2 + 'SWAP';
+
 	// updates
 	// set team1 record key to team2+SWAP
 	await utilities.update(
