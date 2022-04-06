@@ -672,8 +672,8 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 	}
 	else {
 		// just get two sets of all teams
-		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
-		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}}, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}}, { });
 	}
 	//sort teams lists by number
 	teams1.sort(function(a, b) {
