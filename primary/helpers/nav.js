@@ -199,6 +199,10 @@ navHelpers.getNavContents = () => {
 							href: '/manage/scoutingpairs/swapmembers'
 						},
 						{
+							label: 'Swap Pit Scouting assignments',
+							href: '/manage/scoutingpairs/swappitassignments'
+						},
+						{
 							label: 'Set Present',
 							href: '/manage/members/present'
 						},

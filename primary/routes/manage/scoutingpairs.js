@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('scoutingpairs');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const e = require('@firstteam102/http-errors');
@@ -654,6 +654,12 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 
 	// who is the scout we're querying (if specified)
 	var scoutId = req.query.scoutId;
+	
+	var doEveryone = req.query.all;
+	if (doEveryone == 'true') {
+		logger.debug('"All scouters" set to true; redirecting to get rid of the scoutId= and all= parameters');
+		return res.redirect('/manage/scoutingpairs/swappitassignments');
+	}
 
 	// Two sets of teams - one for each select control
 	var teams1 = [];
@@ -663,7 +669,8 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
 		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
 		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, primary: {$not: new RegExp('^'+scoutId+'$')}, secondary: {$not: new RegExp('^'+scoutId+'$')}, tertiary: {$not: new RegExp('^'+scoutId+'$')} }, { });
-	} else {
+	}
+	else {
 		// just get two sets of all teams
 		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
 		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
@@ -696,23 +703,31 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 }));
 
 router.post('/swappitassignments', wrap(async (req, res) => {
-	
-	var thisFuncName = 'scoutingpairs.swappitassignments[post]: ';
+	logger.addContext('funcName', 'swappitassignments[post]');
 	
 	// for later querying by event_key
 	var event_key = req.event.key;
 	var org_key = req.user.org_key;
 
 	// Log message so we can see on the server side when we enter this
-	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
+	logger.info('ENTER org_key=' + org_key);
 	
-	var scoutId = req.body.scoutId;
+	var scoutId = req.body.scoutId || req.query.scoutId;
 	// Extract 'from' & 'to' from req
 	var team_key1 = req.body.team1;
 	var team_key2 = req.body.team2;
-	var team_key2_temp = team_key2 + 'SWAP'
-	logger.info(thisFuncName + 'team_key1=' + team_key1 + ',team_key2=' + team_key2 + ';scoutId=' + scoutId);
-
+	var team_key2_temp = team_key2 + 'SWAP';
+	logger.info('team_key1=' + team_key1 + ',team_key2=' + team_key2 + ';scoutId=' + scoutId);
+	
+	if (!team_key1 || !team_key2) {
+		let redirect = req.getURLWithQueryParameters('/manage/scoutingpairs/swappitassignments', {
+			scoutId: scoutId,
+			alert: 'Please specify two teams to be swapped.',
+			type: 'bad'
+		});
+		return res.redirect(redirect);
+	}
+	
 	// updates
 	// set team1 record key to team2+SWAP
 	await utilities.update(
@@ -733,10 +748,7 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 		{ $set: { 'team_key': team_key2 } }
 	);
 
-	var redirect = '/manage/scoutingpairs/swappitassignments';
-	if (scoutId) {
-		redirect = redirect + '?scoutId=' + scoutId;
-	}
+	var redirect = req.getURLWithQueryParameters('/manage/scoutingpairs/swappitassignments', {scoutId: scoutId});
 	res.redirect(redirect);
 }));
 
