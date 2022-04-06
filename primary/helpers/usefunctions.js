@@ -51,6 +51,30 @@ functions.initialMiddleware = async function(req, res, next){
 		}
 	};
 	
+	/**
+	 * Function to add query parameters to an URL, respecting the one ? rule, with an object of parameters & their values which CAN be undefined or null. Undefined/null parameters are removed.
+	 * @param {string} url URL
+	 * @param {object} parameters Parameters to modify.
+	 * @returns {string} URL with the query parameters automatically fixed.
+	 */
+	req.getURLWithQueryParameters = function(url, parameters) {
+		let hasQuestionMark = url.includes('?');
+		for (let key in parameters) {
+			let arg = parameters[key];
+			if (typeof arg !== 'undefined' && arg !== null && arg !== 'undefined' && arg !== '') {
+				if (hasQuestionMark) {
+					url += '&';
+				}
+				else {
+					url += '?';
+					hasQuestionMark = true;
+				}
+				url += key + '=' + String(arg);
+			}
+		}
+		return url;
+	};
+	
 	next();
 };
 
