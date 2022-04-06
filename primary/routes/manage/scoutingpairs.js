@@ -666,9 +666,9 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 	var teams2 = [];
 	if (scoutId) {
 		// find teams which have the specified scout in primary OR secondary OR tertiary
-		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
 		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
-		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, primary: {$not: new RegExp('^'+scoutId+'$')}, secondary: {$not: new RegExp('^'+scoutId+'$')}, tertiary: {$not: new RegExp('^'+scoutId+'$')} }, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, primary: {$not: new RegExp('^'+scoutId+'$')}, secondary: {$not: new RegExp('^'+scoutId+'$')}, tertiary: {$not: new RegExp('^'+scoutId+'$')} }, { });
 	}
 	else {
 		// just get two sets of all teams
