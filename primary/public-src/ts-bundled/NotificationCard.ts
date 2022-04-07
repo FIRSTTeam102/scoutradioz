@@ -70,7 +70,7 @@ class NotificationCard{
 	 * @param {function} [options.onexit=undefined] Callback for when a user clicks the exit button.
 	 * @return {NotificationCard} The new NotificationCard object.
 	 */
-	static show(text: string, opts?: NotificationCardOptions|any){
+	static show(text: string, opts?: NotificationCardOptions|undefined){
 		
 		var newCard = new NotificationCard(text, opts);
 		
@@ -84,7 +84,7 @@ class NotificationCard{
 	 * @param {string} text Text to display.
 	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
-	static error(text: string, opts?: NotificationCardOptions|any){
+	static error(text: string, opts?: NotificationCardOptions){
 		
 		if (!opts) opts = {};
 		opts.type = 'error';
@@ -97,7 +97,7 @@ class NotificationCard{
 	 * @param {string} text Text to display.
 	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
-	static good(text: string, opts?: NotificationCardOptions|any){
+	static good(text: string, opts?: NotificationCardOptions){
 		
 		if (!opts) opts = {};
 		opts.type = 'good';
@@ -110,7 +110,7 @@ class NotificationCard{
 	 * @param {string} text Text to display.
 	 * @param {object} [options] Optional settings. See NotificationCard constructor for detailed docs.
 	 */
-	static warn(text: string, opts?: NotificationCardOptions|any){
+	static warn(text: string, opts?: NotificationCardOptions){
 		
 		if (!opts) opts = {};
 		opts.type = 'warn';
@@ -381,15 +381,15 @@ class NotificationCard{
 }
 
 class NotificationCardOptions {
-	type: string|undefined|null;
-	ttl: number|undefined|null;
-	exitable: boolean|undefined|null;
-	darken: false|undefined|null;
-	onexit: Function|undefined|null;
+	type?: string|undefined|null;
+	ttl?: number|undefined|null;
+	exitable?: boolean|undefined|null;
+	darken?: false|undefined|null;
+	onexit?: Function|undefined|null;
 	
-	color: string|undefined|null;
-	borderColor: string|undefined|null;
-	textColor: string|undefined|null;
+	color?: string|undefined|null;
+	borderColor?: string|undefined|null;
+	textColor?: string|undefined|null;
 	
 	constructor() {
 		this.type = 'normal';
