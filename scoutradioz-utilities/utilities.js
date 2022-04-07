@@ -680,6 +680,9 @@ utilities.distinct = async function(collection, field, query){
 	if(typeof(query) != 'object') throw new TypeError('Utilities.distinct: query must be of type object'); 
 	query = castID(query);
 	
+	var timeLogName = `distinct: ${collection}`;
+	consoleTime(timeLogName);
+	
 	logger.trace(`${collection}, ${JSON.stringify(query)}`);
 	
 	//Find in collection with query and options
@@ -687,6 +690,7 @@ utilities.distinct = async function(collection, field, query){
 	var data = await db.collection(collection).distinct(field, query);
 	
 	// logger.trace(`result: ${JSON.stringify(data)}`);
+	consoleTimeEnd(timeLogName);
 	
 	logger.removeContext('funcName');
 	//Return (Promise to get) data
