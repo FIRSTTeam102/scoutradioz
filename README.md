@@ -38,7 +38,7 @@ An NPM package that contains our database manager / caching wrapper.
 #### [scoutradioz-helpers](https://www.npmjs.com/package/@firstteam102/scoutradioz-helpers)
 An NPM package that contains helper functions needed across multiple packages, such as parsing match data, calculating metrics, and listing team images.
 
-#### [scoutradioz-http-errors](https://www.npmjs.com/package/@firstteam102/scoutradioz-http-errors)
+#### [scoutradioz-http-errors](https://www.npmjs.com/package/@firstteam102/http-errors)
 A small NPM package that exposes a small handful of HTTP errors for use inside Express routes. We created this one instead of alternatives because it has no dependencies and only contains what we need.
 
 #### scoutradioz-eslint
