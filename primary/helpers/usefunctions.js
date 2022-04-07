@@ -92,6 +92,8 @@ functions.authenticate = function(req, res, next) {
 		
 		var user = req.user;
 		
+		let redirect = req.fixRedirectURL(req.originalUrl); // 2022-04-07 JL: Fixed redirects from share.js getting their URL query params borked
+		
 		if (user) {
 			
 			var userRole = user.role;
@@ -106,7 +108,7 @@ functions.authenticate = function(req, res, next) {
 			else{
 				
 				if (req.method == 'GET' && user.name == 'default_user') {
-					res.redirect(`/user/login?redirectURL=${req.originalUrl}`);
+					res.redirect(`/user/login?rdr=${redirect}`);
 				}
 				else {
 					res.redirect('/?alert=You are not authorized to access this page.&type=error');
@@ -116,7 +118,7 @@ functions.authenticate = function(req, res, next) {
 		// If user is undefined, then send them to the index page to select an organization
 		else {
 			
-			res.redirect(`/?redirectURL=${req.originalUrl}`);
+			res.redirect(`/?rdr=${redirect}`);
 		}
 		
 		return isAuthenticated;
