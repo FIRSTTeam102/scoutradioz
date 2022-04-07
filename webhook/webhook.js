@@ -70,7 +70,7 @@ const options = {
 		logger.info(`Our hash: ${hash}`);
 		
 		//If comparison failed, then we need to throw an error to stop code
-		// if (hash != hmac) throw Error('X-TBA-HMAC not verified.'); TEMPORARILY DISABLED FOR TESTING
+		if (hash != hmac && process.env.TIER !== 'dev') throw new Error('X-TBA-HMAC not verified.');
 	}
 };
 webhook.use(express.json(options));
