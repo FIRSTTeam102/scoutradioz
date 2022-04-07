@@ -190,6 +190,7 @@ router.post('/', wrap(async (req, res) => {
 	res.status(200).send('thanks!');
 }));
 
+// Testing functions
 router.get('/upcoming', wrap(async (req, res) => {
 	let matchKey = req.query.key;
 	let match = await utilities.findOne('matches', {key: matchKey});
@@ -210,7 +211,27 @@ router.get('/upcoming', wrap(async (req, res) => {
 	}
 }));
 
+router.get('/matchScore', wrap(async (req, res) => {
+	let matchKey = req.query.key;
+	let match = await utilities.findOne('matches', {key: matchKey});
+	if (!match) return res.send('No match found');
+	else {
+		let data = {
+			match: match,
+		};
+		try {
+			await handleMatchScore(data, req, res);
+			res.send(JSON.stringify(data, 0, 2));
+		}
+		catch (err) {
+			res.send(JSON.stringify(err, 0, 2));
+		}
+	}
+}));
+
 ////////// Type handlers
+
+const matchGapBreakThreshold = 30 * 60; // 30 minutes, in seconds
 
 //TBA push handlers
 async function handleUpcomingMatch( data, req, res ) {
@@ -227,141 +248,6 @@ async function handleUpcomingMatch( data, req, res ) {
 	// Synchronize the rankings (just in case)
 	await syncRankings(event_key);
 
-	// push notifications
-	if (process.env.DISABLE_PUSH_NOTIFICATIONS !== 'true') {
-	
-		logger.debug('Configuring web-push');
-		const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
-		webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
-		
-		const teamKeys = data.team_keys;
-		const matchNumberKey = data.match_key.split('_')[1];
-		logger.debug(`matchNumberKey: ${matchNumberKey}, teamKeys: ${JSON.stringify(teamKeys)}`);
-		
-		let scoutPromises = [];
-		for (let teamKey of teamKeys) {
-			scoutPromises.push(utilities.find('matchscouting', {match_team_key: match_key + '_' + teamKey}));
-		}
-		
-		let scoutAssignments = await Promise.all(scoutPromises);
-		logger.debug(`scoutAssignments = ${JSON.stringify(scoutAssignments)}`);
-		
-		let userPromises = [];
-		for (let scoutAssignmentList of scoutAssignments) {
-			for (let assignment of scoutAssignmentList) {
-				// note: There can be assignments from multiple orgs, so I can't assume there are a max of 6 assignments. Have to tie the teamKey to the user object.
-				if (assignment) {
-					userPromises.push(utilities.aggregate('users', [
-						{$match: {org_key: assignment.org_key, name: assignment.assigned_scorer}},
-						{$set: {assigned_team: assignment.team_key}}
-					]));
-					// userPromises[i] = utilities.findOne('users', {org_key: assignment.org_key, name: assignment.assigned_scorer});
-				}
-			}
-		}
-		
-		let users = await Promise.all(userPromises);
-		logger.debug('users=', JSON.stringify(users));
-		
-		for (let userArr of users) {			
-			if (userArr && userArr[0]) {
-				const user = userArr[0]; // Aggregate returns an array, get first element instead
-				const teamKey = user.assigned_team; // from the aggregate statement above
-				
-				// All the code below was written based on a for-i-in-teamKeys loop, so here we can recreate i
-				let i;
-				for (let j = 0; j < teamKeys.length; j++) if (teamKeys[j] === teamKey) i = j;
-				
-				logger.info(`Asignee: ${user.name} from ${user.org_key}`);
-				
-				if (!user.push_subscription) {
-					logger.debug(`Push subscription not available for ${user.name}`);
-					continue;
-				}
-				
-				let alliance = (i <= 2) ? 'blue' : 'red'; // first three keys are blue, last three are red
-				let assignedTeam = alliance + (i<=2 ? i+1 : i-2); // 0-2 -> blue1-3, 3-5: red1-3
-				let titleIdentifier;
-				let matchNumber, compLevel;
-				let setNumber = '';
-				
-				//comp_level isn't available in upcoming_match notification, so we have to find it ourselves
-				if (matchNumberKey.substring(0, 2) == 'qm') {
-					compLevel = 'qm';
-					matchNumber = matchNumberKey.substring(2);
-					titleIdentifier = `Match ${matchNumber}`;
-				}
-				else if (matchNumberKey.substring(0, 2) == 'qf') {
-					compLevel = 'qf';
-					setNumber = matchNumberKey.substring(2, 3);
-					matchNumber = matchNumberKey.substring(4);
-					titleIdentifier = `Quarterfinal ${setNumber} Match ${matchNumber}`;
-				}
-				else if (matchNumberKey.substring(0, 2) == 'sf') {
-					compLevel = 'sf';
-					setNumber = matchNumberKey.substring(2, 3);
-					matchNumber = matchNumberKey.substring(4);
-					titleIdentifier = `Semifinal ${setNumber} Match ${matchNumber}`;
-				}
-				else if (matchNumberKey.substring(0, 1) == 'f') {
-					compLevel = 'f';
-					matchNumber = matchNumberKey.substring(3);
-					titleIdentifier = `Final Match ${matchNumber}`;
-				} 
-				else {
-					throw new Error('Unexpected matchKey comp_level identifier');
-				}
-				
-				let matchTeamKey = match_key + '_' + teamKey;
-				let body = `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`;
-				let ifFocusedMessage = `Don't forget, Match ${match.match_number} is about to start!`;
-				let scoutMatchURL = `https://scoutradioz.com/scouting/match?key=${matchTeamKey}&alliance=${alliance}`;
-				
-				let imageHref = process.env.UPLOAD_URL + '/' + process.env.TIER + '/generate/upcomingmatch?'
-					+ `match_number=${matchNumber}&comp_level=${compLevel}&set_number=${setNumber}`
-					+ '&blue1=' + teamKeys[0].substring(3)
-					+ '&blue2=' + teamKeys[1].substring(3)
-					+ '&blue3=' + teamKeys[2].substring(3)
-					+ '&red1=' + teamKeys[3].substring(3)
-					+ '&red2=' + teamKeys[4].substring(3)
-					+ '&red3=' + teamKeys[5].substring(3)
-					+ '&assigned=' + assignedTeam;
-				
-				let baseUrl; // Serve static files from primary func ONLY IF LOCAL
-				if (process.env.local) baseUrl = '';
-				else baseUrl = process.env.S3_BASE_URL + '/' + process.env.TIER;
-				
-				logger.debug(`assignedTeam=${assignedTeam}, matchteam=${matchTeamKey}, imageURL=${imageHref}`);
-				
-				const notificationContent = JSON.stringify({
-					title: `${titleIdentifier} will start soon`,
-					options: {
-						body: body,
-						badge: baseUrl + '/images/brand-logos/monochrome-badge.png',
-						icon: baseUrl + '/images/brand-logos/FIRST-logo.png',
-						image: imageHref,
-						actions: [
-							{
-								action: scoutMatchURL,
-								title: 'Scout Match',
-								//icon: '',
-							}
-						]
-					},
-					ifFocused: {
-						message: ifFocusedMessage
-					},
-				});
-				// https://web-push-book.gauntface.com/demos/notification-examples/ 
-				
-				await sendPushMessage(user.push_subscription, notificationContent);
-			}
-		}
-	}
-	else {
-		logger.debug('Push notifications disabled!');
-	}
-
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
 	var orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
@@ -370,12 +256,39 @@ async function handleUpcomingMatch( data, req, res ) {
 		//var aggRangePromises = [];
 		for (var i in orgsAtEvent) {
 			var thisOrg = orgsAtEvent[i];
-			await matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
+			// 2022-04-06 JL note: No need to await these
+			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
 			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
 			//aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
 		//Promise.all(aggRangePromises);
+	}
+
+	// push notifications
+	// sendUpcomingNotifications(match, data.team_keys);
+	
+	let matchesScheduledBeforeThis = await utilities.find('matches', {event_key: event_key, time: {$lt: match.time}}, {sort: {time: -1}});
+	
+	let oldMatch = matchesScheduledBeforeThis[1]; // Similar to handleMatchScore, find the match that's 2 before this one
+	
+	let doSendNotification;
+	if (oldMatch) {
+		let timeDifference = match.time - oldMatch.time;
+		logger.debug(`Time difference between this match and the last match: ${timeDifference / 60} minutes`);
+		if (timeDifference > matchGapBreakThreshold) doSendNotification = true;
+		else logger.debug('Not sending push notifications (match break NOT detected)');
+	}
+	else {
+		// If oldMatch is not found, then that means we're in match #1 or #2
+		doSendNotification = true;
+		logger.debug('Did not find a match before this one. Sending notification.');
+	}
+	
+	if (doSendNotification) {
+		// Proceed with the push notifications for this upcoming match
+		let teamKeys = [...match.alliances.blue.team_keys, ...match.alliances.red.team_keys];
+		await sendUpcomingNotifications(match, teamKeys);
 	}
 }
 
@@ -417,8 +330,6 @@ async function handleMatchScore( data ) {
 	// Insert the match data
 	await utilities.insert('matches', data.match);
 	
-	// Synchronize the rankings
-	await syncRankings(event_key);
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
@@ -428,13 +339,36 @@ async function handleMatchScore( data ) {
 		//var aggRangePromises = [];
 		for (var i in orgsAtEvent) {
 			var thisOrg = orgsAtEvent[i];
-			await matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
+			// 2022-04-06 JL note: No need to await these
+			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
 			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
 			//aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
 		//Promise.all(aggRangePromises);
 	}
+	console.log(data.match.time, event_key);
+	// Find the match-after-next-match, for push notifications.
+	let matchesScheduledAfterThis = await utilities.find('matches', {event_key: event_key, time: {$gt: data.match.time}}, {sort: {time: 1}});
+	
+	logger.debug(`Matches after this one: ${matchesScheduledAfterThis.length}`);
+	console.log({event: event_key, time: {$gt: data.match.time}}, {sort: {time: 1}});
+	let newMatch = matchesScheduledAfterThis[1];
+	if (newMatch) {
+		let timeDifference = newMatch.time - data.match.time; // use scheduled time
+		logger.debug(`Time difference between this match and the next-next match: ${timeDifference / 60} minutes`);
+		if (timeDifference < matchGapBreakThreshold) {
+			// Proceed with the push notifications for this upcoming match
+			let teamKeys = [...newMatch.alliances.blue.team_keys, ...newMatch.alliances.red.team_keys];
+			await sendUpcomingNotifications(newMatch, teamKeys);
+		}
+		else {
+			logger.debug('Not sending push notifications (match break detected)');
+		}
+	}
+	
+	// Synchronize the rankings
+	// await syncRankings(event_key); //////////////////////////////////////////////////////////////
 }
 
 async function handleStartingCompLevel( data ) {
@@ -521,6 +455,145 @@ async function syncRankings(event_key) {
 	// Insert into DB
 	//await utilities.insert("currentrankings", rankArr);
 	await utilities.insert('rankings', rankArr);
+}
+
+// Send push notifications for a particular match.
+async function sendUpcomingNotifications(match, teamKeys) {
+	
+	if (process.env.DISABLE_PUSH_NOTIFICATIONS !== 'true') {
+	
+		logger.debug('Configuring web-push');
+		const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
+		webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
+		
+		// const teamKeys = data.team_keys;
+		const matchKey = match.key;
+		const matchNumberKey = matchKey.split('_')[1];
+		logger.debug(`matchNumberKey: ${matchNumberKey}, matchKey: ${matchKey} teamKeys: ${JSON.stringify(teamKeys)}`);
+		
+		let scoutPromises = [];
+		for (let teamKey of teamKeys) {
+			scoutPromises.push(utilities.find('matchscouting', {match_team_key: matchKey + '_' + teamKey}));
+		}
+		
+		let scoutAssignments = await Promise.all(scoutPromises);
+		logger.debug(`scoutAssignments = ${JSON.stringify(scoutAssignments)}`);
+		
+		let userPromises = [];
+		for (let scoutAssignmentList of scoutAssignments) {
+			for (let assignment of scoutAssignmentList) {
+				// note: There can be assignments from multiple orgs, so I can't assume there are a max of 6 assignments. Have to tie the teamKey to the user object.
+				if (assignment) {
+					userPromises.push(utilities.aggregate('users', [
+						{$match: {org_key: assignment.org_key, name: assignment.assigned_scorer}},
+						{$set: {assigned_team: assignment.team_key}}
+					]));
+					// userPromises[i] = utilities.findOne('users', {org_key: assignment.org_key, name: assignment.assigned_scorer});
+				}
+			}
+		}
+		
+		let users = await Promise.all(userPromises);
+		logger.debug('users=', JSON.stringify(users));
+		
+		for (let userArr of users) {			
+			if (userArr && userArr[0]) {
+				const user = userArr[0]; // Aggregate returns an array, get first element instead
+				const teamKey = user.assigned_team; // from the aggregate statement above
+				
+				// All the code below was written based on a for-i-in-teamKeys loop, so here we can recreate i
+				let i;
+				for (let j = 0; j < teamKeys.length; j++) if (teamKeys[j] === teamKey) i = j;
+				
+				logger.info(`Asignee: ${user.name} from ${user.org_key}`);
+				
+				if (!user.push_subscription) {
+					logger.debug(`Push subscription not available for ${user.name}`);
+					continue;
+				}
+				
+				let alliance = (i <= 2) ? 'blue' : 'red'; // first three keys are blue, last three are red
+				let assignedTeam = alliance + (i<=2 ? i+1 : i-2); // 0-2 -> blue1-3, 3-5: red1-3
+				let titleIdentifier;
+				let matchNumber, compLevel;
+				let setNumber = '';
+				
+				//comp_level isn't available in upcoming_match notification, so we have to find it ourselves
+				if (matchNumberKey.substring(0, 2) == 'qm') {
+					compLevel = 'qm';
+					matchNumber = matchNumberKey.substring(2);
+					titleIdentifier = `Match ${matchNumber}`;
+				}
+				else if (matchNumberKey.substring(0, 2) == 'qf') {
+					compLevel = 'qf';
+					setNumber = matchNumberKey.substring(2, 3);
+					matchNumber = matchNumberKey.substring(4);
+					titleIdentifier = `Quarterfinal ${setNumber} Match ${matchNumber}`;
+				}
+				else if (matchNumberKey.substring(0, 2) == 'sf') {
+					compLevel = 'sf';
+					setNumber = matchNumberKey.substring(2, 3);
+					matchNumber = matchNumberKey.substring(4);
+					titleIdentifier = `Semifinal ${setNumber} Match ${matchNumber}`;
+				}
+				else if (matchNumberKey.substring(0, 1) == 'f') {
+					compLevel = 'f';
+					matchNumber = matchNumberKey.substring(3);
+					titleIdentifier = `Final Match ${matchNumber}`;
+				} 
+				else {
+					throw new Error('Unexpected matchKey comp_level identifier');
+				}
+				
+				let matchTeamKey = matchKey + '_' + teamKey;
+				let body = `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`;
+				let ifFocusedMessage = `Don't forget, Match ${match.match_number} is about to start!`;
+				let scoutMatchURL = `https://scoutradioz.com/scouting/match?key=${matchTeamKey}&alliance=${alliance}`;
+				
+				let imageHref = process.env.UPLOAD_URL + '/' + process.env.TIER + '/generate/upcomingmatch?'
+					+ `match_number=${matchNumber}&comp_level=${compLevel}&set_number=${setNumber}`
+					+ '&blue1=' + teamKeys[0].substring(3)
+					+ '&blue2=' + teamKeys[1].substring(3)
+					+ '&blue3=' + teamKeys[2].substring(3)
+					+ '&red1=' + teamKeys[3].substring(3)
+					+ '&red2=' + teamKeys[4].substring(3)
+					+ '&red3=' + teamKeys[5].substring(3)
+					+ '&assigned=' + assignedTeam;
+				
+				let baseUrl; // Serve static files from primary func ONLY IF LOCAL
+				if (process.env.local) baseUrl = '';
+				else baseUrl = process.env.S3_BASE_URL + '/' + process.env.TIER;
+				
+				logger.debug(`assignedTeam=${assignedTeam}, matchteam=${matchTeamKey}, imageURL=${imageHref}`);
+				
+				const notificationContent = JSON.stringify({
+					title: `${titleIdentifier} will start soon`,
+					options: {
+						body: body,
+						badge: baseUrl + '/images/brand-logos/monochrome-badge.png',
+						icon: baseUrl + '/images/brand-logos/FIRST-logo.png',
+						image: imageHref,
+						actions: [
+							{
+								action: scoutMatchURL,
+								title: 'Scout Match',
+								//icon: '',
+							}
+						]
+					},
+					ifFocused: {
+						message: ifFocusedMessage
+					},
+				});
+				// https://web-push-book.gauntface.com/demos/notification-examples/ 
+				
+				await sendPushMessage(user.push_subscription, notificationContent);
+			}
+		}
+	}
+	else {
+		logger.debug('Push notifications disabled!');
+	}
 }
 
 // Push notification function
