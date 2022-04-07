@@ -240,8 +240,6 @@ utilities.getDB = function(){
 			
 			logger.trace('(getDB) returning db');
 			
-			//Must use object destructuring becasue for SOME reason,
-			// returning monk from an async function hangs the process
 			resolve(db);
 		}
 	});
@@ -403,11 +401,10 @@ utilities.find = async function(collection, query, options, cacheOptions){
 	//If cache is not enabled
 	else {
 		
-		//Must use object destructuring because returning monk from an async function hangs the process
 		let db = await this.getDB();
 		//Request db
 		var data = await db.collection(collection).find(query, options).toArray();
-		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
+		// logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
 		returnData = data;
@@ -491,7 +488,7 @@ utilities.findOne = async function(collection, query, options, cacheOptions){
 		let db = await this.getDB();
 		data = await db.collection(collection).findOne(query, options);
 		logger.trace(`Not cached (findOne:${collection})`);
-		logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
+		// logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
 		returnData = data;
@@ -541,7 +538,7 @@ utilities.update = async function(collection, query, update, options){
 	let db = await this.getDB();
 	writeResult = await db.collection(collection).updateMany(query, update, options);
 	
-	logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
+	// logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 	consoleTimeEnd(timeLogName);
 	
 	logger.removeContext('funcName');
@@ -620,7 +617,7 @@ utilities.aggregate = async function(collection, pipeline, cacheOptions) {
 		data = await db.collection(collection).aggregate(pipeline).toArray();
 		
 		logger.trace(`Not cached (aggregate:${collection})`);
-		logger.trace(`result: ${JSON.stringify(data)}`);
+		// logger.trace(`result: ${JSON.stringify(data)}`);
 		consoleTimeEnd(timeLogName);
 		
 		//Return (Promise to get) data
@@ -689,7 +686,7 @@ utilities.distinct = async function(collection, field, query){
 	let db = await this.getDB();
 	var data = await db.collection(collection).distinct(field, query);
 	
-	logger.trace(`result: ${JSON.stringify(data)}`);
+	// logger.trace(`result: ${JSON.stringify(data)}`);
 	
 	logger.removeContext('funcName');
 	//Return (Promise to get) data
