@@ -356,7 +356,7 @@ async function handleMatchScore( data ) {
 	let newMatch = matchesScheduledAfterThis[1];
 	if (newMatch) {
 		let timeDifference = newMatch.time - data.match.time; // use scheduled time
-		logger.debug(`Time difference between this match and the next-next match: ${timeDifference / 60} minutes`);
+		logger.debug(`Time difference between this match and the next-next match: ${timeDifference / 60} minutes [this=${data.match.key}, next-next=${newMatch.key}]`);
 		if (timeDifference < matchGapBreakThreshold) {
 			// Proceed with the push notifications for this upcoming match
 			let teamKeys = [...newMatch.alliances.blue.team_keys, ...newMatch.alliances.red.team_keys];
@@ -547,8 +547,8 @@ async function sendUpcomingNotifications(match, teamKeys) {
 				
 				let matchTeamKey = matchKey + '_' + teamKey;
 				let body = `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`;
-				let ifFocusedMessage = `Don't forget, Match ${match.match_number} is about to start!`;
-				let scoutMatchURL = `https://scoutradioz.com/scouting/match?key=${matchTeamKey}&alliance=${alliance}`;
+				let ifFocusedMessage = `Don't forget, *${titleIdentifier}* is about to start!\n${body}`;
+				let scoutMatchURL = `https://scoutradioz.com/${user.org_key}/scouting/match?key=${matchTeamKey}&alliance=${alliance}`;
 				
 				let imageHref = process.env.UPLOAD_URL + '/' + process.env.TIER + '/generate/upcomingmatch?'
 					+ `match_number=${matchNumber}&comp_level=${compLevel}&set_number=${setNumber}`

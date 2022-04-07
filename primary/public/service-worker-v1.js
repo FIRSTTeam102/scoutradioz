@@ -12,17 +12,19 @@ self.addEventListener('push', function(event) {
 	
 	const promiseChain = isClientFocused()
 		.then((clientIsFocused) => {
-		
-			// Client isn't focused, we need to show a notification.
-			return self.registration.showNotification(messageJSON.title, messageJSON.options)
-				.then(() => {
-					if (clientIsFocused) {
-						console.log('Don\'t need to show a notification.');
+			// 2022-04-07 JL: I somehow borked up the logic and I'm sending a notification whether the client is focused or not.
+			
+			if (clientIsFocused) {
+				console.log('Don\'t need to show a notification.');
 				
-						//Post message to client window
-						return postMessageToClient(messageJSON);
-					}
-				});
+				//Post message to client window (see public-src/js/scoutradioz.js)
+				return postMessageToClient(messageJSON);
+			}
+			else {
+				// Client isn't focused, so4 we need to show a notification.
+				return self.registration.showNotification(messageJSON.title, messageJSON.options);
+			}
+		
 		});
 	
 	event.waitUntil(promiseChain);

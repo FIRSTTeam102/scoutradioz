@@ -14,7 +14,7 @@ div(class="w3-auto")
 			input(type="hidden" name="user-notification-endpoint" value=(user.push_subscription ? user.push_subscription.endpoint : ''))
 		script.
 			
-			var scriptURL = '/service-worker-v1.js'; // Can't serve the service worker from amazonaws.com, it has to be straight from scoutradioz.com
+			var scriptURL = '/service-worker-v1.js?v=1'; // Can't serve the service worker from amazonaws.com, it has to be straight from scoutradioz.com
 			
 			//- Check if notifications are enabled on this device
 			var notifsEnabled = false;
@@ -127,8 +127,13 @@ div(class="w3-auto")
 						NotificationCard.error("An error occurred: " + err, {ttl: 0, exitable: true});
 						resolve(false);
 					})
-					.always(() => {
+					.always(async () => {
 						card.remove(500);
+						//- Now, unregister the service worker in the browser
+						var registrations = await navigator.serviceWorker.getRegistrations();
+						for (let registration of registrations) {
+							console.log(registration);
+						}
 					});
 				})
 			}
