@@ -76,6 +76,8 @@
 		"web-push": "^3.4.5"
 	},
 	"devDependencies": {
+		"@types/express": "^4.17.13",
+		"@types/node": "^17.0.23",
 		"@types/jquery": "3.5.14"
 	},
 	"nodemonConfig": {

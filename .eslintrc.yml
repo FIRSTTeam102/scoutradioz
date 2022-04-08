@@ -3,9 +3,12 @@ env:
   commonjs: true
   es6: true
   node: true
-extends: 'eslint:recommended'
+extends: 
+  - 'eslint:recommended'
+  - 'plugin:@typescript-eslint/recommended'
 plugins:
-  - scoutradioz-eslint
+  - 'scoutradioz-eslint'
+  - '@typescript-eslint'
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
@@ -20,6 +23,7 @@ parserOptions:
 ignorePatterns: 
   - bundle.js
   - primary/public/js/*
+  - '*/build/*'
 rules:
   indent:
     - error
@@ -50,3 +54,5 @@ rules:
   no-useless-escape: 0
   scoutradioz-eslint/res-render-require-title:
     - error
+  prefer-const: off
+  '@typescript-eslint/no-var-requires': off
