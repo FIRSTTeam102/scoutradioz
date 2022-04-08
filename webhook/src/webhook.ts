@@ -1,26 +1,40 @@
+import { LoggingEvent } from 'log4js';
+import express, { RequestHandler, Request, Response } from 'express';
+
+type AsyncHandler = (cb: RequestHandler2) => RequestHandler2;
+
+interface RequestHandler2 extends RequestHandler {
+	(req: Request, res: Response, next: (err?: any) => any): void;
+}
+
+class HttpError extends Error {
+	status?: number;
+}
+
+
 require('dotenv').config();
-const crypto = require('crypto');
-const express = require('express');
+const _crypto = require('crypto');
+// const express: Express = require('express');
 const log4js = require('log4js');
-const wrap = require('express-async-handler');
+const wrap: AsyncHandler = require('express-async-handler');
 const webpush = require('web-push');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const helpers = require('@firstteam102/scoutradioz-helpers');
 const matchDataHelper = helpers.matchData;
 
 //utililties config
-utilities.config(require('./databases.json'));
+utilities.config(require('../databases.json'));
 helpers.config(utilities); // pass the utilities db object to helpers
 
 //log4js config
-var log4jsConfig = {
+let log4jsConfig = {
 	appenders: { out: { type: 'stdout', layout: {
 		type: 'pattern',
 		//Non-colored pattern layout (default)
 		pattern: '[%x{tier}] [%p] %c.%x{funcName} - %m',
 		tokens: {
-			'tier': logEvent => (process.env.ALIAS || process.env.TIER || '').toUpperCase(),
-			'funcName': logEvent => {
+			'tier': () => (process.env.ALIAS || process.env.TIER || '').toUpperCase(),
+			'funcName': (logEvent: LoggingEvent) => {
 				if (logEvent.context && logEvent.context.funcName) {
 					return logEvent.context.funcName;
 				}
@@ -55,12 +69,12 @@ webhook.use(wrap(async (req, res, next) => {
 //bodyParser config
 const options = {
 	extended: false,
-	verify: function(req, res, buf, encoding) {
+	verify: function(req: Request, res: Response, buf: Buffer, encoding: string) {
 		
 		const secret = req.tba_secret;
 		
 		//Generate hash to compare with TBA's hmac hash.
-		const hash = crypto.createHmac('sha256', secret)
+		const hash = _crypto.createHmac('sha256', secret)
 			.update(buf)
 			.digest('hex');
 		const hmac = req.header('X-TBA-HMAC');
@@ -83,10 +97,10 @@ webhook.use((req, res, next) => {
 	logger.addContext('funcName', 'urlParser');
 	
 	//Tier is overridden in lambda.js.
-	var tier = process.env.TIER;
+	let tier = process.env.TIER;
 	logger.info(`tier=${tier} originalUrl=${req.originalUrl} url=${req.url}`);
 	
-	var splitUrl = req.url.split('/');
+	let splitUrl = req.url.split('/');
 	logger.debug(splitUrl);
 	
 	if (splitUrl[1] == tier) {
@@ -108,12 +122,12 @@ webhook.use((req, res, next) => {
 webhook.use('/', router);
 //404 handler
 webhook.use((req, res, next) => {
-	var err = new Error('Not Found');
+	let err = new HttpError('Not Found');
 	err.status = 404;
 	next(err);
 }); 
 //Error handler
-webhook.use((err, req, res, next) => {
+webhook.use((err: HttpError, req: Request, res: Response) => {
 	logger.addContext('funcName', 'error');
 	
 	logger.error(err);
@@ -144,7 +158,7 @@ router.get('/flush-cache', wrap(async (req, res) => {
 
 // Test TBA's REST API
 router.get('/test-tba-api', wrap(async (req, res) => {
-	var result = await utilities.requestTheBlueAlliance('events/2022/simple');
+	let result = await utilities.requestTheBlueAlliance('events/2022/simple');
 	res.send(result);
 }));
 
@@ -152,11 +166,11 @@ router.get('/test-tba-api', wrap(async (req, res) => {
 router.post('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[post]');
 	
-	var message = req.body;
+	let message = req.body;
 	logger.info('ENTER message=' + JSON.stringify(message));
 
-	var messageType = message.message_type;
-	var messageData = message.message_data;
+	let messageType = message.message_type;
+	let messageData = message.message_data;
 	
 	logger.info('messageType=' + messageType);
 	
@@ -196,17 +210,20 @@ router.get('/upcoming', wrap(async (req, res) => {
 	let match = await utilities.findOne('matches', {key: matchKey});
 	if (!match) return res.send('No match found');
 	else {
-		let data = {
+		let data: UpcomingMatch = {
 			event_key: match.event_key,
 			match_key: match.key,
+			event_name: '',
+			scheduled_time: -1,
+			predicted_time: -1,
 			team_keys: [...match.alliances.blue.team_keys, ...match.alliances.red.team_keys]
 		};
 		try {
 			await handleUpcomingMatch(data, req, res);
-			res.send(JSON.stringify(data, 0, 2));
+			res.send(JSON.stringify(data, null, 2));
 		}
 		catch (err) {
-			res.send(JSON.stringify(err, 0, 2));
+			res.send(JSON.stringify(err, null, 2));
 		}
 	}
 }));
@@ -220,11 +237,11 @@ router.get('/matchScore', wrap(async (req, res) => {
 			match: match,
 		};
 		try {
-			await handleMatchScore(data, req, res);
-			res.send(JSON.stringify(data, 0, 2));
+			await handleMatchScore(data);
+			res.send(JSON.stringify(data, null, 2));
 		}
 		catch (err) {
-			res.send(JSON.stringify(err, 0, 2));
+			res.send(JSON.stringify(err, null, 2));
 		}
 	}
 }));
@@ -234,15 +251,15 @@ router.get('/matchScore', wrap(async (req, res) => {
 const matchGapBreakThreshold = 30 * 60; // 30 minutes, in seconds
 
 //TBA push handlers
-async function handleUpcomingMatch( data, req, res ) {
+async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Response ) {
 	logger.addContext('funcName', 'handleUpcomingMatch');
 
-	var match_key = data.match_key;
-	var event_key = match_key.split('_')[0];
-	var event_year = parseInt(event_key.substring(0, 4));
+	let match_key = data.match_key;
+	let event_key = match_key.split('_')[0];
+	let event_year = parseInt(event_key.substring(0, 4));
 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
 	
-	var match = await utilities.findOne('matches', {key: match_key});
+	let match = await utilities.findOne('matches', {key: match_key});
 	if (!match) return logger.error(`Match not found: ${match_key}`), res.send(`Match not found: ${match_key}`);
 
 	// Synchronize the rankings (just in case)
@@ -250,12 +267,12 @@ async function handleUpcomingMatch( data, req, res ) {
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
-	var orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
+	let orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
 		//var aggRangePromises = [];
-		for (var i in orgsAtEvent) {
-			var thisOrg = orgsAtEvent[i];
+		for (let i in orgsAtEvent) {
+			let thisOrg = orgsAtEvent[i];
 			// 2022-04-06 JL note: No need to await these
 			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
 			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
@@ -265,9 +282,7 @@ async function handleUpcomingMatch( data, req, res ) {
 		//Promise.all(aggRangePromises);
 	}
 
-	// push notifications
-	// sendUpcomingNotifications(match, data.team_keys);
-	
+	// push notifications	
 	let matchesScheduledBeforeThis = await utilities.find('matches', {event_key: event_key, time: {$lt: match.time}}, {sort: {time: -1}});
 	
 	let oldMatch = matchesScheduledBeforeThis[1]; // Similar to handleMatchScore, find the match that's 2 before this one
@@ -292,36 +307,36 @@ async function handleUpcomingMatch( data, req, res ) {
 	}
 }
 
-async function handleMatchScore( data ) {
+async function handleMatchScore( data: {match: Match} ) {
 	logger.addContext('funcName', 'handleMatchScore');
 	
-	var match_key = data.match.key;
-	var event_key = match_key.split('_')[0];
-	var event_year = parseInt(event_key.substring(0, 4));
+	const match_key = data.match.key;
+	const event_key = match_key.split('_')[0];
+	const event_year = parseInt(event_key.substring(0, 4));
 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
 
 	// 2020-02-13, M.O'C: Handle possible bugs in webhook push data?
 	// Setting winning_alliance
-	if (!data.match.winning_alliance) {
-		var winning_alliance = '';
+	if (!data.match.hasOwnProperty('winning_alliance')) {
 		if (data.match.alliances.blue.score > data.match.alliances.red.score)
-			winning_alliance = 'blue';
-		if (data.match.alliances.blue.score < data.match.alliances.red.score)
-			winning_alliance = 'red';
-		data.match.winning_alliance = winning_alliance;
+			data.match.winning_alliance = 'blue';
+		else if (data.match.alliances.blue.score < data.match.alliances.red.score)
+			data.match.winning_alliance = 'red';
+		else 
+			data.match.winning_alliance = '';
 	}
 	// Renaming the 'teams' attribute
 	if (!data.match.alliances.blue.team_keys) {
-		var blue_team_keys = data.match.alliances.blue.teams;
+		let blue_team_keys = data.match.alliances.blue.teams;
 		data.match.alliances.blue.team_keys = blue_team_keys;
 	}
 	if (!data.match.alliances.red.team_keys) {
-		var red_team_keys = data.match.alliances.red.teams;
+		let red_team_keys = data.match.alliances.red.teams;
 		data.match.alliances.red.team_keys = red_team_keys;
 	}
 	// Setting actual_time
 	if (!data.match.actual_time) {
-		var actual_time = data.match.time;
+		let actual_time = data.match.time;
 		data.match.actual_time = actual_time;
 	}
 
@@ -333,12 +348,12 @@ async function handleMatchScore( data ) {
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
-	var orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
+	let orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
 		//var aggRangePromises = [];
-		for (var i in orgsAtEvent) {
-			var thisOrg = orgsAtEvent[i];
+		for (let i in orgsAtEvent) {
+			let thisOrg = orgsAtEvent[i];
 			// 2022-04-06 JL note: No need to await these
 			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
 			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
@@ -371,21 +386,21 @@ async function handleMatchScore( data ) {
 	// await syncRankings(event_key); //////////////////////////////////////////////////////////////
 }
 
-async function handleStartingCompLevel( data ) {
+async function handleStartingCompLevel( data: StartingCompLevel ) {
 	logger.addContext('funcName', 'handleStartingCompLevel');
 	logger.info('ENTER (sync rankings only) data=' + JSON.stringify(data));
-	var event_key = data.event_key; // <-- Comment this out & send 'starting_comp_level' webhooks from TBA to cause errors
+	let event_key = data.event_key; // <-- Comment this out & send 'starting_comp_level' webhooks from TBA to cause errors
 	
 	// Synchronize the rankings
 	await syncRankings(event_key);
 }
 
-async function handleAllianceSelection( data ) {
+async function handleAllianceSelection( data: any /*TODO*/ ) {
 	logger.addContext('funcName', 'handleAllianceSelection');
 	logger.info('ENTER DNGN data=' + JSON.stringify(data));
 }
 
-async function handleScheduleUpdated( data ) {
+async function handleScheduleUpdated( data: ScheduleUpdated /*TODO*/ ) {
 	logger.addContext('funcName', 'handleScheduleUpdated');
 	/*
 	{
@@ -395,14 +410,14 @@ async function handleScheduleUpdated( data ) {
 	}	
 	*/
 
-	var event_key = data.event_key;
-	var event_year = parseInt(event_key.substring(0, 4));
+	let event_key = data.event_key;
+	let event_year = parseInt(event_key.substring(0, 4));
 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key);
 
 	// Reload the matches
-	var url = 'event/' + event_key + '/matches';
+	let url = 'event/' + event_key + '/matches';
 	logger.debug('url=' + url);
-	var matchData = await utilities.requestTheBlueAlliance(url);
+	let matchData = await utilities.requestTheBlueAlliance(url);
 	if (matchData && matchData.length && matchData.length > 0) {
 		logger.debug(`Matches received: ${matchData.length}`);
 
@@ -419,7 +434,7 @@ async function handleScheduleUpdated( data ) {
 	await syncRankings(event_key);
 }
 
-async function handleAwardsPosted( data ) {
+async function handleAwardsPosted( data: any /*TODO*/ ) {
 	logger.addContext('funcName', 'handleAwardsPosted');
 	logger.info('ENTER DNGN data=' + JSON.stringify(data));
 }
@@ -427,21 +442,21 @@ async function handleAwardsPosted( data ) {
 ////////// Helper functions
 
 // Pull down rankings for event event_key
-async function syncRankings(event_key) {
+async function syncRankings(event_key: EventKey) {
 	logger.addContext('funcName', 'syncRankings');
 	logger.info('ENTER');
 
 	// Reload the rankings from TBA
-	var rankingUrl = 'event/' + event_key + '/rankings';
+	let rankingUrl = 'event/' + event_key + '/rankings';
 	logger.info('rankingUrl=' + rankingUrl);
 
-	var rankData = await utilities.requestTheBlueAlliance(rankingUrl);
-	var rankArr = [];
+	let rankData = await utilities.requestTheBlueAlliance(rankingUrl);
+	let rankArr = [];
 	if (rankData && rankData.rankings && rankData.rankings.length > 0) {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-		var thisRankings = rankData.rankings;
-		for (var i in thisRankings) {
-			var thisRank = thisRankings[i];
+		let thisRankings = rankData.rankings;
+		for (let i in thisRankings) {
+			let thisRank = thisRankings[i];
 			thisRank['event_key'] = event_key;
 			rankArr.push(thisRank);
 		}
@@ -458,7 +473,7 @@ async function syncRankings(event_key) {
 }
 
 // Send push notifications for a particular match.
-async function sendUpcomingNotifications(match, teamKeys) {
+async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>) {
 	
 	if (process.env.DISABLE_PUSH_NOTIFICATIONS !== 'true') {
 	
@@ -502,7 +517,7 @@ async function sendUpcomingNotifications(match, teamKeys) {
 				const teamKey = user.assigned_team; // from the aggregate statement above
 				
 				// All the code below was written based on a for-i-in-teamKeys loop, so here we can recreate i
-				let i;
+				let i = -1;
 				for (let j = 0; j < teamKeys.length; j++) if (teamKeys[j] === teamKey) i = j;
 				
 				logger.info(`Asignee: ${user.name} from ${user.org_key}`);
@@ -597,18 +612,18 @@ async function sendUpcomingNotifications(match, teamKeys) {
 }
 
 // Push notification function
-async function sendPushMessage(subscription, dataToSend) {
+async function sendPushMessage(subscription: PushSubscription, dataToSend: string) {
 	logger.addContext('funcName', 'sendPushMessage');
 	logger.info('ENTER');
 	
 	logger.debug(`Attempting to send push message: ${dataToSend}`);
 	
 	try {
-		var result = await webpush.sendNotification(subscription, dataToSend);
+		let result = await webpush.sendNotification(subscription, dataToSend);
 		
 		logger.debug(`Result: ${JSON.stringify(result)}`);
 	}
-	catch (err) {
+	catch (err: any) {
 		
 		if (err.statusCode == 404 || err.statusCode == 410) {
 			logger.warn('Subscription has expired or is no longer valid: ', err);
