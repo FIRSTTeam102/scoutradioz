@@ -274,9 +274,7 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 		for (let i in orgsAtEvent) {
 			let thisOrg = orgsAtEvent[i];
 			// 2022-04-06 JL note: No need to await these
-			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
-			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
-			//aggRangePromises.push(thisPromise);
+			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
 		}
 		// wait for all the updates to finish
 		//Promise.all(aggRangePromises);
@@ -481,7 +479,6 @@ async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>)
 		const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});
 		webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
 		
-		// const teamKeys = data.team_keys;
 		const matchKey = match.key;
 		const matchNumberKey = matchKey.split('_')[1];
 		logger.debug(`matchNumberKey: ${matchNumberKey}, matchKey: ${matchKey} teamKeys: ${JSON.stringify(teamKeys)}`);
@@ -501,15 +498,14 @@ async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>)
 				if (assignment) {
 					userPromises.push(utilities.aggregate('users', [
 						{$match: {org_key: assignment.org_key, name: assignment.assigned_scorer}},
+						{$lookup: {from: 'orgs', localField: 'org_key', foreignField: 'org_key', as: 'org'}}, // 2022-04-08 JL: Retrieve org info so we can check if the user's org is actually at the event
 						{$set: {assigned_team: assignment.team_key}}
 					]));
-					// userPromises[i] = utilities.findOne('users', {org_key: assignment.org_key, name: assignment.assigned_scorer});
 				}
 			}
 		}
 		
 		let users = await Promise.all(userPromises);
-		logger.debug('users=', JSON.stringify(users));
 		
 		for (let userArr of users) {			
 			if (userArr && userArr[0]) {
@@ -524,6 +520,10 @@ async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>)
 				
 				if (!user.push_subscription) {
 					logger.debug(`Push subscription not available for ${user.name}`);
+					continue;
+				}
+				if (user.org[0].event_key !== match.event_key) {
+					logger.debug(`Org ${user.org_key} is at ${user.org[0].event_key}, not ${match.event_key}; not sending ${user.name} a push notification`);
 					continue;
 				}
 				
@@ -594,7 +594,8 @@ async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>)
 								title: 'Scout Match',
 								//icon: '',
 							}
-						]
+						],
+						ttl: 300, // 5 minutes, in seconds
 					},
 					ifFocused: {
 						message: ifFocusedMessage
