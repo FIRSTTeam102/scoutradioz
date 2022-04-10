@@ -292,6 +292,28 @@ const autoPoints2022 = {
 		}
 	],
 };
+const totalCargo2022 = {
+	order: 552,
+	label: 'Total cargo',
+	id: 'totalCargo',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoHighScored', 'teleopHighScored', 'autoLowScored', 'autoLowMissed']
+		}
+	]
+};
+const autoCargo2022 = {
+	order: 552,
+	label: 'Total cargo',
+	id: 'autoCargo',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoHighScored', 'autoLowScored']
+		}
+	]
+};
 const teleopPoints2022 = {
 	order: 555,
 	label: 'Teleop points',
@@ -569,6 +591,8 @@ const matchDerivedGearheads2022 = [
 	teleopAccuracy2022,
 	upperHubAccuracy2022,
 	lowerHubAccuracy2022,
+	totalCargo2022,
+	autoCargo2022,
 	climbAccuracy2022b, 
 	climbTime2022,
 	attemptedClimb2022,
@@ -593,6 +617,9 @@ if (org_key == 'frc102' || org_key == 'demo' || org_key == 'frc8024') {
 	autoPoints2022.order = -9; // was 71
 	teleopPoints2022.order = -8; // was 161
 	climbPoints2022.order = -7; // was 224
+	
+	totalCargo2022.order = -6;
+	autoCargo2022.order = -5;
 	
 	autoAccuracy2022.order = 72;
 	teleopAccuracy2022.order = 162;
