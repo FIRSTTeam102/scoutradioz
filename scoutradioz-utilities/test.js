@@ -85,7 +85,17 @@ async function testMultipleDbs(){
 	var delResult = await utilities.remove('test', {'foo': 'bar'});
 	logger.info(`delResult: ${JSON.stringify(delResult)}`);
 	
+	process.env.TIER = 'app';
+	utilities.refreshTier();
+	
+	var teamAvatar = await utilities.requestFIRST('2020/avatars?teamNumber=238');
+	logger.info(`teamAvatar: ${JSON.stringify(teamAvatar, null, 2)}`);
+	
+	var teamAvatars = await utilities.requestFIRST('2022/avatars?eventCode=mrcmp');
+	console.log(teamAvatars);
+	
 	logger.info('Done');
+	process.exit(0);
 }
 
 testMultipleDbs();

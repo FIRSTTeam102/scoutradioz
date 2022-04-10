@@ -797,6 +797,42 @@ class Utilities {
 		//Resolve promise
 		return thisPromise;
 	}
+	
+	/**
+	 * Asynchronous request to FIRST's API. Requires a URL ending to execute correctly. 
+	 * @param {string} url ENDING of URL, after "https://.../v2.0/" DO NOT INCLUDE A / AT THE START
+	 * @return {object} JSON-formatted response from FIRST
+	 */
+	async requestFIRST(url: string) {
+		
+		let requestURL = 'https://frc-api.firstinspires.org/v2.0/' + url;
+		logger.trace(`requestURL=${requestURL}`);
+		
+		let headers = await this.getFIRSTKey();
+		
+		let thisPromise = new Promise((resolve, reject) => {
+			
+			let client = new Client();
+			
+			client.get(requestURL, headers, function (firstData: any, response: any) {
+				
+				if (response.statusCode === 200) {
+					
+					let str = JSON.stringify(firstData);
+					logger.debug(`FIRST response: ${str.substring(0, 200)}...`);
+					
+					resolve(firstData);
+				}
+				else {
+					logger.error(`Error when requesting ${url}: Status=${response.statusCode}, ${response.statusMessage}`);
+					reject(firstData);
+				}
+			});
+			
+		});
+		
+		return thisPromise;
+	}
 
 	/**
 	 * Asynchronous function to get our TheBlueAlliance API key from the DB.
@@ -820,6 +856,32 @@ class Utilities {
 			
 			logger.removeContext('funcName');
 			throw 'Could not find api-headers in database';
+		}
+	}
+	
+	/**
+	 * Asynchronous function to get our FIRST API key from the DB.
+	 * https://frc-api-docs.firstinspires.org/#authorization
+	 * @returns {FIRSTKey} - FIRST header arguments
+	 */
+	async getFIRSTKey(): Promise<FIRSTKey> {
+		logger.addContext('funcName', 'getFIRSTKey');
+		
+		
+		let firstKey: FIRSTKey = await this.findOne('passwords', {name: 'first-api-headers'}, {}, {allowCache: true});
+		
+		if (firstKey) {
+			let headers = firstKey.headers;
+			let key = {'headers': headers};
+			
+			logger.removeContext('funcName');
+			return key;
+		}
+		else {
+			logger.fatal('Could not find first-api-headers in database');
+			
+			logger.removeContext('funcName');
+			throw new Error('Could not find first-api-headers in database');
 		}
 	}
 
@@ -910,6 +972,13 @@ declare interface TBAKey extends Document {
 		accept: string; 
 		'X-TBA-Auth-Key': string;
 	};
+}
+
+declare interface FIRSTKey extends Document {
+	headers: {
+		Authorization: string;
+		'If-Modified-Since': string;
+	}
 }
 
 class UtilitiesOptions {
