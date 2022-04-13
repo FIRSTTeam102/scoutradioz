@@ -30,6 +30,9 @@ navHelpers.compileNavcontents = function(navcontents, req, res) {
 			else if (item.icon) {
 				compiledItem.icon = resolveToValue(item.icon, req, res);
 			}
+			else if (item.customData) {
+				compiledItem.customData = resolveToValue(item.customData, req, res);
+			}
 			if (item.submenu) {
 				//recursively solve submenu
 				let submenu = resolveToValue(item.submenu, req, res);
@@ -79,10 +82,16 @@ navHelpers.getNavContents = () => {
 										{label: 'Upcoming Matches', href: '/reports/upcoming?team_key=' + team.key},
 										{label: 'Team Statistics', href: '/reports/teamintel?team_key=' + team.key},
 										{label: yearstr, href: '/reports/teamintelhistory?team_key=' + team.key},
-									]
+									],
+									customData: `team=${team.team_number}`
 								});
 							}
 							return arr;
+						},
+						customData: () => {
+							if (!teams) return;
+							// Comma separated list of teams, to be parsed in JS
+							else return 'teams=' + teams.map(team => team.team_number).join(',');
 						}
 					},
 					{

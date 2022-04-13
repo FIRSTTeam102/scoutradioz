@@ -1,5 +1,7 @@
 'use strict';
+
 var navMenu;
+var loadedTeamImages = false; // Only want to load team images once per page load
 
 $(() => {
 	navMenu = new NavigationBar();
@@ -78,6 +80,9 @@ class NavigationBar{
 						content: this.footerContents,
 					}
 				],
+				hooks: {
+					'openPanel:before': this.handleOpenPanelBefore,
+				}
 			}, { });
 		
 		this.api = this.menu.API;
@@ -85,6 +90,74 @@ class NavigationBar{
 		this.menuElem.detach().appendTo(document.body);
 		//Set up event handlers
 		this.eventHandlers();
+	}
+	
+	handleOpenPanelBefore(panel: MMHTMLElement) {
+		// MM panels have a custom mmParent attribute to link it to the original LI element.
+		if (panel.mmParent) {
+			let li = panel.mmParent;
+			// data-custom is added in nav.pug
+			if (li.hasAttribute('data-custom')) {
+				let customAttr = li.getAttribute('data-custom');
+				// List of teams!
+				if (customAttr?.startsWith('teams=')) {
+					if (loadedTeamImages) return console.log('Already loaded team images');
+					loadedTeamImages = true; // As soon as we start to load the images, set it to true
+					
+					// Get the list of teams without the "teams=" part
+					let teamList = customAttr.substring(6).split(',');
+					let teamsToQuery: string[] = []; // Team list for which to query the API
+					
+					for (let teamNum of teamList) {
+						let avatar = getWithExpiry(`avatar_frc${teamNum}`);
+						if (typeof avatar === 'string') {
+							setTeamImage(teamNum, avatar);
+						}
+						else {
+							teamsToQuery.push(teamNum);
+						}
+					}
+					console.log(teamsToQuery);
+					
+					if (teamsToQuery.length > 0) {
+						let teamQueryList = teamsToQuery.join(',');
+						$.get(`/api/team-avatars?teamNumbers=${teamQueryList}`)
+							.done((data) => {
+								// error
+								if (data.status === 500) {
+									return console.error(data);
+								}
+								console.log(data);
+								for (let i in data) {
+									let teamAvatar: TeamAvatar = data[i];
+									let teamNum = teamAvatar.team_number;
+									
+									// Only set the image if it's defined (note that '' returns false, which some teams have)
+									if (teamAvatar.encoded_avatar) {
+										setTeamImage(teamNum, teamAvatar.encoded_avatar);
+									}
+									const expiration = 1000 * 3600 * 24 * 7; // one week, in ms
+									// Cache the avatar string in localStorage
+									setWithExpiry(`avatar_frc${teamNum}`, teamAvatar.encoded_avatar, expiration);
+								}
+							});
+					}
+				}
+			}
+		}
+		
+		function setTeamImage(teamNum: number|string, encoded_avatar: string) {
+			
+			let imgSrc = 'data:image/png;base64, ' + encoded_avatar;
+			let img = document.createElement('img');
+			img.src = imgSrc;
+			img.classList.add('team-avatar');
+			
+			// Find the LI element for the associated team, and append it to the sprite item
+			let teamRow = $(`[data-custom="team=${teamNum}"]`);
+			console.log(`[data-custom="team=${teamNum}"]`, teamRow);
+			teamRow.find('span.sprite').append(img);
+		}
 	}
 	
 	eventHandlers(){
@@ -284,6 +357,16 @@ class NavigationBar{
 declare class TransformPosition {
 	menu: string;
 	bar: string;
+}
+
+declare class TeamAvatar {
+	team_number: number;
+	event_year: number;
+	encoded_avatar: string;
+}
+
+declare class MMHTMLElement extends HTMLElement {
+	mmParent?: HTMLElement;
 }
 
 // Initialized in pug

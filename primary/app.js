@@ -176,6 +176,7 @@ var scouting = require('./routes/scouting');
 var reports = require('./routes/reports');
 var notifications = require('./routes/notifications');
 var share = require('./routes/share.js');
+var api = require('./routes/api');
 //ORG MANAGEMENT ROUTES
 var manageindex = require('./routes/manage/indexmgmt');
 var allianceselection = require('./routes/manage/allianceselection');
@@ -196,6 +197,7 @@ app.use('/scouting', scouting);
 app.use('/dashboard', dashboard);
 app.use('/reports', reports);
 app.use('/notifications', notifications);
+app.use('/api', api);
 
 app.use('/manage', manageindex);
 app.use('/manage/allianceselection', allianceselection);

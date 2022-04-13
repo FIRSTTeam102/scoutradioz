@@ -56,7 +56,7 @@
 	"dependencies": {
 		"@firstteam102/http-errors": "^1.0.3",
 		"@firstteam102/scoutradioz-helpers": "^1.0.26",
-		"@firstteam102/scoutradioz-utilities": "^1.1.7",
+		"@firstteam102/scoutradioz-utilities": "1.1.7-test3",
 		"aws-serverless-express": "^3.4.0",
 		"bcryptjs": "^2.4.3",
 		"colors": "^1.4.0",

@@ -28,7 +28,8 @@ mixin mmenuLabel(item)
 			li
 				a(href=/foo/bar/baz)
 mixin mmenuItem(item)
-	li
+	//- data-custom is custom data to send from nav.js to NavMenu.ts
+	li(data-custom=(item.customData ? item.customData : null))
 		- let href = resolveToValue(item.href);
 		if href
 			a(href=href)
