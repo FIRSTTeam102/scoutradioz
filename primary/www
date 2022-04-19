@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 
+require('colors');
+
 //for views to either have a base of /prod/ or /
 process.env.local = true;
 
 /**
- * Get port from environment and store in Express.
+ * Specify some configuration with command line arguments
  */
 
 //eslint-disable-next-line
 for (var i in process.argv) {
 	let thisArg = process.argv[i];
 	let nextArg = process.argv[i - -1];
-	
+
 	switch (thisArg) {
 		case '--port':
 			process.env.PORT = nextArg;
@@ -20,6 +22,10 @@ for (var i in process.argv) {
 			console.log('Setting process.env.NODE_ENV=production');
 			process.env.NODE_ENV = 'production';
 			break;
+		case '--watch-staticfiles':
+		case '--watch-static':
+			launchChildProcess('npm run watch-staticfiles');
+			break;
 		default:
 			if (thisArg.substring(0, 2) == '--') {
 				console.log(`Setting process.env.${thisArg.substring(2)}=${nextArg}`);
@@ -27,6 +33,23 @@ for (var i in process.argv) {
 			}
 			break;
 	}
+}
+
+function launchChildProcess(command, onlyErrors = false, logName = undefined) {
+	var args = command.split(' ');
+	logName = logName || args[args.length - 1];
+
+	var child = require('child_process').spawn(args.shift(), args, { shell: true });
+
+	function handleData(data) {
+		// ignore launch messages made by npm/shell that start with >
+		if (data.indexOf('>') !== 1) {
+			process.stdout.write(`[${logName}] `.magenta + data);
+		}
+	}
+
+	if (!onlyErrors) child.stdout.on('data', handleData);
+	child.stderr.on('data', handleData);
 }
 
 /**
