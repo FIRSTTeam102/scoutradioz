@@ -1,13 +1,7 @@
-/* eslint-disable global-require */
 'use strict';
-// const mongodb = require('mongodb');
-// const ObjectId = mongodb.ObjectId;
-// const MongoClient = mongodb.MongoClient;
-// const _crypto = require('crypto');
-// const NodeCache = require('node-cache');
 
 import NodeCache from 'node-cache';
-import { ObjectId, MongoClient, Db, Document, 
+import { ObjectId, MongoClient, Db, Document as MongoDocument, 
 	Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions,
 	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult } from 'mongodb';
 import crypto from 'crypto';
@@ -26,13 +20,46 @@ const logger = log4js.getLogger('utilities');
 // }
 logger.level = process.env.LOG_LEVEL || 'info';
 
-class Utilities {
+
+export class UtilitiesOptions {
+	cache: {
+		enable: boolean;
+		maxAge: number;
+	};
+	debug: boolean;
+	constructor(options?: any) {
+		if (typeof options === 'object' && typeof options.debug === 'boolean') this.debug = options.debug;
+		else this.debug = false;
+		
+		let defaultCacheOpts = {
+			enable: false,
+			maxAge: 30
+		};
+		
+		if (typeof options === 'object' && typeof options.cache === 'object') {
+			let cache = defaultCacheOpts;
+			if (typeof options.cache.enable === 'boolean') cache.enable = options.cache.enable;
+			if (typeof options.cache.maxAge === 'number') cache.maxAge = options.cache.maxAge;
+			this.cache = cache;
+		}
+		else {
+			this.cache = defaultCacheOpts;
+		}
+		
+		this.debug = false;
+	}
+}
+
+export class Utilities {
 	activeTier: any;
 	dbConfig: any;
 	ready: boolean;
 	whenReadyQueue: any[];
 	cache: NodeCache;
 	options: UtilitiesOptions;
+	// Utilities is a singleton class. The refreshTier function is passed as a middleware, so the "this" argument gets messed up. 
+	//  To avoid having to change code, we can instead use Utilities.instance.x
+	static instance: Utilities = new Utilities(); 
 	
 	private _cacheFlushTimeout?: NodeJS.Timeout;
 	
@@ -257,12 +284,12 @@ class Utilities {
 	 */
 	refreshTier(req: Request, res: Response, next: NextFunction) {
 		
-		//set this.ready to true
-		this.ready = true;
-		this.activeTier = process.env.TIER;
+		//set ready to true
+		Utilities.instance.ready = true;
+		Utilities.instance.activeTier = process.env.TIER;
 		
-		while (this.whenReadyQueue.length > 0) {
-			let cb = this.whenReadyQueue.splice(0, 1)[0];
+		while (Utilities.instance.whenReadyQueue.length > 0) {
+			let cb = Utilities.instance.whenReadyQueue.splice(0, 1)[0];
 			cb();
 		}
 		
@@ -278,7 +305,7 @@ class Utilities {
 	 * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
 	 * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
 	 */
-	async find(collection: string, query: Filter<Document>, options: FindOptions, cacheOptions: UtilitiesCacheOptions): Promise<Document[]> {
+	async find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
@@ -302,7 +329,7 @@ class Utilities {
 		let timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
-		let returnData: Document[];
+		let returnData: MongoDocument[];
 		
 		//If cache is enabled
 		if (cacheOptions.allowCache === true && this.options.cache.enable === true) {
@@ -311,7 +338,7 @@ class Utilities {
 			let hashedQuery = await this.hashQuery('find', collection, query, options);
 			logger.trace(`(find) Request Hash: ${hashedQuery}`);
 			
-			let cachedRequest: Document[] | undefined = this.cache.get(hashedQuery);
+			let cachedRequest: MongoDocument[] | undefined = this.cache.get(hashedQuery);
 			
 			//Look in cache for the query
 			if (cachedRequest) {
@@ -363,7 +390,7 @@ class Utilities {
 	 * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
 	 * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
 	 */
-	async findOne(collection: string, query: Filter<Document>, options: FindOptions, cacheOptions: UtilitiesCacheOptions): Promise<any>{
+	async findOne(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>{
 		logger.addContext('funcName', 'findOne');
 		
 		//Collection type filter
@@ -387,7 +414,7 @@ class Utilities {
 		let timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
-		let returnData, data, cachedRequest;
+		let returnData, data;
 		
 		//If cache is enabled
 		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
@@ -396,9 +423,10 @@ class Utilities {
 			let hashedQuery = await this.hashQuery('findOne', collection, query, options);
 			logger.trace(`(findOne) Request Hash: ${hashedQuery}`);
 			
+			let cachedRequest: MongoDocument | undefined | null = this.cache.get(hashedQuery);
+			
 			//Look in cache for the query
-			if (this.cache.get(hashedQuery)) {
-				cachedRequest = this.cache.get(hashedQuery);
+			if (cachedRequest) {
 				
 				logger.trace(`Serving request from cache (findOne:${collection})`);
 				logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
@@ -446,7 +474,7 @@ class Utilities {
 	 * @param {object} options Query options, such as sort.
 	 * @returns {WriteResult} writeResult
 	 */
-	async update(collection: string, query: Filter<Document>, update: UpdateFilter<Document>, options: UpdateOptions): Promise<UpdateResult | Document>{
+	async update(collection: string, query: Filter<MongoDocument>, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>{
 		logger.addContext('funcName', 'update');
 		
 		//Collection filter
@@ -494,7 +522,7 @@ class Utilities {
 	 * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
 	 * @returns {object} Aggregated data.
 	 */
-	async aggregate(collection: string, pipeline: Document[], cacheOptions: UtilitiesCacheOptions) {
+	async aggregate(collection: string, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any> {
 		logger.addContext('funcName', 'aggregate');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -514,7 +542,7 @@ class Utilities {
 		this.consoleTime(timeLogName);
 		logger.trace(`${collection}, ${JSON.stringify(pipeline)}`);
 		
-		let returnData, cachedRequest, data; 
+		let returnData: MongoDocument[], data; 
 		//If cache is enabled
 		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
 			
@@ -522,9 +550,10 @@ class Utilities {
 			let hashedQuery = await this.hashQuery('aggregate', collection, pipeline, {});
 			logger.trace(`(aggregate) Request Hash: ${hashedQuery}`);
 			
+			let cachedRequest: MongoDocument[] | undefined = this.cache.get(hashedQuery);
+			
 			//Look in cache for the query
-			if (this.cache.get(hashedQuery)) {
-				cachedRequest = this.cache.get(hashedQuery);
+			if (cachedRequest) {
 				
 				logger.trace(`Serving request from cache (aggregate:${collection})`);
 				logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
@@ -583,7 +612,7 @@ class Utilities {
 	 * @param {object} param1 First param (oft. query)
 	 * @param {object} param2 Second param (oft. options)
 	 */
-	async hashQuery(type: string, collection: string, param1: Filter<Document>, param2: UpdateOptions) {
+	async hashQuery(type: string, collection: string, param1: Filter<MongoDocument>, param2: UpdateOptions) {
 		
 		collection = collection.toString();
 		let param1String = JSON.stringify(param1);
@@ -604,7 +633,7 @@ class Utilities {
 	 * @param {object} query The query for filtering the set of documents to which we apply the distinct filter.
 	 * @returns {array} Distinct values for the specified field
 	 */
-	async distinct(collection: string, field: string, query: Filter<Document>){
+	async distinct(collection: string, field: string, query: Filter<MongoDocument>){
 		logger.addContext('funcName', 'distinct');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -641,7 +670,7 @@ class Utilities {
 	 * @param {object} options Optional settings.
 	 * @returns {WriteResult} writeResult
 	 */
-	async bulkWrite(collection: string, operations: AnyBulkWriteOperation, options: BulkWriteOptions): Promise<BulkWriteResult>{
+	async bulkWrite(collection: string, operations: AnyBulkWriteOperation, options?: BulkWriteOptions): Promise<BulkWriteResult>{
 		logger.addContext('funcName', 'bulkWrite');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -681,7 +710,7 @@ class Utilities {
 	 * @param {object} query Filter for element/s to remove.
 	 * @return {WriteResult} writeResult
 	 */
-	async remove(collection: string, query: Filter<Document>): Promise<DeleteResult>{
+	async remove(collection: string, query: Filter<MongoDocument>): Promise<DeleteResult>{
 		logger.addContext('funcName', 'remove');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -712,7 +741,7 @@ class Utilities {
 	 * @param {object} elements [Any] Element or array of elements to insert
 	 * @returns {WriteResult} writeResult
 	 */
-	async insert(collection: string, elements: Document[]): Promise<InsertManyResult | InsertOneResult | undefined>{
+	async insert(collection: string, elements: MongoDocument[]): Promise<InsertManyResult | InsertOneResult | undefined>{
 		logger.addContext('funcName', 'insert');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -956,7 +985,7 @@ class Utilities {
 	 * @param {object} query Query with or without _id
 	 * @returns {object} Query with _id replaced with an ObjectId
 	 */
-	private castID(query: Filter<Document>) {
+	private castID(query: Filter<MongoDocument>) {
 		if (typeof query !== 'object') return query;
 		
 		if (typeof query._id === 'string') {
@@ -967,105 +996,41 @@ class Utilities {
 
 }
 
-declare interface TBAKey extends Document {
+declare interface TBAKey extends MongoDocument {
 	headers: {
 		accept: string; 
 		'X-TBA-Auth-Key': string;
 	};
 }
 
-declare interface FIRSTKey extends Document {
+declare interface FIRSTKey extends MongoDocument {
 	headers: {
 		Authorization: string;
 		'If-Modified-Since': string;
 	}
 }
 
-class UtilitiesOptions {
-	cache: {
-		enable: boolean;
-		maxAge: number;
-	};
-	debug: boolean;
-	constructor(options?: any) {
-		if (typeof options === 'object' && typeof options.debug === 'boolean') this.debug = options.debug;
-		else this.debug = false;
-		
-		let defaultCacheOpts = {
-			enable: false,
-			maxAge: 30
-		};
-		
-		if (typeof options === 'object' && typeof options.cache === 'object') {
-			let cache = defaultCacheOpts;
-			if (typeof options.cache.enable === 'boolean') cache.enable = options.cache.enable;
-			if (typeof options.cache.maxAge === 'number') cache.maxAge = options.cache.maxAge;
-			this.cache = cache;
-		}
-		else {
-			this.cache = defaultCacheOpts;
-		}
-		
-		this.debug = false;
-	}
-}
-
-declare class UtilitiesCacheOptions {
+export declare class UtilitiesCacheOptions {
 	allowCache?: boolean;
 	maxCacheAge?: number;
 }
 
-module.exports = new Utilities(); // Essentially a static class
 
 /**
  * Config JSON for utilities.js. Provide a connection URL for each possible value of process.env.TIER.
  */
-interface UtilitiesConfig {
+export interface UtilitiesConfig {
 	[tier: string]: {
 		url: string;
 	}
 }
 
+// For types
+export { Document as MongoDocument } from 'mongodb';
 
-// class WriteResult{
-// 	nInserted: any;
-// 	insertedCount: any;
-// 	insertedIds: any;
-// 	nMatched: any;
-// 	nModified: any;
-// 	nUpserted: any;
-// 	_id: any;
-// 	nRemoved: any;
-// 	writeError: any;
-// 	writeConcernError: any;
-// 	/**
-// 	 * A wrapper that contains the result status of the mongo shell write methods.
-// 	 * @param {number} nInserted The number of documents inserted, excluding upserted documents.
-// 	 * @param {number} nMatched The number of documents selected for update.
-// 	 * @param {number} nModified The number of existing documents updated.
-// 	 * @param {number} nUpserted The number of documents inserted by an upsert.
-// 	 * @param {ObjectId} _id The _id of the document inserted by an upsert. Returned only if an upsert results in an insert.
-// 	 * @param {number} nRemoved The number of documents removed.
-// 	 * @param {object} writeError A document that contains information regarding any error, excluding write concern errors, encountered during the write operation.
-// 	 * @param {number} writeError.code An integer value identifying the error.
-// 	 * @param {string} writeError.errmsg A description of the error.
-// 	 * @param {object} writeConcernError A document that contains information regarding any write concern errors encountered during the write operation.
-// 	 * @param {number} writeConcernError.code An integer value identifying the write concern error.
-// 	 * @param {any} writeConcernError.errInfo A document identifying the write concern setting related to the error.
-// 	 * @param {string} writeConcernError.errmsg A description of the error.
-// 	 * @param {number} insertedCount Number of documents inserted [bulkWrite]
-// 	 * @param {ArrayLike} insertedIds List of inserted IDs [bulkWrite]
-// 	 */
-// 	constructor(nInserted, nMatched, nModified, nUpserted, _id, nRemoved, writeError, writeConcernError, insertedCount, insertedIds){
-// 		this.nInserted = nInserted;
-// 		this.insertedCount = insertedCount;
-// 		this.insertedIds = insertedIds;
-// 		this.nMatched = nMatched;
-// 		this.nModified = nModified;
-// 		this.nUpserted = nUpserted;
-// 		this._id = _id;
-// 		this.nRemoved = nRemoved;
-// 		this.writeError = writeError;
-// 		this.writeConcernError = writeConcernError;
-// 	}
-// }
+// Note: module.exports provides the CommonJS export, which in Utilities' case is a singleton class.
+// Other "export" statements export types for utilities.d.ts.
+
+module.exports = Utilities.instance;
+
+// export const utilities = Utilities.instance;
