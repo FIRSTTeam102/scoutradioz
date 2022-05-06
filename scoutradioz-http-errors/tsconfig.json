@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "es2020",
+		"module": "commonjs",
+		"rootDir": "./src",
+		"outDir": "./build",
+		"esModuleInterop": true,
+		"strict": true,
+		"declaration": true,
+		"declarationDir": "./types"
+		//   "removeComments": true,
+	},
+	"include": [
+		"./src/*"
+	],
+	"ts-node": {
+		"transpileOnly": true, // VS Code has type checking built in, and TSC will also do it when we want to do a proper build.
+	}
+}

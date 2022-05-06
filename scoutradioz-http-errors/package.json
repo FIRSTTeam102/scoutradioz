@@ -1,8 +1,9 @@
 {
   "name": "@firstteam102/http-errors",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A very basic module that defines errors with HTTP status codes, such as 400 Bad Request.",
-  "main": "index.js",
+  "main": "./build/index.js",
+  "types": "types",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
