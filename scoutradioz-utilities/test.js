@@ -88,7 +88,7 @@ async function testMultipleDbs(){
 	process.env.TIER = 'app';
 	utilities.refreshTier();
 	
-	var teamAvatar = await utilities.requestFIRST('2020/avatars?teamNumber=238');
+	var teamAvatar = await utilities.requestFIRST('2020/avatars?teamNumber=238&teamNumber=102');
 	logger.info(`teamAvatar: ${JSON.stringify(teamAvatar, null, 2)}`);
 	
 	var teamAvatars = await utilities.requestFIRST('2022/avatars?eventCode=mrcmp');

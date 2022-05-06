@@ -6,6 +6,8 @@
 		"outDir": "./build",
 		"esModuleInterop": true,
 		"strict": true,
+		"declaration": true,
+		"declarationDir": "./types"
 		//   "removeComments": true,
 	},
 	"include": [
