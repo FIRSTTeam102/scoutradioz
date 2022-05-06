@@ -1,23 +1,23 @@
 {
-  "name": "@firstteam102/scoutradioz-helpers",
-  "version": "1.0.26",
-  "description": "A series of helper files for Scoutradioz functions",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/firstteam102/ScoringApp-Serverless.git"
-  },
-  "author": "JL102",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/firstteam102/ScoringApp-Serverless/issues"
-  },
-  "homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
-  "dependencies": {
-    "@log4js-node/log4js-api": "^1.0.2",
-    "ztable": "^1.0.7"
-  }
+	"name": "@firstteam102/scoutradioz-helpers",
+	"version": "1.1.0",
+	"description": "A series of helper files for Scoutradioz functions",
+	"main": "./build/index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/firstteam102/ScoringApp-Serverless.git"
+	},
+	"author": "JL102",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/firstteam102/ScoringApp-Serverless/issues"
+	},
+	"homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
+	"dependencies": {
+		"@log4js-node/log4js-api": "^1.0.2",
+		"ztable": "^1.0.7"
+	}
 }
