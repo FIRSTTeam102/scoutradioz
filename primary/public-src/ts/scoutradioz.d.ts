@@ -4,6 +4,11 @@ declare class Cookies {
 	static remove(key: string): any;
 }
 
+/**
+ * Measure the time interval to execute the callback function.
+ * @param cb Function to run
+ */
+declare function measureTime(cb: () => void) : number;
 declare function debugToHTML(message: any): void;
 declare function assert(condition: boolean, message: any): void;
 /**

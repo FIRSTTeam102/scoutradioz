@@ -74,7 +74,36 @@ functions.initialMiddleware = async function(req, res, next){
 		}
 		return url;
 	};
+
+	// 2022-04-04 JL: Moving timezoneString calculations into initialMiddleware
+	if (req.cookies['timezone']) {
+		logger.trace(`Setting user timezone ${req.cookies['timezone']}`);
+		req.timezoneString = req.cookies['timezone'];
+	}
+	else if (req.event.timezone) {
+		logger.trace(`Setting event timezone ${req.event.timezone}`);
+		req.timezoneString = req.event.timezone;
+	}
+	else {
+		logger.trace('Setting default timezone');
+		req.timezoneString = 'America/New_York'; // Default to EST/EDT because we're MAR-centered
+	}
 	
+	// Attempt to get the user's locale
+	let localeString = 'en-US';
+	let acceptLang = req.get('accept-language');
+	if (acceptLang) {
+		try {
+			let firstLang = acceptLang.split(',')[0];
+			let locale = new Intl.Locale(firstLang);
+			localeString = locale.baseName;
+		}
+		catch (err) {
+			logger.debug(`Couldn't parse locale: ${err}`);
+		}
+	}
+	req.localeString = localeString;
+
 	next();
 };
 
@@ -144,7 +173,7 @@ const navcontents = navHelpers.getNavContents();
  */
 functions.setViewVariables = async function(req, res, next){
 	logger.addContext('funcName', 'setViewVariables');
-	logger.debug('ENTER');
+	logger.trace('ENTER');
 	
 	if(req.user) {
 		const org = await utilities.findOne('orgs', 
@@ -188,41 +217,19 @@ functions.setViewVariables = async function(req, res, next){
 	// expose Luxon DateTime to views
 	res.locals.DateTime = DateTime;
 	
-	let timezoneString;
-	if (req.cookies['timezone']) {
-		logger.debug(`Setting user timezone ${req.cookies['timezone']}`);
-		timezoneString = req.cookies['timezone'];
-	}
-	else if (req.event.timezone) {
-		logger.debug(`Setting event timezone ${req.event.timezone}`);
-		timezoneString = req.event.timezone;
-	}
-	else {
-		logger.debug('Setting default timezone');
-		timezoneString = 'America/New_York'; // Default to EST/EDT because we're MAR-centered
-	}
-	logger.debug(`Timezone fixed offset: ${getFixedZone(timezoneString).offset()}`);
+	// 2022-04-04 JL: Moving timezoneString calculations into initialMiddleware
+	let timezoneString = req.timezoneString;
+	let fixedZone = getFixedZone(timezoneString);
+	let localeString = req.localeString;
 	
-	// Attempt to get the user's locale
-	let localeString = 'en-US';
-	let acceptLang = req.get('accept-language');
-	if (acceptLang) {
-		try {
-			let firstLang = acceptLang.split(',')[0];
-			let locale = new Intl.Locale(firstLang);
-			localeString = locale.baseName;
-		}
-		catch (err) {
-			logger.debug(`Couldn't parse locale: ${err}`);
-		}
-	}
+	logger.trace(`Timezone fixed offset: ${fixedZone.offset()}`);
 	
 	// Method for views to get the offset time w/o having to do DateTime.whatever
 	res.locals.zoneTime = function (millis) {
-		return DateTime.fromMillis(millis, {zone: getFixedZone(timezoneString), locale: localeString});
+		return DateTime.fromMillis(millis, {zone: fixedZone, locale: localeString});
 	};
 	
-	logger.debug('EXIT');
+	logger.trace('EXIT');
 	logger.removeContext('funcName');
 	next();
 };
@@ -338,7 +345,9 @@ functions.requestLogger = function(req, res, next){
 		+ req.shortagent.os
 		+ '|'
 		+ req.shortagent.browser
-		+ ' to '
+		+ ' ('
+		+ (req.timezoneString + ', ' + req.localeString).yellow
+		+ ') to '
 		+ (req.url).cyan
 		+ ' at '
 		+ formattedReqTime);
