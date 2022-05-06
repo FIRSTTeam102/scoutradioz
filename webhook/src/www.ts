@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
 //for views to either have a base of /prod/ or /
-process.env.local = true;
+process.env.local = 'true';
 
 /**
  * Module dependencies.
  */
 
-var webhook = require('./webhook');
-var http = require('http');
+let webhook = require('./webhook');
+let http = require('http');
 
 /**
  * Get port from environment and store in Express.
  */
 
-for(var i = 0; i < process.argv.length; i++){
+for(let i = 0; i < process.argv.length; i++){
 	switch(process.argv[i]){
 		case '-port':
 		case '--port':
@@ -23,14 +23,14 @@ for(var i = 0; i < process.argv.length; i++){
 	} 
 }
 
-var port = normalizePort(process.env.PORT || '3002');
+let port = normalizePort(process.env.PORT || '3002');
 webhook.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(webhook);
+let server = http.createServer(webhook);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -44,8 +44,8 @@ server.on('listening', onListening);
  * Normalize a port into a number, string, or false.
  */
 
-function normalizePort(val) {
-	var port = parseInt(val, 10);
+function normalizePort(val: string) {
+	let port = parseInt(val, 10);
 
 	if (isNaN(port)) {
 		// named pipe
@@ -64,12 +64,12 @@ function normalizePort(val) {
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
+function onError(error: NodeJS.ErrnoException) {
 	if (error.syscall !== 'listen') {
 		throw error;
 	}
 
-	var bind = typeof port === 'string'
+	let bind = typeof port === 'string'
 		? 'Pipe ' + port
 		: 'Port ' + port;
 
@@ -93,8 +93,8 @@ function onError(error) {
  */
 
 function onListening() {
-	var addr = server.address();
-	var bind = typeof addr === 'string'
+	let addr = server.address();
+	let bind = typeof addr === 'string'
 		? 'pipe ' + addr
 		: 'port ' + addr.port;
 	console.log('Listening on ' + bind);

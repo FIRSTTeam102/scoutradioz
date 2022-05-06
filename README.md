@@ -32,13 +32,13 @@ _(The latter was introduced after upload.scoutradioz.com was created, but both r
 Scoutradioz is subscribed to [The Blue Alliance's Firehose](https://www.thebluealliance.com/apidocs/webhooks#firehose), which provides the site with up-to-date information on every supported match and event. This Lambda function handles data provided by the Firehose, and sends push notifications to scouters who are assigned to an upcoming match & have notifications enabled.
 
 ### Helper packages
-#### scoutradioz-utilities
+#### [scoutradioz-utilities](https://www.npmjs.com/package/@firstteam102/scoutradioz-utilities)
 An NPM package that contains our database manager / caching wrapper.
 
-#### scoutradioz-helpers
+#### [scoutradioz-helpers](https://www.npmjs.com/package/@firstteam102/scoutradioz-helpers)
 An NPM package that contains helper functions needed across multiple packages, such as parsing match data, calculating metrics, and listing team images.
 
-#### scoutradioz-http-errors
+#### [scoutradioz-http-errors](https://www.npmjs.com/package/@firstteam102/http-errors)
 A small NPM package that exposes a small handful of HTTP errors for use inside Express routes. We created this one instead of alternatives because it has no dependencies and only contains what we need.
 
 #### scoutradioz-eslint

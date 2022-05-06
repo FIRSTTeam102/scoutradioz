@@ -15,6 +15,15 @@ $(() => {
 	//		We can't disable Cookies.org_key, but we can disable non necessary ones like report columns and the selected "Are you:" button on the chooseorg page
 	//		Possible text: "Before you reject the use of non-necessary cookies, please take a look at our cookie policy, where we explain what each is used for. We do not use third party cookies or tracking cookies."
 	Cookies.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
+	
+	if ('serviceWorker' in navigator) {
+		navigator.serviceWorker.addEventListener('message', function(event) {
+			console.log('Received a message from service worker: ', event.data);
+
+			var message = event.data.ifFocused.message;
+			NotificationCard.show(message, {ttl: 3500});
+		});
+	}
 });
 
 (() => {

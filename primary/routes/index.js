@@ -94,9 +94,11 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 		if (redirectURL) {
 			logger.debug(`redirect: ${redirectURL}`);
 			if (req.query.alert) {
+				// 2022-04-05 JL: Introduced getURLWithQueryParameters so we don't have to worry about ? and & all the time
+				redirectURL = req.getURLWithQueryParameters(redirectURL, {alert: req.query.alert});
 				// 2022-02-27 JL: fixing alert not showing up on login redirects
-				if (redirectURL.includes('?')) redirectURL += '&alert=' + req.query.alert;
-				else redirectURL += '?alert=' + req.query.alert;
+				// if (redirectURL.includes('?')) redirectURL += '&alert=' + req.query.alert;
+				// else redirectURL += '?alert=' + req.query.alert;
 			}
 			res.redirect(redirectURL);
 		}

@@ -4,7 +4,7 @@
 		match [db Object] TBA data for a completed match.
 		includeHr [boolean] Whether to include an hr at the bottom.
 mixin completedMatch(match, includeHr=false, selectedTeam=null)
-	- let timeString = '', shortTimeString = ''; console.log(selectedTeam)
+	- let timeString = '', shortTimeString = '';
 	if match.actual_time
 		- let time = zoneTime(match.actual_time * 1000);
 		- timeString = time.toFormat('ccc t');

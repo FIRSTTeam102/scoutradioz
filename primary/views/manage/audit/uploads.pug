@@ -25,15 +25,16 @@ block content
 		a(href="/manage/scoutingaudit/bymatch") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Per-Match Audit
-	//p 
-		if eventKey == 'all'
-			a(href="/manage/scoutingaudit/")
-		else 
-			a(href="./?event_key=all" class="gear-btn theme-submit w3-btn") All events
-			a(href="./?event_key=all" class="gear-btn theme-submit w3-btn") All events
+	p 
+		form(name="yearSelect" method="get" action="")
+			label(class="w3-label theme-inline-padding" style="margin-right: 8px;") View uploads from:
+			select(name="year" class="theme-input")
+				option
+				each year in years
+					option(selected=(thisYear===year) value=year)= year
 	div(class="w3-auto")
-		if !uploadsByTeam[0]
-			h4 No uploads are currently available.
+		if !uploadsByTeam || Object.keys(uploadsByTeam).length === 0
+			+noDataFound('No uploads were found for the year ' + thisYear)
 		each teamUploads, teamKey in uploadsByTeam
 			if teamUploads[0]
 				div(class="w3-row")
@@ -63,6 +64,10 @@ block content
 									div(class="w3-col m4 w3-padding" onclick=`deleteUpload('${upload._id}')`)
 										button(class="w3-btn w3-block theme-red") Delete
 	script.
+		$('select[name=year]').on('change', () => {
+			$('form[name=yearSelect]').submit();
+		});
+		
 		function changeIndex(id, amount) {
 			//id is id of document; amount is +1 or -1
 			var indexCard = new NotificationCard(`Changing image index by ${amount > 0 ? '+1' : '-1'}...`);

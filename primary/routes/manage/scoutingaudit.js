@@ -116,12 +116,19 @@ router.get('/', wrap(async (req, res) =>  {
 
 router.get('/uploads', wrap(async (req, res) => {
 	
-	var orgKey = req.user.org_key;
+	const org_key = req.user.org_key;
+	
+	// Get the year from either the HTTP query or the current event
+	var year = parseInt(req.query.year);
+	if (!year || isNaN(year)) year = req.event.year;
 	
 	var uploads = await utilities.find('uploads', 
-		{org_key: orgKey, removed: false, year: req.event.year},
+		{org_key: org_key, removed: false, year: year},
 		{},
 	);
+	
+	// Years that contain any non-removed uploads
+	var years = await utilities.distinct('uploads', 'year', {org_key: org_key, removed: false});
 	
 	uploads.sort((a, b) => {
 		var aNum = parseInt(a.team_key.substring(3));
@@ -181,7 +188,9 @@ router.get('/uploads', wrap(async (req, res) => {
 	
 	res.render('./manage/audit/uploads', {
 		title: 'Uploads Audit',
-		uploadsByTeam: uploadsByTeamKey
+		uploadsByTeam: uploadsByTeamKey,
+		years: years,
+		thisYear: year,
 	});
 }));
 
@@ -277,6 +286,13 @@ router.get('/bymatch', wrap(async (req, res) => {
 	
 	//Create array of matches for audit, with each match-team inside each match
 	var audit = [];
+	
+	if (scoreData.length == 0) {
+		return res.render('./manage/audit/bymatch', {
+			title: 'Match Scouting Audit',
+			audit: null
+		});
+	}
 	
 	var lastMatchNum = scoreData[0].match_number;
 	

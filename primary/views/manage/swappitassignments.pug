@@ -1,0 +1,61 @@
+//-
+	Org mgmt page to swap members between/in/out of pairs.
+		PARAM
+			teams1		[Array] pitscouting objects (may contain a specific member)
+			teams2		[Array] pitscouting objects (may AVOID a specific member)
+		manage/swappitassignments.js	
+		'/manage/swappitassignments'
+	//
+extends ../layout
+block content
+	h2 Swap Pit Scouts
+	br 
+	form(method="get" action="" name="scoutIdForm")
+		span(class="w3-mobile w3-margin-top")
+			label(class="w3-label" style="padding-right: 8px") View assignments for...
+			select(class="theme-input" style="min-width: 100;" name="scoutId")
+				noscript
+					if !scoutId
+						option(selected value='') [Select a scouter]
+				each scout in pitScouts 
+					if scoutId == scout 
+						option(selected value=scout)=scout
+					else 
+						option(value=scout)=scout
+			noscript
+				button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true") Selected scouter
+		span(class="w3-mobile w3-margin-top")
+			label(class="w3-label w3-margin-left" style="padding-right: 8px") or...
+			button(class="w3-btn theme-submit" type="submit" name="all" value="true") Everyone
+	p All the scouts (primary, secondary, and tertiary [if secondary or tertiary are defined]) will be swapped between the two teams
+	p
+		i You can only swap sets of scouts for teams which do NOT have pit scouting data!
+	form#swap-form(name="swap-form" method="post" action="")
+		div(class="w3-container w3-padding-16")
+			label(class="w3-quarter w3-label theme-inline-padding") Team #1 to be swapped: 
+			select(class="w3-half w3-border-light-grey theme-input" type="text" name="team1")
+				option
+				each team, i in teams1
+					- var teamNum = team.team_key.substring(3)
+					- var optionStr = teamNum + ' - ' + team.primary
+					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary }
+					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary }
+					option(value=teamNum class="w3-bar-item") !{optionStr}
+		div(class="w3-container w3-padding-16")
+			label(class="w3-quarter w3-label theme-inline-padding") Team #2 to be swapped: 
+			select(class="w3-half w3-border-light-grey theme-input" type="text" name="team2")
+				option
+				each team, i in teams2
+					- var teamNum = team.team_key.substring(3)
+					- var optionStr = teamNum + ' - ' + team.primary
+					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary }
+					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary }
+					option(value=teamNum class="w3-bar-item") !{optionStr}
+		input#scoutId(type="hidden", name="scoutId", value=scoutId)
+		div(class="w3-padding-16")
+			input(type="submit" class="gear-btn theme-link w3-btn" value="Submit")
+	script.
+		// When the scoutId select changes, submit the form to reload the page with the new scouter
+		$('select[name=scoutId]').on('change', () => {
+			$('form[name=scoutIdForm]').submit();
+		});

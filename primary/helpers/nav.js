@@ -106,22 +106,22 @@ navHelpers.getNavContents = () => {
 						sprite: 'download',
 						submenu: [
 							{
-								label: 'Export match scouting data [this event]',
+								label: `Match scouting data: [[${req.event.name}]]`,
 								href: '/reports/exportdata?type=matchscouting',
 								sprite: 'download',
 							},
 							{
-								label: 'Export pit scouting data [this event]',
+								label: `Pit scouting data: [[${req.event.name}]]`,
 								href: '/reports/exportdata?type=pitscouting',
 								sprite: 'download',
 							},
 							{
-								label: 'Export match scouting [ALL SEASON]',
+								label: `Match scouting data: [[All of ${req.event.year}]]`,
 								href: '/reports/exportdata?type=matchscouting&span=all',
 								sprite: 'download',
 							},
 							{
-								label: 'Export pit scouting [ALL SEASON]',
+								label: `Pit scouting data: [[All of ${req.event.year}]]`,
 								href: '/reports/exportdata?type=pitscouting&span=all',
 								sprite: 'download',
 							}
@@ -197,6 +197,10 @@ navHelpers.getNavContents = () => {
 						{
 							label: 'Swap in/out Match Scouts',
 							href: '/manage/scoutingpairs/swapmembers'
+						},
+						{
+							label: 'Swap Pit Scouting assignments',
+							href: '/manage/scoutingpairs/swappitassignments'
 						},
 						{
 							label: 'Set Present',

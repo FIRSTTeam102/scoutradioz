@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
-const logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger('scoutingpairs');
 const wrap = require('express-async-handler');
 const utilities = require('@firstteam102/scoutradioz-utilities');
 const e = require('@firstteam102/http-errors');
@@ -290,7 +290,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 	// - matchscouts is the "queue"; need a pointer to indicate where we are
 	// TODO: Use _id, not name, because names can be modified!
 	// 2022-03-01, M.O'C: Adding 'org_key': org_key into the 2nd part of the "or" clause
-	var matchScouts = await utilities.find('users', {$or: [{'name': {$in: availableArray}, 'org_key': org_key}, {'event_info.assigned': true, 'org_key': org_key}]}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
+	var matchScouts = await utilities.find('users', {$or: [{'name': {$in: availableArray}, 'org_key': org_key}, {'event_info.assigned': true, 'org_key': org_key}]}, { sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, 'name': 1} });
 	var matchScoutsLen = matchScouts.length;
 	logger.trace(thisFuncName + '*** Assigned + available, by seniority:');
 	for (let i = 0; i < matchScoutsLen; i++)
@@ -643,6 +643,120 @@ router.post('/swapmembers', wrap(async (req, res) => {
 	res.redirect('/dashboard/matches');
 }));
 
+router.get('/swappitassignments', wrap(async (req, res) => {
+
+	logger.addContext('funcName', 'swappitassignments[get]');
+	logger.info('ENTER');
+	
+	// for later querying by event_key
+	var event_key = req.event.key;
+	var org_key = req.user.org_key;
+
+	// who is the scout we're querying (if specified)
+	var scoutId = req.query.scoutId;
+	
+	var doEveryone = req.query.all;
+	if (doEveryone == 'true') {
+		logger.debug('"All scouters" set to true; redirecting to get rid of the scoutId= and all= parameters');
+		return res.redirect('/manage/scoutingpairs/swappitassignments');
+	}
+
+	// Two sets of teams - one for each select control
+	var teams1 = [];
+	var teams2 = [];
+	if (scoutId) {
+		// find teams which have the specified scout in primary OR secondary OR tertiary
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
+		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, primary: {$not: new RegExp('^'+scoutId+'$')}, secondary: {$not: new RegExp('^'+scoutId+'$')}, tertiary: {$not: new RegExp('^'+scoutId+'$')} }, { });
+	}
+	else {
+		// just get two sets of all teams
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}}, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}}, { });
+	}
+	//sort teams lists by number
+	teams1.sort(function(a, b) {
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
+		return aNum - bNum;
+	});
+	teams2.sort(function(a, b) {
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
+		return aNum - bNum;
+	});
+	logger.debug('teams1.length=' + teams1.length);
+	logger.debug('teams2.length=' + teams2.length);
+
+	// get the list of assigned scouts
+	var pitScouts = await utilities.distinct('pitscouting', 'primary', {'org_key': org_key, 'event_key': event_key});
+	logger.debug('distinct pitScouts=' + JSON.stringify(pitScouts));
+
+	res.render('./manage/swappitassignments', {
+		title: 'Team Assignments',
+		teams1: teams1,
+		teams2: teams2,
+		pitScouts: pitScouts,
+		scoutId: scoutId
+	});	
+}));
+
+router.post('/swappitassignments', wrap(async (req, res) => {
+	logger.addContext('funcName', 'swappitassignments[post]');
+	
+	// for later querying by event_key
+	var event_key = req.event.key;
+	var org_key = req.user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info('ENTER org_key=' + org_key);
+	
+	var scoutId = req.body.scoutId || req.query.scoutId;
+	// Extract from req the two teams to be swapped
+	var team1 = req.body.team1;
+	var team2 = req.body.team2;
+	logger.info('team1=' + team1 + ',team2=' + team2 + ';scoutId=' + scoutId);
+	
+	if (!team1 || !team2) {
+		let redirect = req.getURLWithQueryParameters('/manage/scoutingpairs/swappitassignments', {
+			scoutId: scoutId,
+			alert: 'Please specify two teams to be swapped.',
+			type: 'bad'
+		});
+		return res.redirect(redirect);
+	}
+	
+	// create keys from the team values
+	var team_key1 = 'frc' + team1;
+	var team_key2 = 'frc' + team2;
+	// use a temporary value during the swapping process
+	var team_key2_temp = team_key2 + 'SWAP';
+
+	// updates
+	// set team1 record key to team2+SWAP
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key1 },
+		{ $set: { 'team_key': team_key2_temp } }
+	);
+	// set team2 record key to team1
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key2 },
+		{ $set: { 'team_key': team_key1 } }
+	);
+	// set team1 record key to team2+SWAP
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key2_temp },
+		{ $set: { 'team_key': team_key2 } }
+	);
+
+	var redirect = req.getURLWithQueryParameters('/manage/scoutingpairs/swappitassignments', {scoutId: scoutId});
+	res.redirect(redirect);
+}));
+
 async function generateMatchAllocations(req, res){
 	/* Begin regular code ----------------------------------------------------------- */
 	
@@ -857,7 +971,7 @@ async function generateTeamAllocations(req, res){
 	// Read all present members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
 	// TODO: Use _id, not name, because names can be modified!
-	var teammembers = await utilities.find('users', { 'name': {$in: scoutingAssignedArray }, 'org_key': org_key}, { sort: {'seniority': 1, 'subteam': 1, 'name': 1} });
+	var teammembers = await utilities.find('users', { 'name': {$in: scoutingAssignedArray }, 'org_key': org_key}, { sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, 'name': 1} });
 	var teammembersLen = teammembers.length;
 
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event

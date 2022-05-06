@@ -51,6 +51,30 @@ functions.initialMiddleware = async function(req, res, next){
 		}
 	};
 	
+	/**
+	 * Function to add query parameters to an URL, respecting the one ? rule, with an object of parameters & their values which CAN be undefined or null. Undefined/null parameters are removed.
+	 * @param {string} url URL
+	 * @param {object} parameters Parameters to modify.
+	 * @returns {string} URL with the query parameters automatically fixed.
+	 */
+	req.getURLWithQueryParameters = function(url, parameters) {
+		let hasQuestionMark = url.includes('?');
+		for (let key in parameters) {
+			let arg = parameters[key];
+			if (typeof arg !== 'undefined' && arg !== null && arg !== 'undefined' && arg !== '') {
+				if (hasQuestionMark) {
+					url += '&';
+				}
+				else {
+					url += '?';
+					hasQuestionMark = true;
+				}
+				url += key + '=' + String(arg);
+			}
+		}
+		return url;
+	};
+
 	// 2022-04-04 JL: Moving timezoneString calculations into initialMiddleware
 	if (req.cookies['timezone']) {
 		logger.trace(`Setting user timezone ${req.cookies['timezone']}`);
@@ -79,7 +103,7 @@ functions.initialMiddleware = async function(req, res, next){
 		}
 	}
 	req.localeString = localeString;
-	
+
 	next();
 };
 
@@ -97,6 +121,8 @@ functions.authenticate = function(req, res, next) {
 		
 		var user = req.user;
 		
+		let redirect = req.fixRedirectURL(req.originalUrl); // 2022-04-07 JL: Fixed redirects from share.js getting their URL query params borked
+		
 		if (user) {
 			
 			var userRole = user.role;
@@ -111,7 +137,7 @@ functions.authenticate = function(req, res, next) {
 			else{
 				
 				if (req.method == 'GET' && user.name == 'default_user') {
-					res.redirect(`/user/login?redirectURL=${req.originalUrl}`);
+					res.redirect(`/user/login?rdr=${redirect}`);
 				}
 				else {
 					res.redirect('/?alert=You are not authorized to access this page.&type=error');
@@ -121,7 +147,7 @@ functions.authenticate = function(req, res, next) {
 		// If user is undefined, then send them to the index page to select an organization
 		else {
 			
-			res.redirect(`/?redirectURL=${req.originalUrl}`);
+			res.redirect(`/?rdr=${redirect}`);
 		}
 		
 		return isAuthenticated;

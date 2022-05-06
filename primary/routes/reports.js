@@ -1432,7 +1432,8 @@ router.get('/exportdata', wrap(async (req, res) => {
 				var headerRow = pivotDataCols;
 				// add on metric IDs
 				for (var thisItem of matchLayout) {
-					if (matchDataHelper.isMetric(thisItem.type)) 
+					// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
+					if (matchDataHelper.isMetric(thisItem.type) && !isOtherNotesAndUnauthorized(thisItem)) 
 						headerRow += ',' + thisItem.id;
 				}
 				//logger.debug("headerRow=" + headerRow);
@@ -1465,7 +1466,8 @@ router.get('/exportdata', wrap(async (req, res) => {
 
 			// cycle through the metrics
 			for (let thisItem of matchLayout) {
-				if (matchDataHelper.isMetric(thisItem.type)) {
+				// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
+				if (matchDataHelper.isMetric(thisItem.type) && !isOtherNotesAndUnauthorized(thisItem)) {
 					dataRow += ',';
 
 					if (thisData[thisItem.id] || thisData[thisItem.id] == 0) {
@@ -1477,7 +1479,12 @@ router.get('/exportdata', wrap(async (req, res) => {
 			//logger.debug("dataRow=" + dataRow);
 			fullCSVoutput += '\n' + dataRow;
 		}
-	}	
+	}
+	
+	// If the layout item is otherNotes and the user is unauthorized to view it, return false.
+	function isOtherNotesAndUnauthorized(thisItem) {
+		return (thisItem.id === 'otherNotes' && req.user.role.access_level < process.env.ACCESS_SCOUTER);
+	}
 
 	logger.info('EXIT returning ' + scored.length + ' rows of CSV');
 
@@ -1485,7 +1492,8 @@ router.get('/exportdata', wrap(async (req, res) => {
 	res.setHeader('Content-Type', 'text/csv');
 	if (dataSpan == 'all') {
 		res.setHeader('Content-Disposition', 'attachment; filename="' + dataType + '_' + orgKey + '_' + eventYear + '_' + Date.now() + '.csv"');
-	} else {
+	}
+	else {
 		res.setHeader('Content-Disposition', 'attachment; filename="' + dataType + '_' + orgKey + '_' + eventKey + '_' + Date.now() + '.csv"');
 	}
 	return res.send(fullCSVoutput);

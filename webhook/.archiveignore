@@ -2,6 +2,7 @@
 **/test/**
 **/examples/**
 **/demo/**
+**/@types/**
 
 *.map
 *.zip

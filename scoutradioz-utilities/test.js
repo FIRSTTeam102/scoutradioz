@@ -1,5 +1,5 @@
 const log4js = require('log4js');
-const utilities = require('./utilities');
+const utilities = require('./build/utilities');
 
 //log4js config
 log4js.configure({
@@ -27,7 +27,7 @@ logger.level = 'trace';
 utilities.config({
 	app: {url: 'mongodb://localhost:27017/app'},
 	dev: {url: 'mongodb://localhost:27017/dev'}
-});
+}, {cache: {enable: true}, debug: true});
 
 //Test utilities.getURL
 async function testGetUrl() {
@@ -72,20 +72,30 @@ async function testMultipleDbs(){
 	logger.info(`writeResult=${JSON.stringify(writeResult)}`);
 	
 	var obj = await utilities.findOne('test', {'foo': 'bar'});
-	logger.info(`In dev: ${obj}`);
+	logger.info(`In dev: ${JSON.stringify(obj)}`);
 	
 	process.env.TIER = 'app';
 	utilities.refreshTier();
 	obj = await utilities.findOne('test', {'foo': 'bar'});
-	logger.info(`In app: ${obj}`);
+	logger.info(`In app: ${JSON.stringify(obj)}`);
 	
 	process.env.TIER = 'dev';
 	utilities.refreshTier();
 	
 	var delResult = await utilities.remove('test', {'foo': 'bar'});
-	logger.info(`delResult: ${delResult}`);
+	logger.info(`delResult: ${JSON.stringify(delResult)}`);
+	
+	process.env.TIER = 'app';
+	utilities.refreshTier();
+	
+	var teamAvatar = await utilities.requestFIRST('2020/avatars?teamNumber=238&teamNumber=102');
+	logger.info(`teamAvatar: ${JSON.stringify(teamAvatar, null, 2)}`);
+	
+	var teamAvatars = await utilities.requestFIRST('2022/avatars?eventCode=mrcmp');
+	console.log(teamAvatars);
 	
 	logger.info('Done');
+	process.exit(0);
 }
 
 testMultipleDbs();

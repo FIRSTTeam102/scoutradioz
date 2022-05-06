@@ -130,7 +130,7 @@ const pitGearheads2022 = [
 	// ['textblock', 'controlNotes', 'Other info: Any special notes on driving? Are there operator controls? What does the operator use? Etc.'],
 	['h2', 'lblAuto', 'Autonomous period'],
 	['checkbox', 'doAuto', 'Can they move during the autonomous period?'],
-	['slider', 'autoHowManyCargo', 'How many cargo can they shoot during autonomous?', null, [0, 5, 1]],
+	['slider', 'autoHowManyCargo', 'How many cargo can they shoot during autonomous?', null, [0, 7, 1]],
 	['spacer'],
 	['h2', 'lblCargo', 'Teleop period'],
 	['checkbox', 'doAutoCodeTeleop', 'Do they use any autonomous/assisting code during the match?'],
@@ -292,6 +292,28 @@ const autoPoints2022 = {
 		}
 	],
 };
+const totalCargo2022 = {
+	order: 552,
+	label: 'Total cargo',
+	id: 'totalCargo',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoHighScored', 'teleopHighScored', 'autoLowScored', 'autoLowMissed']
+		}
+	]
+};
+const autoCargo2022 = {
+	order: 552,
+	label: 'Total cargo',
+	id: 'autoCargo',
+	operations: [
+		{
+			operator: 'sum',
+			operands: ['autoHighScored', 'autoLowScored']
+		}
+	]
+};
 const teleopPoints2022 = {
 	order: 555,
 	label: 'Teleop points',
@@ -310,6 +332,36 @@ const teleopPoints2022 = {
 			operands: ['$teleopHigh', '$teleopLow']
 		}
 	],
+};
+const teleopPlusClimb2022 = {
+	order: 556,
+	label: 'Teleop plus Climb',
+	id: 'teleopPlusClimb',
+	operations: [
+		{
+			operator: 'multiply',
+			operands: ['teleopHighScored', 2],
+			as: 'teleopHigh'
+		}, {
+			operator: 'multiply',
+			operands: ['teleopLowScored', 1],
+			as: 'teleopLow'
+		},{
+			operator: 'multiselect',
+			id: 'successfulClimb',
+			quantifiers: {
+				'None': 0,
+				'Low': 4,
+				'Mid': 6,
+				'High': 10,
+				'Traversal': 15,
+			},
+			as: 'climbPoints'
+		}, {
+			operator: 'sum',
+			operands: ['$teleopHigh', '$teleopLow', 'climbPoints']
+		}
+	]
 };
 const contributedPoints2022 = {
 	order: 560,
@@ -569,6 +621,8 @@ const matchDerivedGearheads2022 = [
 	teleopAccuracy2022,
 	upperHubAccuracy2022,
 	lowerHubAccuracy2022,
+	totalCargo2022,
+	autoCargo2022,
 	climbAccuracy2022b, 
 	climbTime2022,
 	attemptedClimb2022,
@@ -576,6 +630,7 @@ const matchDerivedGearheads2022 = [
 	autoPoints2022, teleopPoints2022, contributedPoints2022, 
 	reliabilityFactor2022,
 	flagRecoverWithoutFreeze2022, flagClimbAttemptLtSuccess2022, flagNegativeClimbTime2022,
+	teleopPlusClimb2022,
 ];
 
 /*
@@ -588,11 +643,15 @@ const year = 2022;
 const org_key = orgkey;
 
 // Moving the order of derived metrics based on the calculated order of our scouting form
-if (org_key == 'frc102' || org_key == 'demo' || org_key == 'frc8024') {
+if (org_key == 'frc102' || org_key == 'demo' || org_key == 'frc8024' || org_key == 'frc41') {
 	contributedPoints2022.order = -10;
 	autoPoints2022.order = -9; // was 71
 	teleopPoints2022.order = -8; // was 161
+	teleopPlusClimb2022.order = -8.5;
 	climbPoints2022.order = -7; // was 224
+	
+	totalCargo2022.order = -6;
+	autoCargo2022.order = -5;
 	
 	autoAccuracy2022.order = 72;
 	teleopAccuracy2022.order = 162;
@@ -680,7 +739,7 @@ async function main() {
 	
 	if (org_key === 'frc852')
 		layoutArr = [...fixArray(matchAthenian2022, matchDerivedAthenian2022, 'matchscouting'), ...fixArray(pitAthenian2022, [], 'pitscouting')];
-	else if (org_key === 'frc102' || org_key === 'demo' || org_key === 'frc8024')
+	else if (org_key === 'frc102' || org_key === 'demo' || org_key === 'frc8024'  || org_key == 'frc41')
 		layoutArr = [...fixArray(matchGearheads2022, matchDerivedGearheads2022, 'matchscouting'), ...fixArray(pitGearheads2022, [], 'pitscouting')];
 	else {
 		console.log('Sorry, not supported yet');
