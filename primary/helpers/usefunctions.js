@@ -147,7 +147,7 @@ const navcontents = navHelpers.getNavContents();
  */
 functions.setViewVariables = async function(req, res, next){
 	logger.addContext('funcName', 'setViewVariables');
-	logger.debug('ENTER');
+	logger.trace('ENTER');
 	
 	if(req.user) {
 		const org = await utilities.findOne('orgs', 
@@ -192,16 +192,18 @@ functions.setViewVariables = async function(req, res, next){
 	res.locals.DateTime = DateTime;
 	
 	// 2022-04-04 JL: Moving timezoneString calculations into initialMiddleware
-	let timezoneString = req.timezoneString; 
-	logger.debug(`Timezone fixed offset: ${getFixedZone(timezoneString).offset()}`);
+	let timezoneString = req.timezoneString;
+	let fixedZone = getFixedZone(timezoneString);
 	let localeString = req.localeString;
+	
+	logger.trace(`Timezone fixed offset: ${fixedZone.offset()}`);
 	
 	// Method for views to get the offset time w/o having to do DateTime.whatever
 	res.locals.zoneTime = function (millis) {
-		return DateTime.fromMillis(millis, {zone: getFixedZone(timezoneString), locale: localeString});
+		return DateTime.fromMillis(millis, {zone: fixedZone, locale: localeString});
 	};
 	
-	logger.debug('EXIT');
+	logger.trace('EXIT');
 	logger.removeContext('funcName');
 	next();
 };
