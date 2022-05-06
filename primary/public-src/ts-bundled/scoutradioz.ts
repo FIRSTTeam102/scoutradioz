@@ -74,6 +74,16 @@ $(() => {
 		'padding': '8px 16px',
 	});
 	
+	/**
+	 * Measure the time interval to execute the callback function.
+	 * @param cb Function to run
+	 */
+	window.measureTime = function(cb: () => void) {
+		let st = performance.now();
+		cb();
+		return performance.now() - st;
+	}
+	
 	window.debugToHTML = function(message: string) {
 		
 		var text;
@@ -170,6 +180,7 @@ declare class Cookies {
 	static set(key: string, value: any, value2?: any): any;
 }
 
+declare function measureTime(cb: () => void) : number;
 declare function debugToHTML(message: any): void;
 declare function assert(condition: boolean, message: any): void;
 declare function onResize(cb: Function): void; 
