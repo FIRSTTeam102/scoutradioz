@@ -110,17 +110,12 @@ app.use(express.urlencoded({ extended: false }));
 const i18n = new I18n({
 	locales: require('fs').readdir(path.join(__dirname, 'locales'), (err, files) => {
 		if (err) return ['en'];
-		return files.map(file => file.replace('.json', ''));
+		return ['qqx'].concat(files.map(file => file.replace('.json', '')));
 	}),
 	directory: path.join(__dirname, 'locales'),
 	objectNotation: true,
 	updateFiles: process.env.UPDATE_I18N_FILES === 'true', // fill in missing spots in i18n files, should only be used during development
 	retryInDefaultLocale: true, // fallback to en
-	api: { // these will be exposed to requests and views
-		__: '__', // for a normal message
-		__n: '__n', // for a message with plurals
-		__mf: '__mf', // for a message with advanced formatting (see MessageFormat)
-	},
 	preserveLegacyCase: true,
 
 	cookie: 'language', // langauge cookie to look for
@@ -140,14 +135,27 @@ const i18n = new I18n({
 		logger.addContext('funcName', 'i18n');
 		logger.error(msg);
 		logger.removeContext('funcName');
-	},
-
-	missingKeyFn: function (locale, key) {
-		// if (locale === 'qqx') return `${key}`
-		return key;
 	}
 });
-app.use(i18n.init);
+
+app.use((req, res, next) => {
+	// these will be exposed to requests and views:
+	// __() for a normal message
+	// __n() for a message with plurals
+	// __mf() for a message with advanced formatting (see MessageFormat)
+	i18n.init(req, res);
+
+	// implement qqx language logic
+	if (req.locale === 'qqx') {
+		['__', '__n', '__mf'].forEach(fn => {
+			req[fn] = res[fn] = res.locals[fn] = (msg) => {
+				return `${fn}(${msg})`;
+			};
+		});
+	}
+
+	next();
+});
 
 //Session
 console.log('app.js: app.use(session({... - START');
