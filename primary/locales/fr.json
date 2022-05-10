@@ -1,0 +1,9 @@
+{
+	"index": {
+		"welcome": "Bienvenue au Scoutradioz"
+	},
+	"hello": {
+		"world": "Bonjour le monde !",
+		"name": "Bonjour, %s !"
+	}
+}

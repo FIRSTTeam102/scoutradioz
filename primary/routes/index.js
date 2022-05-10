@@ -65,7 +65,7 @@ router.get('/', wrap(async (req, res) => {
 		);
 		logger.trace(JSON.stringify(i18n));
 		
-		const selectedButton = req.cookies['homepageButton']; // Previously-selected "Are you:" button on the homepage
+		const selectedButton = req.query['customer'] || req.cookies['homepageButton']; // Previously-selected "Are you:" button on the homepage
 		
 		res.render('./index', {
 			fulltitle: 'Scoutradioz: FRC Scouting as a Service',

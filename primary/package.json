@@ -67,6 +67,7 @@
 		"express-async-handler": "^1.2.0",
 		"express-session": "^1.17.2",
 		"express-useragent": "^1.0.15",
+		"i18n": "^0.14.2",
 		"log4js": "^6.4.0",
 		"luxon": "^2.3.1",
 		"mongodb": "~4.1.0",
@@ -77,8 +78,8 @@
 	},
 	"devDependencies": {
 		"@types/express": "^4.17.13",
-		"@types/node": "^17.0.23",
-		"@types/jquery": "3.5.14"
+		"@types/jquery": "3.5.14",
+		"@types/node": "^17.0.23"
 	},
 	"nodemonConfig": {
 		"ignore": [
