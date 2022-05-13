@@ -80,10 +80,12 @@ functions.initialMiddleware = async function(req, res, next){
 		logger.trace(`Setting user timezone ${req.cookies['timezone']}`);
 		req.timezoneString = req.cookies['timezone'];
 	}
-	else if (req.event.timezone) {
-		logger.trace(`Setting event timezone ${req.event.timezone}`);
-		req.timezoneString = req.event.timezone;
-	}
+	// 2022-05-13 JL: Can no longer use req.event.timezone because getEventInfo is called after initialMiddleware and renderLogger
+	//	we can rejigger this around later if we get complaints from people who insist on blocking cookies
+	// else if (req.event.timezone) { 
+	// 	logger.trace(`Setting event timezone ${req.event.timezone}`);
+	// 	req.timezoneString = req.event.timezone;
+	// }
 	else {
 		logger.trace('Setting default timezone');
 		req.timezoneString = 'America/New_York'; // Default to EST/EDT because we're MAR-centered
