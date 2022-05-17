@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
-require('colors');
+const child_process = require('child_process');
+import 'colors';
+import http from 'http';
 
 //for views to either have a base of /prod/ or /
-process.env.local = true;
+process.env.local = 'true';
 
 /**
  * Specify some configuration with command line arguments
  */
 
 //eslint-disable-next-line
-for (var i in process.argv) {
+for (var i = 0; i < process.argv.length; i++) {
 	let thisArg = process.argv[i];
 	let nextArg = process.argv[i - -1];
 
@@ -35,13 +37,14 @@ for (var i in process.argv) {
 	}
 }
 
-function launchChildProcess(command, onlyErrors = false, logName = undefined) {
-	var args = command.split(' ');
+function launchChildProcess(command: string, onlyErrors = false, logName?: string) {
+	let args = command.split(' ');
 	logName = logName || args[args.length - 1];
 
-	var child = require('child_process').spawn(args.shift(), args, { shell: true });
+	let child = child_process.spawn(args.shift(), args, { shell: true });
 
-	function handleData(data) {
+	function handleData(data: any) {
+		console.log(typeof data);
 		// ignore launch messages made by npm/shell that start with >
 		if (data.indexOf('>') !== 1) {
 			process.stdout.write(`[${logName}] `.magenta + data);
@@ -56,18 +59,17 @@ function launchChildProcess(command, onlyErrors = false, logName = undefined) {
  * Module dependencies.
  */
 
-var app = require('./app');
-var http = require('http');
+const app = require('./app');
 
 
-var port = normalizePort(process.env.PORT || '3000');
+let port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+let server = http.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -81,8 +83,8 @@ server.on('listening', onListening);
  * Normalize a port into a number, string, or false.
  */
 
-function normalizePort(val) {
-	var port = parseInt(val, 10);
+function normalizePort(val: any) {
+	let port = parseInt(val, 10);
 
 	if (isNaN(port)) {
 		// named pipe
@@ -101,12 +103,12 @@ function normalizePort(val) {
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
+function onError(error: any) {
 	if (error.syscall !== 'listen') {
 		throw error;
 	}
 
-	var bind = typeof port === 'string'
+	let bind = typeof port === 'string'
 		? 'Pipe ' + port
 		: 'Port ' + port;
 
@@ -130,8 +132,10 @@ function onError(error) {
  */
 
 function onListening() {
-	var addr = server.address();
-	var bind = typeof addr === 'string'
+	let addr = server.address();
+	if (!addr) return;
+	
+	let bind = typeof addr === 'string'
 		? 'pipe ' + addr
 		: 'port ' + addr.port;
 	console.log('Listening on ' + bind);

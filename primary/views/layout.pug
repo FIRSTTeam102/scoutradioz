@@ -45,7 +45,7 @@ html
 		script(src=`${fileRoot}/lib/jscookie-2.2.1.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
 		//- script(src=`${fileRoot}/lib/chart.min.js`) 2022-03-18 JL: Taking chart.js out of the required scripts for all pages & putting it only where needed (as of today, only Drive Team)
-		//- script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
+		script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
 		script(src=`${fileRoot}/js/bundle.js`)
 		if alert && alert != "undefined"

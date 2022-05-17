@@ -1,12 +1,14 @@
-const express = require('express');						//main express shiz
-const path = require('path');							//for filesystem
-const favicon = require('serve-favicon');				//serves favicon
-const session = require('express-session');				//session middleware
-const cookieParser = require('cookie-parser');			//cookies
-const MongoStore = require('connect-mongo');			//Alternative session storage
-const passport = require('passport');					//for user authentication
-const useragent = require('express-useragent');			//for info on connected users
-const log4js = require('log4js');						//for extensive logging functionality
+import express from 'express';									// HTTP framework
+const path = require('path');									// For filesystem
+const favicon = require('serve-favicon');						// Serves favicon
+const session = require('express-session');						// Session middleware
+const cookieParser = require('cookie-parser');					// Cookies
+const MongoStore = require('@firstteam102/connect-mongo');		// Alternative session storage
+import passport from 'passport';								// User authentication
+import useragent from 'express-useragent';						// Info on connected users
+import log4js, { LoggingEvent } from 'log4js';					// Extensive logging functionality
+import utilities from '@firstteam102/scoutradioz-utilities'; 	// Database utilities
+import { MongoClient } from 'mongodb';							// MongoDB client
 
 const appStartupTime = Date.now();
 
@@ -16,17 +18,17 @@ require('aws-serverless-express/middleware');
 require('dotenv').config();
 
 //log4js config
-var log4jsConfig = {
+let log4jsConfig = {
 	appenders: { out: { type: 'stdout', layout: {
 		type: 'pattern',
 		//Non-colored pattern layout (default)
 		pattern: '[%x{tier}] [%p] %c.%x{funcName} - %m',
 		tokens: {
-			'tier': logEvent => {
+			'tier': () => {
 				if (process.env.ALIAS) return process.env.ALIAS;
 				else return 'LOCAL|' + process.env.TIER;
 			},
-			'funcName': logEvent => {
+			'funcName': (logEvent: LoggingEvent) => {
 				if (logEvent.context && logEvent.context.funcName) {
 					return logEvent.context.funcName;
 				}
@@ -47,10 +49,8 @@ logger.level = process.env.LOG_LEVEL || 'debug';
 
 //load custom middleware
 const usefunctions = require('./helpers/usefunctions');
-//load database utilities
-const utilities = require('@firstteam102/scoutradioz-utilities');
 //Configure utilities with the full file path of our databases json file
-utilities.config(require('./databases.json'), {
+utilities.config(require('../databases.json'), {
 	cache: {
 		enable: true,
 		maxAge: 30,
@@ -95,11 +95,11 @@ app.get('/*', (req, res, next) => {
 app.use(utilities.refreshTier);
 
 //Boilerplate setup
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '..', 'views'));
 app.set('view engine', 'pug');
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(favicon(path.join(__dirname, 'public', 'icon-32.png')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
 
 app.use(cookieParser());
 app.use(express.json());
@@ -107,16 +107,16 @@ app.use(express.urlencoded({ extended: false }));
 
 //Session
 console.log('app.js: app.use(session({... - START');
-const MongoClient = require('mongodb').MongoClient;
+// const MongoClient = require('mongodb').MongoClient;
 //Get promise for MongoClient
 const clientPromise = new Promise((resolve, reject) => {
 	logger.debug('Waiting for utilities.getDBurl');
 	//2020-03-23 JL: Made getDBurl() async to wait for TIER to be given
 	utilities.getDBurl()
-		.then(url => {
+		.then((url: string) => {
 			logger.info('Got url');
 			//Connect mongoClient to dbUrl specified in utilities
-			MongoClient.connect(url, {useUnifiedTopology: true}, function(err, client){
+			MongoClient.connect(url, {}, function(err?: Error, client?: MongoClient){
 			//Resolve/reject with client
 				if (err) reject(err);
 				else if (client) resolve(client);
@@ -146,7 +146,7 @@ app.use(session({
 app.use(useragent.express());
 
 //Passport setup (user authentication)
-require('./helpers/passport-config');
+require('../build_tmp/helpers/passport-config');
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -165,29 +165,29 @@ app.use(usefunctions.authenticate);
 app.use(usefunctions.setViewVariables);
 
 //SCOUTRADIOZ ADMIN ROUTE FOR SYNCING - PLACED FIRST TO ENABLE UNAUTHENTICATED AUTOMATED CALLS
-var sync = require('./routes/admin/sync');
+let sync = require('../build_tmp/routes/admin/sync');
 app.use('/admin/sync', sync);
 
 //USER ROUTES
-var index = require('./routes/index');
-var user = require('./routes/user');
-var dashboard = require('./routes/dashboard');
-var scouting = require('./routes/scouting');
-var reports = require('./routes/reports');
-var notifications = require('./routes/notifications');
-var share = require('./routes/share.js');
+let index = require('./routes/index');
+let user = require('../build_tmp/routes/user');
+let dashboard = require('../build_tmp/routes/dashboard');
+let scouting = require('../build_tmp/routes/scouting');
+let reports = require('../build_tmp/routes/reports');
+let notifications = require('../build_tmp/routes/notifications');
+let share = require('../build_tmp/routes/share.js');
 //ORG MANAGEMENT ROUTES
-var manageindex = require('./routes/manage/indexmgmt');
-var allianceselection = require('./routes/manage/allianceselection');
-var currentevent = require('./routes/manage/currentevent');
-var config = require('./routes/manage/orgconfig');
-var manualdata = require('./routes/manage/manualdata');
-var orgmembers = require('./routes/manage/members');
-var scoutingaudit = require('./routes/manage/scoutingaudit');
-var scoutingpairs = require('./routes/manage/scoutingpairs');
+let manageindex = require('../build_tmp/routes/manage/indexmgmt');
+let allianceselection = require('../build_tmp/routes/manage/allianceselection');
+let currentevent = require('../build_tmp/routes/manage/currentevent');
+let config = require('../build_tmp/routes/manage/orgconfig');
+let manualdata = require('../build_tmp/routes/manage/manualdata');
+let orgmembers = require('../build_tmp/routes/manage/members');
+let scoutingaudit = require('../build_tmp/routes/manage/scoutingaudit');
+let scoutingpairs = require('../build_tmp/routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
-var adminindex = require('./routes/admin/indexadmin');
-var externaldata = require('./routes/admin/externaldata');
+let adminindex = require('../build_tmp/routes/admin/indexadmin');
+let externaldata = require('../build_tmp/routes/admin/externaldata');
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
