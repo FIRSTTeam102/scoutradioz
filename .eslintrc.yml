@@ -53,3 +53,4 @@ rules:
     - error
   prefer-const: off
   '@typescript-eslint/no-var-requires': off
+  '@typescript-eslint/no-namespace': off

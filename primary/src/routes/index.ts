@@ -1,8 +1,13 @@
-const router = require('express').Router();
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const logger = require('log4js').getLogger('index');
-const e = require('@firstteam102/http-errors');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from 'express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+// import {  } from '@firstteam102/scoutradioz-types';
+import e from '@firstteam102/http-errors';
+
+const router = express.Router();
+const logger = getLogger('index');
+// const wrap: Express.AsyncHandler = require('express-async-handler');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -13,7 +18,7 @@ router.all('/*', wrap(async (req, res, next) => {
 /**
  * The "index" page that loads is now a form to select an organization.
  */
-router.get('/', wrap(async (req, res) => {
+router.get('/', wrap(async (req, res, next) => {
 	logger.addContext('funcName', 'root[get]');
 	logger.debug('ENTER');
 	
@@ -28,7 +33,7 @@ router.get('/', wrap(async (req, res) => {
 	else if ( req.query.org_key || req.cookies.org_key ){
 		//Prioritize QUERY org key over cookies
 		//If someone wishes to share a page in the future, the link will include org_key
-		var orgKey = req.query.org_key || req.cookies.org_key;
+		let orgKey = req.query.org_key || req.cookies.org_key;
 		
 		//redirect to selectorg with the selected org_key to sign in to the org user
 		res.redirect(307, `/selectorg?org_key=${orgKey}&redirectURL=${req.originalUrl}`);
@@ -59,7 +64,7 @@ router.get('/', wrap(async (req, res) => {
 		const orgs = await utilities.aggregate('orgs', aggPipeline, {allowCache: true});
 		
 		// TODO: currently hard-coded to US English
-		var i18n = await utilities.findOne('i18n',
+		let i18n = await utilities.findOne('i18n',
 			{language: 'en_US'}, {},
 			{allowCache: true}
 		);
@@ -159,9 +164,9 @@ router.get('/usererror', wrap(async (req, res) => {
 }));
 
 // Moved the select-org process into a helper function so I can do it with the standard selectorg and & one which immediately takes you to the login screen
-async function doSelectOrg(req, res, cb) {
+async function doSelectOrg(req: express.Request, res: express.Response, cb: () => void) {
 	
-	var org_key = req.body.org_key || req.query.org_key;
+	let org_key = req.body.org_key || req.query.org_key;
 	logger.debug(`org_key=${org_key}`);
 	
 	//Make sure that form is filled
@@ -171,7 +176,7 @@ async function doSelectOrg(req, res, cb) {
 	}
 	
 	//search for organization in database
-	var selectedOrg = await utilities.findOne('orgs', 
+	let selectedOrg = await utilities.findOne('orgs', 
 		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
@@ -187,7 +192,7 @@ async function doSelectOrg(req, res, cb) {
 	}
 	
 	//Now, sign in to organization's default user
-	var defaultUser = await utilities.findOne('users', 
+	let defaultUser = await utilities.findOne('users', 
 		{org_key: org_key, name: 'default_user'}, {},
 		{allowCache: true}
 	);
