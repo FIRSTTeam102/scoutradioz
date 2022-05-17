@@ -1,6 +1,6 @@
 {
   "name": "@firstteam102/scoutradioz-utilities",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "Database utilities package for Scoutradioz",
   "main": "build/utilities.js",
   "scripts": {
@@ -11,23 +11,25 @@
     "url": "git+https://github.com/firstteam102/ScoringApp-Serverless.git"
   },
   "author": "JL102",
-  "license": "ISC",
+  "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/firstteam102/ScoringApp-Serverless/issues"
   },
   "homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
   "devDependencies": {
     "log4js": "^6.1.2",
-    "mongodb": "^4.5.0"
+    "mongodb": ">=4.1.0"
   },
   "peerDependencies": {
-    "mongodb": "~4.1.0"
+    "mongodb": ">=4.1.0"
   },
   "files": [
     "src",
-    "build"
+    "build",
+	"types",
+	"tsconfig.json"
   ],
-  "types": "types.d.ts",
+  "types": "types/utilities.d.ts",
   "dependencies": {
     "@log4js-node/log4js-api": "^1.0.2",
     "@types/express": "^4.17.13",

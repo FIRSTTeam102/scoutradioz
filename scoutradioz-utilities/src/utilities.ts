@@ -1032,5 +1032,4 @@ export { Document as MongoDocument } from 'mongodb';
 // Other "export" statements export types for utilities.d.ts.
 
 module.exports = Utilities.instance;
-
-// export const utilities = Utilities.instance;
+export default Utilities.instance;

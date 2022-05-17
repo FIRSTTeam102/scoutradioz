@@ -218,3 +218,5 @@ export interface UtilitiesConfig {
     };
 }
 export { Document as MongoDocument } from 'mongodb';
+declare const _default: Utilities;
+export default _default;
