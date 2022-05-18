@@ -55,6 +55,13 @@ export class InternalServerError extends HttpError {
 	}
 }
 
+export class InternalDatabaseError extends HttpError {
+	constructor(message?: string) {
+		super(message || 'Internal Server Error (Database Contents)');
+		this.status = 500;
+	}
+}
+
 export class ServiceUnavailableError extends HttpError {
 	constructor(message?: string) {
 		super(message || 'Service Unavailable');
@@ -70,5 +77,6 @@ module.exports = {
 	TeapotError: TeapotError,
 	TooEarlyError: TooEarlyError,
 	InternalServerError: InternalServerError,
+	InternalDatabaseError: InternalDatabaseError,
 	ServiceUnavailableError: ServiceUnavailableError
 };

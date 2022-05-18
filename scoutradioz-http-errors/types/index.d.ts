@@ -23,6 +23,9 @@ export declare class TooEarlyError extends HttpError {
 export declare class InternalServerError extends HttpError {
     constructor(message?: string);
 }
+export declare class InternalDatabaseError extends HttpError {
+    constructor(message?: string);
+}
 export declare class ServiceUnavailableError extends HttpError {
     constructor(message?: string);
 }
