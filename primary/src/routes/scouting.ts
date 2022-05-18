@@ -1,10 +1,14 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger('scouting');
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
-const e = require('@firstteam102/http-errors');
-const bcrypt = require('bcryptjs');
+import express from 'express';
+import { getLogger } from 'log4js';
+import bcrypt from 'bcryptjs';
+import wrap from '../helpers/express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
+import { MatchScouting, Team, Layout, PitScouting, User } from '@firstteam102/scoutradioz-types';
+import e from '@firstteam102/http-errors';
+
+const router = express.Router();
+const logger = getLogger('scouting');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -19,14 +23,14 @@ router.get('/match*', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match[get]');
 	logger.info('ENTER');
 
-	var eventYear = req.event.year;
-	var thisUser = req.user;
-	var thisUserName = thisUser.name;
-	var match_team_key = req.query.key;
-	var alliance = req.query.alliance;
-	var org_key = req.user.org_key;
-	if (!match_team_key) return res.redirect('/dashboard?alert=No match key was set for scouting.'); // 2022-03-06 JL: Redirect user if they don't have a match key set in the url
-	var teamKey = match_team_key.split('_')[2];
+	let eventYear = req.event.year;
+	let thisUser = req._user;
+	let thisUserName = thisUser.name;
+	let match_team_key = req.query.key;
+	let alliance = req.query.alliance;
+	let org_key = thisUser.org_key;
+	if (typeof match_team_key !== 'string') return res.redirect('/dashboard?alert=Invalid match key set for scouting.'); // 2022-05-17 JL: Redirect user if they don't have a match key set in the url OR if they set two, making it an array
+	let teamKey = match_team_key.split('_')[2];
 	
 	logger.debug(`match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName} teamKey=${teamKey}`);
 	
@@ -37,15 +41,15 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	//check if there is already data for this match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoringdata = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
+	let scoringdata: MatchScouting = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
 		
 	//scouting answers for this match are initialized as null for visibility
-	var answers = null;
+	let answers = null;
 	
 	if( scoringdata && scoringdata[0] ){
 		
 		//if we have data for this match, 
-		var data = scoringdata[0].data;
+		let data = scoringdata[0].data;
 		if(data){
 			logger.debug(`data: ${JSON.stringify(scoringdata[0].data)}`);
 			//set answers to data if exists
@@ -58,9 +62,8 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	//load layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	//var layout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	var layout = await utilities.find('layout', 
-		{org_key: org_key, year: parseInt(eventYear), form_type: 'matchscouting'}, 
+	let layout: Layout[] = await utilities.find('layout', 
+		{org_key: org_key, year: eventYear, form_type: 'matchscouting'}, 
 		{sort: {'order': 1}},
 		{allowCache: true}
 	);
@@ -68,7 +71,7 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
 	
-	const team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 
 	//render page
 	res.render('./scouting/match', {
@@ -87,7 +90,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match/submit[post]');
 	logger.info('ENTER');
 	
-	var thisUser, thisUserName;
+	let thisUser, thisUserName;
 	
 	if(req.user && req.user.name){
 		thisUser = req.user;
@@ -97,13 +100,13 @@ router.post('/match/submit', wrap(async (req, res) => {
 		thisUser = { name: 'Mr. Unknown' };
 		thisUserName = 'Mr. Unknown';
 	}
-	var matchData = req.body;
+	let matchData = req.body;
 	if(!matchData)
 		return res.send({status: 500, message: 'No data was sent to /scouting/match/submit.'});
 	
-	var event_year = req.event.year;
-	var match_team_key = matchData.match_team_key;
-	var org_key = req.user.org_key;
+	let event_year = req.event.year;
+	let match_team_key = matchData.match_team_key;
+	let org_key = req._user.org_key;
 
 	logger.debug('match_key=' + match_team_key + ' ~ thisUserName=' + thisUserName);
 	delete matchData.match_key;
@@ -114,25 +117,28 @@ router.post('/match/submit', wrap(async (req, res) => {
 	// Get the 'layout' so we know types of data elements
 
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	var layout = await utilities.find('layout', 
-		{org_key: org_key, year: parseInt(event_year), form_type: 'matchscouting'}, 
+	let layout: Layout[] = await utilities.find('layout',
+		{org_key: org_key, year: event_year, form_type: 'matchscouting'}, 
 		{sort: {'order': 1}},
 		{allowCache: true}
 	);
 
-	var layoutTypeById = {};
-	//logger.debug("layout=" + JSON.stringify(layout));
+	let layoutTypeById: StringDict = {};
+	logger.debug('layout=' + JSON.stringify(layout));
 	for (let property in layout) {
 		if (layout.hasOwnProperty(property)) {
-			//logger.debug(layout[property].id + " is a " + layout[property].type);
-			layoutTypeById[layout[property].id] = layout[property].type;
+			let thisLayoutItem = layout[property];
+			if (typeof thisLayoutItem.id === 'string') {
+				logger.debug(thisLayoutItem.id + ' is a ' + thisLayoutItem.type);
+				layoutTypeById[thisLayoutItem.id] = thisLayoutItem.type;
+			}
 		}
 	}
 
 	// Process input data, convert to numeric values
 	for (let property in matchData) {
 		if (layoutTypeById.hasOwnProperty(property)) {
-			var thisType = layoutTypeById[property];
+			let thisType = layoutTypeById[property];
 			// 2022-03-22 JL: Moving the data-type parsing into a helper function, which can easily be updated later as more form types are added
 			matchData[property] = matchDataHelper.fixDatumType(matchData[property], thisType);
 			/*
@@ -166,12 +172,12 @@ router.post('/match/submit', wrap(async (req, res) => {
 	await utilities.update('matchscouting', { 'org_key': org_key, 'match_team_key' : match_team_key }, { $set: { 'data' : matchData, 'actual_scorer': thisUserName, useragent: req.shortagent } });
 
 	// Simply to check if the user is assigned (2022-03-24 JL)
-	const oneAssignedMatch = await utilities.findOne('matchscouting', {
+	const oneAssignedMatch: MatchScouting = await utilities.findOne('matchscouting', {
 		org_key: org_key, 
 		event_key: req.event.key, 
 		assigned_scorer: thisUserName
 	});
-	var assigned = !!oneAssignedMatch;
+	let assigned = !!oneAssignedMatch;
 	
 	return res.send({message: 'Submitted data successfully.', status: 200, assigned: assigned});
 }));
@@ -180,36 +186,35 @@ router.get('/pit*', wrap(async (req, res) => {
 	logger.addContext('funcName', 'pit[get]');
 	logger.info('ENTER');
 	
-	var uploadURL = process.env.UPLOAD_URL + '/' + process.env.TIER + '/image';
+	let uploadURL = process.env.UPLOAD_URL + '/' + process.env.TIER + '/image';
 	
 	//Add event key and pit data to get pit function
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	let event_key = req.event.key;
+	let event_year = req.event.year;
+	let org_key = req._user.org_key;
 
-	var teamKey = req.query.team_key;
-	if (!teamKey) {
-		throw new e.UserError('Team key is not defined.');
-	}
+	let teamKey = req.query.team_key;
 	
+	if (typeof teamKey !== 'string') throw new e.UserError('Team key is either not defined or invalid.');
+		
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
 	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
-	var layout = await utilities.find('layout', 
+	let layout: Layout[] = await utilities.find('layout', 
 		{org_key: org_key, year: event_year, form_type: 'pitscouting'}, 
 		{sort: {'order': 1}},
 		{allowCache: true}
 	);
 	
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	var pitFind = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
-	var pitData = null;
+	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
+	let pitData = null;
 	if (pitFind && pitFind[0])
 		if (pitFind[0].data)
 			pitData = pitFind[0].data;
-	
+			
 	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
 	
-	const team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	
 	res.render('./scouting/pit', {
 		title: 'Pit Scouting',
@@ -227,17 +232,17 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	logger.addContext('funcName', 'pit/submit[post]');
 	logger.info('ENTER');
 	
-	var thisUser = req.user;
-	var thisUserName = thisUser.name;
+	let thisUser = req._user;
+	let thisUserName = thisUser.name;
 	
-	var pitData = req.body;
-	var teamKey = pitData.teamkey;
+	let pitData = req.body;
+	let teamKey = pitData.teamkey;
 	delete pitData.teamkey;
 	logger.debug('teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
 	logger.debug('pitData=' + JSON.stringify(pitData));
 
-	var event_key = req.event.key;
-	var org_key = req.user.org_key;
+	let event_key = req.event.key;
+	let org_key = thisUser.org_key;
 
 	// TODO: Verify pit data against layout, to avoid malicious/bogus data inserted into db?
 
@@ -262,17 +267,18 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 	
 	const password = req.body.password;
 	const match_team_key = req.body.match_team_key;
-	const org_key = req.user.org_key;
+	const thisUser = req._user;
+	const org_key = thisUser.org_key;
 	
-	const user = await utilities.findOne('users', {_id: req.user._id});
+	const user: User = await utilities.findOne('users', {_id: thisUser._id});
 	
-	logger.info(`User ${req.user.name} is requesting to delete scouting data for match ${match_team_key}!`);
+	logger.info(`User ${thisUser.name} is requesting to delete scouting data for match ${match_team_key}!`);
 	
 	const comparison = await bcrypt.compare(password, user.password);
 	
 	if (comparison === true) {
 		
-		let entry = await utilities.findOne('matchscouting', {org_key: org_key, match_team_key: match_team_key});
+		let entry: MatchScouting = await utilities.findOne('matchscouting', {org_key: org_key, match_team_key: match_team_key});
 		if (entry) {
 			if (entry.data)
 				logger.info(`Previous data: ${JSON.stringify(entry.data)}`);

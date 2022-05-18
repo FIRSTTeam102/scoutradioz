@@ -242,7 +242,7 @@ class UseFunctions {
 		req.event = {
 			key: 'undefined',
 			name: 'undefined',
-			year: 'undefined',
+			year: -1,
 			timezone: 'UTC',
 		};
 		
@@ -259,7 +259,7 @@ class UseFunctions {
 	
 		//sets locals to no event defined just in case we don't find thing and we can just do next();
 		let eventKey = 'No event defined';
-		let eventYear: string|number = 'No year defined';
+		let eventYear = -1;
 		res.locals.eventName = eventKey;
 		res.locals.url = req.url;
 		

@@ -68,7 +68,7 @@ declare namespace Express {
 		event: {
 			key: string;
 			name: string;
-			year: string|number;
+			year: number;
 			timezone: string;
 		}
 		

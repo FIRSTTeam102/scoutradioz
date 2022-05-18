@@ -171,8 +171,8 @@ app.use('/admin/sync', sync);
 //USER ROUTES
 let index = require('./routes/index');
 let user = require('./routes/user');
-let dashboard = require('../build_tmp/routes/dashboard');
-let scouting = require('../build_tmp/routes/scouting');
+let dashboard = require('./routes/dashboard');
+let scouting = require('./routes/scouting');
 let reports = require('../build_tmp/routes/reports');
 let notifications = require('../build_tmp/routes/notifications');
 let share = require('../build_tmp/routes/share.js');
