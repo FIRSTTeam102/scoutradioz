@@ -78,13 +78,13 @@ export declare interface AllianceStatsData {
      * @param {array} avgNorms
      * @param {array} maxNorms
      */
-    teams?: string;
-    teamList?: string[];
-    currentAggRanges?: AggRange[];
-    avgTable?: MetricRow[];
-    maxTable?: MetricRow[];
-    avgNorms?: MetricRow[];
-    maxNorms?: MetricRow[];
+    teams: string;
+    teamList: string[];
+    currentAggRanges: AggRange[];
+    avgTable: MetricRow[];
+    maxTable: MetricRow[];
+    avgNorms: MetricRow[];
+    maxNorms: MetricRow[];
 }
 export declare interface MetricRow {
     key: string;
