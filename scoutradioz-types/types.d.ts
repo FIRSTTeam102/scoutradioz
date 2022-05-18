@@ -336,6 +336,7 @@ export declare interface Role {
 export declare interface ScoutingPair {
 	member1: string;
 	member2: string;
+	member3?: string;
 	org_key: OrgKey;
 }
 

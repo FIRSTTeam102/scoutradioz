@@ -19,7 +19,26 @@ declare global {
 		bgBrightWhite: string,
 	}
 	
+	/**
+	 * Key-value object holding strings.
+	 */
 	interface StringDict {
 		[key: string]: string;
+	}
+	
+	/**
+	 * Key-value object holding numbers.
+	 */
+	interface NumericalDict {
+		[key: string]: number;
+	}
+	
+	/**
+	 * Generic key-value object with a declared type. 
+	 * @example var teamKeyMap: Dict<Team> = {}; 
+	 * teamKeyMap['team0'] = teams[0];
+	 */
+	interface Dict<T> {
+		[key: string]: T;
 	}
 }

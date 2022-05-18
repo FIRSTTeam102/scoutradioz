@@ -1,11 +1,14 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger('dashboard');
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const {upload: uploadHelper, matchData: matchDataHelper} = require('@firstteam102/scoutradioz-helpers');
-const e = require('@firstteam102/http-errors');
-//const matchDataHelper = require('../../scoutradioz-helpers/helpers/matchdatahelper');
-//const uploadHelper = require('../../scoutradioz-helpers/helpers/uploadhelper');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../helpers/express-async-handler';
+import { Document } from 'mongodb';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
+import { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from '@firstteam102/scoutradioz-types';
+import e from '@firstteam102/http-errors';
+
+const router = express.Router();
+const logger = getLogger('dashboard');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -20,19 +23,20 @@ router.get('/driveteam', wrap(async (req, res) => {
 	logger.addContext('funcName', 'driveteam[get]');
 	logger.info('ENTER');
 	
-	var eventKey = req.event.key;
-	var eventYear = req.event.year;
-	var orgKey = req.user.org_key;
-	var teamKey;
-	var noMatchesFoundForTeam = false; // 2022-03-02 JL: To let view know if matches were not found for the team
+	let eventKey = req.event.key;
+	let eventYear = req.event.year;
+	let thisUser = req._user;
+	let orgKey = thisUser.org_key;
+	let teamKey;
+	let noMatchesFoundForTeam = false; // 2022-03-02 JL: To let view know if matches were not found for the team
 	
 	//set teamKey to query or org default
 	// 2022-03-16 JL: Adding an "all" button
-	if (req.query.team_key && !req.query.all) {
+	if (typeof req.query.team_key === 'string' && !req.query.all) {
 		teamKey = req.query.team_key;
 	}
-	else if (req.user.org.team_key && !req.query.all) {
-		teamKey = req.user.org.team_key;
+	else if (thisUser.org.team_key && !req.query.all) {
+		teamKey = thisUser.org.team_key;
 	}
 	else {
 		teamKey = 'all';
@@ -41,10 +45,10 @@ router.get('/driveteam', wrap(async (req, res) => {
 	logger.debug(`eventKey=${eventKey} orgKey=${orgKey} teamKey=${teamKey}`);
 	
 	// Get upcoming match data for the specified team (or "all" if no default & none specified)
-	var upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey, orgKey);
+	let upcomingData = await matchDataHelper.getUpcomingMatchData(eventKey, teamKey, orgKey);
 	
 	// Pull out the first match (if it exists), get the team keys from the alliances
-	var matches = upcomingData.matches;
+	let matches = upcomingData.matches;
 	
 	// 2022-03-02 JL: Don't want to throw an error if the current team has no matches; Instead, default to "all"
 	if (!matches || !matches[0] && teamKey !== 'all') {
@@ -63,32 +67,32 @@ router.get('/driveteam', wrap(async (req, res) => {
 	}
 	
 	// Data for the upcoming matches portion
-	var teamRanks = upcomingData.teamRanks;
-	var teamNumbers = upcomingData.teamNumbers;
+	let teamRanks = upcomingData.teamRanks;
+	let teamNumbers = upcomingData.teamNumbers;
 	
-	var firstMatch = matches[0];
+	let firstMatch = matches[0];
 	
 	//2020-03-27 JL: Simplified the way teamKeyList was made
-	var redArray = firstMatch.alliances.red.team_keys; 
-	var blueArray = firstMatch.alliances.blue.team_keys; 
-	var teamKeyList;
+	let redArray = firstMatch.alliances.red.team_keys; 
+	let blueArray = firstMatch.alliances.blue.team_keys; 
+	let teamKeyList;
 	teamKeyList = redArray.join(',');
 	teamKeyList += ',0,';
 	teamKeyList += blueArray.join(',');
 	logger.debug(`teamKeyList=${teamKeyList}`);
 	
 	// Get the alliance stats
-	var allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamKeyList, req.cookies);
+	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamKeyList, req.cookies);
 
 	//var teams = allianceStatsData.teams;
-	var teamList = allianceStatsData.teamList;
-	var currentAggRanges = allianceStatsData.currentAggRanges;
-	var avgTable = allianceStatsData.avgTable;
-	var maxTable = allianceStatsData.maxTable;
-	var avgNorms = allianceStatsData.avgNorms;
-	var maxNorms = allianceStatsData.maxNorms;
+	let teamList = allianceStatsData.teamList;
+	let currentAggRanges = allianceStatsData.currentAggRanges;
+	let avgTable = allianceStatsData.avgTable;
+	let maxTable = allianceStatsData.maxTable;
+	let avgNorms = allianceStatsData.avgNorms;
+	let maxNorms = allianceStatsData.maxNorms;
 
-	var dataForChartJS = {
+	let dataForChartJS: ChartJSData = {
 		labels: [],
 		items: {
 			red: [
@@ -127,9 +131,9 @@ router.get('/driveteam', wrap(async (req, res) => {
 			]
 		},
 		datasets: {
-			avg: {red: [], blue: []},
-			max: {red: [], blue: []},
-			sum: {red: [], blue: []},
+			avg: {red: [[], [], []], blue: [[], [], []]},
+			max: {red: [[], [], []], blue: [[], [], []]},
+			sum: {red: [[], [], []], blue: [[], [], []]},
 		},
 		options: {
 			scales: {
@@ -152,39 +156,38 @@ router.get('/driveteam', wrap(async (req, res) => {
 		}
 	};
 	
-	// eslint-disable-next-line guard-for-in
-	for (let i in dataForChartJS.datasets) {
-		let set = dataForChartJS.datasets[i];
-		for (let i = 0; i < 3; i++ ) {
-			set.red[i] = [];
-			set.blue[i] = [];
-		}
-	}
+	// for (let i in dataForChartJS.datasets) {
+	// 	let set = dataForChartJS.datasets[i];
+	// 	for (let i = 0; i < 3; i++ ) {
+	// 		set.red[i] = [];
+	// 		set.blue[i] = [];
+	// 	}
+	// }
 	
 	//Populate labels array
 	for (let agg of avgTable) {
 		if (agg.hasOwnProperty('key')) {
-			var text = agg.key.replace( /([A-Z])/g, ' $1' ); 
-			var label = (text.charAt(0).toUpperCase() + text.slice(1)).split(' ');
+			let text = agg.key.replace( /([A-Z])/g, ' $1' ); 
+			let label = (text.charAt(0).toUpperCase() + text.slice(1)).split(' ');
 			dataForChartJS.labels.push(label);
-			// console.log(agg);
+			console.log(label, agg);
 		}
 	}
 	
 	//Avg norms
 	for (let agg of avgNorms) {
-		for (let i in teamList) {
+		for (let i = 0; i < teamList.length; i++) {
 			if (agg.hasOwnProperty(teamList[i])) {
 				let team = teamList[i];
 				//red
 				if (i < 3) {
-					let thisDatum = agg[team];
+					let thisDatum = parseFloat(agg[team]);
 					dataForChartJS.datasets.avg.red[i].push(thisDatum * 100);
 					// 2022-03-19 JL: Multiplying the data by 100 to show them as a sort of percent
 				}
 				//blue
 				else {
-					let thisDatum = agg[team];
+					let thisDatum = parseFloat(agg[team]);
 					dataForChartJS.datasets.avg.blue[i - 4].push(thisDatum * 100);
 				}
 			}
@@ -192,17 +195,17 @@ router.get('/driveteam', wrap(async (req, res) => {
 	}
 	//Max norms
 	for (let agg of maxNorms) {
-		for (let i in teamList) {
+		for (let i = 0; i < teamList.length; i++) {
 			if (agg.hasOwnProperty(teamList[i])) {
 				let team = teamList[i];
 				//red
 				if (i < 3) {
-					let thisDatum = agg[team];
+					let thisDatum = parseFloat(agg[team]);
 					dataForChartJS.datasets.max.red[i].push(thisDatum * 100);
 				}
 				//blue
 				else {
-					let thisDatum = agg[team];
+					let thisDatum = parseFloat(agg[team]);
 					dataForChartJS.datasets.max.blue[i - 4].push(thisDatum * 100);
 				}
 			}
@@ -242,19 +245,19 @@ router.get('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[get]');
 	logger.info('ENTER');
 	
-	var thisUser = req.user;
-	var thisUserName = thisUser.name;
-	var org_key = req.user.org_key;
+	let thisUser = req._user;
+	let thisUserName = thisUser.name;
+	let org_key = thisUser.org_key;
 
 	// for later querying by event_key
-	var eventKey = req.event.key;
+	let eventKey = req.event.key;
 
 	// start by assuming this user has no assignments
-	var noAssignments = true;
+	let noAssignments = true;
 
 	// Check to see if the logged in user is one of the scouting/scoring assignees
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	var assignedTeams = await utilities.find('pitscouting', {
+	let assignedTeams: PitScouting[] = await utilities.find('pitscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
 		'primary': thisUserName
@@ -264,7 +267,7 @@ router.get('/', wrap(async (req, res) => {
 
 	// 2020-03-07, M.O'C: Allowing for scouts assigned to matches but NOT to pits
 	if (assignedTeams.length == 0) {
-		var assignedMatches = await utilities.find('matchscouting', {
+		let assignedMatches: MatchScouting[] = await utilities.find('matchscouting', {
 			org_key: org_key, 
 			event_key: eventKey, 
 			assigned_scorer: thisUserName
@@ -279,26 +282,28 @@ router.get('/', wrap(async (req, res) => {
 	//if (assignedTeams.length == 0) {
 	if (noAssignments) {
 		logger.debug('User \'' + thisUserName + '\' has no assigned teams');
-		res.redirect('./dashboard/unassigned');
+		let alert = req.query.alert; // in case they were sent to the dashboard with an alert
+		let redirect = req.getURLWithQueryParameters('/dashboard/unassigned', {alert: alert});
+		res.redirect(redirect);
 		return;
 	}
-	for (var assignedIdx = 0; assignedIdx < assignedTeams.length; assignedIdx++)
+	for (let assignedIdx = 0; assignedIdx < assignedTeams.length; assignedIdx++)
 		logger.trace('assignedTeam[' + assignedIdx + ']=' + assignedTeams[assignedIdx].team_key + '; data=' + assignedTeams[assignedIdx].data);
 
 	// Get their scouting team
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
-	var pairsData = await utilities.find('scoutingpairs', { 'org_key': org_key, 
+	let pairsData: ScoutingPair[] = await utilities.find('scoutingpairs', { 'org_key': org_key, 
 		$or:
 			[{'member1': thisUserName},
 				{'member2': thisUserName},
 				{'member3': thisUserName}]
 	}, {});
 
-	var backupTeams = [];
-	var thisPairLabel = 'Not assigned to pit scouting';
+	let backupTeams: PitScouting[] = [];
+	let thisPairLabel = 'Not assigned to pit scouting';
 	if (pairsData.length > 0) {
 		// we assume they're in a pair!
-		var thisPair = pairsData[0];
+		let thisPair = pairsData[0];
 		
 		//Sets up pair label
 		thisPairLabel = thisPair.member1;
@@ -320,35 +325,35 @@ router.get('/', wrap(async (req, res) => {
 		});
 			
 		//logs backup teams to console
-		for (var backupIdx = 0; backupIdx < backupTeams.length; backupIdx++)
+		for (let backupIdx = 0; backupIdx < backupTeams.length; backupIdx++)
 			logger.trace('backupTeam[' + backupIdx + ']=' + backupTeams[backupIdx].team_key);
 	}
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matchDocs = await utilities.find('matches', {
+	let matchDocs: Match[] = await utilities.find('matches', {
 		event_key: eventKey, 
 		'alliances.red.score': -1
 	},{
 		sort: {'time': 1}
 	});
 		
-	var earliestTimestamp = 9999999999;
+	let earliestTimestamp = 9999999999;
 	if (matchDocs && matchDocs[0]){
-		var earliestMatch = matchDocs[0];
+		let earliestMatch = matchDocs[0];
 		earliestTimestamp = earliestMatch.time;
 	}
 
 	// 2018-04-05, M.O'C - Adding 'predicted time' to a map for later enriching of 'scoreData' results
-	var matchLookup = {};
+	let matchLookup: Dict<Match> = {};
 	if (matchDocs)
-		for (var matchIdx = 0; matchIdx < matchDocs.length; matchIdx++) {
+		for (let matchIdx = 0; matchIdx < matchDocs.length; matchIdx++) {
 			//logger.debug('associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
 			matchLookup[matchDocs[matchIdx].key] = matchDocs[matchIdx];
 		}
 		
 	// Get all the UNRESOLVED matches where they're set to score
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoringMatches = await utilities.find('matchscouting', {
+	let scoringMatches: MatchScouting[] = await utilities.find('matchscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
 		'assigned_scorer': thisUserName, 
@@ -358,10 +363,10 @@ router.get('/', wrap(async (req, res) => {
 		sort: {'time': 1} 
 	});
 
-	for (var matchesIdx = 0; matchesIdx < scoringMatches.length; matchesIdx++)
+	for (let matchesIdx = 0; matchesIdx < scoringMatches.length; matchesIdx++)
 		logger.trace('scoringMatch[' + matchesIdx + ']: num,team=' + scoringMatches[matchesIdx].match_number + ',' + scoringMatches[matchesIdx].team_key);
 
-	for (var scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
+	for (let scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoringMatches[scoreIdx] && scoringMatches[scoreIdx] && matchLookup[scoringMatches[scoreIdx].match_key])
 			scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
@@ -399,9 +404,10 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	logger.addContext('funcName', 'allianceselection[get]');
 	logger.info('ENTER');
 	
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	let event_key = req.event.key;
+	let event_year = req.event.year;
+	let thisUser = req._user;
+	let org_key = thisUser.org_key;
 	
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// 2019-11-11 JL: Put everything inside a try/catch block with error conditionals throwing
@@ -409,11 +415,11 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 		//var rankings = await utilities.find("currentrankings", {}, {});
-		var rankings = await utilities.find('rankings', {'event_key': event_key}, {});
+		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
 		if(!rankings[0])
 			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
 		
-		var alliances = [];
+		let alliances = [];
 		for(let i = 0; i < 8; i++){
 			alliances[i] = {
 				team1: rankings[i].team_key,
@@ -422,35 +428,37 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			};
 		}
 			
-		var rankMap = {};
-		for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+		let rankMap: Dict<Ranking> = {};
+		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
 			//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 			rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 		}
 	
 		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-		var cookie_key = org_key + '_' + event_year + '_cols';
-		var colCookie = req.cookies[cookie_key];
-		var scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+		let cookie_key = org_key + '_' + event_year + '_cols';
+		let colCookie = req.cookies[cookie_key];
+		let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 			
 		if(!scoreLayout[0])
 			throw 'Couldn\'t find scoringlayout in allianceselection';
 		
 		//initialize aggQuery
-		var aggQuery = [];
+		let aggQuery = [];
 		//add $match > event_key
 		aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
 
 		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
 		//get the alpha from the process.env
-		var emaAlpha = parseFloat(process.env.EMA_ALPHA);
+		if (!process.env.EMA_ALPHA) throw new e.InternalServerError('EMA_ALPHA not set!');
+		let emaAlpha = parseFloat(process.env.EMA_ALPHA);
+		
 		//initialize setWindowFieldsClause
-		var setWindowFieldsClause = {};
+		let setWindowFieldsClause: Document = {};
 		setWindowFieldsClause['partitionBy'] = '$team_key';
-		var sortField = {};
+		let sortField: Document = {};
 		sortField['time'] = 1;
 		setWindowFieldsClause['sortBy'] = sortField;
-		var outputClause = {};
+		let outputClause: Document = {};
 		//iterate through scoringlayout
 		for (let scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
 			//pull this layout element from score layout
@@ -459,8 +467,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			scoreLayout[scoreIdx] = thisLayout;
 			//if it is a valid data type, add this layout's ID to groupClause
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-				let thisEMAclause = {};
-				let thisEMAinner = {};
+				let thisEMAclause: Document = {};
+				let thisEMAinner: Document = {};
 				thisEMAinner['alpha'] = emaAlpha;
 				thisEMAinner['input'] = '$data.' + thisLayout.id;
 				thisEMAclause['$expMovingAvg'] = thisEMAinner;
@@ -472,7 +480,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 		
 		//initialize groupClause
-		var groupClause = {};
+		let groupClause: Document = {};
 		//group teams for 1 row per team
 		groupClause['_id'] = '$team_key';
 		
@@ -515,19 +523,19 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		
 		//Aggregate with this query we made
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-		var aggArray = await utilities.aggregate('matchscouting', aggQuery);
+		let aggArray = await utilities.aggregate('matchscouting', aggQuery);
 		if(!aggArray[0])
 			throw 'Couldn\'t find scoringdata in allianceselection';
 		
 		// Rewrite data into display-friendly values
-		for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+		for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
 			//get thisAgg
-			var thisAgg = aggArray[aggIdx];
+			let thisAgg = aggArray[aggIdx];
 			for (let scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
 				let thisLayout = scoreLayout[scoreIdx];
 				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-					var roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-					var roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+					let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+					let roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
 					thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 					thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 				}
@@ -538,7 +546,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			}
 		}
 		//quick sort by rank
-		aggArray.sort(function(a,b){
+		aggArray.sort((a: { rank: number; }, b: { rank: number; }) => {
 			let aNum = a.rank;
 			let bNum = b.rank;
 			if( aNum < bNum ){
@@ -547,29 +555,29 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			if( aNum > bNum ){
 				return 1;
 			}
+			return 0;
 		});
 		
-		var sortedTeams = [];
+		let sortedTeams: Array<{rank: number, team_key: TeamKey}> = [];
 		for(let i = 8; i < rankings.length; i++){
 			sortedTeams[i - 8] = {
 				rank: rankings[i].rank,
 				team_key: rankings[i].team_key
 			};
 		}
-		sortedTeams.sort(function(a,b){
+		sortedTeams.sort((a, b) => {
 			if(a && b){
 				let aNum = parseInt(a.team_key.substring(3));
 				let bNum = parseInt(b.team_key.substring(3));
-				if( aNum < bNum ){
+				if ( aNum < bNum )
 					return -1;
-				}
-				if( aNum > bNum ){
+				if ( aNum > bNum )
 					return 1;
-				}
+				else 
+					return 0;
 			}
-			else{
+			else
 				return 1;
-			}
 		});
 		
 		logger.trace(sortedTeams);
@@ -577,7 +585,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges
 		// var currentAggRanges = await utilities.find("currentaggranges", {}, {});
-		var currentAggRanges = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
+		let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
 	
 		//logger.debug('aggArray=' + JSON.stringify(aggArray));
 		res.render('./dashboard/allianceselection', {
@@ -602,18 +610,18 @@ router.get('/pits', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	// are we asking for pictures?
-	var loadPhotos = req.query.loadPhotos;
+	let loadPhotos = req.query.loadPhotos;
 
 	// for later querying by event_key
-	var event_year = req.event.year;
-	var event_key = req.event.key;
-	var org_key = req.user.org_key;
+	let event_year = req.event.year;
+	let event_key = req.event.key;
+	let org_key = req._user.org_key;
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	var teams = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
+	let teamAssignments: PitScouting[] = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
 		
 	//sort teams list by number
-	teams.sort(function(a, b) {
+	teamAssignments.sort(function(a, b) {
 		let aNum = parseInt(a.team_key.substring(3));
 		let bNum = parseInt(b.team_key.substring(3));
 		return aNum - bNum;
@@ -621,11 +629,11 @@ router.get('/pits', wrap(async (req, res) => {
 	
 	// read in team list for data
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	var thisEvent = await utilities.findOne('events', 
+	let thisEvent: Event = await utilities.findOne('events', 
 		{'key': event_key}, {},
 		{allowCache: true}
 	);
-	var teamArray = [];
+	let teamArray: Team[] = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
 
 		logger.debug('thisEvent.team_keys=' + JSON.stringify(thisEvent.team_keys));
@@ -636,35 +644,38 @@ router.get('/pits', wrap(async (req, res) => {
 	}
 
 	// Build map of team_key -> team data
-	var teamKeyMap = {};
+	let teamKeyMap: Dict<Team> = {};
 	for (let teamIdx = 0; teamIdx < teamArray.length; teamIdx++) {
 		//logger.debug('teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
 	// Add data to 'teams' data
-	for (let teamIdx = 0; teamIdx < teams.length; teamIdx++) {
+	for (let teamIdx = 0; teamIdx < teamAssignments.length; teamIdx++) {
 		// logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
-		if (!teamKeyMap[teams[teamIdx].team_key]) {
-			throw new e.InternalServerError(`Couldn't find details for team ${teams[teamIdx].team_key}. Has the team list changed since you created the scouting assignments?`);
+		if (!teamKeyMap[teamAssignments[teamIdx].team_key]) {
+			throw new e.InternalServerError(`Couldn't find details for team ${teamAssignments[teamIdx].team_key}. Has the team list changed since you created the scouting assignments?`);
 		}
-		teams[teamIdx].nickname = teamKeyMap[teams[teamIdx].team_key].nickname;
+		// 2022-05-18 JL: Passing teamKeyMap to view instead of adding nickname to the teamAssignments object
+		//	we can still use this loop to guarantee that the pug won't encounter an error
+		// teamAssignments[teamIdx].nickname = teamKeyMap[teams[teamIdx].team_key].nickname;
 	}
 	//Add a call to the database for populating menus in pit scouting
-	var teamKeys = [];
-	for (var team of teamArray) {
+	let teamKeys = [];
+	for (let team of teamArray) {
 		if (team.hasOwnProperty('key')) teamKeys.push(team.key);
 	}
 	
-	var images;
+	let images;
 	
-	if (loadPhotos == true) {
+	if (loadPhotos) {
 		images = await uploadHelper.findTeamImagesMultiple(org_key, event_year, teamKeys);
 	}
 	
 	res.render('./dashboard/pits', {
 		title: 'Pit Scouting',
-		teamAssignments: teams,
+		teamAssignments: teamAssignments,
+		teamKeyMap: teamKeyMap,
 		images: images
 	});	
 }));
@@ -674,25 +685,25 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.info('ENTER');
 
 	// for later querying by event_key
-	var eventKey = req.event.key;
-	var org_key = req.user.org_key;
+	let eventKey = req.event.key;
+	let org_key = req._user.org_key;
 
 	logger.info('ENTER org_key=' + org_key + ',eventKey=' + eventKey);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	var earliestTimestamp = 9999999999;
+	let earliestTimestamp = 9999999999;
 	if (matches && matches[0]) {
-		var earliestMatch = matches[0];
+		let earliestMatch = matches[0];
 		earliestTimestamp = earliestMatch.time;
 	}
 	
 	// 2018-04-05, M.O'C - Adding 'predicted time' to a map for later enriching of 'scoreData' results
-	var matchLookup = {};
+	let matchLookup: Dict<Match> = {};
 	if (matches)
-		for (var matchIdx = 0; matchIdx < matches.length; matchIdx++) {
+		for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
 			//logger.debug('associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
 			matchLookup[matches[matchIdx].key] = matches[matchIdx];
 		}
@@ -702,14 +713,14 @@ router.get('/matches', wrap(async (req, res) => {
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2022-03-17 JL: Reversed alliance sorting order to show red first
-	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 60, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 60, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
 
 	if(!scoreData)
 		return logger.error('mongo error at dashboard/matches');
 
 	logger.debug('scoreData.length=' + scoreData.length);
 
-	for (var scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
+	for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key])
 			scoreData[scoreIdx].predicted_time = matchLookup[scoreData[scoreIdx].match_key].predicted_time;
@@ -718,18 +729,18 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.trace('DEBUG getting nicknames next?');
 
 	// read in team list for data
-	var teamArray = req.teams; // 2022-03-13 JL: Removed copied code for identifying the current event & teams
+	let teamArray = req.teams; // 2022-03-13 JL: Removed copied code for identifying the current event & teams
 	
 	if (!teamArray) throw new e.InternalServerError('Could not find list of teams at this event. Please ask your organization manager to update the list of current teams.');
 	
 	// Build map of team_key -> team data
-	var teamKeyMap = {};
-	for (var teamIdx = 0; teamIdx < teamArray.length; teamIdx++) {
+	let teamKeyMap: Dict<Team> = {};
+	for (let teamIdx = 0; teamIdx < teamArray.length; teamIdx++) {
 		//logger.debug('teamIdx=' + teamIdx + ', teamArray[]=' + JSON.stringify(teamArray[teamIdx]));
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 	
-	for(var i in scoreData) {
+	for(let i in scoreData) {
 		if (teamKeyMap[scoreData[i].team_key]) {
 			scoreData[i].team_nickname = teamKeyMap[scoreData[i].team_key].nickname;
 		}
@@ -746,3 +757,36 @@ router.get('/matches', wrap(async (req, res) => {
 }));
 
 module.exports = router;
+
+interface ChartJSData {
+	datasets: {
+		avg: AllianceDataSet;
+		max: AllianceDataSet;
+		sum: AllianceDataSet;
+	};
+	items: {
+		blue: ChartJSItem[];
+		red: ChartJSItem[];
+	}
+	labels: string[][];
+	options: unknown;
+}
+
+interface AllianceDataSet {
+	blue: [
+		number[],
+		number[],
+		number[]
+	];
+	red: [
+		number[],
+		number[],
+		number[]
+	]
+}
+
+interface ChartJSItem {
+	label: string;
+	backgroundColor: string;
+	borderColor: string;
+}

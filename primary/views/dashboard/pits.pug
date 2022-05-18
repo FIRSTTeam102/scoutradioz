@@ -32,7 +32,7 @@ block content
 								div(class="gear-btn theme-link w3-btn w3-section")
 									span= team.team_key.substring(3)
 					td(class='w3-left-align theme-spacer')
-						h4(class=`${style}`) #{team.nickname}
+						h4(class=`${style}`) #{teamKeyMap[team.team_key].nickname}
 					if images
 						td(class="theme-spacer")
 							//- console.log(images[i])
