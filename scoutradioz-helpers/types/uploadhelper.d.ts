@@ -1,10 +1,11 @@
-import { Utilities, Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-utilities';
+import { Utilities } from '@firstteam102/scoutradioz-utilities';
+import { Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-types';
 export declare class UploadHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
      * @param {Utilities} utilitiesModule
      */
-    config(utilitiesModule: Utilities): void;
+    static config(utilitiesModule: Utilities): void;
     /**
      * Find upload links for a given team.
      * @param {string} orgKey org_key
@@ -12,13 +13,13 @@ export declare class UploadHelper {
      * @param {string} teamKey team_key
      * @returns {ImageLinks} Links to images
      */
-    findTeamImages(orgKey: OrgKey, year: number, teamKey: TeamKey): Promise<TeamImages>;
+    static findTeamImages(orgKey: OrgKey, year: number, teamKey: TeamKey): Promise<TeamImages>;
     /**
      * Return ImageLinks from an upload object.
      * @param {object} upload Upload object from database.
      * @returns {ImageLinks} Links to images
      */
-    getLinks(upload: Upload): ImageLinks;
+    static getLinks(upload: Upload): ImageLinks;
     /**
      * Find upload links for a given team.
      * @param {string} orgKey org_key
@@ -26,8 +27,9 @@ export declare class UploadHelper {
      * @param {array} teamKeys Array of team_keys
      * @returns {ImageLinks[]} Links to images
      */
-    findTeamImagesMultiple(orgKey: OrgKey, year: number, teamKeys: TeamKey[]): Promise<TeamImages[]>;
+    static findTeamImagesMultiple(orgKey: OrgKey, year: number, teamKeys: TeamKey[]): Promise<TeamImages[]>;
 }
+export default UploadHelper;
 export interface ImageLinks {
     sm?: string;
     md?: string;
