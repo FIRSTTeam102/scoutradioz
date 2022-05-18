@@ -54,14 +54,14 @@
 	},
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@firstteam102/http-errors": "^1.0.4",
-		"@firstteam102/scoutradioz-helpers": "^1.1.0",
-		"@firstteam102/scoutradioz-types": "^1.0.0-test1",
-		"@firstteam102/scoutradioz-utilities": "^1.2.1-test7",
+		"@firstteam102/connect-mongo": "~4.6.1-test1",
+		"@firstteam102/http-errors": "^1.0.7",
+		"@firstteam102/scoutradioz-helpers": "^1.1.1",
+		"@firstteam102/scoutradioz-types": "^1.0.0",
+		"@firstteam102/scoutradioz-utilities": "^1.2.2",
 		"aws-serverless-express": "^3.4.0",
 		"bcryptjs": "^2.4.3",
 		"colors": "^1.4.0",
-		"@firstteam102/connect-mongo": "~4.6.1-test1",
 		"cookie-parser": "^1.4.6",
 		"dotenv": "^8.2.0",
 		"express": "^4.17.1",
@@ -75,11 +75,6 @@
 		"pug": "^3.0.2",
 		"serve-favicon": "^2.5.0",
 		"web-push": "^3.4.5"
-	},
-	"devDependencies": {
-		"@types/express": "^4.17.13",
-		"@types/jquery": "3.5.14",
-		"@types/node": "^17.0.23"
 	},
 	"nodemonConfig": {
 		"ignore": [

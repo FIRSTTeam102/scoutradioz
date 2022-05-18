@@ -105,18 +105,24 @@ class UseFunctions {
 			}
 		}
 		req.localeString = localeString;
+		
+		// JL: See the JSDoc note in namespace-extensions.d.ts
+		if (req.user) req._user = req.user;
 	
 		next();
 	}
 	
 	static authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
 	
-		let authenticate = async function (accessLevel: string) {
-			
-			let isAuthenticated = false;
+		req.authenticate = async function (accessLevel: string|number|undefined) {
 			
 			//Parse number from accessLevel
-			let accessLevelNum = parseInt( accessLevel );
+			let accessLevelNum;
+			if (typeof accessLevel === 'string') accessLevelNum = parseInt( accessLevel );
+			else if (typeof accessLevel === 'number') accessLevelNum = accessLevel;
+			else throw new e.InternalServerError('req.authenticate: accessLevel is not defined');
+			
+			let isAuthenticated = false;
 			
 			//Throw if access level is not a valid number (Programming error)
 			if( isNaN(accessLevelNum) ) throw new Error('req.authenticate: Access level is not a number (Check naming of process.env.ACCESS_X)');
@@ -148,18 +154,11 @@ class UseFunctions {
 			}
 			// If user is undefined, then send them to the index page to select an organization
 			else {
-				
 				res.redirect(`/?rdr=${redirect}`);
 			}
 			
 			return isAuthenticated;
 		};
-		
-		//write authenticate function to req
-		Object.defineProperty(req, 'authenticate', {
-			value: authenticate,
-			writable: false
-		});
 		
 		next();
 	}
@@ -467,6 +466,7 @@ class UseFunctions {
 			case 500:
 				title = 'Error';
 				statusMessage = 'Internal Server Error';
+				// if (err instanceof e.InternalDatabaseError) statusMessage += ' (Database)'; // Custom error name
 				break;
 			default:
 				title = 'Error';
@@ -478,7 +478,6 @@ class UseFunctions {
 			stack = err.stack;
 		}
 		
-		logger.warn(typeof err.stack);
 		logger.error(err.message + '\n' + err.stack);
 		
 		let viewError = {
