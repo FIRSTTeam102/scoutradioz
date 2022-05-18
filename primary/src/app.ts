@@ -1,10 +1,10 @@
-import express from 'express';									// HTTP framework
-const path = require('path');									// For filesystem
 const favicon = require('serve-favicon');						// Serves favicon
-const session = require('express-session');						// Session middleware
-const cookieParser = require('cookie-parser');					// Cookies
 const MongoStore = require('@firstteam102/connect-mongo');		// Alternative session storage
-import passport from 'passport';								// User authentication
+const passport = require('passport');							// User authentication
+import express from 'express';									// HTTP framework
+import path from 'path';										// For filesystem
+import session from 'express-session';							// Session middleware
+import cookieParser from 'cookie-parser';						// Cookies
 import useragent from 'express-useragent';						// Info on connected users
 import log4js, { LoggingEvent } from 'log4js';					// Extensive logging functionality
 import utilities from '@firstteam102/scoutradioz-utilities'; 	// Database utilities
@@ -170,7 +170,7 @@ app.use('/admin/sync', sync);
 
 //USER ROUTES
 let index = require('./routes/index');
-let user = require('../build_tmp/routes/user');
+let user = require('./routes/user');
 let dashboard = require('../build_tmp/routes/dashboard');
 let scouting = require('../build_tmp/routes/scouting');
 let reports = require('../build_tmp/routes/reports');

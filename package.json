@@ -9,12 +9,17 @@
     "lint": "./node_modules/.bin/eslint primary/app.js"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/cookie-parser": "^1.4.3",
     "@types/express": "^4.17.13",
+    "@types/express-session": "^1.17.4",
+    "@types/express-useragent": "^1.0.2",
+    "@types/luxon": "^2.3.2",
+	"@types/jquery": "3.5.14",
+	"@types/node": "^17.0.23",
+    "@types/passport": "^1.0.7",
     "@typescript-eslint/eslint-plugin": "^5.18.0",
     "@typescript-eslint/parser": "^5.18.0",
-    "@types/express-useragent": "^1.0.2",
-    "@types/passport": "^1.0.7",
-	"@types/luxon": "^2.3.2",
     "eslint": "^8.8.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-scoutradioz-eslint": "file:scoutradioz-eslint"
