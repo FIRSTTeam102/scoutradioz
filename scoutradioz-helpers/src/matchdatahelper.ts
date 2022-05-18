@@ -811,7 +811,6 @@ export class MatchDataHelper {
 		logger.addContext('funcName', 'getAllianceStatsData');
 		
 		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
-		let returnData: AllianceStatsData = {};
 	
 		let teams = teams_list;
 	
@@ -1006,14 +1005,15 @@ export class MatchDataHelper {
 		let currentAggRanges = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
 		
 		// set up the return data
-		returnData.teams = teams;
-		returnData.teamList = teamList;
-		returnData.currentAggRanges = currentAggRanges;
-		returnData.avgTable = avgTable;
-		returnData.maxTable = maxTable;
-		returnData.avgNorms = avgNorms;
-		returnData.maxNorms = maxNorms;
-	
+		let returnData: AllianceStatsData = {
+			teams, 
+			teamList, 
+			currentAggRanges, 
+			avgTable, 
+			maxTable, 
+			avgNorms, 
+			maxNorms
+		};
 		logger.removeContext('funcName');
 		return returnData;	
 	}
@@ -1038,13 +1038,13 @@ export declare interface AllianceStatsData {
 	 * @param {array} avgNorms
 	 * @param {array} maxNorms
 	 */
-	teams?: string;
-	teamList?: string[];
-	currentAggRanges?: AggRange[]; // TODO
-	avgTable?: MetricRow[]; // TODO
-	maxTable?: MetricRow[]; // you get the picture
-	avgNorms?: MetricRow[];
-	maxNorms?: MetricRow[];
+	teams: string;
+	teamList: string[];
+	currentAggRanges: AggRange[]; // TODO
+	avgTable: MetricRow[]; // TODO
+	maxTable: MetricRow[]; // you get the picture
+	avgNorms: MetricRow[];
+	maxNorms: MetricRow[];
 }
 
 export declare interface MetricRow {
