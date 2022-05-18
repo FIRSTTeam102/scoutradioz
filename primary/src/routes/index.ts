@@ -1,13 +1,11 @@
 import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from 'express-async-handler';
+import wrap from '../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
-// import {  } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
 
 const router = express.Router();
 const logger = getLogger('index');
-// const wrap: Express.AsyncHandler = require('express-async-handler');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
