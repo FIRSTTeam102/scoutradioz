@@ -1,8 +1,7 @@
-// JL: Colors is no longer maintained, and the TS declarations are out of date.
-
 export {};
 
 declare global {
+	// JL: Colors is no longer maintained, and the TS declarations are out of date.
 	interface String {
 		brightRed: string;
 		brightGreen: string;
@@ -18,5 +17,9 @@ declare global {
 		bgBrightMagenta: string,
 		bgBrightCyan: string,
 		bgBrightWhite: string,
+	}
+	
+	interface StringDict {
+		[key: string]: string;
 	}
 }

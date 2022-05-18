@@ -11,6 +11,7 @@ declare namespace Express {
 	//	then we would need to either wrap every route in namespace SR {} or type smth like "SR.Match" for 
 	//	every typecast in our routes.
 	export interface User {
+		_id: any;
 		org_key: string;
 		name: string;
 		role_key: string;
@@ -78,54 +79,16 @@ declare namespace Express {
 			browser: string;
 		}
 		
-		// user?: {
-		// 	org_key: string;
-		// 	name: string;
-		// 	role_key: string;
-		// 	password: string;
-		// 	org_info: {
-		// 		subteam_key: string;
-		// 		class_key: string;
-		// 		years: string|number; // TODO: only number
-		// 		seniority: string|number; // TODO: only number
-		// 	};
-		// 	event_info: {
-		// 		present: boolean;
-		// 		assigned: boolean;
-		// 	};
-		// 	visible: boolean;
-		// 	role: {
-		// 		role_key: string;
-		// 		label: string;
-		// 		access_level: number;
-		// 	};
-		// 	org: {
-		// 		org_key: string;
-		// 		nickname: string;
-		// 		team_number?: number;
-		// 		team_numbers?: number[];
-		// 		team_key?: string;
-		// 		team_keys?: string[];
-		// 		default_password: string;
-		// 		config: {
-		// 			members: {
-		// 				subteams: Array<{
-		// 					label: string;
-		// 					subteam_key: string;
-		// 					pit_scout: boolean;
-		// 				}>;
-		// 				classes: Array<{
-		// 					label: string;
-		// 					class_key: string;
-		// 					seniority: number;
-		// 					youth: boolean;
-		// 				}>;
-		// 			};
-		// 			columnDefaults: {
-		// 				[key: string]: string;
-		// 			};
-		// 		}}
-		// };
+		// @ts-ignore
+		/**
+		 * Because the type of req.user is declared in Passport as User|undefined, TypeScript will always think that
+		 * req.user can possibly be undefined, even though we have checks in middleware / auth methods to not proceed if
+		 * req.user is not defined. 
+		 * 
+		 * To get around this, we can use req._user in the routes where we *know* req.user is defined.
+		 * @property {User} _user User from database.
+		 */
+		_user: User
 		
 		teams?: Array<{
 			address: string|null;
@@ -171,5 +134,19 @@ declare namespace Express {
 		 */
 		getURLWithQueryParameters: (url: string, parameters: StringDict) => string;
 		
+		/**
+		 * Checks if a user is authenticated at a given access level. Automatically redirects the user if not authenticated.
+		 */
+		authenticate: (accessLevel: string|number|undefined) => Promise<boolean>;
+	}
+	
+	export interface Request2 extends Request {
+		user: User;
+	}
+}
+
+declare namespace Process {
+	interface ProcessEnv {
+		ACCESS_SCOUTER: string;
 	}
 }
