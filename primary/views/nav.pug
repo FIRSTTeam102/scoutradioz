@@ -61,16 +61,16 @@ div(style="overflow-x: hidden;")
 		div(class="w3-right w3-show-inline-block w3-text-white" style="height: 45px;")
 			//- Share
 			- var orgKey = user ? user.org.org_key : 0;
-			div(class="w3-right" style="margin-right: 8px;")
+			div(class="w3-right" style="margin-inline-end: 8px;")
 				a(href=`javascript:share('${orgKey}')` class="w3-right w3-show-inline-block" style="height: 45px;" title="Share")
 					- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
 					div(class="w3-show-inline-block")
 						span(class=`sprite sp-32 ${spriteType} sp-white` style="margin-top: 5.5px;")
 					div(class="w3-show-inline-block")
-						span(style="font-size:14px; margin-left: 1px; position:relative; top:-9px; font-family:Tahoma,Geneva,sans-serif;") Share
+						span(style="font-size:14px; margin-inline-start: 1px; position:relative; top:-9px; font-family:Tahoma,Geneva,sans-serif;") Share
 			//- i18n
 			//- disabled for now
-			//div(class="w3-right" style="margin-right: 8px;")
+			//div(class="w3-right" style="margin-inline-end: 8px;")
 				a(href="" class="w3-show-inline-block" style="height: 45px;" title="Language")
 					div(class="w3-show-inline-block")
 						span(class="sprite sp-32 sp-language sp-i18n sp-black" style="margin-top: 7px;")
@@ -113,6 +113,7 @@ style.
 		padding: 8px;
 		max-width: 100%;
 		left: 0;
+		margin-inline-start: 0;
 		margin-left: 0;
 	}
 	.slidein-brand .w3-tooltiptext::after{

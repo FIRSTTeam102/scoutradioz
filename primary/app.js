@@ -7,7 +7,6 @@ const MongoStore = require('connect-mongo');			//Alternative session storage
 const passport = require('passport');					//for user authentication
 const useragent = require('express-useragent');			//for info on connected users
 const log4js = require('log4js');						//for extensive logging functionality
-const { I18n } = require('i18n');						//for internationalization
 
 const appStartupTime = Date.now();
 
@@ -107,55 +106,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 //Internationalization
+const { I18n } = require('./helpers/i18n');
+
 const i18n = new I18n({
-	locales: require('fs').readdir(path.join(__dirname, 'locales'), (err, files) => {
-		if (err) return ['en'];
-		return ['qqx'].concat(files.map(file => file.replace('.json', '')));
-	}),
-	directory: path.join(__dirname, 'locales'),
-	objectNotation: true,
-	updateFiles: process.env.UPDATE_I18N_FILES === 'true', // fill in missing spots in i18n files, should only be used during development
-	retryInDefaultLocale: true, // fallback to en
-	preserveLegacyCase: true,
-
-	cookie: 'language', // langauge cookie to look for
-	queryParameter: 'uselang', // query parameter to look for
-
-	logDebugFn: function (msg) {
-		logger.addContext('funcName', 'i18n');
-		logger.debug(msg);
-		logger.removeContext('funcName');
-	},
-	logWarnFn: function (msg) {
-		logger.addContext('funcName', 'i18n');
-		logger.warn(msg);
-		logger.removeContext('funcName');
-	},
-	logErrorFn: function (msg) {
-		logger.addContext('funcName', 'i18n');
-		logger.error(msg);
-		logger.removeContext('funcName');
-	}
+	directory: path.join(__dirname, 'locales')
 });
 
-app.use((req, res, next) => {
-	// these will be exposed to requests and views:
-	// __() for a normal message
-	// __n() for a message with plurals
-	// __mf() for a message with advanced formatting (see MessageFormat)
-	i18n.init(req, res);
-
-	// implement qqx language logic
-	if (req.locale === 'qqx') {
-		['__', '__n', '__mf'].forEach(fn => {
-			req[fn] = res[fn] = res.locals[fn] = (msg) => {
-				return `${fn}(${msg})`;
-			};
-		});
-	}
-
-	next();
-});
+app.use(i18n.middleware());
+// these will be exposed to requests and views:
+// __() for a normal message
+// __n() for a message with plurals
+// __mf() for a message with advanced formatting (see MessageFormat)
 
 //Session
 console.log('app.js: app.use(session({... - START');

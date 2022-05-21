@@ -4,6 +4,6 @@
 	},
 	"hello": {
 		"world": "Bonjour le monde !",
-		"name": "Bonjour, %s !"
+		"name": "Bonjour, {name} !"
 	}
 }

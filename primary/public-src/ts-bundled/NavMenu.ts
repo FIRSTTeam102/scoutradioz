@@ -260,24 +260,38 @@ class NavigationBar{
 		if (percentageOpened < 0) percentageOpened = 0;
 		
 		const windowWidth = window.innerWidth;
-		var positions: TransformPosition;
+		const isRTL = document.dir === 'rtl';
+		var positions: {
+			menu: number;
+			bar: number;
+		}, unit: string;
 		
 		//If 80% of the screen is lower than 440px, use percentages instead of pixels
 		if (windowWidth < 550) {
 			positions = {
-				menu: -80 * (1 - percentageOpened) + 'vw',
-				bar: 80 * percentageOpened + 'vw'
+				menu: -80 * (1 - percentageOpened),
+				bar: 80 * percentageOpened
 			}
+			unit = 'vw'
 		}
 		//if 80% of screen is greater than 440px, use pixels
 		else {
 			positions = {
-				menu: Math.floor( (1- percentageOpened) * -440) + 'px', 
-				bar: Math.floor( (percentageOpened) * 440) + 'px'
+				menu: Math.floor( (1- percentageOpened) * -440),
+				bar: Math.floor( (percentageOpened) * 440)
 			}
+			unit = 'px';
 		}
-		
-		return positions;
+
+		if (isRTL) {
+			positions.menu *= -1;
+			positions.bar *= -1;
+		}
+
+		return {
+			menu: positions.menu + unit,
+			bar: positions.bar + unit
+		};
 	}
 }
 

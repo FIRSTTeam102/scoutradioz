@@ -13,7 +13,7 @@
 -	if (Number.isInteger(num)) return num; else return (num < 1) ? num.toFixed(2) : (num < 10) ? num.toFixed(1) : parseInt(num); } /*TODO: Incorporate display_as into here, e.g. percentage & time (may require modifying aggregate queries) */
 include mixins/noDataFound
 doctype html
-html
+html(lang=locale dir=getLocaleDirection(locale))
 	head
 		base(href="/")
 		if fulltitle

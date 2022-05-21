@@ -1,0 +1,9 @@
+{
+	"index": {
+		"welcome": "ברוכים הבאים ל-Scoutradioz"
+	},
+	"hello": {
+		"world": "שלום עולם!",
+		"name": "שלום, {name}!"
+	}
+}
