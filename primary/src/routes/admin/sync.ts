@@ -1,10 +1,12 @@
-const express = require('express');
-const logger = require('log4js').getLogger('sync');
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../../helpers/express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import { Event, MatchScouting } from '@firstteam102/scoutradioz-types';
+import { matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
+
 const router = express.Router();
-const matchDataHelper = require('@firstteam102/scoutradioz-helpers').matchData;
-const e = require('@firstteam102/http-errors');
+const logger = getLogger('sync');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
@@ -23,13 +25,13 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	logger.debug(`Getting event list, year=${year}`);
 	
 	// Events with simple data
-	var url = `events/${year}/simple`;
-	var events = await utilities.requestTheBlueAlliance(url);
+	let url = `events/${year}/simple`;
+	let events = await utilities.requestTheBlueAlliance(url);
 	// Events with full data
 	url = `events/${year}`;
-	var eventsFull = await utilities.requestTheBlueAlliance(url);
+	let eventsFull = await utilities.requestTheBlueAlliance(url);
 	// Properties of the full event list to add to the simple event list
-	var keysToAdd = ['timezone'];
+	let keysToAdd = ['timezone'];
 	
 	for (let i in events) {
 		let thisEvent = events[i];
@@ -61,7 +63,7 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	//Now insert new events list
 	let insertResult = await utilities.insert('events', events);
 	
-	logger.info(`${removeResult.deletedCount} removed, ${insertResult.insertedCount} inserted`);
+	logger.info(`${removeResult.deletedCount} removed, ${insertResult ? insertResult.insertedCount : 0} inserted`);
 	
 	res.send({message: `Found ${events.length} events.`, length: events.length});
 }));
@@ -72,45 +74,48 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	logger.info('ENTER');	
 
 	// Get the year from the URL (or default to the current year)
-	var year = req.query.year;
-	if (!year) {
-		// Get the current year
-		var now = new Date();
-		year = now.getFullYear();
+	let year: number;
+	if (typeof req.query.year === 'string') {
+		year = parseInt(req.query.year);
 	}
+	else {
+		year = new Date().getFullYear();
+		logger.debug('No year specified, defaulting to ' + year);
+	}
+	logger.debug('Year: ' + year);
 
 	// Get the start query character (or default to 'a')
-	var urlStart = req.query.start;
-	if (!urlStart) {
+	let urlStart = req.query.start;
+	if (typeof urlStart !== 'string') {
 		urlStart = 'a';
 	}
-	var queryStart = year + urlStart;
+	let queryStart = year + urlStart;
 
 	// Get the start query character (or default to 'a')
-	var urlEnd = req.query.end;
-	if (!urlEnd) {
+	let urlEnd = req.query.end;
+	if (typeof urlEnd !== 'string') {
 		urlEnd = 'z';
 	}
 	// We append 'zzzzzzz' to bracket every possible alphanumeric combination (after the first alpha character after the year) 
-	var queryEnd = year + urlEnd + 'zzzzzzz';
+	let queryEnd = year + urlEnd + 'zzzzzzz';
 
 	logger.debug('from URL (or defaults): year=' + year + ',queryStart=' + queryStart + ',queryEnd=' + queryEnd);
 
 	//Set up TBA url
-	var url = `events/${year}/simple`;
+	let url = `events/${year}/simple`;
 	logger.debug('url=' + url);
 	
 	const keyFilter = { $and: [{'key': {$gt: queryStart}}, {'key': {$lt: queryEnd}}] };
 	
 	// 2022-02-19 JL: Events now retrieved from TBA in /resynceventlist
-	var events = await utilities.find('events', keyFilter, {sort: {key: 1}});
+	let events: Event[] = await utilities.find('events', keyFilter, {sort: {key: 1}});
 	
 	// if no events were found in db, that just means there are none starting with that letter
 	if(events.length == 0) {
 		return res.send(`SUCCESS ${year} updated 0`);
 	}
 	
-	var updatedNum = 0;
+	let updatedNum = 0;
 	
 	// 2020-02-08, M.O'C: Need to track which teams are at each event, by event key - pull team keys for each event & store in the event
 	// 2022-02-19 JL: Cleaned up event resync, switched to update statement instead of delete/insert
@@ -122,13 +127,13 @@ router.get('/resyncevents', wrap(async (req, res) => {
 		
 		let retries = 3;
 		while (retries > 0) {
-			var readSuccess = false;
+			let readSuccess = false;
 			try {
 				thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
 				readSuccess = true;
 			}
 			catch (err) {
-				console.log('Problem reading team keys for ' + thisEventKey + ' - ' + err.message);
+				console.log('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
 				retries -= 1;
 			}
 			
@@ -155,16 +160,16 @@ router.get('/resyncteams', wrap(async (req, res) => {
 		
 	////// Teams sync
 
-	var teamPageIdx = 0;
-	var teamsArray = [];
-	var keepLooping = true;
+	let teamPageIdx = 0;
+	let teamsArray = [];
+	let keepLooping = true;
 	while (keepLooping) {
 		//Set up TBA url
-		var url = `teams/${teamPageIdx}`;
+		let url = `teams/${teamPageIdx}`;
 		logger.debug('url=' + url);
 		
 		//Submit request to TBA
-		var teams = await utilities.requestTheBlueAlliance(url);
+		let teams = await utilities.requestTheBlueAlliance(url);
 		
 		//if request was invalid, redirect to admin page with alert message
 		if(teams.length == undefined || teams.length == 0) {
@@ -175,7 +180,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 		else {
 			// we have teams to add to the total array
 			//var printIdx = 0;
-			for (var team of teams) {
+			for (let team of teams) {
 				//var team = teams[i];
 				// if (printIdx >= 50) {
 				// 	printIdx = 0;
@@ -205,29 +210,30 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	logger.addContext('funcName', 'recalcderived[get]');
 	logger.info('ENTER');
 	
-	var event_year = req.event.year;
-	var event_key = req.event.key;
-	var org_key = req.user.org_key;
+	let event_year = req.event.year;
+	let event_key = req.event.key;
+	let org_key = req._user.org_key;
 
 	logger.info('ENTER org_key=' + org_key + ',event_key=' + event_key);
 
 	// read in existing match scouting data
-	var scored = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} }, { sort: {'time': 1} });
+	let scored: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} }, { sort: {'time': 1} });
 	// logger.debug("scored[0].data=" + JSON.stringify(scored[0].data));
 	// logger.debug("scored[0].data[matchLayout[0].operands[2]]=" + JSON.stringify(scored[0].data[matchLayout[0].operands[2]]));
 
 	// cycle through each scored match & [re]calculate derived metrics - push into new array 'updatedScored'
-	var writeQueries = [];
-	var startTime = Date.now(); // JL: to check performance
+	let writeQueries = [];
+	let startTime = Date.now(); // JL: to check performance
 	//var debugCountdown = 0;
-	for (var i in scored) {
-		if (scored[i].data) {
+	for (let i in scored) {
+		let thisScored = scored[i];
+		if (thisScored.data) {
 			// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-			var thisScored = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, scored[i].data);
+			let thisScoredUpdated = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, thisScored.data);
 			writeQueries.push({
 				updateOne: {
 					filter: {_id: scored[i]._id},
-					update: {$set: {data: thisScored}}
+					update: {$set: {data: thisScoredUpdated}}
 				}
 			});
 		}
@@ -248,7 +254,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 }));
 
 
-function promiseTimeout(time) {
+function promiseTimeout(time: number) {
 	return new Promise((resolve, reject) => {
 		setTimeout(resolve, time);
 	});

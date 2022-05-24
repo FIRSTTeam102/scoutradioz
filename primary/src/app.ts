@@ -165,7 +165,7 @@ app.use(usefunctions.authenticate);
 app.use(usefunctions.setViewVariables);
 
 //SCOUTRADIOZ ADMIN ROUTE FOR SYNCING - PLACED FIRST TO ENABLE UNAUTHENTICATED AUTOMATED CALLS
-let sync = require('../build_tmp/routes/admin/sync');
+let sync = require('./routes/admin/sync');
 app.use('/admin/sync', sync);
 
 //USER ROUTES
@@ -186,8 +186,8 @@ let orgmembers = require('../build_tmp/routes/manage/members');
 let scoutingaudit = require('../build_tmp/routes/manage/scoutingaudit');
 let scoutingpairs = require('../build_tmp/routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
-let adminindex = require('../build_tmp/routes/admin/indexadmin');
-let externaldata = require('../build_tmp/routes/admin/externaldata');
+let adminindex = require('./routes/admin/indexadmin');
+let externaldata = require('./routes/admin/externaldata');
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
