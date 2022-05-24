@@ -1,6 +1,8 @@
 const logger = require('log4js').getLogger('i18n');
 const fs = require('fs');
 const path = require('path');
+const marked = require('marked');
+const sanitizeHtml = require('sanitize-html');
 
 // Based on i18n-node, but designed for our specific use cases
 class I18n {
@@ -59,7 +61,7 @@ class I18n {
 			this.locale = req.locale = res.locale = res.locals.locale = locale;
 
 			// Add functions to the request
-			for (const func of ['msg', 'getLocaleName', 'getLocaleDirection']) {
+			for (const func of ['msg', 'msgMarked', 'getLocaleName', 'getLocaleDirection']) {
 				req[func] = res[func] = res.locals[func] = this[func].bind(this);
 			}
 
@@ -77,21 +79,6 @@ class I18n {
 	getLocaleDirection(locale) {
 		return rtlLocales.includes(locale) ? 'rtl' : 'ltr';
 	}
-
-	// Escape HTML
-	escape(string) {
-		const htmlEscapes = {
-			'&': '&amp;',
-			'<': '&lt;',
-			'>': '&gt;',
-			'"': '&quot;',
-			"'": '&#39;'
-		};
-		const filter = /[&<>"']/g;
-		return (string && filter.test(string))
-			? string.replace(filter, (chr) => htmlEscapes[chr])
-			: (string || '');
-	}		
 
 	// Finds an item in an object based on dot notation
 	// 'a.b.c' => object.a.b.c
@@ -125,6 +112,17 @@ class I18n {
 		return object[target] || null;
 	}
 
+	// @param {bool} allowTags - Allow any HTML tags in the message
+	sanitizeHtml(dirty, allowTags = true) {
+		return sanitizeHtml(dirty, {
+			// we probably only want to allow inline elements, everything else should be done in views
+			// CD 2022-05-24: allowing <p> because it might pop up
+			allowedTags: allowTags ? ['a', 'br', 'p', 'span', 'b', 'strong', 'i', 'em', 'tt', 'code'] : [],
+			allowedSchemes: ['http', 'https'],
+			disallowedTagsMode: 'escape' // leaves the content- maybe switch to 'discard'?
+		});
+	}
+
 	// Finds a raw message in a specified locale
 	_rawMsg(locale, msg) {
 		// qqx will just return the message name
@@ -147,10 +145,14 @@ class I18n {
 
 	// Returns a plain message with substituted args
 	msg(name, parameters) {
-		return(this._paramterize(this._rawMsg(this.locale, name), parameters));
+		return this.sanitizeHtml(this._paramterize(this._rawMsg(this.locale, name), parameters), false);
 	}
 
-	// @todo: markdown support
+	// Returns a message with parsed markdown
+	msgMarked(name, parameters) {
+		return this.sanitizeHtml(marked.parseInline(this._paramterize(this._rawMsg(this.locale, name), parameters)));
+	}
+
 	// @todo: Implement pluralization function?
 	// @todo: MessageFormat support
 }

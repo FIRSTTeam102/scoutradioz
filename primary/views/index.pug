@@ -55,14 +55,14 @@ block content
 			div.w3-padding-small
 				p 
 					span(class="sprite sp-16 sp-radio sp-inline")
-					span !{msg('index.info.intro')}
+					span !{msgMarked('index.info.intro')}
 				p #{msg('index.info.features.intro')}
 				ul
-					li.w3-margin !{msg('index.info.features.modular')}
-					li.w3-margin !{msg('index.info.features.automatic')}
-					li.w3-margin !{msg('index.info.features.advanced')}
-					li.w3-margin !{msg('index.info.features.management')}
-					li.w3-margin !{msg('index.info.features.free')}
+					li.w3-margin !{msgMarked('index.info.features.modular')}
+					li.w3-margin !{msgMarked('index.info.features.automatic')}
+					li.w3-margin !{msgMarked('index.info.features.advanced')}
+					li.w3-margin !{msgMarked('index.info.features.management')}
+					li.w3-margin !{msgMarked('index.info.features.free')}
 				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki" target="_blank")
 						span(class="sprite sp-22 sp-black sp-github sp-inline")
@@ -79,7 +79,7 @@ block content
 				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://www.firstinspires.org/robotics/frc" target="_blank")
 						span(class="sprite sp-22 sp-black sp-first sp-inline")
-						span !{msg('index.info.first')}
+						span !{msgMarked('index.info.first')}
 			hr 
 		div(id="selectorg" style=learnMoreInvisible)
 			h3 #{msg('index.select_org')}

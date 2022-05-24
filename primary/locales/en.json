@@ -12,19 +12,19 @@
 		},
 		"info": {
 			"choice": "Interested in learning about Scoutradioz and how your team can use it",
-			"intro": "Scoutradioz is an FRC scouting app developed by The Gearheads which enables teams and organizations to <b>gather their own, customized intel at competitions</b>.",
+			"intro": "Scoutradioz is an FRC scouting app developed by The Gearheads which enables teams and organizations to **gather their own, customized intel at competitions**.",
 			"features": {
 				"intro": "Initially created in 2018, Scoutradioz has continued to evolve and it now runs on Amazon Web Services. Here is a list of some of the features Scoutradioz offers:",
-				"modular": "<b>Modular and configurable</b> pit & match scouting surveys, so your organization can pick exactly what info you want to record and show",
-				"automatic": "<b>Automatic</b>, individualized pit & match scouting assignments",
-				"advanced": "<b>Advanced</b> reports and metrics",
+				"modular": "**Modular and configurable** pit & match scouting surveys, so your organization can pick exactly what info you want to record and show",
+				"automatic": "**Automatic**, individualized pit & match scouting assignments",
+				"advanced": "**Advanced** reports and metrics",
 				"management": "Event management tools such as auditing match assignments, swapping scouters in and out, and managing a list of members",
 				"free": "And of course, it's completely free!"
 			},
 			"github": "See our code & documentation on GitHub",
 			"discord": "Join our Discord",
 			"partner": "Apply to be an Early-Access partner",
-			"first": "More on <i>FIRST</i> and FRC"
+			"first": "More on *FIRST* and FRC"
 		},
 		"select_org": "Please select an organization.",
 		"view": "View",
