@@ -68,6 +68,7 @@ export class Utilities {
 	whenReadyQueue: any[];
 	cache: NodeCache;
 	options: UtilitiesOptions;
+	client: typeof Client;
 	// Utilities is a singleton class. The refreshTier function is passed as a middleware, so the "this" argument gets messed up. 
 	//  To avoid having to change code, we can instead use Utilities.instance.x
 	static instance: Utilities = new Utilities(); 
@@ -81,6 +82,7 @@ export class Utilities {
 		this.whenReadyQueue = [];
 		this.cache = new NodeCache({stdTTL: 30});
 		this.options = new UtilitiesOptions();
+		this.client = new Client();
 	}
 	
 	/**
@@ -791,6 +793,7 @@ export class Utilities {
 	 * Asynchronous request to TheBlueAlliance. Requires a URL ending to execute correctly.
 	 * @param url ENDING of URL, after "https://.../api/v3/" DO NOT INCLUDE A / AT THE START
 	 * @return JSON-formatted response from TBA
+	 * @throws Network error 
 	 */
 	async requestTheBlueAlliance(url: string): Promise<any> {
 		logger.addContext('funcName', 'requestTheBlueAlliance');
@@ -804,12 +807,10 @@ export class Utilities {
 		let headers = await this.getTBAKey();
 		
 		//Create promise first
-		let thisPromise = new Promise(function(resolve, reject){
-			
-			let client = new Client();
+		let thisPromise = new Promise((resolve, reject) => {
 			
 			//Inside promise function, perform client request
-			client.get(requestURL, headers, function(tbaData: any){
+			let request = this.client.get(requestURL, headers, function(tbaData: any){
 				
 				//If newline characters are not deleted, then CloudWatch logs get spammed
 				let str = tbaData.toString().replace(/\n/g, '');
@@ -828,6 +829,10 @@ export class Utilities {
 					//Inside client callback, resolve promise
 					resolve(tbaData);
 				}
+			});
+			
+			request.on('error', function (err: any) {
+				reject(err);
 			});
 		});
 		
@@ -848,10 +853,8 @@ export class Utilities {
 		let headers = await this.getFIRSTKey();
 		
 		let thisPromise = new Promise((resolve, reject) => {
-			
-			let client = new Client();
-			
-			client.get(requestURL, headers, function (firstData: any, response: any) {
+						
+			let request = this.client.get(requestURL, headers, function (firstData: any, response: any) {
 				
 				if (response.statusCode === 200) {
 					
@@ -866,6 +869,9 @@ export class Utilities {
 				}
 			});
 			
+			request.on('error', function (err: any) {
+				reject(err);
+			});
 		});
 		
 		return thisPromise;

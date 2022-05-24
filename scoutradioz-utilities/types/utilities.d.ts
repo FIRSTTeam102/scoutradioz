@@ -1,6 +1,7 @@
 import NodeCache from 'node-cache';
 import { ObjectId, MongoClient, Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult } from 'mongodb';
 import { Request, Response, NextFunction } from 'express';
+declare const Client: any;
 /**
  * Optional settings for configurating SR-Utilities.
  * @param cache
@@ -35,6 +36,7 @@ export declare class Utilities {
     whenReadyQueue: any[];
     cache: NodeCache;
     options: UtilitiesOptions;
+    client: typeof Client;
     static instance: Utilities;
     private _cacheFlushTimeout?;
     constructor();
@@ -157,6 +159,7 @@ export declare class Utilities {
      * Asynchronous request to TheBlueAlliance. Requires a URL ending to execute correctly.
      * @param url ENDING of URL, after "https://.../api/v3/" DO NOT INCLUDE A / AT THE START
      * @return JSON-formatted response from TBA
+     * @throws Network error
      */
     requestTheBlueAlliance(url: string): Promise<any>;
     /**
