@@ -15,6 +15,7 @@
 		"src/express-extensions.d.ts.d.ts",
 		"src/*",
 		"src/routes/*", 
+		"src/routes/*/*", 
 		"src/helpers/*",
 	],
 	"ts-node": {
