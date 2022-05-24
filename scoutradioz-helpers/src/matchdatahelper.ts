@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import { Match, Team, Ranking, TeamKey, AggRange } from '@firstteam102/scoutradioz-types';
+import { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput } from '@firstteam102/scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -1070,12 +1070,6 @@ export declare interface PredictiveBlock {
 	redSTD?: number;
 	totalCNT?: number;
 	chanceOfRed?: number;
-}
-
-declare type formDataOutput = number|boolean|string|null;
-
-export declare interface MatchFormData {
-	[key: string]: formDataOutput;
 }
 
 declare interface NumericalDict {

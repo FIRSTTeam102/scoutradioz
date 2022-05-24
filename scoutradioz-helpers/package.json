@@ -1,6 +1,6 @@
 {
 	"name": "@firstteam102/scoutradioz-helpers",
-	"version": "1.1.2",
+	"version": "1.1.3",
 	"description": "A series of helper files for Scoutradioz functions",
 	"main": "./build/index.js",
 	"scripts": {
@@ -22,7 +22,7 @@
 		"ztable": "^1.0.7"
 	},
 	"peerDependencies": {
-		"@firstteam102/scoutradioz-utilities": ">=1.2.2",
-		"@firstteam102/scoutradioz-types": ">=0.0.1"
+		"@firstteam102/scoutradioz-utilities": ">=1.2.4",
+		"@firstteam102/scoutradioz-types": ">=1.0.3"
 	}
 }
