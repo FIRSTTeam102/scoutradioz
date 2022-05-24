@@ -177,9 +177,9 @@ let reports = require('../build_tmp/routes/reports');
 let notifications = require('../build_tmp/routes/notifications');
 let share = require('../build_tmp/routes/share.js');
 //ORG MANAGEMENT ROUTES
-let manageindex = require('../build_tmp/routes/manage/indexmgmt');
+let manageindex = require('./routes/manage/indexmgmt');
 let allianceselection = require('../build_tmp/routes/manage/allianceselection');
-let currentevent = require('../build_tmp/routes/manage/currentevent');
+let currentevent = require('./routes/manage/currentevent');
 let config = require('../build_tmp/routes/manage/orgconfig');
 let manualdata = require('../build_tmp/routes/manage/manualdata');
 let orgmembers = require('../build_tmp/routes/manage/members');

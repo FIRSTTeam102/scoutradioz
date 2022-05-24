@@ -1,5 +1,3 @@
-
-
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';

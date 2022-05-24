@@ -3,6 +3,7 @@ import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
 import { Document } from 'mongodb';
 import utilities from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../helpers/permissions';
 import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
 import { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
@@ -14,7 +15,7 @@ router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_VIEWER)) {
+	if (await req.authenticate (Permissions.ACCESS_VIEWER)) {
 		next();
 	} 
 }));
