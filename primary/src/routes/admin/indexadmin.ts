@@ -1,15 +1,19 @@
-const express = require('express');
-const logger = require('log4js').getLogger('indexadmin');
-const bcrypt = require('bcryptjs');
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
+import bcrypt from 'bcryptjs';
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../../helpers/express-async-handler';
+import utilities, { MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../../helpers/permissions';
+import { Org, Team } from '@firstteam102/scoutradioz-types';
+
 const router = express.Router();
+const logger = getLogger('indexadmin');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	//Require global-admin-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
+	if (await req.authenticate (Permissions.ACCESS_GLOBAL_ADMIN)) {
 		next();
 	}
 }));
@@ -26,7 +30,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 	logger.addContext('funcName', 'sitemap[get]');
 	logger.info('ENTER');
 	
-	var siteLayout = {
+	let siteLayout = {
 		'index.js': {
 			'/': 'Pick organization',
 			'/home': 'home'
@@ -124,7 +128,7 @@ router.get('/orgs', wrap(async (req, res) => {
 	logger.addContext('funcName', 'orgs[get]');
 	logger.info('ENTER');
 	
-	const orgs = await utilities.find('orgs');
+	const orgs: Org[] = await utilities.find('orgs', {});
 	
 	res.render('./admin/orgs', {
 		title: 'Manage organizations',
@@ -144,7 +148,7 @@ router.post('/orgs', wrap(async (req, res) => {
 	const teamKey = req.body.team_key;
 	const defaultPassword = req.body.default_password;
 	
-	var org = await utilities.findOne('orgs', {org_key: orgKey});
+	let org: Org = await utilities.findOne('orgs', {org_key: orgKey});
 	
 	logger.debug(`${thisFuncName} org=${JSON.stringify(org)}`);
 	if (!org) throw Error('Org could not be found');
@@ -152,14 +156,14 @@ router.post('/orgs', wrap(async (req, res) => {
 	logger.info(`${thisFuncName} Updating org ${orgKey}, nickname=${nickname}`);
 	
 	//Aggregate config.members.subteams and config.members.classes
-	var subteams = [];
-	var classes = [];
+	let subteams: MongoDocument[] = []; // TODO: Change to OrgSubteam[] and OrgClass[], but the code later down will have to be tweaked (got to verify the data structure)
+	let classes: MongoDocument[] = [];
 	//eslint-disable-next-line
 	for (var elem in req.body) {
-		var split = elem.split('_');
-		var elemIdx = parseInt(split[1]);
-		var elemType = split[2];
-		var elemKey, elemValue;
+		let split = elem.split('_');
+		let elemIdx = parseInt(split[1]);
+		let elemType = split[2];
+		let elemKey, elemValue;
 		
 		switch (elemType) {
 			case 'pitscout':
@@ -205,7 +209,7 @@ router.post('/orgs', wrap(async (req, res) => {
 	logger.debug(`${thisFuncName} subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
 	
 	//Create update query
-	var updateQuery = {
+	let updateQuery: MongoDocument = {
 		$set: {
 			nickname: nickname,
 			'config.members.subteams': subteams,
@@ -216,7 +220,7 @@ router.post('/orgs', wrap(async (req, res) => {
 	//If new default password is set
 	if (defaultPassword) {
 		//Hash new password
-		var hash = await bcrypt.hash(defaultPassword, 10);
+		let hash = await bcrypt.hash(defaultPassword, 10);
 		
 		logger.info(`${thisFuncName} Setting ${orgKey}'s default password to: ${defaultPassword}`);
 		logger.info(`${thisFuncName} Old hash: ${org.default_password} New hash: ${hash}`);
@@ -228,10 +232,10 @@ router.post('/orgs', wrap(async (req, res) => {
 	if (teamKey) {
 		if (!teamKey.includes('frc')) throw Error('Team key is invalid.');
 		
-		var team = await utilities.findOne('teams', {key: teamKey});
+		let team: Team = await utilities.findOne('teams', {key: teamKey});
 		if (!team) throw Error(`Team ${teamKey} could not be found`);
 		
-		var teamNumber = teamKey.substring(3);
+		let teamNumber = teamKey.substring(3);
 		updateQuery['$set'].team_key = teamKey;
 		updateQuery['$set'].team_number = teamNumber;
 	}

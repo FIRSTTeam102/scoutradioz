@@ -1,13 +1,18 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger('externaldata');
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../../helpers/express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../../helpers/permissions';
+import { Team, Event, Match } from '@firstteam102/scoutradioz-types';
+
+const router = express.Router();
+const logger = getLogger('externaldata');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	//Require team-admin-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
+	if (await req.authenticate (Permissions.ACCESS_GLOBAL_ADMIN)) {
 		next();
 	}
 }));
@@ -22,18 +27,24 @@ router.get('/events', wrap(async (req, res) => {
 	logger.info('ENTER');
 		
 	// Get our query value(s)
-	var year = req.query.year;
-	if (!year) {
-		year = (new Date()).getFullYear();
+	let year: number;
+	if (typeof req.query.year === 'string') {
+		year = parseInt(req.query.year);
+	}
+	else {
+		year = new Date().getFullYear();
 		logger.debug('No year specified, defaulting to ' + year);
 	}
 	logger.debug('Year: ' + year);
 
-	var events = await utilities.find('events', {'year': parseInt(year)},{sort: {'start_date': 1, 'end_date': 1, 'name': 1}});
+	let events: Event[] = await utilities.find('events', 
+		{year: year},
+		{sort: {start_date: 1, end_date: 1, name: 1}}
+	);
 		
 	// Read unique list of years in DB
-	var distinctYears = await utilities.distinct('events', 'year');
-	var uniqueYears = distinctYears.sort();
+	let distinctYears: string[] = await utilities.distinct('events', 'year', {});
+	let uniqueYears = distinctYears.sort();
 
 	logger.debug('uniqueYears=' + uniqueYears);
 	
@@ -95,7 +106,7 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	// Get our query value(s)
-	var eventKey = req.query.eventKey || req.query.event_key;
+	let eventKey = req.query.eventKey || req.query.event_key;
 	if (!eventKey) {
 		logger.debug('No event specified');
 		res.redirect('/admin/externaldata/events');
@@ -103,7 +114,7 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.debug('eventKey=' + eventKey);
 
 	// Read matches from DB for specified event
-	var matches = await utilities.find('matches', {'event_key': eventKey},{sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', {'event_key': eventKey},{sort: {'time': 1}});
 	
 	res.render('./admin/externaldata/matches', {
 		title: 'Matches',
@@ -189,16 +200,16 @@ router.post('/matches', wrap(async (req, res) => {
 	logger.info('ENTER');
 
 	// Get our form value(s)
-	var eventKey = req.body.eventKey;
+	let eventKey = req.body.eventKey;
 	logger.debug('eventKey=' + eventKey);
 	
 	//Set up TBA api request
-	var url = `event/${eventKey}/matches`;
+	let url = `event/${eventKey}/matches`;
 	logger.debug('url=' + url);
 	
 	//Request from TBA
-	var matches = await utilities.requestTheBlueAlliance(url);
-	logger.debug(`matches= ${JSON.stringify(matches)}`);
+	let matches = await utilities.requestTheBlueAlliance(url);
+	logger.trace(`matches= ${JSON.stringify(matches)}`);
 
 	//if request was invalid, redirect to admin page with alert message
 	if(matches.length == undefined || matches.length == 0){
@@ -226,7 +237,7 @@ router.get('/teams', wrap(async (req, res) => {
 	logger.addContext('funcName', 'teams[get]');
 	logger.info('ENTER');
 	
-	var teams;
+	let teams: Team[];
 	
 	//if no event is specified send page with all teams
 	if(req.query.eventKey == '' || req.query.eventKey == undefined){
@@ -242,10 +253,10 @@ router.get('/teams', wrap(async (req, res) => {
 	//if event is specified, get list of teams from event
 	else{
 		//get eventKey
-		var eventKey = req.query.eventKey;
+		let eventKey = req.query.eventKey;
 		
 		//prepare api call
-		var url = `event/${eventKey}/teams/simple`;
+		let url = `event/${eventKey}/teams/simple`;
 		
 		//perform api call
 		teams = await utilities.requestTheBlueAlliance(url);
