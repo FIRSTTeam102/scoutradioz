@@ -1,5 +1,5 @@
 import { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import { Match, TeamKey, AggRange } from '@firstteam102/scoutradioz-types';
+import { Match, TeamKey, AggRange, MatchFormData } from '@firstteam102/scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -107,8 +107,4 @@ export declare interface PredictiveBlock {
     redSTD?: number;
     totalCNT?: number;
     chanceOfRed?: number;
-}
-declare type formDataOutput = number | boolean | string | null;
-export declare interface MatchFormData {
-    [key: string]: formDataOutput;
 }

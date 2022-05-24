@@ -13,6 +13,11 @@ declare interface StringDict {
 
 declare type integer = number;
 declare type operand = number|string;
+export declare type formDataOutput = number|boolean|string|null;
+
+export declare interface MatchFormData {
+	[key: string]: formDataOutput;
+}
 
 declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
@@ -179,7 +184,7 @@ export declare interface MatchScouting extends MongoDocument {
 	match_team_key: MatchTeamKey;
 	assigned_scorer: string;
 	actual_scorer?: string;
-	data?: AnyDict;
+	data?: MatchFormData;
 	useragent?: UserAgent;
 }
 
@@ -198,20 +203,24 @@ export declare interface Org {
 	default_password: string;
 	config: {
 		members: {
-			subteams: Array<{
-				label: string;
-				subteam_key: string;
-				pit_scout: boolean;
-			}>;
-			classes: Array<{
-				label: string;
-				class_key: string;
-				seniority: number;
-				youth: boolean;
-			}>;
+			subteams: Array<OrgSubteam>;
+			classes: Array<OrgClass>;
 		};
 		columnDefaults: StringDict;
 	}
+}
+
+export declare interface OrgSubteam {
+	label: string;
+	subteam_key: string;
+	pit_scout: boolean;
+}
+
+export declare interface OrgClass {
+	label: string;
+	class_key: string;
+	seniority: number;
+	youth: boolean;
 }
 
 /**
