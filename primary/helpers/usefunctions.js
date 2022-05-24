@@ -80,7 +80,7 @@ functions.initialMiddleware = async function(req, res, next){
 		logger.trace(`Setting user timezone ${req.cookies['timezone']}`);
 		req.timezoneString = req.cookies['timezone'];
 	}
-	else if (req.event.timezone) {
+	else if (req.event && req.event.timezone) {
 		logger.trace(`Setting event timezone ${req.event.timezone}`);
 		req.timezoneString = req.event.timezone;
 	}

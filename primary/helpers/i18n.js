@@ -43,11 +43,16 @@ class I18n {
 			logger.addContext('funcName', 'middleware');
 
 			// Guess the locale from the request
-			let locale = ((req.query && req.query[this.config.queryParameter])
-				|| (req.cookies && req.cookies[this.config.cookie])
-				|| req.acceptsLanguages(Object.keys(this.locales))
-				|| this.config.defaultLocale)
-				.replace('_', '-').toLowerCase(); // treat something like en_US as en-us
+			let locale = (
+					(req.query && req.query[this.config.queryParameter] && (Array.isArray(req.query[this.config.queryParameter])
+						// express will turn duplicate params into an array- we only want one
+						? req.query[this.config.queryParameter][0]
+						: req.query[this.config.queryParameter]
+					))
+					|| (req.cookies && req.cookies[this.config.cookie])
+					|| req.acceptsLanguages(Object.keys(this.locales))
+					|| this.config.defaultLocale
+				).replace('_', '-').toLowerCase(); // treat something like en_US as en-us
 			logger.debug(`Guessed locale: ${locale}`);
 
 			// Set the locale
