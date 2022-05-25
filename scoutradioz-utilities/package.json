@@ -1,6 +1,6 @@
 {
   "name": "@firstteam102/scoutradioz-utilities",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Database utilities package for Scoutradioz",
   "main": "build/utilities.js",
   "scripts": {
