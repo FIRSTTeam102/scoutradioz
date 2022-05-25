@@ -1,6 +1,8 @@
-const passport = require('passport');
-const logger = require('log4js').getLogger('passport');
-const utilities = require('@firstteam102/scoutradioz-utilities');
+import passport from 'passport';
+import { getLogger } from 'log4js';
+import utilities from '@firstteam102/scoutradioz-utilities';
+
+const logger = getLogger('passport');
 
 // Creates the data necessary to store in the session cookie
 passport.serializeUser(function(user, done) {
@@ -14,7 +16,8 @@ passport.deserializeUser(async function(id, done) {
 	
 	logger.trace('deserializeUser: ' + id);
 	
-	var user = await utilities.findOne('users', { '_id': id }, {}, {allowCache: true});
+	// JL note: Can't declare the type of this one because of the slight type differences between our extended express.User object (namespace-extensions.d.ts) and our regular User object in the DB
+	let user = await utilities.findOne('users', { '_id': id }, {}, {allowCache: true});
 	
 	if(!user){
 		logger.error('User not found in db: deserializeUser ' + id);

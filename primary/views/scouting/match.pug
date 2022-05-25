@@ -113,7 +113,7 @@ block content
 					include templates/formSpacer
 	br 
 	button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit") Submit
-	if user && user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
+	if user && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
 		hr 
 		p Organization Manager Actions:
 		div(class="w3-btn theme-submit theme-red" id="btnClearData") Clear data

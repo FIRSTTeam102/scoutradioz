@@ -146,7 +146,7 @@ app.use(session({
 app.use(useragent.express());
 
 //Passport setup (user authentication)
-require('../build_tmp/helpers/passport-config');
+require('./helpers/passport-config');
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -173,18 +173,18 @@ let index = require('./routes/index');
 let user = require('./routes/user');
 let dashboard = require('./routes/dashboard');
 let scouting = require('./routes/scouting');
-let reports = require('../build_tmp/routes/reports');
-let notifications = require('../build_tmp/routes/notifications');
-let share = require('../build_tmp/routes/share.js');
+let reports = require('./routes/reports');
+let notifications = require('./routes/notifications');
+let share = require('./routes/share');
 //ORG MANAGEMENT ROUTES
 let manageindex = require('./routes/manage/indexmgmt');
-let allianceselection = require('../build_tmp/routes/manage/allianceselection');
+let allianceselection = require('./routes/manage/allianceselection');
 let currentevent = require('./routes/manage/currentevent');
-let config = require('../build_tmp/routes/manage/orgconfig');
-let manualdata = require('../build_tmp/routes/manage/manualdata');
-let orgmembers = require('../build_tmp/routes/manage/members');
-let scoutingaudit = require('../build_tmp/routes/manage/scoutingaudit');
-let scoutingpairs = require('../build_tmp/routes/manage/scoutingpairs');
+let config = require('./routes/manage/orgconfig');
+let manualdata = require('./routes/manage/manualdata');
+let orgmembers = require('./routes/manage/members');
+let scoutingaudit = require('./routes/manage/scoutingaudit');
+let scoutingpairs = require('./routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
 let adminindex = require('./routes/admin/indexadmin');
 let externaldata = require('./routes/admin/externaldata');

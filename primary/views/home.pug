@@ -54,10 +54,10 @@ block content
 			h4(class="theme-text")=user.name
 			a(href="/dashboard")
 				div(class="gear-btn theme-link w3-btn") Scouting Dashboard
-			if user.role && user.role.access_level >= process.env.ACCESS_TEAM_ADMIN
+			if user.role && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
 				a(href="/manage")
 					div(class="gear-btn theme-link w3-btn") Management
-			if user.role && user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN
+			if user.role && user.role.access_level >= Permissions.ACCESS_GLOBAL_ADMIN
 				a(href="/admin")
 					div(class="gear-btn theme-link w3-btn") Admin
 

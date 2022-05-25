@@ -1,12 +1,18 @@
-/* eslint-disable */
-const router = require('express').Router();
-const wrap = require('express-async-handler');
-const logger = require('log4js').getLogger();
-const utilities = require('@firstteam102/scoutradioz-utilities');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../../helpers/express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../../helpers/permissions';
+import { Org, Event } from '@firstteam102/scoutradioz-types';
+
+const router = express.Router();
+const logger = getLogger('manualdata');
+
+// TODO: Update to 2020+ data structures
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require GLOBAL-admin-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_GLOBAL_ADMIN)) {
+	if (await req.authenticate (Permissions.ACCESS_GLOBAL_ADMIN)) {
 		next();
 	}
 }));
@@ -18,10 +24,8 @@ router.all('/*', wrap(async (req, res, next) => {
  */
 router.get('/teams', wrap(async (req, res) => {
 	
-	//return res.send("Code hasn't been updated to 2020 data structure! Sorry!");
-	
 	//Get list of currentteams
-	var teamsArray = await utilities.find('currentteams', {}, {sort: {'team_number': 1}});
+	let teamsArray = req.teams;
 	
 	res.render('./manage/manualdata/teams', {
 		title: 'Edit List of Teams',
@@ -38,17 +42,17 @@ router.post('/teams', wrap(async (req, res) => {
 	
 	return res.send('Legacy code! Don\'t break the site!');
 	
-	// eslint-disable-next-line no-unreachable
+	/*
 	logger.debug(req.body);
 	
-	var teamNumbersArray = [];
-	var teamInfoArray = [];
-	var tbaPromiseArray = [];
+	let teamNumbersArray = [];
+	let teamInfoArray = [];
+	let tbaPromiseArray = [];
 	
-	for(var teamNumberInputName in req.body){
+	for(let teamNumberInputName in req.body){
 		//grab team number
-		var teamNumberInput = req.body[teamNumberInputName];
-		var teamNumber = parseInt(teamNumberInput);
+		let teamNumberInput = req.body[teamNumberInputName];
+		let teamNumber = parseInt(teamNumberInput);
 		
 		//if number is valid, proceed
 		if(!isNaN(teamNumber)){
@@ -56,7 +60,7 @@ router.post('/teams', wrap(async (req, res) => {
 		}
 	}
 	
-	var startTime = Date.now();
+	let startTime = Date.now();
 	
 	//Fill an array of Promises for TBA info on each team.
 	for(var i = 0; i < teamNumbersArray.length; i++){
@@ -83,25 +87,25 @@ router.post('/teams', wrap(async (req, res) => {
 		}
 	}
 	
-	var teamInfoNoDuplicates = [];
+	let teamInfoNoDuplicates = [];
 	
 	//Rebuild array without duplicates.
 	for(var i = 0; i < teamInfoArray.length; i++){
 		
 		//grab team info to check for dupes
 		var thisTeamInfo = teamInfoArray[i];
-		var thisTeamNum = thisTeamInfo.team_number;
+		let thisTeamNum = thisTeamInfo.team_number;
 		
 		let didFindDuplicate = false;
 		
 		logger.debug('================');
 		logger.debug('CHECKING TEAM ' + thisTeamNum);
 		
-		for(var j = 0; j < teamInfoNoDuplicates.length; j++){
+		for(let j = 0; j < teamInfoNoDuplicates.length; j++){
 			
 			//grab team info to compare
-			var thatTeamInfo = teamInfoArray[j];
-			var thatTeamNum = thatTeamInfo.team_number;
+			let thatTeamInfo = teamInfoArray[j];
+			let thatTeamNum = thatTeamInfo.team_number;
 			
 			logger.debug('CMP: ' + thatTeamNum);
 			
@@ -127,6 +131,7 @@ router.post('/teams', wrap(async (req, res) => {
 	
 	//Redirect with success message.
 	res.redirect('/manage?alert=Input teams successfully.');
+	*/
 }));
 
 /**
@@ -142,7 +147,7 @@ router.post('/api/team', wrap(async (req, res) => {
 	}
 	
 	//get team number
-	var team_number = parseInt(req.body.team_number);
+	let team_number = parseInt(req.body.team_number);
 	
 	//if not a number, return with error 400
 	if(isNaN(team_number)){
@@ -151,9 +156,9 @@ router.post('/api/team', wrap(async (req, res) => {
 	}
 	
 	//create team key
-	var team_key = 'frc' + team_number;
+	let team_key = 'frc' + team_number;
 	
-	var teamInfoResponse = await utilities.requestTheBlueAlliance(`team/${team_key}`);
+	let teamInfoResponse = await utilities.requestTheBlueAlliance(`team/${team_key}`);
 	
 	res.status(200).send(teamInfoResponse);
 	
@@ -167,13 +172,13 @@ router.post('/api/team', wrap(async (req, res) => {
  */
 router.get('/matchschedule', wrap(async (req, res) => {
 	
-	var thisFuncName = '[GET] /manage/manualdata/matchschedule => ';
+	let thisFuncName = '[GET] /manage/manualdata/matchschedule => ';
 	
-	var event_key = req.event.key;
+	let event_key = req.event.key;
 	
 	logger.debug(`${thisFuncName} Getting matches`);
 	
-	var matches = await utilities.find('matches', {'event_key': event_key});
+	let matches = await utilities.find('matches', {'event_key': event_key});
 	
 	res.render('./manage/manualdata/matchschedule', {
 		title: 'Enter Match Schedule',
@@ -214,15 +219,15 @@ router.post('/matchschedule', wrap(async (req, res) => {
 		"winning_alliance": ""
 	*/
 	
-	var event_key = req.event.key;
+	let event_key = req.event.key;
 	
 	//Cycle through body and assemble an array of matches.
 	//Array of matches
-	var matchArray = [];
+	let matchArray: StringDict[] = [];
 	//Current match row (*_1, *_2, *_3 etc; the number is idx + 1)
-	var idx = 0;
+	let idx = 0;
 	
-	for(var elementName in req.body){
+	for(let elementName in req.body){
 		//if this input elem. name is a match row (Names are split by Name_#)
 		if(elementName.split('_')[1]){
 			//update idx to the # in element name minus 1
@@ -232,9 +237,9 @@ router.post('/matchschedule', wrap(async (req, res) => {
 				matchArray[idx] = {};
 			}
 			//grab this match obj
-			var thisMatch = matchArray[idx];
+			let thisMatch = matchArray[idx];
 			//add this element to match obj
-			var nameMinusNumber = elementName.split('_')[0];
+			let nameMinusNumber = elementName.split('_')[0];
 			thisMatch[nameMinusNumber] = req.body[elementName];
 		}
 	}
@@ -245,13 +250,13 @@ router.post('/matchschedule', wrap(async (req, res) => {
 	//We need to rearrange the data to fit our database needs.
 	
 	//First, filter matchArray to trash any matches that don't have complete data.
-	var matchArrayFiltered = [];
+	let matchArrayFiltered = [];
 	
 	for(let i = 0; i < matchArray.length; i++){
 		let match = matchArray[i];
 		
 		if(match.BlueTeam1 && match.BlueTeam2 && match.BlueTeam3 &&
-			match.RedTeam1 && match.RedTeam2 && match.RedTeam3 && match.SchedTime != -1){
+			match.RedTeam1 && match.RedTeam2 && match.RedTeam3 && match.SchedTime != '-1'){
 			//If all elements exist and are populated, and time is not -1
 			matchArrayFiltered.push(match);
 		}
@@ -260,13 +265,13 @@ router.post('/matchschedule', wrap(async (req, res) => {
 	logger.debug(matchArrayFiltered);
 	
 	//Now, we can rearrange our data.
-	var matchArrayFormatted = [];
+	let matchArrayFormatted = [];
 	
 	for(let i = 0; i < matchArrayFiltered.length; i++){
 		
 		let match = matchArrayFiltered[i];
 		//Time is in seconds, not ms: divide by 1000
-		match.SchedTime = parseInt( match.SchedTime / 1000 );
+		let schedTime = Math.floor( parseInt(match.SchedTime) / 1000 );
 		//Create formatted match thing
 		matchArrayFormatted[i] = {
 			'actual_time': '',
@@ -292,10 +297,10 @@ router.post('/matchschedule', wrap(async (req, res) => {
 			'event_key': event_key,
 			'key': `${event_key}_qm${i + 1}`, //2019pahat_qm1 (# is i+1) 
 			'match_number': i + 1,
-			'post_result_time': match.SchedTime, //idk what all this time stuff is, just gonna set it to sched time
-			'predicted_time': match.SchedTime,
+			'post_result_time': schedTime, //idk what all this time stuff is, just gonna set it to sched time
+			'predicted_time': schedTime,
 			'set_number': 1,
-			'time': match.SchedTime,
+			'time': schedTime,
 			'winning_alliance': ''
 		};
 	}
@@ -318,9 +323,9 @@ router.post('/matchschedule', wrap(async (req, res) => {
  */
 router.get('/matches', wrap(async (req, res) => {
 	
-	var event_key = req.event.key;
+	let event_key = req.event.key;
 	
-	var matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
+	let matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
 	
 	res.render('./manage/manualdata/matches', {
 		title: 'Input Match Outcomes',
@@ -333,26 +338,26 @@ router.get('/matches', wrap(async (req, res) => {
  */
 router.post('/matches', wrap(async (req, res) => {
 	
-	var event_key = req.event.key;
+	let event_key = req.event.key;
 	
 	//Get list of matches from the database.
-	var matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
+	let matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
 	
-	var startTime = Date.now();
+	let startTime = Date.now();
 	
 	//Build array of each match, from user input
-	var userInputGrouped = {};
+	let userInputGrouped: Dict<StringDict> = {};
 	
 	//go through body and group every piece of data
-	for(var elementName in req.body){
+	for(let elementName in req.body){
 		if (req.body[elementName]) {
 			//console.log(`${elementName}: ${req.body[elementName]}`);
-			var elementContents = req.body[elementName];
+			let elementContents = req.body[elementName];
 			
 			//match key 2019mrcmp_qm1
-			var thisMatchKey = elementName.split('_')[1] + '_' + elementName.split('_')[2];
+			let thisMatchKey = elementName.split('_')[1] + '_' + elementName.split('_')[2];
 			//e.g. BlueCompletedRocket or WinningAlliance
-			var thisElementType = elementName.split('_')[0];
+			let thisElementType = elementName.split('_')[0];
 			
 			//if a match does not exist already, create new obj
 			if( !userInputGrouped[thisMatchKey] ){
@@ -363,10 +368,10 @@ router.post('/matches', wrap(async (req, res) => {
 		}
 	}
 	
-	for(var match of matches){
-		var match_key = match.key;
+	for(let match of matches){
+		let match_key = match.key;
 		
-		var userInputThisMatch = userInputGrouped[match_key];
+		let userInputThisMatch = userInputGrouped[match_key];
 		
 		//Modify winning alliance
 		match.winning_alliance = userInputThisMatch.WinningAlliance;
@@ -380,11 +385,11 @@ router.post('/matches', wrap(async (req, res) => {
 		}
 		
 		//Modify blue score
-		match.alliances.blue.score = ( isNaN(parseInt(userInputThisMatch.BlueScore)) || userInputThisMatch.BlueScore == 0) ? -1 : parseInt(userInputThisMatch.BlueScore);
-		match.score_breakdown.blue.totalPoints = ( isNaN(parseInt(userInputThisMatch.BlueScore)) || userInputThisMatch.BlueScore == 0) ? -1 : parseInt(userInputThisMatch.BlueScore);
+		match.alliances.blue.score = ( isNaN(parseInt(userInputThisMatch.BlueScore)) || userInputThisMatch.BlueScore == '0') ? -1 : parseInt(userInputThisMatch.BlueScore);
+		match.score_breakdown.blue.totalPoints = ( isNaN(parseInt(userInputThisMatch.BlueScore)) || userInputThisMatch.BlueScore == '0') ? -1 : parseInt(userInputThisMatch.BlueScore);
 		//Modify red score
-		match.alliances.red.score = ( isNaN(parseInt(userInputThisMatch.RedScore)) || userInputThisMatch.RedScore == 0) ? -1 : parseInt(userInputThisMatch.RedScore);
-		match.score_breakdown.red.totalPoints = ( isNaN(parseInt(userInputThisMatch.RedScore)) || userInputThisMatch.RedScore == 0) ? -1 : parseInt(userInputThisMatch.RedScore);
+		match.alliances.red.score = ( isNaN(parseInt(userInputThisMatch.RedScore)) || userInputThisMatch.RedScore == '0') ? -1 : parseInt(userInputThisMatch.RedScore);
+		match.score_breakdown.red.totalPoints = ( isNaN(parseInt(userInputThisMatch.RedScore)) || userInputThisMatch.RedScore == '0') ? -1 : parseInt(userInputThisMatch.RedScore);
 		//Modify blue RPs
 		match.score_breakdown.blue.habDockingRankingPoint = ( userInputThisMatch.BlueHabDock == 'on' ) ? true : false;
 		match.score_breakdown.blue.completeRocketRankingPoint = ( userInputThisMatch.BlueCompletedRocket == 'on' ) ? true : false;
@@ -400,7 +405,7 @@ router.post('/matches', wrap(async (req, res) => {
 	//Now, insert updated list of matches
 	await utilities.insert('matches', matches);
 	
-	var endTime = Date.now();
+	let endTime = Date.now();
 	logger.debug(`Done in ${endTime - startTime} ms`);
 	
 	
@@ -423,12 +428,12 @@ router.post('/matches', wrap(async (req, res) => {
 
 	// Build an array of objects, one per team
 	
-	// eslint-disable-next-line no-unreachable
-	var teamsArray = await utilities.find('currentteams', {}, {sort: {'team_number': 1}});
+	/*
+	let teamsArray = await utilities.find('currentteams', {}, {sort: {'team_number': 1}});
 	mapTeamToOrder = {};
 	rankArray = [];
 	for (var i in teamsArray) {
-		var team = teamsArray[i];
+		let team = teamsArray[i];
 		thisRank = {
 			'dq': 0,
 			'extra_stats': [0],
@@ -449,7 +454,7 @@ router.post('/matches', wrap(async (req, res) => {
 
 	// Go through every match, updating the rank array
 	for (var i in matches) {
-		var thisMatch = matches[i];
+		let thisMatch = matches[i];
 
 		if (thisMatch.alliances.red.score != -1) {
 			//console.log("DEBUG: match=" + JSON.stringify(thisMatch));
@@ -475,10 +480,11 @@ router.post('/matches', wrap(async (req, res) => {
 				"set_number":1,
 				"winning_alliance":"red"}
 			*/
+	/*
 			// alliances
-			var redRP = 0;
-			var blueRP = 0;
-			var redWin = 0; var blueWin = 0; var isTie = 0;
+			let redRP = 0;
+			let blueRP = 0;
+			let redWin = 0; let blueWin = 0; let isTie = 0;
 			if (thisMatch.winning_alliance == 'red') { redRP = 2; redWin = 1; }
 			if (thisMatch.winning_alliance == 'blue') { blueRP = 2; blueWin = 1; }
 			if (thisMatch.winning_alliance == '') { redRP = 1; blueRP = 1; isTie = 1; }
@@ -486,8 +492,8 @@ router.post('/matches', wrap(async (req, res) => {
 			if (thisMatch.score_breakdown.red.completeRocketRankingPoint) redRP++;
 			if (thisMatch.score_breakdown.blue.habDockingRankingPoint) blueRP++;
 			if (thisMatch.score_breakdown.blue.completeRocketRankingPoint) blueRP++;
-			var redScore = thisMatch.alliances.red.score;
-			var blueScore = thisMatch.alliances.blue.score;
+			let redScore = thisMatch.alliances.red.score;
+			let blueScore = thisMatch.alliances.blue.score;
 
 			// red
 			for (var j in thisMatch.alliances.red.team_keys) {
@@ -555,7 +561,7 @@ router.post('/matches', wrap(async (req, res) => {
 					currentPointsFor += blueScore;
 					currentPointsAgainst += redScore;
 					var thisSortOrders = [];
-					var rpRatio = currentRP/currentMatchesPlayed;
+					let rpRatio = currentRP/currentMatchesPlayed;
 					thisSortOrders.push(rpRatio);
 					thisSortOrders.push(currentPointsFor);
 					thisSortOrders.push(currentPointsAgainst);
@@ -579,7 +585,7 @@ router.post('/matches', wrap(async (req, res) => {
 	console.log('DEBUG: rankArray=' + JSON.stringify(rankArray));
 
 	// comparator for rankings - generally, higher numbers means 'lower' rank #
-	var compareRankings = function(a,b) {
+	let compareRankings = function(a,b) {
 		if (a.sort_orders && b.sort_orders) {
 			if (a.sort_orders[0] < b.sort_orders[0]) return 1;
 			if (a.sort_orders[0] > b.sort_orders[0]) return -1;
@@ -592,7 +598,7 @@ router.post('/matches', wrap(async (req, res) => {
 		return a.team_number - b.team_number;		
 	};
 	// sort the rankings
-	var sortedRankArray = rankArray.sort(compareRankings);
+	let sortedRankArray = rankArray.sort(compareRankings);
 	// add in the rank values
 	// 2020-02-08, M.O'C: And add in the event_key
 	for (var i in sortedRankArray) {
@@ -611,6 +617,7 @@ router.post('/matches', wrap(async (req, res) => {
 
 	//Redirect to updatematches page with success alert.
 	res.redirect('/manage/manualdata/matches?alert=Updated match successfully.');
+	// */
 }));
 
 module.exports = router;

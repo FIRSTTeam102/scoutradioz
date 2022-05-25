@@ -1,21 +1,22 @@
 // Nodemon is configured to ignore the public-src directory, and I don't think it can be configured to run an NPM script
 //	so instead, just run this script (or npm run watch-staticfiles)
-
-const fs = require('fs');
-const path = require('path');
-const spawn = require('child_process').spawn;
-require('colors');
+import fs from 'fs';
+import path from 'path';
+import {ChildProcessWithoutNullStreams, spawn} from 'child_process';
+import 'colors';
 
 const pathToPublicSrc = path.join(__dirname, '../public-src');
 
-var child, isWorking, startTime;
+let child: ChildProcessWithoutNullStreams|null, 
+	isWorking: boolean, 
+	startTime: number;
 
 function kill() {
 	if (child) child.kill();
 	child = null;
 }
 
-function start(command) {
+function start(command: string) {
 	isWorking = true;
 	startTime = Date.now();
 	
@@ -38,7 +39,7 @@ function start(command) {
 	});
 }
 
-var timeout;
+let timeout: NodeJS.Timeout;
 
 function init() {
 	start('compile-static'); // Start by compiling all static files

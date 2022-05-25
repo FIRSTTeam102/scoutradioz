@@ -1,55 +1,82 @@
-const navHelpers = module.exports = {};
+import express from 'express';
+import Permissions from './permissions';
 
-function resolveToValue(property, /**/) {
+/**
+ * Nav item that's sent to nav.pug.
+ */
+interface CompiledNavItem {
+	label: string;
+	href?: string;
+	sprite?: string;
+	icon?: string;
+	submenu?: CompiledNavItem[];
+}
+
+type ResolvableValue<T> = T|((req: express.Request, res: express.Response) => T|undefined)
+
+interface NavItem {
+	label: ResolvableValue<string>;
+	href?: ResolvableValue<string>;
+	icon?: ResolvableValue<string>;
+	sprite?: ResolvableValue<string>;
+	visible?: ResolvableValue<boolean>;
+	submenu?: ResolvableValue<NavItem[]>;
+}
+
+function resolveToValue(...args: unknown[]) {
+	let property = args[0];
 	if (typeof property == 'function') {
-		let args = Array.prototype.slice.call(arguments, 1);
-		return property(...args);
+		let params = Array.prototype.slice.call(args, 1);
+		return property(...params);
 	}
 	else return property;
 }
 
-navHelpers.compileNavcontents = function(navcontents, req, res) {
-	let ret = [];
-	
-	for (let item of navcontents) {
-		
-		// If the item is not visible, don't go through the work of resolving it or its submenu
-		// REMEMBER!!! Make sure all "visible" functions return true or false. 
-		// 	Use !!(cond) if testing for existence of a variable!
-		let visible = resolveToValue(item.visible, req, res);
-		if (visible !== false) {
-			let compiledItem = {
-				label: resolveToValue(item.label, req, res),
-			};
-			if (item.href) {
-				compiledItem.href = resolveToValue(item.href, req, res);
-			}
-			if (item.sprite) {
-				compiledItem.sprite = resolveToValue(item.sprite, req, res);
-			}
-			else if (item.icon) {
-				compiledItem.icon = resolveToValue(item.icon, req, res);
-			}
-			if (item.submenu) {
-				//recursively solve submenu
-				let submenu = resolveToValue(item.submenu, req, res);
-				if (submenu) {
-					compiledItem.submenu = navHelpers.compileNavcontents(submenu, req, res);
-				}
-			}
-			ret.push(compiledItem);
-		}
-	}
-	
-	return ret;
-};
-
-function userLoggedIn(req, res) {
+function userLoggedIn(req: express.Request) {
 	return !!req.user;
 }
 
-navHelpers.getNavContents = () => {
-	return [
+class NavHelpers {
+	compileNavcontents(navcontents: NavItem[], req: express.Request, res: express.Response) {
+		let ret = [];
+		
+		for (let item of navcontents) {
+			
+			// If the item is not visible, don't go through the work of resolving it or its submenu
+			// REMEMBER!!! Make sure all "visible" functions return true or false. 
+			// 	Use !!(cond) if testing for existence of a variable!
+			let visible = resolveToValue(item.visible, req, res);
+			if (visible !== false) {
+				let compiledItem: CompiledNavItem = {
+					label: resolveToValue(item.label, req, res),
+				};
+				if (item.href) {
+					compiledItem.href = resolveToValue(item.href, req, res);
+				}
+				if (item.sprite) {
+					compiledItem.sprite = resolveToValue(item.sprite, req, res);
+				}
+				else if (item.icon) {
+					compiledItem.icon = resolveToValue(item.icon, req, res);
+				}
+				if (item.submenu) {
+					//recursively solve submenu
+					let submenu = resolveToValue(item.submenu, req, res);
+					if (submenu) {
+						compiledItem.submenu = this.compileNavcontents(submenu, req, res);
+					}
+				}
+				ret.push(compiledItem);
+			}
+		}
+		
+		return ret;
+	}
+	
+	/**
+	 * Navigation contents that get compiled at runtime, depending on the logged-in user.
+	 */
+	private _navContents: NavItem[] = [
 		{
 			label: 'Home',
 			href: '/home',
@@ -147,7 +174,7 @@ navHelpers.getNavContents = () => {
 			label: 'Scouting',
 			href: '/dashboard',
 			sprite: 'radio',
-			visible: (req, res) => !!req.user && req.user.role.access_level >= process.env.ACCESS_SCOUTER,
+			visible: (req, res) => !!req.user && req._user.role.access_level >= Permissions.ACCESS_SCOUTER,
 			submenu: [
 				{
 					label: 'Pit Scouting',
@@ -165,10 +192,10 @@ navHelpers.getNavContents = () => {
 		},
 		// Org Management submenu
 		{
-			label: (req, res) => `Manage: [[${req.user.org.nickname}]]`,
+			label: (req, res) => `Manage: [[${req._user.org.nickname}]]`,
 			href: '/manage',
 			sprite: 'settings',
-			visible: (req, res) => !!req.user && req.user.role.access_level >= process.env.ACCESS_TEAM_ADMIN,
+			visible: (req, res) => !!req.user && req.user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN,
 			submenu: [
 				{
 					label: 'Members',
@@ -235,7 +262,7 @@ navHelpers.getNavContents = () => {
 			label: 'Admin',
 			href: '/admin',
 			sprite: 'scoutradioz',
-			visible: (req, res) => !!req.user && req.user.role.access_level >= process.env.ACCESS_GLOBAL_ADMIN,
+			visible: (req, res) => !!req.user && req.user.role.access_level >= Permissions.ACCESS_GLOBAL_ADMIN,
 		},
 		// User when signed in
 		{
@@ -255,9 +282,9 @@ navHelpers.getNavContents = () => {
 		},
 		// User login when not signed in
 		{
-			label: (req, res) => `Log In: [[${req.user.org.nickname}]]`,
+			label: (req, res) => `Log In: [[${req._user.org.nickname}]]`,
 			sprite: 'user',
-			visible: (req, res) => !!req.user && req.user.name === 'default_user',
+			visible: (req, res) => !!req.user && req._user.name === 'default_user',
 			href: '/user/login'
 		},
 		// Change org
@@ -289,4 +316,11 @@ navHelpers.getNavContents = () => {
 			href: 'https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki'
 		}
 	];
-};
+	
+	getNavContents() {
+		return this._navContents;
+	}
+}
+
+const navHelpers = module.exports = new NavHelpers();
+export default navHelpers;

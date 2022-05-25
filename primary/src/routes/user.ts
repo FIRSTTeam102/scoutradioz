@@ -762,7 +762,7 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 		
 	}
 	
-	let redirectURL = req.getRedirectURL();
+	let redirectURL = req.getFixedRedirectURL() || '/home';
 	logger.debug(`Redirect: ${redirectURL}`);
 
 	res.redirect(redirectURL + '?alert=Saved column preferences successfully.&type=success&autofade=true');
