@@ -90,7 +90,7 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @param cacheOption Caching options.
      */
-    find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>;
+    find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]>;
     /**
      * Asynchronous "findOne" function to a collection specified in first parameter.
      * @param collection Collection to findOne in.

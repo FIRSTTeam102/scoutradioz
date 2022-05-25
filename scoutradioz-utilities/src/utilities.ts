@@ -316,7 +316,7 @@ export class Utilities {
 	 * @param options Query options, such as sort.
 	 * @param cacheOption Caching options.
 	 */
-	async find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any> {
+	async find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
@@ -679,6 +679,8 @@ export class Utilities {
 	 */
 	async bulkWrite(collection: string, operations: AnyBulkWriteOperation[], options?: BulkWriteOptions): Promise<BulkWriteResult>{
 		logger.addContext('funcName', 'bulkWrite');
+		
+		// JL TODO: Automatic _id casting for BulkWrite operations
 		
 		//If the collection is not specified and is not a String, throw an error.
 		//This would obly be caused by a programming error.

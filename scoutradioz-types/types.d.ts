@@ -1,6 +1,6 @@
 // JL: Should these be put into a separate package?
 
-import { Document as MongoDocument, ObjectId } from 'mongodb';
+import { Document, ObjectId } from 'mongodb';
 
 // General interfaces/types that don't need to be exported
 declare interface NumericalDict {
@@ -21,6 +21,13 @@ export declare interface MatchFormData {
 
 declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
+}
+
+export declare interface MongoDocument extends Document {
+	/**
+	 * MongoDB ID. Declared as optional to assist the creation of data structures in code, because it does not need to be specified in an insert statement.
+	 */
+	_id?: ObjectId;
 }
 
 /**
@@ -67,7 +74,7 @@ export declare interface Event extends MongoDocument {
  * @collection layout
  * @interface Layout
  */
-export declare interface Layout {
+export declare interface Layout extends MongoDocument {
 	year: number;
 	order: number|string;
 	type: 'checkbox'|'counter'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
@@ -182,7 +189,7 @@ export declare interface MatchScouting extends MongoDocument {
 	alliance: 'red' | 'blue';
 	team_key: TeamKey;
 	match_team_key: MatchTeamKey;
-	assigned_scorer: string;
+	assigned_scorer?: string;
 	actual_scorer?: string;
 	data?: MatchFormData;
 	useragent?: UserAgent;
@@ -193,7 +200,7 @@ export declare interface MatchScouting extends MongoDocument {
  * @collection orgs
  * @interface Org
  */
-export declare interface Org {
+export declare interface Org extends MongoDocument {
 	org_key: OrgKey;
 	nickname: string;
 	team_number?: integer;
@@ -228,7 +235,7 @@ export declare interface OrgClass {
  * @collection orgteamvalues
  * @interface OrgTeamValue
  */
-export declare interface OrgTeamValue {
+export declare interface OrgTeamValue extends MongoDocument {
 	org_key: OrgKey;
 	team_key: TeamKey;
 	event_key: EventKey;
@@ -239,7 +246,7 @@ export declare interface OrgTeamValue {
  * Headers for TBA API calls.
  * @collection passwords
  */
-export declare interface TBAApiHeaders {
+export declare interface TBAApiHeaders extends MongoDocument {
 	name: 'tba-api-headers';
 	headers: StringDict;
 }
@@ -248,7 +255,7 @@ export declare interface TBAApiHeaders {
  * Headers for FIRST API calls.
  * @collection passwords
  */
-export declare interface FIRSTApiHeaders {
+export declare interface FIRSTApiHeaders extends MongoDocument {
 	name: 'first-api-headers';
 	headers: StringDict;
 }
@@ -257,7 +264,7 @@ export declare interface FIRSTApiHeaders {
  * Secret key for TBA webhooks
  * @collection passwords
  */
-export declare interface TBAWebhookSecret {
+export declare interface TBAWebhookSecret extends MongoDocument {
 	name: 'tba-webhook-secret';
 	secret_key: string;
 }
@@ -266,7 +273,7 @@ export declare interface TBAWebhookSecret {
  * Public/private keys for web push API.
  * @collection passwords
  */
-export declare interface WebPushKeys {
+export declare interface WebPushKeys extends MongoDocument {
 	name: 'web_push_keys';
 	public_key: string;
 	private_key: string;
@@ -277,7 +284,7 @@ export declare interface WebPushKeys {
  * @collection pitscouting
  * @interface PitScouting
  */
-export declare interface PitScouting {
+export declare interface PitScouting extends MongoDocument {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
@@ -295,12 +302,12 @@ export declare interface PitScouting {
  * @collection rankingpoints
  * @interface RankingPoints
  */
-export declare interface RankingPoints {
+export declare interface RankingPoints extends MongoDocument {
 	year: number;
 	attributes: RankingPoint[];
 }
 
-export declare interface RankingPoint {
+export declare interface RankingPoint extends MongoDocument {
 	label: string;
 	name: string;
 	abbr: string;
@@ -441,7 +448,7 @@ export declare interface User {
 		assigned: boolean;
 	};
 	visible: boolean;
-	role?: Role; // in code, not in db
+	push_subscription?: PushSubscription
 }
 
 export declare type RoleKey = 'scouter' | 'viewer' | 'team_admin' | 'global_admin';
