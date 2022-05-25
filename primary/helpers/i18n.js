@@ -61,13 +61,24 @@ class I18n {
 			this.locale = req.locale = res.locale = res.locals.locale = locale;
 
 			// Add functions to the request
-			for (const func of ['msg', 'msgMarked', 'getLocaleName', 'getLocaleDirection']) {
+			for (const func of ['msg', 'msgMarked', 'getLocales', 'getLocaleName', 'getLocaleDirection']) {
 				req[func] = res[func] = res.locals[func] = this[func].bind(this);
 			}
 
 			next();
 			logger.removeContext('funcName', 'middleware');
 		}
+	}
+
+	// Get info about all loaded locales
+	getLocales() {
+		return Object.keys(this.locales).map(locale => {
+			return {
+				lang: locale,
+				name: this.getLocaleName(locale),
+				dir: this.getLocaleDirection(locale)
+			}
+		})
 	}
 
 	// Get a locale name by its identifier
@@ -119,6 +130,10 @@ class I18n {
 			// CD 2022-05-24: allowing <p> because it might pop up
 			allowedTags: allowTags ? ['a', 'br', 'p', 'span', 'b', 'strong', 'i', 'em', 'tt', 'code'] : [],
 			allowedSchemes: ['http', 'https'],
+			allowedAttributes: {
+				...sanitizeHtml.defaults.allowedAttributes,
+				'*': ['dir', 'lang']
+			},
 			disallowedTagsMode: 'escape' // leaves the content- maybe switch to 'discard'?
 		});
 	}

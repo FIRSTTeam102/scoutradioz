@@ -17,6 +17,7 @@ class NavigationBar{
 	overlayElem: JQuery;
 	title: string;
 	footerContents: Array<string>;
+	locales: Array<Locale>;
 	opts: {
 		openingInterval: number,
 		fastTransitionTime: number,
@@ -28,7 +29,6 @@ class NavigationBar{
 	// mmenu.js doesn't provide a typescript version; Not gonna bother updating the mmenu minified js to typescript
 	menu: any;
 	api: any;
-	
 	
 	constructor(){
 		//Options and ID names are hard-coded. I'm not THAT much of a masochist!
@@ -49,13 +49,16 @@ class NavigationBar{
 		this.menuElem = $('#menu');
 		this.barElem = $('#headerbar');
 		this.overlayElem = $('#overlay');
-		//Take menu title & footer branding variables from inline script in nav.pug
-		
+
+		//Take menu title & footer branding variables from inline script in nav.pug		
 		if (typeof navMenuTitle === 'string') this.title = navMenuTitle;
 		else this.title = 'Menu';
 		if (footerContents instanceof Array) this.footerContents = footerContents;
 		else this.footerContents = [];
-		
+		if (locales instanceof Array) this.locales = locales;
+		else this.locales = [];
+
+		var currentLang = document.documentElement.lang || 'en';
 		//Create Mmenu object
 		this.menu = new Mmenu('#menu',
 			{
@@ -71,14 +74,23 @@ class NavigationBar{
 				extensions: {
 					'all': ['border-full'],
 				},
-				//Branding on bottom of menu (footerContents is set in nav.pug)
 				navbars: [
+					// Locale selector (locales is set in nav.pug)
+					{
+						use: this.locales.length > 0, // only show when there are multiple locales
+						position: 'bottom',
+						content: `<select id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${locale.name}</option>`)}</select>`
+					},
+					//Branding on bottom of menu (footerContents is set in nav.pug)
 					{
 						position: 'bottom',
 						content: this.footerContents,
 					}
 				],
-			}, { });
+			}, {
+				// mmenu has its own internal translations
+				language: currentLang
+			});
 		
 		this.api = this.menu.API;
 		//Move element into parent body
@@ -124,6 +136,13 @@ class NavigationBar{
 					this.menuClose();
 				}, this.opts.openingInterval);
 			}
+		});
+		
+		// Locale selector
+		$('#localeSelector').on('change', (e) => {
+			var newLang = (e.target as HTMLSelectElement).value;
+			Cookies.set('language', newLang);
+			location.reload();
 		});
 	}
 	
@@ -300,9 +319,16 @@ declare class TransformPosition {
 	bar: string;
 }
 
+interface Locale {
+	lang: string;
+	name: string;
+	dir: 'ltr' | 'rtl';
+}
+
 // Initialized in pug
 declare var navMenuTitle: string | undefined;
 declare var footerContents: Array<string> | undefined;
+declare var locales: Array<Locale> | undefined;
 declare var Mmenu: any;
 
 		/*
