@@ -93,7 +93,7 @@ block content
 							hr 
 						//include templates/completedMatch
 						+completedMatch(match, undefined, team.key)
-						if (match.scoringdata && user && user.role.access_level >= process.env.ACCESS_SCOUTER)
+						if (match.scoringdata && user && user.role.access_level >= Permissions.ACCESS_SCOUTER)
 							each element in scorelayout
 								case element.type
 									when "textblock"

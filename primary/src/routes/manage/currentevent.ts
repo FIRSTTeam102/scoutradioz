@@ -57,7 +57,7 @@ router.post('/resetmatches', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	// Issue #45 
-	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+	// if (!await req.authenticate(Permissions.ACCESS_GLOBAL_ADMIN)) {
 	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
 	// }
 	
@@ -95,7 +95,7 @@ router.post('/updatematch', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	// Issue #45 
-	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+	// if (!await req.authenticate(Permissions.ACCESS_GLOBAL_ADMIN)) {
 	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
 	// }
 	
@@ -172,7 +172,7 @@ router.post('/updatematches', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	// Issue #45 
-	// if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) {
+	// if (!await req.authenticate(Permissions.ACCESS_GLOBAL_ADMIN)) {
 	// 	return res.redirect('/manage/currentevent/matches?alert=Unauthorized to modify TBA data.');
 	// }
 	

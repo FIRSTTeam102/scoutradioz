@@ -232,7 +232,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require scouter-level authentication for every method in this route BELOW this method.
-	if (await req.authenticate (process.env.ACCESS_SCOUTER)) {
+	if (await req.authenticate (Permissions.ACCESS_SCOUTER)) {
 		next();
 	}
 }));

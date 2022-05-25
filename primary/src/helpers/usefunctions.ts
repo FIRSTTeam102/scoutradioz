@@ -1,13 +1,14 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import utilities from '@firstteam102/scoutradioz-utilities';
-import luxon, { DateTime, IANAZone, FixedOffsetZone } from 'luxon';										// Luxon lets us handle timezones and localization
-import * as e from '@firstteam102/http-errors';
+import { DateTime, IANAZone, FixedOffsetZone } from 'luxon';	// Luxon lets us handle timezones and localization
+import e from '@firstteam102/http-errors';
+import Permissions from './permissions';
 import 'colors';
 
 
 const logger = getLogger('usefunctions');
-const navHelpers = require('../../build_tmp/helpers/nav');
+const navHelpers = require('../helpers/nav');
 
 // There are some pages where we don't want the year, but the rest of the string is good
 class DateTimeExtras {
@@ -125,7 +126,7 @@ class UseFunctions {
 			let isAuthenticated = false;
 			
 			//Throw if access level is not a valid number (Programming error)
-			if( isNaN(accessLevelNum) ) throw new Error('req.authenticate: Access level is not a number (Check naming of process.env.ACCESS_X)');
+			if( isNaN(accessLevelNum) ) throw new Error('req.authenticate: Access level is not a number (Check naming of Permissions.ACCESS_X)');
 			
 			let user = req.user;
 			
@@ -206,6 +207,7 @@ class UseFunctions {
 			req.shortagent.browser == 'Safari'
 			|| req.shortagent.os == 'OS X'
 		) ? true : false;
+		res.locals.Permissions = Permissions;
 		
 		// Compile the navcontents according to the current user's state
 		res.locals.navcontents = navHelpers.compileNavcontents(navcontents, req, res);

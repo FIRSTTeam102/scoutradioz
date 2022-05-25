@@ -1,15 +1,27 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger();
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const uploadHelper = require('@firstteam102/scoutradioz-helpers').upload;
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../../helpers/express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../../helpers/permissions';
+import { upload as uploadHelper } from '@firstteam102/scoutradioz-helpers';
+import { MatchScouting, Team, Layout, PitScouting, User, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
+import e from '@firstteam102/http-errors';
+
+const router = express.Router();
+const logger = getLogger('scoutingaudit');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//Require team-admin-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+	if (await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
 }));
+	
+declare interface AuditElement {
+	match_team_key?: MatchTeamKey;
+	actual_scorer?: string;
+	char?: string;
+}
 
 /**
  * Scoring audit page.
@@ -18,41 +30,44 @@ router.all('/*', wrap(async (req, res, next) => {
  */
 router.get('/', wrap(async (req, res) =>  {
 	
-	var thisFuncName = 'audit.root[GET]:';
+	let thisFuncName = 'audit.root[GET]:';
 	logger.debug(`${thisFuncName} enter`);
 	
-	var eventKey = req.event.key;
-	var org_key = req.user.org_key;
+	let eventKey = req.event.key;
+	let org_key = req._user.org_key;
 
-	var matches = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 }, {sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 }, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	var earliestTimestamp = 9999999999;
+	let earliestTimestamp = 9999999999;
 	if (matches && matches[0]) {
-		var earliestMatch = matches[0];
+		let earliestMatch = matches[0];
 		earliestTimestamp = earliestMatch.time;
 	}
 	
 	logger.debug('Scoring audit: earliestTimestamp=' + earliestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'assigned_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'assigned_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	if(!scoreData)
 		return res.redirect('/?alert=mongo error at dashboard/matches');
 
 	// Build per-team-member array
-	var memberArr = [];
-	var lastMember = 'NOLASTMEMBER';
-	var thisMemberArr = [];
+	let memberArr = [];
+	let lastMember: string|undefined = 'NOLASTMEMBER';
+	let thisMemberArr = [];
 
 	if (scoreData && scoreData.length > 0) {
-		for (var scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
-			var thisMember = scoreData[scoreIdx].assigned_scorer;
+		for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
+			let thisScoreData = scoreData[scoreIdx];
+			let thisMember = thisScoreData.assigned_scorer;
+						
 			if (thisMember != lastMember) {
-				let thisRow = {};
-				thisRow['member'] = lastMember;
-				thisRow['record'] = thisMemberArr;
+				let thisRow = {
+					member: lastMember,
+					record: thisMemberArr
+				};
 				if ('NOLASTMEMBER' != lastMember)
 					memberArr.push(thisRow);
 				
@@ -61,35 +76,35 @@ router.get('/', wrap(async (req, res) =>  {
 			}
 			
 			//create audit-element to push
-			var auditElement = {};
-			var auditElementChar;
+			let auditElement: AuditElement = {};
+			let auditElementChar;
 			//set auditElement.match_team_key
-			if(scoreData[scoreIdx]){
-				auditElement.match_team_key = scoreData[scoreIdx].match_team_key;
+			if(thisScoreData){
+				auditElement.match_team_key = thisScoreData.match_team_key;
 			}
 			
-			if (scoreData[scoreIdx].data){
+			if (thisScoreData.data){
 				
-				if (scoreData[scoreIdx].assigned_scorer == scoreData[scoreIdx].actual_scorer)
+				if (thisScoreData.assigned_scorer == thisScoreData.actual_scorer)
 					auditElementChar = 'Y';
 				else
 				// 2019-03-16 JL: App crashed due to actual_scorer being undefined
-				if (scoreData[scoreIdx].actual_scorer == undefined){
+				if (thisScoreData.actual_scorer == undefined){
 					logger.debug(`${thisFuncName} actual_scorer undefined`);
 					auditElementChar = 'N';
 				}
 				// 2018-03-22, M.O'C: Adding parent option
-				else if (scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('mr') || 
-						scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('mrs') || 
-						scoreData[scoreIdx].actual_scorer.toLowerCase().startsWith('ms')){
+				else if (thisScoreData.actual_scorer.toLowerCase().startsWith('mr') || 
+						thisScoreData.actual_scorer.toLowerCase().startsWith('mrs') || 
+						thisScoreData.actual_scorer.toLowerCase().startsWith('ms')){
 					//covered by parent (and insert actual_scorer)
 					auditElementChar = 'P';
-					auditElement.actual_scorer = scoreData[scoreIdx].actual_scorer;
+					auditElement.actual_scorer = thisScoreData.actual_scorer;
 				}
 				else{
 					//covered by lead (and insert actual_scorer)
 					auditElementChar = 'C';
-					auditElement.actual_scorer = scoreData[scoreIdx].actual_scorer;
+					auditElement.actual_scorer = thisScoreData.actual_scorer;
 				}		
 			}
 			else{
@@ -102,9 +117,10 @@ router.get('/', wrap(async (req, res) =>  {
 			
 		}
 		// Write in the last set of records
-		let thisRow = {};
-		thisRow['member'] = lastMember;
-		thisRow['record'] = thisMemberArr;
+		let thisRow = {
+			member: lastMember,
+			record: thisMemberArr
+		};
 		memberArr.push(thisRow);
 	}
 
@@ -116,29 +132,30 @@ router.get('/', wrap(async (req, res) =>  {
 
 router.get('/uploads', wrap(async (req, res) => {
 	
-	const org_key = req.user.org_key;
+	const org_key = req._user.org_key;
 	
 	// Get the year from either the HTTP query or the current event
-	var year = parseInt(req.query.year);
+	let year;
+	if (typeof req.query.year === 'string') year = parseInt(req.query.year);
 	if (!year || isNaN(year)) year = req.event.year;
 	
-	var uploads = await utilities.find('uploads', 
+	let uploads: Upload[] = await utilities.find('uploads', 
 		{org_key: org_key, removed: false, year: year},
 		{},
 	);
 	
 	// Years that contain any non-removed uploads
-	var years = await utilities.distinct('uploads', 'year', {org_key: org_key, removed: false});
+	let years: string[] = await utilities.distinct('uploads', 'year', {org_key: org_key, removed: false});
 	
 	uploads.sort((a, b) => {
-		var aNum = parseInt(a.team_key.substring(3));
-		var bNum = parseInt(b.team_key.substring(3));
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
 		if (aNum == bNum) {
-			var aIdx = a.index;
-			var bIdx = b.index;
+			let aIdx = a.index;
+			let bIdx = b.index;
 			if (aIdx == bIdx) {
-				var aTime = a.uploader.upload_time;
-				var bTime = b.uploader.upload_time;
+				let aTime = a.uploader.upload_time;
+				let bTime = b.uploader.upload_time;
 				return aTime - bTime;
 			}
 			else {
@@ -151,7 +168,7 @@ router.get('/uploads', wrap(async (req, res) => {
 	});
 	
 	// 2022-03-08 JL: Previous logic didn't work, it always left out at least one document
-	var uploadsByTeamKey = {};
+	let uploadsByTeamKey: Dict<Upload[]> = {};
 	for (let upload of uploads) {
 		upload.links = uploadHelper.getLinks(upload);
 		if (upload.hasOwnProperty('team_key')) {
@@ -195,22 +212,22 @@ router.get('/uploads', wrap(async (req, res) => {
 }));
 
 router.post('/uploads/changeindex', wrap(async (req, res) => {
-	var thisFuncName = 'audit.uploads.changeindex: ';
+	let thisFuncName = 'audit.uploads.changeindex: ';
 	
 	try {
 		logger.debug(`${thisFuncName} ENTER`);
 		
-		var uploadId = req.body.id;
-		var changeAmt = parseInt(req.body.amount);
-		var orgKey = req.user.org_key;
+		let uploadId = req.body.id;
+		let changeAmt = parseInt(req.body.amount);
+		let orgKey = req._user.org_key;
 	
-		var upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
+		let upload: Upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
 		
 		if (upload) {
 			
-			var newIndex = upload.index + changeAmt;
+			let newIndex = upload.index + changeAmt;
 			
-			var writeResult = await utilities.update('uploads',
+			let writeResult = await utilities.update('uploads',
 				{_id: uploadId, org_key: orgKey},
 				{$set: {index: newIndex}}
 			);
@@ -225,26 +242,26 @@ router.post('/uploads/changeindex', wrap(async (req, res) => {
 	}
 	catch (err) {
 		logger.error(err);
-		res.status(500).send(err.message);
+		res.status(500).send(JSON.stringify(err));
 	}
 }));
 
 router.post('/uploads/delete', wrap(async (req, res) => {
-	var thisFuncName = 'audit.uploads.delete: ';
+	let thisFuncName = 'audit.uploads.delete: ';
 	
 	try {
 		logger.debug(`${thisFuncName} ENTER`);
 		
-		var uploadId = req.body.id;
-		var orgKey = req.user.org_key;
+		let uploadId = req.body.id;
+		let orgKey = req._user.org_key;
 	
-		var upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
+		let upload: Upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
 		
 		if (upload) {
 			
-			logger.info(`${req.user} has deleted: ${JSON.stringify(upload)}`);
+			logger.info(`${req._user} has deleted: ${JSON.stringify(upload)}`);
 			
-			var writeResult = await utilities.update('uploads',
+			let writeResult = await utilities.update('uploads',
 				{_id: uploadId, org_key: orgKey},
 				{$set: {removed: true}}
 			);
@@ -259,33 +276,33 @@ router.post('/uploads/delete', wrap(async (req, res) => {
 	}
 	catch (err) {
 		logger.error(err);
-		res.status(500).send(err.message);
+		res.status(500).send(JSON.stringify(err));
 	}
 }));
 
 router.get('/bymatch', wrap(async (req, res) => {
 	
-	var eventKey = req.event.key;
-	var org_key = req.user.org_key;
+	let eventKey = req.event.key;
+	let org_key = req._user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	var earliestTimestamp = 9999999999;
+	let earliestTimestamp = 9999999999;
 	
 	if (matches[0]){
-		var earliestMatch = matches[0];
+		let earliestMatch = matches[0];
 		earliestTimestamp = earliestMatch.time;
 	}
 	
 	logger.debug('Per-match audit: earliestTimestamp=' + earliestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	//Create array of matches for audit, with each match-team inside each match
-	var audit = [];
+	let audit = [];
 	
 	if (scoreData.length == 0) {
 		return res.render('./manage/audit/bymatch', {
@@ -294,9 +311,9 @@ router.get('/bymatch', wrap(async (req, res) => {
 		});
 	}
 	
-	var lastMatchNum = scoreData[0].match_number;
+	let lastMatchNum = scoreData[0].match_number;
 	
-	for(var i = 0; i < scoreData.length; i++){
+	for(let i = 0; i < scoreData.length; i++){
 		
 		let thisMatchNum  = scoreData[i].match_number;
 		
@@ -307,7 +324,7 @@ router.get('/bymatch', wrap(async (req, res) => {
 			let matchTeamArr = [];
 			
 			//go through the next 6 elements in scoreData and add to matchTeamArr
-			for(var j = 0; j < 6; j++){
+			for(let j = 0; j < 6; j++){
 				
 				let thisMatchTeam = scoreData[i + j];
 				let thisMatchTeamNum = thisMatchTeam.match_number;
@@ -339,30 +356,30 @@ router.get('/bymatch', wrap(async (req, res) => {
 
 router.get('/comments', wrap(async (req, res) => {
 	
-	var eventKey = req.event.key;
-	var org_key = req.user.org_key;
+	let eventKey = req.event.key;
+	let org_key = req._user.org_key;
 		
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	var matches = utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	var earliestTimestamp = 9999999999;
+	let earliestTimestamp = 9999999999;
 	
 	if (matches[0]){
-		var earliestMatch = matches[0];
+		let earliestMatch = matches[0];
 		earliestTimestamp = earliestMatch.time;
 	}
 	
 	logger.debug('Comments audit: earliestTimestamp=' + earliestTimestamp);
 		
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var scoreData = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'actual_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'actual_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
 	
-	var audit = [];
+	let audit = [];
 	
-	for(var i in scoreData){
-		if(scoreData[i].data && scoreData[i].data.otherNotes != ''){
-			audit.push(scoreData[i]);
+	for(let item of scoreData){
+		if(item.data && item.data.otherNotes != ''){
+			audit.push(item);
 		}
 	}
 	
@@ -376,15 +393,15 @@ router.get('/matchscores', wrap(async (req, res) => {
 	logger.addContext('funcName', 'matchscores[get]');
 	logger.info('ENTER');
 
-	var eventKey = req.event.key;
-	var orgKey = req.user.org_key;
-
-	var lookbackto = req.query.lookbackto;
-	if (!lookbackto)
+	let eventKey = req.event.key;
+	let orgKey = req._user.org_key;
+	
+	let lookbackto = req.query.lookbackto;
+	if (typeof lookbackto !== 'string')
 		lookbackto = '1';
 	let lookbacktoIndex = parseInt(lookbackto) - 1;
 	
-	var matches = await utilities.find('matches',
+	let matches: Match[] = await utilities.find('matches',
 		{ 'event_key': eventKey, 'match_number': { '$gt': lookbacktoIndex }, 'score_breakdown': { '$ne': null } }, { sort: { match_number: -1 } },
 		{allowCache: true, maxCacheAge: 10}
 	);
@@ -392,11 +409,11 @@ router.get('/matchscores', wrap(async (req, res) => {
 	// set up the return data table - we'll add alternating rows of FRC & scouting data
 	let returnCompareTable = [];
 	// dictionary of scouts - each item should be keyed by scout name and contain (a) total matches scouted + (b) total error point diffs & ratios	
-	let scoutScoreDict = {};
+	let scoutScoreDict: Dict<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number}> = {};
 
 	// cycle through match objects; for each one, cycle through 'red' and 'blue' array
 	// for each alliance, pull scouting data - if less than 3 found, can't compare
-	let allianceArray = ['red', 'blue'];
+	let allianceArray: Array<'red'|'blue'> = ['red', 'blue'];
 	for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
 		let thisMatch = matches[matchIdx];
 		for (let allianceIdx = 0; allianceIdx < allianceArray.length; allianceIdx++) {
@@ -404,7 +421,7 @@ router.get('/matchscores', wrap(async (req, res) => {
 			console.log('thisAlliance=' + thisAlliance + ',thisMatch.key=' + thisMatch.key);
 
 			// retrieve the scouting data for this match
-			var matchScoutReports = await utilities.find('matchscouting',
+			let matchScoutReports: MatchScouting[] = await utilities.find('matchscouting',
 				{ 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { '$ne': null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
 			);
 			console.debug('matchScoutReports.length=' + matchScoutReports.length);
@@ -414,8 +431,10 @@ router.get('/matchscores', wrap(async (req, res) => {
 			}
 			else {
 				let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
-				let totalPoints = thisScoreBreakdown.totalPoints;
-				let foulPoints = thisScoreBreakdown.foulPoints;
+				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
+				let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
+				let teleopPoints = getNumberFrom(thisScoreBreakdown, 'teleopPoints');
+				let endgamePoints = getNumberFrom(thisScoreBreakdown, 'endgamePoints');
 				let frcTot = totalPoints - foulPoints;
 
 				let orgTot = 0;
@@ -429,15 +448,15 @@ router.get('/matchscores', wrap(async (req, res) => {
 				let orgTeleHigh = 0;
 				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
 					let thisScoutReport = matchScoutReports[scoutIdx].data;
-					orgTot += thisScoutReport.contributedPoints;
-					orgAutoTot += thisScoutReport.autoPoints;
-					orgTeleTot += thisScoutReport.teleopPoints;
-					orgEndTot += thisScoutReport.climbPoints;
-					orgTaxiTot += thisScoutReport.didTaxi;
-					orgAutoLow += thisScoutReport.autoLowScored;
-					orgAutoHigh += thisScoutReport.autoHighScored;
-					orgTeleLow += thisScoutReport.teleopLowScored;
-					orgTeleHigh += thisScoutReport.teleopHighScored;
+					orgTot += getNumberFrom(thisScoutReport, 'contributedPoints');
+					orgAutoTot += getNumberFrom(thisScoutReport, 'autoPoints');
+					orgTeleTot += getNumberFrom(thisScoutReport, 'teleopPoints');
+					orgEndTot += getNumberFrom(thisScoutReport, 'climbPoints');
+					orgTaxiTot += getNumberFrom(thisScoutReport, 'didTaxi');
+					orgAutoLow += getNumberFrom(thisScoutReport, 'autoLowScored');
+					orgAutoHigh += getNumberFrom(thisScoutReport, 'autoHighScored');
+					orgTeleLow += getNumberFrom(thisScoutReport, 'teleopLowScored');
+					orgTeleHigh += getNumberFrom(thisScoutReport, 'teleopHighScored');
 				}
 
 				// score
@@ -449,6 +468,10 @@ router.get('/matchscores', wrap(async (req, res) => {
 				// track scores
 				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
 					let thisScoutName = matchScoutReports[scoutIdx].actual_scorer;
+					if (!thisScoutName) {
+						logger.trace('No actual_scorer for scout report idx=' + scoutIdx);
+						continue;
+					}
 					let thisScoutRecord = scoutScoreDict[thisScoutName];
 					if (!thisScoutRecord) {
 						scoutScoreDict[thisScoutName] = {count: 1, avgDiff: errDiff, avgRatio: errRatio, totDiff: errDiff, totRatio: errRatio};
@@ -468,20 +491,23 @@ router.get('/matchscores', wrap(async (req, res) => {
 				frcRow.push('');
 				frcRow.push('');
 				frcRow.push(frcTot);
-				frcRow.push(thisScoreBreakdown.autoPoints);
-				frcRow.push(thisScoreBreakdown.teleopPoints - thisScoreBreakdown.endgamePoints);
-				frcRow.push(thisScoreBreakdown.endgamePoints);
+				frcRow.push(getNumberFrom(thisScoreBreakdown, 'autoPoints'));
+				frcRow.push(teleopPoints - endgamePoints);
+				frcRow.push(getNumberFrom(thisScoreBreakdown, 'endgamePoints'));
 				let frcTaxi = 0;
 				for (let robotIdx = 1; robotIdx < 4; robotIdx++)
 					if (thisScoreBreakdown['taxiRobot' + robotIdx] == 'Yes')
 						frcTaxi++;
 				frcRow.push(frcTaxi);
-				frcRow.push(thisScoreBreakdown.autoCargoLowerBlue + thisScoreBreakdown.autoCargoLowerFar + thisScoreBreakdown.autoCargoLowerNear + thisScoreBreakdown.autoCargoLowerRed);
-				frcRow.push(thisScoreBreakdown.autoCargoUpperBlue + thisScoreBreakdown.autoCargoUpperFar + thisScoreBreakdown.autoCargoUpperNear + thisScoreBreakdown.autoCargoUpperRed);
-				frcRow.push(thisScoreBreakdown.teleopCargoLowerBlue + thisScoreBreakdown.teleopCargoLowerFar + thisScoreBreakdown.teleopCargoLowerNear + thisScoreBreakdown.teleopCargoLowerRed);
-				frcRow.push(thisScoreBreakdown.teleopCargoUpperBlue + thisScoreBreakdown.teleopCargoUpperFar + thisScoreBreakdown.teleopCargoUpperNear + thisScoreBreakdown.teleopCargoUpperRed);
+				frcRow.push(getNumberFrom(thisScoreBreakdown, 'autoCargoLowerBlue') + getNumberFrom(thisScoreBreakdown, 'autoCargoLowerFar') + getNumberFrom(thisScoreBreakdown, 'autoCargoLowerNear') + getNumberFrom(thisScoreBreakdown, 'autoCargoLowerRed'));
+				frcRow.push(getNumberFrom(thisScoreBreakdown, 'autoCargoUpperBlue') + getNumberFrom(thisScoreBreakdown, 'autoCargoUpperFar') + getNumberFrom(thisScoreBreakdown, 'autoCargoUpperNear') + getNumberFrom(thisScoreBreakdown, 'autoCargoUpperRed'));
+				frcRow.push(getNumberFrom(thisScoreBreakdown, 'teleopCargoLowerBlue') + getNumberFrom(thisScoreBreakdown, 'teleopCargoLowerFar') + getNumberFrom(thisScoreBreakdown, 'teleopCargoLowerNear') + getNumberFrom(thisScoreBreakdown, 'teleopCargoLowerRed'));
+				frcRow.push(getNumberFrom(thisScoreBreakdown, 'teleopCargoUpperBlue') + getNumberFrom(thisScoreBreakdown, 'teleopCargoUpperFar') + getNumberFrom(thisScoreBreakdown, 'teleopCargoUpperNear') + getNumberFrom(thisScoreBreakdown, 'teleopCargoUpperRed'));
 
 				let orgRow = [];
+				if (!matchScoutReports[0].actual_scorer || !matchScoutReports[1].actual_scorer || !matchScoutReports[2].actual_scorer) {
+					throw new e.InternalServerError('actual_scorer not defined for the first three matchScoutReports');
+				}
 				orgRow.push(matchScoutReports[0].actual_scorer.split(' ')[0]
 					+ ', ' + matchScoutReports[1].actual_scorer.split(' ')[0]
 					+ ', ' + matchScoutReports[2].actual_scorer.split(' ')[0]);
@@ -517,3 +543,13 @@ router.get('/matchscores', wrap(async (req, res) => {
 }));
 
 module.exports = router;
+
+/**
+ * Get a number from an AnyDict, defaulting to 0. Easier than doing an inline ternary for each variable.
+ */
+function getNumberFrom(dict: AnyDict|MatchFormData|undefined, key: string): number {
+	if (!dict) return 0;
+	let thisItem = dict[key];
+	if (typeof thisItem === 'number') return thisItem;
+	else return 0;
+}

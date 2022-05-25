@@ -3,6 +3,7 @@ import { getLogger } from 'log4js';
 import bcrypt from 'bcryptjs';
 import wrap from '../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../helpers/permissions';
 import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
 import { MatchScouting, Team, Layout, PitScouting, User } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
@@ -14,7 +15,7 @@ router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	//Require scouter-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_SCOUTER)) {
+	if (await req.authenticate (Permissions.ACCESS_SCOUTER)) {
 		next();
 	}
 }));
@@ -29,7 +30,7 @@ router.get('/match*', wrap(async (req, res) => {
 	let match_team_key = req.query.key;
 	let alliance = req.query.alliance;
 	let org_key = thisUser.org_key;
-	if (typeof match_team_key !== 'string') return res.redirect('/dashboard?alert=Invalid match key set for scouting.'); // 2022-05-17 JL: Redirect user if they don't have a match key set in the url OR if they set two, making it an array
+	if (typeof match_team_key !== 'string') throw new e.UserError('Invalid match key set for scouting.'); // 2022-05-17 JL: Throw if they don't have a match key set in the url OR if they set two, making it an array
 	let teamKey = match_team_key.split('_')[2];
 	
 	logger.debug(`match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName} teamKey=${teamKey}`);
@@ -41,7 +42,7 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	//check if there is already data for this match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoringdata: MatchScouting = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
+	let scoringdata: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
 		
 	//scouting answers for this match are initialized as null for visibility
 	let answers = null;
@@ -70,8 +71,9 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	
 	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
-	
 	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	
+	if (!team) throw new e.UserError(`Team ${teamKey} does not exist.`);
 
 	//render page
 	res.render('./scouting/match', {
@@ -260,7 +262,7 @@ router.get('/', wrap(async (req, res) => {
 
 // (Org manager only) - Deletes the scouting data from a given match. Requires a password.
 router.post('/match/delete-data', wrap(async (req, res) => {
-	if (!await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+	if (!await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {
 		return;
 	}
 	logger.addContext('funcName', 'match/delete-data[post]');

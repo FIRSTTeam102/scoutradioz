@@ -1,30 +1,35 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger();
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const matchDataHelper = require('@firstteam102/scoutradioz-helpers').matchData;
-const e = require('@firstteam102/http-errors');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../../helpers/express-async-handler';
+import utilities, { MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../../helpers/permissions';
+import {  Ranking, AggRange, OrgTeamValue } from '@firstteam102/scoutradioz-types';
+import { matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
+import e from '@firstteam102/http-errors';
+
+const router = express.Router();
+const logger = getLogger('allianceselection');
 
 router.get('/', wrap(async (req, res) => {
 	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	if( !await req.authenticate( Permissions.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var thisFuncName = 'allianceselection{root}[get]: ';
+	let thisFuncName = 'allianceselection{root}[get]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
 	// for later querying by event_key
-	var event_key = req.event.key;
-	var event_year = req.event.year;
-	var org_key = req.user.org_key;
+	let event_key = req.event.key;
+	let event_year = req.event.year;
+	let org_key = req._user.org_key;
 	logger.debug(thisFuncName + 'event_key=' + event_key);
 	
 	// get the current rankings
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 	//var rankings = await utilities.find("currentrankings", {}, {});
-	var rankings = await utilities.find('rankings', {'event_key': event_key}, {});
+	let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
 
-	var rankMap = {};
-	for (var rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+	let rankMap: Dict<Ranking> = {};
+	for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
 		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 	}
@@ -41,13 +46,13 @@ router.get('/', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
 	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
-	var cookie_key = org_key + '_' + event_year + '_cols';
-	var colCookie = req.cookies[cookie_key];
-	var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	let cookie_key = org_key + '_' + event_year + '_cols';
+	let colCookie = req.cookies[cookie_key];
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
-	var aggQuery = [];
+	let aggQuery = [];
 	aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
-	var groupClause = {};
+	let groupClause: MongoDocument = {};
 	// group teams for 1 row per team
 	groupClause['_id'] = '$team_key';
 
@@ -83,17 +88,17 @@ router.get('/', wrap(async (req, res) => {
 	// logger.debug(thisFuncName + 'aggQuery=' + JSON.stringify(aggQuery, 0, 2));
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	var aggArray = await utilities.aggregate('matchscouting', aggQuery);
+	let aggArray = await utilities.aggregate('matchscouting', aggQuery);
 			
 	logger.trace(`${thisFuncName} rankMap=${JSON.stringify(rankMap)}`);
 	
 	// Rewrite data into display-friendly values
-	for (var aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
-		var thisAgg = aggArray[aggIdx];
-		for (var scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+	for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+		let thisAgg = aggArray[aggIdx];
+		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-				var roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
+				let roundedVal = (Math.round(thisAgg[thisLayout.id] * 10)/10).toFixed(1);
 				thisAgg[thisLayout.id] = roundedVal;
 			}
 		}
@@ -108,7 +113,7 @@ router.get('/', wrap(async (req, res) => {
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	// var currentAggRanges = await utilities.find("currentaggranges", {}, {});
-	var currentAggRanges = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
+	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
 
 	res.render('./manage/allianceselection', {
 		title: 'Alliance Selection',
@@ -129,21 +134,21 @@ router.get('/', wrap(async (req, res) => {
 */
 router.post('/updateteamvalue', wrap(async (req, res) => {
 	//Check authentication for team admin level
-	if( !await req.authenticate( process.env.ACCESS_TEAM_ADMIN ) ) return;
+	if( !await req.authenticate( Permissions.ACCESS_TEAM_ADMIN ) ) return;
 	
-	var thisFuncName = 'allianceselection.updateteamvalue[post]: ';
+	let thisFuncName = 'allianceselection.updateteamvalue[post]: ';
 	logger.info(thisFuncName + 'ENTER');
 	
 	const team_key = req.body.key;
 	const valueToAdd = parseInt(req.body.value);
-	const org_key = req.user.org_key;
+	const org_key = req._user.org_key;
 	const event_key = req.event.key;
 	
 	if (!team_key || !valueToAdd) throw new e.UserError('Provide a team_key and a value.');
 	
-	var currentTeamValue = await utilities.findOne('orgteamvalues', {org_key: org_key, team_key: team_key, event_key: event_key});
+	let currentTeamValue: OrgTeamValue = await utilities.findOne('orgteamvalues', {org_key: org_key, team_key: team_key, event_key: event_key});
 	
-	var newValue;
+	let newValue;
 	
 	if (currentTeamValue) {
 		newValue = currentTeamValue.value + valueToAdd;

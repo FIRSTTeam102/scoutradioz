@@ -58,6 +58,7 @@ declare namespace Express {
 					[key: string]: string;
 				};
 			}}
+		push_subscription?: any; // Can't import PushSubscription from web-push in this file
 	}
 	
 	export interface Request {

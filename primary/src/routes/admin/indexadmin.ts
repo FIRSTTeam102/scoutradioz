@@ -54,7 +54,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 		'scouting.js': {
 			'/scouting/pit?team_key=frc102': 'Pit scouting survey + photo upload',
 			'/scouting/match?key=2019paca_qm57_frc2656&alliance=Blue': 'Match scouting survey',
-			'/scouting/teampictures': 'Team pictures list (currently broken)',
+			// '/scouting/teampictures': 'Team pictures list (currently broken)',
 		},
 		'reports.js': {
 			'/reports/alliancestats?teams=frc3260,frc379,frc2053,0,frc2656,frc4085,frc4780': 'show metrics (averages vs. maximums) for individual teams [nominally, to compare alliances]',

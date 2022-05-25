@@ -1,12 +1,17 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger('notifications');
-const wrap = require('express-async-handler');
-const webpush = require('web-push');
-const utilities = require('@firstteam102/scoutradioz-utilities');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../helpers/express-async-handler';
+import Permissions from '../helpers/permissions';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import webpush, { WebPushError, PushSubscription } from 'web-push';
+import { Org, Event } from '@firstteam102/scoutradioz-types';
+
+const router = express.Router();
+const logger = getLogger('notifications');
 
 router.all('/*', wrap(async (req, res, next) => {
 	//check if user is logged in as a scouter
-	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
+	if (!await req.authenticate(Permissions.ACCESS_SCOUTER)) return;
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	next();
@@ -19,14 +24,14 @@ router.post('/save-subscription', wrap(async (req, res) => {
 	//check if it's a valid save request
 	if (!await isValidSaveRequest(req, res)) return;
 	
-	logger.info(`Request to save push notification subscription for ${req.user.name}`);
+	logger.info(`Request to save push notification subscription for ${req._user.name}`);
 	logger.debug(`body: ${JSON.stringify(req.body)}`);
 	
-	var pushSubscription = req.body;
+	let pushSubscription = req.body;
 	
 	try {
 	
-		var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: pushSubscription}});
+		let writeResult = await utilities.update('users', {_id: req._user._id}, {$set: {push_subscription: pushSubscription}});
 	
 		logger.debug(`writeResult: ${JSON.stringify(writeResult)}`);
 		
@@ -54,7 +59,7 @@ router.post('/disable-subscription', wrap(async (req, res) => {
 	logger.addContext('funcName', 'disable-subscription[post]');
 	logger.info('ENTER');
 	
-	var writeResult = await utilities.update('users', {_id: req.user._id}, {$set: {push_subscription: null}});
+	let writeResult = await utilities.update('users', {_id: req._user._id}, {$set: {push_subscription: null}});
 	
 	logger.debug(JSON.stringify(writeResult));
 	logger.info('Success');
@@ -71,19 +76,19 @@ router.post('/disable-subscription', wrap(async (req, res) => {
 
 router.all('/*', wrap(async (req, res, next) => {
 	//check if user is logged in as a scouter
-	if (!await req.authenticate(process.env.ACCESS_GLOBAL_ADMIN)) return;
+	if (!await req.authenticate(Permissions.ACCESS_GLOBAL_ADMIN)) return;
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	next();
 }));
 
 router.get('/', wrap(async (req, res) => {
-	var usersWithPushNotifs = await utilities.find('users', 
+	let usersWithPushNotifs = await utilities.find('users', 
 		{push_subscription: {$ne: null}},
 		{sort: {org_key: 1, role_key: 1, name: 1}}
 	);
 	
-	var matches = await utilities.find('matches', {event_key: req.event.key}, {sort: {predicted_time: 1}});
+	let matches = await utilities.find('matches', {event_key: req.event.key}, {sort: {predicted_time: 1}});
 	
 	res.render('./admin/notifications', {
 		title: 'Notifications testing page',
@@ -97,7 +102,7 @@ router.post('/sendtest', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	//check if user is logged in as a scouter
-	if (!await req.authenticate(process.env.ACCESS_SCOUTER)) return;
+	if (!await req.authenticate(Permissions.ACCESS_SCOUTER)) return;
 	
 	const keys = await utilities.findOne('passwords', {name: 'web_push_keys'});	
 	webpush.setVapidDetails('mailto:roboticsfundinc@gmail.com', keys.public_key, keys.private_key);
@@ -147,7 +152,7 @@ router.post('/sendtest', wrap(async (req, res) => {
 	
 	const users = await utilities.find('users', {push_subscription: {$ne: null}});
 	
-	const pushSubscription = req.user.push_subscription;
+	const pushSubscription = req._user.push_subscription;
 	
 	if (pushSubscription){
 		
@@ -178,24 +183,24 @@ router.post('/sendtest', wrap(async (req, res) => {
 		
 	}
 	else {
-		logger.debug(`Push subscription not available for ${req.user.name}`);
+		logger.debug(`Push subscription not available for ${req._user.name}`);
 	}
 	
 	res.redirect('/notifications');
 }));
 
-async function sendPushMessage (subscription, dataToSend) {
+async function sendPushMessage (subscription: PushSubscription, dataToSend: string) {
 	
 	logger.debug(`Attempting to send push message: ${dataToSend}`);
 	
 	try {
-		var result = await webpush.sendNotification(subscription, dataToSend);
+		let result = await webpush.sendNotification(subscription, dataToSend);
 		
 		logger.debug(`Result: ${JSON.stringify(result)}`);
 	}
 	catch (err) {
 		
-		if (err.statusCode == 404 || err.statusCode == 410) {
+		if (err instanceof WebPushError && (err.statusCode == 404 || err.statusCode == 410)) {
 			logger.warn('Subscription has expired or is no longer valid: ', err);
 		}
 		
@@ -203,7 +208,7 @@ async function sendPushMessage (subscription, dataToSend) {
 	}
 }
 
-async function isValidSaveRequest (req, res) {
+async function isValidSaveRequest (req: express.Request, res: express.Response) {
 	// Check the request body has at least an endpoint
 	if (!req.body || !req.body.endpoint) {
 		// Not a valid subscription.

@@ -41,7 +41,7 @@ block content
 								label(class=thisTextClass for=item.id) &nbsp;#{result2}
 							br 
 		//-Checkbox to set org defaults
-		- if (user.role.access_level >= process.env.ACCESS_TEAM_ADMIN)
+		- if (user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN)
 			br
 			//- 'setOrgDefault': see reports.js, /reports/choosecolumns
 			input(type="checkbox" class="w3-check" name='setOrgDefault' id='setOrgDefault')
@@ -51,7 +51,7 @@ block content
 		div(style="width:200px;margin:auto;text-align:center")
 			button(type="submit" class="w3-btn theme-submit") Save Column Selections
 	//-Button to clear org defaults
-	- if (user.role.access_level >= process.env.ACCESS_TEAM_ADMIN)
+	- if (user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN)
 		br
 		form#clearOrgDefault(action="/user/preferences/reportcolumns/clearorgdefaultcols" method="post")
 			div(style="width:200px;margin:auto;text-align:center")

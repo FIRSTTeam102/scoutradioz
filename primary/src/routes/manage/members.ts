@@ -1,34 +1,44 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger();
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
+import express from 'express';
+import { getLogger } from 'log4js';
+import wrap from '../../helpers/express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import Permissions from '../../helpers/permissions';
+import { Layout, Org, Role, User } from '@firstteam102/scoutradioz-types';
+import e from '@firstteam102/http-errors';
+
+const router = express.Router();
+const logger = getLogger('members');
 
 router.all('/*', wrap(async (req, res, next) => {
+	logger.removeContext('funcName');
 	//Require team-admin-level authentication for every method in this route.
-	if (await req.authenticate (process.env.ACCESS_TEAM_ADMIN)) {
+	if (await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
 }));
 
 router.get('/', wrap(async (req, res) => {
+	logger.addContext('funcName', 'index[get]');
+	logger.info('ENTER');
 	
-	var org_key = req.user.org_key;
+	let thisUser = req._user;
+	let org_key = thisUser.org_key;
 	
-	var orgMembers = await utilities.find('users', {org_key: org_key, visible: true}, {sort: {'name': 1}});
-	var org = await utilities.findOne('orgs', {org_key: org_key});
+	let orgMembers: User[] = await utilities.find('users', {org_key: org_key, visible: true}, {sort: {'name': 1}});
+	let org: Org = await utilities.findOne('orgs', {org_key: org_key});
 	
-	var roles = await utilities.find('roles', { access_level: { $lte: req.user.role.access_level }});
+	let roles: Role[] = await utilities.find('roles', { access_level: { $lte: thisUser.role.access_level }});
 	
-	var config = org.config.members;
+	let config = org.config.members;
 	
 	
-	var membersByRole = {};
+	let membersByRole: Dict<User[]> = {};
 	
-	for( var thisRole of roles ){
+	for( let thisRole of roles ){
 		
 		membersByRole[ thisRole.label ] = [];
 		
-		for( var thisMember of orgMembers ){
+		for( let thisMember of orgMembers ){
 			
 			if( thisMember.role_key == thisRole.role_key ){
 				
@@ -39,7 +49,6 @@ router.get('/', wrap(async (req, res) => {
 	
 	res.render('./manage/members/index', { 
 		title: 'Organization Members',
-		//members: orgMembers,
 		membersByRole: membersByRole,
 		config: config,
 		roles: roles
@@ -47,17 +56,17 @@ router.get('/', wrap(async (req, res) => {
 }));
 
 router.post('/addmember', wrap(async (req, res) => {
+	logger.addContext('funcName', 'addmember[post]');
+	logger.info('ENTER');
 	
-	var thisFuncName = 'members.addmember[post]: ';
-	logger.info(thisFuncName + 'ENTER');
+	let thisUser = req._user;
+	let name = req.body.name;
+	let subteam_key = req.body.subteam_key;
+	let class_key = req.body.class_key;
+	let years = req.body.years;
+	let role_key = req.body.role_key;
 	
-	var name = req.body.name;
-	var subteam_key = req.body.subteam_key;
-	var class_key = req.body.class_key;
-	var years = req.body.years;
-	var role_key = req.body.role_key;
-	
-	var org_key = req.user.org_key;
+	let org_key = thisUser.org_key;
 	
 	if(!name || name == ''){
 		return res.redirect('/manage/members?alert=User must have a name.&type=error');
@@ -66,25 +75,25 @@ router.post('/addmember', wrap(async (req, res) => {
 		return res.redirect('/manage/members?alert=You cannot create a user with that name.&type=error');
 	}
 	
-	var requestedRole = await utilities.findOne('roles', {role_key: role_key});
+	let requestedRole: Role = await utilities.findOne('roles', {role_key: role_key});
 	
 	if( !requestedRole ){
 		return res.redirect('/manage/members?alert=Invalid role requested.');
 	}
-	if( requestedRole.access_level > req.user.role.access_level ){
+	if( requestedRole.access_level > thisUser.role.access_level ){
 		return res.redirect('/manage/members?alert=You do not have permission to create a user with that role.');
 	}
 	
-	var memberJson = JSON.stringify(req.body);
+	let memberJson = JSON.stringify(req.body);
 	logger.debug(`Request to add member ${memberJson}`, true);
 
 	// calculate seniority
-	var seniority = years;
+	let seniority = years;
 	// sanity-check! use '0' if it's not already a parseable int
 	if (isNaN(parseInt(seniority))) seniority = '0';
 	
 	// Get the first 3 characters, all lower case
-	var classPre = class_key.toLowerCase().substring(0, 3);
+	let classPre = class_key.toLowerCase().substring(0, 3);
 	switch(classPre) {
 		case 'fre':
 			seniority += '.1';
@@ -101,9 +110,9 @@ router.post('/addmember', wrap(async (req, res) => {
 		default:
 			seniority += '.0';
 	}
-	logger.debug(thisFuncName + 'seniority=' + seniority);
+	logger.debug('seniority=' + seniority);
 	
-	var insertQuery = {
+	let insertQuery = {
 		org_key: org_key,
 		name: name,
 		role_key: role_key,
@@ -121,17 +130,17 @@ router.post('/addmember', wrap(async (req, res) => {
 		visible: true,
 	};
 	
-	var writeResult = await utilities.insert('users', insertQuery);
+	let writeResult = await utilities.insert('users', insertQuery);
 	
 	res.redirect('/manage/members#addMember');
 }));
 
 router.post('/updatemember', wrap(async (req, res) => {
+	logger.addContext('funcName', 'updatemember[post]');
+	logger.info('ENTER');
 	
-	var thisFuncName = 'members.updatemember[post]: ';
-	logger.info(thisFuncName + 'ENTER');
-	
-	const org_key = req.user.org_key;
+	const thisUser = req._user;
+	const org_key = thisUser.org_key;
 	const memberId = req.body.memberId;
 	const name = req.body.name;
 	const subteam_key = req.body.subteam_key;
@@ -152,12 +161,12 @@ router.post('/updatemember', wrap(async (req, res) => {
 	}
 	
 	// recalculate seniority
-	var seniority = years;
+	let seniority = years;
 	// sanity-check! use '0' if it's not already a parseable int
 	if (isNaN(parseInt(seniority))) seniority = '0';
 	
 	// Get the first 3 characters, all lower case
-	var classPre = class_key.toLowerCase().substring(0, 3);
+	let classPre = class_key.toLowerCase().substring(0, 3);
 	switch(classPre) {
 		case 'fre':
 			seniority += '.1';
@@ -176,15 +185,15 @@ router.post('/updatemember', wrap(async (req, res) => {
 	}
 	
 	// 2022-03-02 JL: Needed to shuffle the logic a bit so that the final update query only uses _id (not org_key) so that utilities cache is cleared for that query
-	var existingUserPreEdit = await utilities.findOne('users', {org_key: org_key, _id: memberId});
+	let existingUserPreEdit: User = await utilities.findOne('users', {org_key: org_key, _id: memberId});
 	if (!existingUserPreEdit) return res.send({
 		status: 400,
 		message: 'The requested user does not exist inside your organization.'
 	});
-	var existingUserRole = await utilities.findOne('roles', {role_key: existingUserPreEdit.role_key});
+	let existingUserRole: Role = await utilities.findOne('roles', {role_key: existingUserPreEdit.role_key});
 	
 	//Check the role of the user they're trying to edit, and see if they are authorized to edit that user
-	if( existingUserRole.access_level > req.user.role.access_level ){
+	if( existingUserRole.access_level > thisUser.role.access_level ){
 		
 		res.send({
 			status: 401,
@@ -193,10 +202,10 @@ router.post('/updatemember', wrap(async (req, res) => {
 	}
 	else{
 		
-		var requestedRole = await utilities.findOne('roles', {role_key: role_key});
+		let requestedRole: Role = await utilities.findOne('roles', {role_key: role_key});
 		
 		//Check the role they're trying to give the user, and see if they are authorized to give that role
-		if( !requestedRole || requestedRole.access_level > req.user.role.access_level ){
+		if( !requestedRole || requestedRole.access_level > thisUser.role.access_level ){
 			res.send({
 				status: 401,
 				message: 'You do not have permission to set a role of this level.'
@@ -204,7 +213,7 @@ router.post('/updatemember', wrap(async (req, res) => {
 		}
 		else{
 			//Query to update user in db
-			var updateQuery = {
+			let updateQuery = {
 				$set: {
 					name: name,
 					role_key: role_key,
@@ -220,7 +229,7 @@ router.post('/updatemember', wrap(async (req, res) => {
 			//log it
 			logger.debug(`Request to update member ${memberId} with details ${JSON.stringify(updateQuery)}`, true);
 			
-			var writeResult = await utilities.update('users', {_id: memberId}, updateQuery);
+			let writeResult = await utilities.update('users', {_id: memberId}, updateQuery);
 			
 			console.log(writeResult);
 			
@@ -233,24 +242,28 @@ router.post('/updatemember', wrap(async (req, res) => {
 }));
 
 router.post('/deletemember', wrap(async (req, res) => {
+	logger.addContext('funcName', 'deletemember[post]');
+	logger.info('ENTER');
+	
+	let thisUser = req._user;
 	
 	if(req.body.memberId){
 		
-		var memberId = req.body.memberId;
-		var orgKey = req.user.org_key;
+		let memberId = req.body.memberId;
+		let orgKey = thisUser.org_key;
 		
-		var member = await utilities.findOne('users', {_id: memberId, org_key: orgKey});
-		var memberRole = await utilities.findOne('roles', {role_key: member.role_key});
+		let member: User = await utilities.findOne('users', {_id: memberId, org_key: orgKey});
+		let memberRole: Role = await utilities.findOne('roles', {role_key: member.role_key});
 		
 		logger.debug(`Request to delete member ${memberId} by user ${JSON.stringify(req.user)}`, true);
 		
 		//check for authorization
-		if( req.user.role.access_level >= memberRole.access_level ){
+		if( thisUser.role.access_level >= memberRole.access_level ){
 			
 			//check if someone's trying to delete themselves (Don't do that!)
-			if(req.user._id != memberId){
+			if(thisUser._id != memberId){
 				
-				var writeResult = await utilities.remove('users', {_id: memberId});
+				let writeResult = await utilities.remove('users', {_id: memberId});
 				
 				res.redirect('/manage/members?alert=Removed user successfully.');
 			}
@@ -317,20 +330,23 @@ router.post('/batch', wrap(async (req, res) => {
 */
 
 router.get('/passwords', wrap(async (req, res) => {
+	logger.addContext('funcName', 'passwords[get]');
+	logger.info('ENTER');
 	
-	var orgKey = req.user.org_key;
+	const thisUser = req._user;
+	let orgKey = thisUser.org_key;
 	
-	var orgMembers = await utilities.find('users', {org_key: orgKey, visible: true}, {sort: {'name': 1}});
+	let orgMembers: User[] = await utilities.find('users', {org_key: orgKey, visible: true}, {sort: {'name': 1}});
 	
-	var roles = await utilities.find('roles', { access_level: { $lte: req.user.role.access_level }});
+	let roles: Role[] = await utilities.find('roles', { access_level: { $lte: thisUser.role.access_level }});
 	
-	var membersByRole = {};
+	let membersByRole: Dict<User[]> = {};
 	
-	for( var thisRole of roles ){
+	for( let thisRole of roles ){
 		
 		membersByRole[ thisRole.label ] = [];
 		
-		for( var thisMember of orgMembers ){
+		for( let thisMember of orgMembers ){
 			
 			if( thisMember.role_key == thisRole.role_key ){
 				
@@ -347,72 +363,76 @@ router.get('/passwords', wrap(async (req, res) => {
 }));
 
 router.post('/resetpassword', wrap(async (req, res) =>  {
-	const thisFuncName = 'manage/members/resetpassword[POST]: ';
+	logger.addContext('funcName', 'resetpassword[post]');
+	logger.info('ENTER');
 	
 	const memberId = req.body.memberId;
+	const thisUser = req._user;
 	
 	try {
 		//get info on requested member
-		const member = await utilities.findOne('users', {_id: memberId});
-		logger.info(`${thisFuncName} Request to reset password of ${member.name} by ${req.user.name}`);
-		const memberRole = await utilities.findOne('roles', {role_key: member.role_key});
+		const member: User = await utilities.findOne('users', {_id: memberId});
+		logger.info(`Request to reset password of ${member.name} by ${thisUser.name}`);
+		const memberRole: Role = await utilities.findOne('roles', {role_key: member.role_key});
 		
 		//check if user is authorized to edit the selected member
-		if (memberRole.access_level <= req.user.role.access_level) {
+		if (memberRole.access_level <= thisUser.role.access_level) {
 			
 			const writeResult = await utilities.update('users', 
 				{_id: memberId}, {$set: {'password': 'default'}});
 				
-			logger.info(`${thisFuncName} Reset password of ${member.name} successfully.`);
+			logger.info(`Reset password of ${member.name} successfully.`);
 			res.send({status: 200, message: 'Reset password successfully.'});
 		}
 		//if unauthorized, return unauthorized message
 		else {
-			logger.info(`${thisFuncName} User ${req.user.name} unauthorized to edit ${member.name}`);
+			logger.info(`User ${thisUser.name} unauthorized to edit ${member.name}`);
 			res.send({status: 401, message: 'Unauthorized to edit this user.'});
 		}
 	}
 	//catch-all for any other errors
 	catch (err) {
 		logger.error(err);
-		res.send({status: 500, message: err.toString()});
+		res.send({status: 500, message: JSON.stringify(err)});
 	}
 }));
 
 router.get('/present', wrap(async (req, res) => {
 	
 	//2019-11-20 JL: updated to only work with members of the right organization.
-	const orgKey = req.user.org_key;
+	const orgKey = req._user.org_key;
 	
-	var users = await utilities.find('users', {org_key: orgKey, visible: true}, {sort: {'name': 1}});
+	let users: User[] = await utilities.find('users', {org_key: orgKey, visible: true}, {sort: {'name': 1}});
 	logger.trace('members.present: users=' + JSON.stringify(users));
 
 	res.render('./manage/members/present', {
 		title: 'Assign Who Is Present',
-		'members': users
+		members: users
 	});
 }));
 
 router.post('/updatepresent', wrap(async (req, res) => {
+	logger.addContext('funcName', 'updatepresent[post]');
+	logger.info('ENTER');
 	
 	//2019-11-20 JL: updated to only work with members of the right organization.
-	const orgKey = req.user.org_key;
+	const orgKey = req._user.org_key;
 	
-	await utilities.update('users', {org_key: orgKey, visible: true}, { $set: { 'event_info.present' : 'false' } }, {multi: true});
+	await utilities.update('users', {org_key: orgKey, visible: true}, { $set: { 'event_info.present' : 'false' } }, {});
 	
 	//Get a list of all present member IDs.
-	var allPresentMembers = [];
+	let allPresentMembers = [];
 	//eslint-disable-next-line
 	for(var i in req.body) {
 		allPresentMembers.push(utilities.id(i));
 	}
 	
-	console.log(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
+	logger.debug(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);
 	
-	var query = {'_id': {$in: allPresentMembers}, org_key: orgKey};
-	var update = {$set: {'event_info.present': true}};
+	let query = {'_id': {$in: allPresentMembers}, org_key: orgKey};
+	let update = {$set: {'event_info.present': true}};
 	
-	await utilities.update('users', query, update, {multi: true, castIds: true});
+	await utilities.update('users', query, update, {});
 	
 	res.redirect('./present');
 }));
