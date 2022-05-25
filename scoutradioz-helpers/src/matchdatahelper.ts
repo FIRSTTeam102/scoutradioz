@@ -779,7 +779,7 @@ export class MatchDataHelper {
 					predictiveBlock['redAVG'] = redAVG; predictiveBlock['redSTD'] = redSTD;
 					predictiveBlock['totalCNT'] = blueCNT + redCNT;
 					predictiveBlock['chanceOfRed'] = chanceOfRed;
-					logger.debug('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
+					logger.trace('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
 		
 					returnData.matches[i]['predictive'] = predictiveBlock;
 				}
