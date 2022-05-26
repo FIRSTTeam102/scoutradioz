@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const child_process = require('child_process');
+import child_process from 'child_process';
 import 'colors';
 import http from 'http';
 
@@ -40,8 +40,11 @@ for (var i = 0; i < process.argv.length; i++) {
 function launchChildProcess(command: string, onlyErrors = false, logName?: string) {
 	let args = command.split(' ');
 	logName = logName || args[args.length - 1];
+	
+	let exec = args.shift();
+	if (!exec) return console.error('Command invalid!');
 
-	let child = child_process.spawn(args.shift(), args, { shell: true });
+	let child = child_process.spawn(exec, args, { shell: true });
 
 	function handleData(data: any) {
 		console.log(typeof data);

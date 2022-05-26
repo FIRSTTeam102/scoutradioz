@@ -6,7 +6,7 @@
 		"target": "es2020",
 		"module": "commonjs",
 		"rootDir": "./src",
-		"outDir": "./build_tmp",
+		"outDir": "./build",
 		"esModuleInterop": true,
 		"strict": true,
 		//   "removeComments": true,
