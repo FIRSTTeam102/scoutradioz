@@ -13,6 +13,7 @@
 	},
 	"include": [
 		"src/express-extensions.d.ts.d.ts",
+		"src/namespace-extensions.d.ts",
 		"src/*",
 		"src/routes/*", 
 		"src/routes/*/*", 

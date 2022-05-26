@@ -108,17 +108,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 //Internationalization
-const { I18n } = require('./helpers/i18n');
-
+import { I18n } from './helpers/i18n';
 const i18n = new I18n({
-	directory: path.join(__dirname, 'locales')
+	directory: path.join(__dirname, '../locales')
 });
-
 app.use(i18n.middleware());
-// these will be exposed to requests and views:
-// __() for a normal message
-// __n() for a message with plurals
-// __mf() for a message with advanced formatting (see MessageFormat)
 
 //Session
 console.log('app.js: app.use(session({... - START');

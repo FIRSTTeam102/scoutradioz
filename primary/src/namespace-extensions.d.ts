@@ -60,8 +60,19 @@ declare namespace Express {
 			}}
 		push_subscription?: any; // Can't import PushSubscription from web-push in this file
 	}
-	
-	export interface Request {
+
+	// Extensions added by i18n middleware to request/response/locals
+	// It would be nice if these could be gotten from i18n.ts instead
+	export interface I18nExpressExtensions {
+		locale: string;
+		msg: (name: string, parameters: Record<string, string | number>) => string;
+		msgMarked: (name: string, parameters: Record<string, string | number>) => string;
+		getLocales: () => StringDict[];
+		getLocaleName: (locale: string, inLocale?: string) => string;
+		getLocaleDir: (locale: string) => 'ltr' | 'rtl';
+	}
+
+	export interface Request extends I18nExpressExtensions {
 		requestTime: number;
 		timezoneString: string;
 		localeString: string;
@@ -143,6 +154,10 @@ declare namespace Express {
 	
 	export interface Request2 extends Request {
 		user: User;
+	}
+
+	export interface Response extends I18nExpressExtensions {
+		locals: Partial<I18nExpressExtensions> & Record<string, any>; // @fixme
 	}
 }
 
