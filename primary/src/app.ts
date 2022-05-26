@@ -1,6 +1,6 @@
-const favicon = require('serve-favicon');						// Serves favicon
-const MongoStore = require('@firstteam102/connect-mongo');		// Alternative session storage
-const passport = require('passport');							// User authentication
+import favicon from 'serve-favicon';							// Serves favicon
+import MongoStore from '@firstteam102/connect-mongo';			// Alternative session storage						
+import passport from 'passport';								// User authentication
 import express from 'express';									// HTTP framework
 import path from 'path';										// For filesystem
 import session from 'express-session';							// Session middleware
@@ -13,9 +13,10 @@ import { MongoClient } from 'mongodb';							// MongoDB client
 const appStartupTime = Date.now();
 
 //AWS middleware magic
-require('aws-serverless-express/middleware');
+import awsMiddleware from 'aws-serverless-express/middleware';
 //load .env variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 //log4js config
 let log4jsConfig = {
@@ -109,7 +110,7 @@ app.use(express.urlencoded({ extended: false }));
 console.log('app.js: app.use(session({... - START');
 // const MongoClient = require('mongodb').MongoClient;
 //Get promise for MongoClient
-const clientPromise = new Promise((resolve, reject) => {
+const clientPromise: Promise<MongoClient> = new Promise((resolve, reject) => {
 	logger.debug('Waiting for utilities.getDBurl');
 	//2020-03-23 JL: Made getDBurl() async to wait for TIER to be given
 	utilities.getDBurl()
@@ -137,7 +138,7 @@ app.use(session({
 		autoRemoveInterval: 10, // In minutes. Default
 		touchAfter: 24 * 3600, // time period in seconds for lazy loading session
 		mongoOptions: {
-			useUnifiedTopology: true
+			// useUnifiedTopology: true
 		}
 	}),
 }));
