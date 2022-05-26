@@ -2,9 +2,10 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities, { MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { Org, Team } from '@firstteam102/scoutradioz-types';
+import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import type { Org, Team } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('indexadmin');

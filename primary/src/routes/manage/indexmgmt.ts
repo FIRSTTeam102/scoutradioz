@@ -4,7 +4,7 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { Org, Event } from '@firstteam102/scoutradioz-types';
+import type { Org, Event } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('manage');

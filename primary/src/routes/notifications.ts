@@ -3,8 +3,8 @@ import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
 import Permissions from '../helpers/permissions';
 import utilities from '@firstteam102/scoutradioz-utilities';
-import webpush, { WebPushError, PushSubscription } from 'web-push';
-import { Org, Event } from '@firstteam102/scoutradioz-types';
+import webpush, { WebPushError } from 'web-push';
+import type { PushSubscription } from 'web-push';
 
 const router = express.Router();
 const logger = getLogger('notifications');

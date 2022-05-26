@@ -1,10 +1,10 @@
-import express from 'express';
 import { getLogger } from 'log4js';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import { DateTime, IANAZone, FixedOffsetZone } from 'luxon';	// Luxon lets us handle timezones and localization
 import e from '@firstteam102/http-errors';
 import Permissions from './permissions';
 import 'colors';
+import type express from 'express';
 
 
 const logger = getLogger('usefunctions');

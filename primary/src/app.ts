@@ -6,9 +6,10 @@ import path from 'path';										// For filesystem
 import session from 'express-session';							// Session middleware
 import cookieParser from 'cookie-parser';						// Cookies
 import useragent from 'express-useragent';						// Info on connected users
-import log4js, { LoggingEvent } from 'log4js';					// Extensive logging functionality
+import log4js from 'log4js';									// Extensive logging functionality
 import utilities from '@firstteam102/scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
+import type { LoggingEvent } from 'log4js';
 
 const appStartupTime = Date.now();
 

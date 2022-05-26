@@ -1,12 +1,12 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
-import { Document } from 'mongodb';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../helpers/permissions';
 import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
+import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import type { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('dashboard');
@@ -454,12 +454,12 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		let emaAlpha = parseFloat(process.env.EMA_ALPHA);
 		
 		//initialize setWindowFieldsClause
-		let setWindowFieldsClause: Document = {};
+		let setWindowFieldsClause: MongoDocument = {};
 		setWindowFieldsClause['partitionBy'] = '$team_key';
-		let sortField: Document = {};
+		let sortField: MongoDocument = {};
 		sortField['time'] = 1;
 		setWindowFieldsClause['sortBy'] = sortField;
-		let outputClause: Document = {};
+		let outputClause: MongoDocument = {};
 		//iterate through scoringlayout
 		for (let scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
 			//pull this layout element from score layout
@@ -468,8 +468,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			scoreLayout[scoreIdx] = thisLayout;
 			//if it is a valid data type, add this layout's ID to groupClause
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-				let thisEMAclause: Document = {};
-				let thisEMAinner: Document = {};
+				let thisEMAclause: MongoDocument = {};
+				let thisEMAinner: MongoDocument = {};
 				thisEMAinner['alpha'] = emaAlpha;
 				thisEMAinner['input'] = '$data.' + thisLayout.id;
 				thisEMAclause['$expMovingAvg'] = thisEMAinner;
@@ -481,7 +481,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 		
 		//initialize groupClause
-		let groupClause: Document = {};
+		let groupClause: MongoDocument = {};
 		//group teams for 1 row per team
 		groupClause['_id'] = '$team_key';
 		

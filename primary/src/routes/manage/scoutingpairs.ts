@@ -4,8 +4,8 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { Layout, Match, MatchScouting, Org, OrgSubteam, PitScouting, Role, ScoutingPair, Team, TeamKey, User } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
+import type { Match, MatchScouting, OrgSubteam, PitScouting, ScoutingPair, Team, TeamKey} from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('scoutingpairs');
