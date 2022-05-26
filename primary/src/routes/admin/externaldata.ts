@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { Team, Event, Match } from '@firstteam102/scoutradioz-types';
+import type { Team, Event, Match } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('externaldata');

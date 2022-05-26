@@ -4,8 +4,8 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import { upload as uploadHelper } from '@firstteam102/scoutradioz-helpers';
-import { MatchScouting, Team, Layout, PitScouting, User, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
+import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('scoutingaudit');

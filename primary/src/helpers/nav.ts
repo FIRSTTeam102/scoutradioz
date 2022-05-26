@@ -1,5 +1,5 @@
-import express from 'express';
 import Permissions from './permissions';
+import type express from 'express';
 
 /**
  * Nav item that's sent to nav.pug.

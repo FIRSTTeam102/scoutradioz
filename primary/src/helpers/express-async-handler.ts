@@ -13,7 +13,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 // import express = require('express');
 import type express from 'express';
-import core from 'express-serve-static-core';
+import type core from 'express-serve-static-core';
 
 function expressAsyncHandler < P = core.ParamsDictionary, ResBody = any, ReqBody = any, ReqQuery = core.Query >
 (handler: (...args: Parameters<express.RequestHandler<P, ResBody, ReqBody, ReqQuery>>) => unknown | Promise<unknown>):

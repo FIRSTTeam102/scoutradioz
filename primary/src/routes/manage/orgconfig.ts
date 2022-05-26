@@ -3,8 +3,8 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { Layout } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
+import type { Layout } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('orgconfig');

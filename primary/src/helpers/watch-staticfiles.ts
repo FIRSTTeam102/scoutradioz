@@ -2,8 +2,9 @@
 //	so instead, just run this script (or npm run watch-staticfiles)
 import fs from 'fs';
 import path from 'path';
-import {ChildProcessWithoutNullStreams, spawn} from 'child_process';
+import { spawn } from 'child_process';
 import 'colors';
+import type {ChildProcessWithoutNullStreams} from 'child_process';
 
 const pathToPublicSrc = path.join(__dirname, '../public-src');
 
