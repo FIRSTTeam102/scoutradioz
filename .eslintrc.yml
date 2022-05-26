@@ -53,3 +53,6 @@ rules:
     - error
   prefer-const: off
   '@typescript-eslint/no-var-requires': off
+  '@typescript-eslint/no-namespace': off
+  '@typescript-eslint/ban-ts-comment': warn
+  '@typescript-eslint/consistent-type-imports': warn

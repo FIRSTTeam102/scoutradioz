@@ -1,0 +1,22 @@
+{
+	"name": "@firstteam102/scoutradioz-types",
+	"version": "1.0.5",
+	"description": "Type declarations for objects in the Scoutradioz database.",
+	"types": "types.d.ts",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/firstteam102/scoringapp-serverless.git"
+	},
+	"author": "firstteam102",
+	"license": "AGPL-3.0",
+	"bugs": {
+		"url": "https://github.com/firstteam102/scoringapp-serverless/issues"
+	},
+	"homepage": "https://github.com/firstteam102/scoringapp-serverless#readme",
+	"peerDependencies": {
+		"mongodb": ">=4.1.0"
+	}
+}

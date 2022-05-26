@@ -1,6 +1,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import { Utilities, Team, Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-utilities';
+import { Utilities } from '@firstteam102/scoutradioz-utilities';
+import { Team, Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -13,7 +14,7 @@ export class UploadHelper {
 	 * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
 	 * @param {Utilities} utilitiesModule 
 	 */
-	config(utilitiesModule: Utilities) {
+	static config(utilitiesModule: Utilities) {
 		utilities = utilitiesModule;
 	}
 	
@@ -25,7 +26,7 @@ export class UploadHelper {
 	 * @param {string} teamKey team_key
 	 * @returns {ImageLinks} Links to images
 	 */
-	async findTeamImages (orgKey: OrgKey, year: number, teamKey: TeamKey) {
+	static async findTeamImages (orgKey: OrgKey, year: number, teamKey: TeamKey) {
 		logger.addContext('funcName', 'findTeamImages');
 		
 		if (!(typeof orgKey == 'string')) throw new TypeError('orgKey must be string');
@@ -88,7 +89,7 @@ export class UploadHelper {
 	 * @param {object} upload Upload object from database.
 	 * @returns {ImageLinks} Links to images
 	 */
-	getLinks (upload: Upload) {
+	static getLinks (upload: Upload) {
 		logger.addContext('funcName', 'findTeamImages');
 				
 		const key = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${upload.s3_key}`;
@@ -112,7 +113,7 @@ export class UploadHelper {
 	 * @param {array} teamKeys Array of team_keys
 	 * @returns {ImageLinks[]} Links to images
 	 */
-	async findTeamImagesMultiple(orgKey: OrgKey, year: number, teamKeys: TeamKey[]) {
+	static async findTeamImagesMultiple(orgKey: OrgKey, year: number, teamKeys: TeamKey[]) {
 		logger.addContext('funcName', 'findTeamImages');
 		
 		if (!(typeof orgKey == 'string')) throw new TypeError('orgKey must be string');
@@ -212,7 +213,8 @@ export class UploadHelper {
 	}
 }
 
-module.exports = new UploadHelper();
+module.exports = UploadHelper;
+export default UploadHelper;
 
 export interface ImageLinks {
 	sm?: string;

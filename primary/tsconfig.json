@@ -1,0 +1,24 @@
+{
+	"exclude": [
+		"node_modules",
+	],
+	"compilerOptions": {
+		"target": "es2020",
+		"module": "commonjs",
+		"rootDir": "./src",
+		"outDir": "./build",
+		"esModuleInterop": true,
+		"strict": true,
+		//   "removeComments": true,
+	},
+	"include": [
+		"src/express-extensions.d.ts.d.ts",
+		"src/*",
+		"src/routes/*", 
+		"src/routes/*/*", 
+		"src/helpers/*",
+	],
+	"ts-node": {
+		"transpileOnly": true, // VS Code has type checking built in, and TSC will also do it when we want to do a proper build.
+	}
+}

@@ -11,21 +11,32 @@ import log4js from '@log4js-node/log4js-api';
 const Client = require('node-rest-client').Client;
 
 const logger = log4js.getLogger('utilities');
-// let logger;
-// try {
-// 	logger = require('log4js').getLogger('utilities');
-// }
-// catch(err) {
-// 	logger = require('@log4js-node/log4js-api').getLogger('utilities');
-// }
 logger.level = process.env.LOG_LEVEL || 'info';
 
-
+/**
+ * Optional settings for configurating SR-Utilities.
+ * @param cache
+ * @param debug
+ */
 export class UtilitiesOptions {
+	/**
+	 * Default caching options for database requests.
+	 * @param {boolean} enable
+	 * @param {number} maxAge
+	 */
 	cache: {
+		/**
+		 * Whether to allow cache on database requests. If disabled, no caching will be used.
+		 */
 		enable: boolean;
+		/**
+		 * Default cache maximum age, in seconds.
+		 */
 		maxAge: number;
 	};
+	/**
+	 * Whether to add extensive logger.trace statements
+	 */
 	debug: boolean;
 	constructor(options?: any) {
 		if (typeof options === 'object' && typeof options.debug === 'boolean') this.debug = options.debug;
@@ -57,6 +68,7 @@ export class Utilities {
 	whenReadyQueue: any[];
 	cache: NodeCache;
 	options: UtilitiesOptions;
+	client: typeof Client;
 	// Utilities is a singleton class. The refreshTier function is passed as a middleware, so the "this" argument gets messed up. 
 	//  To avoid having to change code, we can instead use Utilities.instance.x
 	static instance: Utilities = new Utilities(); 
@@ -70,12 +82,13 @@ export class Utilities {
 		this.whenReadyQueue = [];
 		this.cache = new NodeCache({stdTTL: 30});
 		this.options = new UtilitiesOptions();
+		this.client = new Client();
 	}
 	
 	/**
 	 * Create a MongoDB ObjectID, either from a string or a random new one
-	 * @param {string} [str] ID-like string
-	 * @returns {ObjectId} MongoDB Object ID
+	 * @param str ID-like string
+	 * @returns MongoDB Object ID
 	 */
 	id(str?: string): ObjectId {
 		if (!str) return new ObjectId();
@@ -96,9 +109,9 @@ export class Utilities {
 	
 	/**
 	 * (Required) Configure utilities with database config file.
-	 * @param {object} databaseConfig JSON object for database config (use require('databases.json') for security)
-	 * @param {object} [options] Optional settings
-	 * @param {object} [options.cache] Cache settings
+	 * @param databaseConfig JSON object for database config (use require('databases.json') for security)
+	 * @param options Optional settings
+	 * @param options.cache Cache settings
 	 * @param {boolean} [options.cache.enable=false] Whether to enable or disable caching in find requests
 	 * @param {number} [options.cache.maxAge=30] Default maximum age of cached requests, in seconds
 	 * @param {debug} [options.debug=false] Whether to enable extra debug logging (Performance, timing, etc.)
@@ -219,7 +232,7 @@ export class Utilities {
 	/**
 	 * Function that retrieves the database connection string from databases, and returns that connection string URL.
 	 * If databases does not exist, it defaults to localhost.
-	 * @returns {string} Database connection uri.
+	 * @returns Database connection uri.
 	 */
 	getDBurl(): Promise<string> {
 		logger.addContext('funcName', 'getDBurl');
@@ -277,8 +290,8 @@ export class Utilities {
 	}
 
 	/**
-	 * Express middleware function to refresh the active tier of utilities.js.
-	 * Usage:
+	 * Express middleware function to refresh the active tier of utilities.ts.
+	 * @example 
 	 * 	const app = express();
 	 * 	app.use(utilities.refreshTier);
 	 */
@@ -298,14 +311,12 @@ export class Utilities {
 
 	/**
 	 * Asynchronous "find" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to find in.
-	 * @param {object} [query={}] Filter for query.
-	 * @param {object} [options={}] Query options, such as sort.
-	 * @param {object} [cacheOptions=undefined] Caching options.
-	 * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
-	 * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
+	 * @param collection Collection to find in.
+	 * @param query Filter for query.
+	 * @param options Query options, such as sort.
+	 * @param cacheOption Caching options.
 	 */
-	async find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any> {
+	async find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
@@ -383,12 +394,10 @@ export class Utilities {
 
 	/**
 	 * Asynchronous "findOne" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to findOne in.
-	 * @param {object} [query={}] Filter for query.
-	 * @param {object} [options={}] Query options, such as sort.
-	 * @param {object} [cacheOptions=undefined] Caching options.
-	 * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
-	 * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
+	 * @param collection Collection to findOne in.
+	 * @param query Filter for query.
+	 * @param options Query options, such as sort.
+	 * @param cacheOptions Caching options.
 	 */
 	async findOne(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>{
 		logger.addContext('funcName', 'findOne');
@@ -468,10 +477,10 @@ export class Utilities {
 
 	/**
 	 * Asynchronous "update" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to find in.
-	 * @param {object} query Filter query.
-	 * @param {object} update Update query.
-	 * @param {object} options Query options, such as sort.
+	 * @param collection Collection to find in.
+	 * @param query Filter query.
+	 * @param update Update query.
+	 * @param options Query options, such as sort.
 	 * @returns {WriteResult} writeResult
 	 */
 	async update(collection: string, query: Filter<MongoDocument>, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>{
@@ -515,12 +524,10 @@ export class Utilities {
 
 	/**
 	 * Asynchronous "aggregate" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to find in.
-	 * @param {object} pipeline Array containing all the aggregation framework commands for the execution.
-	 * @param {object} [cacheOptions=undefined] Caching options.
-	 * @param {boolean} [cacheOptions.allowCache=false] Whether this request can be cached. If true, then identical requests will be returned from the cache.
-	 * @param {number} [cacheOptions.maxCacheAge=30] Max age for this cached request.
-	 * @returns {object} Aggregated data.
+	 * @param collection Collection to find in.
+	 * @param pipeline Array containing all the aggregation framework commands for the execution.
+	 * @param cacheOptions Caching options.
+	 * @returns Aggregated data.
 	 */
 	async aggregate(collection: string, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any> {
 		logger.addContext('funcName', 'aggregate');
@@ -607,10 +614,10 @@ export class Utilities {
 	}
 
 	/**
-	 * @param {string} type Type of function
-	 * @param {string} collection Collection
-	 * @param {object} param1 First param (oft. query)
-	 * @param {object} param2 Second param (oft. options)
+	 * @param type Type of function
+	 * @param collection Collection
+	 * @param param1 First param (oft. query)
+	 * @param param2 Second param (oft. options)
 	 */
 	async hashQuery(type: string, collection: string, param1: Filter<MongoDocument>, param2: UpdateOptions) {
 		
@@ -628,10 +635,10 @@ export class Utilities {
 
 	/**
 	 * Asynchronous "distinct" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to find in.
-	 * @param {string} field Which field to distinct.
-	 * @param {object} query The query for filtering the set of documents to which we apply the distinct filter.
-	 * @returns {array} Distinct values for the specified field
+	 * @param collection Collection to find in.
+	 * @param field Which field to distinct.
+	 * @param query The query for filtering the set of documents to which we apply the distinct filter.
+	 * @returns Distinct values for the specified field
 	 */
 	async distinct(collection: string, field: string, query: Filter<MongoDocument>){
 		logger.addContext('funcName', 'distinct');
@@ -665,13 +672,15 @@ export class Utilities {
 
 	/**
 	 * Asynchronous "bulkWrite" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to find in.
-	 * @param {array} operations Array of Bulk operations to perform.
-	 * @param {object} options Optional settings.
-	 * @returns {WriteResult} writeResult
+	 * @param collection Collection to find in.
+	 * @param operations Array of Bulk operations to perform.
+	 * @param options Optional settings.
+	 * @returns writeResult
 	 */
-	async bulkWrite(collection: string, operations: AnyBulkWriteOperation, options?: BulkWriteOptions): Promise<BulkWriteResult>{
+	async bulkWrite(collection: string, operations: AnyBulkWriteOperation[], options?: BulkWriteOptions): Promise<BulkWriteResult>{
 		logger.addContext('funcName', 'bulkWrite');
+		
+		// JL TODO: Automatic _id casting for BulkWrite operations
 		
 		//If the collection is not specified and is not a String, throw an error.
 		//This would obly be caused by a programming error.
@@ -706,11 +715,11 @@ export class Utilities {
 
 	/**
 	 * Asynchronous "remove" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to remove from.
-	 * @param {object} query Filter for element/s to remove.
-	 * @return {WriteResult} writeResult
+	 * @param collection Collection to remove from.
+	 * @param query Filter for element/s to remove.
+	 * @return {Promise<DeleteResult>} writeResult
 	 */
-	async remove(collection: string, query: Filter<MongoDocument>): Promise<DeleteResult>{
+	async remove(collection: string, query?: Filter<MongoDocument>): Promise<DeleteResult>{
 		logger.addContext('funcName', 'remove');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -734,14 +743,17 @@ export class Utilities {
 		//return writeResult
 		return writeResult;
 	}
-
+	
 	/**
 	 * Asynchronous "insert" function to a collection specified in first parameter.
-	 * @param {string} collection Collection to insert into.
-	 * @param {object} elements [Any] Element or array of elements to insert
-	 * @returns {WriteResult} writeResult
+	 * @param collection Collection to insert into.
+	 * @param {MongoDocument[] | MongoDocument} elements [Any] Element or array of elements to insert
+	 * @returns {Promise<InsertManyResult | InsertOneResult | undefined>} writeResult
 	 */
-	async insert(collection: string, elements: MongoDocument[]): Promise<InsertManyResult | InsertOneResult | undefined>{
+	async insert(collection: string, elements: MongoDocument[]): Promise<InsertManyResult | undefined>;
+	async insert(collection: string, elements: MongoDocument): Promise<InsertOneResult>;
+
+	async insert(collection: string, elements: MongoDocument[] | MongoDocument): Promise<InsertManyResult | InsertOneResult | undefined>{
 		logger.addContext('funcName', 'insert');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -781,10 +793,11 @@ export class Utilities {
 
 	/**
 	 * Asynchronous request to TheBlueAlliance. Requires a URL ending to execute correctly.
-	 * @param {string} url ENDING of URL, after "https://.../api/v3/" DO NOT INCLUDE A / AT THE START
-	 * @return {object} JSON-formatted response from TBA
+	 * @param url ENDING of URL, after "https://.../api/v3/" DO NOT INCLUDE A / AT THE START
+	 * @return JSON-formatted response from TBA
+	 * @throws Network error 
 	 */
-	async requestTheBlueAlliance(url: string) {
+	async requestTheBlueAlliance(url: string): Promise<any> {
 		logger.addContext('funcName', 'requestTheBlueAlliance');
 		
 		//Setup our request URL, including specified URL ending parameter
@@ -796,12 +809,10 @@ export class Utilities {
 		let headers = await this.getTBAKey();
 		
 		//Create promise first
-		let thisPromise = new Promise(function(resolve, reject){
-			
-			let client = new Client();
+		let thisPromise = new Promise((resolve, reject) => {
 			
 			//Inside promise function, perform client request
-			client.get(requestURL, headers, function(tbaData: any){
+			let request = this.client.get(requestURL, headers, function(tbaData: any){
 				
 				//If newline characters are not deleted, then CloudWatch logs get spammed
 				let str = tbaData.toString().replace(/\n/g, '');
@@ -821,6 +832,10 @@ export class Utilities {
 					resolve(tbaData);
 				}
 			});
+			
+			request.on('error', function (err: any) {
+				reject(err);
+			});
 		});
 		
 		//Resolve promise
@@ -829,10 +844,10 @@ export class Utilities {
 	
 	/**
 	 * Asynchronous request to FIRST's API. Requires a URL ending to execute correctly. 
-	 * @param {string} url ENDING of URL, after "https://.../v2.0/" DO NOT INCLUDE A / AT THE START
-	 * @return {object} JSON-formatted response from FIRST
+	 * @param url ENDING of URL, after "https://.../v2.0/" DO NOT INCLUDE A / AT THE START
+	 * @return JSON-formatted response from FIRST
 	 */
-	async requestFIRST(url: string) {
+	async requestFIRST(url: string): Promise<any> {
 		
 		let requestURL = 'https://frc-api.firstinspires.org/v2.0/' + url;
 		logger.trace(`requestURL=${requestURL}`);
@@ -840,10 +855,8 @@ export class Utilities {
 		let headers = await this.getFIRSTKey();
 		
 		let thisPromise = new Promise((resolve, reject) => {
-			
-			let client = new Client();
-			
-			client.get(requestURL, headers, function (firstData: any, response: any) {
+						
+			let request = this.client.get(requestURL, headers, function (firstData: any, response: any) {
 				
 				if (response.statusCode === 200) {
 					
@@ -858,6 +871,9 @@ export class Utilities {
 				}
 			});
 			
+			request.on('error', function (err: any) {
+				reject(err);
+			});
 		});
 		
 		return thisPromise;
@@ -865,7 +881,7 @@ export class Utilities {
 
 	/**
 	 * Asynchronous function to get our TheBlueAlliance API key from the DB.
-	 * @return {object} - TBA header arguments
+	 * @return - TBA header arguments
 	 */
 	async getTBAKey(): Promise<TBAKey>{
 		logger.addContext('funcName', 'getTBAKey');
@@ -927,9 +943,7 @@ export class Utilities {
 	}
 	
 	
-	// cached DB reference
-	// let dbRefs = {}, urls = {}, clients = {};
-	
+	// cached DB reference	
 	dbRefs: { [tier: string]: Db } = {};
 	urls: { [tier: string]: string } = {};
 	clients: { [tier: string]: MongoClient } = {};
@@ -982,8 +996,8 @@ export class Utilities {
 
 	/**
 	 * Fix filter queries by replacing String IDs with the proper ObjectID
-	 * @param {object} query Query with or without _id
-	 * @returns {object} Query with _id replaced with an ObjectId
+	 * @param query Query with or without _id
+	 * @returns Query with _id replaced with an ObjectId
 	 */
 	private castID(query: Filter<MongoDocument>) {
 		if (typeof query !== 'object') return query;
@@ -1010,8 +1024,21 @@ declare interface FIRSTKey extends MongoDocument {
 	}
 }
 
+/**
+ * Caching options.
+ * @param {boolean} [allowCache=false]
+ * @param {number} [maxCacheAge=30]
+ */
 export declare class UtilitiesCacheOptions {
+	/**
+	 * Whether this request can be cached. If true, then identical requests will be returned from the cache.
+	 * @default false
+	 */
 	allowCache?: boolean;
+	/**
+	 * Max age for this cached request, in seconds.
+	 * @default 30
+	 */
 	maxCacheAge?: number;
 }
 
@@ -1032,5 +1059,4 @@ export { Document as MongoDocument } from 'mongodb';
 // Other "export" statements export types for utilities.d.ts.
 
 module.exports = Utilities.instance;
-
-// export const utilities = Utilities.instance;
+export default Utilities.instance;

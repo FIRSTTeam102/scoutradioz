@@ -1,7 +1,8 @@
 /* eslint-disable global-require */
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import { Utilities, MongoDocument, Match, Team, Ranking, TeamKey, AggRange } from '@firstteam102/scoutradioz-utilities';
+import { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput } from '@firstteam102/scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -16,7 +17,7 @@ export class MatchDataHelper {
 	 * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
 	 * @param {Utilities} utilitiesModule 
 	 */
-	config(utilitiesModule: Utilities) {
+	static config(utilitiesModule: Utilities) {
 		utilities = utilitiesModule;
 	}
 	
@@ -25,7 +26,7 @@ export class MatchDataHelper {
 	 * @param {string} type Type of layout element
 	 * @return {boolean} isQuantifiable
 	 */
-	isQuantifiableType(type: string): boolean {
+	static isQuantifiableType(type: string): boolean {
 		
 		let isQuantifiable;
 		
@@ -52,7 +53,7 @@ export class MatchDataHelper {
 	 * @param {string} type The type of the element, e.g. checkbox/counter/slider.
 	 * @return {string|number} 
 	 */
-	fixDatumType(value: string|number|boolean, type: string) {
+	static fixDatumType(value: string|number|boolean, type: string) {
 	
 		let newVal;
 		
@@ -84,7 +85,7 @@ export class MatchDataHelper {
 	 * @param {string} type Type of layout element
 	 * @return {boolean} isMetric
 	 */
-	isMetric(type: string) {
+	static isMetric(type: string) {
 		
 		let isMetric;
 		
@@ -108,7 +109,7 @@ export class MatchDataHelper {
 	 * @param {Object} matchData Scouting data ("data" field in the db)
 	 * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
 	 */
-	async calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData) {
+	static async calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData) {
 		// let st = performance.now();
 		// Just derived fields from the org's match scouting layout for this year
 		let derivedLayout = await utilities.find('layout', 
@@ -333,7 +334,7 @@ export class MatchDataHelper {
 	 * @param {string} colCookie Comma-separated list of metric IDs
 	 * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
 	 */
-	async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string) {
+	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string) {
 		logger.addContext('funcName', 'getModifiedMatchScoutingLayout');
 		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
 		
@@ -427,7 +428,7 @@ export class MatchDataHelper {
 	 * @param {number} event_year Year of event
 	 * @param {string} event_key Event key
 	 */
-	async calculateAndStoreAggRanges(org_key: string, event_year: number, event_key: string) {
+	static async calculateAndStoreAggRanges(org_key: string, event_year: number, event_key: string) {
 		logger.addContext('funcName', 'calculateAndStoreAggRanges');
 		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
 	
@@ -565,7 +566,7 @@ export class MatchDataHelper {
 	 * @param {string} [team_key] Team key (can be 'all' or null)
 	 * @returns {MatchData} Data blob containing matches, teamRanks, team, and teamList
 	 */
-	async getUpcomingMatchData(event_key: string, team_key: string, org_key: string) {
+	static async getUpcomingMatchData(event_key: string, team_key: string, org_key: string) {
 		logger.addContext('funcName', 'getUpcomingMatchData');
 		logger.info('ENTER event_key=' + event_key + ',team_key=' + team_key + ',org_key=' + org_key);
 		//console.log('ENTER event_key=' + event_key + ',team_key=' + team_key + ',org_key=' + org_key);
@@ -778,7 +779,7 @@ export class MatchDataHelper {
 					predictiveBlock['redAVG'] = redAVG; predictiveBlock['redSTD'] = redSTD;
 					predictiveBlock['totalCNT'] = blueCNT + redCNT;
 					predictiveBlock['chanceOfRed'] = chanceOfRed;
-					logger.debug('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
+					logger.trace('match#=' + returnData.matches[i].match_number + ', predictiveBlock=' + JSON.stringify(predictiveBlock));
 		
 					returnData.matches[i]['predictive'] = predictiveBlock;
 				}
@@ -806,11 +807,10 @@ export class MatchDataHelper {
 	 * @param {object} cookies req.cookies
 	 * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
 	 */
-	async getAllianceStatsData( event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any ) {
+	static async getAllianceStatsData( event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any ) {
 		logger.addContext('funcName', 'getAllianceStatsData');
 		
 		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
-		let returnData: AllianceStatsData = {};
 	
 		let teams = teams_list;
 	
@@ -1005,20 +1005,22 @@ export class MatchDataHelper {
 		let currentAggRanges = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
 		
 		// set up the return data
-		returnData.teams = teams;
-		returnData.teamList = teamList;
-		returnData.currentAggRanges = currentAggRanges;
-		returnData.avgTable = avgTable;
-		returnData.maxTable = maxTable;
-		returnData.avgNorms = avgNorms;
-		returnData.maxNorms = maxNorms;
-	
+		let returnData: AllianceStatsData = {
+			teams, 
+			teamList, 
+			currentAggRanges, 
+			avgTable, 
+			maxTable, 
+			avgNorms, 
+			maxNorms
+		};
 		logger.removeContext('funcName');
 		return returnData;	
 	}
 }
 
-module.exports = new MatchDataHelper();
+module.exports = MatchDataHelper;
+export default MatchDataHelper;
 
 // parseInt in reality can accept any type.
 declare function parseInt(value: string|number|boolean|undefined|null): number;
@@ -1036,13 +1038,13 @@ export declare interface AllianceStatsData {
 	 * @param {array} avgNorms
 	 * @param {array} maxNorms
 	 */
-	teams?: string;
-	teamList?: string[];
-	currentAggRanges?: AggRange[]; // TODO
-	avgTable?: MetricRow[]; // TODO
-	maxTable?: MetricRow[]; // you get the picture
-	avgNorms?: MetricRow[];
-	maxNorms?: MetricRow[];
+	teams: string;
+	teamList: string[];
+	currentAggRanges: AggRange[]; // TODO
+	avgTable: MetricRow[]; // TODO
+	maxTable: MetricRow[]; // you get the picture
+	avgNorms: MetricRow[];
+	maxNorms: MetricRow[];
 }
 
 export declare interface MetricRow {
@@ -1068,12 +1070,6 @@ export declare interface PredictiveBlock {
 	redSTD?: number;
 	totalCNT?: number;
 	chanceOfRed?: number;
-}
-
-declare type formDataOutput = number|boolean|string|null;
-
-export declare interface MatchFormData {
-	[key: string]: formDataOutput;
 }
 
 declare interface NumericalDict {
