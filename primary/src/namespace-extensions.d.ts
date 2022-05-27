@@ -65,8 +65,8 @@ declare namespace Express {
 	// It would be nice if these could be gotten from i18n.ts instead
 	export interface I18nExpressExtensions {
 		locale: string;
-		msg: (name: string, parameters: Record<string, string | number>) => string;
-		msgMarked: (name: string, parameters: Record<string, string | number>) => string;
+		msg: (name: string, parameters?: Record<string, string | number>) => string;
+		msgMarked: (name: string, parameters?: Record<string, string | number>) => string;
 		getLocales: () => StringDict[];
 		getLocaleName: (locale: string, inLocale?: string) => string;
 		getLocaleDir: (locale: string) => 'ltr' | 'rtl';

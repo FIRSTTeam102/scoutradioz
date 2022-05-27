@@ -33,5 +33,92 @@
 	"hello": {
 		"world": "Hello world!",
 		"name": "Hello, {name}!"
+	},
+	"error": {
+		"title": "Error: {message}",
+		"report": {
+			"intro": "To help us fix this error, please:",
+			"screenshot": "Take a screenshot of this error message,",
+			"url": "Copy the full URL of this page by clicking on \"Share\" at the top of the page,",
+			"send": "Post the screenshot in either our Discord server or our {github}GitHub page{/github}, including relevant information, such as the link you clicked to get to this error."
+		},
+		"stack": "Stack trace:"
+	},
+	"layout": {
+		"untitled": "Untitled page",
+		"share": "Share",
+		"menu": {
+			"main": "Menu",
+			"user": "{user} - {org}"
+		},
+		"footer": {
+			"copyright": "Copyright {date} FIRST Team 102 and Robotics Fund Inc.\nOpen-source & licensed with AGPLv3.",
+			"tba": "Powered by The Blue Alliance.",
+			"frc": "We are proud to be participants of FIRST Robotics Competition."
+		},
+		"nav": {
+			"home": "Home",
+			"reports": {
+				"main": "Info and Reports: [[{event}]]",
+				"teams": "Teams",
+				"teamList": "{number}: {name}",
+				"teamStats": "Team Statistics",
+				"yearStats": "Complete Statistics for {year}",
+				"rankings": "Current Rankings",
+				"upcoming": "Upcoming Matches",
+				"completed": "Completed Matches",
+				"allteammetrics": "Stats for All Teams",
+				"export": {
+					"main": "Export to CSV",
+					"match": "Match scouting data: [[{event}]]",
+					"pit": "Pit scouting data: [[{event}]]",
+					"matchAll": "Match scouting data: [[All of {year}]]",
+					"pitAll": "Pit scouting data: [[All of {year}]]"
+				}
+			},
+			"driveteam": "Drive Team Dashboard",
+			"reportcolumns": "Configure Report Columns",
+			"scouting": {
+				"main": "Scouting",
+				"pit": "Pit Scouting",
+				"match": "Match Scouting",
+				"alliance": "Alliance Selection"
+			},
+			"manage": {
+				"main": "Manage: [[{org}]]",
+				"members": {
+					"main": "Members",
+					"list": "Member List",
+					"passwords": "Audit/Reset Member Passwords"
+				},
+				"scouters": {
+					"main": "Scouters",
+					"event": "Scouters: [[{event}]]",
+					"audit": "Scouting Audit",
+					"assignments": "Scouting Assignments",
+					"swapmembers": "Swap in/out Match Scouts",
+					"swappitassignments": "Swap Pit Scouting assignments",
+					"present": "Set Present"
+				},
+				"event": {
+					"main": "Event Data",
+					"event": "Event Data: [[{event}]]",
+					"matches": "Matches",
+					"allianceselection": "Alliance Selection Data",
+					"getcurrentteams": "Update List of Teams",
+					"recalcderived": "Recalculate Derived Metrics"
+				}
+			},
+			"admin": "Admin",
+			"user": {
+				"main": "User: [[{user}]]",
+				"fallback": "User",
+				"login": "Log in: [[{org}]]",
+				"logout": "Log out",
+				"changepassword": "Change password",
+				"switchorg": "Change Organization"
+			},
+			"help": "Need help? Check our wiki!"
+		}
 	}
 }

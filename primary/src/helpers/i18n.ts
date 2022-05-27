@@ -85,7 +85,7 @@ export class I18n {
 				name: this.getLocaleName(locale),
 				dir: this.getLocaleDirection(locale)
 			}
-		})
+		});
 	}
 
 	// Get a locale name by its identifier
@@ -100,23 +100,23 @@ export class I18n {
 
 	// Finds an item in an object based on dot notation
 	// 'a.b.c' => object.a.b.c
-	_findInObject(target: string, object: LocaleTree): string | null {
+	_findInObject(target: string, object: LocaleTree): string {
 		const indexOfDot = target.lastIndexOf('.');
 
 		if (indexOfDot > 0 && indexOfDot < target.length - 1) {
 			// The current item
-			let item = null;
+			let item = '';
 
 			// Split the provided term and run the callback for each subterm.
 			target.split('.').reduce((previousValue: LocaleTree | string, currentValue) => {
-				item = null;
+				item = '';
 
 				// If the current target object (in the locale tree) doesn't exist or doesn't have the next subterm as a member, exit
 				if (
 					!previousValue ||
 					!currentValue ||
 					!Object.prototype.hasOwnProperty.call(previousValue, currentValue)
-				) return null
+				) return '';
 
 				// Return a reference to the next deeper level in the tree
 				return item = (previousValue as Record<string, any>)[currentValue];
@@ -126,8 +126,8 @@ export class I18n {
 			return item;
 		}
 
-		// No object notation, so we can just return the requested item
-		return (object[target] as string) || null;
+		// No object notation, so we can just return the original target string
+		return (object[target] as string) || target;
 	}
 
 	// @param {bool} allowTags - Allow any HTML tags in the message
@@ -139,7 +139,7 @@ export class I18n {
 			allowedSchemes: ['http', 'https'],
 			allowedAttributes: {
 				...sanitizeHtml.defaults.allowedAttributes,
-				'*': ['dir', 'lang']
+				'*': ['dir', 'lang', 'class', 'id']
 			},
 			disallowedTagsMode: 'escape' // leaves the content- maybe switch to 'discard'?
 		});
@@ -154,27 +154,39 @@ export class I18n {
 		let result = this._findInObject(msg, this.locales[locale]);
 		if (result) return result;
 
+		// Don't recurse forever
+		if (locale === this.config.defaultLocale) return msg;
+
 		// Otherwise, fallback to the next locale
 		return this._rawMsg(fallbackLocales[locale] || this.config.defaultLocale, msg);
 	}
 
 	// Replace named keywords (eg. {name}) with arguments
-	_paramterize(text: string, parameters: I18nParameters) {
+	_paramterize(text: string, parameters?: I18nParameters) {
 		// @todo: Make escaping work (eg. \{c} or {c\}c})
 		if (parameters && typeof parameters === 'object') return text.replace(/\{([^}]+)\}/g, (match, key) => {
 			let result = parameters[key];
-			return (typeof result === 'string' ? result : result.toString()) || match
+			return (typeof result === 'string' ? result : String(result)) || match
 		});
 		return text;
 	}
 
+	// Internal function to format qqx output
+	_qqxHandler(func: string, query: string, parameters?: I18nParameters) {
+		return this.sanitizeHtml(`${func}(${query}${parameters && ', ' + JSON.stringify(parameters) || ''})`)
+	}
+
 	// Returns a plain message with substituted args
-	msg(name: string, parameters: I18nParameters) {
+	msg(name: string, parameters?: I18nParameters) {
+		if (this.locale === 'qqx') return this._qqxHandler('msg', name, parameters);
+
 		return this.sanitizeHtml(this._paramterize(this._rawMsg(this.locale, name), parameters), false);
 	}
 
 	// Returns a message with parsed markdown
 	msgMarked(name: string, parameters: I18nParameters) {
+		if (this.locale === 'qqx') return this._qqxHandler('msgMarked', name, parameters);
+
 		return this.sanitizeHtml(marked.parseInline(this._paramterize(this._rawMsg(this.locale, name), parameters)));
 	}
 

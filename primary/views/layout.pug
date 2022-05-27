@@ -20,7 +20,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 			title= fulltitle
 		else
 			if !title
-				- title = "Untitled Page"
+				- title = msg('layout.untitled')
 			title #{title} | Scoutradioz
 		if description
 			if description == 'default'

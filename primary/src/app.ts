@@ -108,6 +108,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 //Internationalization
+//Must be before any other custom code
 import { I18n } from './helpers/i18n';
 const i18n = new I18n({
 	directory: path.join(__dirname, '../locales')

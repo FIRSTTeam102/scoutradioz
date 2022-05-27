@@ -50,6 +50,9 @@ class NavHelpers {
 				let compiledItem: CompiledNavItem = {
 					label: resolveToValue(item.label, req, res),
 				};
+				if (compiledItem.label.startsWith('!')) {
+					compiledItem.label = req.msg(compiledItem.label.substring(1));
+				}
 				if (item.href) {
 					compiledItem.href = resolveToValue(item.href, req, res);
 				}
@@ -75,17 +78,16 @@ class NavHelpers {
 	
 	/**
 	 * Navigation contents that get compiled at runtime, depending on the logged-in user.
+	 * Labels starting with ! will use i18n
 	 */
 	private _navContents: NavItem[] = [
 		{
-			label: 'Home',
+			label: '!layout.nav.home',
 			href: '/home',
 			sprite: 'home',
 		},
 		{
-			label: (req, res) => {
-				return `Info and Reports: [[${res.locals.eventName}]]`;
-			},
+			label: (req, res) => req.msg('layout.nav.reports.main', {event: res.locals.eventName}),
 			sprite: 'info',
 			visible: userLoggedIn,
 			submenu: (req, res) => {
@@ -93,19 +95,18 @@ class NavHelpers {
 				let teams = res.locals.teams;
 				let arr = [
 					{
-						label: 'Teams',
+						label: '!layout.nav.reports.teams',
 						visible: !!(teams && teams[0]),
 						submenu: () => {
 							if (!teams) return;
-							let yearstr = `Complete Statistics for ${new Date().getFullYear()}`;
 							let arr = [];
 							for (let team of teams) {
 								arr.push({
-									label: `${team.team_number}: ${team.nickname}`,
+									label: req.msg('layout.nav.reports.teamList', {number: team.team_number, name: team.nickname}),
 									submenu: [
-										{label: 'Upcoming Matches', href: '/reports/upcoming?team_key=' + team.key},
-										{label: 'Team Statistics', href: '/reports/teamintel?team_key=' + team.key},
-										{label: yearstr, href: '/reports/teamintelhistory?team_key=' + team.key},
+										{label: '!layout.nav.reports.upcoming', href: '/reports/upcoming?team_key=' + team.key},
+										{label: '!layout.nav.reports.teamStats', href: '/reports/teamintel?team_key=' + team.key},
+										{label: req.msg('layout.nav.reports.yearStats', {year: new Date().getFullYear()}), href: '/reports/teamintelhistory?team_key=' + team.key},
 									]
 								});
 							}
@@ -113,42 +114,42 @@ class NavHelpers {
 						}
 					},
 					{
-						label: 'Current Rankings',
+						label: '!layout.nav.reports.rankings',
 						href: '/reports/rankings',
 					},
 					{
-						label: 'Upcoming Matches',
+						label: '!layout.nav.reports.upcoming',
 						href: '/reports/upcoming',
 					},
 					{
-						label: 'Completed Matches',
+						label: '!layout.nav.reports.finished',
 						href: '/reports/finishedmatches',
 					},
 					{
-						label: 'Stats for All Teams',
+						label: '!layout.nav.reports.allteammetrics',
 						href: '/reports/allteammetrics',
 					},
 					{
-						label: 'Export to CSV',
+						label: '!layout.nav.reports.export.main',
 						sprite: 'download',
 						submenu: [
 							{
-								label: `Match scouting data: [[${req.event.name}]]`,
+								label: req.msg('layout.nav.reports.export.match', {event: req.event.name}),
 								href: '/reports/exportdata?type=matchscouting',
 								sprite: 'download',
 							},
 							{
-								label: `Pit scouting data: [[${req.event.name}]]`,
+								label: req.msg('layout.nav.reports.export.pit', {event: req.event.name}),
 								href: '/reports/exportdata?type=pitscouting',
 								sprite: 'download',
 							},
 							{
-								label: `Match scouting data: [[All of ${req.event.year}]]`,
+								label: req.msg('layout.nav.reports.export.matchAll', {event: req.event.year}),
 								href: '/reports/exportdata?type=matchscouting&span=all',
 								sprite: 'download',
 							},
 							{
-								label: `Pit scouting data: [[All of ${req.event.year}]]`,
+								label: req.msg('layout.nav.reports.export.pitAll', {event: req.event.year}),
 								href: '/reports/exportdata?type=pitscouting&span=all',
 								sprite: 'download',
 							}
@@ -159,99 +160,99 @@ class NavHelpers {
 			}
 		},
 		{
-			label: 'Drive Team Dashboard',
+			label: '!layout.nav.driveteam',
 			href: '/dashboard/driveteam',
 			sprite: 'wheel',
 			visible: userLoggedIn
 		},
 		{
-			label: 'Configure report columns',
+			label: '!layout.nav.reportcolumns',
 			href: (req, res) => `/user/preferences/reportcolumns?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`,
 			sprite: 'sheet',
 			visible: userLoggedIn
 		},
 		{
-			label: 'Scouting',
+			label: '!layout.nav.scouting.main',
 			href: '/dashboard',
 			sprite: 'radio',
 			visible: (req, res) => !!req.user && req._user.role.access_level >= Permissions.ACCESS_SCOUTER,
 			submenu: [
 				{
-					label: 'Pit Scouting',
+					label: '!layout.nav.scouting.pit',
 					href: '/dashboard/pits'
 				},
 				{
-					label: 'Match Scouting',
+					label: '!layout.nav.scouting.match',
 					href: '/dashboard/matches',
 				},
 				{
-					label: 'Alliance Selection',
+					label: '!layout.nav.scouting.alliance',
 					href: '/dashboard/allianceselection',
 				}
 			]
 		},
 		// Org Management submenu
 		{
-			label: (req, res) => `Manage: [[${req._user.org.nickname}]]`,
+			label: (req, res) => req.msg('layout.nav.manage.main', {org: req._user.org.nickname}),
 			href: '/manage',
 			sprite: 'settings',
 			visible: (req, res) => !!req.user && req.user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN,
 			submenu: [
 				{
-					label: 'Members',
+					label: '!layout.nav.manage.members.main',
 					submenu: [
 						{
-							label: 'Member List',
+							label: '!layout.nav.manage.members.list',
 							href: '/manage/members'
 						},
 						{
-							label: 'Audit/Reset Member Passwords',
+							label: '!layout.nav.manage.members.passwords',
 							href: '/manage/members/passwords'
 						},
 					]
 				},
 				{
-					label: (req, res) => req.event ? `Scouters: [[${req.event.name}]]` : 'Scouters',
+					label: (req, res) => req.event ? req.msg('layout.nav.manage.scouters.event', {event: req.event.name}) : '!layout.nav.manage.scouters.main',
 					submenu: [
 						{
-							label: 'Scouting Audit',
+							label: '!layout.nav.manage.scouters.audit',
 							href: '/manage/scoutingaudit'
 						},
 						{
-							label: 'Scouting Assignments',
+							label: '!layout.nav.manage.scouters.assignments',
 							href: '/manage/scoutingpairs'
 						},
 						{
-							label: 'Swap in/out Match Scouts',
+							label: '!layout.nav.manage.scouters.swapmembers',
 							href: '/manage/scoutingpairs/swapmembers'
 						},
 						{
-							label: 'Swap Pit Scouting assignments',
+							label: '!layout.nav.manage.scouters.swappitassignments',
 							href: '/manage/scoutingpairs/swappitassignments'
 						},
 						{
-							label: 'Set Present',
+							label: '!layout.nav.manage.scouters.present',
 							href: '/manage/members/present'
 						},
 					]
 				},
 				{
-					label: (req, res) => req.event ? `Event Data: [[${req.event.name}]]` : 'Event Data',
+					label: (req, res) => req.event ? req.msg('layout.nav.manage.event.event', {event: req.event.name}) : '!layout.nav.manage.event.main',
 					submenu: [
 						{
-							label: 'Matches',
+							label: '!layout.nav.manage.event.matches',
 							href: '/manage/currentevent/matches'
 						},
 						{
-							label: 'Alliance Selection Data',
+							label: '!layout.nav.manage.event.allianceselection',
 							href: '/manage/allianceselection'
 						},
 						{
-							label: 'Update List of Teams',
+							label: '!layout.nav.manage.event.getcurrentteams',
 							href: '/manage/currentevent/getcurrentteams'
 						},
 						{
-							label: 'Recalculate Derived Metrics',
+							label: '!layout.nav.manage.event.recalcderived',
 							href: '/admin/sync/recalcderived'
 						},
 					]
@@ -259,37 +260,37 @@ class NavHelpers {
 			]
 		},
 		{
-			label: 'Admin',
+			label: '!layout.nav.admin',
 			href: '/admin',
 			sprite: 'scoutradioz',
 			visible: (req, res) => !!req.user && req.user.role.access_level >= Permissions.ACCESS_GLOBAL_ADMIN,
 		},
 		// User when signed in
 		{
-			label: (req, res) => `User: [[${req.user ? req.user.name : ''}]]`,
+			label: (req, res) => req.user ? req.msg('layout.nav.user.main', {user: req.user.name}) : '!layout.nav.user.fallback',
 			sprite: 'user',
 			visible: (req, res) => !!req.user && req.user.name !== 'default_user',
 			submenu: [
 				{
-					label: 'Log Out',
+					label: '!layout.nav.user.logout',
 					href: '/user/logout',
 				},
 				{
-					label: 'Change Password',
+					label: '!layout.nav.user.changepassword',
 					href: '/user/changepassword',
 				}
 			]
 		},
 		// User login when not signed in
 		{
-			label: (req, res) => `Log In: [[${req._user.org.nickname}]]`,
+			label: (req, res) => req.msg('layout.nav.user.login', {org: req._user.org.nickname}),
 			sprite: 'user',
 			visible: (req, res) => !!req.user && req._user.name === 'default_user',
 			href: '/user/login'
 		},
 		// Change org
 		{
-			label: 'Change Organization',
+			label: '!layout.nav.user.switchorg',
 			sprite: 'org',
 			visible: userLoggedIn,
 			href: '/user/switchorg'
@@ -311,7 +312,7 @@ class NavHelpers {
 		// 	]
 		// },
 		{
-			label: 'Need help? Check our wiki!',
+			label: '!layout.nav.help',
 			sprite: 'help',
 			href: 'https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki'
 		}

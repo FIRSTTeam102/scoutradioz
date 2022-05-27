@@ -82,6 +82,7 @@
 		"ignore": [
 			"public/*",
 			"public-src/*"
-		]
+		],
+		"ext": "js,ts,pug,json"
 	}
 }

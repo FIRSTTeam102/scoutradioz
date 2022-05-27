@@ -2,7 +2,7 @@
 	Slide-in navigation menu.
 	Included by layout.pug.
 	//
-//- The following mixins are for dynamically creating sliding menu items. See helpers/nav.js for the nav menu creation process.
+//- The following mixins are for dynamically creating sliding menu items. See helpers/nav.ts for the nav menu creation process.
 - const bracketsRegex = /\[\[(.*)\]\]/; // For "unimportant text" in a label, put it inside [[]]
 mixin mmenuLabel(item)
 	span
@@ -62,15 +62,15 @@ div(style="overflow-x: hidden;")
 			//- Share
 			- var orgKey = user ? user.org.org_key : 0;
 			div(class="w3-right" style="margin-inline-end: 8px;")
-				a(href=`javascript:share('${orgKey}')` class="w3-right w3-show-inline-block" style="height: 45px;" title="Share")
+				a(href=`javascript:share('${orgKey}')` class="w3-right w3-show-inline-block" style="height: 45px;" title=msg('layout.share'))
 					- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
 					div(class="w3-show-inline-block")
 						span(class=`sprite sp-32 ${spriteType} sp-white` style="margin-top: 5.5px;")
 					div(class="w3-show-inline-block")
-						span(style="font-size:14px; margin-inline-start: 1px; position:relative; top:-9px; font-family:Tahoma,Geneva,sans-serif;") Share
+						span(style="font-size:14px; margin-inline-start: 1px; position:relative; top:-9px; font-family:Tahoma,Geneva,sans-serif;") !{msg('layout.share')}
 			//- i18n
 			//- disabled for now
-			//div(class="w3-right" style="margin-inline-end: 8px;")
+			//-div(class="w3-right" style="margin-inline-end: 8px;")
 				a(href="" class="w3-show-inline-block" style="height: 45px;" title="Language")
 					div(class="w3-show-inline-block")
 						span(class="sprite sp-32 sp-language sp-i18n sp-black" style="margin-top: 7px;")
@@ -87,36 +87,27 @@ div(style="display: none;" id="menuParent")
 			if navcontents
 				for item in navcontents
 					+mmenuItem(item)
+
 - var navMenuTitle;
 if user
 	if user.name != 'default_user'
-		- navMenuTitle = user.name + ' - ' + user.org.nickname;
+		- navMenuTitle = msg('layout.menu.user', {user: user.name, org: user.org.nickname});
 	else if user.org
 		- navMenuTitle = user.org.nickname;
 else 
-	- navMenuTitle = 'Menu';
+	- navMenuTitle = msg('layout.menu.main');
+
+- var locales = getLocales();
+//- CD 2022-05-27: add qqx to list when on dev tier
+if process.env.TIER == 'dev'
+	- locales.push({lang: 'qqx', name: 'qqx', dir: 'ltr'});
+
 //-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
 script.
 	var navMenuTitle = `#{navMenuTitle}`;
 	var footerContents = [
-		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-gearheads"></span><span class="w3-tooltiptext">Copyright 2018-#{new Date().getFullYear()} FIRST Team 102 and Robotics Fund Inc.<br>Open-source & licensed with AGPLv3.</span></img></a>`,
-		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-tba"></span><span class="w3-tooltiptext">Powered by The Blue Alliance.</span></img></a>`,
-		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-first"></span><span class="w3-tooltiptext">We are proud to be participants of FIRST Robotics Competition.</span></img></a>`,
+		`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-gearheads"></span><span class="w3-tooltiptext">!{msg('layout.footer.copyright', {date: `2018-${new Date().getFullYear()}`})}</span></img></a>`,
+		`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-tba"></span><span class="w3-tooltiptext">!{msg('layout.footer.tba')}</span></img></a>`,
+		`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-first"></span><span class="w3-tooltiptext">!{msg('layout.footer.frc')}</span></img></a>`,
 	];
-	var locales = !{JSON.stringify(getLocales())};
-style.
-	.slidein-brand{
-		padding: 16px;
-	}
-	.slidein-brand .w3-tooltiptext{
-		background-color: #eee;
-		color: #000;
-		padding: 8px;
-		max-width: 100%;
-		left: 0;
-		margin-inline-start: 0;
-		margin-left: 0;
-	}
-	.slidein-brand .w3-tooltiptext::after{
-		border-color: #eee transparent transparent transparent;
-	}
+	var locales = !{JSON.stringify(locales)};
