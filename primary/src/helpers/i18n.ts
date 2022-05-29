@@ -8,6 +8,11 @@ import type express from 'express';
 
 const logger = getLogger('i18n');
 
+marked.setOptions({
+	gfm: true,
+	breaks: true,
+});
+
 // Based on i18n-node, but designed for our specific use cases
 export class I18n {
 	locales: { [key: string]: { [key: string]: LocaleTree } } = {};
@@ -67,7 +72,7 @@ export class I18n {
 
 			// Add functions to the request
 			// link:../namespace-extensions.d.ts:I18nExpressExtensions
-			for (const func of ['msg', 'msgMarked', 'getLocales', 'getLocaleName', 'getLocaleDirection']) {
+			for (const func of ['msg', 'msgUrl', 'msgMarked', 'getLocales', 'getLocaleName', 'getLocaleDirection']) {
 				// @ts-ignore
 				req[func] = res[func] = res.locals[func] = this[func].bind(this);
 			}
@@ -181,6 +186,13 @@ export class I18n {
 		if (this.locale === 'qqx') return this._qqxHandler('msg', name, parameters);
 
 		return this.sanitizeHtml(this._paramterize(this._rawMsg(this.locale, name), parameters), false);
+	}
+
+	// Returns a URL-encoded message
+	msgUrl(name: string, parameters?: I18nParameters) {
+		if (this.locale === 'qqx') return this._qqxHandler('msgUrl', name, parameters);
+
+		return encodeURI(this.msg(name, parameters));
 	}
 
 	// Returns a message with parsed markdown

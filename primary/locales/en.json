@@ -120,5 +120,46 @@
 			},
 			"help": "Need help? Check our wiki!"
 		}
+	},
+	"user": {
+		"loginOrg": "Log in to {org}",
+		"orgpassword": "Organization password:",
+		"next": "Next",
+		"name": "Name:",
+		"personalpassword": "Personal password:",
+		"createnew": "Please create a new password.",
+		"mustcreate": "You have elevated permissions in your organization, so you must set a password to ensure that others cannot log in as you.",
+		"currentpassword": "Current password:",
+		"newpassword": "New password:",
+		"newpassword2": "Confirm:",
+		"newpasswordmismatch": "New passwords do not match.",
+		"login": "Log in",
+		"changepassword": "Change password",
+		"blankpassword": "Leave blank if you do not have your own password yet.",
+		"selectorg": "Please select an organization to log in to.",
+		"logoutbeforelogin": "Please log out before you can sign in to another user.",
+		"orgpasswordrequired": "Please enter your organization's password. To go back, open the navigation on the top left.",
+		"orgpasswordincorrect": "Incorrect password for organization {org}.",
+		"resubmitlogin": "Sorry, please re-submit your organization login information.",
+		"selectuser": "Please select a user.",
+		"nouserexists": "No such user exists.",
+		"incorrectpassword": "Incorrect password.",
+		"incorrectpasswordcurrent": "Incorrect current password.",
+		"passwordalreadyexists": "Password already exists. Please submit your current password.",
+		"newpasswordboth": "Please fill both password forms.",
+		"newpasswordsuccess": "Set password successfully.",
+		"reportcolumns": {
+			"title": "Choose report columns",
+			"saved": "Saved column preferences successfully.",
+			"clearedorgdefaults": "Cleared org default columns successfully.",
+			"intro": "If NONE selected, report pages will show default set of columns for organization.\nOrganization's default columns are **bold**.\nIf ALL selected, or SOME selected, report pages will show ONLY the selected columns.",
+			"default": "Default",
+			"checkAll": "Check all",
+			"uncheckAll": "Uncheck all",
+			"setOrgDefalts": "Check this to set the organization defaults",
+			"save": "Save column selections",
+			"clearOrgDefaults": "Clear organization defaults",
+			"clearOrgDefaultsConfirmation": "Doing this will clear your organization's report column defaults (for EVERYONE, not just you). Are you sure?"
+		}
 	}
 }

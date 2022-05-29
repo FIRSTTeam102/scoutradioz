@@ -9,7 +9,7 @@ block content
 	//-User name input
 	div(class="w3-container w3-padding-16")
 		div(class="w3-quarter w3-label theme-inline-padding")
-			label Name: 
+			label !{msg('user.name')}
 		div(class="w3-half")
 			select(class="w3-select theme-input w3-no-border" type="text" name="user")
 				option
@@ -18,22 +18,22 @@ block content
 	//-Password input starts hidden, then is revealed if user is of a higher rank than scouter
 	div#passwordContainer(class="w3-container w3-padding-16 w3-hide")
 		div(class="w3-quarter w3-label theme-inline-padding")
-			label Personal Password: 
+			label !{msg('user.personalpassword')}
 		div(class="w3-half")
 			input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="password")
 	div#passwordCreationContainer(class="w3-contaner w3-padding-16 w3-hide")
 		h6
-			i Please create a new password.
+			i !{msg('user.createnew')}
 			span(class="sprite sp-info sp-24 sp-inline w3-tooltip")
-				span(class="w3-tooltiptext") You have elevated permissions in your organization, so you must set a password to ensure that others cannot log in as you.
+				span(class="w3-tooltiptext") !{msg('user.mustcreate')}
 		div(class="w3-container w3-padding-16")
 			div(class="w3-quarter w3-label theme-inline-padding")
-				label New Password: 
+				label !{msg('user.newpassword')}
 			div(class="w3-half")
 				input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="newPassword1")
 		div(class="w3-container w3-padding-16")
 			div(class="w3-quarter w3-label theme-inline-padding")
-				label Confirm: 
+				label !{msg('user.newpassword2')}
 			div(class="w3-half")
 				input(class="w3-input theme-input w3-no-border theme-inline-padding" type="password" name="newPassword2")
 	//-Organization's id and password must be passed back to user so they can send it with their request.
@@ -46,7 +46,8 @@ block content
 		if redirectURL
 			input(type="hidden" name="redirectURL" value=redirectURL)
 	div(class="w3-padding-16")
-		input#btnLogin(type="submit" class="gear-btn theme-submit w3-btn" value="Login")
+		input#btnLogin(type="submit" class="gear-btn theme-submit w3-btn" value=msg('user.login'))
+
 	script.
 		
 		var passwordNeeded = false;
@@ -102,7 +103,7 @@ block content
 					});
 				}
 				else{
-					NotificationCard.error("Both new password forms must be equal.");
+					NotificationCard.error(!{msg('user.newpasswordmismatch')});
 				}
 			}
 			//If password is needed and has been entered, submit to /withpassword

@@ -35,11 +35,11 @@ router.get('/login', wrap(async (req, res) => {
 	
 	//If there is no user logged in, send them to select-org page
 	if( !req.user ){
-		return res.redirect('/?alert=Please select an organization to sign in to.');
+		return res.redirect('/?alert=' + req.msgUrl('user.selectorg'));
 	}
 	//If the user logged in is NOT default_user, then send them to index.
 	else if( req.user.name != 'default_user' ){
-		return res.redirect('/?alert=Please log out before you can sign in to another user.');
+		return res.redirect('/?alert=' + req.msgUrl('user.logoutbeforelogin'));
 	}
 	//Otherwise, proceed.
 	
@@ -57,7 +57,7 @@ router.get('/login', wrap(async (req, res) => {
 	if(!selectedOrg) return res.status(500).send('Invalid organization');
 	
 	res.render('./user/login', {
-		title: `Log In to ${selectedOrg.nickname}`,
+		title: req.msg('user.loginOrg', {org: selectedOrg.nickname}),
 		org: selectedOrg,
 		redirectURL: req.getFixedRedirectURL()
 	});
@@ -86,7 +86,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	
 	//Make sure that form is filled
 	if(!org_key || !org_password || org_key == '' || org_password == ''){
-		return res.redirect('/user/login?alert=Please enter your organization\'s password. To go back, open the navigation on the top left.&rdr=' + req.getFixedRedirectURL());
+		return res.redirect('/user/login?alert=' + req.msgUrl('user.orgpasswordrequired') + '&rdr=' + req.getFixedRedirectURL());
 	}
 	
 	//If form is filled, then proceed.
@@ -115,7 +115,7 @@ router.post('/login/select', wrap(async (req, res) => {
 		);
 				
 		res.render('./user/selectuser', {
-			title: `Sign In to ${selectedOrg.nickname}`,
+			title: req.msg('user.loginOrg', {org: selectedOrg.nickname}),
 			org: selectedOrg,
 			users: users,
 			org_password: org_password, //Must be passed back to user so they can send org's password back with their request (Avoid dealing with tokens & cookies)
@@ -124,7 +124,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	}
 	//If failed, then redirect with alert
 	else{
-		res.redirect(`/user/login?alert=Incorrect password for organization ${selectedOrg.nickname}&rdr=${req.getFixedRedirectURL()}`);
+		res.redirect(`/user/login?alert=${req.msgUrl('user.orgpasswordincorrect', {org: selectedOrg.nickname})}&rdr=${req.getFixedRedirectURL()}`);
 	}
 }));
 
@@ -142,7 +142,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(!org_key || !org_password){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?alert=Sorry, please re-submit your organization login information.'
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitlogin')
 		});
 	}
 	
@@ -150,7 +150,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(!userID || userID == ''){
 		return res.send({
 			status: 400,
-			alert: 'Please select a user.'
+			alert: req.msg('user.selectuser')
 		});
 	}
 	
@@ -172,7 +172,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(!comparison){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?alert=Sorry, please re-submit your organization login information.'
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitlogin')
 		});
 	}
 	
@@ -183,7 +183,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	if(!user){
 		return res.send({
 			status: 400,
-			alert: 'No such user exists'
+			alert: req.msg('user.nouserexists')
 		});
 	}
 	
@@ -297,7 +297,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	if(!org_key || !org_password){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitlogin')
 		});
 	}
 	
@@ -305,7 +305,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	if(!userID || userID == ''){
 		return res.send({
 			status: 400,
-			alert: 'Please select a user.'
+			alert: req.msg('user.selectuser')
 		});
 	}
 	
@@ -325,7 +325,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	if(!orgComparison){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitlogin')
 		});
 	}
 	
@@ -337,7 +337,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	if(!user || !user.password){
 		return res.send({
 			status: 400,
-			alert: 'No such user exists'
+			alert: req.msg('user.nouserexists')
 		});
 	}
 	
@@ -387,7 +387,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 		//If authentication failed, then send alert
 		return res.send({
 			status: 400,
-			alert: 'Incorrect password.'
+			alert: req.msg('user.incorrectpassword')
 		});
 	}
 }));
@@ -407,7 +407,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!org_key || !org_password){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitorg')
 		});
 	}
 	
@@ -415,7 +415,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!userID || userID == ''){
 		return res.send({
 			status: 400,
-			alert: 'Please select a user.'
+			alert: req.msg('user.selectuser')
 		});
 	}
 	
@@ -435,7 +435,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!orgComparison){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?Sorry, please re-submit your organization login information.'
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitorg')
 		});
 	}
 	
@@ -446,26 +446,26 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!user){
 		return res.send({
 			status: 500,
-			alert: 'No such user exists'
+			alert: req.msg('user.nouserexists')
 		});
 	}
 	
 	if(user.password != 'default'){
 		return res.send({
 			password_needed: true,
-			alert: 'Password already exists. Please submit your current password.'
+			alert: req.msg('user.passwordalreadyexists')
 		});
 	}
 	
 	//make sure forms are filled
 	if( !p1 || !p2 ){
 		return res.send({
-			alert: 'Please fill both password forms.'
+			alert: req.msg('user.newpasswordboth')
 		});
 	}
 	if( p1 != p2 ){
 		return res.send({
-			alert: 'Both new password forms must be equal.'
+			alert: req.msg('user.newpasswordmismatch')
 		});
 	}
 	
@@ -484,7 +484,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 		if(err) logger.error(err);
 		
 		res.send({
-			redirect_url: '/?alert=Set password successfully.'
+			redirect_url: '/?alert=' + req.msgUrl('user.newpasswordsuccess')
 		});
 	});
 }));
@@ -500,7 +500,7 @@ router.get('/changepassword', wrap(async (req, res) => {
 	if( !await req.authenticate( Permissions.ACCESS_SCOUTER ) ) return;
 	
 	res.render('./user/changepassword', {
-		title: 'Change Password'
+		title: req.msg('user.changepassword')
 	});
 }));
 
@@ -515,10 +515,10 @@ router.post('/changepassword', wrap(async (req, res) => {
 	
 	//make sure forms are filled
 	if( !p1 || !p2 ){
-		return res.redirect('/user/changepassword?alert=Please enter new password.&type=error');
+		return res.redirect('/user/changepassword?alert=' + req.msgUrl('user.createnew') + '&type=error');
 	}
 	if( p1 != p2 ){
-		return res.redirect('/user/changepassword?alert=Both new password forms must be equal.&type=error');
+		return res.redirect('/user/changepassword?alert=' + req.msgUrl('user.newpasswordmismatch') + '&type=error');
 	}
 	
 	let passComparison;
@@ -532,7 +532,7 @@ router.post('/changepassword', wrap(async (req, res) => {
 	}
 	
 	if( !passComparison ){
-		return res.redirect('/user/changepassword?alert=Current password incorrect.&type=error');
+		return res.redirect('/user/changepassword?alert=' + req.msgUrl('user.incorrectpasswordcurrent') + '&type=error');
 	}
 	
 	//Hash new password
@@ -544,7 +544,7 @@ router.post('/changepassword', wrap(async (req, res) => {
 	
 	logger.debug('changepassword: ' + JSON.stringify(writeResult), true);
 	
-	res.redirect('/?alert=Changed password successfully.');
+	res.redirect('/?alert=' + req.msgUrl('user.newpasswordsuccess'));
 }));
 
 //Log out
@@ -668,7 +668,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	logger.debug('savedCols=' + JSON.stringify(savedCols));
 
 	res.render('./user/preferences/reportcolumns', {
-		title: 'Choose Report Columns',
+		title: req.msg('user.reportcolumns.title'),
 		layout: matchlayout,
 		savedCols: savedCols,
 		orgCols: orgCols,
@@ -765,7 +765,7 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 	let redirectURL = req.getFixedRedirectURL() || '/home';
 	logger.debug(`Redirect: ${redirectURL}`);
 
-	res.redirect(redirectURL + '?alert=Saved column preferences successfully.&type=success&autofade=true');
+	res.redirect(redirectURL + '?alert=' + req.msgUrl('user.reportcolumns.saved') + '&type=success&autofade=true');
 }));
 
 router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, res) => {
@@ -799,7 +799,7 @@ router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, r
 		await utilities.update('orgs', {org_key: orgKey}, {$set: {'config.columnDefaults': theseColDefaults}});
 	}
 
-	res.redirect('/user/preferences/reportcolumns?alert=Cleared org default columns successfully.&type=success&autofade=true');
+	res.redirect('/user/preferences/reportcolumns?alert=' + req.msgUrl('user.reportcolumns.clearedorgdefaults') + '&type=success&autofade=true');
 }));
 
 module.exports = router;

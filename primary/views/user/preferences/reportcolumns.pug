@@ -11,19 +11,14 @@
 	//
 extends ../../layout
 block content
-	h2 Choose Report Columns
+	h2 !{msg('user.reportcolumns.title')}
 	h6
-		i 
-			p If NONE selected, report pages will show default set of columns for organization.
-			p 
-				span Organization's default columns are
-				strong &nbsp;bold. 
-			p If ALL selected, or SOME selected, report pages will show ONLY the selected columns.
-			
+		i !{msgMarked('user.reportcolumns.intro')}
+
 	div(class="w3-section")
-		button(class="theme-input w3-btn gear-btn" onclick="resetToDefault()") Default
-		button(class="theme-input w3-btn gear-btn" onclick="check()") Check All
-		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") Uncheck All
+		button(class="theme-input w3-btn gear-btn" onclick="resetToDefault()") !{msg('user.reportcolumns.default')}
+		button(class="theme-input w3-btn gear-btn" onclick="check()") !{msg('user.reportcolumns.checkAll')}
+		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") !{msg('user.reportcolumns.uncheckAll')}
 	form(action="" method="post")
 		input(type="hidden" name="redirectURL" value=redirectURL)
 		div(class="w3-section w3-auto")
@@ -45,17 +40,17 @@ block content
 			br
 			//- 'setOrgDefault': see reports.js, /reports/choosecolumns
 			input(type="checkbox" class="w3-check" name='setOrgDefault' id='setOrgDefault')
-			label(class="theme-text" for='setOrgDefault') &nbsp;Check this to set the organization defaults
+			label(class="theme-text" for='setOrgDefault') &nbsp;!{msg('user.reportcolumns.setOrgDefalts')}
 			br
 			br
 		div(style="width:200px;margin:auto;text-align:center")
-			button(type="submit" class="w3-btn theme-submit") Save Column Selections
+			button(type="submit" class="w3-btn theme-submit") !{msg('user.reportcolumns.save')}
 	//-Button to clear org defaults
 	- if (user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN)
 		br
 		form#clearOrgDefault(action="/user/preferences/reportcolumns/clearorgdefaultcols" method="post")
 			div(style="width:200px;margin:auto;text-align:center")
-		button(type="submit" class="w3-btn theme-red" onclick='confirmResetDefault()') CLEAR ORGANIZATION DEFAULTS
+		button(type="submit" class="w3-btn theme-red" onclick='confirmResetDefault()') !{msg('user.reportcolumns.clearOrgDefaults')}
 	script(type="text/javascript").
 		var orgCols = JSON.parse('!{JSON.stringify(orgCols)}');
 		var doesOrgHaveNoDefaults = !{doesOrgHaveNoDefaults};
@@ -96,8 +91,9 @@ block content
 			}
 		}
 		
-		function confirmResetDefault(){ 
-			if (confirm('Doing this will clear your organization\'s report column defaults (for EVERYONE, not just you). Are you sure?')) {
+		function confirmResetDefault() {
+			// JSON.stringify will escape the message into a JS-readable string
+			if (confirm(!{JSON.stringify(msg('user.reportcolumns.clearOrgDefaultsConfirmation'))})) {
 				$('#clearOrgDefault').submit();
 			}
 		}
