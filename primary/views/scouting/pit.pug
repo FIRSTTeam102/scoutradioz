@@ -18,9 +18,8 @@ block content
 		}
 	script(src=`${fileRoot}/lib/jimp.min.js`)
 	script(src=`${fileRoot}/js/script-pitscouting.js?v=10`)
-	h3= key.replace('frc','Team #')
-	h5 #{team.nickname}, 
-		span(class="unimportant") from #{team.city}, #{team.state_prov}
+	h3!=msg('scouting.pitHeading', {team: key.replace('frc', '')})
+	h5!=msgMarked('scouting.subheading', {team: team.nickname, city: team.city, state: team.state_prov})
 	p
 	if images
 		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
@@ -60,18 +59,18 @@ block content
 		input(type="hidden" name="user" value=user._id)
 		//-The buttons are actually labels for each image input
 		div(class="w3-container w3-padding")
-			label#uploadMain(for="imageMain" class="w3-btn theme-submit") Upload Main Photo
+			label#uploadMain(for="imageMain" class="w3-btn theme-submit")!=msg('scouting.upload.main')
 		div(class="w3-container")
 			div(class="w3-padding w3-show-inline-block")
-				label#uploadA(for="imageA" class="w3-btn theme-submit") Upload Small #1
+				label#uploadA(for="imageA" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 1})
 			div(class="w3-padding w3-show-inline-block")
-				label#uploadB(for="imageB" class="w3-btn theme-submit") Upload Small #2
+				label#uploadB(for="imageB" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 2})
 			div(class="w3-padding w3-show-inline-block")
-				label#uploadC(for="imageC" class="w3-btn theme-submit") Upload Small #3
+				label#uploadC(for="imageC" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 3})
 	//- Preprocess images: Temporarily disabled
 	div(class="w3-container w3-hide")
 		input(type="checkbox" name="chkPreprocess" id="chkPreprocess" class="w3-check")
-		label(for="chkPreprocess" class="theme-inline-padding") Pre-process photos to conserve mobile data?
+		label(for="chkPreprocess" class="theme-inline-padding")!=msg('scouting.upload.preprocess')
 	p
 	div(class="")
 		form#scoutform(class="" name="scoutform")
@@ -102,7 +101,7 @@ block content
 						when "spacer"
 							include templates/formSpacer
 		br 
-		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit") Submit
+		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit")!=msg('scouting.submit')
 		p 
 	each element in layout
 		case element.type

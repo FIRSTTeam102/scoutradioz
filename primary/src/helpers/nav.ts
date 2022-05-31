@@ -122,7 +122,7 @@ class NavHelpers {
 						href: '/reports/upcoming',
 					},
 					{
-						label: '!layout.nav.reports.finished',
+						label: '!layout.nav.reports.completed',
 						href: '/reports/finishedmatches',
 					},
 					{
@@ -144,12 +144,12 @@ class NavHelpers {
 								sprite: 'download',
 							},
 							{
-								label: req.msg('layout.nav.reports.export.matchAll', {event: req.event.year}),
+								label: req.msg('layout.nav.reports.export.matchAll', {year: req.event.year}),
 								href: '/reports/exportdata?type=matchscouting&span=all',
 								sprite: 'download',
 							},
 							{
-								label: req.msg('layout.nav.reports.export.pitAll', {event: req.event.year}),
+								label: req.msg('layout.nav.reports.export.pitAll', {year: req.event.year}),
 								href: '/reports/exportdata?type=pitscouting&span=all',
 								sprite: 'download',
 							}

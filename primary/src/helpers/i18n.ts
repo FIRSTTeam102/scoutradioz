@@ -34,17 +34,17 @@ export class I18n {
 		readdir(this.config.directory, (err, files) => {
 			if (err) return logger.error(err);
 
-			files.forEach(file => {
+			files.forEach((file) => {
 				let locale = file.replace('.json', '');
 
 				try {
 					this.locales[locale] = require(path.join(this.config.directory, file));
 				} catch (err) {
-					logger.error(`Unable to load ${locale} locale`, err)
+					logger.error(`Unable to load ${locale} locale`, err);
 				}
 			});
 			logger.debug('Loaded languages:', Object.keys(this.locales));
-		})
+		});
 
 		this.locale = this.config.defaultLocale;
 	}
@@ -79,17 +79,17 @@ export class I18n {
 
 			next();
 			logger.removeContext('funcName');
-		}
+		};
 	}
 
 	// Get info about all loaded locales
 	getLocales() {
-		return Object.keys(this.locales).map(locale => {
+		return Object.keys(this.locales).map((locale) => {
 			return {
 				lang: locale,
 				name: this.getLocaleName(locale),
-				dir: this.getLocaleDirection(locale)
-			}
+				dir: this.getLocaleDirection(locale),
+			};
 		});
 	}
 
@@ -124,7 +124,7 @@ export class I18n {
 				) return '';
 
 				// Return a reference to the next deeper level in the tree
-				return item = (previousValue as Record<string, any>)[currentValue];
+				return (item = (previousValue as Record<string, any>)[currentValue]);
 			}, object);
 
 			// Return the requested accessor.
@@ -144,9 +144,9 @@ export class I18n {
 			allowedSchemes: ['http', 'https'],
 			allowedAttributes: {
 				...sanitizeHtml.defaults.allowedAttributes,
-				'*': ['dir', 'lang', 'class', 'id']
+				'*': ['dir', 'lang', 'class', 'id'],
 			},
-			disallowedTagsMode: 'escape' // leaves the content- maybe switch to 'discard'?
+			disallowedTagsMode: 'escape', // leaves the content- maybe switch to 'discard'?
 		});
 	}
 
@@ -169,16 +169,19 @@ export class I18n {
 	// Replace named keywords (eg. {name}) with arguments
 	_paramterize(text: string, parameters?: I18nParameters) {
 		// @todo: Make escaping work (eg. \{c} or {c\}c})
-		if (parameters && typeof parameters === 'object') return text.replace(/\{([^}]+)\}/g, (match, key) => {
-			let result = parameters[key];
-			return (typeof result === 'string' ? result : String(result)) || match
-		});
+		if (parameters && typeof parameters === 'object')
+			return text.replace(/\{([^}]+)\}/g, (match, key) => {
+				let result = parameters[key];
+				return (result !== undefined) ?
+					((typeof result === 'string' ? result : String(result)) || match)
+					: `{${key}}`;
+			});
 		return text;
 	}
 
 	// Internal function to format qqx output
 	_qqxHandler(func: string, query: string, parameters?: I18nParameters) {
-		return this.sanitizeHtml(`${func}(${query}${parameters && ', ' + JSON.stringify(parameters) || ''})`)
+		return this.sanitizeHtml(`${func}(${query}${(parameters && ', ' + JSON.stringify(parameters)) || ''})`);
 	}
 
 	// Returns a plain message with substituted args
@@ -235,7 +238,7 @@ interface I18nOptions {
 
 interface LocaleTree {
 	[key: string]: string | LocaleTree;
-};
+}
 
 interface I18nParameters {
 	[key: string]: string | number; // anything that can be substituted into a string

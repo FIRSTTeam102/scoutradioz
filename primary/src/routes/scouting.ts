@@ -30,7 +30,7 @@ router.get('/match*', wrap(async (req, res) => {
 	let match_team_key = req.query.key;
 	let alliance = req.query.alliance;
 	let org_key = thisUser.org_key;
-	if (typeof match_team_key !== 'string') throw new e.UserError('Invalid match key set for scouting.'); // 2022-05-17 JL: Throw if they don't have a match key set in the url OR if they set two, making it an array
+	if (typeof match_team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidMatchKey')); // 2022-05-17 JL: Throw if they don't have a match key set in the url OR if they set two, making it an array
 	let teamKey = match_team_key.split('_')[2];
 	
 	logger.debug(`match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName} teamKey=${teamKey}`);
@@ -73,11 +73,11 @@ router.get('/match*', wrap(async (req, res) => {
 	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
 	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	
-	if (!team) throw new e.UserError(`Team ${teamKey} does not exist.`);
+	if (!team) throw new e.UserError(req.msg('scouting.invalidTeam', {team: teamKey}));
 
 	//render page
 	res.render('./scouting/match', {
-		title: 'Match Scouting',
+		title: req.msg('scouting.match'),
 		layout: layout,
 		key: match_team_key,
 		alliance: alliance,
@@ -104,7 +104,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	}
 	let matchData = req.body;
 	if(!matchData)
-		return res.send({status: 500, message: 'No data was sent to /scouting/match/submit.'});
+		return res.send({status: 500, message: req.msg('scouting.noDataSubmit', {url: '/scouting/match/submit'})});
 	
 	let event_year = req.event.year;
 	let match_team_key = matchData.match_team_key;
@@ -181,7 +181,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	});
 	let assigned = !!oneAssignedMatch;
 	
-	return res.send({message: 'Submitted data successfully.', status: 200, assigned: assigned});
+	return res.send({message: req.msg('scouting.submitSuccess'), status: 200, assigned: assigned});
 }));
 
 router.get('/pit*', wrap(async (req, res) => {
@@ -197,7 +197,7 @@ router.get('/pit*', wrap(async (req, res) => {
 
 	let teamKey = req.query.team_key;
 	
-	if (typeof teamKey !== 'string') throw new e.UserError('Team key is either not defined or invalid.');
+	if (typeof teamKey !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
 		
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
 	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
@@ -219,7 +219,7 @@ router.get('/pit*', wrap(async (req, res) => {
 	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	
 	res.render('./scouting/pit', {
-		title: 'Pit Scouting',
+		title: req.msg('scouting.pit'),
 		layout: layout,
 		pitData: pitData, 
 		key: teamKey,
@@ -251,7 +251,7 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	await utilities.update('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, { $set: { 'data' : pitData, 'actual_scouter': thisUserName, useragent: req.shortagent } });
 
-	return res.send({message: 'Submitted data successfully.', status: 200});
+	return res.send({message: req.msg('scouting.submitSuccess'), status: 200});
 }));
 
 router.get('/', wrap(async (req, res) => {
@@ -295,14 +295,14 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 			logger.debug(`Done; writeResult=${JSON.stringify(writeResult)}`);
 			res.send({
 				success: true,
-				message: 'Deleted data successfully. You will not be redirected away from the page, in case you wish to re-submit the data on screen.'
+				message: req.msg('scouting.deleteSuccess')
 			});
 		}
 		else {
 			logger.info('Entry not found in database!');
 			res.send({
 				success: false,
-				message: 'Invalid match requested.'
+				message: req.msg('scouting.invalidMatchKey')
 			});
 		}
 	}
@@ -310,7 +310,7 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 		logger.info('Authentication failed');
 		res.send({
 			success: false,
-			message: 'Password incorrect.'
+			message: req.msg('user.incorrectpassword')
 		});
 	}
 }));
