@@ -172,21 +172,21 @@ class NavHelpers {
 			visible: userLoggedIn
 		},
 		{
-			label: '!layout.nav.scouting.main',
+			label: '!layout.nav.scouting',
 			href: '/dashboard',
 			sprite: 'radio',
 			visible: (req, res) => !!req.user && req._user.role.access_level >= Permissions.ACCESS_SCOUTER,
 			submenu: [
 				{
-					label: '!layout.nav.scouting.pit',
+					label: '!scouting.pit',
 					href: '/dashboard/pits'
 				},
 				{
-					label: '!layout.nav.scouting.match',
+					label: '!scouting.match',
 					href: '/dashboard/matches',
 				},
 				{
-					label: '!layout.nav.scouting.alliance',
+					label: '!allianceselection.title',
 					href: '/dashboard/allianceselection',
 				}
 			]
@@ -276,7 +276,7 @@ class NavHelpers {
 					href: '/user/logout',
 				},
 				{
-					label: '!layout.nav.user.changepassword',
+					label: '!user.changepassword',
 					href: '/user/changepassword',
 				}
 			]

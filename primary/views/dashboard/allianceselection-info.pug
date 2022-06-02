@@ -21,23 +21,21 @@ if (aggdata)
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
 	//- 2022-03-17 JL: A simple but effective way of showimg multiple table types w/o too much copy paste (though I hardcoded the AVG default)
-	- var metricTypes = {AVG: 'Averages', MAX: 'Maximums'};
+	- var metricTypes = {AVG: msg('metrics.AVG'), MAX: msg('metrics.MAX')};
 	span Show:  
 	each label, key in metricTypes
 		input(type="radio" id=`show_${key}` name="metricSelection" value=key checked=(key=='AVG'))
 		label(for=`show_${key}`) &nbsp;#{label} &nbsp;
-		//- input(type="radio" id="showAvg" name="sel" checked="checked" onclick="showAvg();")
-		//- label(for="showAvg")  Averages    
-		//- input(type="radio" id="showMax" name="sel" onclick="showMax();")
-		//- label(for="showMax")  Maximums 
 	p
 	each label, key in metricTypes
 		- let visibility = (key === 'AVG') ? '' : 'display: none;'; // Show or hide depending on the key (AVG hardcoded) - used for jquery .hide()/.show()
 		table(class="w3-table w3-text-white metricTable" id=`metricTable_${key}` style=visibility)
 			tr
-				th V
-				th Team
-				th FRC Rank
+				th(class="w3-tooltip")
+					abbr(title)!=msg('allianceselection.priorityAbbr')
+					span(class="w3-tooltiptext" style="min-width: fit-content")!=msg('allianceselection.priority')
+				th!=msg('allianceselection.team')
+				th!=msg('allianceselection.rank')
 				- var colIdx = 4;
 				for item in layout
 					if (matchDataHelper.isQuantifiableType(item.type))
@@ -65,7 +63,7 @@ if (aggdata)
 							else
 								td(class=`${valStyle}`)= row[item.key + key]
 else
-	p.i Insufficient data at this time, come back later!
+	p.i!=msg('allianceselection.insufficientData')
 script.
 	//- Handler for the metric selection radio button
 	$('input[name=metricSelection]').on('change', function() {

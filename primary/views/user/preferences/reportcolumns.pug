@@ -11,14 +11,14 @@
 	//
 extends ../../layout
 block content
-	h2 !{msg('user.reportcolumns.title')}
+	h2!=msg('user.reportcolumns.title')
 	h6
-		i !{msgMarked('user.reportcolumns.intro')}
+		i!=msgMarked('user.reportcolumns.intro')
 
 	div(class="w3-section")
-		button(class="theme-input w3-btn gear-btn" onclick="resetToDefault()") !{msg('user.reportcolumns.default')}
-		button(class="theme-input w3-btn gear-btn" onclick="check()") !{msg('user.reportcolumns.checkAll')}
-		button(class="theme-red w3-btn gear-btn" onclick="uncheck()") !{msg('user.reportcolumns.uncheckAll')}
+		button(class="theme-input w3-btn gear-btn" onclick="resetToDefault()")!=msg('user.reportcolumns.default')
+		button(class="theme-input w3-btn gear-btn" onclick="check()")!=msg('user.reportcolumns.checkAll')
+		button(class="theme-red w3-btn gear-btn" onclick="uncheck()")!=msg('user.reportcolumns.uncheckAll')
 	form(action="" method="post")
 		input(type="hidden" name="redirectURL" value=redirectURL)
 		div(class="w3-section w3-auto")
@@ -44,13 +44,13 @@ block content
 			br
 			br
 		div(style="width:200px;margin:auto;text-align:center")
-			button(type="submit" class="w3-btn theme-submit") !{msg('user.reportcolumns.save')}
+			button(type="submit" class="w3-btn theme-submit")!=msg('user.reportcolumns.save')
 	//-Button to clear org defaults
 	- if (user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN)
 		br
 		form#clearOrgDefault(action="/user/preferences/reportcolumns/clearorgdefaultcols" method="post")
 			div(style="width:200px;margin:auto;text-align:center")
-		button(type="submit" class="w3-btn theme-red" onclick='confirmResetDefault()') !{msg('user.reportcolumns.clearOrgDefaults')}
+		button(type="submit" class="w3-btn theme-red" onclick='confirmResetDefault()')!=msg('user.reportcolumns.clearOrgDefaults')
 	script(type="text/javascript").
 		var orgCols = JSON.parse('!{JSON.stringify(orgCols)}');
 		var doesOrgHaveNoDefaults = !{doesOrgHaveNoDefaults};
@@ -93,7 +93,7 @@ block content
 		
 		function confirmResetDefault() {
 			// JSON.stringify will escape the message into a JS-readable string
-			if (confirm(!{JSON.stringify(msg('user.reportcolumns.clearOrgDefaultsConfirmation'))})) {
+			if (confirm(!{msgJs('user.reportcolumns.clearOrgDefaultsConfirmation')})) {
 				$('#clearOrgDefault').submit();
 			}
 		}

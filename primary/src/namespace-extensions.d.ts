@@ -67,6 +67,7 @@ declare namespace Express {
 		locale: string;
 		msg: (name: string, parameters?: Record<string, string | number>) => string;
 		msgUrl: (name: string, parameters?: Record<string, string | number>) => string;
+		msgJs: (name: string, parameters?: Record<string, string | number>) => string;
 		msgMarked: (name: string, parameters?: Record<string, string | number>) => string;
 		getLocales: () => StringDict[];
 		getLocaleName: (locale: string, inLocale?: string) => string;

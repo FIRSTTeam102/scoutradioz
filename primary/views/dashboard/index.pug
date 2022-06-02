@@ -6,14 +6,12 @@
 extends ../layout
 block content
 	if user
-		h2(class="theme-text") Dashboard for
-		h2(class="theme-text")= user.name
-		h4(style="font-style:italic") Scouting group:
-		h4(style="font-style:italic")= thisPair
-		include templates/notifications 
+		h2(class="theme-text")!=msg('dashboard.titleUser', {user: user.name})
+		h4(style="font-style:italic")!=msg('dashboard.group', {group: thisPair})
+		include templates/notifications
 		hr 
 		if assignedTeams.length > 0
-			h3(class="theme-text") Pit scouting assignments
+			h3(class="theme-text")!=msg('dashboard.pitScouting')
 			each team in assignedTeams
 				if team.data
 					a(href=`/scouting/pit?team_key=${team.team_key}`) 
@@ -25,7 +23,7 @@ block content
 							span= team.team_key.substring(3)
 			hr 
 		if backupTeams.length > 0
-			h3(class="theme-text") Partner(s) pit scouting
+			h3(class="theme-text")!=msg('dashboard.pitScoutingPartner')
 			each team in backupTeams
 				if team.data
 					a(href=`/scouting/pit?team_key=${team.team_key}`) 
@@ -37,13 +35,13 @@ block content
 							span= team.team_key.substring(3)
 			hr 
 		if scoringMatches.length > 0
-			h3(class="theme-text") Upcoming matches to be scouted
+			h3(class="theme-text")!=msg('dashboard.upcomingMatches')
 			br 
 			each match in scoringMatches
 				- match.alliance = (match.alliance == "red") ? "Red" : "Blue";
 				- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 				
-				h4 Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')} 
+				h4 !{msg('dashboard.matchNumber', {number: match.match_number})} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')} 
 					if match.data
 						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
 							div(class="gear-btn theme-dim w3-btn w3-section w3-margin-left w3-margin-right")
@@ -56,7 +54,7 @@ block content
 		div(class="w3-container w3-padding-16")
 			a(href="/dashboard/pits") 
 				div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
-					span One-off Pit Scouting
+					span!=msg('dashboard.oneOffPit')
 			a(href="/dashboard/matches") 
 				div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
-					span One-off Match Scouting
+					span!=msg('dashboard.oneOffMatch')

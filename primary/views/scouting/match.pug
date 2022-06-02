@@ -118,7 +118,7 @@ block content
 		div(class="w3-btn theme-submit theme-red" id="btnClearData")!=msg('scouting.clearData')
 		script.
 			$('#btnClearData').on('click', async () => {
-				let result = await PasswordPrompt.show(!{JSON.stringify(msg('scouting.clearDataConfirm'))});
+				let result = await PasswordPrompt.show(!{msgJs('scouting.clearDataConfirm')});
 				if (result.cancelled == false) {
 					$.post('/scouting/match/delete-data', {password: result.password, match_team_key: '#{key}'})
 						.done(result => {

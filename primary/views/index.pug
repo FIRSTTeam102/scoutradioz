@@ -18,9 +18,9 @@ block content
 	- var viewDataVisible = (selectedButton === 'viewData') ? '' : 'display: none';
 	- var scoutVisible = (selectedButton === 'loginScout') ? '' : 'display: none';
 	div(class="w3-auto")
-		h2 !{msg('index.welcome')}
+		h2!=msg('index.welcome')
 		hr 
-		h3 !{msg('index.choice')}
+		h3!=msg('index.choice')
 		div.w3-row
 			div.centered-half
 				ul(class="w3-ul w3-medium w3-left-align")
@@ -29,59 +29,59 @@ block content
 							div.w3-left.w3-margin-right
 								input(type="radio" class="w3-radio" name="customer" id="chbViewData" value="viewData" checked=(selectedButton === 'viewData'))
 							div.w3-rest
-								span !{msg('index.viewer.choice')}
+								span!=msg('index.viewer.choice')
 					label(for="chbLoginScout")
 						li(class="w3-no-border w3-display-container")
 							div.w3-left.w3-margin-right
 								input(type="radio" class="w3-radio" name="customer" id="chbLoginScout" value="loginScout" checked=(selectedButton === 'loginScout'))
 							div.w3-rest
-								span !{msg('index.scouter.choice')}
+								span!=msg('index.scouter.choice')
 					label(for="chbLearnMore")
 						li(class="w3-no-border")
 							div.w3-left.w3-margin-right
 								input(type="radio" class="w3-radio" name="customer" id="chbLearnMore" value="learnMore" checked=(selectedButton === 'learnMore'))
 							div.w3-rest
-								span !{msg('index.info.choice')}
+								span!=msg('index.info.choice')
 		hr 
 		div(id="blurbViewData" class="w3-medium" style=viewDataVisible)
 			div
 				h5.strong
 					span(class="sprite sp-20 sp-radio sp-inline")
-					span !{msg('index.viewer.intro')}
-				p !{msg('index.viewer.action')}
+					span!=msg('index.viewer.intro')
+				p!=msg('index.viewer.action')
 			hr 
 		div(id="blurbLearnMore" class="w3-left-align w3-medium" style=learnMoreVisible)
 			div.w3-padding-small
 				p 
 					span(class="sprite sp-16 sp-radio sp-inline")
-					span !{msgMarked('index.info.intro')}
-				p !{msg('index.info.features.intro')}
+					span!=msgMarked('index.info.intro')
+				p!=msg('index.info.features.intro')
 				ul
-					li.w3-margin !{msgMarked('index.info.features.modular')}
-					li.w3-margin !{msgMarked('index.info.features.automatic')}
-					li.w3-margin !{msgMarked('index.info.features.advanced')}
-					li.w3-margin !{msgMarked('index.info.features.management')}
-					li.w3-margin !{msgMarked('index.info.features.free')}
+					li.w3-margin!=msgMarked('index.info.features.modular')
+					li.w3-margin!=msgMarked('index.info.features.automatic')
+					li.w3-margin!=msgMarked('index.info.features.advanced')
+					li.w3-margin!=msgMarked('index.info.features.management')
+					li.w3-margin!=msgMarked('index.info.features.free')
 				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki" target="_blank")
 						span(class="sprite sp-22 sp-black sp-github sp-inline")
-						span !{msg('index.info.github')}
+						span!=msg('index.info.github')
 				div.w3-center.w3-margin-top 
 					a(class="theme-link w3-btn gear-btn" href="https://discord.gg/Mr3kyqkSrQ" target="_blank")
 						span(class="sprite sp-22 sp-black sp-discord sp-inline")
-						span !{msg('index.info.discord')}
+						span!=msg('index.info.discord')
 				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://forms.gle/vRqkS5w4HpKNdLYp9" target="_blank")
 						span(class="sprite sp-22 sp-black sp-org sp-inline")
-						span !{msg('index.info.partner')}
+						span!=msg('index.info.partner')
 				br 
 				div.w3-center.w3-margin-top
 					a(class="theme-link w3-btn gear-btn" href="https://www.firstinspires.org/robotics/frc" target="_blank")
 						span(class="sprite sp-22 sp-black sp-first sp-inline")
-						span !{msgMarked('index.info.first')}
+						span!=msgMarked('index.info.first')
 			hr 
 		div(id="selectorg" style=learnMoreInvisible)
-			h3 !{msg('index.select_org')}
+			h3!=msg('index.select_org')
 			div(class="w3-container w3-auto w3-padding")
 				each org, i in orgs
 					div.w3-padding 
@@ -94,13 +94,13 @@ block content
 						//- JL: Making the "view" buttons links to the "share" feature so that web crawlers can be somewhat aware of our site structure (/frc102/home instead of /selectorg?redirectURL=home)
 						div(class="org-view" style=viewDataVisible)
 							- if (!redirectURL) redirectURL = '/home';
-							a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) !{msg('index.view')}
+							a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`)!=msg('index.view')
 						div(class="org-login" style=scoutVisible)
-							a(class="theme-link w3-btn gear-btn" href=`/selectorg-login?org_key=${org.org_key}&rdr=${redirectURL}`) !{msg('index.login')}
+							a(class="theme-link w3-btn gear-btn" href=`/selectorg-login?org_key=${org.org_key}&rdr=${redirectURL}`)!=msg('index.login')
 							//- if redirectURL
-							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) !{msg('index.login')}
+							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`)!=msg('index.login')
 							//- else 
-							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}/home`) !{msg('index.login')}
+							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}/home`)!=msg('index.login')
 					//- div(class="w3-col")
 						div(class="w3-quarter w3-hide-small") &nbsp;
 						div(class="w3-half w3-padding")

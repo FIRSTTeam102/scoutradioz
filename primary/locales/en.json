@@ -77,13 +77,8 @@
 				}
 			},
 			"driveteam": "Drive team dashboard",
-			"reportcolumns": "Configure Report Columns",
-			"scouting": {
-				"main": "Scouting",
-				"pit": "Pit scouting",
-				"match": "Match scouting",
-				"alliance": "Alliance selection"
-			},
+			"reportcolumns": "Configure report columns",
+			"scouting": "Scouting",
 			"manage": {
 				"main": "Manage: [[{org}]]",
 				"members": {
@@ -115,7 +110,6 @@
 				"fallback": "User",
 				"login": "Log in: [[{org}]]",
 				"logout": "Log out",
-				"changepassword": "Change password",
 				"switchorg": "Change organization"
 			},
 			"help": "Need help? Check our wiki!"
@@ -184,5 +178,48 @@
 		"noDataSubmit": "No data was sent to {url}.",
 		"submitSuccess": "Submitted data successfully.",
 		"deleteSuccess": "Deleted data successfully. You will not be redirected away from the page, in case you wish to re-submit the data on screen."
+	},
+	"notifications": {
+		"status": "Match notifications are {status} for this device.",
+		"enabled": "enabled",
+		"disabled": "disabled",
+		"confirmEnable": "Enable match notifications on this device?",
+		"subscribing": "Subscribing to push notifications...",
+		"goneWrong": "Something might have gone wrong. Data:",
+		"error": "An error occured:",
+		"disabling": "Disabling push notifications...",
+		"noPermission": "We weren't granted permission."
+	},
+	"dashboard": {
+		"titleUser": "Dashboard for {user}",
+		"group": "Scouting group: {group}",
+		"pitScouting": "Pit scouting assignments",
+		"pitScoutingPartner": "Partner's pit scouting assignments",
+		"upcomingMatches": "Upcoming matches to be scouted",
+		"matchNumber": "Match {number}",
+		"oneOffPit": "One-off pit scouting",
+		"oneOffMatch": "One-off match scouting"
+	},
+	"allianceselection": {
+		"title": "Alliance selection",
+		"intro": "Tap a team, then tap the empty slot [2] or [3] to move them up.\nAs teams are selected for alliances, they will gray out in the table below.",
+		"preferred": "Before alliance selection, you and your team lead(s) can mark your preferred teams on <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">this page</a>.",
+		"undo": "Undo",
+		"allianceNumber": "Alliance {number}",
+		"showData": "Show team data",
+		"wontSave": "This page won't be saved.",
+		"noPreviousState": "Previous state undefined",
+		"noLastMove": "Last move undefined",
+		"noAllianceAttribute": "Couldn't find alliance attribute for #{team}",
+		"noTeamStateRankings": "Could not find team from state rankings idx {i}",
+		"priority": "Priority",
+		"priorityAbbr": "V",
+		"team": "Team",
+		"rank": "FRC Rank",
+		"insufficientData": "Insufficient data at this time, come back later!"
+	},
+	"metrics": {
+		"AVG": "Averages",
+		"MAX": "Maximums"
 	}
 }

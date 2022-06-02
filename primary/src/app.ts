@@ -38,7 +38,10 @@ let log4jsConfig = {
 			},
 		},
 	} } },
-	categories: { default: { appenders: ['out'], level: 'info' } }
+	categories: {
+		default: { appenders: ['out'], level: 'info' },
+		off: { appenders: ['out'], level: 'off' },
+	}
 };
 if( process.env.COLORIZE_LOGS == 'true'){
 	//Colored pattern layout

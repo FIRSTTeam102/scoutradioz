@@ -39,18 +39,18 @@ block content
 		}
 	h2=title
 	div(class="w3-mobile w3-center")
-		p.i Tap a team, then tap the empty slot [2] or [3] to move them up.<br>As teams are selected for alliances, they will gray out in the table below.
-		p.i Before alliance selection, you and your team lead(s) can mark your preferred teams on <a class="link" href="/manage/allianceselection" target="_blank">this page</a>.
+		p.i!=msg('allianceselection.intro')
+		p.i!=msgMarked('allianceselection.preferred')
 		div(class="w3-row w3-padding-small")
 			div(class="w3-left")
-				div(id="undo" class="w3-btn theme-submit") Undo
+				div(id="undo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
 		section(class="w3-row")
 			div(id="allianceSelection")
 				each alliance, i in alliances
 					- var allianceNum = i + 1;
 					div(class="w3-padding-small w3-col s12 m6 l3")
 						div(class="theme-dim w3-padding-large w3-col")
-							div(class="w3-col s0 m12") Alliance #{allianceNum}
+							div(class="w3-col s0 m12")!=msg('allianceselection.allianceNumber', {number: allianceNum})
 							div(class="w3-col s2 m0") 
 								p(class="w3-large") #{allianceNum}
 							div(class="w3-col s10 m12")
@@ -76,7 +76,7 @@ block content
 		
 		div(class="w3-section")
 			input(class="w3-check w3-margin-right" type="checkbox" checked id="showHideData")
-			label(for="showHideData") Show Team Data
+			label(for="showHideData")!=msg('allianceselection.showData')
 		div#data()
 			include allianceselection-info
 	script.
@@ -116,8 +116,13 @@ block content
 		state.currentAlliance = 1;
 		//Previous states of allianceSelection
 		var previousStates = [];
+	
+		// i18n messages used by client script
+		window.i18n = {};
 	| <script>
 	each team, i in rankings
 		| state.rankings[#{i+1}] = "#{team.team_key}";
+	each msg in ['wontSave', 'noPreviousState', 'noLastMove', 'noAllianceAttribute', 'noTeamStateRankings']
+		| i18n["#{msg}"] = !{msgJs('allianceselection.' + msg)};
 	| </script>
 	script(src=`${fileRoot}/js/script-allianceselection.js?v`)

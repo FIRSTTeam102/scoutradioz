@@ -38,8 +38,9 @@ declare type TeamKey = string|null;
 declare var state: State;
 declare var previousStates: Array<PreviousState>;
 declare var startingCaptain: TeamKey;
+declare var i18n: Record<string, string>; // select i18n messages are passed through pug
 
-window.onbeforeunload = function(){return 'This page won\'t be saved.';};
+window.onbeforeunload = function(){return i18n['wontSave'];};
 
 const ROW_BASE_COLOR = '#b0b0c057';
 const ROW_HIGHLIGHT_COLOR = 'rgba(220,220,240)';
@@ -82,7 +83,7 @@ function doUndo(){
 		requestAnimationFrame(function(){
 
 			var lastState = previousStates.pop();
-			if (!lastState) throw new Error('Previous state undefined');
+			if (!lastState) throw new Error(i18n['previousStateUndefined']);
 			
 			var parentElem = $('#allianceSelection').parent();
 			var previousHTML = lastState.html;
@@ -102,7 +103,7 @@ function doUndo(){
 
 			//get last team thingy
 			var lastMove = state.moveHistory.pop();
-			if (!lastMove) throw new Error('Last move undefined');
+			if (!lastMove) throw new Error(i18n['noLastMove']);
 			var lastTeam = lastMove.teamKey;
 			var lastSpot = lastMove.previousSpot;
 			var lastNewCaptain = lastMove.newAllianceCaptain;
@@ -195,7 +196,7 @@ function doAllianceTeamClick(this: HTMLElement){
 			else{
 				//get alliance num
 				var currentAllianceStr = $(`#${currentSelectedTeam}`).attr('alliance');
-				if (!currentAllianceStr) throw new Error(`Couldn't find alliance attribute for #${currentSelectedTeam}`);
+				if (!currentAllianceStr) throw new Error(i18n['noAllianceAttribute'].replace('{team}', currentSelectedTeam));
 				
 				var currentAlliance = parseInt(currentAllianceStr);
 
@@ -205,7 +206,7 @@ function doAllianceTeamClick(this: HTMLElement){
 					let nextTeamInThisSpot: TeamKey = state.rankings[i + 1];
 					let thisSpot = $(`#${state.rankings[i]}`);
 					
-					if (typeof nextTeamInThisSpot !== 'string') throw new TypeError(`Could not find team from state rankings idx ${i+1}`);
+					if (typeof nextTeamInThisSpot !== 'string') throw new TypeError(i18n['noTeamStateRankings'].replace('{i}', ''+i+1));
 
 					//set this spot's contents to next team
 					thisSpot.html( nextTeamInThisSpot.substring(3) );

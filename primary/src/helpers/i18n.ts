@@ -17,6 +17,7 @@ marked.setOptions({
 export class I18n {
 	locales: { [key: string]: { [key: string]: LocaleTree } } = {};
 	locale: string; // Current locale to use for languages
+	reqFallbackChain: string[] = []; // Set by the middleware on each request, has the request's fallbacks
 	config: I18nOptions = {
 		directory: '', // Directory to look for locales in
 		cookie: 'language',
@@ -54,25 +55,48 @@ export class I18n {
 		return (req, res, next) => {
 			logger.addContext('funcName', 'middleware');
 
-			// Guess the locale from the request
-			let locale = (
-					(req.query && req.query[this.config.queryParameter] && (Array.isArray(req.query[this.config.queryParameter])
-						// express will turn duplicate params into an array- we only want one
-						? (req.query[this.config.queryParameter] as Array<string>)[0]
-						: req.query[this.config.queryParameter]
-					))
-					|| (req.cookies && req.cookies[this.config.cookie])
-					|| req.acceptsLanguages(Object.keys(this.locales))
-					|| this.config.defaultLocale
-				).replace('_', '-').toLowerCase(); // treat something like en_US as en-us
-			logger.debug(`Guessed locale: ${locale}`);
+			/*
+			 * Guess the locale from the request
+			 * 
+			 * Locales are tried in this order:
+			 * - First possible locale
+			 * - Fallbacks of the first possible locale
+			 * - Second possible locale
+			 * - Fallbacks of the second possible locale
+			 * etc.
+			 * 
+			 * Inner fallback logic is implemented in _rawMsg()
+			 */
+			let possibleLocales = [
+				// query parameter
+				(req.query && req.query[this.config.queryParameter] && (Array.isArray(req.query[this.config.queryParameter])
+					// express will turn duplicate params into an array- we only want one
+					? (req.query[this.config.queryParameter] as Array<string>)[0]
+					: req.query[this.config.queryParameter]
+				)),
+				// cookie
+				(req.cookies && req.cookies[this.config.cookie]),
+				// Accept-Language header
+				...req.acceptsLanguages()
+			];
+			this.reqFallbackChain = []; // reset it for each request
+			for (let locale_ of possibleLocales) {
+				try {
+					let locale = (new Intl.Locale(locale_)).baseName?.toLocaleLowerCase();
+					if (!locale || this.reqFallbackChain.includes(locale)) continue;
+					this.reqFallbackChain.push(locale);
+				} catch (e) {}
+			}
+			this.locale = this.reqFallbackChain[0] || this.config.defaultLocale;
+
+			logger.debug('Locale chain:', this.reqFallbackChain);
 
 			// Set the locale
-			this.locale = req.locale = res.locale = res.locals.locale = locale;
+			req.locale = res.locale = res.locals.locale = this.locale;
 
 			// Add functions to the request
 			// link:../namespace-extensions.d.ts:I18nExpressExtensions
-			for (const func of ['msg', 'msgUrl', 'msgMarked', 'getLocales', 'getLocaleName', 'getLocaleDirection']) {
+			for (const func of ['msg', 'msgUrl', 'msgJs', 'msgMarked', 'getLocales', 'getLocaleName', 'getLocaleDirection']) {
 				// @ts-ignore
 				req[func] = res[func] = res.locals[func] = this[func].bind(this);
 			}
@@ -131,8 +155,8 @@ export class I18n {
 			return item;
 		}
 
-		// No object notation, so we can just return the original target string
-		return (object[target] as string) || target;
+		// No object notation
+		return (object[target] as string) || '';
 	}
 
 	// @param {bool} allowTags - Allow any HTML tags in the message
@@ -151,19 +175,46 @@ export class I18n {
 	}
 
 	// Finds a raw message in a specified locale
-	_rawMsg(locale: string, msg: string): string {
+	// @param {string} locale - locale to start searching from
+	// @param {number} localeFallbackIndex - index of this.reqFallbackChain to use
+	// @see {@link I18n#middleware}
+	_rawMsg(msg: string, locale: string = this.locale, localeFallbackIndex = 0): string {
+		// Disable logger here - this makes a lot of output for every message
+		const logger = getLogger('off');
+
+		logger.debug('Looking for message', msg, 'in', locale);
 		// qqx will just return the message name
 		if (locale === 'qqx') return `(${msg})`;
 
 		// Look for the message in the current locale
-		let result = this._findInObject(msg, this.locales[locale]);
-		if (result) return result;
+		let result = this.locales[locale] && this._findInObject(msg, this.locales[locale]);
+		if (result) {
+			logger.debug('Found result');
+			return result;
+		}
 
 		// Don't recurse forever
-		if (locale === this.config.defaultLocale) return msg;
+		if (locale === this.config.defaultLocale || localeFallbackIndex === this.reqFallbackChain.length) {
+			logger.debug('Done recursing');
+			return msg;
+		}
 
-		// Otherwise, fallback to the next locale
-		return this._rawMsg(fallbackLocales[locale] || this.config.defaultLocale, msg);
+		// Otherwise, fallback to
+		// 1. the next locale in the current fallback chain
+		if (fallbackLocales[locale]) {
+			logger.debug('Falling back to the next locale in the current fallback chain');
+			return this._rawMsg(msg, fallbackLocales[locale], localeFallbackIndex);
+		}
+		// 2. the first locale in the next fallback chain
+		else if (localeFallbackIndex < this.reqFallbackChain.length) {
+			logger.debug('Falling back to the first locale in the next fallback chain');
+			return this._rawMsg(msg, this.reqFallbackChain[localeFallbackIndex + 1], localeFallbackIndex + 1);
+		}
+		// 3. the default locale
+		else {
+			logger.debug('Falling back to the default locale');
+			return this._rawMsg(msg, this.config.defaultLocale);
+		}
 	}
 
 	// Replace named keywords (eg. {name}) with arguments
@@ -188,21 +239,32 @@ export class I18n {
 	msg(name: string, parameters?: I18nParameters) {
 		if (this.locale === 'qqx') return this._qqxHandler('msg', name, parameters);
 
-		return this.sanitizeHtml(this._paramterize(this._rawMsg(this.locale, name), parameters), false);
+		return this.sanitizeHtml(this._paramterize(this._rawMsg(name, this.locale), parameters), false);
 	}
 
 	// Returns a URL-encoded message
 	msgUrl(name: string, parameters?: I18nParameters) {
-		if (this.locale === 'qqx') return this._qqxHandler('msgUrl', name, parameters);
 
-		return encodeURI(this.msg(name, parameters));
+		return encodeURI((this.locale === 'qqx') ?
+			this._qqxHandler('msgUrl', name, parameters)
+			: this.msg(name, parameters)
+		);
+	}
+
+	// Returns a JS-encoded message for use in embedded scripts
+	msgJs(name: string, parameters?: I18nParameters) {
+
+		return JSON.stringify((this.locale === 'qqx') ?
+			this._qqxHandler('msgJs', name, parameters)
+			: this.msg(name, parameters)
+		);
 	}
 
 	// Returns a message with parsed markdown
 	msgMarked(name: string, parameters: I18nParameters) {
 		if (this.locale === 'qqx') return this._qqxHandler('msgMarked', name, parameters);
 
-		return this.sanitizeHtml(marked.parseInline(this._paramterize(this._rawMsg(this.locale, name), parameters)));
+		return this.sanitizeHtml(marked.parseInline(this._paramterize(this._rawMsg(name, this.locale), parameters)));
 	}
 
 	// @todo: Implement pluralization function?
@@ -215,6 +277,8 @@ const fallbackLocales: Record<string, string> = {
 	'en-au': 'en',
 	'en-gb': 'en',
 	'en-us': 'en',
+	'fr-ca': 'fr',
+	'fr-fr': 'fr',
 	'pt-br': 'pt',
 	'yi': 'he',
 	'zh': 'zh-hans',

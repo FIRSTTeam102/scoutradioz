@@ -7,9 +7,7 @@ div(class="w3-auto")
 				input(type="checkbox" id="toggleNotifs")
 				span(class="toggle" id="toggleNotifsToggle")
 			label(class="w3-show-inline-block theme-inline-padding" for="toggleNotifs")
-				span Match notifications are&nbsp;
-				span(id="enabledOrDisabled" class="strong") disabled
-				span &nbsp;for this device.
+				span!=msgMarked('notifications.status', {status: `<span id="enabledOrDisabled" class="strong">${msg('notifications.disabled')}</span>`})
 			//- Below: The unique endpoint for this given user's push subscription. If it matches the device, then the switch will toggle ON.
 			input(type="hidden" name="user-notification-endpoint" value=(user.push_subscription ? user.push_subscription.endpoint : ''))
 		script.
@@ -49,7 +47,7 @@ div(class="w3-auto")
 				}
 				else {
 					//- Make sure the user wants to enable notifications before requesting them
-					let conf = await Confirm.show('Enable match notifications on this device?');
+					let conf = await Confirm.show(!{msgJs('notifications.confirmEnable')});
 					if (conf.cancelled === false) {
 						//- Returns a boolean, whether the subscription was successful
 						let result = await enablePushNotifications();
@@ -62,7 +60,7 @@ div(class="w3-auto")
 			
 			async function enablePushNotifications() {
 				
-				var card = new NotificationCard('Subscribing to push notifications...', {ttl: 0, darken: true});
+				var card = new NotificationCard(!{msgJs('notifications.subscribing')}, {ttl: 0, darken: true});
 				card.show();
 				
 				//register service worker
@@ -87,31 +85,31 @@ div(class="w3-auto")
 						return true;
 					}
 					else {
-						NotificationCard.warn("Something might have gone wrong. Data: " + JSON.stringify(data), {exitable: true, ttl: 0});
+						NotificationCard.warn(!{msgJs('notifications.goneWrong')} + ' ' + JSON.stringify(data), {exitable: true, ttl: 0});
 						return false;
 					}
 				}
 				catch (err){
 					console.error(err);
 					card.remove();
-					NotificationCard.error("An error occurred: " + err, {exitable: true, ttl: 0});
+					NotificationCard.error(!{msgJs('notifications.error')} + ' ' + err, {exitable: true, ttl: 0});
 				}
 			}
 			
 			//- Just set the label to "enabled" or "disabled"
 			function setLabel(notifsEnabled) {
 				if (notifsEnabled === true) {
-					$('#enabledOrDisabled').text('enabled');
+					$('#enabledOrDisabled').text(!{msgJs('notifications.enabled')});
 				}
 				else {
-					$('#enabledOrDisabled').text('disabled');
+					$('#enabledOrDisabled').text(!{msgJs('notifications.disabled')});
 				}
 			}
 			
 			//- Cancel the push subscription for the given user.
 			function cancelSubscription(cb){
 				return new Promise((resolve, reject) => {
-					var card = new NotificationCard('Disabling push notifications...', {ttl: 0, darken: true});
+					var card = new NotificationCard(!{msgJs('notifications.disabling')}, {ttl: 0, darken: true});
 					card.show();
 					
 					$.ajax({
@@ -124,7 +122,7 @@ div(class="w3-auto")
 					})
 					.fail((xhr, status, error) => {
 						console.error(error);
-						NotificationCard.error("An error occurred: " + err, {ttl: 0, exitable: true});
+						NotificationCard.error(!{msgJs('notifications.error')} + ' ' + err, {ttl: 0, exitable: true});
 						resolve(false);
 					})
 					.always(async () => {
@@ -194,7 +192,7 @@ div(class="w3-auto")
 				})
 				.then(function(permissionResult) {
 					if (permissionResult !== 'granted') {
-						throw new Error('We weren\'t granted permission.');
+						throw new Error(!{msgJs('notifications.noPermission')});
 					}
 				});
 			}
@@ -205,10 +203,7 @@ div(class="w3-auto")
 					userVisibleOnly: true,
 					applicationServerKey: urlBase64ToUint8Array(
 						'BDc8VHzWNVkZ2C6MWUf30TyXMm-trm86-K9bfl6ejCvbjAwgegokOLfC48e65i0umB0NIzNlNhTgbSC0QTRyEPQ'
-						),
-					//applicationServerKey: urlBase64ToUint8Array(
-					//	'BDc8VHzWNVkZ2C6MWUf30TyXMm-trm86-K9bfl6ejCvbjAwgegokOLfC48e65i0umB0NIzNlNhTgbSC0QTRyEPQ'
-					//)
+						)
 					};
 					
 					return registration.pushManager.subscribe(subscribeOptions);

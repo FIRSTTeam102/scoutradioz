@@ -93,7 +93,7 @@ class UseFunctions {
 		}
 		
 		// Attempt to get the user's locale
-		let localeString = 'en-US';
+		/* let localeString = 'en-US';
 		let acceptLang = req.get('accept-language');
 		if (acceptLang) {
 			try {
@@ -105,7 +105,9 @@ class UseFunctions {
 				logger.debug(`Couldn't parse locale: ${err}`);
 			}
 		}
-		req.localeString = localeString;
+		req.localeString = localeString;*/
+		// CD 2022-05-31: use value from i18n helper
+		req.localeString = req.locale;
 		
 		// JL: See the JSDoc note in namespace-extensions.d.ts
 		if (req.user) req._user = req.user;
