@@ -6,47 +6,28 @@
 extends ../layout
 block content
 	include mixins/completedMatch
+	include mixins/intelToggler
 	div(class="w3-auto")
-		h2 Team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
+		h2!=msg('reports.teamHeader', {number: team.team_number, nick: team.nickname.replace(new RegExp(' ', 'g'), '\xa0')})
 		if (ranking)
-			h4 Currently ranked ##{ranking.rank} <br/> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
-		- var country = '';
-		- if (team.country != 'USA') country = team.country;
-		h4(class="theme-text" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
-		h4(class="theme-text" style="font-style:italic") #{team.name}
+			h4(class="theme-text")!=msg('reports.teamRank', {rank: ranking.rank, rp: ranking.extra_stats[0], ...ranking.record})
+		//- var country = '';
+		//- if (team.country != 'USA') country = team.country;
+		h4(class="theme-text w3-tooltip i")!=msg('reports.teamFrom', {city: team.city, state: team.state_prov, country: team.country})
+			span(class="w3-tooltiptext w3-block i")=team.name
 		p
-		script.
-			function toggle(sectionId, elem){
-				//hide/show
-				var x = document.getElementById(sectionId);
-				if (x.className.indexOf("w3-show") == -1)
-					x.className += " w3-show";
-				else
-					x.className = x.className.replace(" w3-show", "");
-				
-				//change text thingy
-				var caret = elem.firstElementChild;//is span w/ caret
-				var text = caret.nextElementSibling; //is main text
-				
-				text.innerText = (caret.innerText[0] == "▼") ? "Hide " : "Show ";
-				caret.innerText = (caret.innerText[0] == "▼") ? "▲\xa0" : "▼\xa0";
-				
-			}
 		div(class="w3-padding-small")
-			button#StatisticsButton(onClick="toggle('StatisticsSection', this)" class="w3-block w3-btn w3-left-align w3-border-gray w3-border-bottom rounded-small") 
-				span(class="w3-left") &#9660;&nbsp;
-				span Show 
-				span Statistics Over Year #{year}
-			div#StatisticsSection(class="w3-container w3-hide")
+			+intelTogglerSectionHeader('reports.teamIntel.yearStatistics', {year: year})
+			div#yearStatisticsSection(class="w3-container w3-hide")
 				if (aggdata)
-					h2(class="theme-text") Historical statistics for #{team.key.replace('frc','team ')}
+					h2(class="theme-text")!=msg('reports.historicalTeamStats', {team: team.key.substring(3)})
 					table(class="w3-table")
 						tr
-							th Metric
-							th(class="w3-right-align") Min
-							th(class="w3-right-align") Avg
-							th(class="w3-right-align") Var
-							th(class="w3-right-align") Max
+							th!=msg('metrics.metric')
+							th(class="w3-right-align")!=msg('metrics.MIN1')
+							th(class="w3-right-align")!=msg('metrics.AVG1')
+							th(class="w3-right-align")!=msg('metrics.VAR1')
+							th(class="w3-right-align")!=msg('metrics.MAX1')
 						each agg in aggdata
 							tr
 								- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
@@ -64,11 +45,8 @@ block content
 								- if (agg.max == 0) maxCol = 'w3-right-align w3-text-gray'
 								td(class=`${maxCol}`)= agg.max
 		div(class="w3-padding-small")
-			button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" class="w3-block w3-btn w3-left-align w3-border-gray w3-border-bottom rounded-small") 
-				span(class="w3-left") &#9660;&nbsp;
-				span Show 
-				span All Matches From Year #{year}
-			div#PreviousMatchesSection(class="w3-container w3-hide")
+			+intelTogglerSectionHeader('reports.teamIntel.yearPreviousMatches', {year: year})
+			div#yearPreviousMatchesSection(class="w3-container w3-hide")
 				style.
 					.thick-border{
 						border-width: 3px!important;
@@ -76,11 +54,11 @@ block content
 						border-radius: 9px;
 						border-color: #dfe1e9!important;
 					}
-				h2(class="theme-text") ALL previous matches
+				h2(class="theme-text")!=msg('reports.allPreviousMatches')
 				
 				if (matches && matches.length > 0)		
-					h6 <i>Click team number for match scouting details</i>
-					h6 <i>Click match button for overall alliance performances</i>
+					h6.i!=msg('reports.teamMatchClick')
+					h6.i!=msg('reports.overallMatchClick')
 					- var thisEventKey = '';
 					each match in matches
 						if (match.event_key != thisEventKey)
@@ -101,4 +79,6 @@ block content
 											h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 						hr 
 				else
-					h6 No previous matches yet - check back later					
+					include ../mixins/noDataFound
+					+noDataFound('!reports.noPreviousMatchesYet', true)
+	+intelTogglerJS()

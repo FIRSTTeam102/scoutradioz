@@ -24,15 +24,15 @@ block content
 		- matchMap[matchItem.team_key] = matchItem;
 
 	//- h2(class="theme-text") Statistics for teams</br>#{teams.replace(/,/g, ', ').replace(/frc/g, '')}
-	h2(class="theme-text") Match data for match ##{match.match_number}
-	h6.i Click on a team number for intel on that team
-	h6.i Click on a metric to compare all event teams
+	h2(class="theme-text")!=msg('reports.matchData', {match: match.match_number})
+	h6.i!=msg('reports.teamClick')
+	h6.i!=msg('reports.metricClick')
 	
 	if (matches)
 		div(class="w3-auto w3-content")
 			table(class="w3-table w3-mobile" style="width: 80%;")
 					tr
-						th(class="w3-right-align" style="width: 25%") Metric
+						th(class="w3-right-align" style="width: 25%")!=msg('metrics.metric')
 						for team in match.alliances.red.team_keys
 							th(class="w3-right-align theme-text")
 								u
@@ -85,5 +85,5 @@ block content
 											td
 			div(class="w3-col s0 m4") &nbsp;
 		p(class="w3-col")
-			a(class="gear-btn theme-link w3-btn strong" href=('/reports/matchmetrics?key=' + match.key)) Compare alliance metrics
-			a(class="gear-btn theme-link w3-btn strong" href='/reports/metricsranked') Overall ranked event data
+			a(class="gear-btn theme-link w3-btn strong" href=('/reports/matchmetrics?key=' + match.key))!=msg('reports.compareAlliance')
+			a(class="gear-btn theme-link w3-btn strong" href='/reports/metricsranked')!=msg('reports.overall')

@@ -9,19 +9,17 @@ block content
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
 
-	h2(class="theme-text") Statistical summary across ALL teams
-	h6 <i>Click on a metric to compare individual teams</i>
+	h2(class="theme-text")!=msg('reports.allTeamsMetricsSummary')
+	h6.i!=msg('reports.metricClick')
 	
 	if (aggdata)
 		div(class="w3-auto w3-content")
 			div(class="w3-show-inline-block")
 				table(class="w3-table w3-mobile")
 					tr
-						th(class="w3-right-align" style="width: 25%") Metric
-						th(class="w3-right-align") Min
-						th(class="w3-right-align") Avg
-						th(class="w3-right-align") Var
-						th(class="w3-right-align") Max
+						th(class="w3-right-align" style="width: 25%")!=msg('reports.team')
+						each metric in ['MIN', 'AVG', 'VAR', 'MAX']
+							th(class="w3-right-align w3-tooltip")!=msg(`metrics.${metric}1`)
 					each agg in aggdata
 						tr
 							- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)

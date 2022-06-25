@@ -13,28 +13,28 @@ block content
 			- aggRangeMap[scoreItem.key] = scoreItem;
 
 		- var matchPrefix = ''; if (match.comp_level != 'qm') matchPrefix = match.comp_level;
-		h2(class="theme-text") Comparing alliances for match ##{match.match_number}
-		h6 <i>Click on an alliance to see comparative individual team stats:</i>
+		h2(class="theme-text")!=msg('reports.compareAllianceMatch', {match: match.match_number})
+		h6.i!=msg('reports.compareAllianceClick')
 		- var redTeams = match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3);
-		- var redTeamKeys = match.alliances.red.team_keys[0]+','+match.alliances.red.team_keys[1]+','+match.alliances.red.team_keys[2]
+		- var redTeamKeys = match.alliances.red.team_keys.join(',')
 		- var blueTeams = match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3);
-		- var blueTeamKeys = match.alliances.blue.team_keys[0]+','+match.alliances.blue.team_keys[1]+','+match.alliances.blue.team_keys[2]
-		- var allTeamKeys = match.alliances.red.team_keys[0]+','+match.alliances.red.team_keys[1]+','+match.alliances.red.team_keys[2]+',0,'+match.alliances.blue.team_keys[0]+','+match.alliances.blue.team_keys[1]+','+match.alliances.blue.team_keys[2]
-		a(class="gear-btn theme-link w3-btn" href=`/reports/alliancestats?teams=${allTeamKeys}`) Stats for BOTH alliances
+		- var blueTeamKeys = match.alliances.blue.team_keys.join(',')
+		- var allTeamKeys = redTeamKeys+',0,'+blueTeamKeys
+		a(class="gear-btn theme-link w3-btn" href=`/reports/alliancestats?teams=${allTeamKeys}`)!=msg('reports.bothStats')
 		div(class="w3-section")
 			a(class="alliance-red alliance-hover-red w3-btn" style="min-width: 200px;" href=`/reports/alliancestats?teams=${redTeamKeys}`)
-				span Stats for Red: #{redTeams}
+				span!=msg('reports.redStats', {teams: redTeams})
 		div(class="w3-section")
 			a(class="alliance-blue alliance-hover-blue w3-btn" style="min-width: 200px;" href=`/reports/alliancestats?teams=${blueTeamKeys}`)
-				span Stats for Blue: #{blueTeams}
-		h6 <i>Click on a metric to compare event teams</i>
+				span!=msg('reports.blueStats', {teams: blueTeams})
+		h6.i!=msg('reports.metricClick')
 		
 		if (aggdata)
 			table(class="w3-table w3-mobile" style="width: 75%")
 				tr
-					th(class="w3-right-align" style="width: 33%") Metric
-					th(class="w3-right-align gear-text-red") Red<br/>Avg
-					th(class="w3-right-align gear-text-blue") Blue<br/>Avg
+					th(class="w3-right-align" style="width: 33%")!=msg('metrics.metricAVG')
+					th(class="w3-right-align gear-text-red")!=msg('alliance.redShort')
+					th(class="w3-right-align gear-text-blue")!=msg('alliance.blueShort')
 				each agg in aggdata
 					tr
 						- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
@@ -50,5 +50,5 @@ block content
 						else
 							td(class=`${redCol}`)= agg.red
 							td(class=`${blueCol}`)= agg.blue
-			a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') <b>Overall ranked event data</b>
+			a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked')!=msg('reports.overall')
 

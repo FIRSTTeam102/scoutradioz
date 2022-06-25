@@ -120,7 +120,7 @@ p.hanging-indent{
 .info{
 	font-style: italic;
 	width: 50%;
-	text-align: left;
+	text-align: start;
 	margin: 1em auto;
 	color: @text-secondary;
 }
@@ -233,6 +233,7 @@ hr{
 	float: right;
 	padding: 12px 24px;
 }
+[dir=rtl] .notification-card .notification-card-exit { float: left }
 
 .notification-card .notification-card-exit:hover{
 	cursor: pointer;
@@ -280,7 +281,7 @@ hr{
 	}
 	&::after {
 		left: 8px;
-    	border-color: transparent white transparent transparent;
+    border-color: transparent white transparent transparent;
 	}
 }
 

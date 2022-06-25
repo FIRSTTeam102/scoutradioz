@@ -1,0 +1,46 @@
+//- metricSwitcher
+	Handles switching between metric tables
+	This mixin creates radio buttons and the code to switch between them
+	You still have to create the metric tables, similar to this:
+		table(id=`metricTable_${key}`)
+mixin metricSwitcher(metricTypes)
+	//- 2022-03-17 JL: A simple but effective way of showimg multiple table types w/o too much copy paste
+	- metricTypes = metricTypes || ['AVG', 'MAX'];
+	- defaultMetric = metricTypes[0] || 'AVG';
+	span!=msg('metrics.show')+' '
+	each key in metricTypes
+		input(type="radio" id=`show_${key}` name="metricSelection" value=key checked=(key==defaultMetric))
+		label(for=`show_${key}`) &nbsp;!{msg(`metrics.${key}`)}&#32;
+
+	script.
+		//- Handler for the metric selection radio button
+		$('input[name=metricSelection]').on('change', function() {
+			var newKey = $(this).val();
+			//- Using :not selector to hide all metric tables without the id of the one we want to show
+			$(`[id^="metricTable_"]:not(#metricTable_${newKey})`).hide();
+			$(`#metricTable_${newKey}`).show();
+		});
+		//- Show only the default metric table on init
+		$(document).ready(function() {
+			$(`[id^="metricTable_"]:not(#metricTable_#{defaultMetric})`).hide();
+		});
+
+//- tableSorter
+	Script to implement table sorting when clicking on a table heading
+mixin tableSorter(colOffset = 0)
+	script.
+		$('th:not([no-sort])').click(function(){
+			var table = $(this).parents('table').eq(0);
+			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index() + !{colOffset}));
+			this.asc = !this.asc;
+			if (!this.asc) rows = rows.reverse();
+			for (var i = 0; i < rows.length; i++) {table.append(rows[i])}
+		})
+		function comparer(index) {
+			return function(a, b) {
+				var valA = getCellValue(a, index), valB = getCellValue(b, index);
+				if (valA === '') valA = 0; if (valB === '') valB = 0; // Treat empty as 0 for sorting the "V" column
+				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB);
+			}
+		}
+		function getCellValue(row, index) { return $(row).children('td').eq(index).text() }

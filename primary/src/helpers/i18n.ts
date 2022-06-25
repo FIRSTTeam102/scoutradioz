@@ -11,19 +11,19 @@ const logger = getLogger('i18n');
 marked.setOptions({
 	gfm: true,
 	breaks: true,
+	headerIds: false
 });
 
 // Based on i18n-node, but designed for our specific use cases
 export class I18n {
-	locales: { [key: string]: { [key: string]: LocaleTree } } = {};
+	locales: Dict<Dict<LocaleTree>> = {};
 	locale: string; // Current locale to use for languages
 	reqFallbackChain: string[] = []; // Set by the middleware on each request, has the request's fallbacks
 	config: I18nOptions = {
 		directory: '', // Directory to look for locales in
 		cookie: 'language',
 		queryParameter: 'uselang',
-		defaultLocale: 'en',
-		autoReload: false, // @todo: implement auto reloading
+		defaultLocale: 'en'
 	};
 	constructor(options: Partial<I18nOptions>) {
 		// Merge options
@@ -39,6 +39,7 @@ export class I18n {
 				let locale = file.replace('.json', '');
 
 				try {
+					// eslint-disable-next-line global-require
 					this.locales[locale] = require(path.join(this.config.directory, file));
 				} catch (err) {
 					logger.error(`Unable to load ${locale} locale`, err);
@@ -83,9 +84,15 @@ export class I18n {
 			for (let locale_ of possibleLocales) {
 				try {
 					let locale = (new Intl.Locale(locale_)).baseName?.toLocaleLowerCase();
-					if (!locale || this.reqFallbackChain.includes(locale)) continue;
+					if (
+						!locale // invalid
+						|| this.reqFallbackChain.includes(locale) // already in the chain
+						|| (this.reqFallbackChain.length > 0 && devLocales.includes(locale)) // shouldn't be a fallback
+					) continue;
 					this.reqFallbackChain.push(locale);
-				} catch (e) {}
+				} catch (e) {
+					// failed to parse locale
+				}
 			}
 			this.locale = this.reqFallbackChain[0] || this.config.defaultLocale;
 
@@ -97,8 +104,8 @@ export class I18n {
 			// Add functions to the request
 			// link:../namespace-extensions.d.ts:I18nExpressExtensions
 			for (const func of ['msg', 'msgUrl', 'msgJs', 'msgMarked', 'getLocales', 'getLocaleName', 'getLocaleDirection']) {
-				// @ts-ignore
-				req[func] = res[func] = res.locals[func] = this[func].bind(this);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(req as Dict<any>)[func] = (res as Dict<any>)[func] = res.locals[func] = (this[func as keyof I18n] as typeof this.msg).bind(this);
 			}
 
 			next();
@@ -134,7 +141,7 @@ export class I18n {
 
 		if (indexOfDot > 0 && indexOfDot < target.length - 1) {
 			// The current item
-			let item = '';
+			let item: string | LocaleTree = '';
 
 			// Split the provided term and run the callback for each subterm.
 			target.split('.').reduce((previousValue: LocaleTree | string, currentValue) => {
@@ -148,7 +155,7 @@ export class I18n {
 				) return '';
 
 				// Return a reference to the next deeper level in the tree
-				return (item = (previousValue as Record<string, any>)[currentValue]);
+				return (item = (previousValue as LocaleTree)[currentValue]);
 			}, object);
 
 			// Return the requested accessor.
@@ -183,8 +190,8 @@ export class I18n {
 		const logger = getLogger('off');
 
 		logger.debug('Looking for message', msg, 'in', locale);
-		// qqx will just return the message name
-		if (locale === 'qqx') return `(${msg})`;
+		// qqx will just return the message name (but it should be using @qqxOutput)
+		if (locale === 'qqx') return msg;
 
 		// Look for the message in the current locale
 		let result = this.locales[locale] && this._findInObject(msg, this.locales[locale]);
@@ -224,51 +231,54 @@ export class I18n {
 			return text.replace(/\{([^}]+)\}/g, (match, key) => {
 				let result = parameters[key];
 				return (result !== undefined) ?
-					((typeof result === 'string' ? result : String(result)) || match)
+					((typeof result === 'string' ? result : String(result)))
 					: `{${key}}`;
 			});
 		return text;
 	}
 
-	// Internal function to format qqx output
-	_qqxHandler(func: string, query: string, parameters?: I18nParameters) {
-		return this.sanitizeHtml(`${func}(${query}${(parameters && ', ' + JSON.stringify(parameters)) || ''})`);
-	}
-
 	// Returns a plain message with substituted args
+	@qqxOutput()
 	msg(name: string, parameters?: I18nParameters) {
-		if (this.locale === 'qqx') return this._qqxHandler('msg', name, parameters);
-
 		return this.sanitizeHtml(this._paramterize(this._rawMsg(name, this.locale), parameters), false);
 	}
 
 	// Returns a URL-encoded message
+	@qqxOutput(encodeURI)
 	msgUrl(name: string, parameters?: I18nParameters) {
-
-		return encodeURI((this.locale === 'qqx') ?
-			this._qqxHandler('msgUrl', name, parameters)
-			: this.msg(name, parameters)
-		);
+		return encodeURI(this.msg(name, parameters));
 	}
 
 	// Returns a JS-encoded message for use in embedded scripts
+	@qqxOutput(JSON.stringify)
 	msgJs(name: string, parameters?: I18nParameters) {
-
-		return JSON.stringify((this.locale === 'qqx') ?
-			this._qqxHandler('msgJs', name, parameters)
-			: this.msg(name, parameters)
-		);
+		return JSON.stringify(this.msg(name, parameters));
 	}
 
 	// Returns a message with parsed markdown
+	@qqxOutput()
 	msgMarked(name: string, parameters: I18nParameters) {
-		if (this.locale === 'qqx') return this._qqxHandler('msgMarked', name, parameters);
-
 		return this.sanitizeHtml(marked.parseInline(this._paramterize(this._rawMsg(name, this.locale), parameters)));
 	}
 
 	// @todo: Implement pluralization function?
 	// @todo: MessageFormat support
+}
+
+// Decorator to format qqx output
+// @param {Function} outputWrapper - qqx output willl be wrapped in this
+function qqxOutput(outputWrapper = (output: string) => output) {
+	return function (obj: unknown, func: string, descriptor: PropertyDescriptor) {
+		const original = descriptor.value;
+
+		descriptor.value = function(this: I18n, query: string, parameters?: I18nParameters) {
+			if (this.locale === 'qqx') {
+				return outputWrapper(this.sanitizeHtml(`${func}(${query}${(parameters && Object.keys(parameters).length !== 0) ? (', ' + JSON.stringify(parameters)) : ''})`));
+			} else {
+				return original.apply(this, arguments); // eslint-disable-line prefer-rest-params
+			}
+		};
+	};
 }
 
 // ISO 639-1 language codes
@@ -291,13 +301,13 @@ const fallbackLocales: Record<string, string> = {
 	'zh-sg': 'zh-hans',
 	'zh-tw': 'zh-hant',
 };
+const devLocales = ['qqx', 'rtl'];
 
 interface I18nOptions {
 	directory: string;
 	cookie: string;
 	queryParameter: string;
 	defaultLocale: string;
-	autoReload: boolean;
 }
 
 interface LocaleTree {

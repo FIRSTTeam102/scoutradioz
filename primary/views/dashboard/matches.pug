@@ -9,20 +9,15 @@ block content
 	if matches.length === 0
 		+noDataFound("There are no match scouting assignments in the system now", "Please check back later")
 	else
-		h3(class="theme-text w3-margin-bottom") Match Scouting
+		h3(class="theme-text w3-margin-bottom")!=msg('scouting.match')
 		div(class="w3-col w3-container")
-			div(class="w3-col m6 l4 w3-padding strong")
-				div(class="w3-col s3") Assigned
-				div(class="w3-col s4") Team
-				div(class="w3-col s5") Team Name
-			div(class="w3-col s0 m6 l4 w3-padding strong")
-				div(class="w3-col s3") Assigned
-				div(class="w3-col s4") Team
-				div(class="w3-col s5") Team Name
-			div(class="w3-col s0 m0 l4 w3-padding strong")
-				div(class="w3-col s3") Assigned
-				div(class="w3-col s4") Team
-				div(class="w3-col s5") Team Name
+			- var col = 0
+			while col < 3
+				div(class=`w3-col ${col > 0 ? 's0' : ''} m6 l4 w3-padding strong`)
+					div(class="w3-col s3")!=msg('dashboard.assigned')
+					div(class="w3-col s4")!=msg('dashboard.team')
+					div(class="w3-col s5")!=msg('dashboard.teamName')
+				- col++
 		div(class="w3-container")
 			each match, i in matches
 				- if( i % 6 == 0 )
@@ -31,7 +26,7 @@ block content
 					div(class="w3-col m6 l4 w3-padding")
 						hr
 						div(class="w3-col w3-padding")
-							span Match #{match.match_number} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')}
+							span !{msg('dashboard.matchNumber', {number: match.match_number})} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')}
 						each assignment, j in assignments
 							- assignment.alliance = (assignment.alliance == "red") ? "Red" : "Blue";
 							div(class="w3-col" style="height: 55px; display: flex;")

@@ -7,29 +7,28 @@ extends ../layout
 block content
 	include mixins/upcomingMatch
 	if teamKey == 'all'
-		- teamLabel = 'all teams'
+		- teamLabel = msg('reports.allTeams')
 	else 
-		- teamLabel = `Team ${teamKey.substring(3)}`;
+		- teamLabel = msg('reports.teamNumber', {team: teamKey.substring(3)});
 	
 	if !matches[0] && teamKey == 'all'
-		h3 No upcoming matches for this tournament.
+		h3!=msg('driveDashboard.noMatches')
 	else if !matches[0]
-		h3 No upcoming matches for #{teamLabel}.
+		h!=msg('driveDashboard.noMatchesTeam', {team: teamLabel})
 	else
-		h3 Upcoming matches for #{teamLabel}
+		h3!=msg('reports.upcomingMatchesTeam', {team: teamLabel})
 		if teams
 			select#teamSelect(class="gear-btn theme-input w3-btn")
-				option(value="") Team #
+				option(value="")!=msg('reports.team')
 				each team in teams
-					option(value=team.team_number class="w3-bar-item") #{team.team_number}
+					option(value=team.team_number class="w3-bar-item")=team.team_number
 			a#upcomingMatchesLink(href="/reports/upcoming")
-				div(class="gear-btn w3-btn theme-dim theme-hover-light-gray") View upcoming matches for 
-					span#upcomingMatchesLabel [All Teams]
+				div(class="gear-btn w3-btn theme-dim theme-hover-light-gray")!=msg('reports.upcomingMatchesFor') 
+					span#upcomingMatchesLabel!=msg('driveDashboard.allTeams')
 		br 
 		br 
 		section
 			each match in matches
-				//include templates/upcomingMatch 
 				+upcomingMatch(match, true, teamKey)
 	script.
 		$("#teamSelect").change(function(){

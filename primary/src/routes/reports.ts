@@ -39,7 +39,7 @@ router.get('/rankings', wrap(async (req, res) => {
 	);
 
 	res.render('./reports/rankings', {
-		title: 'Rankings',
+		title: res.msg('reports.currentRankings.titleShort'),
 		rankings: rankings
 	});
 }));
@@ -62,7 +62,7 @@ router.get('/finishedmatches', wrap(async (req, res) => {
 	
 	//logger.debug('matches=' + JSON.stringify(matches));
 	res.render('./reports/finishedmatches', {
-		title: 'Completed Matches',
+		title: res.msg('reports.completedMatches'),
 		matches: matches,
 		rankingPoints: rankingPoints
 	});
@@ -89,7 +89,7 @@ router.get('/upcoming', wrap(async (req, res) => {
 	// 2020-03-21 JL: Removed teamNumbers from locals (already set in usefunctions)
 	//	+ renamed team to teamKey
 	res.render('./reports/upcoming', {
-		title: 'Upcoming',
+		title: res.msg('reports.upcomingMatches'),
 		matches: matches,
 		teamRanks: teamRanks,
 		teamKey: teamKey
@@ -107,8 +107,9 @@ router.get('/teamintel', wrap(async (req, res) => {
 	logger.debug('event_year=' + eventYear);
 	
 	let teamKey = req.query.team_key;
-	let expandSection = req.query.expand; // 2022-03-12 JL: adding a way to auto expand a section
-	if (typeof teamKey !== 'string') throw new e.UserError('Please specify one team_key.');
+	let expandSection = String(req.query.expand); // 2022-03-12 JL: adding a way to auto expand a section
+	if (expandSection) expandSection = expandSection.charAt(0).toLowerCase() + expandSection.slice(1);
+	if (typeof teamKey !== 'string') throw new e.UserError(res.msg('errors.specifyTeamKey'));
 	
 	logger.debug('teamKey=' + teamKey);
 	
@@ -120,7 +121,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 		{allowCache: true}
 	);
 	
-	if (!team) throw new e.UserError(`Team ${teamKey.substring(3)} does not exist or did not participate in this event.`);
+	if (!team) throw new e.UserError(res.msg('errors.noTeam', {team: teamKey}));
 
 	// Extract the current team ranking, etc.
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'
@@ -300,7 +301,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 	const images = await uploadHelper.findTeamImages(orgKey, eventYear, teamKey);
 	
 	res.render('./reports/teamintel', {
-		title: 'Intel: Team ' + teamKey.substring(3),
+		title: res.msg('reports.teamIntel.title', {team: teamKey.substring(3)}),
 		team: team,
 		ranking: ranking,
 		data: pitData,
@@ -501,7 +502,7 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 	//logger.debug('pitData1=' + JSON.stringify(pitData1));
 
 	res.render('./reports/teamintelhistory', {
-		title: 'Intel History: Team ' + teamKey.substring(3),
+		title: res.msg('reports.teamIntel.titleHistory', {team: teamKey.substring(3)}),
 		team: team,
 		scorelayout: scorelayout,
 		aggdata: aggTable,
@@ -517,7 +518,7 @@ router.get('/matchintel', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	let matchKey = req.query.key;
-	if (typeof matchKey !== 'string') throw new e.UserError('Please specify one match key.');
+	if (typeof matchKey !== 'string') throw new e.UserError(res.msg('errors.specifyMatchKey'));
 	
 	logger.debug('matchKey=' + matchKey);
 	
@@ -525,11 +526,11 @@ router.get('/matchintel', wrap(async (req, res) => {
 		{'key': matchKey}, {},
 		{allowCache: true, maxCacheAge: 10}
 	);
-	if (!match) throw new e.InternalDatabaseError(`Could not find match: ${matchKey}`);
+	if (!match) throw new e.InternalDatabaseError(res.msg('errors.noMatchFound', {matchKey}));
 	
 	//logger.debug('match=' + JSON.stringify(match));
 	res.render('./reports/matchintel', {
-		title: 'Intel: Match '+matchKey.substring(matchKey.indexOf('qm')+2),
+		title: res.msg('reports.matchIntel.title', {match: matchKey.substring(matchKey.indexOf('qm')+2)}),
 		match: match
 	});
 }));
@@ -540,7 +541,7 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	let matchTeamKey = req.query.key;
-	if (typeof matchTeamKey !== 'string') throw new e.UserError('Please specify one team-match key.');
+	if (typeof matchTeamKey !== 'string') throw new e.UserError(res.msg('errors.specifyTeamMatchKey'));
 	
 	logger.debug('teamMatchKey=' + matchTeamKey);
 	
@@ -567,26 +568,26 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 	let teamNum = x.substring(x.lastIndexOf('_')+4);
 	
 	if( x.indexOf('qm') != -1 ){
-		matchType = 'Match';
+		matchType = res.msg('matchType.qm');
 		matchNum = x.substring(x.indexOf('qm')+2, x.lastIndexOf('_'));
 	}
 	else if( x.indexOf('qf') != -1){
-		matchType = 'Quarterfinal';
+		matchType = res.msg('matchType.qf');
 		matchNum = x.substring(x.indexOf('qf')+2, x.lastIndexOf('_'));
 	}
 	else if( x.indexOf('sf') != -1 ){
-		matchType = 'Semifinal';
+		matchType = res.msg('matchType.sf');
 		matchNum = x.substring(x.indexOf('sf')+2, x.lastIndexOf('_'));
 	}
 	else{
-		matchType = 'Final';
+		matchType = res.msg('matchType.f');
 		matchNum = x.substring(x.indexOf('f')+2, x.lastIndexOf('_'));
 	}
 	
 	
 	//logger.debug('teammatch=' + JSON.stringify(teammatch));
 	res.render('./reports/teammatchintel', {
-		title: `Intel: ${matchType} ${matchNum} Team ${teamNum}`,
+		title: res.msg('reports.teamMatchIntel.title', {matchType, match: matchNum, team: teamNum}),
 		layout: layout,
 		data: data,
 		teammatch: teammatch,
@@ -604,7 +605,7 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 	let orgKey = req._user.org_key;
 	
 	let teamsInput = req.query.teams;
-	if (typeof teamsInput !== 'string') throw new e.UserError('Must specify a comma-separated list of teams.');
+	if (typeof teamsInput !== 'string') throw new e.UserError(res.msg('errors.specifyTeamCsv'));
 
 	// use helper function
 	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamsInput, req.cookies);
@@ -618,7 +619,7 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 	let maxNorms = allianceStatsData.maxNorms;
 
 	res.render('./reports/alliancestats', {
-		title: 'Alliance Team Statistics',
+		title: res.msg('reports.allianceStats'),
 		teams: teams,
 		teamList: teamList,
 		currentAggRanges: currentAggRanges,
@@ -639,7 +640,7 @@ router.get('/teamdata', wrap(async (req, res) =>  {
 	let teamKey = req.query.team_key;
 	let orgKey = req._user.org_key;
 	
-	if (typeof teamKey !== 'string') throw new e.UserError('Must specify one team key for reports/teamdata.');
+	if (typeof teamKey !== 'string') throw new e.UserError(res.msg('errors.specifyTeamKey'));
 			
 	logger.debug(`teamKey: ${teamKey}`);
 
@@ -651,7 +652,7 @@ router.get('/teamdata', wrap(async (req, res) =>  {
 		{allowCache: true}
 	);
 	
-	if (!team) throw new e.UserError('Could not find team: ' + teamKey);
+	if (!team) throw new e.UserError(res.msg('errors.noTeam', {teak: teamKey}));
 	
 	logger.debug(`team: ${JSON.stringify(team)}`);
 
@@ -674,7 +675,7 @@ router.get('/teamdata', wrap(async (req, res) =>  {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	res.render('./reports/teamdata', {
-		title: 'Match Scouting Data for Team #' + teamKey.substring(3),
+		title: res.msg('reports.matchDataForShort', {team: teamKey.substring(3)}),
 		layout: scoreLayout,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
@@ -691,14 +692,14 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	let eventKey = req.event.key;
 	let matchKey = req.query.key;
 	let orgKey = req._user.org_key;
+ 
+	if (typeof matchKey !== 'string') throw new e.UserError(res.msg('errors.specifyMatchKey'));
 
-	if (!matchKey) throw new e.UserError('Must specify match key.');
-	
 	logger.debug(`matchKey: ${matchKey}`);
 
 	// get the specified match object
 	let match: Match = await utilities.findOne('matches', {'key': matchKey}, {});
-	if (!match) throw new e.UserError(`Could not find match: ${matchKey}`);
+	if (!match) throw new e.UserError(res.msg('errors.noMatchFound', {matchKey}));
 	
 	logger.trace(`match: ${JSON.stringify(match)}`);
 
@@ -721,7 +722,7 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	res.render('./reports/matchdata', {
-		title: 'Scoring Data For Match',
+		title: res.msg('reports.matchDataShort'),
 		scoreLayout: scoreLayout,
 		currentAggRanges: currentAggRanges,
 		matches: matches,
@@ -739,7 +740,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	let matchKey = req.query.key;
 	let orgKey = req._user.org_key;
 	
-	if (!matchKey) throw new e.UserError('Must specify match key.');
+	if (!matchKey) throw new e.UserError(res.msg('errors.specifyMatchKey'));
 	
 	logger.debug(`matchKey: ${matchKey}`);
 
@@ -871,7 +872,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 
 	res.render('./reports/matchmetrics', {
-		title: 'Metrics For Upcoming Match',
+		title: res.msg('reports.upcomingMatchMetrics'),
 		aggdata: aggTable,
 		currentAggRanges: currentAggRanges,
 		match: match
@@ -1008,7 +1009,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	res.render('./reports/metricsranked', {
-		title: 'Metrics For All Teams',
+		title: res.msg('reports.rankedTitle'),
 		currentAggRanges: currentAggRanges,
 		aggdata: aggTable
 	});
@@ -1100,7 +1101,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': event_key});
 	
 	res.render('./reports/metrics', {
-		title: 'Metrics For All Teams',
+		title: res.msg('reports.allTeamMetricsTitle'),
 		currentAggRanges: currentAggRanges,
 		aggdata: aggTable
 	});
@@ -1111,7 +1112,7 @@ router.get('/metricintel', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	let metricKey = req.query.key;
-	if (typeof metricKey !== 'string') throw new Error('Please specify one metric key.');
+	if (typeof metricKey !== 'string') throw new Error(res.msg('errors.specifyMetricKey'));
 	
 	logger.debug('metricKey=' + metricKey);
 	
@@ -1197,7 +1198,7 @@ router.get('/metricintel', wrap(async (req, res) => {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	res.render('./reports/metricintel', {
-		title: 'Intel: ' + metricKey,
+		title: res.msg('reports.intel', {type: metricKey}),
 		aggdata: aggdata,
 		currentAggRanges: currentAggRanges,
 		key: metricKey
@@ -1329,7 +1330,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	res.render('./reports/allteammetrics', {
-		title: 'All Team Metrics',
+		title: res.msg('reports.allTeamMetricsTitle'),
 		aggdata: aggArray,
 		currentAggRanges: currentAggRanges,
 		layout: scorelayout,
@@ -1358,7 +1359,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 
 	let dataType = req.query.type;
 	if (typeof dataType !== 'string') {
-		res.redirect('/?alert=No (or invalid) data type specified for export.');
+		res.redirect('/?alert=' + res.msgUrl('reports.exportData.noType'));
 		return;
 	}
 	let dataSpan = req.query.span;
@@ -1375,7 +1376,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	// sanity check
 	//logger.debug("layout=" + JSON.stringify(matchLayout));
 	if (!matchLayout || matchLayout.length == 0) {
-		res.redirect('/?alert=No data found for type \'' + dataType + '\'.');
+		res.redirect('/?alert=' + res.msg('reports.exportData.noData', {type: dataType}));
 		return;
 	}
 	

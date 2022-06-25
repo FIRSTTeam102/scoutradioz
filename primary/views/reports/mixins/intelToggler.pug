@@ -1,0 +1,30 @@
+//- intelTogglerSectionHeader
+	Creates a section header that can be used with intelTogglerJS()
+mixin intelTogglerSectionHeader(type, typeParams = {})
+	- var idType = type.substring(type.lastIndexOf('.') + 1) // only include message name as type ID
+	//- the text in data-type will be substituted into a message like "Hide {type}" client-side
+	button(onClick=`toggle(this)` data-type=msg(type, typeParams) id=`${idType}Button` for=`${idType}Section` class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
+		span(class="w3-left") &#9660;&nbsp;
+		span!=msg('reports.teamIntel.show', {type: msg(type, typeParams)})
+
+//- intelTogglerJS
+	Code that handles toggling sections
+	See reports/teamintel.pug for example usage
+mixin intelTogglerJS(defaultSection = undefined)
+	script.
+		function toggle(elem) {
+			//hide/show
+			var x = document.getElementById(elem.getAttribute('for'));
+			var doShow = !x.classList.contains('w3-show');
+			x.classList.toggle('w3-show');
+			x.classList.toggle('w3-hide');
+
+			//change text thingy
+			var caret = elem.firstElementChild; //is span w/ caret
+			var text = caret.nextElementSibling; //is main text
+
+			var newText = doShow ? !{msgJs('reports.teamIntel.hide')} : !{msgJs('reports.teamIntel.show')};
+			text.innerText = newText.replace('{type}', elem.getAttribute('data-type'));
+			caret.innerText = doShow ? '▲\xa0' : '▼\xa0';
+		}
+		!{defaultSection ? `toggle(document.querySelector('[for=${JSON.stringify(''+defaultSection)}]'));` : ''}

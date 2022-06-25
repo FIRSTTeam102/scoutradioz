@@ -5,24 +5,25 @@
 		'/reports/teamdata'
 			QUERY: team_key (Team key)
 extends ../layout
+include mixins/metricTables
 block content
 	style.
 		html{
 			overflow: visible;
 		}
 	include templates/heatmap
-	h2(class="theme-text") Match Scouting Data for Team ##{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
+	h2(class="theme-text")!=msg('reports.matchDataFor', {number: team.team_number, nick: team.nickname.replace(new RegExp(' ', 'g'), '\xa0')})
 	p
 
 	if (matches)
-		h6 <i>Click on a match number to see alliance data for that match</i>
+		h6.i!=msg('reports.matchClickAlliance')
 		- var aggRangeMap = [];
 		for scoreItem in currentAggRanges
 			- aggRangeMap[scoreItem.key] = scoreItem;
 
 		table(class="w3-table" id="metricTable")
 			tr
-				th(class="w3-center") Match
+				th(class="w3-center")!=msg('reports.match')
 				- var colIdx = 2;
 				for item in layout
 					-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
@@ -45,19 +46,5 @@ block content
 								else
 									td(class=`${valStyle}`)= displayReportMetric(row.data[item.id])
 	else
-		p <i>Insufficient data at this time, come back later!</i>
-	script.
-		$('th').click(function(){
-			var table = $(this).parents('table').eq(0)
-			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
-			this.asc = !this.asc
-			if (!this.asc){rows = rows.reverse()}
-			for (var i = 0; i < rows.length; i++){table.append(rows[i])}
-		})
-		function comparer(index) {
-			return function(a, b) {
-				var valA = getCellValue(a, index), valB = getCellValue(b, index)
-				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
-			}
-		}
-		function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
+		p.i!=msg('metrics.insufficientData')
+	+tableSorter()

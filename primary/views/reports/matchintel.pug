@@ -8,16 +8,14 @@ block content
 	include mixins/youtubeEmbed
 	if match.score_breakdown
 		div(class="w3-auto")
-			h2 Match #{match.match_number} - Winner: #{match.winning_alliance}
+			h2!=msg('reports.matchIntel.winner', {match: match.match_number, alliance: msg(`alliance.${match.winning_alliance}Short`)})
 			- var thisObj = {};
 
-			h4 Red team: #{match.alliances.red.score} points
-			- var redTeams = match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3);
-			h4.i= redTeams
+			h4!=msg('reports.matchIntel.points', {alliance: msg('alliance.red'), score: match.alliances.red.score})
+			h4.i=match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3)
 			p
-			h4 Blue team: #{match.alliances.blue.score} points
-			- var blueTeams = match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3);
-			h4.i= blueTeams
+			h4!=msg('reports.matchIntel.points', {alliance: msg('alliance.blue'), score: match.alliances.blue.score})
+			h4.i=match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3)
 			if (match.videos)
 				if (match.videos[0])
 					if (match.videos[0].type == "youtube")
@@ -27,9 +25,9 @@ block content
 			hr
 			table(class="w3-table w3-auto" style="width: 80%")
 				tr
-					th(style="width: 33%") Attribute
-					th(style="width: 33%") Red
-					th(style="width: 33%") Blue
+					th(style="width: 33%")!=msg('metrics.metric')
+					th(style="width: 33%")!=msg('alliance.redShort')
+					th(style="width: 33%")!=msg('alliance.blueShort')
 				- blueObj = match.score_breakdown.blue;
 				- redObj = match.score_breakdown.red;
 				- for (var property in blueObj)
@@ -44,5 +42,4 @@ block content
 							- if (blueProp) var blueFinal = blueProp.join(" "); else var blueFinal = blueObj[property];
 							td.b= blueFinal
 	else 
-		h4
-			i No data available for this match yet. Please check back later.
+		h4.i!=msg('reports.noMatchDataYet')

@@ -13,10 +13,10 @@ block content
 			border-color: #dfe1e9!important;
 		}
 	if (matches && matches.length > 0)
-		h2(class="theme-text") Finished Matches
+		h2(class="theme-text")!=msg('reports.completedMatches')
 		br 
 		each match in matches
 			+completedMatch(match, true)
 	else
-		h2(class="theme-text") <i>There are no matches in the system yet</i>
-		h6 Please check back later
+		h2(class="theme-text")
+			i!=msg('reports.noMatchesYet')

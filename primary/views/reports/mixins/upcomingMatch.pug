@@ -26,11 +26,11 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 			blueA = match.predictive.blueAVG.toFixed(0); blueS = match.predictive.blueSTD.toFixed(0); 
 			if (match.predictive.chanceOfRed > 0.5) {
 				percentChance = (match.predictive.chanceOfRed * 100).toFixed(0);
-				winningTeam = 'Red';
+				winningTeam = 'red';
 			}
 			else {
 				percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
-				winningTeam = 'Blue';
+				winningTeam = 'blue';
 			}
 		}
 	
@@ -70,9 +70,9 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 					//- set classes for alliance window
 					var blueClass = "alliance-blue alliance-border-blue rounded-small";
 					var redClass = "alliance-red alliance-border-red rounded-small";
-					if (winningTeam == 'Blue') 
+					if (winningTeam == 'blue') 
 						blueClass += " semi-thick-border";
-					else if (winningTeam == 'Red') 
+					else if (winningTeam == 'red') 
 						redClass += " semi-thick-border";
 				div(class=redClass)
 					//- not doing this with a loop because border needs to be specified
@@ -112,14 +112,14 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
 	if match.hasPredictive 
 		if match.predictive
-			i #{percentChance}% chance #{winningTeam} wins
+			i!=msg('reports.prediction.winner', {chance: percentChance, alliance: req.msg(`alliance.${winningTeam}Short`)})
 			span(class="w3-tooltip")
 				span(class="sprite sp-info sp-16 sp-inline") &nbsp;
-				span(class="w3-tooltiptext no-mobile-tweak" style="width: 140px; margin-left: -70px;") Based on #{match.predictive.totalCNT} total reports
+				span(class="w3-tooltiptext no-mobile-tweak" style="width: 140px; margin-left: -70px;")!=msg('reports.prediction.reports', {count: match.predictive.totalCNT})
 			br
-			i Predicted scores: Red #{redA} ± #{redS}, Blue #{blueA} ± #{blueS}
+			i!=msg('reports.prediction.scores', {redA: redA, redS: redS, blueA: blueA, blueS: blueS})
 		else
-			i Not enough data to make prediction
+			i!=msg('reports.prediction.noData')
 	//- Put a horizontal rule if requested
 	if (includeHr == true)
 		hr 

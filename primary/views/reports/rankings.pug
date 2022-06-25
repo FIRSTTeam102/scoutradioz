@@ -15,22 +15,22 @@ block content
 			margin-left: -80px;
 		}
 	if (rankings.length === 0)
-		+noDataFound("There are no rankings in the system yet", "Please check back later")
+		+noDataFound(msg('reports.noRankingsYet'), true)
 	else
-		h2(class="theme-text") Current event rankings
-		h6.i Click on a team to see intel on that team
+		h2(class="theme-text")!=msg('reports.currentRankings.title')
+		h6.i!=msg('reports.teamClick')
 		div(class="w3-auto")
 			table(class="w3-table")
 				tr
-					th(class="w3-center theme-spacer") Rank
-					th(class="w3-center theme-spacer") Team
-					th(class="w3-center theme-spacer w3-tooltip") W-L-T
-						span(class="w3-tooltiptext") Win-Loss-Tie
-					th(class="w3-center theme-spacer w3-tooltip") DQ
-						span(class="w3-tooltiptext") Disqualifications
-					th(class="w3-center theme-spacer") Matches
-					th(class="w3-center theme-spacer w3-tooltip") RP
-						span(class="w3-tooltiptext") Ranking Points
+					th(class="w3-center theme-spacer")!=msg('reports.rank')
+					th(class="w3-center theme-spacer")!=msg('reports.team')
+					th(class="w3-center theme-spacer w3-tooltip")!=msg('reports.currentRankings.wlt')
+						span(class="w3-tooltiptext")!=msg('reports.currentRankings.wltDesc')
+					th(class="w3-center theme-spacer w3-tooltip")!=msg('reports.currentRankings.dq')
+						span(class="w3-tooltiptext")!=msg('reports.currentRankings.dqDesc')
+					th(class="w3-center theme-spacer")!=msg('reports.currentRankings.matches')
+					th(class="w3-center theme-spacer w3-tooltip")!=msg('reports.currentRankings.rp')
+						span(class="w3-tooltiptext")!=msg('reports.currentRankings.rpDesc')
 				each team in rankings
 					tr
 						td(class="theme-text w3-center")

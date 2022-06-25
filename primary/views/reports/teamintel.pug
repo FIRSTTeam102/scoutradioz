@@ -7,17 +7,20 @@ extends ../layout
 block content
 	include templates/heatmap
 	include mixins/completedMatch
+	include ../mixins/noDataFound
+	include mixins/intelToggler
+	- var teamNum = team.key.substring(3);
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
 	div(class="w3-auto")
-		h2 Team #{team.team_number}: #{team.nickname.replace(new RegExp(' ', 'g'), '\xa0')}
+		h2!=msg('reports.teamHeader', {number: team.team_number, nick: team.nickname.replace(new RegExp(' ', 'g'), '\xa0')})
 		if (ranking)
-			h4(class="theme-text") Currently ranked ##{ranking.rank} <br> #{ranking.record.wins+'-'+ranking.record.losses+'-'+ranking.record.ties} record with #{ranking.extra_stats[0]} RP
-		- var country = '';
-		- if (team.country != 'USA') country = team.country;
-		h4(class="theme-text w3-tooltip" style="font-style:italic") From: #{team.city}, #{team.state_prov} #{country}
-			span(class="w3-tooltiptext w3-block" style="font-style:italic") #{team.name}
+			h4(class="theme-text")!=msg('reports.teamRank', {rank: ranking.rank, rp: ranking.extra_stats[0], ...ranking.record})
+		//- var country = '';
+		//- if (team.country != 'USA') country = team.country;
+		h4(class="theme-text w3-tooltip i")!=msg('reports.teamFrom', {city: team.city, state: team.state_prov, country: team.country})
+			span(class="w3-tooltiptext w3-block i")=team.name
 		if images 
 			//-Main image
 			if images.main
@@ -35,51 +38,48 @@ block content
 					a(href=images.b.lg)
 						img(src=images.b.sm alt="" class="w3-image team-image-sm")
 		div(class="w3-padding")
-			a(class="theme-link w3-btn" href=`/reports/upcoming?team_key=${team.key}`) Upcoming matches for team #{team.key.substring(3)}
+			a(class="theme-link w3-btn" href=`/reports/upcoming?team_key=${team.key}`)!=msg('reports.upcomingMatchesTeam', {team: teamNum})
 		div(class="w3-padding")
-			a(class="theme-link w3-btn" href=`/reports/teamintelhistory?team_key=${team.key}`) All data for Team #{team.key.substring(3)} from this year
-		br 
+			a(class="theme-link w3-btn" href=`/reports/teamintelhistory?team_key=${team.key}`)!=msg('reports.teamDataYear', {team: teamNum})
+		br
 		//-Pit scouting section
 		div(class="w3-padding-small")
-			button#PitScoutingButton(onClick="toggle('PitScoutingSection', this)" for="PitScoutingSection" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
-				span(class="w3-left") &#9660;&nbsp;
-				span Show 
-				span Pit Scouting
-			div#PitScoutingSection(class="w3-container w3-hide")
+			+intelTogglerSectionHeader('reports.teamIntel.pitScouting')
+			div#pitScoutingSection(class="w3-container w3-hide")
 				if (data)
-					h1 Pit Scouting Info
+					//-h1 Pit Scouting Info
 					- var changeCount = -0.5;
 					each element in layout
 						- element.label = resolveLabelTemplate(element.label, team.key)
 						case element.type
 							when "checkbox"
 								- if (data[element.id] != 0 && data[element.id] != '' && data[element.id] != null)
-									h4(class="") #{element.label} <strong>Yes</strong>
+									p #{element.label} <strong>!{msg('yes')}</strong>
 								- else
-									h4(class="") #{element.label} <strong>No</strong>
+									p #{element.label} <strong>!{msg('no')}</strong>
 							when "counter"
 							when "badcounter"
 							when "multiselect"
 							when "derived"
 							when "textblock"
 								- if (data[element.id] != 0 && data[element.id] != '' && data[element.id] != null)
-									h4(class="") #{element.label} <strong>#{data[element.id]}</strong>
+									p #{element.label} <strong>#{data[element.id]}</strong>
 								- else
-									h4(class="") #{element.label} <i>[no data]</i>
+									p #{element.label} <i>!{msg('reports.noDataPlaceholder')}</i>
 							when "h2"
 								//- if (changeCount == 0)
 									h4(class="") <i>(no change)</i>
 								- changeCount = 0;
 								br 
 								div(class="theme-spacer")
-								h2 #{element.label}
+								h4=element.label
 							when "h3"
 								//- if (changeCount == 0)
 									h4(class="") <i>(no change)</i>
 								- changeCount = 0;
 								br 
 								div(class="theme-spacer")
-								h3 #{element.label}
+								h5=element.label
 							when "spacer"
 								br
 					//- if (changeCount == 0)
@@ -87,24 +87,21 @@ block content
 					if (inTable)
 						| </table>
 				else
-					h6 No pit scouting data yet - check back later
+					+noDataFound('!reports.noPitDataYet', true)
 		//-Statistics section
 		div(class="w3-padding-small")
-			button#StatisticsButton(onClick="toggle('StatisticsSection', this)" for="StatisticsSection" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
-				span(class="w3-left") &#9660;&nbsp;
-				span Show 
-				span Statistics
-			div#StatisticsSection(class="w3-container w3-hide")
+			+intelTogglerSectionHeader('reports.teamIntel.statistics')
+			div#statisticsSection(class="w3-container w3-hide")
 				if (aggdata)
-					h2(class="theme-text") Statistics for #{team.key.replace('frc','team ')}
-					h6 <i>Click on a metric to compare vs. other teams</i>
+					h2(class="theme-text")!=msg('reports.teamStats', {team: team.key.substring(3)})
+					h6.i!=msg('reports.metricClick')
 					table(class="w3-table")
 						tr
-							th Metric
-							th(class="w3-right-align") Min
-							th(class="w3-right-align") Avg
-							th(class="w3-right-align") Var
-							th(class="w3-right-align") Max
+							th!=msg('metrics.metric')
+							th(class="w3-right-align")!=msg('metrics.MIN1')
+							th(class="w3-right-align")!=msg('metrics.AVG1')
+							th(class="w3-right-align")!=msg('metrics.VAR1')
+							th(class="w3-right-align")!=msg('metrics.MAX1')
 						each agg in aggdata
 							tr
 								- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
@@ -138,11 +135,8 @@ block content
 								td(style="padding:0;")
 		//-Previous matches section
 		div(class="w3-padding-small")
-			button#PreviousMatchesButton(onClick="toggle('PreviousMatchesSection', this)" for="PreviousMatchesSection" class="w3-block w3-btn w3-no-outline w3-left-align w3-border-gray w3-border-bottom rounded-small") 
-				span(class="w3-left") &#9660;&nbsp;
-				span Show 
-				span Previous Matches
-			div#PreviousMatchesSection(class="w3-container w3-hide")
+			+intelTogglerSectionHeader('reports.teamIntel.previousMatches')
+			div#previousMatchesSection(class="w3-container w3-hide")
 				style.
 					.thick-border{
 						border-width: 3px!important;
@@ -150,7 +144,6 @@ block content
 						border-radius: 9px;
 						border-color: #dfe1e9!important;
 					}
-				h2(class="theme-text") Previous matches
 				//- for the comments
 				- let isScouter = false; 
 				- if (user && user.role.access_level >= Permissions.ACCESS_SCOUTER) isScouter = true;
@@ -164,15 +157,14 @@ block content
 											- element.label = resolveLabelTemplate(element.label, teamKey)
 											h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 				
-				if (matches && matches.length > 0)		
-					h6 <i>Click team number for match scouting details</i>
-					h6 <i>Click match button for overall alliance performances</i>
+				if (matches && matches.length > 9990)		
+					h6.i!=msg('reports.teamMatchClick')
+					h6.i!=msg('reports.overallMatchClick')
 					h6(class="theme-text")
-						a(class="theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key) Match Scouting data for all Team #{team.key.substring(3)} matches
+						a(class="theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key)!=msg('reports.teamAllMatchData', {team: team.key.substring(3)})
 					hr 
 					
 					each match in matches
-						//include templates/completedMatch
 						+completedMatch(match, undefined, team.key)
 						if (match.scoringdata && isScouter)
 							each element in scorelayout
@@ -182,24 +174,5 @@ block content
 											h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 						hr
 				else
-					h6 No previous matches yet - check back later
-	script.
-		function toggle(sectionId, elem){
-			//hide/show
-			var x = document.getElementById(sectionId);
-			if (x.className.indexOf("w3-show") == -1)
-				x.className += " w3-show";
-			else
-				x.className = x.className.replace(" w3-show", "");
-			
-			//change text thingy
-			var caret = elem.firstElementChild;//is span w/ caret
-			var text = caret.nextElementSibling; //is main text
-			
-			text.innerText = (caret.innerText[0] == "▼") ? "Hide " : "Show ";
-			caret.innerText = (caret.innerText[0] == "▼") ? "▲\xa0" : "▼\xa0";
-			
-		}
-	if expandSection
-		script.
-			toggle("#{expandSection}", $("[for=#{expandSection}]")[0]);
+					+noDataFound('!reports.noPreviousMatchesYet', true)
+	+intelTogglerJS(expandSection)

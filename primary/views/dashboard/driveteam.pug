@@ -21,11 +21,11 @@ block content
 	include ../reports/templates/heatmap
 	
 	if !teams || !teams[0]
-		h3 No teams were found for this tournament.
+		h3!=msg('driveDashboard.noTeams')
 	else 
 		h3=title
 		if noMatchesFoundForTeam
-			p.i No matches were found for team #{selectedTeam.substring(3)}.
+			p.i!=msg('driveDashboard.noMatchesTeam', {team: selectedTeam.substring(3)})
 			- selectedTeam = 'all';
 		else 
 			br 
@@ -35,11 +35,11 @@ block content
 			//- form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
 			form(name="driveDashboardTeam" method="get" action="/dashboard/driveteam")
 				span(class="w3-mobile w3-margin-top")
-					label(class="w3-label" style="padding-right: 8px") View dashboard for...
+					label(class="w3-label" style="padding-right: 8px")!=msg('driveDashboard.viewFor')
 					select(class="theme-input" style="min-width: 100;" name="team_key")
 						noscript
 							if selectedTeam == 'all'
-								option(selected value='all') [Choose a team]
+								option(selected value='all')!=msg('driveDashboard.chooseTeam')
 							//- else
 								option(value='all') All teams
 						each team in teams 
@@ -49,18 +49,18 @@ block content
 								option(value=team.key)=team.team_number
 					noscript
 						//- JL: I made the multiselect auto-submit on change, but to make it still work in browsers with JS disabled, this submit button will act in its place.
-						button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true") Selected team
+						button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true")!=msg('driveDashboard.selectedTeam')
 				span(class="w3-mobile w3-margin-top")
-					label(class="w3-label w3-margin-left" style="padding-right: 8px") or...
-					button(class="w3-btn theme-submit" type="submit" name="all" value="true") All teams
+					label(class="w3-label w3-margin-left" style="padding-right: 8px")!=msg('driveDashboard.viewOr')
+					button(class="w3-btn theme-submit" type="submit" name="all" value="true")!=msg('driveDashboard.allTeams')
 		br
 		if selectedTeam == 'all'
-			h4 Next Match:
+			h4!=msg('driveDashboard.nextMatch')
 		else
-			h4 Next Match for Team #{selectedTeam.substring(3)}:
+			h4!=msg('driveDashboard.nextMatchTeam', {team: selectedTeam.substring(3)})
 		//- Check if there are any matches
 		if !matches || !matches[0]
-			h3 No upcoming matches for this tournament.
+			h3!=msg('driveDashboard.noMatches')
 		else
 			//- View first match
 			- var match = matches[0];
@@ -69,24 +69,25 @@ block content
 			hr 
 			//-Radar
 			div(class="w3-section w3-auto")
-				h4 Relative Strengths
-				h6 <i>Click on a legend to hide/show that team</i>
+				h4!=msg('driveDashboard.relativeStrengths')
+				h6
+					i!=msg('driveDashboard.legendShowHide')
 				div
 					div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
-						h5 Red Alliance
+						h5!=msg('alliance.red')
 						canvas(id="RadarRedAlliance" class="radar-canvas" width="250" height="215")
 					div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
-						h5 Blue Alliance
+						h5!=msg('alliance.blue')
 						canvas(id="RadarBlueAlliance" class="radar-canvas" width="250" height="215")
 			//-Table
 			div(class="w3-section")
-				h4 Raw Data
+				h4!=msg('metrics.raw')
 				div
-					span Show:  
+					span!=msg('metrics.show') 
 					input(type="radio" id="showAvg" name="sel" onclick="showAvg();" checked)
-					label(for="showAvg")  Averages    
+					label(for="showAvg")!=msg('metrics.AVG')    
 					input(type="radio" id="showMax" name="sel" onclick="showMax();")
-					label(for="showMax")  Maximums 
+					label(for="showMax")!=msg('metrics.MAX')
 				p
 				- var aggRangeMap = [];
 				for scoreItem in currentAggRanges
@@ -95,7 +96,7 @@ block content
 					if (avgdata)
 						table(class="w3-table" style="max-width: 80%;")
 							tr
-								th(style="padding-left: 0; width: 25%;" class="w3-right-align") Metric (Avg)
+								th(style="padding-left: 0; width: 25%;" class="w3-right-align")!=msg('metrics.metricAVG')
 								for team in teamList
 									if team == 0
 										th 
@@ -122,7 +123,7 @@ block content
 					if (maxdata)
 						table(class="w3-table" style="max-width: 80%;")
 							tr
-								th(style="padding-left: 0; width: 25%;" class="w3-right-align") Metric (Max)
+								th(style="padding-left: 0; width: 25%;" class="w3-right-align")!=msg('metrics.metricMAX')
 								for team in teamList
 									if team == 0
 										th 
@@ -148,9 +149,9 @@ block content
 						
 			hr
 			if selectedTeam == 'all'
-				h4 Future Matches:
+				h4!=msg('driveDashboard.futureMatches')
 			else
-				h4 Future Matches for Team #{selectedTeam.substring(3)}:
+				h4!=msg('driveDashboard.futureMatchesTeam', {team: selectedTeam.substring(3)})
 			each match, i in matches
 				//-Skip first match
 				if (i > 0)

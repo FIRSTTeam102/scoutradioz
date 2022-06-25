@@ -4,6 +4,7 @@
 		'/reports/metricintel'
 			QUERY: key (Metric key, e.g. totalPieces)
 extends ../layout
+include mixins/metricTables
 block content
 	style.
 		.w3-tooltip .w3-tooltiptext{
@@ -16,10 +17,10 @@ block content
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
 
-	- var text = key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-	h2(class="theme-text") Per-team <b>#{result2}</b> statistics
-	h6 <i>Click on a column header to sort teams by that column's information (click again to change sort direction)</i>
-	h6 <i>Click on a team number to jump to that team's intel page</i>
+	- var text = key; var result1 = text.replace( /([A-Z])/g, " $1" ); var metricTitle = result1.charAt(0).toUpperCase() + result1.slice(1)
+	h2(class="theme-text")!=msgMarked('reports.metricIntel', {metric: metricTitle})
+	h6.i!=msg('reports.headerClick')
+	h6.i!=msg('reports.teamClick')
 	
 	if (aggdata)
 		div(class="w3-auto w3-content")
@@ -33,15 +34,9 @@ block content
 			div(class="w3-show-inline-block")
 				table(class="w3-table" id="metricTable")
 					tr
-						th(class="w3-center") Team
-						th(class="w3-right-align w3-tooltip")  Min
-							span.w3-tooltiptext Minimum
-						th(class="w3-right-align w3-tooltip")  Avg
-							span.w3-tooltiptext Average
-						th(class="w3-right-align w3-tooltip")  Var
-							span.w3-tooltiptext Variance
-						th(class="w3-right-align w3-tooltip")  Max
-							span.w3-tooltiptext Maximum
+						th(class="w3-center")!=msg('reports.team')
+						each metric in ['MIN', 'AVG', 'VAR', 'MAX']
+							th(class="w3-right-align w3-tooltip")!=msg(`metrics.${metric}1`)
 					each agg, i in aggdata
 						tr
 							td(class="w3-text-light-gray w3-center")
@@ -64,18 +59,4 @@ block content
 								td(class=`${avgCol}`)= agg[key+"AVG"]
 								td(class=`${avgCol}`)= agg[key+"VAR"]
 								td(class=`${maxCol}`)= agg[key+"MAX"]
-	script.
-		$('th').on('click', function() {
-			var table = $(this).parents('table').eq(0)
-			var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
-			this.asc = !this.asc
-			if (!this.asc){rows = rows.reverse()}
-			for (var i = 0; i < rows.length; i++){table.append(rows[i])}
-		});
-		function comparer(index) {
-			return function(a, b) {
-				var valA = getCellValue(a, index), valB = getCellValue(b, index)
-				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
-			}
-		}
-		function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
+	+tableSorter()

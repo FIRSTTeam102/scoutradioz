@@ -4,6 +4,7 @@
 		'/reports/alliancestats'
 			QUERY: teams (comma separated list of teams)
 extends ../layout
+include mixins/metricTables
 block content
 	style.
 		html{
@@ -19,22 +20,20 @@ block content
 		- aggRangeMap[scoreItem.key] = scoreItem;
 
 	//- h2(class="theme-text") Statistics for teams</br>#{teams.replace(/,/g, ', ').replace(/frc/g, '')}
-	h2(class="theme-text") Statistics for alliance teams
-	h6 <i>Click on a team number for intel on that team</i>
-	h6 <i>Click on a metric to compare all event teams</i>
-	
-	span Show:  
-	input(type="radio" id="showAvg" name="sel" checked="checked" onclick="showAvg();")
-	label(for="showAvg")  Averages    
-	input(type="radio" id="showMax" name="sel" onclick="showMax();")
-	label(for="showMax")  Maximums 
+	h2(class="theme-text")!=msg('reports.allianceStats')
+	h6
+		i!=msg('reports.teamClick')
+	h6
+		i!=msg('reports.metricClick')
+
+	+metricSwitcher()
 	p
 
-	div#avgSect(class="w3-auto")
+	div#metricTable_AVG(class="metricTable w3-auto")
 		if (avgdata)
 			table(class="w3-table" style="width: 80%")
 				tr
-					th(class="w3-right-align" style="width: 25%") Metric (Avg)
+					th(class="w3-right-align" style="width: 25%")!=msg('metrics.metricAVG')
 					for team in teamList
 						th(class="w3-right-align theme-text")
 							u
@@ -55,11 +54,11 @@ block content
 								td(class=`${valueCol}`)= agg[team]
 			p
 
-	div#maxSect(class="w3-auto")
+	div#metricTable_MAX(class="metricTable w3-auto")
 		if (maxdata)
 			table(class="w3-table" style="width: 80%")
 				tr
-					th(class="w3-right-align" style="width: 25%") Metric (Max)
+					th(class="w3-right-align" style="width: 25%")!=msg('metrics.metricMAX')
 					for team in teamList
 						th(class="w3-right-align theme-text")
 							u
@@ -80,21 +79,4 @@ block content
 								td(class=`${valueCol}`)= agg[team]
 			p
 
-	a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked') Overall ranked event data
-
-	script.
-		showAvg();
-
-		function showAvg() {
-			var avg = document.getElementById('avgSect');
-			avg.style.display = "block";
-			var max = document.getElementById('maxSect');
-			max.style.display = "none";
-		}
-
-		function showMax() {
-			var avg = document.getElementById('avgSect');
-			avg.style.display = "none";
-			var max = document.getElementById('maxSect');
-				max.style.display = "block";
-		}
+	a(class="gear-btn theme-link w3-btn" href='/reports/metricsranked')!=msg('reports.overall')

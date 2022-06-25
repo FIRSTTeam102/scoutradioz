@@ -9,11 +9,11 @@ block content
 	if teams.length > 0
 		h3(class="theme-text")=title
 		table(class="w3-content w3-center theme-contains-spacer")
-			th Assignee
-			th Team #
-			th Nickname
+			th!=msg('dashboard.assigned')
+			th!=msg('dashboard.team')
+			th!=msg('dashboard.teamName')
 			if images
-				th Photo
+				th!=msg('dashboard.photo')
 			each team, i in teamAssignments
 				if( user.name == team.primary )
 					- style = "strong";
@@ -40,5 +40,5 @@ block content
 								a(href=images[i].main.lg target="_blank")
 									img(src=images[i].main.sm alt="" style="max-height:80px; max-width: 50px;")
 		h6
-			a(class="gear-btn theme-link w3-btn" href=`/dashboard/pits?loadPhotos=1`) Refresh with team photos
+			a(class="gear-btn theme-link w3-btn" href="/dashboard/pits?loadPhotos=1")!=msg('dashboard.loadTeamPhotos')
 

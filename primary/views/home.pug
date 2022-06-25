@@ -6,60 +6,60 @@
 	//
 extends layout
 block content
-	h6(class="theme-text") 
-		i Click on the ≡ in the upper left to open the menu
+	h6(class="theme-text").i!=msg('home.menu', {menu: '≡'})
 	p
 	div(class="w3-container w3-section")
-		h4(class="theme-text") Tournament Info
+		h4(class="theme-text")!=msg('home.tournamentInfo')
 		
 		a(href="/reports/rankings")
 			div(class="gear-btn theme-link w3-btn")
-				span Current Rankings
+				span!=msg('reports.currentRankings.titleShort')
 		br 
 		a(href="/reports/finishedmatches")
 			div(class="gear-btn theme-link w3-btn")
-				span Completed Matches [All teams]
+				span!=msg('reports.completedMatches')
 		br 
 		a(href="/reports/allteammetrics")
 			div(class="gear-btn theme-link w3-btn")
-				span Statistics for All Teams
+				span!=msg('reports.allTeamMetricsTitle')
 	div(class="w3-container w3-section")
-		h4(class="theme-text") Team Info
+		h4(class="theme-text")!=msg('home.teamInfo')
 		//-teamSelect dropdown for intel and upcoming pages.
 		a(href="/dashboard/driveteam")
 			div(class="gear-btn theme-link w3-btn")
-				span Drive Team Dashboard
+				span!=msg('driveDashboard.title')
 		br
 		if teams && teams[0]
 			label(class="")
 				select#teamSelect(class="gear-btn theme-input-link w3-btn")
-					option(value="") Team #
+					option(value="")!=msg('home.teamNum')
 					each team in teams
-						option(value=team.team_number class="w3-bar-item") #{team.team_number}
+						option(value=team.team_number class="w3-bar-item")=team.team_number
 		a
 			button(class="gear-btn theme-link w3-btn w3-disabled" onclick="redIntel()" id="stats" disabled)
-				span Stats
+				span!=msg('home.stats')
 		a
 			div(class="gear-btn theme-link w3-btn" onclick="redUpcoming()")
-				span#upcomingMatches Upcoming Matches: All Teams
+				- var all = msg('reports.upcomingMatchesTeam', {team: msg('reports.allTeams')})
+				span#upcomingMatches(data-all=all data-team=msg('reports.upcomingMatchesTeam', {team: '{team}'}))!=all
 	//-If there is no logged-in user, then show a log-in link
 	if( !user || user.name == "default_user" || user.name == "[Dev]")
 		div(class="w3-container w3-section")
-			h4(class="theme-text") User Login
+			h4(class="theme-text")!=msg('home.userLogin')
 			a(href="/user/login") 
 				div(class="gear-btn theme-link w3-btn")
-					span Log In
+					span!=msg('user.login')
 	else
 		div(class="w3-container w3-section")
 			h4(class="theme-text")=user.name
 			a(href="/dashboard")
-				div(class="gear-btn theme-link w3-btn") Scouting Dashboard
+				div(class="gear-btn theme-link w3-btn")!=msg('home.scoutingDashboard')
 			if user.role && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
 				a(href="/manage")
-					div(class="gear-btn theme-link w3-btn") Management
+					div(class="gear-btn theme-link w3-btn")!=msg('home.management')
 			if user.role && user.role.access_level >= Permissions.ACCESS_GLOBAL_ADMIN
 				a(href="/admin")
-					div(class="gear-btn theme-link w3-btn") Admin
+					div(class="gear-btn theme-link w3-btn")!=msg('home.admin')
 
 	script.
 		$(function(){
@@ -77,7 +77,7 @@ block content
 				
 				}else if( !$("#stats").prop("disabled"))
 					//if nothing selected then do alert thang
-					alert("You must specify a team.");
+					alert(!{msgJs('home.specifyTeam')});
 			}else{
 				//if text input is filled, proceed to intel url
 				var key = "frc".concat($("#teamSelect").val());
@@ -115,7 +115,7 @@ block content
 				$("#stats").removeClass("w3-disabled");
 				$("#stats").prop("disabled", false);
 				//change "upcoming matches" button to team #
-				$("#upcomingMatches").text(`Upcoming Matches: Team ${teamNo.value}`);
+				$("#upcomingMatches").text($("#upcomingMatches").data("team").replace('{team}', teamNo.value));
 			}
 			//if a team isn't selected
 			else{
@@ -123,6 +123,6 @@ block content
 				$("#stats").addClass("w3-disabled");
 				$("#stats").prop("disabled", true);
 				//change "upcoming matches" button to all teams
-				$("#upcomingMatches").text("Upcoming Matches: All teams");
+				$("#upcomingMatches").text($("#upcomingMatches").data("all"));
 			}
 		}

@@ -1,5 +1,7 @@
 //- Shows a "No data found" message to help achieve a more consistent style across the site.
 mixin noDataFound(title, subtitle)
-	h3.i= title
+	- if (typeof title === 'string' && title.indexOf('!') === 0) title = msg(title.substring(1))
+	- if (typeof subtitle === 'string' && subtitle.indexOf('!') === 0) subtitle = msg(subtitle.substring(1))
+	h4.i=title
 	if subtitle
-		h6= subtitle
+		h6.i!=subtitle === true ? msg('tryAgainLater') : subtitle

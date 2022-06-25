@@ -114,19 +114,19 @@ class NavHelpers {
 						}
 					},
 					{
-						label: '!layout.nav.reports.rankings',
+						label: '!reports.currentRankings.titleShort',
 						href: '/reports/rankings',
 					},
 					{
-						label: '!layout.nav.reports.upcoming',
+						label: '!reports.upcomingMatches',
 						href: '/reports/upcoming',
 					},
 					{
-						label: '!layout.nav.reports.completed',
+						label: '!reports.completedMatches',
 						href: '/reports/finishedmatches',
 					},
 					{
-						label: '!layout.nav.reports.allteammetrics',
+						label: '!reports.allTeamMetricsTitle',
 						href: '/reports/allteammetrics',
 					},
 					{
@@ -160,13 +160,13 @@ class NavHelpers {
 			}
 		},
 		{
-			label: '!layout.nav.driveteam',
+			label: '!driveDashboard.title',
 			href: '/dashboard/driveteam',
 			sprite: 'wheel',
 			visible: userLoggedIn
 		},
 		{
-			label: '!layout.nav.reportcolumns',
+			label: '!user.reportcolumns.title',
 			href: (req, res) => `/user/preferences/reportcolumns?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`,
 			sprite: 'sheet',
 			visible: userLoggedIn

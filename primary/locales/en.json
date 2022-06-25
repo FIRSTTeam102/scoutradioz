@@ -1,5 +1,6 @@
 {
 	"index": {
+		"fulltitle": "Scoutradioz: FRC Scouting as a Service",
 		"welcome": "Welcome to Scoutradioz",
 		"choice": "Are you:",
 		"viewer": {
@@ -26,7 +27,6 @@
 			"partner": "Apply to be an Early-Access partner",
 			"first": "More on *FIRST* and FRC"
 		},
-		"select_org": "Please select an organization.",
 		"view": "View",
 		"login": "Log in"
 	},
@@ -34,6 +34,7 @@
 		"world": "Hello world!",
 		"name": "Hello, {name}!"
 	},
+	"selectOrg": "Please select an organization.",
 	"error": {
 		"title": "Error: {message}",
 		"report": {
@@ -64,10 +65,6 @@
 				"teamList": "{number}: {name}",
 				"teamStats": "Team statistics",
 				"yearStats": "Complete statistics for {year}",
-				"rankings": "Current rankings",
-				"upcoming": "Upcoming matches",
-				"completed": "Completed matches",
-				"allteammetrics": "Stats for all teams",
 				"export": {
 					"main": "Export to CSV",
 					"match": "Match scouting data: [[{event}]]",
@@ -76,8 +73,6 @@
 					"pitAll": "Pit scouting data: [[All of {year}]]"
 				}
 			},
-			"driveteam": "Drive team dashboard",
-			"reportcolumns": "Configure report columns",
 			"scouting": "Scouting",
 			"manage": {
 				"main": "Manage: [[{org}]]",
@@ -114,6 +109,22 @@
 			},
 			"help": "Need help? Check our wiki!"
 		}
+	},
+	"home": {
+		"title": "Home",
+		"menu": "Click on the {menu} in the upper left to open the menu",
+		"tournamentInfo": "Tournament info",
+		"teamInfo": "Team info",
+		"teamNum": "Team #",
+		"stats": "Stats",
+		"userLogin": "User login",
+		"scoutingDashboard": "Scouting dashboard",
+		"management": "Management",
+		"admin": "Admin",
+		"specifyTeam": "You must specify a team."
+	},
+	"share": {
+		"changeOrg": "You are viewing {org}.\nTo change the organization you wish to view, click *Org: {org}* in the menu and select *Change Organization*."
 	},
 	"user": {
 		"loginOrg": "Log in to {org}",
@@ -188,17 +199,55 @@
 		"goneWrong": "Something might have gone wrong. Data:",
 		"error": "An error occured:",
 		"disabling": "Disabling push notifications...",
-		"noPermission": "We weren't granted permission."
+		"noPermission": "We weren't granted permission.",
+		"dbSaveFailed": "The subscription was received but we were unable to save it to our database.",
+		"testPageTitle": "Notifications testing page",
+		"invalidKey": "No match & match team key",
+		"invalidMatch": "Match not found",
+		"content": {
+			"title": "{match} will start soon",
+			"body": "You're assigned to team {team} on the {alliance} alliance.",
+			"ifFocused": "Don't forget, {match} is about to start!"
+		},
+		"actions": {
+			"scout": "Scout match"
+		}
 	},
 	"dashboard": {
 		"titleUser": "Dashboard for {user}",
 		"group": "Scouting group: {group}",
 		"pitScouting": "Pit scouting assignments",
+		"notPitAssigned": "Not assigned to pit scouting",
 		"pitScoutingPartner": "Partner's pit scouting assignments",
 		"upcomingMatches": "Upcoming matches to be scouted",
 		"matchNumber": "Match {number}",
+		"unassigned": "Unassigned",
+		"unassignedOptions": "Options for unassigned scouts",
 		"oneOffPit": "One-off pit scouting",
-		"oneOffMatch": "One-off match scouting"
+		"oneOffMatch": "One-off match scouting",
+		"assigned": "Assigned",
+		"team": "Team",
+		"teamName": "Team name",
+		"none": "None",
+		"photo": "Photo",
+		"loadTeamPhotos": "Refresh with team photos"
+	},
+	"driveDashboard": {
+		"title": "Drive team dashboard",
+		"noTeams": "No teams were found for this tournament.",
+		"noMatches": "No upcoming matches for this tournament.",
+		"noMatchesTeam": "No matches were found for team {team}.",
+		"viewFor": "View dashboard for...",
+		"chooseTeam": "[Choose a team]",
+		"viewOr": "or",
+		"allTeams": "All teams",
+		"selectedTeam": "Selected team",
+		"nextMatch": "Next match:",
+		"nextMatchTeam": "Next match for team {team}:",
+		"relativeStrengths": "Relative strengths:",
+		"legendShowHide": "Click on a legend to hide/show that team",
+		"futureMatches": "Future matches:",
+		"futureMatchesTeam": "Future matches for team {team}:"
 	},
 	"allianceselection": {
 		"title": "Alliance selection",
@@ -215,11 +264,146 @@
 		"priority": "Priority",
 		"priorityAbbr": "V",
 		"team": "Team",
-		"rank": "FRC Rank",
-		"insufficientData": "Insufficient data at this time, come back later!"
+		"rank": "FRC Rank"
 	},
 	"metrics": {
+		"raw": "Raw data",
+		"show": "Show: ",
 		"AVG": "Averages",
-		"MAX": "Maximums"
-	}
+		"AVG1": "Average",
+		"metricAVG": "Metric (avg)",
+		"MAX": "Maximums",
+		"MAX1": "Maximum",
+		"metricMAX": "Metric (max)",
+		"MIN1": "Minimum",
+		"VAR1": "Variance",
+		"metric": "Metric",
+		"insufficientData": "Insufficient data at this time, come back later!"
+	},
+	"alliance": {
+		"red": "Red alliance",
+		"redShort": "Red",
+		"blue": "Blue alliance",
+		"blueShort": "Blue"
+	},
+	"reports": {
+		"redWon": "Red won",
+		"blueWon": "Blue won",
+		"redStats": "Stats for red: {teams}",
+		"blueStats": "Stats for blue: {teams}",
+		"bothStats": "Stats for both alliances",
+		"tie": "Tie",
+		"match": "{level} Match {number}",
+		"scoutData": "Scout data",
+		"firstData": "FIRST data",
+		"score": "Score:",
+		"prediction": {
+			"winner": "{chance}% chance {alliance} wins",
+			"reports": "Based on {count} total reports",
+			"scores": "Predicted scores: Red {redA} ± {redS}, Blue {blueA} ± {blueS}",
+			"noData": "Not enough data to make a prediction."
+		},
+		"teamClick": "Click on a team number for intel on that team",
+		"teamMatchClick": "Click team number for match scouting details",
+		"metricClick": "Click on a metric to compare all event teams",
+		"headerClick": "Click on a column header to sort teams by that column's information (click again to change sort direction)",
+		"overall": "Overall ranked event data",
+		"overallMatchClick": "Click match button for overall alliance performances",
+		"compareAlliance": "Compare alliance metrics",
+		"compareAllianceMatch": "Comparing alliances for match {match}",
+		"compareAllianceClick": "Click on an alliance to see comparative individual team stats:",
+		"team": "Team",
+		"rank": "Rank",
+		"allTeams": "all teams",
+		"teamNumber": "Team {team}",
+		"allianceStats": "Alliance team statistics",
+		"allTeamMetrics": "All team metrics",
+		"completedMatches": "Completed matches",
+		"upcomingMatches": "Upcoming matches",
+		"upcomingMatchesTeam": "Upcoming matches for {team}",
+		"upcomingMatchesFor": "View upcoming matches for ",
+		"noMatchesYet": "There are no matches in the system. Please try again later.",
+		"noPreviousMatchesYet": "No previous matches yet.",
+		"noMatchDataYet": "No data available for this match yet. Please try again later.",
+		"noRankingsYet": "There are no matches in the system.",
+		"noPitDataYet": "No pit scouting data yet.",
+		"noDataPlaceholder": "[no data]",
+		"matchData": "Match data for match #{match}",
+		"matchIntel": {
+			"title": "Intel: Match {match}",
+			"winner": "Match {match} - Winner: {alliance}",
+			"points": "{alliance}: {score} points"
+		},
+		"metricIntel": "Per-team **{metric}** statistics",
+		"allTeamMetricsTitle": "Metrics for all teams",
+		"allTeamsMetricsSummary": "Statistical summary across all teams",
+		"rankedTitle": "Top teams per metric",
+		"currentRankings": {
+			"title": "Current event rankings",
+			"titleShort": "Current rankings",
+			"wlt": "W-L-T",
+			"wltDesc": "Win-Loss-Tie",
+			"dq": "DQ",
+			"dqDesc": "Disqualifications",
+			"matches": "Matches",
+			"rp": "RP",
+			"rpDesc": "Ranking Points"
+		},
+		"matchDataFor": "Match scouting data for team {number}: {nick}",
+		"matchDataForShort": "Match scouting data for team {team}",
+		"matchDataShort": "Match scouting data",
+		"matchClickAlliance": "Click on a match number to see alliance data for that match.",
+		"teamHeader": "Team {number} - {nick}",
+		"teamRank": "Currently ranked #{rank}\n{wins}-{losses}-{ties} record with {rp} RP",
+		"teamFrom": "From: {city}, {state}, {country}",
+		"teamDataYear": "All data for team {team} from this year",
+		"teamIntel": {
+			"title": "Intel: Team {team}",
+			"titleHistory": "Intel history: Team {team}",
+			"show": "Show {type}",
+			"hide": "Hide {type}",
+			"pitScouting": "pit scouting",
+			"statistics": "statistics",
+			"previousMatches": "previous matches",
+			"yearStatistics": "statistics over year {year}",
+			"yearPreviousMatches": "all matches from year {year}"
+		},
+		"teamStats": "Statistics for team {team}",
+		"teamAllMatchData": "Match scouting data for all team {team} matches",
+		"historicalTeamStats": "Historical statistics for team {team}",
+		"allPreviousMatches": "All previous matches",
+		"teamMatchIntel": {
+			"title": "Intel: {matchType} {match} Team {team}",
+			"header": "Match #{match} - {alliance} alliance"
+		},
+		"noMatchScoutData": "No match scouting data available for team {team} for match {match}.",
+		"noMatchScoutData2": "No match scouting data available for team {team} for this match.",
+		"viewIntelPage": "View this team's intel page",
+		"upcomingMatchMetrics": "Metrics for upcoming match",
+		"intel": "Intel: {type}",
+		"exportData": {
+			"noType": "No (or invalid) data type specified for export.",
+			"noData": "No data found for type '{type}'."
+		}
+	},
+	"errors": {
+		"teamMissing": "Couldn't find details for team {team}. Has the team list changed since you created the scouting assignments?",
+		"eventTeamsMissing": "Could not find list of teams at this event. Please ask your organization manager to update the list of current teams.",
+		"specifyTeamKey": "Please specify one team_key.",
+		"noTeam": "Team {team} does not exist or did not participate in this event.",
+		"specifyMatchKey": "Please specify one match key.",
+		"noMatchFound": "Could not find match: {matchKey}",
+		"specifyTeamMatchKey": "Please specify one team-match key.",
+		"specifyTeamCsv": "Please specify a comma-separated list of teams.",
+		"specifyMetricKey": "Please specify one metric key."
+	},
+	"matchType": {
+		"qm": "Match",
+		"qf": "Quarterfinal",
+		"sf": "Semifinal",
+		"f": "Final"
+	},
+	"tryAgainLater": "Please try again later.",
+	"yes": "Yes",
+	"no": "No"
 }

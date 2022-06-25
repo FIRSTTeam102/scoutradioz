@@ -61,22 +61,14 @@ router.get('/', wrap(async (req, res, next) => {
 		
 		const orgs = await utilities.aggregate('orgs', aggPipeline, {allowCache: true});
 		
-		// TODO: currently hard-coded to US English
-		let i18n = await utilities.findOne('i18n',
-			{language: 'en_US'}, {},
-			{allowCache: true}
-		);
-		logger.trace(JSON.stringify(i18n));
-		
 		const selectedButton = req.query['customer'] || req.cookies['homepageButton']; // Previously-selected "Are you:" button on the homepage
 		
 		res.render('./index', {
-			fulltitle: 'Scoutradioz: FRC Scouting as a Service',
+			fulltitle: res.msg('index.fulltitle'),
 			orgs: orgs,
 			redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 			isOrgSelectScreen: true,
-			selectedButton: selectedButton,
-			lang: i18n.labels
+			selectedButton: selectedButton
 		});
 	}
 }));
@@ -143,7 +135,7 @@ router.get('/home', wrap(async (req, res) =>  {
 	else if (!req.user) res.redirect('/');
 	else {
 		res.render('./home', { 
-			title: 'Home',
+			title: res.msg('home.title'),
 		});
 	}
 }));
@@ -170,7 +162,7 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 	//Make sure that form is filled
 	if(!org_key || org_key == ''){
 		logger.debug('Form isn\'t filled, redir. and telling to select an org.');
-		return res.redirect('/?alert=Please select an organization.');
+		return res.redirect('/?alert=' + res.msgUrl('selectOrg'));
 	}
 	
 	//search for organization in database

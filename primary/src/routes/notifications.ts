@@ -49,7 +49,7 @@ router.post('/save-subscription', wrap(async (req, res) => {
 		res.send({
 			error: {
 				id: 'unable-to-save-subscription',
-				message: 'The subscription was received but we were unable to save it to our database.'
+				message: res.msg('notifications.dbSaveFailed')
 			}
 		});
 	}
@@ -91,7 +91,7 @@ router.get('/', wrap(async (req, res) => {
 	let matches = await utilities.find('matches', {event_key: req.event.key}, {sort: {predicted_time: 1}});
 	
 	res.render('./admin/notifications', {
-		title: 'Notifications testing page',
+		title: res.msg('notifications.testPageTitle'),
 		users: usersWithPushNotifs,
 		matches: matches,
 	});
@@ -109,12 +109,12 @@ router.post('/sendtest', wrap(async (req, res) => {
 	
 	const matchKey = req.body.matchKey;
 	const matchTeamKey = req.body.assignedMatchTeam;
-	if (!matchKey || !matchTeamKey) return res.redirect('/notifications?alert=No match & match team key');
+	if (!matchKey || !matchTeamKey) return res.redirect('/notifications?alert=' + res.msgUrl('notifications.invalidKey'));
 	const teamKey = matchTeamKey.split('_')[2];
 	
 	// Get the match from db & prepare the variables for the url
 	const match = await utilities.findOne('matches', {key: matchKey});
-	if (!match) return res.redirect('/notifications?alert=Match not found');
+	if (!match) return res.redirect('/notifications?alert=' + res.msgUrl('notifications.invalidMatch'));
 	
 	let blue = match.alliances.blue.team_keys;
 	let red = match.alliances.red.team_keys;
@@ -141,10 +141,7 @@ router.post('/sendtest', wrap(async (req, res) => {
 	}
 	
 	let imageURL = process.env.UPLOAD_URL + '/' + process.env.TIER + '/generate/upcomingmatch?' +
-		`match_number=${match.match_number}&comp_level=${match.comp_level}&set_number=${match.set_number}&blue1=${blue1}&blue2=${blue2}&blue3=${blue3}&red1=${red1}&red2=${red2}&red3=${red3}&assigned=${assignedTeam}`;
-	let title = `Match ${match.match_number} is about to start`;
-	let body = `You're assigned to team ${teamKey.substring(3)} on the ${alliance} alliance.`;
-	let ifFocusedMessage = `Don't forget, Match ${match.match_number} is about to start!`;
+		`match_number=${match.match_number}&comp_level=${match.comp_level}&set_number=${match.set_number}&blue1=${blue1}&blue2=${blue2}&blue3=${blue3}&red1=${red1}&red2=${red2}&red3=${red3}&assigned=${assignedTeam}&uselang=${req.locale}`;
 		
 	logger.debug(`assignedTeam=${assignedTeam}, matchteam=${matchTeamKey}, imageURL=${imageURL}`);
 	
@@ -156,10 +153,11 @@ router.post('/sendtest', wrap(async (req, res) => {
 	
 	if (pushSubscription){
 		
+		// @todo: the i18n from here needs to be able to be used in the webhook lambda
 		const notificationContent = JSON.stringify({
-			title: title,
+			title: res.msg('notifications.content.title', {match: match.match_number}),
 			options: {
-				body: body,
+				body: res.msg('notifications.content.body', {team: teamKey.substring(3), alliance: res.msg(`alliance.${alliance}Short`)}),
 				badge: res.locals.fileRoot + '/images/brand-logos/monochrome-badge.png',
 				icon: res.locals.fileRoot + '/images/brand-logos/FIRST-logo.png',
 				// image: 'https://upload.scoutradioz.com/prod/generate/upcomingmatch?match_number=24&comp_level=qm&set_number=2&blue1=225&blue2=102&blue3=1676&red1=11&red2=2590&red3=4261&assigned=red3',
@@ -167,14 +165,14 @@ router.post('/sendtest', wrap(async (req, res) => {
 				actions: [
 					{
 						action: scoutMatchURL,
-						title: 'Scout Match',
+						title: res.msg('notifications.actions.scout'),
 						//icon: '',
 					}
 				],
 				timestamp: Date.now(),
 			},
 			ifFocused: {
-				message: ifFocusedMessage,
+				message: res.msg('notifications.content.ifFocused', {match: match.match_number}),
 			},
 		});
 		// https://web-push-book.gauntface.com/demos/notification-examples/ 

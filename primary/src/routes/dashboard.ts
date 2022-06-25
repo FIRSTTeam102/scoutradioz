@@ -15,7 +15,7 @@ router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
-	if (await req.authenticate (Permissions.ACCESS_VIEWER)) {
+	if (await req.authenticate(Permissions.ACCESS_VIEWER)) {
 		next();
 	} 
 }));
@@ -62,7 +62,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 	if (!matches || !matches[0]) {
 		logger.debug('No matches found at all for the event');
 		return res.render('./dashboard/driveteam', {
-			title: 'Drive Team Dashboard',
+			title: res.msg('driveDashboard.title'),
 			selectedTeam: 'all',
 		});
 	}
@@ -214,7 +214,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 	}
 	
 	res.render('./dashboard/driveteam', {
-		title: 'Drive Team Dashboard',
+		title: res.msg('driveDashboard.title'),
 		teamList: teamList,
 		currentAggRanges: currentAggRanges,
 		avgdata: avgTable,
@@ -301,7 +301,7 @@ router.get('/', wrap(async (req, res) => {
 	}, {});
 
 	let backupTeams: PitScouting[] = [];
-	let thisPairLabel = 'Not assigned to pit scouting';
+	let thisPairLabel = res.msg('dashboard.notPitAssigned');
 	if (pairsData.length > 0) {
 		// we assume they're in a pair!
 		let thisPair = pairsData[0];
@@ -374,7 +374,7 @@ router.get('/', wrap(async (req, res) => {
 	}
 	
 	res.render('./dashboard/index',{
-		title: 'Dashboard for '+thisUserName,
+		title: res.msg('dashboard.titleUser', {user: thisUserName}),
 		'thisPair': thisPairLabel,
 		'assignedTeams': assignedTeams,
 		'backupTeams': backupTeams,
@@ -392,7 +392,7 @@ router.get('/unassigned', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	res.render('./dashboard/unassigned',{
-		title: 'Unassigned'
+		title: res.msg('dashboard.unassigned')
 	});	
 }));
 
@@ -590,7 +590,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	
 		//logger.debug('aggArray=' + JSON.stringify(aggArray));
 		res.render('./dashboard/allianceselection', {
-			title: 'Alliance Selection',
+			title: res.msg('allianceselection.title'),
 			rankings: rankings,
 			alliances: alliances,
 			aggdata: aggArray,
@@ -655,7 +655,7 @@ router.get('/pits', wrap(async (req, res) => {
 	for (let teamIdx = 0; teamIdx < teamAssignments.length; teamIdx++) {
 		// logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
 		if (!teamKeyMap[teamAssignments[teamIdx].team_key]) {
-			throw new e.InternalServerError(`Couldn't find details for team ${teamAssignments[teamIdx].team_key}. Has the team list changed since you created the scouting assignments?`);
+			throw new e.InternalServerError(res.msg('errors.teamMissing', {team: teamAssignments[teamIdx].team_key}));
 		}
 		// 2022-05-18 JL: Passing teamKeyMap to view instead of adding nickname to the teamAssignments object
 		//	we can still use this loop to guarantee that the pug won't encounter an error
@@ -674,7 +674,7 @@ router.get('/pits', wrap(async (req, res) => {
 	}
 	
 	res.render('./dashboard/pits', {
-		title: 'Pit Scouting',
+		title: res.msg('scouting.pit'),
 		teamAssignments: teamAssignments,
 		teamKeyMap: teamKeyMap,
 		images: images
@@ -732,7 +732,7 @@ router.get('/matches', wrap(async (req, res) => {
 	// read in team list for data
 	let teamArray = req.teams; // 2022-03-13 JL: Removed copied code for identifying the current event & teams
 	
-	if (!teamArray) throw new e.InternalServerError('Could not find list of teams at this event. Please ask your organization manager to update the list of current teams.');
+	if (!teamArray) throw new e.InternalServerError(res.msg('errors.eventTeamsMissing'));
 	
 	// Build map of team_key -> team data
 	let teamKeyMap: Dict<Team> = {};
@@ -746,13 +746,13 @@ router.get('/matches', wrap(async (req, res) => {
 			scoreData[i].team_nickname = teamKeyMap[scoreData[i].team_key].nickname;
 		}
 		else {
-			scoreData[i].team_nickname = 'None';
+			scoreData[i].team_nickname = res.msg('dashboard.none');
 		}
 	}
 	//this line has a definition problem ^
 	logger.debug('scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
-		title: 'Match Scouting',
+		title: res.msg('scouting.pit'),
 		matches: scoreData
 	});
 }));

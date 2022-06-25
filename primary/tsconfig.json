@@ -9,6 +9,7 @@
 		"outDir": "./build",
 		"esModuleInterop": true,
 		"strict": true,
+		"experimentalDecorators": true,
 		//   "removeComments": true,
 	},
 	"include": [
