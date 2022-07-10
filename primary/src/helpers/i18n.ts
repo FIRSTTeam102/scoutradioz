@@ -41,7 +41,8 @@ export class I18n {
 				try {
 					// eslint-disable-next-line global-require
 					this.locales[locale] = require(path.join(this.config.directory, file));
-				} catch (err) {
+				}
+				catch (err) {
 					logger.error(`Unable to load ${locale} locale`, err);
 				}
 			});
@@ -90,7 +91,8 @@ export class I18n {
 						|| (this.reqFallbackChain.length > 0 && devLocales.includes(locale)) // shouldn't be a fallback
 					) continue;
 					this.reqFallbackChain.push(locale);
-				} catch (e) {
+				}
+				catch (e) {
 					// failed to parse locale
 				}
 			}
@@ -274,7 +276,8 @@ function qqxOutput(outputWrapper = (output: string) => output) {
 		descriptor.value = function(this: I18n, query: string, parameters?: I18nParameters) {
 			if (this.locale === 'qqx') {
 				return outputWrapper(this.sanitizeHtml(`${func}(${query}${(parameters && Object.keys(parameters).length !== 0) ? (', ' + JSON.stringify(parameters)) : ''})`));
-			} else {
+			}
+			else {
 				return original.apply(this, arguments); // eslint-disable-line prefer-rest-params
 			}
 		};

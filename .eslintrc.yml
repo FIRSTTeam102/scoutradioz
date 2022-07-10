@@ -42,10 +42,10 @@ rules:
   no-new-require: error
   no-mixed-requires: error
   no-prototype-builtins: 0
-  # brace-style:
-  #   - error
-  #   - stroustrup
-  #   - allowSingleLine: true
+  brace-style:
+    - error
+    - stroustrup
+    - allowSingleLine: true
   # guard-for-in: 
   #   - warn
   no-useless-escape: 0
