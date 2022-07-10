@@ -1,6 +1,6 @@
 // JL: Should these be put into a separate package?
 
-import { Document, ObjectId } from 'mongodb';
+import type { Document, ObjectId } from 'mongodb';
 
 // General interfaces/types that don't need to be exported
 declare interface NumericalDict {
