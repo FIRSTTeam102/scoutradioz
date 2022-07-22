@@ -38,7 +38,7 @@
 		"express": "^4.17.3",
 		"express-async-handler": "^1.2.0",
 		"express-useragent": "^1.0.15",
-		"file-type": "~16.5.3",
+		"file-type": "~16.5.4",
 		"jimp": "^0.16.1",
 		"log4js": "^6.4.4",
 		"multer": "^1.4.4",
