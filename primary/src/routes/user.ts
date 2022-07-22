@@ -407,7 +407,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!org_key || !org_password){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitorg')
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitlogin')
 		});
 	}
 	
@@ -435,7 +435,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	if(!orgComparison){
 		return res.send({
 			status: 400,
-			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitorg')
+			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitlogin')
 		});
 	}
 	

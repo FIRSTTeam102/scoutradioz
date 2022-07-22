@@ -104,7 +104,7 @@ class NavHelpers {
 								arr.push({
 									label: req.msg('layout.nav.reports.teamList', {number: team.team_number, name: team.nickname}),
 									submenu: [
-										{label: '!layout.nav.reports.upcoming', href: '/reports/upcoming?team_key=' + team.key},
+										{label: '!reports.upcomingMatches', href: '/reports/upcoming?team_key=' + team.key},
 										{label: '!layout.nav.reports.teamStats', href: '/reports/teamintel?team_key=' + team.key},
 										{label: req.msg('layout.nav.reports.yearStats', {year: new Date().getFullYear()}), href: '/reports/teamintelhistory?team_key=' + team.key},
 									]
