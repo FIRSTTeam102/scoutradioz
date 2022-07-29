@@ -20,10 +20,11 @@ for (var i = 0; i < process.argv.length; i++) {
 		case '--port':
 			process.env.PORT = nextArg;
 			break;
-		case '--production':
-			console.log('Setting process.env.NODE_ENV=production');
-			process.env.NODE_ENV = 'production';
-			break;
+		// JL: disabling NODE_ENV override for Bun support (tracked as https://github.com/oven-sh/bun/issues/556)
+		// case '--production':
+		// 	console.log('Setting process.env.NODE_ENV=production');
+		// 	process.env.NODE_ENV = 'production';
+		// 	break;
 		case '--watch-staticfiles':
 		case '--watch-static':
 			launchChildProcess('npm run watch-staticfiles');
