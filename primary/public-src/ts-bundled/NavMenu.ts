@@ -1,5 +1,5 @@
 'use strict';
-var navMenu;
+let navMenu;
 
 $(() => {
 	navMenu = new NavigationBar();
@@ -25,7 +25,7 @@ class NavigationBar{
 		slowTransition: string,
 		fastTransition: string,
 		panThreshold: number,
-	}
+	};
 	// mmenu.js doesn't provide a typescript version; Not gonna bother updating the mmenu minified js to typescript
 	menu: any;
 	api: any;
@@ -58,7 +58,7 @@ class NavigationBar{
 		if (locales instanceof Array) this.locales = locales;
 		else this.locales = [];
 
-		var currentLang = document.documentElement.lang || 'en';
+		let currentLang = document.documentElement.lang || 'en';
 		//Create Mmenu object
 		this.menu = new Mmenu('#menu',
 			{
@@ -79,7 +79,7 @@ class NavigationBar{
 					{
 						use: this.locales.length > 0, // only show when there are multiple locales
 						position: 'bottom',
-						content: `<select id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${locale.name}</option>`)}</select>`
+						content: `<select class="no-outline" id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${locale.name}</option>`)}</select>`
 					},
 					//Branding on bottom of menu (footerContents is set in nav.pug)
 					{
@@ -140,7 +140,7 @@ class NavigationBar{
 		
 		// Locale selector
 		$('#localeSelector').on('change', (e) => {
-			var newLang = (e.target as HTMLSelectElement).value;
+			let newLang = (e.target as HTMLSelectElement).value;
 			Cookies.set('language', newLang);
 			location.reload();
 		});
@@ -280,7 +280,7 @@ class NavigationBar{
 		
 		const windowWidth = window.innerWidth;
 		const isRTL = document.dir === 'rtl';
-		var positions: {
+		let positions: {
 			menu: number;
 			bar: number;
 		}, unit: string;
@@ -290,15 +290,15 @@ class NavigationBar{
 			positions = {
 				menu: -80 * (1 - percentageOpened),
 				bar: 80 * percentageOpened
-			}
-			unit = 'vw'
+			};
+			unit = 'vw';
 		}
 		//if 80% of screen is greater than 440px, use pixels
 		else {
 			positions = {
 				menu: Math.floor( (1- percentageOpened) * -440),
 				bar: Math.floor( (percentageOpened) * 440)
-			}
+			};
 			unit = 'px';
 		}
 
@@ -326,12 +326,12 @@ interface Locale {
 }
 
 // Initialized in pug
-declare var navMenuTitle: string | undefined;
-declare var footerContents: Array<string> | undefined;
-declare var locales: Array<Locale> | undefined;
-declare var Mmenu: any;
+declare let navMenuTitle: string | undefined;
+declare let footerContents: Array<string> | undefined;
+declare let locales: Array<Locale> | undefined;
+declare let Mmenu: any;
 
-		/*
+/*
 		//Hammer.js - Native-like touch interfaces
 		var hammertime = new Hammer.Manager(document.body, {
 			recognizers: [
