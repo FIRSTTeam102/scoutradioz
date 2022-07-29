@@ -112,7 +112,7 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
 	if match.hasPredictive 
 		if match.predictive
-			i!=msg('reports.prediction.winner', {chance: percentChance, alliance: req.msg(`alliance.${winningTeam}Short`)})
+			i!=msg('reports.prediction.winner', {chance: percentChance, alliance: msg(`alliance.${winningTeam}Short`)})
 			span(class="w3-tooltip")
 				span(class="sprite sp-info sp-16 sp-inline") &nbsp;
 				span(class="w3-tooltiptext no-mobile-tweak" style="width: 140px; margin-left: -70px;")!=msg('reports.prediction.reports', {count: match.predictive.totalCNT})
