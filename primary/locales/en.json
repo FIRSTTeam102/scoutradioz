@@ -247,7 +247,8 @@
 		"relativeStrengths": "Relative strengths:",
 		"legendShowHide": "Click on a legend to hide/show that team",
 		"futureMatches": "Future matches:",
-		"futureMatchesTeam": "Future matches for team {team}:"
+		"futureMatchesTeam": "Future matches for team {team}:",
+		"compareAlliance": "Compare alliances"
 	},
 	"allianceselection": {
 		"title": "Alliance selection",
@@ -313,9 +314,10 @@
 		"compareAllianceMatch": "Comparing alliances for match {match}",
 		"compareAllianceClick": "Click on an alliance to see comparative individual team stats:",
 		"team": "Team",
-		"rank": "Rank",
-		"allTeams": "all teams",
 		"teamNumber": "Team {team}",
+		"rank": "Rank",
+		"rankNumber": "Rank {number}",
+		"allTeams": "all teams",
 		"allianceStats": "Alliance team statistics",
 		"allTeamMetrics": "All team metrics",
 		"completedMatches": "Completed matches",
