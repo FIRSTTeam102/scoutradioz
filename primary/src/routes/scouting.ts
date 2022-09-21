@@ -88,6 +88,78 @@ router.get('/match*', wrap(async (req, res) => {
 	});
 }));
 
+router.post('/testform', wrap(async (req, res) => {
+	logger.addContext('funcName', 'testform[get]');
+	logger.info('ENTER');
+
+	let thisUser = req._user;
+	let match_team_key = '2022dngn_qm99_frc999999';
+	let alliance = 'blue';
+	let org_key = thisUser.org_key;
+
+	let jsonString = req.body.testData;
+	logger.debug('jsonString=' + jsonString);
+	let year = req.body.year;
+	logger.debug('year=' + year);
+	let form_type = req.body.form_type;
+	logger.debug('form_type=' + form_type);
+
+	let layout: Layout[] = JSON.parse(jsonString);
+	layout.forEach( (element) => {
+		// just in case the submission has '_id' attributes, remove them
+		delete element['_id'];
+		// write (or override existing) attributes
+		element['form_type'] = form_type;
+		element['org_key'] = org_key;
+		element['year'] = year;
+	});
+
+	let team: Team = {
+		address: null,
+		city: null, 
+		country: null,
+		gmaps_place_id: null,
+		gmaps_url: null,
+		key: 'frc999999',
+		lat: null,
+		lng: null,
+		location_name: null,
+		motto: null,
+		name: 'DNGN999999',
+		nickname: 'DNGN999999',
+		postal_code: null,
+		rookie_year: null,
+		school_name: null,
+		state_prov: 'DNGN',
+		team_number: 999999,
+		website: null
+	};
+
+	if (form_type == 'matchscouting')
+		//render page
+		res.render('./scouting/match', {
+			title: req.msg('scouting.match'),
+			layout: layout,
+			key: match_team_key,
+			alliance: alliance,
+			answers: null,
+			teamKey: 'frc999999',
+			images: null,
+			team: team,
+		});
+	else
+		res.render('./scouting/pit', {
+			title: req.msg('scouting.pit'),
+			layout: layout,
+			pitData: null, 
+			key: 'frc999999',
+			uploadURL: null,
+			teamKey: 'frc999999',
+			images: null,
+			team: team,
+		});
+}));
+
 router.post('/match/submit', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match/submit[post]');
 	logger.info('ENTER');

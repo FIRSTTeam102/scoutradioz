@@ -85,6 +85,18 @@ export declare interface Layout extends MongoDocument {
 }
 
 /**
+ * Identical to pit/match scouting BUT sets year, order, and form_type to optional
+ * so that during form editing we can create objects without these attributes
+ * @collection layoutedit
+ * @interface LayoutEdit
+ */
+export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key' | 'year'> {
+	year?: number;
+	form_type?: 'matchscouting'|'pitscouting';
+	org_key?: OrgKey;
+}
+
+/**
  * A derived metric in the match scouting form.
  * @collection layout
  * @interface DerivedLayout
