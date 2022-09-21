@@ -33,82 +33,45 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 				winningTeam = 'blue';
 			}
 		}
-	
-	
+
 	div(class="w3-row")
+		-
+			let matchName = msg('reports.match', {
+				level: match.comp_level != 'qm'
+					? `${match.comp_level}${match.set_number}`.toUpperCase()
+					: '',
+				number: match.match_number
+			})
 		//-Title for small screens
 		div(class="w3-col s12 m0 rounded theme-dim w3-border")
 			div(class="w3-col s9 w3-padding")
 				div
-					- var matchPrefix = "";
-					- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-					span #{matchPrefix.toUpperCase()}&nbsp;Match&nbsp;#{match.match_number}:
-					span.theme-text-secondary= timeString
+					span!=matchName
+					span.theme-text-secondary=timeString
 			div(class="w3-col s3")
 				a(href=`/reports/matchmetrics?key=${match.key}`)
 					div(class="w3-padding-small w3-right-align w3-small theme-hover-light-gray rounded-br rounded-tr" style="padding-right: 18px!important;")
-						i Compare alliances
+						i!=msg('driveDashboard.compareAlliance')
 		//-Title for medium screens
 		div(class="w3-col s0 m3 w3-padding-small")
 			div(class="rounded theme-dim w3-border")
-				- var matchPrefix = "";
-				- if (match.comp_level != 'qm') matchPrefix = "" + match.comp_level + "" + match.set_number + " ";
-				div(class="w3-padding") #{matchPrefix.toUpperCase()} Match #{match.match_number}
-				div(class="w3-padding theme-text-secondary")= timeString
+				div(class="w3-padding")!=matchName
+				div(class="w3-padding theme-text-secondary")=timeString
 				a(href=`/reports/matchmetrics?key=${match.key}`)
 					div(class="w3-padding-16 w3-small theme-hover-light-gray rounded-bottom") 
-						i Compare alliances
+						i!=msg('driveDashboard.compareAlliance')
 		//-Alliances
 		div(class="w3-col s12 m9 w3-padding-small")
-			div(class="w3-col s6 w3-padding-small")
-				-
-					// set shorthands for each team key
-					var blue = match.alliances.blue.team_keys, red = match.alliances.red.team_keys;
-					var blue1 = blue[0], blue2 = blue[1], blue3 = blue[2];
-					var red1 = red[0], red2 = red[1], red3 = red[2];
-				
-					//- set classes for alliance window
-					var blueClass = "alliance-blue alliance-border-blue rounded-small";
-					var redClass = "alliance-red alliance-border-red rounded-small";
-					if (winningTeam == 'blue') 
-						blueClass += " semi-thick-border";
-					else if (winningTeam == 'red') 
-						redClass += " semi-thick-border";
-				div(class=redClass)
-					//- not doing this with a loop because border needs to be specified
-					a(href=`/reports/teamintel?team_key=${red1}`)
-						div(class="w3-padding alliance-hover-red rounded-small-top")
-							span(class="upcoming-rank") 
-								i Rank #{teamRanks[red1]}
-							span(class=(selectedTeam==red1?'upcoming-highlighted-team':''))=red1.substring(3)
-					a(href=`/reports/teamintel?team_key=${red2}`)
-						div(class="w3-padding alliance-hover-red")
-							span(class="upcoming-rank") 
-								i Rank #{teamRanks[red2]}
-							span(class=(selectedTeam==red2?'upcoming-highlighted-team':''))=red2.substring(3)
-					a(href=`/reports/teamintel?team_key=${red3}`)
-						div(class="w3-padding alliance-hover-red rounded-small-bottom")
-							span(class="upcoming-rank") 
-								i Rank #{teamRanks[red3]}
-							span(class=(selectedTeam==red3?'upcoming-highlighted-team':''))=red3.substring(3)
-			div(class="w3-col s6 w3-padding-small")
-				div(class=blueClass)
-					//- not doing this with a loop because border needs to be specified
-					a(href=`/reports/teamintel?team_key=${blue1}`)
-						div(class="w3-padding alliance-hover-blue rounded-small-top")
-							span(class="upcoming-rank") 
-								i Rank #{teamRanks[blue1]}
-							span(class=(selectedTeam==blue1?'upcoming-highlighted-team':''))=blue1.substring(3)
-					a(href=`/reports/teamintel?team_key=${blue2}`)
-						div(class="w3-padding alliance-hover-blue")
-							span(class="upcoming-rank") 
-								i Rank #{teamRanks[blue2]}
-							span(class=(selectedTeam==blue2?'upcoming-highlighted-team':''))=blue2.substring(3)
-					a(href=`/reports/teamintel?team_key=${blue3}`)
-						div(class="w3-padding alliance-hover-blue rounded-small-bottom")
-							span(class="upcoming-rank") 
-								i Rank #{teamRanks[blue3]}
-							span(class=(selectedTeam==blue3?'upcoming-highlighted-team':''))=blue3.substring(3)
+			- let alliances = {red: match.alliances.red.team_keys, blue: match.alliances.blue.team_keys};
+			each alliance, color in alliances
+				div(class="w3-col s6 w3-padding-small")
+					div(class=`alliance-${color} alliance-border-${color} rounded-small${winningTeam == color ? ' semi-thick-border' : ''}`)
+						each team in alliance
+							a(href=`/reports/teamintel?team_key=${team}`)
+								div(class=`w3-padding alliance-hover-${color} rounded-small-top`)
+									span(class="upcoming-rank") 
+										i!=msg('reports.rankNumber', {number: teamRanks[team]})
+									span(class=(selectedTeam==team?'upcoming-highlighted-team':''))=team.substring(3)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
 	if match.hasPredictive 
 		if match.predictive

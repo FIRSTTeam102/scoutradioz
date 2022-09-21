@@ -8,7 +8,6 @@
 extends ../layout
 block content
 	script(src=`${fileRoot}/lib/chart.min.js?v=1`)
-	include ../reports/mixins/upcomingMatch
 	style.
 		html{
 			overflow-x: visible;
@@ -19,6 +18,7 @@ block content
 			margin: 0 6%;
 		}
 	include ../reports/templates/heatmap
+	include ../reports/mixins/upcomingMatch
 	
 	if !teams || !teams[0]
 		h3!=msg('driveDashboard.noTeams')
@@ -31,8 +31,6 @@ block content
 			br 
 		//- Dashboard for other teams
 		div(class="w3-section")
-			//- 2020-03-07, M.O'C - temporarily redirecting to /reports so unauthenticated user can see it
-			//- form(name="driveDashboardTeam" method="get" action="/dashboard/drive")
 			form(name="driveDashboardTeam" method="get" action="/dashboard/driveteam")
 				span(class="w3-mobile w3-margin-top")
 					label(class="w3-label" style="padding-right: 8px")!=msg('driveDashboard.viewFor')
@@ -64,7 +62,6 @@ block content
 		else
 			//- View first match
 			- var match = matches[0];
-			//include ../reports/templates/upcomingMatch
 			+upcomingMatch(match, undefined, selectedTeam)
 			hr 
 			//-Radar
@@ -155,7 +152,6 @@ block content
 			each match, i in matches
 				//-Skip first match
 				if (i > 0)
-					//include ../reports/templates/upcomingMatch
 					+upcomingMatch(match, undefined, selectedTeam)
 					hr 
 
