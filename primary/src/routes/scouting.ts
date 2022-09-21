@@ -116,7 +116,7 @@ router.post('/testform', wrap(async (req, res) => {
 
 	let team: Team = {
 		address: null,
-		city: null, 
+		city: 'DN', 
 		country: null,
 		gmaps_place_id: null,
 		gmaps_url: null,
@@ -130,7 +130,7 @@ router.post('/testform', wrap(async (req, res) => {
 		postal_code: null,
 		rookie_year: null,
 		school_name: null,
-		state_prov: 'DNGN',
+		state_prov: 'GN',
 		team_number: 999999,
 		website: null
 	};

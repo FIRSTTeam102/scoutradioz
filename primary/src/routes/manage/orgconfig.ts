@@ -53,9 +53,9 @@ router.get('/editform', wrap(async (req, res) => {
 	let layout = JSON.stringify(updatedarray, null, 2);
 	logger.debug(thisFuncName + 'pitlayout=\n' + layout);
 
-	let title = 'Pit Survey Layout';
+	let title = 'Pit Scouting Layout';
 	if (form_type == 'matchscouting')
-		title = 'Match Survey Layout';
+		title = 'Match Scouting Layout';
 
 	res.render('./manage/config/editform', {
 		title: title,
