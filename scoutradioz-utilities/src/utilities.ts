@@ -1,11 +1,12 @@
 'use strict';
 
 import NodeCache from 'node-cache';
-import { ObjectId, MongoClient, Db, Document as MongoDocument, 
+import type { Db, Document as MongoDocument, 
 	Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions,
 	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult } from 'mongodb';
+import { ObjectId, MongoClient } from 'mongodb';
 import crypto from 'crypto';
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
 
 const Client = require('node-rest-client').Client;

@@ -5,8 +5,8 @@ import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import e from '@firstteam102/http-errors';
 import type { Layout, LayoutEdit } from '@firstteam102/scoutradioz-types';
-import { DeleteResult, InsertManyResult } from 'mongodb';
-import { write } from 'fs';
+import type { DeleteResult, InsertManyResult } from 'mongodb';
+//import { write } from 'fs';
 
 const router = express.Router();
 const logger = getLogger('orgconfig');
