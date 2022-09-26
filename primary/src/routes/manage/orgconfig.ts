@@ -53,7 +53,7 @@ router.get('/editform', wrap(async (req, res) => {
 	});
 	// create a string representation
 	let layout = JSON.stringify(updatedarray, null, 2);
-	logger.debug(thisFuncName + 'pitlayout=\n' + layout);
+	logger.debug(thisFuncName + 'layout=\n' + layout);
 
 	let title = 'Pit Scouting Layout';
 	if (form_type == 'matchscouting')
@@ -80,7 +80,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	logger.debug('org_key=' + org_key);
 	
 	let jsonString = req.body.jsonData;
-	logger.debug('jsonString=' + jsonString);
+	//logger.debug('jsonString=' + jsonString);
 	let year = parseInt(req.body.year);
 	logger.debug('year=' + year);
 	let form_type = req.body.form_type;
@@ -91,14 +91,12 @@ router.post('/submitform', wrap(async (req, res) => {
 		// just in case the submission has '_id' attributes, remove them
 		delete element['_id'];
 		// write (or override existing) attributes
-		element['form_type'] = form_type;
-		element['org_key'] = org_key;
-		element['year'] = year;
+		element.form_type = form_type;
+		element.org_key = org_key;
+		element.year = year;
 	});
 	let updatedString = JSON.stringify(formdata);
 	logger.debug('updatedString=' + updatedString);
-
-	logger.warn('FOOOOOOOOOOOOOOOOOOOOOO');
 
 	// 1. delete existing data {if any} matching form_type, org_key, year
 	let removeResult: DeleteResult = await utilities.remove('layout', {org_key: org_key, year: year, form_type: form_type});
