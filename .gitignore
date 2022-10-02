@@ -5,6 +5,7 @@ node_modules
 zips
 primary/public/uploads/responsive
 *.code-workspace
+*.lockb
 primary/public/css
 primary/public/js
 build
