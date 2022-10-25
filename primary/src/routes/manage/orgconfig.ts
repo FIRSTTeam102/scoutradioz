@@ -5,6 +5,8 @@ import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import e from '@firstteam102/http-errors';
 import type { Layout, LayoutEdit } from '@firstteam102/scoutradioz-types';
+import type { DeleteResult, InsertManyResult } from 'mongodb';
+//import { write } from 'fs';
 
 const router = express.Router();
 const logger = getLogger('orgconfig');
@@ -51,7 +53,7 @@ router.get('/editform', wrap(async (req, res) => {
 	});
 	// create a string representation
 	let layout = JSON.stringify(updatedarray, null, 2);
-	logger.debug(thisFuncName + 'pitlayout=\n' + layout);
+	logger.debug(thisFuncName + 'layout=\n' + layout);
 
 	let title = 'Pit Scouting Layout';
 	if (form_type == 'matchscouting')
@@ -75,10 +77,11 @@ router.post('/submitform', wrap(async (req, res) => {
 	let thisUser = req._user;
 	// only let a user logged into the org modify their own org_key
 	let org_key = thisUser.org_key;
+	logger.debug('org_key=' + org_key);
 	
 	let jsonString = req.body.jsonData;
-	logger.debug('jsonString=' + jsonString);
-	let year = req.body.year;
+	//logger.debug('jsonString=' + jsonString);
+	let year = parseInt(req.body.year);
 	logger.debug('year=' + year);
 	let form_type = req.body.form_type;
 	logger.debug('form_type=' + form_type);
@@ -88,19 +91,24 @@ router.post('/submitform', wrap(async (req, res) => {
 		// just in case the submission has '_id' attributes, remove them
 		delete element['_id'];
 		// write (or override existing) attributes
-		element['form_type'] = form_type;
-		element['org_key'] = org_key;
-		element['year'] = year;
+		element.form_type = form_type;
+		element.org_key = org_key;
+		element.year = year;
 	});
 	let updatedString = JSON.stringify(formdata);
 	logger.debug('updatedString=' + updatedString);
 
-	// TODO
 	// 1. delete existing data {if any} matching form_type, org_key, year
-	// 2. write in new/updated data
+	let removeResult: DeleteResult = await utilities.remove('layout', {org_key: org_key, year: year, form_type: form_type});
+	logger.info(`Removed ${removeResult.deletedCount} prior form records`);
 
-	//let writeResult = await utilities.insert('users', insertQuery);
-	
+	// 2. write in new/updated data
+	let writeResult: InsertManyResult<Document> | undefined = await utilities.insert('layout', formdata);
+	if (writeResult)
+		logger.info(`Inserted ${writeResult.insertedCount} new form records`);
+	else
+		logger.warn('Inserted 0 new form records!');
+
 	res.redirect('/manage');
 }));
 	
