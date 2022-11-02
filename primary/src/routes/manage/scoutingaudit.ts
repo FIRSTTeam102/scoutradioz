@@ -94,13 +94,14 @@ router.get('/', wrap(async (req, res) =>  {
 					auditElementChar = 'N';
 				}
 				// 2018-03-22, M.O'C: Adding parent option
-				else if (thisScoreData.actual_scorer.toLowerCase().startsWith('mr') || 
-						thisScoreData.actual_scorer.toLowerCase().startsWith('mrs') || 
-						thisScoreData.actual_scorer.toLowerCase().startsWith('ms')){
-					//covered by parent (and insert actual_scorer)
-					auditElementChar = 'P';
-					auditElement.actual_scorer = thisScoreData.actual_scorer;
-				}
+				// 2022-11-02, M.O'C: Eliminating parent option
+				// else if (thisScoreData.actual_scorer.toLowerCase().startsWith('mr') || 
+				// 		thisScoreData.actual_scorer.toLowerCase().startsWith('mrs') || 
+				// 		thisScoreData.actual_scorer.toLowerCase().startsWith('ms')){
+				// 	//covered by parent (and insert actual_scorer)
+				// 	auditElementChar = 'P';
+				// 	auditElement.actual_scorer = thisScoreData.actual_scorer;
+				// }
 				else{
 					//covered by lead (and insert actual_scorer)
 					auditElementChar = 'C';
