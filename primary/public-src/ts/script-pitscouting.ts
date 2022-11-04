@@ -20,12 +20,12 @@ $(function(){
 	
 	$('#submit').on('click', function(){
 		
-		var pitForm = $('form[name=scoutform]');
+		let pitForm = $('form[name=scoutform]');
 		
 		console.log(pitForm);
 		//debugToHTML(pitForm);
 		
-		var pitSubmission = new FormSubmission(pitForm, '/scouting/pit/submit', 'pitScouting');
+		let pitSubmission = new FormSubmission(pitForm, '/scouting/pit/submit', 'pitScouting');
 		
 		//debugToHTML(pitSubmission);
 
@@ -54,31 +54,30 @@ $(function(){
 async function submitImage(this: HTMLInputElement){
 	
 	//var form = $("#imageform")[0];
-	var imageInput = this;
-	var imageInputID = imageInput.id;
+	let imageInputID = this.id;
 	//get the label so we can disable it during upload
-	var button = $(`label[for=${imageInputID}]`);
+	let button = $(`label[for=${imageInputID}]`);
 	
 	//formulate the url that we send a request to
-	var index = $(imageInput).attr('index');
-	var year = $('input[name=year]').val();
-	var orgKey = $('input[name=org_key]').val();
-	var teamKey = $('input[name=team_key]').val();
-	var userId = $('input[name=user]').val();
-	var uploadURLBase = $('input[name=uploadURL]').val();
+	let index = $(this).attr('index');
+	let year = $('input[name=year]').val();
+	let orgKey = $('input[name=org_key]').val();
+	let teamKey = $('input[name=team_key]').val();
+	let userId = $('input[name=user]').val();
+	let uploadURLBase = $('input[name=uploadURL]').val();
 	
-	var uploadURL = `${uploadURLBase}?index=${index}&year=${year}&org_key=${orgKey}&team_key=${teamKey}&user=${userId}`;
+	let uploadURL = `${uploadURLBase}?index=${index}&year=${year}&org_key=${orgKey}&team_key=${teamKey}&user=${userId}`;
 	
 	//create FormData object to submit
-	var data = new FormData();
+	let data = new FormData();
 	
-	if (!imageInput.files) return console.error('imageInput.files is not defined');
+	if (!this.files) return console.error('imageInput.files is not defined');
 	
-	var imageData = await getImageData(imageInput.files[0]);
+	let imageData = await getImageData(this.files[0]);
 	
 	if (imageData) {
 		
-		var imageFile = imageData;
+		let imageFile = imageData;
 		
 		// debugToHTML(imageData);
 		// debugToHTML('imageData=' + typeof imageData);
@@ -93,7 +92,7 @@ async function submitImage(this: HTMLInputElement){
 		
 		$(button).addClass('w3-disabled');
 		
-		var uploadingCard = new NotificationCard('Uploading photo...', {ttl: 0}).show();
+		let uploadingCard = new NotificationCard('Uploading photo...', {ttl: 0}).show();
 		
 		try{
 			
@@ -143,7 +142,7 @@ async function submitImage(this: HTMLInputElement){
 					
 					uploadingCard.remove(0);
 					// @ts-ignore
-					var message = err.responseText || errorThrown.message || 'An error occurred.';
+					let message = err.responseText || errorThrown.message || 'An error occurred.';
 					NotificationCard.show(message, {type: 'bad', ttl: 10000});
 					
 				},/*
@@ -184,9 +183,9 @@ async function submitImage(this: HTMLInputElement){
 function getImageData(file: File): Promise<File> {
 	
 	return new Promise((resolve, reject) => {
-		var imageData;
+		let imageData;
 	
-		var preprocessImages = $('input[name=chkPreprocess]').prop('checked');
+		let preprocessImages = $('input[name=chkPreprocess]').prop('checked');
 		
 		// This section is for pre-processing images with Jimp, which has been unused for quite a while
 		if (preprocessImages) {
@@ -194,27 +193,27 @@ function getImageData(file: File): Promise<File> {
 			
 			if (window.hasOwnProperty('Jimp')) {
 				
-				var preReadTime = Date.now();
+				let preReadTime = Date.now();
 				
 				//Read file
-				var reader = new FileReader();
+				let reader = new FileReader();
 				
 				reader.onload = async () => {
 					
-					var imgArrayBuffer = reader.result;
+					let imgArrayBuffer = reader.result;
 						
 					NotificationCard.show('Compressing photo...');
 					
-					var preJimpReadTime = Date.now();
+					let preJimpReadTime = Date.now();
 					
 					//Read image buffer
-					var image = await Jimp.read(imgArrayBuffer);
+					let image = await Jimp.read(imgArrayBuffer);
 					
-					var jimpReadTime = Date.now();
+					let jimpReadTime = Date.now();
 					
-					var width = image.bitmap.width, height = image.bitmap.height;
-					var ratio = width / height;
-					var resizeWidth, resizeHeight;
+					let width = image.bitmap.width, height = image.bitmap.height;
+					let ratio = width / height;
+					let resizeWidth, resizeHeight;
 					
 					//only resize if original image is larger than 1000x1000
 					if (width > 1000 && height > 1000) {
@@ -240,7 +239,7 @@ function getImageData(file: File): Promise<File> {
 						image.quality(90);
 					}
 					
-					var imgResizeTime = Date.now();
+					let imgResizeTime = Date.now();
 					
 					image.getBuffer('image/jpeg', async (err: Error, newArrayBuffer: BlobPart[]) => {
 						if(err){
@@ -249,13 +248,13 @@ function getImageData(file: File): Promise<File> {
 							resolve(file);
 						}
 						
-						var imgBufferTime = Date.now();
+						let imgBufferTime = Date.now();
 						
-						var str = `FileRead: ${preJimpReadTime - preReadTime}ms, JimpRead: ${jimpReadTime - preJimpReadTime}ms, Resize: ${imgResizeTime-jimpReadTime}ms, getBuffer: ${imgBufferTime-imgResizeTime}ms`;
+						let str = `FileRead: ${preJimpReadTime - preReadTime}ms, JimpRead: ${jimpReadTime - preJimpReadTime}ms, Resize: ${imgResizeTime-jimpReadTime}ms, getBuffer: ${imgBufferTime-imgResizeTime}ms`;
 						console.log(str);
 						debugToHTML(str);
 						
-						var newFile = new File(newArrayBuffer, file.name, {type: 'image/jpeg'});
+						let newFile = new File(newArrayBuffer, file.name, {type: 'image/jpeg'});
 						
 						console.log(newArrayBuffer);
 						console.log(newFile);

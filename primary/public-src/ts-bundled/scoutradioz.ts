@@ -5,7 +5,7 @@ if(!$){
 
 $(() => {
 	if (Cookies.get('accepted') != 'true') {
-		var cookiesMessage = new NotificationCard('Scoutradioz uses some cookies in order to operate. We do not use third party cookies or tracking cookies.',
+		let cookiesMessage = new NotificationCard('Scoutradioz uses some cookies in order to operate. We do not use third party cookies or tracking cookies.',
 			{ttl: 0, exitable: true, onexit: function(){
 				Cookies.set('accepted', 'true', {expires: 1000});
 			}});
@@ -20,7 +20,7 @@ $(() => {
 		navigator.serviceWorker.addEventListener('message', function(event) {
 			console.log('Received a message from service worker: ', event.data);
 
-			var message = event.data.ifFocused.message;
+			let message = event.data.ifFocused.message;
 			NotificationCard.show(message, {ttl: 3500});
 		});
 	}
@@ -29,13 +29,13 @@ $(() => {
 (() => {
 	
 	
-	const resizeCallbacks: Array<Function> = [];
+	const resizeCallbacks: Array<() => void> = [];
 	
 	/**
 	 * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
-	 * @param {function} cb Callback to run on a resize event.
+	 * @param cb Callback to run on a resize event.
 	 */
-	window.onResize = function(cb: Function) {
+	window.onResize = function(cb: () => void) {
 		resizeCallbacks.push(cb);
 		cb(); // Run the callback once
 	};
@@ -64,7 +64,7 @@ $(() => {
 	 */
 	window.assert = function (condition, message) {
 		if (!condition) {
-			var x = new Error();
+			let x = new Error();
 			NotificationCard.error(
 				`ERROR: ${message}\nPlease report as an issue on our GitHub page.\n\nCall stack: ${x.stack}`, 
 				{exitable: true, ttl: 0}
@@ -72,7 +72,7 @@ $(() => {
 		}
 	};
 	
-	var debugLogger = document.createElement('div');
+	let debugLogger = document.createElement('div');
 	$(debugLogger).css({
 		'background-color': 'white',
 		'color': 'black',
@@ -91,11 +91,11 @@ $(() => {
 		let st = performance.now();
 		cb();
 		return performance.now() - st;
-	}
+	};
 	
 	window.debugToHTML = function(message: string) {
 		
-		var text;
+		let text;
 		
 		switch (typeof message) {
 			case 'string':
@@ -115,7 +115,7 @@ $(() => {
 			$(document.body).append(debugLogger);
 		}
 		
-		var newTextElem = document.createElement('pre');
+		let newTextElem = document.createElement('pre');
 		$(newTextElem).text(text);
 		
 		$(debugLogger).append(newTextElem);
@@ -123,23 +123,23 @@ $(() => {
 })();
 
 function scrollToId(id: string) {
-	var elem = document.getElementById(id);
+	let elem = document.getElementById(id);
 	if (elem) elem.scrollIntoView({behavior: 'smooth'});
 	else console.error(`Element with id ${id} not found.`);
 }
 
 function share(orgKey: string|boolean) {
 	
-	var origin = window.location.origin;
-	var pathname = window.location.pathname;
-	var search = window.location.search;
+	let origin = window.location.origin;
+	let pathname = window.location.pathname;
+	let search = window.location.search;
 	
 	//if orgKey is defined, add it to the base of the pathname
 	if (orgKey != false) {
 		pathname = '/' + orgKey + pathname;
 	}
 	
-	var shareURL = origin + pathname + search;
+	let shareURL = origin + pathname + search;
 	
 	console.log(shareURL);
 	
@@ -170,7 +170,7 @@ function copyClipboardDom(text: string) {
 		
 		console.log('Attempting DOM copy');
 		
-		var shareURLInput: JQuery<HTMLInputElement> = $('#shareURLInput');
+		let shareURLInput: JQuery<HTMLInputElement> = $('#shareURLInput');
 		shareURLInput.attr('value', text);
 		shareURLInput[0].select();
 		shareURLInput[0].setSelectionRange(0, 99999); 
@@ -187,9 +187,10 @@ function copyClipboardDom(text: string) {
 declare class Cookies {
 	static get(key: string): any;
 	static set(key: string, value: any, value2?: any): any;
+	static remove(key: string): void;
 }
 
 declare function measureTime(cb: () => void) : number;
 declare function debugToHTML(message: any): void;
 declare function assert(condition: boolean, message: any): void;
-declare function onResize(cb: Function): void; 
+declare function onResize(cb: () => void): void; 

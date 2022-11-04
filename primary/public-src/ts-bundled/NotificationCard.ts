@@ -72,7 +72,7 @@ class NotificationCard{
 	 */
 	static show(text: string, opts?: NotificationCardOptions|undefined){
 		
-		var newCard = new NotificationCard(text, opts);
+		let newCard = new NotificationCard(text, opts);
 		
 		newCard.show();
 		
@@ -124,7 +124,7 @@ class NotificationCard{
 	 */
 	static container(){
 		
-		var containerElement = $('#notificationcard-container');
+		let containerElement = $('#notificationcard-container');
 		//If container element does not already exist, then create one with necessary properties
 		if ( !containerElement[0] ){
 			containerElement =  $(document.createElement('div'))
@@ -140,7 +140,7 @@ class NotificationCard{
 	 */
 	show(){
 		//Create card element
-		var card = $(document.createElement('div'))
+		let card = $(document.createElement('div'))
 			.addClass('notification-card')
 			.css({
 				'background-color': this.opts.color,
@@ -149,17 +149,17 @@ class NotificationCard{
 			});
 		
 		//Enrich text with bold typefacing
-		var enrichedText = this._enrichText();
+		let enrichedText = this._enrichText();
 		
 		//Create text element
-		var text = $(document.createElement('div'))
+		let text = $(document.createElement('div'))
 			.addClass('notification-card-content')
 			.html(enrichedText.html());
 		this._textContent = text;
 		//Add exit button if exitable option is enabled
 		if (this.opts.exitable) {
 			//Create exit button
-			var exitBtn = $(document.createElement('div'))
+			let exitBtn = $(document.createElement('div'))
 				.addClass('notification-card-exit')
 				.css({})
 				.text('X')
@@ -203,7 +203,7 @@ class NotificationCard{
 	 */
 	setText(newText: string) {
 		this.text = newText;
-		var enrichedText = this._enrichText();
+		let enrichedText = this._enrichText();
 		
 		if (this._textContent) this._textContent.html(enrichedText.html());
 	}
@@ -214,7 +214,7 @@ class NotificationCard{
 	 */
 	remove(time?: number){
 		
-		var removeTime = 0;
+		let removeTime = 0;
 		
 		if (typeof time == 'number') {
 			removeTime = time;
@@ -236,11 +236,11 @@ class NotificationCard{
 	
 	_filterOptions(options: any){
 		
-		var defaultOpts = new NotificationCardOptions();
+		let defaultOpts = new NotificationCardOptions();
 		
-		var opts = defaultOpts;
+		let opts = defaultOpts;
 		
-		for (var option in opts) {
+		for (let option in opts) {
 			
 			if (options.hasOwnProperty(option)) {	
 				switch(option){
@@ -300,10 +300,10 @@ class NotificationCard{
 	
 	_enrichText(): JQuery {
 		
-		var text = this.text;
+		let text = this.text;
 		
 		//HTML-encode the text of the notificationcard (for safety)
-		var enrichedText = $(document.createElement('span'))
+		let enrichedText = $(document.createElement('span'))
 			.text(text);
 		
 		//Enrich text with predetermined keys
@@ -318,21 +318,21 @@ class NotificationCard{
 	static _enrichWithClosingTags(html: string, key: string, openTag: string, closeTag: string) {
 		
 		//Get all locations of the key
-		var locationsOfKey = [];
-		for (var i = 0; i < html.length; i++) {
+		let locationsOfKey = [];
+		for (let i = 0; i < html.length; i++) {
 			if (html.substring(i, i + key.length) == key) {
 				locationsOfKey.push(i);
 			}
 		}
 		
-		var numIterations = 0;
+		let numIterations = 0;
 		//Loop until there are no more pairs of the key
 		while (locationsOfKey.length > 1) {
 			
 			//Add length of openTag/closeTag to indices so the indices don't get messed up
-			var lengthAddition = numIterations * (openTag.length + closeTag.length - 2 * key.length);
-			var thisIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
-			var nextIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
+			let lengthAddition = numIterations * (openTag.length + closeTag.length - 2 * key.length);
+			let thisIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
+			let nextIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
 			// var thisIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
 			// var nextIndex = parseInt(locationsOfKey.splice(0, 1)) + lengthAddition;
 			//Splice html together with opening and closing tags
@@ -342,7 +342,7 @@ class NotificationCard{
 		}
 		
 		//Create new span with the enriched html.
-		var enrichedText = $(document.createElement('span'))
+		let enrichedText = $(document.createElement('span'))
 			.html(html);
 		
 		return enrichedText;
@@ -351,20 +351,20 @@ class NotificationCard{
 	static _enrichWithSelfClosingTags(html: string, key: string, tag: string) {
 		
 		//Get all locations of the key
-		var locationsOfKey = [];
-		for (var i = 0; i < html.length; i++) {
+		let locationsOfKey = [];
+		for (let i = 0; i < html.length; i++) {
 			if (html.substring(i, i + key.length) == key) {
 				locationsOfKey.push(i);
 			}
 		}
 		
-		var numIterations = 0;
+		let numIterations = 0;
 		//Loop until there are no more pairs of the key
 		while (locationsOfKey.length > 0) {
 			
 			//Add length of tag to indices so the indices don't get messed up
-			var lengthAddition = numIterations * (tag.length - key.length);
-			var thisIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
+			let lengthAddition = numIterations * (tag.length - key.length);
+			let thisIndex = locationsOfKey.splice(0, 1)[0] + lengthAddition;
 			
 			//Splice html together with opening and closing tags
 			html = html.slice(0, thisIndex) + tag + html.slice(thisIndex + key.length);
@@ -373,7 +373,7 @@ class NotificationCard{
 		}
 		
 		//Create new span with the enriched html.
-		var enrichedText = $(document.createElement('span'))
+		let enrichedText = $(document.createElement('span'))
 			.html(html);
 		
 		return enrichedText;
@@ -384,8 +384,8 @@ class NotificationCardOptions {
 	type?: string|undefined|null;
 	ttl?: number|undefined|null;
 	exitable?: boolean|undefined|null;
-	darken?: false|undefined|null;
-	onexit?: Function|undefined|null;
+	darken?: boolean|undefined|null;
+	onexit?: (() => void)|undefined|null;
 	
 	color?: string|undefined|null;
 	borderColor?: string|undefined|null;

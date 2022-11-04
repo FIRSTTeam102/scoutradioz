@@ -1,14 +1,14 @@
 // These variables are created in the pug view
-declare var stickyBarEnabled: boolean;
-declare var headerList: Array<string>;
+declare let stickyBarEnabled: boolean;
+declare let headerList: Array<string>;
 
 $(function () {
 	
 	$('#toggleStickyToggle').addClass('animate');
 	
 	$('#toggleSticky').on('change', () => {
-		var enabled = $('#toggleSticky').prop('checked');
-		window.stickyBarEnabled = enabled;
+		let enabled = $('#toggleSticky').prop('checked');
+		stickyBarEnabled = enabled;
 		if (enabled) {
 			// Show the sticky bar
 			$('#stickyBar').show().css('bottom', -60).animate({
@@ -31,8 +31,8 @@ $(function () {
 	});
 	
 	//- Get a list of all the header elements, to use for scrolling
-	var headerElements: Array<HTMLElement> = [];
-	for (let label of window.headerList) {
+	let headerElements: Array<HTMLElement> = [];
+	for (let label of headerList) {
 		let thisHeader = $(`#${label}`);
 		if (thisHeader[0]) headerElements.push(thisHeader[0]);
 	}
@@ -41,11 +41,11 @@ $(function () {
 	const stickyBarLeft  = $('#stickyBarLeft');
 	const stickyBarRight = $('#stickyBarRight');
 	
-	var currentHeaderID = '';
+	let currentHeaderID = '';
 	
 	handleScroll();
 				
-	var ticking = false;
+	let ticking = false;
 	$(window).on('scroll', () => {
 		if (!ticking) {
 			requestAnimationFrame(() => {
@@ -57,7 +57,7 @@ $(function () {
 	});
 				
 	function handleScroll() {
-		if (!window.stickyBarEnabled) return;
+		if (!stickyBarEnabled) return;
 		
 		for (let header of headerElements) {
 			let isVisible = checkVisible(header);
@@ -161,13 +161,13 @@ $(function () {
 				
 	//- Credit: https://stackoverflow.com/questions/5353934/check-if-element-is-visible-on-screen
 	function checkVisible(elem: HTMLElement) {
-		var rect = elem.getBoundingClientRect();
-		var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+		let rect = elem.getBoundingClientRect();
+		let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
 		return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
 	}
 				
 	window.onResize(() => {
-		if (!window.stickyBarEnabled) return;
+		if (!stickyBarEnabled) return;
 		
 		// - The text is centered at a fixed size, but we want to make sure the text is visible even on small screens.
 		let triLeft = $('#stickyBarLeft')[0];
@@ -194,16 +194,16 @@ $(function(){
 		// JL: Disabled inputs are only for visual assistance in dynamic scrolling, but they might be ignored in the form submission if they remain disabled
 		$('input[disabled]').removeAttr('disabled'); 
 		
-		var matchForm = $('form[name=matchform]');
+		let matchForm = $('form[name=matchform]');
 		
-		var matchSubmission = new FormSubmission(matchForm, '/scouting/match/submit', 'matchScouting');
+		let matchSubmission = new FormSubmission(matchForm, '/scouting/match/submit', 'matchScouting');
 		
 		matchSubmission.submit((err, response) => {
-			let message = response.message;
-			if (err || !message) {
+			if (err || !response || !response.message) {
 				NotificationCard.error('An error occurred. Please retry.');
 			}
 			else{
+				let message = response.message;
 				NotificationCard.show(message, {darken: true, type: 'good', ttl: 0});
 				
 				// 2022-03-24 JL: Send assigned scouters back to dashboard, send unassigned scouters back to dashboard/matches 
@@ -226,4 +226,8 @@ $(function(){
 // Again because JQuery typing is dumb
 interface Element {
 	disabled: boolean;
+}
+
+interface SRResponse {
+	assigned: boolean;
 }
