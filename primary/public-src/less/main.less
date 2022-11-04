@@ -59,6 +59,13 @@
 .theme-red{color:#fff!important;background-color:@first-red!important}
 .gear-btn{min-width:100px;margin: 15px 8px 0px 8px;}
 
+.w3-input {
+	color: @white;
+	&::placeholder {
+		color: fadeout(@white, 40%);
+	}
+}
+
 .theme-text{color:@text-primary!important;}
 .theme-text-secondary{color:@text-secondary!important;}
 .theme-text-dark{color:#1E1E23!important;}
@@ -102,6 +109,10 @@
 }
 
 .animate{transition: @animate; -webkit-transition: @animate;}
+
+.clickable {
+	cursor: pointer;
+}
 
 .unimportant{opacity: 70%;}
 .very-unimportant{opacity: 30%;}

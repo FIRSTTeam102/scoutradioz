@@ -321,7 +321,13 @@ class NotificationCard{
 		let locationsOfKey = [];
 		for (let i = 0; i < html.length; i++) {
 			if (html.substring(i, i + key.length) == key) {
-				locationsOfKey.push(i);
+				// escaped character
+				if (html.substring(i-1, i) === '\\') {
+					html = html.substring(0, i-1) + html.substring(i, html.length); // remove backslash
+				}
+				else {
+					locationsOfKey.push(i);
+				}
 			}
 		}
 		
@@ -354,7 +360,13 @@ class NotificationCard{
 		let locationsOfKey = [];
 		for (let i = 0; i < html.length; i++) {
 			if (html.substring(i, i + key.length) == key) {
-				locationsOfKey.push(i);
+				// escaped character
+				if (html.substring(i-1, i) === '\\') {
+					html = html.substring(0, i-1) + html.substring(i, html.length); // remove backslash
+				}
+				else {
+					locationsOfKey.push(i);
+				}
 			}
 		}
 		
