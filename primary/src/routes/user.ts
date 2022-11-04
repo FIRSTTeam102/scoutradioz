@@ -79,13 +79,13 @@ router.post('/login/select', wrap(async (req, res) => {
 	if( !await req.authenticate( Permissions.ACCESS_VIEWER ) ) return null;
 	
 	//get contents of request and selected organization
-	let org_key = req._user.org_key;
-	let org_password = req.body.org_password;
+	let org_key: string = req._user.org_key;
+	let org_password: string = req.body.org_password;
 	logger.debug(`- ${org_key}`);
 	
 	
 	//Make sure that form is filled
-	if(!org_key || !org_password || org_key == '' || org_password == ''){
+	if(!org_key || !org_password || org_key === '' || org_password === ''){
 		return res.redirect('/user/login?alert=' + req.msgUrl('user.orgpasswordrequired') + '&rdr=' + req.getFixedRedirectURL());
 	}
 	
@@ -106,10 +106,11 @@ router.post('/login/select', wrap(async (req, res) => {
 	let comparison = await bcrypt.compare( org_password, passwordHash );
 	
 	//If comparison succeeded, then proceed
-	if(comparison == true){
+	if(comparison === true){
 		
+		// 2022-04-03 JL: Changing "name: {$ne: 'default_user'}" to "visible: true"
 		let users: User[] = await utilities.find('users', 
-			{org_key: org_key, name: {$ne: 'default_user'}}, 
+			{org_key: org_key, visible: true}, 
 			{sort: {name: 1}},
 			{allowCache: true}
 		);
@@ -147,7 +148,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	}
 	
 	//If no user is selected, send an alert message
-	if(!userID || userID == ''){
+	if(!userID){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
@@ -199,11 +200,19 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	//If no such role exists, throw an error because there must be one
 	if(!userRole) throw new Error(`user.js /login/withoutpassword: No role exists in DB with key ${role_key}`);
 	
+	// 2022-04-03 JL: Sanity check for scoutradioz_admin user. While the bcrypt comparison should always fail when password === "disabled", I'd rather not run the risk. 
+	if (user.password === 'disabled') {
+		return res.send({
+			status: 400,
+			alert: 'You cannot sign in as this user.'
+		});
+	}
+	
 	//if user's access level is greater than scouter, then a password is required.
 	if(userRole.access_level > Permissions.ACCESS_SCOUTER){
 		
 		//if user does not have a password but NEEDS a password, then they will need to create one
-		if( user.password == 'default' ){
+		if( user.password === 'default' ){
 			res.send({
 				status: 200,
 				create_password: true
@@ -217,10 +226,10 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 			});
 		}
 	} 
-	else if(userRole.access_level == Permissions.ACCESS_SCOUTER){
+	else if(userRole.access_level === Permissions.ACCESS_SCOUTER){
 		
 		//First, check if the user has a password that is default
-		if( user.password == 'default'){
+		if( user.password === 'default'){
 			
 			logger.debug('Logging in scouter');
 		
@@ -302,7 +311,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	}
 	
 	//If no user is selected, send an alert message
-	if(!userID || userID == ''){
+	if(!userID){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
@@ -366,9 +375,9 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 			
 			//Set redirect url depending on user's access level
 			if (req.body.redirectURL) redirectURL = req.body.redirectURL;
-			else if (userRole.access_level == Permissions.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
-			else if (userRole.access_level == Permissions.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
-			else if (userRole.access_level == Permissions.ACCESS_SCOUTER) redirectURL = '/dashboard';
+			else if (userRole.access_level === Permissions.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
+			else if (userRole.access_level === Permissions.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
+			else if (userRole.access_level === Permissions.ACCESS_SCOUTER) redirectURL = '/dashboard';
 			else redirectURL = '/home';
 			
 			logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
@@ -412,7 +421,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	}
 	
 	//If no user is selected, send an alert message
-	if(!userID || userID == ''){
+	if(!userID){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
@@ -524,7 +533,7 @@ router.post('/changepassword', wrap(async (req, res) => {
 	let passComparison;
 	
 	//if user's password is set to default, then allow them to change their password
-	if( req._user.password == 'default'){
+	if( req._user.password === 'default'){
 		passComparison = true;
 	}
 	else{
@@ -693,10 +702,10 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 	
 	let columnArray = [];
 	for (let key in req.body) {
-		if (key == 'setOrgDefault') {
+		if (key === 'setOrgDefault') {
 			setOrgDefault = true;
 		}
-		else if (key == 'redirectURL') {
+		else if (key === 'redirectURL') {
 			// 2020-04-04 JL: Added exceptions to redirectURL 
 			// 2022-03-09 JL: Removed exceptions to redirectURL to make the behavior more consistent
 			//	(currently only home, but made it a regex to make it easier to add more in the future)
@@ -719,7 +728,7 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 	var first = true;
 	var columnCookie = '';
 	for (var i in req.body) {
-		if (i == 'setOrgDefault')    // see choosecolumns.pug
+		if (i === 'setOrgDefault')    // see choosecolumns.pug
 			setOrgDefault = true;
 		else {
 			if (first)

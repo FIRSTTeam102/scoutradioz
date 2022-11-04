@@ -153,7 +153,7 @@ router.post('/updatemember', wrap(async (req, res) => {
 			status: 400, message: 'User must have a name.'
 		});
 	}
-	if (name.toLowerCase() === 'default_user') {
+	if (name.toLowerCase() === 'default_user' || name.toLowerCase() === 'scoutradioz_admin') {
 		return res.send({
 			status: 400, message: 'You cannot give a user that name.'
 		});

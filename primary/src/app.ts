@@ -203,6 +203,7 @@ let scoutingpairs = require('./routes/manage/scoutingpairs');
 //SCOUTRADIOZ ADMIN ROUTES
 let adminindex = require('./routes/admin/indexadmin');
 let externaldata = require('./routes/admin/externaldata');
+let orgs = require('./routes/admin/orgs');
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
@@ -223,6 +224,7 @@ app.use('/manage/manualdata', manualdata);
 
 app.use('/admin', adminindex);
 app.use('/admin/externaldata', externaldata);
+app.use('/admin/orgs', orgs);
 
 app.use('/', share);
 
