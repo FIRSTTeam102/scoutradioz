@@ -67,8 +67,8 @@ class Prompt {
 		this.options.allowClickAway ??= defaultOptions.allowClickAway;
 	}
 	
-	static show(contents: PromptItem[], buttons: PromptButton[]) {
-		let newPrompt = new Prompt(contents, buttons);
+	static show(contents: PromptItem[], buttons: PromptButton[], options?: PromptOptions) {
+		let newPrompt = new Prompt(contents, buttons, options);
 		let promise = newPrompt.show();
 		return promise;
 	}

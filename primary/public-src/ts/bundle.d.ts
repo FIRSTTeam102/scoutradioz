@@ -184,6 +184,11 @@ declare type PromptReturnDatum = {
     type: 'password' | 'textinput';
     value: string;
 };
+/**
+ * Includes an array of the values of all input fields.
+ * 	e.g.: if contents[0] is a label, contents[1] is a textinput, contents[2] is a label, and contents[3] is a password,
+ * 	then data will be [{type: 'textinput', value: string}, {type: 'password', value: string}]
+ */
 declare type PromptReturn = {
     cancelled: boolean;
     data: PromptReturnDatum[];
@@ -217,7 +222,7 @@ declare class Prompt {
     resolvePromise: ((...args: any[]) => void) | undefined;
     options: PromptOptions;
     constructor(contents: PromptItem[], buttons: PromptButton[], options?: PromptOptions);
-    static show(contents: PromptItem[], buttons: PromptButton[]): Promise<PromptReturn>;
+    static show(contents: PromptItem[], buttons: PromptButton[], options?: PromptOptions): Promise<PromptReturn>;
     show(): Promise<PromptReturn>;
     onKeyDown(e: KeyboardEvent): void;
     getData(): PromptReturnDatum[];
