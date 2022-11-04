@@ -149,6 +149,11 @@ block content
 					//Possible response information: alert, password_needed, and redirect_url
 					console.log(response);
 					
+					//- 2022-04-03 JL: Attempting to log in as specific hidden users have a special message
+					if (response.alert) {
+						NotificationCard.error(response.alert);
+					}
+
 					//if redirect, then redirect
 					if(response.redirect_url){
 						window.location.href = decodeURIComponent(response.redirect_url);
