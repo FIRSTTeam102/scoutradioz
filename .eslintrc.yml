@@ -20,7 +20,8 @@ globals:
   window: writable
 parserOptions:
   ecmaVersion: 2018
-# ignorePatterns: 
+ignorePatterns: 
+  - bundle.d.ts
 rules:
   indent:
     - error
