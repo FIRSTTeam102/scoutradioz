@@ -167,9 +167,9 @@ export declare interface Match extends MongoDocument {
 		red: AnyDict;
 		blue: AnyDict;
 	};
-	videos: Array<MatchVideo>;
+	videos?: Array<MatchVideo>;
 	time: number;
-	actual_time: number;
+	actual_time: number|'';
 	predicted_time: number;
 	post_result_time?: number;
 }
