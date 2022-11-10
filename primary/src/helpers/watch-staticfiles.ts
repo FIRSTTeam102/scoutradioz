@@ -6,7 +6,15 @@ import { spawn } from 'child_process';
 import 'colors';
 import type {ChildProcessWithoutNullStreams} from 'child_process';
 
-const pathToPublicSrc = path.join(__dirname, '../public-src');
+const pathToPublicSrc = path.join(__dirname, '../../public-src');
+
+let doBun = false;
+for (let arg of process.argv) {
+	if (arg.includes('bun')) {
+		doBun = true;
+		console.log('Using Bun'.red);
+	}
+}
 
 let child: ChildProcessWithoutNullStreams|null, 
 	isWorking: boolean, 
@@ -17,14 +25,16 @@ function kill() {
 	child = null;
 }
 
-function start(command: string) {
+function start(command: string, cwd?: string) {
 	isWorking = true;
 	startTime = Date.now();
 	
-	child = spawn('npm', [
+	child = spawn(doBun ? 'bun' : 'npm', [
 		'run',
 		command,
-	], {shell: true});
+	], {shell: true, cwd: cwd});
+	
+	if (cwd) console.log(command, cwd);
 	
 	child.stdout.on('data', function (data) {
 		process.stdout.write(data);
@@ -45,11 +55,15 @@ let timeout: NodeJS.Timeout;
 function init() {
 	start('compile-static'); // Start by compiling all static files
 	
-	fs.watch(pathToPublicSrc, {recursive: true}, (type, filename) => {
+	function doTimeout(cb: () => void) {
+		if (timeout) clearTimeout(timeout);
+		timeout = setTimeout(cb, 100);
+	}
+	
+	const callback = (type: any, filename: string) => {
 		// Only recompile if LESS or TS files are changed
 		if ((filename.endsWith('.ts') || filename.endsWith('.less')) && !isWorking) {
-			if (timeout) clearTimeout(timeout);
-			timeout = setTimeout(() => {
+			doTimeout(() => {
 				kill();
 				if (filename.endsWith('.ts')) {
 					// Only compile TypeScript files
@@ -61,9 +75,39 @@ function init() {
 					console.log('A change has been detected. Reloading...'.red + ' [LESS]'.yellow);
 					start('compile-less');
 				}
-			}, 100);
+			});
 		}
-	});
+	};
+	
+	try {
+		fs.watch(pathToPublicSrc, {recursive: true}, callback);
+	}
+	catch (err) {
+		console.error('recursive fs.watch() failed, attempting with individual dirs...');
+		fs.watch(path.join(pathToPublicSrc, 'less'), {}, () => {
+			doTimeout(() => {
+				kill();
+				console.log('A change has been detected. Reloading...'.red + ' [LESS]'.yellow);
+				start('compile-less');
+			});
+		});
+		fs.watch(path.join(pathToPublicSrc, 'ts'), {}, () => {
+			doTimeout(() => {
+				kill();
+				console.log('A change has been detected. Reloading...'.red + ' [TypeScript]'.yellow);
+				if (doBun) start('tsc', path.join(pathToPublicSrc, 'ts'));
+				else start('compile-ts-indiv');
+			});
+		});
+		fs.watch(path.join(pathToPublicSrc, 'ts-bundled'), {}, () => {
+			doTimeout(() => {
+				kill();
+				console.log('A change has been detected. Reloading...'.red + ' [Bundled TypeScript]'.yellow);
+				if (doBun) start('tsc', path.join(pathToPublicSrc, 'ts-bundled'));
+				else start('compile-ts-bundled');
+			});
+		});
+	}
 }
 
 init();
