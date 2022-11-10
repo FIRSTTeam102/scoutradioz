@@ -187,6 +187,17 @@ declare class MatchVideo {
 }
 
 /**
+ * Record of who is assigned to / completed a scouting assignment.
+ */
+export declare interface ScouterRecord {
+	/**
+	 * {@link User}'s _id
+	 */
+	user_id: string;
+	name: string;
+}
+
+/**
  * Match scouting data & assignments for a given team at a given match.
  * @collection matchscouting
  * @interface MatchScouting
@@ -201,8 +212,8 @@ export declare interface MatchScouting extends MongoDocument {
 	alliance: 'red' | 'blue';
 	team_key: TeamKey;
 	match_team_key: MatchTeamKey;
-	assigned_scorer?: string;
-	actual_scorer?: string;
+	assigned_scorer?: ScouterRecord;
+	actual_scorer?: ScouterRecord;
 	data?: MatchFormData;
 	useragent?: UserAgent;
 }

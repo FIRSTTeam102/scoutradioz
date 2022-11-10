@@ -143,7 +143,6 @@ router.get('/matches', wrap(async (req, res) => {
 }));
 
 router.get('/matches/generate', wrap(async (req, res) => {
-	
 	logger.addContext('funcName', 'matches/generate[post]');
 	
 	// Gap between matches equal to or over this value means a "major" gap (e.g., lunch, overnight, etc.)
@@ -165,14 +164,14 @@ router.get('/matches/generate', wrap(async (req, res) => {
 	
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
 	
-	const availableArray = [];
+	const availableArray = []; // User IDs
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
 		const userId = user.split('|')[0];
-		const userName = user.split('|')[1];
+		const userName = user.split('|')[1]; // unused
 		logger.trace(`user: ${userId} | ${userName}`);
 		assert(userId && userName, 'Could not find both userId and userName');
-		availableArray.push({user_id: userId, name: userName});
+		availableArray.push(userId);
 	}
 	
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
@@ -226,6 +225,45 @@ router.get('/matches/generate', wrap(async (req, res) => {
 		matchScoutingAssignments = newMatchAssignmentsArray;
 	}
 	
+	//
+	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
+	//
+	// - matchscouts is the "queue"; need a pointer to indicate where we are
+	// TODO: Use _id, not name, because names can be modified!
+	// 2022-03-01, M.O'C: Adding 'org_key': org_key into the 2nd part of the "or" clause
+	const matchScouts = await utilities.find('users', 
+		{$or: [
+			{'name': {$in: availableArray}, 'org_key': org_key}, 
+			{'event_info.assigned': true, 'org_key': org_key}
+		]}, 
+		{ sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, 'name': 1} }
+	);
+	
+	logger.trace('*** Assigned + available, by seniority:');
+	for (let i in matchScouts)
+		logger.trace('member['+i+'] = ' + matchScouts[i].name);
+	
+	//
+	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	//
+	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
+
+	// Avoid crashing server if all matches at an event are done
+	let earliestTimestamp = 9999999999;
+	if (timestampArray && timestampArray[0]) {
+		let earliestMatch = timestampArray[0];
+		earliestTimestamp = earliestMatch.time;
+	}
+
+
+	// Clear 'assigned_scorer' from all unresolved team@matches
+	await utilities.bulkWrite('matchscouting', 
+		[{updateMany: {
+			filter: { org_key, event_key, time: { $gte: earliestTimestamp } }, 
+			update: { $unset: { 'assigned_scorer' : '' } }
+		}}]
+	);
+
 	
 }));
 
