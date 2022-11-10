@@ -200,6 +200,7 @@ let manualdata = require('./routes/manage/manualdata');
 let orgmembers = require('./routes/manage/members');
 let scoutingaudit = require('./routes/manage/scoutingaudit');
 let scoutingpairs = require('./routes/manage/scoutingpairs');
+let assignments = require('./routes/manage/assignments');
 //SCOUTRADIOZ ADMIN ROUTES
 let adminindex = require('./routes/admin/indexadmin');
 let externaldata = require('./routes/admin/externaldata');
@@ -217,6 +218,7 @@ app.use('/manage', manageindex);
 app.use('/manage/allianceselection', allianceselection);
 app.use('/manage/config', config);
 app.use('/manage/scoutingpairs', scoutingpairs);
+app.use('/manage/assignments', assignments);
 app.use('/manage/members', orgmembers);
 app.use('/manage/currentevent', currentevent);
 app.use('/manage/scoutingaudit', scoutingaudit);

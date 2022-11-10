@@ -212,6 +212,33 @@ hr{
 	left: 0px;
 }
 
+// Grids
+.responsive-grid {
+	display: grid;
+	grid-template-columns: auto auto auto; /* default 3 */
+	&.rg-1 { grid-template-columns: auto; }
+	&.rg-2 { grid-template-columns: auto auto; }
+	&.rg-3 { grid-template-columns: auto auto auto; }
+	&.rg-4 { grid-template-columns: auto auto auto auto; }
+	&.rg-5 { grid-template-columns: auto auto auto auto auto; }
+}
+@media(max-width:993px) {
+	.responsive-grid {
+		grid-template-columns: auto auto;
+		&.rg-1 { grid-template-columns: auto; }
+		&.rg-2 { grid-template-columns: auto auto; }
+		&.rg-3 { grid-template-columns: auto auto; }
+		&.rg-4 { grid-template-columns: auto auto auto; }
+		&.rg-5 { grid-template-columns: auto auto auto; }
+	}
+}
+@media(max-width:600px) {
+	.responsive-grid {
+		grid-template-columns: auto;
+		&.rg-1, &.rg-2, &.rg-3, &.rg-4, &.rg-5 { grid-template-columns: auto; }
+	}
+}
+
 .notification-card{
 	z-index: 3;
 	position: relative;

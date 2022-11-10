@@ -1,0 +1,91 @@
+extends ../../layout
+block content
+	div.w3-auto
+		h4=title
+		h2 Team@Match Allocation v2.0
+		form(action="/manage/assignments/matches/generate" method="post")
+			div(class="responsive-grid rg-4 w3-left-align")
+				each member in available
+					div(class="w3-padding")
+						input(type="checkbox" class="w3-check" name=`${member._id}|${member.name}` id='chk_'+member._id)
+						label(class="w3-text-white" for='chk_'+member._id) &nbsp;#{member.name} (#{member.org_info.subteam_key})
+						br
+			- var defaultBlockSize = 5;
+			p
+			label Allocate in blocks of&nbsp;
+			select(class="theme-input theme-inline-padding w3-no-border" style="float: none" type="text" name="blockSize")
+				each val in [1, 2, 3, 4, 5, 6, 7, 8]
+					if( val == defaultBlockSize )
+						option(value=val class="w3-bar-item" selected) #{val}
+					else
+						option(value=val class="w3-bar-item") #{val}
+			label &nbsp;matches
+			p
+			button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
+	script.
+		
+		function confirmThenPost(message, url) {
+			Confirm.show(message).then((result) => {
+				if (!result.cancelled) {
+					$.post(url, 
+						{}, 
+						function( data, status ){
+							if(data && data.message) {
+								// error
+								if (data.status && data.status >= 400)
+									NotificationCard.error(data.message);
+								// success/message
+								else
+									NotificationCard.show(data.message);
+							}
+						}
+					);
+				}
+			})
+		}
+		
+		function promptPass(message, url, numberDeleting){
+			
+			// Prompt user for their password
+			PasswordPrompt.show(message + "\n\nTo continue, enter your password.")
+				.then(result => {
+					if (result.cancelled === false) {
+						
+						if (numberDeleting && numberDeleting > 0) {
+							setTimeout(() => {
+								//- make ABSOLUTE SURE THEY WANNA PROCEED if they're actually gonna delete data
+								Confirm.show(`By proceeding, you will be *permanently deleting* the data from *${numberDeleting}* scouting assignments from _#{eventName}_. Are you sure you want to continue?`, {
+									yesText: 'Yes, proceed',
+									noText: 'Cancel',
+									yesTimeout: 2000
+								})
+									.then(result2 => {
+										if (result2.cancelled === false) {
+											doPostWithPassword(url, result.password);
+										}
+									})
+							}, 350);
+						}
+						else {
+							// Send request immediately if the user didn't cancel & there's nothing to delete
+							doPostWithPassword(url, result.password)
+						}
+					}
+				});
+		}
+		
+		function doPostWithPassword(url, password) {
+			$.post(url, {
+				password: password
+			}, 
+			function( data, status ){
+				if(data && data.message) {
+					// error
+					if (data.status && data.status >= 400)
+						NotificationCard.error(data.message);
+					// success/message
+					else
+						NotificationCard.show(data.message);
+				}
+			});
+		}
