@@ -24,7 +24,7 @@ router.get('/matches', wrap(async (req, res) => {
 	let eventKey = req.event.key;
 		
 	// Read matches from DB for specified event
-	let matches: Match[] = await utilities.find('matches', {'event_key': eventKey},{sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', {'event_key': eventKey}, {sort: {'time': 1}});
 		
 	res.render('./manage/currentevent/matches', {
 		title: 'Matches',

@@ -8,7 +8,6 @@ interface CompiledNavItem {
 	label: string;
 	href?: string;
 	sprite?: string;
-	icon?: string;
 	submenu?: CompiledNavItem[];
 }
 
@@ -17,7 +16,6 @@ type ResolvableValue<T> = T|((req: express.Request, res: express.Response) => T|
 interface NavItem {
 	label: ResolvableValue<string>;
 	href?: ResolvableValue<string>;
-	icon?: ResolvableValue<string>;
 	sprite?: ResolvableValue<string>;
 	visible?: ResolvableValue<boolean>;
 	submenu?: ResolvableValue<NavItem[]>;
@@ -58,9 +56,6 @@ class NavHelpers {
 				}
 				if (item.sprite) {
 					compiledItem.sprite = resolveToValue(item.sprite, req, res);
-				}
-				else if (item.icon) {
-					compiledItem.icon = resolveToValue(item.icon, req, res);
 				}
 				if (item.submenu) {
 					//recursively solve submenu
@@ -198,6 +193,7 @@ class NavHelpers {
 			sprite: 'settings',
 			visible: (req, res) => !!req.user && req.user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN,
 			submenu: [
+				// Manage members
 				{
 					label: '!layout.nav.manage.members.main',
 					submenu: [
@@ -211,6 +207,7 @@ class NavHelpers {
 						},
 					]
 				},
+				// Manage scouters
 				{
 					label: (req, res) => req.event ? req.msg('layout.nav.manage.scouters.event', {event: req.event.name}) : '!layout.nav.manage.scouters.main',
 					submenu: [
@@ -236,6 +233,7 @@ class NavHelpers {
 						},
 					]
 				},
+				// Manage event data
 				{
 					label: (req, res) => req.event ? req.msg('layout.nav.manage.event.event', {event: req.event.name}) : '!layout.nav.manage.event.main',
 					submenu: [
@@ -255,7 +253,27 @@ class NavHelpers {
 							label: '!layout.nav.manage.event.recalcderived',
 							href: '/admin/sync/recalcderived'
 						},
+						{
+							label: '!layout.nav.manage.event.editteams', 
+							href: '/manage/manualdata/teams',
+							sprite: 'edit',
+						},
+						{
+							label: '!layout.nav.manage.event.editmatchschedule',
+							href: '/manage/manualdata/matchschedule',
+							sprite: 'edit',
+						},
+						{
+							label: '!layout.nav.manage.event.editmatchresults',
+							href: '/manage/manualdata/matchresults',
+							sprite: 'edit',
+						},
 					]
+				},
+				{
+					label: (req, res) => req.msg('layout.nav.manage.event.setcurrent'),
+					href: '/manage#setCurrentEvent',
+					// sprite: 'first',
 				}
 			]
 		},

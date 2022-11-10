@@ -249,15 +249,34 @@ interface ConfirmOptions {
     noText?: string;
     yesTimeout?: number;
 }
+declare function debugToHTML(message: any): void;
+/**
+ * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
+ * @param cb Callback to run on a resize event.
+ */
+declare function onResize(cb: () => void): void;
+/**
+ * Assert a condition & display an error message to the user.
+ * @param condition Condition to test
+ * @param message Message to display
+ */
+declare function assert(condition: unknown, message?: any): asserts condition;
+/**
+ * Assert a condition & display an error message to the user WITHOUT a call stack.
+ * @param {boolean} condition Condition to test
+ * @param {string} message Message to display
+ */
+declare function lightAssert(condition: unknown, message?: any): asserts condition;
 declare function scrollToId(id: string): void;
 declare function share(orgKey: string | boolean): void;
 declare function copyClipboardDom(text: string): void;
+/**
+ * Measure the time interval to execute the callback function.
+ * @param cb Function to run
+ */
+declare function measureTime(cb: () => void): number;
 declare class Cookies {
     static get(key: string): any;
     static set(key: string, value: any, value2?: any): any;
     static remove(key: string): void;
 }
-declare function measureTime(cb: () => void): number;
-declare function debugToHTML(message: any): void;
-declare function assert(condition: boolean, message: any): void;
-declare function onResize(cb: () => void): void;

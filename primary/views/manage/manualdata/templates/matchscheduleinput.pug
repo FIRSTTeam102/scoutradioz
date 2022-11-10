@@ -2,15 +2,27 @@
 - if(!match.alliances) match.alliances = {blue: {team_keys: []}, red: {team_keys: []}} //to avoid undefined TypeError
 div(class="w3-col w3-padding" id=`MatchRow_${row_number}`)
 	//-Match number label
-	div(class="w3-col m2 w3-padding-small")
+	div(class="w3-col m1 w3-padding-small")
 		div(class="gear-label theme-inline-padding" id=`MatchLabel_${row_number}`)
-			label Match #{row_number < 10 ? "0" + row_number : row_number}:
+			if match.match_number
+				label Match ##{String(match.match_number).padStart(2, '0')}:
+			else
+				label Match ##{row_number < 10 ? "0" + row_number : row_number}:
+	- var d = null, timeLabel = '';
+	if match.time
+		- d = zoneTime(1000*match.time)
+		- timeLabel = d.toLocaleString(DateTime.TIME_SIMPLE)
+	//- Day input
+	div(class="w3-col m1 w3-padding-small")
+		select(class="w3-input theme-input w3-no-border DaySelector" data-time=(match.time*1000) name=`DayNumber_${row_number}`)
+			option(value="1") Loading...
+			option(value="2") Loading...
+			option(value="3") Loading...
+			option(value="4") Loading...
+			option(value="5") Loading...
 	//-Time input
 	div(class="w3-col m2 w3-padding-small")
-		if match.time
-			- var d = new Date(1000*match.time);
-			- var timeLabel = d.toLocaleString().split(" ")[1].substring(0,5);
-			- //var timeLabel = new Date(1000*match.time - 1000*60*60*5).toISOString().substring(11,16).replace("T"," ");
+		if match.time && timeLabel
 			input(class="w3-input theme-input w3-no-border theme-inline-padding TimeInput" type="text" value=timeLabel name=`SchedTimeInput_${row_number}`)
 		else
 			input(class="w3-input theme-input w3-no-border theme-inline-padding TimeInput" type="text" placeholder="Scheduled Time" name=`SchedTimeInput_${row_number}`)
@@ -55,7 +67,4 @@ div(class="w3-col w3-padding" id=`MatchRow_${row_number}`)
 			input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-red RedTeam3" type="text" value=match.alliances.red.team_keys[2].substring(3) name=`RedTeam3_${row_number}`)
 		else
 			input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-red RedTeam3" type="text" placeholder="3" name=`RedTeam3_${row_number}`)
-	if match.time
-		input(type="hidden" name=`SchedTime_${row_number}` id=`SchedTime_${row_number}` value=match.time * 1000)
-	else
-		input(type="hidden" name=`SchedTime_${row_number}` id=`SchedTime_${row_number}` value="-1")
+	input(type="hidden" name=`SchedTime_${row_number}` id=`SchedTime_${row_number}` value=(match.time ? match.time * 1000 : '-1'))

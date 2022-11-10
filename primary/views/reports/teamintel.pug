@@ -157,7 +157,7 @@ block content
 											- element.label = resolveLabelTemplate(element.label, teamKey)
 											h5(class="theme-text") #{element.label} <strong>#{match.scoringdata[element.id]}</strong>
 				
-				if (matches && matches.length > 9990)		
+				if (matches && matches.length > 0)		
 					h6.i!=msg('reports.teamMatchClick')
 					h6.i!=msg('reports.overallMatchClick')
 					h6(class="theme-text")

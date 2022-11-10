@@ -3,16 +3,15 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { Org, Event } from '@firstteam102/scoutradioz-types';
+import e, { assert } from '@firstteam102/http-errors';
+import type { Org, Event, Match, RankingPoints, Ranking } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('manualdata');
 
-// TODO: Update to 2020+ data structures
-
 router.all('/*', wrap(async (req, res, next) => {
 	//Require GLOBAL-admin-level authentication for every method in this route.
-	if (await req.authenticate (Permissions.ACCESS_GLOBAL_ADMIN)) {
+	if (await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {
 		next();
 	}
 }));
@@ -39,99 +38,43 @@ router.get('/teams', wrap(async (req, res) => {
  * @redirect /admin
  */
 router.post('/teams', wrap(async (req, res) => {
+	logger.addContext('funcName', 'manualdata.teams[post]');
 	
-	return res.send('Legacy code! Don\'t break the site!');
+	// return res.send('Legacy code! Don\'t break the site!');
 	
-	/*
+	// /*
 	logger.debug(req.body);
 	
-	let teamNumbersArray = [];
-	let teamInfoArray = [];
-	let tbaPromiseArray = [];
+	
+	// return res.send('Legacy code! Don\'t break the site!');
+	
+	let teamKeysArray: string[] = [];
+	const event_key = req.event.key; // don't need to have it part of the form, right?
 	
 	for(let teamNumberInputName in req.body){
 		//grab team number
 		let teamNumberInput = req.body[teamNumberInputName];
 		let teamNumber = parseInt(teamNumberInput);
 		
-		//if number is valid, proceed
-		if(!isNaN(teamNumber)){
-			teamNumbersArray.push(teamNumber);
+		//if number is valid and not duplicate, add to array
+		let thisTeamKey = 'frc' + teamNumber;
+		if(!isNaN(teamNumber) && !teamKeysArray.includes(thisTeamKey)){
+			teamKeysArray.push(thisTeamKey);
 		}
 	}
 	
-	let startTime = Date.now();
+	teamKeysArray.sort(); // tba sends team key list sorted as strings rather than as numbers
 	
-	//Fill an array of Promises for TBA info on each team.
-	for(var i = 0; i < teamNumbersArray.length; i++){
-		//request info from TBA
-		tbaPromiseArray[i] =  utilities.requestTheBlueAlliance(`team/frc${teamNumbersArray[i]}`);
-	}
+	let eventData: Event = await utilities.findOne('events', {key: event_key});
+	assert(eventData, 'Could not find event!');
 	
-	//Await all TBA Promises.
-	for(var i = 0; i < tbaPromiseArray.length; i++){
-		//await all requests
-		teamInfoArray[i] = await tbaPromiseArray[i];
-	}
+	logger.info(`Previous list of team_keys for event ${event_key}: ${JSON.stringify(eventData.team_keys)}`);
+	logger.info(`New list of team_keys for event ${event_key}: ${JSON.stringify(teamKeysArray)}`);
 	
-	logger.debug(`Done with TBA call in ${Date.now() - startTime} ms`);
+	const writeResult = await utilities.update('events', {key: event_key}, {$set: {team_keys: teamKeysArray}});
+	logger.debug(`Updated ${writeResult.modifiedCount} documents`);
 	
-	//Go through teamInfoArray and splice out any item that contains errors
-	for(var i = 0; i < teamInfoArray.length; i++){
-		var thisTeamInfo = teamInfoArray[i];
-		//if obj contains error, remove it
-		if(thisTeamInfo.Errors){
-			logger.debug('Going to remove: ' + JSON.stringify(thisTeamInfo));
-			teamInfoArray.splice(i, 1);
-			i--;
-		}
-	}
-	
-	let teamInfoNoDuplicates = [];
-	
-	//Rebuild array without duplicates.
-	for(var i = 0; i < teamInfoArray.length; i++){
-		
-		//grab team info to check for dupes
-		var thisTeamInfo = teamInfoArray[i];
-		let thisTeamNum = thisTeamInfo.team_number;
-		
-		let didFindDuplicate = false;
-		
-		logger.debug('================');
-		logger.debug('CHECKING TEAM ' + thisTeamNum);
-		
-		for(let j = 0; j < teamInfoNoDuplicates.length; j++){
-			
-			//grab team info to compare
-			let thatTeamInfo = teamInfoArray[j];
-			let thatTeamNum = thatTeamInfo.team_number;
-			
-			logger.debug('CMP: ' + thatTeamNum);
-			
-			//if duplicat exists, set true
-			if(thisTeamNum == thatTeamNum){
-				didFindDuplicate = true;
-				logger.debug('MATCH: Removing duplicate ' + thisTeamNum + ' from team list', true);
-			}
-		}
-		//Add to new array if no duplicates exist.
-		if(!didFindDuplicate){
-			teamInfoNoDuplicates.push(thisTeamInfo);
-			logger.debug('PUSHING ' + thisTeamNum);
-		}
-	}
-	
-	//Now, we have a list of all teams attending the event.
-	//Empty currentteams.
-	await utilities.remove('currentteams');
-	
-	//Now, insert into currentteams.
-	await utilities.insert('currentteams', teamInfoNoDuplicates);
-	
-	//Redirect with success message.
-	res.redirect('/manage?alert=Input teams successfully.');
-	*/
+	return res.redirect('/manage?alert=Updated team list successfully.');
 }));
 
 /**
@@ -171,22 +114,30 @@ router.post('/api/team', wrap(async (req, res) => {
  * @views manualdata/matchschedule
  */
 router.get('/matchschedule', wrap(async (req, res) => {
-	
-	let thisFuncName = '[GET] /manage/manualdata/matchschedule => ';
+	logger.addContext('funcName', 'manualdata.matchschedule[GET]');
 	
 	let event_key = req.event.key;
 	
-	logger.debug(`${thisFuncName} Getting matches`);
+	logger.debug('Getting matches');
 	
-	let matches = await utilities.find('matches', {'event_key': event_key});
+	let matches = await utilities.find('matches', 
+		{event_key, comp_level: 'qm'}, 
+		{sort: {match_number: 1}}
+	);
+	
+	let teamNumbers = req.teams ? req.teams.map((team) => team.team_number) : [];
+	let event = await utilities.findOne('events', {key: req.event.key}, {}, {allowCache: true});
 	
 	res.render('./manage/manualdata/matchschedule', {
 		title: 'Enter Match Schedule',
-		matches: matches
+		matches,
+		teamNumbers,
+		event,
 	});
 }));
 
 router.post('/matchschedule', wrap(async (req, res) => {
+	logger.addContext('funcName', 'manualdata.matchschedule[POST]');
 	
 	/*
 		"actual_time": "",
@@ -244,7 +195,7 @@ router.post('/matchschedule', wrap(async (req, res) => {
 		}
 	}
 	
-	logger.debug(matchArray);
+	logger.debug(`matchArray=${JSON.stringify(matchArray)}`);
 	
 	//We now have an array, comprised of every user match input, separated by each match.
 	//We need to rearrange the data to fit our database needs.
@@ -262,10 +213,10 @@ router.post('/matchschedule', wrap(async (req, res) => {
 		}
 	}
 	
-	logger.debug(matchArrayFiltered);
+	logger.debug(`matchArrayFiltered=${JSON.stringify(matchArrayFiltered)}`);
 	
 	//Now, we can rearrange our data.
-	let matchArrayFormatted = [];
+	let matchArrayFormatted: Match[] = [];
 	
 	for(let i = 0; i < matchArrayFiltered.length; i++){
 		
@@ -274,83 +225,98 @@ router.post('/matchschedule', wrap(async (req, res) => {
 		let schedTime = Math.floor( parseInt(match.SchedTime) / 1000 );
 		//Create formatted match thing
 		matchArrayFormatted[i] = {
-			'actual_time': '',
-			'alliances': {
-				'blue': {
-					'score': -1,
-					'team_keys': [
+			actual_time: '',
+			alliances: {
+				blue: {
+					dq_team_keys: [],
+					score: -1,
+					surrogate_team_keys: [],
+					team_keys: [
 						'frc' + match.BlueTeam1,
 						'frc' + match.BlueTeam2,
 						'frc' + match.BlueTeam3
-					]
+					],
 				},
-				'red': {
-					'score': -1,
-					'team_keys': [
+				red: {
+					dq_team_keys: [],
+					score: -1,
+					surrogate_team_keys: [],
+					team_keys: [
 						'frc' + match.RedTeam1,
 						'frc' + match.RedTeam2,
 						'frc' + match.RedTeam3
 					]
 				}
 			},
-			'comp_level': 'qm', //only support qualifying matches
-			'event_key': event_key,
-			'key': `${event_key}_qm${i + 1}`, //2019pahat_qm1 (# is i+1) 
-			'match_number': i + 1,
-			'post_result_time': schedTime, //idk what all this time stuff is, just gonna set it to sched time
-			'predicted_time': schedTime,
-			'set_number': 1,
-			'time': schedTime,
-			'winning_alliance': ''
+			comp_level: 'qm', //only support qualifying matches
+			event_key: event_key,
+			key: `${event_key}_qm${i + 1}`, //2019pahat_qm1 (# is i+1) 
+			match_number: i + 1,
+			post_result_time: schedTime, //idk what all this time stuff is, just gonna set it to sched time
+			predicted_time: schedTime,
+			set_number: 1,
+			time: schedTime,
+			winning_alliance: '',
+			score_breakdown: {
+				red: {},
+				blue: {},
+			},
+			videos: [],
 		};
 	}
 	
-	logger.debug(matchArrayFormatted);
+	// logger.debug(matchArrayFormatted);
 	
 	//Remove matches from db
-	await utilities.remove('matches', {'event_key': event_key});
+	await utilities.remove('matches', {event_key});
 	
 	//now insert matches into db
 	await utilities.insert('matches', matchArrayFormatted);
 	
-	res.redirect('./matchschedule');
+	res.redirect('/manage/manualdata/matchschedule?alert=Updated match schedule successfully.');
 }));
 
 /**
  * Manual input for correcting each match, if TBA is not accessible.
- * @url /manualdata/matches
- * @views manualdata/matches
+ * @url /manualdata/matchresults
+ * @views manualdata/matchresults
  */
-router.get('/matches', wrap(async (req, res) => {
+router.get('/matchresults', wrap(async (req, res) => {
 	
-	let event_key = req.event.key;
+	const event_key = req.event.key;
+	const year = req.event.year;
 	
-	let matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
+	let matches = await utilities.find('matches', {event_key}, {sort: {time: 1}});
+	let rankingpoints: RankingPoints = await utilities.findOne('rankingpoints', {year});
+	assert(rankingpoints, new e.InternalDatabaseError(`Couldn't find ranking point information for the year ${year}`));
 	
-	res.render('./manage/manualdata/matches', {
+	res.render('./manage/manualdata/matchresults', {
 		title: 'Input Match Outcomes',
-		matches: matches,
+		matches,
+		rankingpoints
 	});
 }));
 
 /** POST method for 
  * 
  */
-router.post('/matches', wrap(async (req, res) => {
+router.post('/matchresults', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matchresults[post]');
 	
 	let event_key = req.event.key;
+	const year = req.event.year;
 	
 	//Get list of matches from the database.
-	let matches = await utilities.find('matches', {'event_key': event_key}, {sort: {time: 1}});
-	
-	let startTime = Date.now();
+	const matches: Match[] = await utilities.find('matches', {event_key}, {sort: {time: 1}});
+	const rankingpoints: RankingPoints = await utilities.findOne('rankingpoints', {year});
+	assert(rankingpoints, new e.InternalDatabaseError(`Couldn't find ranking point information for the year ${year}`));
 	
 	//Build array of each match, from user input
 	let userInputGrouped: Dict<StringDict> = {};
 	
 	//go through body and group every piece of data
 	for(let elementName in req.body){
-		if (req.body[elementName]) {
+		if (typeof req.body[elementName] !== 'undefined') {
 			//console.log(`${elementName}: ${req.body[elementName]}`);
 			let elementContents = req.body[elementName];
 			
@@ -358,6 +324,10 @@ router.post('/matches', wrap(async (req, res) => {
 			let thisMatchKey = elementName.split('_')[1] + '_' + elementName.split('_')[2];
 			//e.g. BlueCompletedRocket or WinningAlliance
 			let thisElementType = elementName.split('_')[0];
+			
+			if (thisMatchKey === '2022flwp_qm25') {
+				console.log(thisMatchKey, elementName, elementContents);
+			}
 			
 			//if a match does not exist already, create new obj
 			if( !userInputGrouped[thisMatchKey] ){
@@ -372,9 +342,19 @@ router.post('/matches', wrap(async (req, res) => {
 		let match_key = match.key;
 		
 		let userInputThisMatch = userInputGrouped[match_key];
+		if (!userInputThisMatch) {
+			logger.debug(`No user input for match ${match_key}; skipping`);
+			continue;
+		}
 		
 		//Modify winning alliance
-		match.winning_alliance = userInputThisMatch.WinningAlliance;
+		switch (userInputThisMatch.WinningAlliance) {
+			case 'red': match.winning_alliance = 'red'; break;
+			case 'blue': match.winning_alliance = 'blue'; break;
+			case '': match.winning_alliance = ''; break;
+			default: 
+				throw new e.UserError(`Match ${match_key} WinningAlliance invalid (input: ${userInputThisMatch.WinningAlliance})`);
+		}
 		
 		//If score_brakdown has not yet been created, create it now.
 		if(!match.score_breakdown){
@@ -384,20 +364,19 @@ router.post('/matches', wrap(async (req, res) => {
 			};
 		}
 		
+		// 2022-11-10 JL: removed the check for bluescore/redscore being 0, because sometimes the score CAN be 0
 		//Modify blue score
-		match.alliances.blue.score = ( isNaN(parseInt(userInputThisMatch.BlueScore)) || userInputThisMatch.BlueScore == '0') ? -1 : parseInt(userInputThisMatch.BlueScore);
-		match.score_breakdown.blue.totalPoints = ( isNaN(parseInt(userInputThisMatch.BlueScore)) || userInputThisMatch.BlueScore == '0') ? -1 : parseInt(userInputThisMatch.BlueScore);
+		match.alliances.blue.score = isNaN(parseInt(userInputThisMatch.BlueScore)) ? -1 : parseInt(userInputThisMatch.BlueScore);
+		match.score_breakdown.blue.totalPoints = isNaN(parseInt(userInputThisMatch.BlueScore)) ? -1 : parseInt(userInputThisMatch.BlueScore);
 		//Modify red score
-		match.alliances.red.score = ( isNaN(parseInt(userInputThisMatch.RedScore)) || userInputThisMatch.RedScore == '0') ? -1 : parseInt(userInputThisMatch.RedScore);
-		match.score_breakdown.red.totalPoints = ( isNaN(parseInt(userInputThisMatch.RedScore)) || userInputThisMatch.RedScore == '0') ? -1 : parseInt(userInputThisMatch.RedScore);
-		//Modify blue RPs
-		match.score_breakdown.blue.habDockingRankingPoint = ( userInputThisMatch.BlueHabDock == 'on' ) ? true : false;
-		match.score_breakdown.blue.completeRocketRankingPoint = ( userInputThisMatch.BlueCompletedRocket == 'on' ) ? true : false;
-		//Modify red RPs
-		match.score_breakdown.red.habDockingRankingPoint = ( userInputThisMatch.RedHabDock == 'on' ) ? true : false;
-		match.score_breakdown.red.completeRocketRankingPoint = ( userInputThisMatch.RedCompletedRocket == 'on' ) ? true : false;
+		match.alliances.red.score = isNaN(parseInt(userInputThisMatch.RedScore)) ? -1 : parseInt(userInputThisMatch.RedScore);
+		match.score_breakdown.red.totalPoints = isNaN(parseInt(userInputThisMatch.RedScore)) ? -1 : parseInt(userInputThisMatch.RedScore);
+		// Ranking points
+		for (let rp of rankingpoints.attributes) {
+			match.score_breakdown.blue[rp.name] = !!userInputThisMatch[`Blue${rp.name}`]; // ex: BluecompleteRocketRankingPoint
+			match.score_breakdown.red[rp.name] = !!userInputThisMatch[`Red${rp.name}`];
+		}
 	}
-	
 	
 	//Remove matches
 	await utilities.remove('matches', {'event_key': event_key});
@@ -405,59 +384,45 @@ router.post('/matches', wrap(async (req, res) => {
 	//Now, insert updated list of matches
 	await utilities.insert('matches', matches);
 	
-	let endTime = Date.now();
-	logger.debug(`Done in ${endTime - startTime} ms`);
-	
-	
-	return;
-	
-	//// Recalculate rankings
-	/*
-		"dq" : 0,
-		"extra_stats" : [ 24 ],   // RP
-		"matches_played" : 10,
-		"qual_average" : null,
-		"rank" : 1,
-		"record" : {
-			"losses" : 1,
-			"ties" : 1,
-			"wins" : 8 },
-		"sort_orders" : [ 2.4, 261, 100, 141, 141, 0 ],
-		"team_key" : "frc1708"
-	*/
+	// Recalculate rankings
 
 	// Build an array of objects, one per team
+	assert(req.teams, new e.InternalDatabaseError('Teams not found'));
 	
-	/*
-	let teamsArray = await utilities.find('currentteams', {}, {sort: {'team_number': 1}});
-	mapTeamToOrder = {};
-	rankArray = [];
-	for (var i in teamsArray) {
-		let team = teamsArray[i];
-		thisRank = {
-			'dq': 0,
-			'extra_stats': [0],
-			'qual_average': null,
-			'record': {
-				'losses': 0,
-				'ties': 0,
-				'wins': 0 },
-			'sort_orders': [0, 0, 0],
-			'team_key': team.key,
-			'team_number': team.team_number };
+	let mapTeamToOrder: Dict<number> = {};
+	let rankArray: Ranking[] = [];
+	for (let i = 0; i < req.teams.length; i++) {
+		let team = req.teams[i];
+		let thisRank = {
+			dq: 0,
+			extra_stats: [0],
+			matches_played: 0,
+			qual_average: null,
+			rank: 0,
+			record: {
+				losses: 0,
+				ties: 0,
+				wins: 0 },
+			sort_orders: [0, 0, 0],
+			team_key: team.key,
+			event_key: event_key
+		};
 		rankArray.push(thisRank);
 		mapTeamToOrder[team.key] = i;
 	}
-	console.log('DEBUG: rankArray=' + JSON.stringify(rankArray));
-	console.log('DEBUG: mapTeamToOrder=' + JSON.stringify(mapTeamToOrder));
-	console.log('DEBUG: frc102=' + JSON.stringify(mapTeamToOrder['frc102']));
-
+	logger.trace('rankArray=' + JSON.stringify(rankArray));
+	logger.debug('mapTeamToOrder=' + JSON.stringify(mapTeamToOrder));
+	
+	const rankingPointNames: string[] = [];
+	for (let rp of rankingpoints.attributes) {
+		rankingPointNames.push(rp.name);
+	}
+	
 	// Go through every match, updating the rank array
-	for (var i in matches) {
+	for (let i in matches) {
 		let thisMatch = matches[i];
-
-		if (thisMatch.alliances.red.score != -1) {
-			//console.log("DEBUG: match=" + JSON.stringify(thisMatch));
+		// 2022-11-10 JL: adding comp_level check because only qualifying matches contribute to rankings
+		if (thisMatch.alliances.red.score != -1 && thisMatch.comp_level === 'qm') {
 			/*
 			match={
 				"alliances":{
@@ -480,7 +445,6 @@ router.post('/matches', wrap(async (req, res) => {
 				"set_number":1,
 				"winning_alliance":"red"}
 			*/
-	/*
 			// alliances
 			let redRP = 0;
 			let blueRP = 0;
@@ -488,104 +452,114 @@ router.post('/matches', wrap(async (req, res) => {
 			if (thisMatch.winning_alliance == 'red') { redRP = 2; redWin = 1; }
 			if (thisMatch.winning_alliance == 'blue') { blueRP = 2; blueWin = 1; }
 			if (thisMatch.winning_alliance == '') { redRP = 1; blueRP = 1; isTie = 1; }
-			if (thisMatch.score_breakdown.red.habDockingRankingPoint) redRP++;
-			if (thisMatch.score_breakdown.red.completeRocketRankingPoint) redRP++;
-			if (thisMatch.score_breakdown.blue.habDockingRankingPoint) blueRP++;
-			if (thisMatch.score_breakdown.blue.completeRocketRankingPoint) blueRP++;
+			for (let rpName of rankingPointNames) {
+				if (thisMatch.score_breakdown.red[rpName]) redRP++;
+				if (thisMatch.score_breakdown.blue[rpName]) blueRP++;
+			}
 			let redScore = thisMatch.alliances.red.score;
 			let blueScore = thisMatch.alliances.blue.score;
+			
+			if (thisMatch.alliances.red.team_keys.includes('frc8324') || thisMatch.alliances.blue.team_keys.includes('frc8324')) {
+				console.log(`\nmatch=${thisMatch.match_number}, redWin=${redWin} blueWin=${blueWin}`);
+			}
 
 			// red
-			for (var j in thisMatch.alliances.red.team_keys) {
-				var thisTeamKey = thisMatch.alliances.red.team_keys[j];
-				var thisRankIndex = mapTeamToOrder[thisTeamKey];
-				if (rankArray[thisRankIndex]) {
-					var currentRP = 0; if (rankArray[thisRankIndex].RP) currentRP = rankArray[thisRankIndex].RP;
-					var currentMatchesPlayed = 0; if (rankArray[thisRankIndex].matches_played) currentMatchesPlayed = rankArray[thisRankIndex].matches_played;
-					var currentWins = 0; var currentLosses = 0; var currentTies = 0;
-					if (rankArray[thisRankIndex].record) {
-						if (rankArray[thisRankIndex].record.wins) currentWins = rankArray[thisRankIndex].record.wins;
-						if (rankArray[thisRankIndex].record.losses) currentLosses = rankArray[thisRankIndex].record.losses;
-						if (rankArray[thisRankIndex].record.ties) currentTies = rankArray[thisRankIndex].record.ties;
-					}
-					var currentPointsFor = 0; if (rankArray[thisRankIndex].pointsFor) currentPointsFor = rankArray[thisRankIndex].pointsFor;
-					var currentPointsAgainst = 0; if (rankArray[thisRankIndex].pointsAgainst) currentPointsAgainst = rankArray[thisRankIndex].pointsAgainst;
-
-					currentRP += redRP; var thisRankValueArray = []; thisRankValueArray.push(currentRP);
-					currentMatchesPlayed++;
-					currentWins += redWin;
-					currentLosses += blueWin;
-					currentTies += isTie;
-					currentPointsFor += redScore;
-					currentPointsAgainst += blueScore;
-					var thisSortOrders = [];
-					thisSortOrders.push(currentRP/currentMatchesPlayed);
-					thisSortOrders.push(currentPointsFor);
-					thisSortOrders.push(currentPointsAgainst);
-
-					rankArray[thisRankIndex].matches_played = currentMatchesPlayed;
-					rankArray[thisRankIndex].extra_stats = thisRankValueArray;
-					rankArray[thisRankIndex].record = {};
-					rankArray[thisRankIndex].record.wins = currentWins;
-					rankArray[thisRankIndex].record.losses = currentLosses;
-					rankArray[thisRankIndex].record.ties = currentTies;
-					rankArray[thisRankIndex].sort_orders = thisSortOrders;
-
-					rankArray[thisRankIndex].RP = currentRP;
-					rankArray[thisRankIndex].pointsFor = currentPointsFor;
-					rankArray[thisRankIndex].pointsAgainst = currentPointsAgainst;
+			for (let j in thisMatch.alliances.red.team_keys) {
+				let thisTeamKey = thisMatch.alliances.red.team_keys[j];
+				let thisRankIndex = mapTeamToOrder[thisTeamKey];
+				assert(rankArray[thisRankIndex]);
+				let currentRP = 0; if (rankArray[thisRankIndex].RP) currentRP = rankArray[thisRankIndex].RP;
+				let currentMatchesPlayed = 0; if (rankArray[thisRankIndex].matches_played) currentMatchesPlayed = rankArray[thisRankIndex].matches_played;
+				let currentWins = 0; let currentLosses = 0; let currentTies = 0;
+				if (rankArray[thisRankIndex].record) {
+					if (rankArray[thisRankIndex].record.wins) currentWins = rankArray[thisRankIndex].record.wins;
+					if (rankArray[thisRankIndex].record.losses) currentLosses = rankArray[thisRankIndex].record.losses;
+					if (rankArray[thisRankIndex].record.ties) currentTies = rankArray[thisRankIndex].record.ties;
 				}
+				let currentPointsFor = 0; if (rankArray[thisRankIndex].pointsFor) currentPointsFor = rankArray[thisRankIndex].pointsFor;
+				let currentPointsAgainst = 0; if (rankArray[thisRankIndex].pointsAgainst) currentPointsAgainst = rankArray[thisRankIndex].pointsAgainst;
+
+				currentRP += redRP; let thisRankValueArray = []; thisRankValueArray.push(currentRP);
+				currentMatchesPlayed++;
+				currentWins += redWin;
+				currentLosses += blueWin;
+				currentTies += isTie;
+				currentPointsFor += redScore;
+				currentPointsAgainst += blueScore;
+				let thisSortOrders = [];
+				thisSortOrders.push(currentRP/currentMatchesPlayed);
+				thisSortOrders.push(currentPointsFor);
+				thisSortOrders.push(currentPointsAgainst);
+				if (thisTeamKey === 'frc8324') {
+					console.log(`wins=${currentWins}, losses=${currentLosses}`);
+				}
+
+				rankArray[thisRankIndex].matches_played = currentMatchesPlayed;
+				rankArray[thisRankIndex].extra_stats = thisRankValueArray;
+				rankArray[thisRankIndex].record = {
+					losses: currentLosses,
+					ties: currentTies,
+					wins: currentWins
+				};
+				rankArray[thisRankIndex].sort_orders = thisSortOrders;
+
+				rankArray[thisRankIndex].RP = currentRP;
+				rankArray[thisRankIndex].pointsFor = currentPointsFor;
+				rankArray[thisRankIndex].pointsAgainst = currentPointsAgainst;
 			}
 
 			// blue
-			for (var j in thisMatch.alliances.blue.team_keys) {
-				var thisTeamKey = thisMatch.alliances.blue.team_keys[j];
-				var thisRankIndex = mapTeamToOrder[thisTeamKey];
-				if (rankArray[thisRankIndex]) {
-					var currentRP = 0; if (rankArray[thisRankIndex].RP) currentRP = rankArray[thisRankIndex].RP;
-					var currentMatchesPlayed = 0; if (rankArray[thisRankIndex].matches_played) currentMatchesPlayed = rankArray[thisRankIndex].matches_played;
-					var currentWins = 0; var currentLosses = 0; var currentTies = 0;
-					if (rankArray[thisRankIndex].record) {
-						if (rankArray[thisRankIndex].record.wins) currentWins = rankArray[thisRankIndex].record.wins;
-						if (rankArray[thisRankIndex].record.losses) currentLosses = rankArray[thisRankIndex].record.losses;
-						if (rankArray[thisRankIndex].record.ties) currentTies = rankArray[thisRankIndex].record.ties;
-					}
-					var currentPointsFor = 0; if (rankArray[thisRankIndex].pointsFor) currentPointsFor = rankArray[thisRankIndex].pointsFor;
-					var currentPointsAgainst = 0; if (rankArray[thisRankIndex].pointsAgainst) currentPointsAgainst = rankArray[thisRankIndex].pointsAgainst;
-
-					currentRP += blueRP; var thisRankValueArray = []; thisRankValueArray.push(currentRP);
-					currentMatchesPlayed++;
-					currentWins += blueWin;
-					currentLosses += redWin;
-					currentTies += isTie;
-					currentPointsFor += blueScore;
-					currentPointsAgainst += redScore;
-					var thisSortOrders = [];
-					let rpRatio = currentRP/currentMatchesPlayed;
-					thisSortOrders.push(rpRatio);
-					thisSortOrders.push(currentPointsFor);
-					thisSortOrders.push(currentPointsAgainst);
-
-					rankArray[thisRankIndex].matches_played = currentMatchesPlayed;
-					rankArray[thisRankIndex].extra_stats = thisRankValueArray;
-					rankArray[thisRankIndex].record = {};
-					rankArray[thisRankIndex].record.wins = currentWins;
-					rankArray[thisRankIndex].record.losses = currentLosses;
-					rankArray[thisRankIndex].record.ties = currentTies;
-					rankArray[thisRankIndex].sort_orders = thisSortOrders;
-
-					rankArray[thisRankIndex].RP = currentRP;
-					//rankArray[thisRankIndex].rpPerMatch = rpRatio;
-					rankArray[thisRankIndex].pointsFor = currentPointsFor;
-					rankArray[thisRankIndex].pointsAgainst = currentPointsAgainst;
+			for (let j in thisMatch.alliances.blue.team_keys) {
+				let thisTeamKey = thisMatch.alliances.blue.team_keys[j];
+				let thisRankIndex = mapTeamToOrder[thisTeamKey];
+				assert(rankArray[thisRankIndex]);
+				let currentRP = 0; if (rankArray[thisRankIndex].RP) currentRP = rankArray[thisRankIndex].RP;
+				let currentMatchesPlayed = 0; if (rankArray[thisRankIndex].matches_played) currentMatchesPlayed = rankArray[thisRankIndex].matches_played;
+				let currentWins = 0; let currentLosses = 0; let currentTies = 0;
+				if (rankArray[thisRankIndex].record) {
+					if (rankArray[thisRankIndex].record.wins) currentWins = rankArray[thisRankIndex].record.wins;
+					if (rankArray[thisRankIndex].record.losses) currentLosses = rankArray[thisRankIndex].record.losses;
+					if (rankArray[thisRankIndex].record.ties) currentTies = rankArray[thisRankIndex].record.ties;
 				}
+				let currentPointsFor = 0; if (rankArray[thisRankIndex].pointsFor) currentPointsFor = rankArray[thisRankIndex].pointsFor;
+				let currentPointsAgainst = 0; if (rankArray[thisRankIndex].pointsAgainst) currentPointsAgainst = rankArray[thisRankIndex].pointsAgainst;
+
+				currentRP += blueRP; let thisRankValueArray = []; thisRankValueArray.push(currentRP);
+				currentMatchesPlayed++;
+				currentWins += blueWin;
+				currentLosses += redWin;
+				currentTies += isTie;
+				currentPointsFor += blueScore;
+				currentPointsAgainst += redScore;
+				let thisSortOrders = [];
+				let rpRatio = currentRP/currentMatchesPlayed;
+				thisSortOrders.push(rpRatio);
+				thisSortOrders.push(currentPointsFor);
+				thisSortOrders.push(currentPointsAgainst);
+				if (thisTeamKey === 'frc8324') {
+					console.log(`wins=${currentWins}, losses=${currentLosses}`);
+				}
+
+				rankArray[thisRankIndex].matches_played = currentMatchesPlayed;
+				rankArray[thisRankIndex].extra_stats = thisRankValueArray;
+				rankArray[thisRankIndex].record = {
+					losses: currentLosses,
+					ties: currentTies,
+					wins: currentWins
+				};
+				rankArray[thisRankIndex].sort_orders = thisSortOrders;
+
+				rankArray[thisRankIndex].RP = currentRP;
+				//rankArray[thisRankIndex].rpPerMatch = rpRatio;
+				rankArray[thisRankIndex].pointsFor = currentPointsFor;
+				rankArray[thisRankIndex].pointsAgainst = currentPointsAgainst;
 			}
 		}
 	}
-	console.log('DEBUG: rankArray=' + JSON.stringify(rankArray));
+	logger.trace('rankArray=' + JSON.stringify(rankArray));
 
 	// comparator for rankings - generally, higher numbers means 'lower' rank #
-	let compareRankings = function(a,b) {
+	let compareRankings = function(a: Ranking, b: Ranking) {
 		if (a.sort_orders && b.sort_orders) {
 			if (a.sort_orders[0] < b.sort_orders[0]) return 1;
 			if (a.sort_orders[0] > b.sort_orders[0]) return -1;
@@ -599,25 +573,20 @@ router.post('/matches', wrap(async (req, res) => {
 	};
 	// sort the rankings
 	let sortedRankArray = rankArray.sort(compareRankings);
-	// add in the rank values
-	// 2020-02-08, M.O'C: And add in the event_key
-	for (var i in sortedRankArray) {
+	// add in the rank values and event key
+	for (let i in sortedRankArray) {
 		sortedRankArray[i].rank = parseInt(i) + 1;
 		sortedRankArray[i].event_key = event_key;
 	}
-	console.log('DEBUG: sortedRankArray=' + JSON.stringify(sortedRankArray));
-
-	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	logger.trace('sortedRankArray=' + JSON.stringify(sortedRankArray));
+	
 	// Delete the current rankings
-	//await utilities.remove("currentrankings", {});
 	await utilities.remove('rankings', {'event_key': event_key});
 	// Insert into DB
-	//await utilities.insert("currentrankings", sortedRankArray);
 	await utilities.insert('rankings', sortedRankArray);
 
 	//Redirect to updatematches page with success alert.
-	res.redirect('/manage/manualdata/matches?alert=Updated match successfully.');
-	// */
+	res.redirect('/manage/manualdata/matchresults?alert=Updated match data successfully.');
 }));
 
 module.exports = router;

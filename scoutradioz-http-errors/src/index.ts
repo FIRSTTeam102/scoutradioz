@@ -93,6 +93,7 @@ export function assert(condition: unknown, message?: string|HttpError): asserts 
 }
 
 export default {
+	HttpError,
 	UserError,
 	UnauthorizedError,
 	ForbiddenError, 
