@@ -42,6 +42,7 @@ export declare class ServiceUnavailableError extends HttpError {
  */
 export declare function assert(condition: unknown, message?: string | HttpError): asserts condition;
 declare const _default: {
+    HttpError: typeof HttpError;
     UserError: typeof UserError;
     UnauthorizedError: typeof UnauthorizedError;
     ForbiddenError: typeof ForbiddenError;

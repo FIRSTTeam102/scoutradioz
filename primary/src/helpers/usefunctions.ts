@@ -1,6 +1,7 @@
 import { getLogger } from 'log4js';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import { DateTime, IANAZone, FixedOffsetZone } from 'luxon';	// Luxon lets us handle timezones and localization
+import type { HttpError } from '@firstteam102/http-errors';
 import e from '@firstteam102/http-errors';
 import Permissions from './permissions';
 import 'colors';
@@ -443,7 +444,7 @@ class UseFunctions {
 	/**
 	 * Handles all errors
 	 */
-	static errorHandler (err: e.HttpError, req: express.Request, res: express.Response, next: express.NextFunction) {
+	static errorHandler (err: HttpError, req: express.Request, res: express.Response, next: express.NextFunction) {
 		logger.addContext('funcName', 'errorHandler');
 		
 		let title;
