@@ -36,7 +36,7 @@
 		"glob": "~7.2.0",
 		"less": "~4.1.2",
 		"less-plugin-clean-css": "^1.5.1",
-		"minimatch": "~3.0.4",
+		"minimatch": "~3.0.5",
 		"oh-no-i-insist": "^1.1.1",
 		"ts-node": "^10.7.0",
 		"nodemon": "^2.0.20",
