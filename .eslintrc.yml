@@ -17,6 +17,7 @@ globals:
   PasswordPrompt: writable
   FormSubmission: writable
   $: readonly
+  luxon: readonly
   window: writable
 parserOptions:
   ecmaVersion: 2018

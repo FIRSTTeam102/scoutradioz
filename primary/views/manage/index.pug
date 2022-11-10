@@ -25,66 +25,81 @@ block content
 		div(class="w3-container w3-section")
 			h4 Member Management
 			a(href="/manage/scoutingaudit")
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Scouting audit
 			a(href="/manage/scoutingpairs")
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Scouting assignments
 			a(href="/manage/scoutingpairs/swappitassignments")
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Swap out/in pit scouts
 			a(href="/manage/scoutingpairs/swapmembers")
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Swap out/in match scouts
 			a(href="/manage/members")
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Manage members
 			a(href="/manage/members/present")
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Set who is present at current event
 			a(href="/manage/members/passwords")
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Audit/reset member passwords
 		div(class="w3-container w3-section")
-			h4 Current Event - #{current}
+			h4 
+				div Current Event - #{event_key}
+				div(class="unimportant") (#{eventName})
 			a(href="/manage/currentevent/matches") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span See matches for current event
 			a(href="/manage/allianceselection") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Alliance selection data
 			//- 2022-03-19 JL: No need to put dashboard/allianceselection in the manage homepage
 			//- a(href="/dashboard/allianceselection") 
-			//- 	div(class="gear-btn theme-link w3-btn w3-section")
+			//- 	div(class="gear-btn theme-link w3-btn")
 			//- 		span Track/simulate alliance selection
 			a(href="manage/currentevent/getcurrentteams") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Update list of current teams
 			a(href="/admin/sync/recalcderived") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Recalculate derived metrics
+			//- Manual data links
+			a(href="/manage/manualdata/teams")
+				div(class="gear-btn theme-link w3-btn")
+					span(class="sprite sp-16 sp-edit sp-inline")
+					span!=msg('layout.nav.manage.event.editteams')
+			a(href="/manage/manualdata/matchschedule")
+				div(class="gear-btn theme-link w3-btn")
+					span(class="sprite sp-16 sp-edit sp-inline")
+					span!=msg('layout.nav.manage.event.editmatchschedule')
+			a(href="/manage/manualdata/matchresults")
+				div(class="gear-btn theme-link w3-btn")
+					span(class="sprite sp-16 sp-edit sp-inline")
+					span!=msg('layout.nav.manage.event.editmatchresults')
 		div(class="w3-container w3-section")
 			h4 Organization Configuration
 			//a(href="/manage/config/pitsurvey") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Configure pit survey layout
 			a(href="/manage/config/editform?form_type=pitscouting") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Set up Pit Scouting form
 			a(href="/manage/config/editform?form_type=matchscouting") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Set up Match Scouting form
 			a(href="/user/preferences/reportcolumns") 
-				div(class="gear-btn theme-link w3-btn w3-section")
+				div(class="gear-btn theme-link w3-btn")
 					span Configure report columns
-			form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword")
+			form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword" class="w3-section")
 				div(class="w3-padding-small w3-show-inline-block")
 					input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")
 				div(class="w3-padding-small w3-show-inline-block")
 					button#btnSubmit(class="theme-submit w3-btn" onclick="confirmSetDefaultPassword()") Change default password for #{org.nickname}
-		div(class="w3-container w3-section")
-			h4 Set current event
-			form#setCurrentEvent(name="setCurrentEvent" method="post" action="/manage/setcurrent")
+		div(class="w3-container w3-section" id="setCurrentEvent")
+			h4!=msg('layout.nav.manage.event.setcurrent')
+			form(name="setCurrentEvent" method="post" action="/manage/setcurrent")
 				div(class="w3-threequarter")
 					div(class="w3-left w3-padding-small")
 						select(class="theme-input w3-left" id="eventYearSelect")

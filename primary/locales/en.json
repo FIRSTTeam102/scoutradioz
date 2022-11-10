@@ -96,7 +96,11 @@
 					"matches": "Matches",
 					"allianceselection": "Alliance selection data",
 					"getcurrentteams": "Update list of teams",
-					"recalcderived": "Recalculate derived metrics"
+					"recalcderived": "Recalculate derived metrics",
+					"editteams": "Edit team list",
+					"editmatchschedule": "Edit match schedule",
+					"editmatchresults": "Edit match results",
+					"setcurrent": "Set current event"
 				}
 			},
 			"admin": "Admin",

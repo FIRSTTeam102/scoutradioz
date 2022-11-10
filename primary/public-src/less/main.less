@@ -51,7 +51,12 @@
 	--sprites-url: url('/images/sprites.png');
 }
 
-.theme-link{color: @black!important; background-color: @button-primary!important}
+.theme-link{
+	color: @black!important; background-color: @button-primary!important;
+	& .sprite {
+		.sprite.sp-black;
+	}
+}
 .theme-input{color: @black!important; background-color: @secondary!important}
 .theme-input-link{color: @black!important; background-color: @button-primary!important}
 .theme-dim,.theme-grey{color:@text-primary!important;background-color:@dark!important}
