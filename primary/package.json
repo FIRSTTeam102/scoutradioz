@@ -76,7 +76,7 @@
     "luxon": "^2.3.1",
     "marked": "^4.0.16",
     "mongodb": "~4.5.0",
-    "passport": "^0.5.2",
+    "passport": "^0.6.0",
     "pug": "^3.0.2",
     "sanitize-html": "^2.7.0",
     "serve-favicon": "^2.5.0",
