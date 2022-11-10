@@ -26,15 +26,17 @@ $(() => {
 	}
 });
 
+
+declare function debugToHTML(message: any): void;
+/**
+ * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
+ * @param cb Callback to run on a resize event.
+ */
+declare function onResize(cb: () => void): void; 
 (() => {
-	
-	
+		
 	const resizeCallbacks: Array<() => void> = [];
 	
-	/**
-	 * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
-	 * @param cb Callback to run on a resize event.
-	 */
 	window.onResize = function(cb: () => void) {
 		resizeCallbacks.push(cb);
 		cb(); // Run the callback once
@@ -57,21 +59,6 @@ $(() => {
 		}
 	});
 	
-	/**
-	 * Assert a condition & display an error message to the user.
-	 * @param {boolean} condition Condition
-	 * @param {string} message Message to display
-	 */
-	window.assert = function (condition, message) {
-		if (!condition) {
-			let x = new Error();
-			NotificationCard.error(
-				`ERROR: ${message}\nPlease report as an issue on our GitHub page.\n\nCall stack: ${x.stack}`, 
-				{exitable: true, ttl: 0}
-			);
-		}
-	};
-	
 	let debugLogger = document.createElement('div');
 	$(debugLogger).css({
 		'background-color': 'white',
@@ -82,16 +69,6 @@ $(() => {
 		'width': '25%',
 		'padding': '8px 16px',
 	});
-	
-	/**
-	 * Measure the time interval to execute the callback function.
-	 * @param cb Function to run
-	 */
-	window.measureTime = function(cb: () => void) {
-		let st = performance.now();
-		cb();
-		return performance.now() - st;
-	};
 	
 	window.debugToHTML = function(message: string) {
 		
@@ -121,6 +98,38 @@ $(() => {
 		$(debugLogger).append(newTextElem);
 	};
 })();
+	
+/**
+ * Assert a condition & display an error message to the user.
+ * @param condition Condition to test
+ * @param message Message to display
+ */
+function assert(condition: unknown, message?: any): asserts condition {
+	if (!condition) {
+		let err = new Error();
+		NotificationCard.error(
+			`ERROR: ${message}\nPlease report as an issue on our GitHub page.\n\nCall stack: ${err.stack}`, 
+			{exitable: true, ttl: 0}
+		);
+		throw err;
+	}
+}
+
+/**
+ * Assert a condition & display an error message to the user WITHOUT a call stack.
+ * @param {boolean} condition Condition to test
+ * @param {string} message Message to display
+ */
+function lightAssert(condition: unknown, message?: any): asserts condition {
+	if (!condition) {
+		let err = new Error();
+		NotificationCard.error(
+			`ERROR: ${message}`,
+			{exitable: true, ttl: 0}
+		);
+		throw err;
+	}
+}
 
 function scrollToId(id: string) {
 	let elem = document.getElementById(id);
@@ -183,14 +192,19 @@ function copyClipboardDom(text: string) {
 		NotificationCard.error(`Could not copy to clipboard. Error: ${err.message}`);
 	}
 }
+	
+/**
+ * Measure the time interval to execute the callback function.
+ * @param cb Function to run
+ */
+function measureTime(cb: () => void) : number {
+	let st = performance.now();
+	cb();
+	return performance.now() - st;
+}
 
 declare class Cookies {
 	static get(key: string): any;
 	static set(key: string, value: any, value2?: any): any;
 	static remove(key: string): void;
 }
-
-declare function measureTime(cb: () => void) : number;
-declare function debugToHTML(message: any): void;
-declare function assert(condition: boolean, message: any): void;
-declare function onResize(cb: () => void): void; 
