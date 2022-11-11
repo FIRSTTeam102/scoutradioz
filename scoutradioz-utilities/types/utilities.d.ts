@@ -1,7 +1,22 @@
 import NodeCache from 'node-cache';
-import { ObjectId, MongoClient, Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult } from 'mongodb';
-import { Request, Response, NextFunction } from 'express';
+import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators } from 'mongodb';
+import { ObjectId, MongoClient } from 'mongodb';
+import type { Request, Response, NextFunction } from 'express';
 declare const Client: any;
+/**
+ * Valid primitives for use in mongodb queries
+ */
+declare type ValidQueryPrimitive = string | number | undefined | null | boolean;
+interface QueryItem extends Omit<FilterOperators<any>, '_id'>, RootFilterOperators<any> {
+    [key: string]: any;
+}
+/**
+ * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
+ */
+export interface FilterQuery {
+    _id?: ObjectId | string;
+    [key: string]: QueryItem | ValidQueryPrimitive;
+}
 /**
  * Optional settings for configurating SR-Utilities.
  * @param cache
@@ -90,7 +105,7 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @param cacheOption Caching options.
      */
-    find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]>;
+    find(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]>;
     /**
      * Asynchronous "findOne" function to a collection specified in first parameter.
      * @param collection Collection to findOne in.
@@ -98,7 +113,7 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @param cacheOptions Caching options.
      */
-    findOne(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>;
+    findOne(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>;
     /**
      * Asynchronous "update" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -107,7 +122,7 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @returns {WriteResult} writeResult
      */
-    update(collection: string, query: Filter<MongoDocument>, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>;
+    update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>;
     /**
      * Asynchronous "aggregate" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -131,7 +146,7 @@ export declare class Utilities {
      * @param query The query for filtering the set of documents to which we apply the distinct filter.
      * @returns Distinct values for the specified field
      */
-    distinct(collection: string, field: string, query: Filter<MongoDocument>): Promise<any[]>;
+    distinct(collection: string, field: string, query: FilterQuery): Promise<any[]>;
     /**
      * Asynchronous "bulkWrite" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -146,7 +161,7 @@ export declare class Utilities {
      * @param query Filter for element/s to remove.
      * @return {Promise<DeleteResult>} writeResult
      */
-    remove(collection: string, query?: Filter<MongoDocument>): Promise<DeleteResult>;
+    remove(collection: string, query?: FilterQuery): Promise<DeleteResult>;
     /**
      * Asynchronous "insert" function to a collection specified in first parameter.
      * @param collection Collection to insert into.
