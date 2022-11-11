@@ -66,6 +66,16 @@
 		position: relative;
 		top: 2px;
 	}
+
+	// CD 2022-11-11: made headerbar fixed to viewport
+	position: fixed;
+	height: @headerbar-height;
+	width: 100%;
+	z-index: 100;
+
+	&>div{
+		height: @headerbar-height;
+	}
 }
 .footer{background-color: @footer;}
 

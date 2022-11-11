@@ -2,7 +2,7 @@ import Permissions from './permissions';
 import type express from 'express';
 
 /**
- * Nav item that's sent to nav.pug.
+ * Nav item that's sent to layout.pug.
  */
 interface CompiledNavItem {
 	label: string;

@@ -24,6 +24,8 @@
 @footer: @black;
 @placeholder-color: #bbb;
 
+@headerbar-height: 45px;
+
 :root {
 	color-scheme: dark;
 
@@ -169,17 +171,8 @@ html{
 #page{
 	min-height: 100%;
 	min-width: 100%;
+	font-size: 1.1em;
 }
-#page::after{
-	content: "";
-	display: block;
-	height: 240px;
-}
-@media(max-width: 600px){
-	#page::after{height: 160px;}
-}
-
-
 /* For spacers */
 .theme-spacer{
 	border-collapse: collapse;
@@ -213,7 +206,7 @@ hr{
 	position: fixed;
 	z-index: 2;
 	width: 100%;
-	top: 45px;
+	top: @headerbar-height;
 	left: 0px;
 }
 
@@ -309,4 +302,10 @@ hr{
 	& .upcoming-highlighted-team::after {
 		border-color: transparent black transparent transparent;
 	}
+}
+
+#content-container {
+	overflow-x: auto;
+	//- CD 2022-11-11: made headerbar fixed to viewport, added margin-top to force content below the bar
+	margin-top: @headerbar-height;
 }

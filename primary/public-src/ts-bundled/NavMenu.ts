@@ -50,7 +50,7 @@ class NavigationBar{
 		this.barElem = $('#headerbar');
 		this.overlayElem = $('#overlay');
 
-		//Take menu title & footer branding variables from inline script in nav.pug		
+		//Take menu title & footer branding variables from inline script in layout.pug		
 		if (typeof navMenuTitle === 'string') this.title = navMenuTitle;
 		else this.title = 'Menu';
 		if (footerContents instanceof Array) this.footerContents = footerContents;
@@ -75,13 +75,13 @@ class NavigationBar{
 					'all': ['border-full'],
 				},
 				navbars: [
-					// Locale selector (locales is set in nav.pug)
+					// Locale selector (locales is set in layout.pug)
 					{
 						use: this.locales.length > 0, // only show when there are multiple locales
 						position: 'bottom',
 						content: `<select class="no-outline" id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${locale.name}</option>`)}</select>`
 					},
-					//Branding on bottom of menu (footerContents is set in nav.pug)
+					//Branding on bottom of menu (footerContents is set in layout.pug)
 					{
 						position: 'bottom',
 						content: this.footerContents,
