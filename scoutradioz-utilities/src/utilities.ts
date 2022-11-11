@@ -17,9 +17,9 @@ logger.level = process.env.LOG_LEVEL || 'info';
 /**
  * Valid primitives for use in mongodb queries
  */
-type ValidQueryPrimitive = string|number|undefined|null|boolean;
+type ValidQueryPrimitive = string|number|undefined|null|boolean|ObjectId;
 
-interface QueryItem extends Omit<FilterOperators<any>, '_id'>, RootFilterOperators<any> {
+interface QueryItem<T = any> extends Omit<FilterOperators<T>, '_id'>, RootFilterOperators<T> {
 	[key: string]: any;
 }
 
@@ -27,7 +27,7 @@ interface QueryItem extends Omit<FilterOperators<any>, '_id'>, RootFilterOperato
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-	_id?: ObjectId|string;
+	_id?: ObjectId|string|FilterOperators<ObjectId>;
 	[key: string]: QueryItem|ValidQueryPrimitive;
 }
 
