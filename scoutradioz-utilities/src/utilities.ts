@@ -3,7 +3,7 @@
 import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, 
 	Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions,
-	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult } from 'mongodb';
+	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators } from 'mongodb';
 import { ObjectId, MongoClient } from 'mongodb';
 import crypto from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
@@ -13,6 +13,23 @@ const Client = require('node-rest-client').Client;
 
 const logger = log4js.getLogger('utilities');
 logger.level = process.env.LOG_LEVEL || 'info';
+
+/**
+ * Valid primitives for use in mongodb queries
+ */
+type ValidQueryPrimitive = string|number|undefined|null|boolean;
+
+interface QueryItem extends Omit<FilterOperators<any>, '_id'>, RootFilterOperators<any> {
+	[key: string]: any;
+}
+
+/**
+ * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
+ */
+export interface FilterQuery {
+	_id?: ObjectId|string;
+	[key: string]: QueryItem|ValidQueryPrimitive;
+}
 
 /**
  * Optional settings for configurating SR-Utilities.
@@ -167,7 +184,7 @@ export class Utilities {
 				url = await this.getDBurl();
 				this.urls[tier] = url;
 				
-				logger.trace(`(getDB) Got url, url=${url}, tier=${tier} this.activeTier=${this.activeTier}`);
+				if (this.options.debug) logger.trace(`(getDB) Got url, url=${url}, tier=${tier} this.activeTier=${this.activeTier}`);
 				
 				this.open(url)
 					.then(([client, db]) => {
@@ -223,7 +240,7 @@ export class Utilities {
 				//renew lastRequestTime
 				this.lastRequestTime[tier] = Date.now();
 				
-				logger.trace('(getDB) returning db');
+				if (this.options.debug) logger.trace('(getDB) returning db');
 				
 				resolve(db);
 			}
@@ -237,13 +254,13 @@ export class Utilities {
 	 */
 	getDBurl(): Promise<string> {
 		logger.addContext('funcName', 'getDBurl');
-		logger.trace('Returning promise');
+		if (this.options.debug) logger.trace('Returning promise');
 		
 		return new Promise((resolve, reject) => {
 			//only execute when utilities.js is ready
 			this.whenReady(() => {
 				logger.addContext('funcName', 'getDBurl(whenReady cb)');
-				logger.trace('BEGIN');
+				if (this.options.debug) logger.trace('BEGIN');
 				//if no config is provided
 				if (!this.dbConfig) {
 					logger.warn('No database config provided; Defaulting to localhost:27017/app');
@@ -274,16 +291,16 @@ export class Utilities {
 	 */
 	whenReady(cb: () => void) {
 		logger.addContext('funcName', 'whenReady');
-		logger.trace('ENTER');
+		if (this.options.debug) logger.trace('ENTER');
 		
 		//if state is already ready, then execute immediately
 		if (this.ready == true) {
-			logger.trace('ready=true; executing cb');
+			if (this.options.debug) logger.trace('ready=true; executing cb');
 			cb();
 		}
 		//if not ready, then add request to queue
 		else {
-			logger.trace('ready=false; adding cb to queue');
+			if (this.options.debug) logger.trace('ready=false; adding cb to queue');
 			this.whenReadyQueue.push(cb);
 		}
 		
@@ -317,7 +334,7 @@ export class Utilities {
 	 * @param options Query options, such as sort.
 	 * @param cacheOption Caching options.
 	 */
-	async find(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]> {
+	async find(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
@@ -337,7 +354,7 @@ export class Utilities {
 		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 		query = this.castID(query);
 		
-		logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
 		let timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
@@ -346,24 +363,24 @@ export class Utilities {
 		//If cache is enabled
 		if (cacheOptions.allowCache === true && this.options.cache.enable === true) {
 			
-			logger.trace('Caching enabled');
+			if (this.options.debug) logger.trace('Caching enabled');
 			let hashedQuery = await this.hashQuery('find', collection, query, options);
-			logger.trace(`(find) Request Hash: ${hashedQuery}`);
+			if (this.options.debug) logger.trace(`(find) Request Hash: ${hashedQuery}`);
 			
 			let cachedRequest: MongoDocument[] | undefined = this.cache.get(hashedQuery);
 			
 			//Look in cache for the query
 			if (cachedRequest) {
 				
-				logger.trace(`Serving request from cache (find:${collection})`);
-				logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
+				if (this.options.debug) logger.trace(`Serving request from cache (find:${collection})`);
+				if (this.options.debug) logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
 				this.consoleTimeEnd(timeLogName);
 				
 				returnData = cachedRequest;
 			}
 			//If query has not yet been cached
 			else {
-				logger.trace(`Caching request (find:${collection})`);
+				if (this.options.debug) logger.trace(`Caching request (find:${collection})`);
 				
 				//Request db
 				let db = await this.getDB();
@@ -371,7 +388,7 @@ export class Utilities {
 				//Cache response (Including maxAge before automatic deletion)
 				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 				
-				logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
+				if (this.options.debug) logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
 				this.consoleTimeEnd(timeLogName);
 				
 				returnData = cachedRequest;
@@ -383,7 +400,7 @@ export class Utilities {
 			let db = await this.getDB();
 			//Request db
 			let data = await db.collection(collection).find(query, options).toArray();
-			// logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
+			// if (this.options.debug) logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 			this.consoleTimeEnd(timeLogName);
 			
 			returnData = data;
@@ -400,7 +417,7 @@ export class Utilities {
 	 * @param options Query options, such as sort.
 	 * @param cacheOptions Caching options.
 	 */
-	async findOne(collection: string, query: Filter<MongoDocument>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>{
+	async findOne(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>{
 		logger.addContext('funcName', 'findOne');
 		
 		//Collection type filter
@@ -420,7 +437,7 @@ export class Utilities {
 		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 		query = this.castID(query);
 		
-		logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
 		let timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
@@ -429,24 +446,24 @@ export class Utilities {
 		//If cache is enabled
 		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
 			
-			logger.trace('Caching enabled');
+			if (this.options.debug) logger.trace('Caching enabled');
 			let hashedQuery = await this.hashQuery('findOne', collection, query, options);
-			logger.trace(`(findOne) Request Hash: ${hashedQuery}`);
+			if (this.options.debug) logger.trace(`(findOne) Request Hash: ${hashedQuery}`);
 			
 			let cachedRequest: MongoDocument | undefined | null = this.cache.get(hashedQuery);
 			
 			//Look in cache for the query
 			if (cachedRequest) {
 				
-				logger.trace(`Serving request from cache (findOne:${collection})`);
-				logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+				if (this.options.debug) logger.trace(`Serving request from cache (findOne:${collection})`);
+				if (this.options.debug) logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 				this.consoleTimeEnd(timeLogName);
 				
 				returnData = cachedRequest;
 			}
 			//If query has not yet been cached
 			else {
-				logger.trace(`Caching request (findOne:${collection})`);
+				if (this.options.debug) logger.trace(`Caching request (findOne:${collection})`);
 				
 				//Request db
 				let db = await this.getDB();
@@ -454,7 +471,7 @@ export class Utilities {
 				//Cache response (Including maxAge before automatic deletion)
 				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 				
-				logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+				if (this.options.debug) logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 				this.consoleTimeEnd(timeLogName);
 				
 				returnData = cachedRequest;
@@ -465,8 +482,7 @@ export class Utilities {
 			//Request db
 			let db = await this.getDB();
 			data = await db.collection(collection).findOne(query, options);
-			logger.trace(`Not cached (findOne:${collection})`);
-			// logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
+			if (this.options.debug) logger.trace(`Not cached (findOne:${collection})`);
 			this.consoleTimeEnd(timeLogName);
 			
 			returnData = data;
@@ -484,7 +500,7 @@ export class Utilities {
 	 * @param options Query options, such as sort.
 	 * @returns {WriteResult} writeResult
 	 */
-	async update(collection: string, query: Filter<MongoDocument>, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>{
+	async update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>{
 		logger.addContext('funcName', 'update');
 		
 		//Collection filter
@@ -499,13 +515,13 @@ export class Utilities {
 		if (typeof options != 'object') throw new TypeError('Utilities.update: Options must be of type object');
 		query = this.castID(query);
 		
-		logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
+		if (this.options.debug) logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
 		let timeLogName = `update: ${collection}`;
 		this.consoleTime(timeLogName);
 		
 		let queryHashFind = await this.hashQuery('find', collection, query, options);
 		let queryHashFindOne = await this.hashQuery('findOne', collection, query, options);
-		logger.trace(`find hash: ${queryHashFind}, findOne hash: ${queryHashFindOne}`);
+		if (this.options.debug) logger.trace(`find hash: ${queryHashFind}, findOne hash: ${queryHashFindOne}`);
 		
 		//If cached responses for either hashed query exist, then delete them
 		this.cache.del(queryHashFind);
@@ -515,7 +531,6 @@ export class Utilities {
 		let db = await this.getDB();
 		let writeResult = await db.collection(collection).updateMany(query, update, options);
 		
-		// logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 		this.consoleTimeEnd(timeLogName);
 		
 		logger.removeContext('funcName');
@@ -548,30 +563,30 @@ export class Utilities {
 		
 		let timeLogName = `agg: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
-		logger.trace(`${collection}, ${JSON.stringify(pipeline)}`);
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(pipeline)}`);
 		
 		let returnData: MongoDocument[], data; 
 		//If cache is enabled
 		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
 			
-			logger.trace('Caching enabled');
+			if (this.options.debug) logger.trace('Caching enabled');
 			let hashedQuery = await this.hashQuery('aggregate', collection, pipeline, {});
-			logger.trace(`(aggregate) Request Hash: ${hashedQuery}`);
+			if (this.options.debug) logger.trace(`(aggregate) Request Hash: ${hashedQuery}`);
 			
 			let cachedRequest: MongoDocument[] | undefined = this.cache.get(hashedQuery);
 			
 			//Look in cache for the query
 			if (cachedRequest) {
 				
-				logger.trace(`Serving request from cache (aggregate:${collection})`);
-				logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+				if (this.options.debug) logger.trace(`Serving request from cache (aggregate:${collection})`);
+				if (this.options.debug) logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 				this.consoleTimeEnd(timeLogName);
 				
 				returnData = cachedRequest;
 			}
 			//If query has not yet been cached
 			else {
-				logger.trace(`Caching request (aggregate:${collection})`);
+				if (this.options.debug) logger.trace(`Caching request (aggregate:${collection})`);
 				
 				//Request db
 				let db = await this.getDB();
@@ -579,7 +594,7 @@ export class Utilities {
 				//Cache response (Including maxAge before automatic deletion)
 				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 				
-				logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
+				if (this.options.debug) logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 				this.consoleTimeEnd(timeLogName);
 				
 				returnData = cachedRequest;
@@ -592,8 +607,7 @@ export class Utilities {
 			let db = await this.getDB();
 			data = await db.collection(collection).aggregate(pipeline).toArray();
 			
-			logger.trace(`Not cached (aggregate:${collection})`);
-			// logger.trace(`result: ${JSON.stringify(data)}`);
+			if (this.options.debug) logger.trace(`Not cached (aggregate:${collection})`);
 			this.consoleTimeEnd(timeLogName);
 			
 			//Return (Promise to get) data
@@ -641,7 +655,7 @@ export class Utilities {
 	 * @param query The query for filtering the set of documents to which we apply the distinct filter.
 	 * @returns Distinct values for the specified field
 	 */
-	async distinct(collection: string, field: string, query: Filter<MongoDocument>){
+	async distinct(collection: string, field: string, query: FilterQuery){
 		logger.addContext('funcName', 'distinct');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -657,13 +671,13 @@ export class Utilities {
 		let timeLogName = `distinct: ${collection}`;
 		this.consoleTime(timeLogName);
 		
-		logger.trace(`${collection}, ${JSON.stringify(query)}`);
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}`);
 		
 		//Find in collection with query and options
 		let db = await this.getDB();
 		let data = await db.collection(collection).distinct(field, query);
 		
-		// logger.trace(`result: ${JSON.stringify(data)}`);
+		// if (this.options.debug) logger.trace(`result: ${JSON.stringify(data)}`);
 		this.consoleTimeEnd(timeLogName);
 		
 		logger.removeContext('funcName');
@@ -701,13 +715,13 @@ export class Utilities {
 			throw new TypeError('Utilities.bulkWrite: options must be of type object');
 		}
 		
-		logger.trace(`${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(options)}`);
+		if (this.options.debug) logger.trace(`${collection}, operations: ${JSON.stringify(operations)}, param: ${JSON.stringify(options)}`);
 
 		//Update in collection with options
 		let db = await this.getDB();
 		let writeResult = await db.collection(collection).bulkWrite(operations, options);
 		
-		logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
+		if (this.options.debug) logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 		
 		logger.removeContext('funcName');
 		//return result
@@ -720,7 +734,7 @@ export class Utilities {
 	 * @param query Filter for element/s to remove.
 	 * @return {Promise<DeleteResult>} writeResult
 	 */
-	async remove(collection: string, query?: Filter<MongoDocument>): Promise<DeleteResult>{
+	async remove(collection: string, query?: FilterQuery): Promise<DeleteResult>{
 		logger.addContext('funcName', 'remove');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -732,13 +746,13 @@ export class Utilities {
 		if(typeof query != 'object') throw new TypeError('utilities.remove: query must be of type object');
 		query = this.castID(query);
 		
-		logger.trace(`${collection}, param: ${JSON.stringify(query)}`);
+		if (this.options.debug) logger.trace(`${collection}, param: ${JSON.stringify(query)}`);
 		
 		//Remove in collection with query
 		let db = await this.getDB();
 		let writeResult = await db.collection(collection).deleteMany(query);
 		
-		logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
+		if (this.options.debug) logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 		
 		logger.removeContext('funcName');
 		//return writeResult
@@ -763,7 +777,7 @@ export class Utilities {
 		//If elements are not set, throw an error
 		if(!elements) throw new TypeError('Utilities.insert: Must contain an element or array of elements to insert.');
 		
-		logger.trace(`${collection}, elements: ${JSON.stringify(elements)}`);
+		if (this.options.debug) logger.trace(`${collection}, elements: ${JSON.stringify(elements)}`);
 		
 		//Insert in collection
 		let writeResult;
@@ -785,7 +799,7 @@ export class Utilities {
 		}
 		this.flushCache();
 		
-		logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
+		if (this.options.debug) logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);
 		
 		logger.removeContext('funcName');
 		//return writeResult
@@ -813,13 +827,13 @@ export class Utilities {
 		let thisPromise = new Promise((resolve, reject) => {
 			
 			//Inside promise function, perform client request
-			let request = this.client.get(requestURL, headers, function(tbaData: any){
+			let request = this.client.get(requestURL, headers, (tbaData: any) => {
 				
 				//If newline characters are not deleted, then CloudWatch logs get spammed
 				let str = tbaData.toString().replace(/\n/g, '');
 				
 				logger.debug(`TBA response: ${str.substring(0, 200)}...`);
-				logger.trace(`Full TBA response: ${str}`);
+				if (this.options.debug) logger.trace(`Full TBA response: ${str}`);
 				
 				logger.removeContext('funcName');
 				
@@ -851,7 +865,7 @@ export class Utilities {
 	async requestFIRST(url: string): Promise<any> {
 		
 		let requestURL = 'https://frc-api.firstinspires.org/v2.0/' + url;
-		logger.trace(`requestURL=${requestURL}`);
+		if (this.options.debug) logger.trace(`requestURL=${requestURL}`);
 		
 		let headers = await this.getFIRSTKey();
 		
@@ -955,31 +969,31 @@ export class Utilities {
 	dbLockPromiseResolves: Array<() => void> = [];
 
 	private enterDbLock() {
-		logger.trace('Entering DB lock');
+		if (this.options.debug) logger.trace('Entering DB lock');
 		this.isDBlocked = true;
 	}
 
 	private leaveDbLock() {
-		logger.trace('Leaving DB lock');
+		if (this.options.debug) logger.trace('Leaving DB lock');
 		this.isDBlocked = false;
-		logger.trace(`Resolving ${this.dbLockPromiseResolves.length} lock promises`);
+		if (this.options.debug) logger.trace(`Resolving ${this.dbLockPromiseResolves.length} lock promises`);
 		for (let i in this.dbLockPromiseResolves) {
 			let resolve = this.dbLockPromiseResolves[i];
 			resolve();
 		}
 		// Clear the promise resolves list
 		this.dbLockPromiseResolves = [];
-		logger.trace('Done resolving db locks');
+		if (this.options.debug) logger.trace('Done resolving db locks');
 	}
 
 	private dbLock() {
 		return new Promise<void>((resolve) => {
 			if (!this.isDBlocked) {
-				logger.trace('DB not locked; Resolving instantly');
+				if (this.options.debug) logger.trace('DB not locked; Resolving instantly');
 				resolve();
 			}
 			else {
-				logger.trace('Awaiting DB lock...');
+				if (this.options.debug) logger.trace('Awaiting DB lock...');
 				this.dbLockPromiseResolves.push(resolve);
 			}
 		});
