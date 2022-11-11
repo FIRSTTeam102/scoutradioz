@@ -71,7 +71,7 @@ router.get('/', wrap(async (req, res) =>  {
 				if ('NOLASTMEMBER' != lastMember)
 					memberArr.push(thisRow);
 				
-				lastMember = thisMember;
+				lastMember = thisMember?.name; // 2022-11-11 JL: ScouterRecord.name
 				thisMemberArr = [];
 			}
 			
@@ -105,7 +105,7 @@ router.get('/', wrap(async (req, res) =>  {
 				else{
 					//covered by lead (and insert actual_scorer)
 					auditElementChar = 'C';
-					auditElement.actual_scorer = thisScoreData.actual_scorer;
+					auditElement.actual_scorer = thisScoreData.actual_scorer?.name; // 2022-11-11 JL: ScouterRecord.name
 				}		
 			}
 			else{
@@ -468,7 +468,7 @@ router.get('/matchscores', wrap(async (req, res) => {
 
 				// track scores
 				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
-					let thisScoutName = matchScoutReports[scoutIdx].actual_scorer;
+					let thisScoutName = matchScoutReports[scoutIdx].actual_scorer?.name; // 2022-11-11 JL: ScouterRecord.name
 					if (!thisScoutName) {
 						logger.trace('No actual_scorer for scout report idx=' + scoutIdx);
 						continue;
@@ -509,9 +509,9 @@ router.get('/matchscores', wrap(async (req, res) => {
 				if (!matchScoutReports[0].actual_scorer || !matchScoutReports[1].actual_scorer || !matchScoutReports[2].actual_scorer) {
 					throw new e.InternalServerError('actual_scorer not defined for the first three matchScoutReports');
 				}
-				orgRow.push(matchScoutReports[0].actual_scorer.split(' ')[0]
-					+ ', ' + matchScoutReports[1].actual_scorer.split(' ')[0]
-					+ ', ' + matchScoutReports[2].actual_scorer.split(' ')[0]);
+				orgRow.push(matchScoutReports[0].actual_scorer.name.split(' ')[0]
+					+ ', ' + matchScoutReports[1].actual_scorer.name.split(' ')[0]
+					+ ', ' + matchScoutReports[2].actual_scorer.name.split(' ')[0]); // 2022-11-11 JL: ScouterRecord.name
 				orgRow.push(errDiff);
 				orgRow.push(errRatio);
 				orgRow.push(orgTot);
