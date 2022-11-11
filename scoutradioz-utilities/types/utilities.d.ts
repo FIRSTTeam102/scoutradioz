@@ -6,15 +6,15 @@ declare const Client: any;
 /**
  * Valid primitives for use in mongodb queries
  */
-declare type ValidQueryPrimitive = string | number | undefined | null | boolean;
-interface QueryItem extends Omit<FilterOperators<any>, '_id'>, RootFilterOperators<any> {
+declare type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
+interface QueryItem<T = any> extends Omit<FilterOperators<T>, '_id'>, RootFilterOperators<T> {
     [key: string]: any;
 }
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-    _id?: ObjectId | string;
+    _id?: ObjectId | string | FilterOperators<ObjectId>;
     [key: string]: QueryItem | ValidQueryPrimitive;
 }
 /**
