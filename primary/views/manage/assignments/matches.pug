@@ -3,12 +3,20 @@ block content
 	div.w3-auto
 		h4=title
 		h2 Team@Match Allocation v2.0
+		h6 Check all:
+		div(class=`responsive-grid rg-4`)
+			each subteam in subteams
+				div(class="w3-padding w3-left-align")
+					input(type="checkbox" class="w3-check subteamToggle" id=`toggleSubteam_${subteam.subteam_key}` data-pit-scout=(subteam.pit_scout) checked=(subteam.pit_scout) data-subteam-key=subteam.subteam_key)
+					label(for=`toggleSubteam_${subteam.subteam_key}`) &nbsp;#{subteam.label}
+		hr
 		form(action="/manage/assignments/matches/generate" method="post")
 			div(class="responsive-grid rg-4 w3-left-align")
 				each member in available
 					div(class="w3-padding")
-						input(type="checkbox" class="w3-check" name=`${member._id}|${member.name}` id='chk_'+member._id)
-						label(class="w3-text-white" for='chk_'+member._id) &nbsp;#{member.name} (#{member.org_info.subteam_key})
+						input(type="checkbox" class="w3-check" name=`${member._id}|${member.name}` id='chk_'+member._id data-subteam-key=member.org_info.subteam_key)
+						label(class="w3-text-white" for='chk_'+member._id) &nbsp;#{member.name}
+							span(class="unimportant")  (#{member.org_info.subteam_key})
 						br
 			- var defaultBlockSize = 5;
 			p
@@ -23,6 +31,24 @@ block content
 			p
 			button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
 	script.
+		let toggleSubteamCheckboxes = $('.subteamToggle');
+		let pitScoutCheckboxes = $('[data-pit-scout]');
+		
+		//- Auto-check students who are in a pit-scout subteam
+		for (let checkbox of pitScoutCheckboxes) {
+			let subteam_key = checkbox.getAttribute('data-subteam-key');
+			assert(subteam_key);
+			checkStudentsOfSubteam(subteam_key, true);
+		}
+		
+		toggleSubteamCheckboxes.on('click', function () {
+			let subteam_key = this.getAttribute('data-subteam-key');
+			checkStudentsOfSubteam(subteam_key, this.checked);
+		})
+		
+		function checkStudentsOfSubteam(subteam_key, isChecked) {
+			$(`[data-subteam-key="${subteam_key}"]`).prop('checked', isChecked);
+		}
 		
 		function confirmThenPost(message, url) {
 			Confirm.show(message).then((result) => {

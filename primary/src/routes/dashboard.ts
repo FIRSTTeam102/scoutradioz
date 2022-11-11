@@ -248,6 +248,7 @@ router.get('/', wrap(async (req, res) => {
 	
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
+	let thisUserId = thisUser._id;
 	let org_key = thisUser.org_key;
 
 	// for later querying by event_key
@@ -271,7 +272,7 @@ router.get('/', wrap(async (req, res) => {
 		let assignedMatches: MatchScouting[] = await utilities.find('matchscouting', {
 			org_key: org_key, 
 			event_key: eventKey, 
-			assigned_scorer: thisUserName
+			'assigned_scorer.id': thisUserId
 		});
 		if (assignedMatches.length > 0)
 			noAssignments = false;		
@@ -357,7 +358,7 @@ router.get('/', wrap(async (req, res) => {
 	let scoringMatches: MatchScouting[] = await utilities.find('matchscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
-		'assigned_scorer': thisUserName, 
+		'assigned_scorer.id': thisUserId, 
 		'time': { $gte: earliestTimestamp }
 	}, { 
 		limit: 10, 
@@ -752,7 +753,7 @@ router.get('/matches', wrap(async (req, res) => {
 	//this line has a definition problem ^
 	logger.debug('scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
-		title: res.msg('scouting.pit'),
+		title: res.msg('scouting.match'),
 		matches: scoreData
 	});
 }));
