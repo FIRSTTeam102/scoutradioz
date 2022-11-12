@@ -27,7 +27,7 @@
 	},
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@firstteam102/scoutradioz-utilities": "^1.1.5",
+		"@firstteam102/scoutradioz-utilities": "^1.2.5",
 		"@firstteam102/http-errors": "^1.0.3",
 		"@aws-sdk/client-s3": "~3.53.1",
 		"@aws-sdk/lib-storage": "~3.53.1",
