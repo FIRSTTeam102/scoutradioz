@@ -19,6 +19,8 @@
 		"build": "npm ci && npm run compile-static && tsc",
 		"win-build": "npm ci && npm run compile-static && tsc",
 		"---readme---": "Use the win-X scripts if you're using Windows. Always upload to test or QA first, then extensively test before promoting to prod.",
+		"archive": "node ../scripts/uploadversion.js --archive --folder $npm_package_config_folder",
+		"win-archive": "node ../scripts/uploadversion.js --archive --folder %npm_package_config_folder%",
 		"win-sync-test": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/test --acl public-read",
 		"win-sync-qa": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/qa --acl public-read",
 		"win-sync-prod": "aws s3 sync %npm_package_config_publicFolderName% s3://%npm_package_config_publicS3BucketName%/prod --acl public-read",
@@ -78,6 +80,7 @@
 		"mongodb": "~4.5.0",
 		"passport": "^0.6.0",
 		"pug": "^3.0.2",
+		"qunit": "^2.19.3",
 		"sanitize-html": "^2.7.0",
 		"serve-favicon": "^2.5.0",
 		"web-push": "^3.4.5"

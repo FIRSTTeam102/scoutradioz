@@ -15,6 +15,8 @@
 	"scripts": {
 		"start": "npx nodemon ./src/www.ts",
 		"build": "npm ci --omit=dev && tsc",
+		"archive": "node ../scripts/uploadversion.js --archive --folder $npm_package_config_folder",
+		"win-archive": "node ../scripts/uploadversion.js --archive --folder %npm_package_config_folder%",
 		"win-upload-test": "npm run build && node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
 		"win-upload-qa": "npm run build && node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
 		"win-promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
