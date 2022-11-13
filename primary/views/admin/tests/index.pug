@@ -1,0 +1,23 @@
+head
+	link(rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.19.3.css")
+	script(src="https://code.jquery.com/qunit/qunit-2.19.3.js")
+	script(src=`${fileRoot}/js/bundle.js`)
+	link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
+	meta(name="viewport" content="width=device-width, initial-scale=1")
+	meta(name="theme-color" content="#333")
+	title=title
+	base(href="/")
+	link(rel="stylesheet" href=`${fileRoot}/css/style.css`)
+body
+	div(id="qunit")
+	div(id="qunit-fixture")
+	script.
+		function add(a, b) {
+			return a + b;
+		}
+
+		QUnit.module('add', function() {
+			QUnit.test('two numbers', function(assert) {
+				assert.equal(add(1, 2), 3);
+			});
+		});
