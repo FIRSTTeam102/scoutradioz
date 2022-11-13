@@ -12,7 +12,7 @@ passport.serializeUser(function(user, done) {
 });
 
 // Reads the session cookie to determine the user from a user ID
-passport.deserializeUser(async function(id, done) {
+passport.deserializeUser(async function(id: string, done) {
 	
 	logger.trace('deserializeUser: ' + id);
 	

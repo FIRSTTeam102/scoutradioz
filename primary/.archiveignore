@@ -18,8 +18,8 @@ README
 **/luxon/build/cjs-browser/**
 **/luxon/build/es6/**
 **/luxon/build/global/**
-**/jquery/external/**
-**/jquery/src/**
+**/bcryptjs/src/**
+**/bcryptjs/tests/**
 **/@types/**
 bower.json
 *.flow
@@ -29,3 +29,4 @@ bson.*.js
 marked.min.js
 marked.umd.js
 marked.esm.js
+acorn.mjs
