@@ -69,8 +69,9 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 						each team in alliance
 							a(href=`/reports/teamintel?team_key=${team}`)
 								div(class=`w3-padding alliance-hover-${color} rounded-small-top`)
-									span(class="upcoming-rank") 
-										i!=msg('reports.rankNumber', {number: teamRanks[team]})
+									if teamRanks[team]
+										span(class="upcoming-rank") 
+											i!=msg('reports.rankNumber', {number: teamRanks[team]})
 									span(class=(selectedTeam==team?'upcoming-highlighted-team':''))=team.substring(3)
 	//- 2022-03-20, M.O'C: Display predictions IF the data is available (ultimately from matchdatahelper.js)
 	if match.hasPredictive 
