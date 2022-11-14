@@ -72,9 +72,15 @@
 	height: @headerbar-height;
 	width: 100%;
 	z-index: 100;
+	top: 0;
+	transition: top .15s ease-in-out;
 
 	&>div{
 		height: @headerbar-height;
+	}
+
+	&.hidden{
+		top: -@headerbar-height;
 	}
 }
 .footer{background-color: @footer;}

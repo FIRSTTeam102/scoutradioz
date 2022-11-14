@@ -1,10 +1,32 @@
 'use strict';
-let navMenu;
+let navMenu: NavigationBar;
 
 $(() => {
 	navMenu = new NavigationBar();
-});
 
+	// hide/show header on scroll down/up
+	let headerbar = $('#headerbar'),
+		headerbarHeight = headerbar.outerHeight() as number,
+		$window = $(window),
+		lastScrollTop = 0;
+	$(window).on('scroll', () => {
+		// we want to keep as little code as possible in here for performance reasons
+		// so anything that persists should be declared outside of it
+
+		let scrollTop = $window.scrollTop() as number;
+
+		// only update if there was enough of a change
+		if (navMenu.opened || Math.abs(lastScrollTop - scrollTop) <= headerbarHeight) return;
+
+		// scrolled down, hide
+		if (scrollTop > lastScrollTop) headerbar.addClass('hidden');
+		// scrolled up, show
+		else headerbar.removeClass('hidden');
+
+		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
+		lastScrollTop = scrollTop;
+	});
+});
 
 class NavigationBar{
 	

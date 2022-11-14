@@ -46,7 +46,7 @@ declare class SRResponse {
 interface Dictionary<T> {
     [Key: string]: T;
 }
-declare let navMenu: any;
+declare let navMenu: NavigationBar;
 declare class NavigationBar {
     opened: boolean;
     moving: boolean;
