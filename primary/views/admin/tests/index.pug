@@ -24,8 +24,18 @@ head
 		body {
 			margin: 0;
 		}
+		@media(max-width: 600px) {
+			#qunit {
+				margin-left: 0;
+				overflow-x: visible;
+				position: absolute;
+			}
+			#iframe {
+				margin-top: 800px;
+			}
+		}
 body
 	iframe(id="iframe" title="test" width="400" height="300" src="")
 	div(id="qunit")
 	div(id="qunit-fixture")
-	script(src=`${fileRoot}/js/script-tests.js`)
+	script(src=`${fileRoot}/js/script-tests.js?v=1`)

@@ -66,7 +66,7 @@ function waitForIframeLoad(): Promise<string> {
 			if (!didResolve) {
 				reject('Page never loaded!');
 			}
-		}, 1000);
+		}, 2500);
 	});
 }
 
