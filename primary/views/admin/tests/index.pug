@@ -1,23 +1,30 @@
 head
-	link(rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.19.3.css")
-	script(src="https://code.jquery.com/qunit/qunit-2.19.3.js")
-	script(src=`${fileRoot}/js/bundle.js`)
+	link(rel="stylesheet" href=`${fileRoot}/lib/qunit-2.19.3.css`)
+	script(src=`${fileRoot}/lib/qunit-2.19.3.js`)
+	script(src=`${fileRoot}/lib/jquery.min.js`)
+	//- script(src=`${fileRoot}/js/bundle.js`)
 	link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
 	meta(name="viewport" content="width=device-width, initial-scale=1")
 	meta(name="theme-color" content="#333")
 	title=title
 	base(href="/")
-	link(rel="stylesheet" href=`${fileRoot}/css/style.css`)
+	//- link(rel="stylesheet" href=`${fileRoot}/css/style.css`)
+	style.
+		#qunit {
+			margin-left: 400px;
+		}
+		#iframe {
+			border: 1px solid white;
+			height: 100%;
+		}
+		#iframe html {
+			zoom: 0.5;
+		}
+		body {
+			margin: 0;
+		}
 body
+	iframe(id="iframe" title="test" width="400" height="300" src="")
 	div(id="qunit")
 	div(id="qunit-fixture")
-	script.
-		function add(a, b) {
-			return a + b;
-		}
-
-		QUnit.module('add', function() {
-			QUnit.test('two numbers', function(assert) {
-				assert.equal(add(1, 2), 3);
-			});
-		});
+	script(src=`${fileRoot}/js/script-tests.js`)

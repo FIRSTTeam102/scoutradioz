@@ -223,8 +223,8 @@ app.use('/manage/currentevent', currentevent);
 app.use('/manage/scoutingaudit', scoutingaudit);
 app.use('/manage/manualdata', manualdata);
 
+app.use('/admin/tests', tests); // temporary: put it before admin so we don't need authentication
 app.use('/admin', adminindex);
-app.use('/admin/tests', tests);
 app.use('/admin/externaldata', externaldata);
 app.use('/admin/orgs', orgs);
 
