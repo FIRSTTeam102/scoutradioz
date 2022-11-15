@@ -10,6 +10,7 @@
 		"esModuleInterop": true,
 		"strict": true,
 		"experimentalDecorators": true,
+		"incremental": true
 		//   "removeComments": true,
 	},
 	"include": [
