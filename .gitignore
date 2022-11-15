@@ -9,3 +9,4 @@ primary/public/uploads/responsive
 primary/public/css
 primary/public/js
 build
+*.tsbuildinfo
