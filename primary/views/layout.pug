@@ -43,7 +43,10 @@ html(lang=locale dir=getLocaleDirection(locale))
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		//script(src=`${fileRoot}/lib/hammer.min.js`)
-		script(src=`${fileRoot}/lib/jquery.min.js`)
+		if useMinifiedJs
+			script(src=`${fileRoot}/lib/jquery.min.js`)
+		else 
+			script(src=`${fileRoot}/lib/jquery.js`)
 		script(src=`${fileRoot}/lib/jscookie-2.2.1.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
 		//- script(src=`${fileRoot}/lib/chart.min.js`) 2022-03-18 JL: Taking chart.js out of the required scripts for all pages & putting it only where needed (as of today, only Drive Team)
