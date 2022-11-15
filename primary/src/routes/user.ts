@@ -568,30 +568,31 @@ router.get('/logout', wrap(async (req, res) =>  {
 	let org_key = req.user.org_key;
 	
 	//destroy session
-	req.logout();
+	req.logout(async () => {
 		
-	//after current session is destroyed, now re log in to org
-	let selectedOrg: Org = await utilities.findOne('orgs', 
-		{'org_key': org_key}, {},
-		{allowCache: true}
-	);
-	if(!selectedOrg) return res.redirect(500, '/');
-	
-	let defaultUser = await utilities.findOne('users', 
-		{'org_key': org_key, name: 'default_user'}, {},
-		{allowCache: true}
-	);
-	if(!defaultUser) return res.redirect(500, '/');
-	
-	
-	//Now, log in to defaultUser
-	req.logIn(defaultUser, async function(err){
+		//after current session is destroyed, now re log in to org
+		let selectedOrg: Org = await utilities.findOne('orgs', 
+			{'org_key': org_key}, {},
+			{allowCache: true}
+		);
+		if(!selectedOrg) return res.redirect(500, '/');
+		
+		let defaultUser = await utilities.findOne('users', 
+			{'org_key': org_key, name: 'default_user'}, {},
+			{allowCache: true}
+		);
+		if(!defaultUser) return res.redirect(500, '/');
+		
+		
+		//Now, log in to defaultUser
+		req.logIn(defaultUser, async function(err){
+				
+			//If error, then log and return an error
+			if(err){ console.error(err); return res.send({status: 500, alert: err}); }
 			
-		//If error, then log and return an error
-		if(err){ console.error(err); return res.send({status: 500, alert: err}); }
-		
-		//now, once default user is logged in, redirect to index
-		res.redirect('/');
+			//now, once default user is logged in, redirect to index
+			res.redirect('/');
+		});
 	});
 }));
 
@@ -602,17 +603,18 @@ router.get('/switchorg', wrap(async (req, res) => {
 	//This will log the user out of their organization.
 	
 	//destroy session
-	req.logout();
+	req.logout(() => {
 	
-	req.session.destroy(async function (err) {
-		if (err) return console.log(err);
-		
-		//clear org_key cookie
-		logger.debug('Clearing org_key cookie');
-		res.clearCookie('org_key');
-		
-		//now, redirect to index
-		res.redirect('/');
+		req.session.destroy(async function (err) {
+			if (err) return console.log(err);
+			
+			//clear org_key cookie
+			logger.debug('Clearing org_key cookie');
+			res.clearCookie('org_key');
+			
+			//now, redirect to index
+			res.redirect('/');
+		});
 	});
 }));
 
