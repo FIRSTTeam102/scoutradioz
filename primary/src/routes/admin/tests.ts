@@ -36,7 +36,7 @@ router.all('/login-to-org-data', async (req, res, next) => {
 	let userWithoutPassword: User = await utilities.findOne('users', 
 		{org_key: org_key, password: 'default'}
 	);
-	let userWithPassword: User = await utilities.findOne('users', 
+	let userWithPassword: User = await utilities.findOne('users',
 		{org_key: org_key, password: {$ne: 'default'}}
 	);
 	
@@ -48,6 +48,13 @@ router.all('/login-to-org-data', async (req, res, next) => {
 });
 
 router.all('/password-creation-data', async (req, res, next) => {
+	
+	if (process.env.TIER !== 'dev') {
+		// ONLY allow the user-creation on DEV tier (to prevent users from maliciously creating a temp-user and thereby gaining access to a team-admin user)
+		return res.send({
+			skip: true
+		});
+	}
 	
 	const org_key = 'demo';
 	

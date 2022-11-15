@@ -238,13 +238,20 @@ QUnit.module('login', function () {
 		assert.ok(wnd.location.pathname.startsWith('/dashboard'), 'Resulted in /dashboard or /dashboard/unassigned');
 	});
 	QUnit.test('2. Logout and password creation', async (assert) => {
+		let newUserData = await queryTestAPI('password-creation-data');
+		let loginData = await queryTestAPI('login-to-org-data');
+		
+		if (newUserData.skip) {
+			assert.expect(1);
+			assert.ok(true, 'Password creation test skipped!!! Tier is not dev!!!');
+			return;
+		}
+		
 		await setIframeSrc('/user/logout');
 		assertPathname(assert, '/home', 'User logged out');
 		assert.equal($$('a[href="/user/login"]').length, 2, 'Two login buttons: One in nav, one in homepage');
 		
 		await setIframeSrc('/user/login');
-		let newUserData = await queryTestAPI('password-creation-data');
-		let loginData = await queryTestAPI('login-to-org-data');
 		$$('input[name="org_password"]').val(loginData.passwd);
 		$$('form').trigger('submit');
 		await waitForIframeLoad();
