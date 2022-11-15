@@ -3,7 +3,7 @@
 import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, 
 	Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions,
-	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators } from 'mongodb';
+	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
 import { ObjectId, MongoClient } from 'mongodb';
 import crypto from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
@@ -19,7 +19,48 @@ logger.level = process.env.LOG_LEVEL || 'info';
  */
 type ValidQueryPrimitive = string|number|undefined|null|boolean|ObjectId;
 
-interface QueryItem<T = any> extends Omit<FilterOperators<T>, '_id'>, RootFilterOperators<T> {
+/**
+ * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
+ */
+interface FilterOps<TValue> {
+    $eq?: TValue;
+    $gt?: TValue;
+    $gte?: TValue;
+    $in?: ReadonlyArray<TValue>;
+    $lt?: TValue;
+    $lte?: TValue;
+    $ne?: TValue;
+    $nin?: ReadonlyArray<TValue>;
+    $not?: TValue extends string ? FilterOperators<TValue> | RegExp : FilterOperators<TValue>;
+    /**
+     * When `true`, `$exists` matches the documents that contain the field,
+     * including documents where the field value is null.
+     */
+    $exists?: boolean;
+    $type?: BSONType | BSONTypeAlias;
+    $expr?: Record<string, any>;
+    $jsonSchema?: Record<string, any>;
+    $mod?: TValue extends number ? [number, number] : never;
+    $regex?: TValue extends string ? RegExp | BSONRegExp | string : never;
+    $options?: TValue extends string ? string : never;
+    $geoIntersects?: {
+        $geometry: Document;
+    };
+    $geoWithin?: Document;
+    $near?: Document;
+    $nearSphere?: Document;
+    $maxDistance?: number;
+    $all?: ReadonlyArray<any>;
+    $elemMatch?: Document;
+    $size?: TValue extends ReadonlyArray<any> ? number : never;
+    $bitsAllClear?: BitwiseFilter;
+    $bitsAllSet?: BitwiseFilter;
+    $bitsAnyClear?: BitwiseFilter;
+    $bitsAnySet?: BitwiseFilter;
+    $rand?: Record<string, never>;
+}
+
+interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
 	[key: string]: any;
 }
 
@@ -27,7 +68,7 @@ interface QueryItem<T = any> extends Omit<FilterOperators<T>, '_id'>, RootFilter
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-	_id?: ObjectId|string|FilterOperators<ObjectId>;
+	_id?: ObjectId|string|FilterOps<ObjectId>;
 	[key: string]: QueryItem|ValidQueryPrimitive;
 }
 
