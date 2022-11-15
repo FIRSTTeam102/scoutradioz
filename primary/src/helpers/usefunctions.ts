@@ -232,6 +232,14 @@ class UseFunctions {
 			return DateTime.fromMillis(millis, {zone: fixedZone, locale: localeString});
 		};
 		
+		// Whether to use minified or un-minified sources (e.g. JQuery)
+		if (process.env.NODE_ENV === 'production') {
+			res.locals.useMinifiedJs = true;
+		}
+		else {
+			res.locals.useMinifiedJs = false;
+		}
+		
 		logger.trace('EXIT');
 		logger.removeContext('funcName');
 		next();

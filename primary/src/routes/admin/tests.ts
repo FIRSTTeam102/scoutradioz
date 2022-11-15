@@ -26,7 +26,9 @@ router.get('/', wrap(async (req, res, next) => {
 	});
 }));
 
-router.all('/login-to-org-data', wrap(async (req, res, next) => {
+const TEMP_USER_NAME = '*TEMPORARY TESTING USER*';
+
+router.all('/login-to-org-data', async (req, res, next) => {
 	
 	const org_key = 'demo';
 	const org_passwd = 'demo2022'; // JL note: this isn't much of a secret, and if someone's gone far enough into SR's code to discover hidden passwords, then hello! Wanna join the dev team?
@@ -41,8 +43,56 @@ router.all('/login-to-org-data', wrap(async (req, res, next) => {
 	res.send({
 		passwd: org_passwd,
 		userWithoutPassword: String(userWithoutPassword._id),
-		userWithPassword: String(userWithPassword._id)
+		userWithPassword: String(userWithPassword._id),
 	});
-}));
+});
+
+router.all('/password-creation-data', async (req, res, next) => {
+	
+	const org_key = 'demo';
+	
+	let tempUser: User = {
+		name: TEMP_USER_NAME,
+		org_key: org_key,
+		role_key: 'team_admin',
+		org_info: {
+			subteam_key: '',
+			class_key: '',
+			years: '',
+			seniority: ''
+		},
+		event_info: {
+			present: false,
+			assigned: false,
+		},
+		visible: true,
+		password: 'default'
+	};
+	await utilities.insert('users', tempUser);
+	let newUser: User = await utilities.findOne('users', {name: TEMP_USER_NAME});
+	
+	res.send({
+		userForPasswordCreation: String(newUser._id),
+	});
+});
+
+router.all('/remove-temp-user', async (req, res, next) => {
+	
+	await utilities.remove('users', {name: TEMP_USER_NAME});
+	
+	res.send({
+		ok: true
+	});
+});
+
+// Just to verify that the temp user has been successfully removed (sanity check)
+router.all('/verify-temp-user-removed', async (req, res, next) => {
+	
+	const users: User[] = await utilities.find('users', {name: TEMP_USER_NAME});
+	
+	res.send({
+		ok: (users.length === 0)
+	});
+});
 
 module.exports = router;
