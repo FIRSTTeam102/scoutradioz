@@ -446,17 +446,18 @@ router.post('/login-to-org', wrap(async (req, res) => {
 		}
 		
 		// First, log out
-		req.logout();
-		
-		// Next, log in as the new SR admin user
-		req.logIn(SRAdminUser, (err) => {
-			if (err) {
-				logger.error(err);
-				req.logout();
-				return res.send({status: 500, message: err});
-			}
-			// After they're logged in, send a success message & they'll be redirected from the client script
-			res.send({status: 200});
+		req.logout(() => {
+			// Next, log in as the new SR admin user
+			req.logIn(SRAdminUser, (err) => {
+				if (err) {
+					logger.error(err);
+					return req.logout(() => {
+						res.send({status: 500, message: err});
+					});
+				}
+				// After they're logged in, send a success message & they'll be redirected from the client script
+				res.send({status: 200});
+			});
 		});
 	}
 	else {
