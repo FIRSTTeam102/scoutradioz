@@ -148,8 +148,8 @@ app.use(session({
 		clientPromise: clientPromise,
 		//client: sessionDb,
 		ttl: 7 * 24 * 60 * 60, // Time-to-live, in seconds. 2022-03-07 JL: Increased from 3 days to 7 days.
-		autoRemove: 'interval',
-		autoRemoveInterval: 10, // In minutes. Default
+		autoRemove: 'native',
+		// autoRemoveInterval: 10, // In minutes. Default
 		touchAfter: 24 * 3600, // time period in seconds for lazy loading session
 		mongoOptions: {
 			// useUnifiedTopology: true
