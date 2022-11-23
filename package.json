@@ -6,7 +6,9 @@
 		"backupsS3BucketName": "scoutradioz-backups"
 	},
 	"scripts": {
-		"lint": "./node_modules/.bin/eslint primary/app.js"
+		"lint": "./node_modules/.bin/eslint primary/app.js",
+		"setup": "npm ci && cd primary && npm ci && cd ../upload && npm ci && cd ../webhook && npm ci",
+		"start": "node scripts/dev.js"
 	},
 	"devDependencies": {
 		"@types/aws-serverless-express": "^3.3.5",
@@ -33,6 +35,7 @@
 	"dependencies": {
 		"archiver": "^5.3.0",
 		"aws-sdk": "^2.1066.0",
+		"colors": "^1.4.0",
 		"concat-stream": "^2.0.0",
 		"glob": "~7.2.0",
 		"less": "~4.1.2",
