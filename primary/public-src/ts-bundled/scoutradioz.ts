@@ -139,7 +139,7 @@ function scrollToId(id: string) {
 	else console.error(`Element with id ${id} not found.`);
 }
 
-function share(orgKey: string|boolean) {
+async function share(orgKey: string|boolean) {
 	
 	let origin = window.location.origin;
 	let pathname = window.location.pathname;
@@ -153,6 +153,26 @@ function share(orgKey: string|boolean) {
 	let shareURL = origin + pathname + search;
 	
 	console.log(shareURL);
+	
+	// First, attempt to use the browser's native Share functionality
+	if ('share' in navigator && 'canShare' in navigator) {
+		let shareData = {
+			url: shareURL,
+			title: document.title,
+		};
+		console.log(`Attempting to share: ${JSON.stringify(shareData)}`);
+		
+		if (navigator.canShare(shareData)) {
+			try {
+				navigator.share(shareData);
+				console.log('Shared data');
+				return; // exit so we don't copy the link to the clipboard later
+			}
+			catch (err) {
+				console.log('Error sharing data:', err);
+			}
+		}
+	}
 	
 	// Attempt to use navigator.clipboard.writeText
 	if (navigator.clipboard && navigator.clipboard.writeText) {
