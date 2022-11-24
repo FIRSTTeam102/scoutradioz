@@ -1,11 +1,11 @@
 type PromptItem = {
 	type: 'password'|'label'|'textinput';
 	/**
-	 * Text value of a label, or placeholder value of a text/password input
+	 * Text value of a label, or placeholder value of a text/password input, or raw html value without any parsing
 	 */
 	value: string;
 	default?: boolean;
-}
+}|HTMLElement;
 
 type PromptReturnDatum = {
 	type: 'password'|'textinput';
@@ -75,46 +75,52 @@ class Prompt {
 	
 	show() {
 		let card = $(document.createElement('div'))
-			.addClass('password-prompt')
+			.addClass('prompt')
 			.css('opacity', 0);
 		let contentContainer = $(document.createElement('div'))
-			.addClass('password-prompt-content w3-mobile w3-card')
+			.addClass('prompt-content w3-mobile w3-card')
 			.appendTo(card);
 			
 		// Contents
 		for (let i in this.contents) {
 			let item = this.contents[i];
 			let thisElement: JQuery;
-			switch(item.type) {
-				case 'label':
-					thisElement = $(document.createElement('div'))
-						.html(this._enrichText(item.value).html())
-						.addClass('w3-margin-top')
-						.appendTo(contentContainer);
-					break;
-				case 'textinput':
-					thisElement = $(document.createElement('input'))
-						.attr('type', 'textinput')
-						.attr('placeholder', item.value)
-						.addClass('w3-input w3-margin-top')
-						// @ts-ignore (JQuery typing is dumb)
-						.on('keydown', this.onKeyDown.bind(this))
-						.appendTo(contentContainer);
-					break;
-				case 'password':
-					thisElement = $(document.createElement('input'))
-						.attr('type', 'password')
-						.attr('placeholder', item.value)
-						.addClass('w3-input w3-margin-top')
-						// @ts-ignore (JQuery typing is dumb)
-						.on('keydown', this.onKeyDown.bind(this))
-						.appendTo(contentContainer);
-					break;
+			if (item instanceof HTMLElement) {
+				thisElement = $(item).appendTo(contentContainer);
+			}
+			// PromptItem
+			else {
+				switch(item.type) {
+					case 'label':
+						thisElement = $(document.createElement('div'))
+							.html(this._enrichText(item.value).html())
+							.addClass('w3-margin-top')
+							.appendTo(contentContainer);
+						break;
+					case 'textinput':
+						thisElement = $(document.createElement('input'))
+							.attr('type', 'textinput')
+							.attr('placeholder', item.value)
+							.addClass('w3-input w3-margin-top')
+							// @ts-ignore (JQuery typing is dumb)
+							.on('keydown', this.onKeyDown.bind(this))
+							.appendTo(contentContainer);
+						break;
+					case 'password':
+						thisElement = $(document.createElement('input'))
+							.attr('type', 'password')
+							.attr('placeholder', item.value)
+							.addClass('w3-input w3-margin-top')
+							// @ts-ignore (JQuery typing is dumb)
+							.on('keydown', this.onKeyDown.bind(this))
+							.appendTo(contentContainer);
+						break;
+				}
+				if (item.default)
+					setTimeout(() => thisElement.trigger('focus'), 1);
 			}
 			thisElement.attr('index', String(i)); // so it can be retrieved later
 			this.elements.push(thisElement);
-			if (item.default)
-				setTimeout(() => thisElement.trigger('focus'), 1);
 		}
 		
 		let btnParent = $(document.createElement('div'))
@@ -176,6 +182,7 @@ class Prompt {
 		
 		for (let i in this.contents) {
 			let item = this.contents[i];
+			if (item instanceof HTMLElement) continue; // skip raw HTMLElements
 			if (item.type === 'password' || item.type === 'textinput') {
 				let thisField = this.card.find(`input[index="${i}"]`);
 				assert(thisField.length === 1, `Could not find field of index ${i}!`);

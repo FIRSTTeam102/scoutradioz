@@ -175,11 +175,11 @@ declare class NotificationCardOptions {
 declare type PromptItem = {
     type: 'password' | 'label' | 'textinput';
     /**
-     * Text value of a label, or placeholder value of a text/password input
+     * Text value of a label, or placeholder value of a text/password input, or raw html value without any parsing
      */
     value: string;
     default?: boolean;
-};
+} | HTMLElement;
 declare type PromptReturnDatum = {
     type: 'password' | 'textinput';
     value: string;
