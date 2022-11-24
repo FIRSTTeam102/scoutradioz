@@ -316,6 +316,9 @@ class UseFunctions {
 			}
 		}
 		
+		// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
+		res.locals.functionVersion = process.env.LAMBDA_FUNCTION_VERSION;
+		
 		logger.removeContext('funcName');
 		next();
 	}

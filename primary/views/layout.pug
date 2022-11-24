@@ -36,10 +36,10 @@ html(lang=locale dir=getLocaleDirection(locale))
 		link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
 		// Libraries bundled in this stylesheet: mmenu.css (Source code licensed CC-BY-NC-4.0), mburger.css (Source code licensed CC-BY-4.0), W3.css (https://www.w3schools.com/w3css/). Source code is available at https://github.com/FIRSTTeam102/ScoringApp-Serverless/tree/master/primary/public-src/less
-		link(rel="stylesheet" href=`${fileRoot}/css/style.css?v=3`)
+		link(rel="stylesheet" href=`${fileRoot}/css/style.css?v=${functionVersion}`)
 		style.
 			#page{ background-image: url('#{fileRoot}/images/backgrounds/2022-grid.svg');}
-			.sprite{ --sprites-url: url('#{fileRoot}/images/sprites.png?v=4');}
+			.sprite{ --sprites-url: url('#{fileRoot}/images/sprites.png?v=#{functionVersion}');}
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		//script(src=`${fileRoot}/lib/hammer.min.js`)
@@ -52,7 +52,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 		//- script(src=`${fileRoot}/lib/chart.min.js`) 2022-03-18 JL: Taking chart.js out of the required scripts for all pages & putting it only where needed (as of today, only Drive Team)
 		script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
-		script(src=`${fileRoot}/js/bundle.js`)
+		script(src=`${fileRoot}/js/bundle.js?v=${functionVersion}`)
 		if alert && alert != "undefined"
 			script.
 				$(function(){
