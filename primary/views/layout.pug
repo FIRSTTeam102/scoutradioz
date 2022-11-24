@@ -123,38 +123,36 @@ html(lang=locale dir=getLocaleDirection(locale))
 
 			//- sticky header bar
 			div(id="headerbar" class=`w3-card header tier-${process.env.TIER}`)
-				//- Hamburger menu button
-				a(id="burger")
-					button(class="mburger mburger--squeeze" title=msg('layout.menu.main'))
-						b
-						b
-						b
-				//- Scoutradioz logo
-				div(class="w3-show-inline-block" style="max-width: 50%;")
-					span(style="display:inline-block;height:100%;vertical-align:middle;")
-					a(href="/home")
-						img(src=`${fileRoot}/images/brand-logos/scoutradioz-white-sm.png` class="header-logo" alt="Scoutradioz")
-				- if (['dev', 'test', 'qa'].includes(process.env.TIER))
-					div(class="tierlabel")= process.env.TIER
+				div(class="header-left")
+					//- Hamburger menu button
+					a(id="burger")
+						button(class="mburger mburger--squeeze" title=msg('layout.menu.main'))
+							b
+							b
+							b
+					//- Scoutradioz logo
+					div
+						span(style="display:inline-block;height:100%;vertical-align:middle;")
+						a(href="/home")
+							img(src=`${fileRoot}/images/brand-logos/scoutradioz-white-sm.png` class="header-logo" alt="Scoutradioz")
+					- if (['dev', 'test', 'qa'].includes(process.env.TIER))
+						div(class="tierlabel")= process.env.TIER
 				//-div(class="w3-right w3-show-inline-block")
 					img(src=`${fileRoot}/images/infinite-recharge/Horizontal-one-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
 				//- Share and i18n buttons ***w3-right class cascades from right-to-left**
-				div(class="w3-right w3-show-inline-block w3-text-white")
+				div(class="header-right")
+					//- i18n
+					a(href="javascript:selectLanguage()" class="centered" title="Language")
+						//- div(class="centered")
+						span(class="sprite sp-32 sp-i18n")
 					//- Share
 					- var orgKey = user ? user.org.org_key : 0;
-					div(class="w3-right" style="margin-inline-end: 8px;")
-						a(href=`javascript:share('${orgKey}')` class="w3-right w3-show-inline-block" title=msg('layout.share'))
-							- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
-							div(class="w3-show-inline-block")
-								span(class=`sprite sp-32 ${spriteType} sp-white` style="margin-top: 5.5px;")
-							div(class="w3-show-inline-block")
-								span(style="font-size:14px; margin-inline-start: 1px; position:relative; top:-9px; font-family:Tahoma,Geneva,sans-serif;")!=msg('layout.share')
-					//- i18n
-					//- disabled for now
-					//-div(class="w3-right" style="margin-inline-end: 8px;")
-						a(href="" class="w3-show-inline-block" title="Language")
-							div(class="w3-show-inline-block")
-								span(class="sprite sp-32 sp-language sp-i18n sp-black" style="margin-top: 7px;")
+					a(href=`javascript:share('${orgKey}')` class="centered" title=msg('layout.share'))
+						- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
+						//- div(class="centered")
+						span(class=`sprite sp-32 ${spriteType} sp-white`)
+						//- div(class="centered w3-hide-small")
+						span(class="w3-hide-small" style="font-size:14px; margin-inline-start: 1px; font-family:Tahoma,Geneva,sans-serif;")!=msg('layout.share')
 			div(style="display: none;" class="slidein-overlay" id="overlay")
 
 			//- main content container, scrolls x independently

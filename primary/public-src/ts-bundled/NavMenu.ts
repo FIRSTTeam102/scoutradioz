@@ -81,6 +81,7 @@ class NavigationBar{
 		else this.locales = [];
 
 		let currentLang = document.documentElement.lang || 'en';
+		let langNames = new Intl.DisplayNames([currentLang], {type: 'language'});
 		//Create Mmenu object
 		this.menu = new Mmenu('#menu',
 			{
@@ -101,7 +102,7 @@ class NavigationBar{
 					{
 						use: this.locales.length > 0, // only show when there are multiple locales
 						position: 'bottom',
-						content: `<select class="no-outline" id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${locale.name}</option>`)}</select>`
+						content: `<select class="no-outline" id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${langNames.of(locale.lang)} (${locale.name})</option>`)}</select>`
 					},
 					//Branding on bottom of menu (footerContents is set in layout.pug)
 					{

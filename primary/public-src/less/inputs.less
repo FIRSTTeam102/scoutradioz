@@ -145,7 +145,7 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	user-select: none;
 }
 
-.password-prompt {
+.prompt {
 	z-index: 4;
 	position: fixed;
 	top: 25%;
@@ -153,18 +153,20 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 	right: 16px;
 }
 
-.password-prompt-content {
+.prompt-content {
 	margin: auto;
-	background-color: #f0f5ff;
+	// background-color: #f0f5ff;
+	background-color: @prompt-color;
 	color: @black;
 	padding: 8px 16px;
 	min-width: 400px;
 	max-width: 800px;
 	width: 50%;
+	border-color: contrast(@prompt-color, @dark, @light);
 }
 
 @media(max-width: 600px) {
-	.password-prompt-content {
+	.prompt-content {
 		min-width: unset;
 	}
 	.centered-half {

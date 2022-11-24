@@ -59,12 +59,12 @@
 	&.tier-test{background-color: @header-tier-test;}
 	&.tier-dev{background-color: @header-tier-dev;}
 	& .tierlabel {
-		.w3-show-inline-block;
 		.monospace;
 		.w3-large;
 		.unimportant;
-		position: relative;
-		top: 2px;
+		display: grid;
+		align-items: center;
+		flex-shrink: 1;
 	}
 
 	// CD 2022-11-11: made headerbar fixed to viewport
@@ -74,8 +74,28 @@
 	z-index: 100;
 	top: 0;
 	transition: top .15s ease-in-out;
+	
+	// JL 2022-11-24: Adjusting navbar classes to use flexbox for positioning instead of absolute/inline-block/float tricks
+	display: flex;
+	justify-content: space-between;
+	
+	& .header-left {
+		flex-grow: 1;
+		display: flex;
+		justify-content: start;
+	}
+	
+	& .header-right {
+		flex-basis: 120px;
+		flex-shrink: 0; // disallow it from shrinking
+		display: flex;
+		justify-content: end;
+		& > * {
+			padding-inline-end: 8px;
+		}
+	}
 
-	&>div{
+	& div{
 		height: @headerbar-height;
 	}
 
@@ -84,6 +104,28 @@
 	}
 }
 .footer{background-color: @footer;}
+
+@media (max-width: 600px) {
+	.header .header-right {
+		// "Share" text is hidden on phones, so it can be smaller
+		flex-basis: (32 + 8) * 2 + 8px; // 32px for each icon, 8px margin on each, and 8px margin on the left
+	}
+}
+
+@media (max-width: 400px) {
+	.header {
+		& .tierlabel {
+			.w3-small; // Shrink the text
+		}
+		& .header-right {
+			// Shrink the sprites
+			& .sprite {
+				--size: 24px; 
+			}
+			flex-basis: (24 + 8) * 2 + 8px;
+		}
+	}
+	}
 
 .mm-navbar select {
 	background-color: var(--mm-color-background);

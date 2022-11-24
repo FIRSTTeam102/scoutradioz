@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 if(!$){
 	console.error('scoutradioz.js error: jQuery not enabled');
@@ -172,6 +174,43 @@ function share(orgKey: string|boolean) {
 		console.log('navigator.clipboard.writeText does not exist; falling back to DOM copy');
 		copyClipboardDom(shareURL);
 	}
+}
+
+function selectLanguage() {
+	lightAssert(locales, 'List of languages not found.');
+	
+	let promptItems: PromptItem[] = [];
+	
+	let prompt: Prompt;
+	let currentLang = document.documentElement.lang || 'en';
+	let langNames = new Intl.DisplayNames([currentLang], {type: 'language'});
+	
+	// Create a list of clickable items for each language we have
+	locales.forEach((locale, idx) => {
+		let newElem = document.createElement('div');
+		newElem.classList.add('w3-padding', 'w3-border-bottom', 'clickable', 'flex');
+		if (idx === 0) newElem.classList.add('w3-margin-top'); // top element
+		newElem.innerHTML = `${langNames.of(locale.lang)} (${locale.name})`;
+		newElem.onclick = () => {
+			// On click, hide the promot and set the new language
+			if (prompt) {
+				prompt.hide();
+			}
+			Cookies.set('language', locale.lang);
+			location.reload();
+		};
+		promptItems.push(newElem);
+	});
+	
+	prompt = new Prompt(promptItems, [{
+		label: 'Cancel',
+		action: () => {
+			prompt.cancel();
+		},
+		default: true,
+	}]);
+	
+	prompt.show();
 }
 
 function copyClipboardDom(text: string) {
