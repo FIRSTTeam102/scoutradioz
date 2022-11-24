@@ -1,4 +1,3 @@
-/* eslint-disable no-unreachable */
 const fs = require('fs');
 const { spawn, ChildProcessWithoutNullStreams } = require('child_process');
 require('colors');
@@ -158,7 +157,7 @@ function init() {
 		lessTimeout = setTimeout(() => {
 			console.log(`${lessName}: Change detected. Reloading...`);
 			compileLess();
-		}, 50);
+		}, 100);
 	});
 	
 	// Text input, allowing "rs" to be typed to restart our Express scripts
