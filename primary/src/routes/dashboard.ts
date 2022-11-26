@@ -752,7 +752,7 @@ router.get('/matches', wrap(async (req, res) => {
 	//this line has a definition problem ^
 	logger.debug('scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
-		title: res.msg('scouting.pit'),
+		title: res.msg('scouting.match'),
 		matches: scoreData
 	});
 }));
