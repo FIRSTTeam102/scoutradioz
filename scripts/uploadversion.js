@@ -8,6 +8,7 @@ const glob = require('glob');
 const minimatch = require('minimatch');
 const archiver = require('archiver');
 const concat = require('concat-stream');
+require('colors');
 
 const lambda = new aws.Lambda({
 	region: 'us-east-1'
@@ -90,6 +91,7 @@ makeZip(folder, (err, zipBuffer) => {
 					}
 					else {
 						console.log(data);
+						console.log('Done! ' + 'DON\'T FORGET TO SYNC STATIC FILES!!'.brightRed);
 					}
 				});
 			}
