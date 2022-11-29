@@ -6,6 +6,7 @@ import e from '@firstteam102/http-errors';
 import Permissions from './permissions';
 import 'colors';
 import type express from 'express';
+import type { Org } from '@firstteam102/scoutradioz-types';
 
 
 const logger = getLogger('usefunctions');
@@ -260,7 +261,7 @@ class UseFunctions {
 		};
 		
 		// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
-		let thisOrg;
+		let thisOrg: Org|undefined = undefined;
 		if (req && req.user && req.user.org_key) {
 			let thisOrgKey = req.user.org_key;
 			thisOrg = await utilities.findOne('orgs', 
