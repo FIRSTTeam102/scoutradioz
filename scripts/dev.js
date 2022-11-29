@@ -63,7 +63,7 @@ function init() {
 						let longMsg = message.attr?.error; // Some (or all?) errors will add a more specific error in 'attr'
 						console.log(`${mongodName}: ${errorName}: ${shortMsg}`);
 						if (longMsg) {
-							console.log(`${mongodName}: ${errorName}: ${longMsg}`);
+							console.log(`${mongodName}: ${errorName}: ${JSON.stringify(longMsg)}`);
 						}
 					}
 				}
