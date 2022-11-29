@@ -1,8 +1,8 @@
 /* eslint-disable global-require */
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput } from '@firstteam102/scoutradioz-types';
+import type { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput } from '@firstteam102/scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -469,7 +469,7 @@ export class MatchDataHelper {
 			}
 		}
 		setWindowFieldsClause['output'] = outputClause;
-		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
+		logger.trace('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 		
 		let groupClause: MongoDocument = {};

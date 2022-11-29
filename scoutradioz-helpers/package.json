@@ -23,6 +23,6 @@
 	},
 	"peerDependencies": {
 		"@firstteam102/scoutradioz-utilities": ">=1.2.4",
-		"@firstteam102/scoutradioz-types": ">=1.0.3"
+		"@firstteam102/scoutradioz-types": ">=1.0.8-test1"
 	}
 }
