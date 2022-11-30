@@ -96,7 +96,11 @@
 					"matches": "Matches",
 					"allianceselection": "Données de sélection d'alliance",
 					"getcurrentteams": "Mettre à jour la liste des équipes",
-					"recalcderived": "Recalculer les métriques dérivées"
+					"recalcderived": "Recalculer les métriques dérivées",
+					"editmatchresults": "Modifier les résultats de match",
+					"editteams": "Modifier la liste d'équipes",
+					"editmatchschedule": "Modifier le programme des matchs",
+					"setcurrent": "Définir l'événement en cours"
 				}
 			},
 			"admin": "Administrateur",
@@ -195,10 +199,10 @@
 		"enabled": "activé",
 		"disabled": "désactivé",
 		"confirmEnable": "Activer les notifications de match sur cet appareil?",
-		"subscribing": "Abonnement aux notifications poussées...",
+		"subscribing": "Abonnement aux notifications poussées…",
 		"goneWrong": "Il se peut que quelque chose se soit mal passé. Données:",
 		"error": "Une erreur s'est produite:",
-		"disabling": "Désactivation des notifications poussées...",
+		"disabling": "Désactivation des notifications poussées…",
 		"noPermission": "Nous n'avons pas obtenu l'autorisation.",
 		"dbSaveFailed": "L'abonnement a été reçu mais nous n'avons pas pu l'enregistrer dans notre base de données.",
 		"testPageTitle": "Page de test des notifications",
@@ -237,7 +241,7 @@
 		"noTeams": "Aucune équipe n'a été trouvée pour ce tournoi.",
 		"noMatches": "Aucun match à venir pour ce tournoi.",
 		"noMatchesTeam": "Aucun match n'a été trouvé pour l'équipe {team}.",
-		"viewFor": "Afficher le tableau de bord pour...",
+		"viewFor": "Afficher le tableau de bord pour…",
 		"chooseTeam": "[Choisissez une équipe]",
 		"viewOr": "ou",
 		"allTeams": "Toutes les équipes",
@@ -247,7 +251,8 @@
 		"relativeStrengths": "Atouts relatifs:",
 		"legendShowHide": "Cliquez sur une légende pour masquer/afficher cette équipe",
 		"futureMatches": "Matchs à venir:",
-		"futureMatchesTeam": "Prochains matchs pour l'équipe{team}:"
+		"futureMatchesTeam": "Prochains matchs pour l'équipe{team}:",
+		"compareAlliance": "Comparer les alliances"
 	},
 	"allianceselection": {
 		"title": "Sélection d'alliances",
@@ -269,8 +274,8 @@
 	"metrics": {
 		"raw": "Données brutes",
 		"show": "Afficher: ",
-		"AVG": "Averages",
-		"AVG1": "Average",
+		"AVG": "Moyennes",
+		"AVG1": "Moyenne",
 		"metricAVG": "Métrique (moyenne)",
 		"MAX": "Maximums",
 		"MAX1": "Maximum",
@@ -354,7 +359,7 @@
 		"matchDataShort": "Données de repérage de match",
 		"matchClickAlliance": "Cliquez sur un numéro de match pour voir les données d'alliance pour ce match.",
 		"teamHeader": "Équipe {number} - {nick}",
-		"teamRank": "Actuellement classé #{rang}\n{victoires}-{défaites}-{égalités} record avec {rp} PC",
+		"teamRank": "Actuellement classé #{rank}\n{wins}-{losses}-{ties} record avec {rp} PC",
 		"teamFrom": "De: {city}, {state}, {country}",
 		"teamDataYear": "Toutes les données de l'équipe {team} de cette année",
 		"teamIntel": {
@@ -379,12 +384,13 @@
 		"noMatchScoutData": "Aucune donnée de repérage de match disponible pour l'équipe {team} pour le match {match}.",
 		"noMatchScoutData2": "Aucune donnée de repérage de match disponible pour l'équipe {team} pour ce match.",
 		"viewIntelPage": "Voir la page d'information de cette équipe",
-		"upcomingMatchMetrics": "Metrics for upcoming match",
+		"upcomingMatchMetrics": "Métriques pour match à venir",
 		"intel": "Information: {type}",
 		"exportData": {
 			"noType": "Aucun type de données (ou non valide) spécifié pour l'exportation.",
 			"noData": "Aucune donnée trouvée pour le type '{type}'."
-		}
+		},
+		"rankNumber": "Rang {number}"
 	},
 	"errors": {
 		"teamMissing": "Impossible de trouver les détails de l'équipe {team}. La liste de l'équipe a-t-elle changé depuis que vous avez créé les missions de repérage?",
