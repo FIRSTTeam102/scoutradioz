@@ -33,18 +33,19 @@ function init() {
 	}
 	
 	childMongod = spawn('mongod', mongodbOptions, {cwd: process.cwd(), stdio: ['ipc'], killSignal: 'SIGINT'});
+	childMongod.on('error', (e) => console.error(e));
 	
 	childMongod.on('close', function (status, signal) {
 		console.log(`${mongodName}: Process exited with status ${status || signal} (${interpretMongoStatusCode(status)})`);
 		// If the database failed to run, then abort the program
-		if (status !== 0 && status !== 12 && !gracefulShutdown) {
+		/* if (status !== 0 && status !== 12 && !gracefulShutdown) {
 			console.log('Database closed unexpectedly. Shutting down all scripts.');
 			lessWatcher?.close();
 			childPrimary?.kill('SIGINT');
 			childUpload?.kill('SIGINT');
 			childTS?.kill('SIGINT');
 			process.exit();
-		}
+		} */
 	});
 	// Fires whenever mongodb outputs to the console
 	childMongod.stdout.on('data', function (data) {
