@@ -38,14 +38,14 @@ function init() {
 	childMongod.on('close', function (status, signal) {
 		console.log(`${mongodName}: Process exited with status ${status || signal} (${interpretMongoStatusCode(status)})`);
 		// If the database failed to run, then abort the program
-		/* if (status !== 0 && status !== 12 && !gracefulShutdown) {
+		if (status !== 0 && status !== 12 && !gracefulShutdown && status !== -2 /* no mongod */) {
 			console.log('Database closed unexpectedly. Shutting down all scripts.');
 			lessWatcher?.close();
 			childPrimary?.kill('SIGINT');
 			childUpload?.kill('SIGINT');
 			childTS?.kill('SIGINT');
 			process.exit();
-		} */
+		}
 	});
 	// Fires whenever mongodb outputs to the console
 	childMongod.stdout.on('data', function (data) {

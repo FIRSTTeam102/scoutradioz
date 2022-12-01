@@ -264,10 +264,11 @@ export class I18n {
 // Decorator to format qqx output
 // @param {Function} outputWrapper - qqx output willl be wrapped in this
 function qqxOutput(outputWrapper = (output: string) => output) {
-	return (obj: unknown, func: string, descriptor: PropertyDescriptor) => {
+	// this is a function for a reason
+	return function (obj: unknown, func: string, descriptor: PropertyDescriptor) {
 		const original = descriptor.value;
 
-		descriptor.value = (this: I18n, query: string, parameters?: I18nParameters) => {
+		descriptor.value = function (this: I18n, query: string, parameters?: I18nParameters) {
 			if (this.locale === 'qqx') {
 				return outputWrapper(this.sanitizeHtml(`${func}(${query}${parameters && Object.keys(parameters).length !== 0 ? ', ' + JSON.stringify(parameters) : ''})`));
 			} else {
