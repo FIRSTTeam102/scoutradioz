@@ -6,6 +6,7 @@ env:
 extends: 
   - 'eslint:recommended'
   - 'plugin:@typescript-eslint/recommended'
+  - 'prettier'
 plugins:
   - 'scoutradioz-eslint'
   - '@typescript-eslint'
