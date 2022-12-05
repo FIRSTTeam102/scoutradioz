@@ -39,7 +39,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 		// Libraries bundled in this stylesheet: mmenu.css (Source code licensed CC-BY-NC-4.0), mburger.css (Source code licensed CC-BY-4.0), W3.css (https://www.w3schools.com/w3css/). Source code is available at https://github.com/FIRSTTeam102/ScoringApp-Serverless/tree/master/primary/public-src/less
 		link(rel="stylesheet" href=`${fileRoot}/css/style.css?v=${functionVersion}`)
 		-
-			let backgrounds = {
+			const backgrounds = {
 				2020: 'city-light.png',
 				2022: '2022-grid.svg',
 				2023: '2023-halftone.svg',
@@ -172,7 +172,8 @@ html(lang=locale dir=getLocaleDirection(locale))
 							2022: ['rapid-react/horizontal-color.svg', 'Rapid React'],
 							2023: ['charged-up/horizontal-color.svg', 'Charged Up'],
 						}
-					img(src=`${fileRoot}/images/${headerlogos[themeYear][0]}` alt=headerlogos[themeYear][1] class="w3-image w3-center" style="max-height: 160px;")
+					if (headerlogos[themeYear])
+						img(src=`${fileRoot}/images/${headerlogos[themeYear][0]}` alt=headerlogos[themeYear][1] class="w3-image w3-center" style="max-height: 160px;")
 					if (!isOrgSelectScreen)
 						h3=eventName
 				main(class="w3-padding w3-mobile w3-center" id="content")
