@@ -116,12 +116,18 @@ export class UtilitiesOptions {
 		maxAge: number;
 	};
 	/**
+	 * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
+	 */
+	stringifyObjectIDs?: boolean;
+	/**
 	 * Whether to add extensive logger.trace statements
 	 */
 	debug: boolean;
 	constructor(options?: any) {
 		if (typeof options === 'object' && typeof options.debug === 'boolean') this.debug = options.debug;
 		else this.debug = false;
+		
+		this.stringifyObjectIDs = options?.stringifyObjectIDs || false;
 		
 		let defaultCacheOpts = {
 			enable: false,
@@ -473,6 +479,9 @@ export class Utilities {
 			returnData = data;
 		}
 		
+		// 2022-06-12 JL: Optionally stringify IDs
+		if (this.options.stringifyObjectIDs) this.stringifyObjectIDs(returnData);
+		
 		logger.removeContext('funcName');
 		return returnData;
 	}
@@ -556,6 +565,8 @@ export class Utilities {
 			if (this.options.debug) logger.trace(`Not cached (findOne:${collection})`);
 			this.consoleTimeEnd(timeLogName);
 		}
+		// 2022-06-12 JL: Optionally stringify IDs
+		if (returnData && this.options.stringifyObjectIDs) this.stringifyObjectID(returnData);
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -689,6 +700,11 @@ export class Utilities {
 			//Return (Promise to get) data
 			returnData = data;
 		}
+		
+		// 2022-12-06 JL: Optionally stringify IDs
+		// 	Since aggregate calls can attach objects as sub-objects (including their _ids), we can't just
+		// 	loop through and do a shallow cast. JSON.stringify() automatically casts ObjectID to string & is fast enough.
+		if (this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -1107,7 +1123,25 @@ export class Utilities {
 		}
 		return query;
 	}
-
+	
+	/**
+	 * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
+	 */
+	private stringifyObjectIDs(results: MongoDocument[]) {
+		if (this.options.debug) logger.trace('Stringifying ObjectIDs');
+		for (let result of results) {
+			this.stringifyObjectID(result);
+		}
+	}
+	
+	/**
+	 * Casts _id into a string, for when utilities is configured to do so.
+	 */
+	private stringifyObjectID(result: MongoDocument) {
+		if (result._id instanceof ObjectId) {
+			result._id = result._id.toString();
+		}
+	}
 }
 
 declare interface TBAKey extends MongoDocument {

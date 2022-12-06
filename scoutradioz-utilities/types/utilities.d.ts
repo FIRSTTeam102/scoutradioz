@@ -97,6 +97,10 @@ export declare class UtilitiesOptions {
         maxAge: number;
     };
     /**
+     * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
+     */
+    stringifyObjectIDs?: boolean;
+    /**
      * Whether to add extensive logger.trace statements
      */
     debug: boolean;
@@ -282,6 +286,14 @@ export declare class Utilities {
      * @returns Query with _id replaced with an ObjectId
      */
     private castID;
+    /**
+     * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
+     */
+    private stringifyObjectIDs;
+    /**
+     * Casts _id into a string, for when utilities is configured to do so.
+     */
+    private stringifyObjectID;
 }
 declare interface TBAKey extends MongoDocument {
     headers: {
