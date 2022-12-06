@@ -1,2 +1,24 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script lang='ts'>
+	import type { PageServerData } from './$types';
+	import Paper, { Title, Subtitle, Content } from '@smui/paper';
+	
+	export let data: PageServerData;
+</script>
+
+<div class='paper-container'>
+	{#each data.users as user}
+		<Paper>
+			<Title>{user.name}</Title>
+			<Subtitle>{user.org_key}</Subtitle>
+		</Paper>
+	{/each}
+</div>
+
+<style lang='scss'>
+	.paper-container {
+		margin: 24px;
+		& :global(.smui-paper) {
+			margin-bottom: 24px;;
+		}
+	}
+</style>

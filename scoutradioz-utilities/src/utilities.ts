@@ -494,7 +494,9 @@ export class Utilities {
 		}
 		
 		// 2022-06-12 JL: Optionally stringify IDs
-		if (this.options.stringifyObjectIDs) this.stringifyObjectIDs(returnData);
+		// 	Since some DB structures contain ObjectIDs (e.g. ScouterRecord), we can't just loop through
+		// 	and do a shallow cast. JSON.stringify() automatically casts ObjectID to string & is fast enough.
+		if (this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -582,7 +584,7 @@ export class Utilities {
 			this.consoleTimeEnd(timeLogName);
 		}
 		// 2022-06-12 JL: Optionally stringify IDs
-		if (returnData && this.options.stringifyObjectIDs) this.stringifyObjectID(returnData);
+		if (returnData && this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -722,8 +724,6 @@ export class Utilities {
 		}
 		
 		// 2022-12-06 JL: Optionally stringify IDs
-		// 	Since aggregate calls can attach objects as sub-objects (including their _ids), we can't just
-		// 	loop through and do a shallow cast. JSON.stringify() automatically casts ObjectID to string & is fast enough.
 		if (this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
@@ -1157,25 +1157,6 @@ export class Utilities {
 			query._id = new ObjectId(query._id);
 		}
 		return query;
-	}
-	
-	/**
-	 * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
-	 */
-	private stringifyObjectIDs(results: MongoDocument[]) {
-		if (this.options.debug) logger.trace('Stringifying ObjectIDs');
-		for (let result of results) {
-			this.stringifyObjectID(result);
-		}
-	}
-	
-	/**
-	 * Casts _id into a string, for when utilities is configured to do so.
-	 */
-	private stringifyObjectID(result: MongoDocument) {
-		if (result._id instanceof ObjectId) {
-			result._id = result._id.toString();
-		}
 	}
 }
 

@@ -1,0 +1,22 @@
+<script lang='ts'>
+	
+	const firstText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam sem et tortor consequat id porta. Arcu dui vivamus arcu felis. Amet cursus sit amet dictum sit amet justo. Sit amet massa vitae tortor. Adipiscing elit duis tristique sollicitudin nibh sit amet. Lectus nulla at volutpat diam ut venenatis tellus. Pellentesque habitant morbi tristique senectus et netus et. Amet commodo nulla facilisi nullam vehicula ipsum a arcu cursus. Morbi tempus iaculis urna id volutpat lacus laoreet. Ut ornare lectus sit amet est placerat. Leo in vitae turpis massa. Eget mauris pharetra et ultrices neque. Auctor augue mauris augue neque gravida in fermentum et sollicitudin. Sit amet mattis vulputate enim nulla aliquet. Lorem dolor sed viverra ipsum nunc aliquet bibendum. Cursus mattis molestie a iaculis at erat pellentesque adipiscing commodo.';
+	
+	const subsequentText = [
+		'Sapien et ligula ullamcorper malesuada proin libero nunc consequat interdum. Id donec ultrices tincidunt arcu non sodales neque sodales. Ultrices tincidunt arcu non sodales neque. Euismod lacinia at quis risus sed vulputate. Non enim praesent elementum facilisis leo. Nibh tortor id aliquet lectus proin nibh. Vestibulum sed arcu non odio euismod lacinia at quis risus. Ac ut consequat semper viverra nam. Id aliquet risus feugiat in ante metus dictum at. Nunc sed id semper risus in hendrerit. At urna condimentum mattis pellentesque id nibh tortor id aliquet. Ut morbi tincidunt augue interdum velit euismod. Orci eu lobortis elementum nibh tellus. Tincidunt praesent semper feugiat nibh sed pulvinar. In pellentesque massa placerat duis ultricies lacus sed turpis. Bibendum enim facilisis gravida neque convallis a cras.',
+		'Magna fringilla urna porttitor rhoncus dolor purus. Volutpat blandit aliquam etiam erat. Condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi. Leo vel orci porta non pulvinar neque laoreet. Et netus et malesuada fames ac turpis egestas maecenas pharetra. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor posuere. Tristique magna sit amet purus gravida quis blandit turpis cursus. At elementum eu facilisis sed odio morbi. Faucibus a pellentesque sit amet porttitor eget dolor. Pulvinar etiam non quam lacus suspendisse faucibus interdum. Est ullamcorper eget nulla facilisi etiam dignissim diam quis.',
+		'Sed risus ultricies tristique nulla aliquet enim tortor at auctor. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper dignissim. Nulla facilisi nullam vehicula ipsum. Felis eget velit aliquet sagittis id. Urna cursus eget nunc scelerisque viverra mauris in aliquam sem. Fermentum et sollicitudin ac orci phasellus. Diam quis enim lobortis scelerisque fermentum dui. Pulvinar pellentesque habitant morbi tristique senectus et netus. Augue eget arcu dictum varius duis at consectetur lorem donec. Ut etiam sit amet nisl purus in mollis nunc sed. Ipsum dolor sit amet consectetur adipiscing elit pellentesque habitant morbi. Tempor orci dapibus ultrices in iaculis.',
+		'At augue eget arcu dictum varius duis at. Elit ut aliquam purus sit amet luctus venenatis lectus. Morbi enim nunc faucibus a pellentesque sit amet porttitor. Consectetur lorem donec massa sapien faucibus et molestie ac feugiat. Sagittis aliquam malesuada bibendum arcu. Diam sit amet nisl suscipit adipiscing bibendum est. Nisl nunc mi ipsum faucibus vitae aliquet nec ullamcorper sit. Habitant morbi tristique senectus et netus et malesuada fames. Pulvinar etiam non quam lacus suspendisse. Nunc mi ipsum faucibus vitae aliquet nec ullamcorper sit amet. Ac feugiat sed lectus vestibulum mattis ullamcorper velit sed. Urna molestie at elementum eu facilisis sed odio morbi quis. Morbi enim nunc faucibus a pellentesque sit amet porttitor eget. Tincidunt arcu non sodales neque sodales. Adipiscing vitae proin sagittis nisl rhoncus mattis rhoncus urna. Sit amet dictum sit amet. Habitant morbi tristique senectus et netus et malesuada fames ac. Integer vitae justo eget magna fermentum iaculis eu. Nulla porttitor massa id neque aliquam vestibulum morbi blandit. Et malesuada fames ac turpis.',
+	]
+	
+	export let paragraphs: number = 3;
+</script>
+
+{#if paragraphs > 0}
+	<p>{firstText}</p>
+	{#if paragraphs > 1}
+		{#each Array(paragraphs - 1) as _, index}
+			<p>{subsequentText[index % (subsequentText.length)]}</p>
+		{/each}
+	{/if}
+{/if}

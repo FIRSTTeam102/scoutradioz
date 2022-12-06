@@ -6,6 +6,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
+    "prepare": "npm run smui-theme",
+    "smui-theme": "smui-theme compile static/smui.css -i src/theme",
     "test": "playwright test",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -14,11 +16,22 @@
     "format": "prettier --plugin-search-dir . --write ."
   },
   "devDependencies": {
+    "@firstteam102/scoutradioz-types": "^1.0.8-test1",
     "@playwright/test": "^1.28.1",
+    "@smui/icon-button": "^7.0.0-beta.0",
+    "@smui/paper": "^7.0.0-beta.0",
+    "@smui/ripple": "^7.0.0-beta.0",
+    "@smui/tab": "^7.0.0-beta.0",
+    "@smui/tab-bar": "^7.0.0-beta.0",
+    "@smui/top-app-bar": "^7.0.0-beta.0",
+    "@smui/touch-target": "^7.0.0-beta.0",
     "@sveltejs/adapter-auto": "next",
     "@sveltejs/kit": "next",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-svelte3": "^4.0.0",
     "prettier": "^2.8.0",
     "prettier-plugin-svelte": "^2.8.1",
+    "smui-theme": "^7.0.0-beta.0",
     "svelte": "^3.53.1",
     "svelte-check": "^2.9.2",
     "svelte-preprocess": "^4.10.7",
@@ -30,7 +43,10 @@
   "type": "module",
   "dependencies": {
     "@firstteam102/scoutradioz-helpers": "^1.1.4",
-    "@firstteam102/scoutradioz-utilities": "^1.2.11",
+    "@firstteam102/scoutradioz-utilities": "^1.2.13",
+    "dotenv": "^16.0.3",
+    "log4js": "^6.7.1",
+    "mongodb": "4.5.0",
     "svelte-material-ui": "^7.0.0-beta.0"
   }
 }

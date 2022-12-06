@@ -1,3 +1,4 @@
+root: true
 env:
   browser: true
   commonjs: true
@@ -6,7 +7,6 @@ env:
 extends: 
   - 'eslint:recommended'
   - 'plugin:@typescript-eslint/recommended'
-  - 'prettier'
 plugins:
   - 'scoutradioz-eslint'
   - '@typescript-eslint'
@@ -15,7 +15,7 @@ globals:
   SharedArrayBuffer: readonly
   NotificationCard: writable
   Confirm: writable
-  PasswordPrompt: writable
+  Pa1swordPrompt: writable
   FormSubmission: writable
   $: readonly
   luxon: readonly
