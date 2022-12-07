@@ -1,9 +1,8 @@
 import utilities from '@firstteam102/scoutradioz-utilities';
 import fs from 'fs';
+import dbJSON from '$lib/../databases.json'
 
-const dbJSON = fs.readFileSync('databases.json', 'utf-8');
-
-utilities.config(JSON.parse(dbJSON), {
+utilities.config(dbJSON, {
 	cache: {
 		enable: true,
 		maxAge: 30,

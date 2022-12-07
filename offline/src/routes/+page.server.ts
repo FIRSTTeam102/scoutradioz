@@ -12,9 +12,9 @@ export const load: PageServerLoad = async ({ params }) => {
 		users
 	};
 	// let promise: Promise<User[]> = utilities.find('users', {});
-	return {
-		users: {
-			promise: Promise.resolve('c')
-		}
-	};
+	// return {
+	// 	users: {
+	// 		promise: Promise.resolve('c')
+	// 	}
+	// };
 };
