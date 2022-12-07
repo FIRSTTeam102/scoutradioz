@@ -1,24 +1,68 @@
 <script lang="ts">
 	import TopAppBar, { Row, Section, AutoAdjust } from '@smui/top-app-bar';
-	import Drawer, { AppContent, Content, Header, Title, Subtitle, Scrim } from '@smui/drawer';
-
+	import Drawer, { Content as DContent, Header as DHeader, Title as DTitle, Subtitle as DSubtitle, Scrim } from '@smui/drawer';
+	import List, { Item as LItem, Text as LText, Graphic as LGraphic, Separator as LSeparator, Subheader as LSubheader } from '@smui/list';
 	import IconButton from '@smui/icon-button';
-	import LoremIpsum from '$lib/LoremIpsum.svelte';
+	import { afterNavigate } from '$app/navigation';
+	import { share } from '$lib/share'
+
+	// close menu when changing pages
+	afterNavigate(() => menuOpen = false);
 
 	let topAppBar: TopAppBar;
-	let topBarHeight = 0; // todo:
-	let menuOpen = false; // todo: why won't this update
+	let topBarHeight = 48; // todo: autocalculate
+	let menuOpen = false;
 </script>
 
-<Drawer variant="modal" bind:open={menuOpen} style={`margin-top: ${topBarHeight}px;`}>
-	<Header>
-		<Title>Scoutradioz</Title>
-		<Subtitle>Your name</Subtitle>
-	</Header>
+<!-- modal is better but it won't close, so dismissible with position:fixed works -->
+<Drawer
+	variant="dismissible"
+	bind:open={menuOpen}
+	style={`margin-top: ${topBarHeight}px; position: fixed; height: calc(100% - ${topBarHeight}px); overflow-y: auto;`}>
+	<DHeader>
+		<DTitle>Welcome, Scott Radius</DTitle>
+		<DSubtitle>Team 102</DSubtitle>
+	</DHeader>
+	<DContent>
+		<List>
+			<LItem href="/">
+				<LGraphic class="material-icons" aria-hidden="true">home</LGraphic>
+				<LText>Home</LText>
+			</LItem>
+			<LItem href="/">
+				<LGraphic class="material-icons" aria-hidden="true">calendar_month</LGraphic>
+				<LText>Schedule</LText>
+			</LItem>
+
+			<LSeparator />
+			<LSubheader tag="h6">Scouter</LSubheader>
+			<LItem href="/">
+				<LGraphic class="material-icons" aria-hidden="true">handyman</LGraphic>
+				<LText>Pit scouting</LText>
+			</LItem>
+			<LItem href="/">
+				<LGraphic class="material-icons" aria-hidden="true">stadium</LGraphic>
+				<LText>Match scouting</LText>
+			</LItem>
+
+			<LSeparator />
+			<LSubheader tag="h6">Lead</LSubheader>
+			<LItem href="/">
+				<LGraphic class="material-icons" aria-hidden="true">assignment_ind</LGraphic>
+				<LText>Manage assignments</LText>
+			</LItem>
+		</List>
+	</DContent>
 </Drawer>
 
-<!-- must be between drawer and appbar -->
-<Scrim />
+<!-- if using modal then it just works, otherwise we have to implement scrim ourselves -->
+<!-- <Scrim /> -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div
+	class="mdc-drawer-scrim"
+	style="background-color: rgba(255, 255, 255, 0.32); position: fixed"
+	on:click={() => (menuOpen = false)}
+></div>
 
 <TopAppBar bind:this={topAppBar} variant={menuOpen ? 'fixed' : 'standard'} dense style="z-index: 5">
 	<Row>
@@ -30,14 +74,16 @@
 		</Section>
 		<Section align="end" toolbar>
 			<IconButton class="material-icons" aria-label="Sync">sync</IconButton>
-			<IconButton class="material-icons" aria-label="Change language">language</IconButton>
-			<IconButton class="material-icons" aria-label="Share">share</IconButton>
+			<!-- <IconButton class="material-icons" aria-label="Change language">language</IconButton> -->
+			<IconButton class="material-icons" aria-label="Share" on:click={() => share()}>share</IconButton>
 		</Section>
 	</Row>
 </TopAppBar>
 
 <AutoAdjust {topAppBar}>
-	<slot></slot>
+	<div id="page">
+		<slot></slot>
+	</div>
 </AutoAdjust>
 
 <style lang='scss'>
@@ -52,6 +98,10 @@
 		max-width: 100%;
 		vertical-align: middle;
 		padding-left: 8px;
+	}
+
+	#page {
+		padding: 0 .5em;
 	}
 </style>
   

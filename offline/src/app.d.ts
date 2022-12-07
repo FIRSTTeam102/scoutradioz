@@ -2,7 +2,11 @@
 // for information about these interfaces
 // and what to do when importing types
 declare namespace App {
-	// interface Error {}
+	interface Error {
+		message: string;
+		name: string;
+		stack?: string;
+	}
 	// interface Locals {}
 	// interface PageData {}
 	// interface Platform {}

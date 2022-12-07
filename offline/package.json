@@ -18,8 +18,10 @@
   "devDependencies": {
     "@firstteam102/scoutradioz-types": "^1.0.8-test1",
     "@playwright/test": "^1.28.1",
+    "@smui/button": "^7.0.0-beta.0",
     "@smui/drawer": "^7.0.0-beta.0",
     "@smui/icon-button": "^7.0.0-beta.0",
+    "@smui/list": "^7.0.0-beta.0",
     "@smui/paper": "^7.0.0-beta.0",
     "@smui/ripple": "^7.0.0-beta.0",
     "@smui/tab": "^7.0.0-beta.0",
