@@ -6,19 +6,19 @@
 </script>
 
 <div class='paper-container'>
-	{#each data.users as user}
+	<!-- {#each data.users as user}
 		<Paper>
 			<Title>{user.name}</Title>
 			<Subtitle>{user.org_key}</Subtitle>
 		</Paper>
-	{/each}
+	{/each} -->
 </div>
 
 <style lang='scss'>
 	.paper-container {
 		margin: 24px;
 		& :global(.smui-paper) {
-			margin-bottom: 24px;;
+			margin-bottom: 24px;
 		}
 	}
 </style>
