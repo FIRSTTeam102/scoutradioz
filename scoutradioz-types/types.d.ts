@@ -1,6 +1,6 @@
 // JL: Should these be put into a separate package?
 
-import type { Document, ObjectId } from 'mongodb';
+import type { ObjectId } from 'mongodb';
 
 // General interfaces/types that don't need to be exported
 declare interface NumericalDict {
@@ -23,7 +23,10 @@ declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
 }
 
-export declare interface MongoDocument extends Document {
+// 2022-12-10 JL: Removed 'extends Document' and renamed to 'DocumentWithID' to:
+// 	1. Allow our schemas to be modified via Omit (the fact that Document has [key: string]: any messes things up)
+// 	2. prevent confusion with the MongoDocument type exported from scoutradioz-utilities
+export declare interface DbDocument {
 	/**
 	 * MongoDB ID. Declared as optional to assist the creation of data structures in code, because it does not need to be specified in an insert statement.
 	 */
@@ -45,7 +48,7 @@ export declare type WithDbId<T> = T & {
  * @collection aggranges
  * @interface AggRange
  */
-export declare interface AggRange extends MongoDocument {
+export declare interface AggRange extends DbDocument {
 	org_key: OrgKey;
 	event_key: EventKey;
 	key: string;
@@ -64,7 +67,7 @@ export declare interface AggRange extends MongoDocument {
  * @collection events
  * @interface Event
  */
-export declare interface Event extends MongoDocument {
+export declare interface Event extends DbDocument {
 	city: string|null;
 	country: string;
 	district: string|null;
@@ -84,7 +87,7 @@ export declare interface Event extends MongoDocument {
  * @collection layout
  * @interface Layout
  */
-export declare interface Layout extends MongoDocument {
+export declare interface Layout extends DbDocument {
 	year: number;
 	order: number|string;
 	type: 'checkbox'|'counter'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
@@ -162,7 +165,7 @@ export declare interface CompareOperation extends DerivedOperation {
  * @collection matches
  * @interface Match
  */
-export declare interface Match extends MongoDocument {
+export declare interface Match extends DbDocument {
 	key: MatchKey;
 	event_key: EventKey;
 	comp_level: CompLevel;
@@ -201,7 +204,7 @@ declare class MatchVideo {
  * @collection matchscouting
  * @interface MatchScouting
  */
-export declare interface MatchScouting extends MongoDocument {
+export declare interface MatchScouting extends DbDocument {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
@@ -222,7 +225,7 @@ export declare interface MatchScouting extends MongoDocument {
  * @collection orgs
  * @interface Org
  */
-export declare interface Org extends MongoDocument {
+export declare interface Org extends DbDocument {
 	org_key: OrgKey;
 	nickname: string;
 	team_number?: integer;
@@ -257,7 +260,7 @@ export declare interface OrgClass {
  * @collection orgteamvalues
  * @interface OrgTeamValue
  */
-export declare interface OrgTeamValue extends MongoDocument {
+export declare interface OrgTeamValue extends DbDocument {
 	org_key: OrgKey;
 	team_key: TeamKey;
 	event_key: EventKey;
@@ -268,7 +271,7 @@ export declare interface OrgTeamValue extends MongoDocument {
  * Headers for TBA API calls.
  * @collection passwords
  */
-export declare interface TBAApiHeaders extends MongoDocument {
+export declare interface TBAApiHeaders extends DbDocument {
 	name: 'tba-api-headers';
 	headers: StringDict;
 }
@@ -277,7 +280,7 @@ export declare interface TBAApiHeaders extends MongoDocument {
  * Headers for FIRST API calls.
  * @collection passwords
  */
-export declare interface FIRSTApiHeaders extends MongoDocument {
+export declare interface FIRSTApiHeaders extends DbDocument {
 	name: 'first-api-headers';
 	headers: StringDict;
 }
@@ -286,7 +289,7 @@ export declare interface FIRSTApiHeaders extends MongoDocument {
  * Secret key for TBA webhooks
  * @collection passwords
  */
-export declare interface TBAWebhookSecret extends MongoDocument {
+export declare interface TBAWebhookSecret extends DbDocument {
 	name: 'tba-webhook-secret';
 	secret_key: string;
 }
@@ -295,7 +298,7 @@ export declare interface TBAWebhookSecret extends MongoDocument {
  * Public/private keys for web push API.
  * @collection passwords
  */
-export declare interface WebPushKeys extends MongoDocument {
+export declare interface WebPushKeys extends DbDocument {
 	name: 'web_push_keys';
 	public_key: string;
 	private_key: string;
@@ -306,7 +309,7 @@ export declare interface WebPushKeys extends MongoDocument {
  * @collection pitscouting
  * @interface PitScouting
  */
-export declare interface PitScouting extends MongoDocument {
+export declare interface PitScouting extends DbDocument {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
@@ -324,12 +327,12 @@ export declare interface PitScouting extends MongoDocument {
  * @collection rankingpoints
  * @interface RankingPoints
  */
-export declare interface RankingPoints extends MongoDocument {
+export declare interface RankingPoints extends DbDocument {
 	year: number;
 	attributes: RankingPoint[];
 }
 
-export declare interface RankingPoint extends MongoDocument {
+export declare interface RankingPoint extends DbDocument {
 	label: string;
 	name: string;
 	abbr: string;
@@ -340,7 +343,7 @@ export declare interface RankingPoint extends MongoDocument {
  * @collection rankings
  * @interface Ranking
  */
-export declare interface Ranking extends MongoDocument {
+export declare interface Ranking extends DbDocument {
 	dq: number;
 	extra_stats: any[];
 	matches_played: number;
@@ -361,7 +364,7 @@ export declare interface Ranking extends MongoDocument {
  * @collection roles
  * @interface Role
  */
-export declare interface Role extends MongoDocument {
+export declare interface Role extends DbDocument {
 	role_key: RoleKey;
 	label: string;
 	access_level: integer;
@@ -371,7 +374,7 @@ export declare interface Role extends MongoDocument {
  * From the scoutingpairs collection. Used in pit scouting.
  * @interface ScoutingPair
  */
-export declare interface ScoutingPair extends MongoDocument {
+export declare interface ScoutingPair extends DbDocument {
 	member1: string;
 	member2: string;
 	member3?: string;
@@ -383,7 +386,7 @@ export declare interface ScoutingPair extends MongoDocument {
  * @collection sessions
  * @interface Session
  */
-export declare interface Session extends MongoDocument {
+export declare interface Session extends DbDocument {
 	expires: Date;
 	lastModified: Date;
 	session: string;
@@ -394,7 +397,7 @@ export declare interface Session extends MongoDocument {
  * @collection teamavatars
  * @interface TeamAvatar
  */
-export declare interface TeamAvatar extends MongoDocument {
+export declare interface TeamAvatar extends DbDocument {
 	team_number: integer;
 	event_year: integer;
 	/**
@@ -408,7 +411,7 @@ export declare interface TeamAvatar extends MongoDocument {
  * @collection teams
  * @interface Team
  */
-export declare interface Team extends MongoDocument {
+export declare interface Team extends DbDocument {
 	address: string|null;
 	city: string|null;
 	country: string|null;
@@ -434,7 +437,7 @@ export declare interface Team extends MongoDocument {
  * @collection uploads
  * @interface Upload
  */
-export declare interface Upload extends MongoDocument {
+export declare interface Upload extends DbDocument {
 	org_key: OrgKey;
 	year: number;
 	team_key: TeamKey;
@@ -454,7 +457,7 @@ export declare interface Upload extends MongoDocument {
  * @collection users
  * @interface User
  */
-export declare interface User extends MongoDocument {
+export declare interface User extends DbDocument {
 	org_key: OrgKey;
 	name: string;
 	role_key: RoleKey;
