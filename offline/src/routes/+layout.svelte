@@ -73,7 +73,7 @@
 			</a>
 		</Section>
 		<Section align="end" toolbar>
-			<IconButton class="material-icons" aria-label="Sync">sync</IconButton>
+			<IconButton class="material-icons" aria-label="Sync" href='/sync'>sync</IconButton>
 			<!-- <IconButton class="material-icons" aria-label="Change language">language</IconButton> -->
 			<IconButton class="material-icons" aria-label="Share" on:click={() => share()}>share</IconButton>
 		</Section>
