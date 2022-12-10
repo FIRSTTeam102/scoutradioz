@@ -31,6 +31,16 @@ export declare interface MongoDocument extends Document {
 }
 
 /**
+ * Optionally explicitly declare that a given object retrieved from the database has `_id` set.
+ * @example
+ * 
+ * 	let users: WithDbId<User>[] = await utilities.find('users', {});
+ */
+export declare type WithDbId<T> = T & {
+	_id: ObjectId
+}
+
+/**
  * Contains the min, max, average, and variance for a given numerical metric from an org's match scouting form.
  * @collection aggranges
  * @interface AggRange
@@ -351,7 +361,7 @@ export declare interface Ranking extends MongoDocument {
  * @collection roles
  * @interface Role
  */
-export declare interface Role {
+export declare interface Role extends MongoDocument {
 	role_key: RoleKey;
 	label: string;
 	access_level: integer;
@@ -361,7 +371,7 @@ export declare interface Role {
  * From the scoutingpairs collection. Used in pit scouting.
  * @interface ScoutingPair
  */
-export declare interface ScoutingPair {
+export declare interface ScoutingPair extends MongoDocument {
 	member1: string;
 	member2: string;
 	member3?: string;
@@ -373,7 +383,7 @@ export declare interface ScoutingPair {
  * @collection sessions
  * @interface Session
  */
-export declare interface Session {
+export declare interface Session extends MongoDocument {
 	expires: Date;
 	lastModified: Date;
 	session: string;
@@ -384,7 +394,7 @@ export declare interface Session {
  * @collection teamavatars
  * @interface TeamAvatar
  */
-export declare interface TeamAvatar {
+export declare interface TeamAvatar extends MongoDocument {
 	team_number: integer;
 	event_year: integer;
 	/**
@@ -444,7 +454,7 @@ export declare interface Upload extends MongoDocument {
  * @collection users
  * @interface User
  */
-export declare interface User {
+export declare interface User extends MongoDocument {
 	org_key: OrgKey;
 	name: string;
 	role_key: RoleKey;
