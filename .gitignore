@@ -10,3 +10,4 @@ primary/public/css
 primary/public/js
 build
 *.tsbuildinfo
+.svelte-kit
