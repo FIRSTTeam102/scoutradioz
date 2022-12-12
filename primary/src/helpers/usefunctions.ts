@@ -491,11 +491,9 @@ class UseFunctions {
 		}
 		
 		//Only provide error stack in development
-		if (req.app.get('env') == 'development') {
-			stack = err.stack;
-		}
+		/*if (req.app.get('env') == 'development')*/ stack = err.stack;
 		
-		logger.error(err.message + '\n' + err.stack);
+		logger.error(err.message + (err.status === 404 ? '' : ('\n' + err.stack)));
 		
 		let viewError = {
 			message: err.message,

@@ -1,9 +1,5 @@
 // Header and Nav Menu
 
-.mburger{
-	// background-color: @header;
-	color: contrast(@header, white, black);
-}
 .header-logo{
 	max-height: 100%; 
 	max-width: 100%;
@@ -55,6 +51,11 @@
 
 .header{
 	background-color: @header;
+
+	@header-color: contrast(@header, @black, @white, 30%);
+	color: @header-color;
+	& .sprite when(@header-color = @black) {.sprite.sp-black;}
+
 	&.tier-qa{background-color: @header-tier-qa;}
 	&.tier-test{background-color: @header-tier-test;}
 	&.tier-dev{background-color: @header-tier-dev;}
@@ -102,6 +103,9 @@
 	&.hidden{
 		top: -@headerbar-height;
 	}
+}
+#headerlogo img {
+	padding: 1em;
 }
 .footer{background-color: @footer;}
 
