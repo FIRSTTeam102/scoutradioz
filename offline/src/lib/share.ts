@@ -1,12 +1,12 @@
 export function share(/*orgKey?*/) {
 	if (!('share' in navigator && 'canShare' in navigator)) return;
 
-	let url = new URL(globalThis.location);
+	let url = new URL(globalThis.location.href);
 	// if (orgKey) url.pathname = '/' + orgKey + url.pathname;
 
-	let shareData = {
-		url,
-		title: document.title,
+	let shareData: ShareData = {
+		url: url.toString(),
+		title: document.title
 	};
 
 	if (navigator.canShare(shareData)) {

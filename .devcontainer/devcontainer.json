@@ -8,13 +8,12 @@
 	"workspaceFolder": "/workspace",
 
 	// Set *default* container specific settings.json values on container create.
-	"settings": {},
+	"settings": {
+		"mdb.confirmRunAll": false
+	},
 
 	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"mongodb.mongodb-vscode",
-		"svelte.svelte-vscode"
-	],
+	"extensions": ["mongodb.mongodb-vscode", "svelte.svelte-vscode"],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [3000, 27017],
@@ -23,12 +22,13 @@
 			"label": "App",
 			"onAutoForward": "notify"
 		},
+		"5173": {
+			"label": "vite dev",
+			"onAutoForward": "notify"
+		},
 		"27017": {
 			"label": "MongoDB",
 			"onAutoForward": "silent"
-		},
-		"270": {
-			"onAutoForward": "ignore"
 		}
 	},
 

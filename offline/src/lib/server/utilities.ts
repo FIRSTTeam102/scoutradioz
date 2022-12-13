@@ -1,5 +1,4 @@
 import utilities from '@firstteam102/scoutradioz-utilities';
-import fs from 'fs';
 import dbJSON from '$lib/../databases.json'
 
 utilities.config(dbJSON, {

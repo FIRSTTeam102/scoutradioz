@@ -1,7 +1,6 @@
-import { error } from '@sveltejs/kit';
+// import { error } from '@sveltejs/kit';
 import utilities from '$lib/server/utilities';
 import type { User } from '@firstteam102/scoutradioz-types';
-import { ObjectId } from 'mongodb';
 
 import type { PageServerLoad } from './$types';
 
