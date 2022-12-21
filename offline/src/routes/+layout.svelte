@@ -17,7 +17,7 @@
 	import IconButton from '@smui/icon-button';
 	import { afterNavigate } from '$app/navigation';
 	import { share } from '$lib/share';
-	import { user } from '$lib/stores';
+	import { user, org_key } from '$lib/stores';
 
 	// close menu when changing pages
 	afterNavigate(() => (menuOpen = false));
@@ -35,7 +35,7 @@
 >
 	<DHeader>
 		<DTitle>Welcome, {$user}</DTitle>
-		<DSubtitle>Team 102</DSubtitle>
+		<DSubtitle>{$org_key}</DSubtitle>
 	</DHeader>
 	<DContent>
 		<List>
@@ -119,7 +119,6 @@
 	  position: static !important;
 	}
   </style> -->
-
 <style lang="scss">
 	.header-logo {
 		height: 100%;
@@ -133,7 +132,6 @@
 		vertical-align: middle;
 		padding-left: 8px;
 	}
-
 	#page {
 		padding: 0 0.5em;
 	}

@@ -1,0 +1,932 @@
+[
+	{
+		"year": 2022,
+		"order": -10,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiply",
+				"operands": [
+					"didTaxi",
+					2
+				],
+				"as": "taxi"
+			},
+			{
+				"operator": "multiply",
+				"operands": [
+					"autoHighScored",
+					4
+				],
+				"as": "autoHigh"
+			},
+			{
+				"operator": "multiply",
+				"operands": [
+					"autoLowScored",
+					2
+				],
+				"as": "autoLow"
+			},
+			{
+				"operator": "multiply",
+				"operands": [
+					"teleopHighScored",
+					2
+				],
+				"as": "teleopHigh"
+			},
+			{
+				"operator": "multiply",
+				"operands": [
+					"teleopLowScored",
+					1
+				],
+				"as": "teleopLow"
+			},
+			{
+				"operator": "multiselect",
+				"id": "successfulClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 4,
+					"Mid": 6,
+					"High": 10,
+					"Traversal": 15
+				},
+				"as": "climbPoints"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"$taxi",
+					"$autoHigh",
+					"$autoLow",
+					"$teleopHigh",
+					"$teleopLow",
+					"$climbPoints"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "Total contributed points",
+		"id": "contributedPoints",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": -9,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiply",
+				"operands": [
+					"didTaxi",
+					2
+				],
+				"as": "taxi"
+			},
+			{
+				"operator": "multiply",
+				"operands": [
+					"autoHighScored",
+					4
+				],
+				"as": "autoHigh"
+			},
+			{
+				"operator": "multiply",
+				"operands": [
+					"autoLowScored",
+					2
+				],
+				"as": "autoLow"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"$taxi",
+					"$autoHigh",
+					"$autoLow"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "Autonomous points",
+		"id": "autoPoints",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": -8,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiply",
+				"operands": [
+					"teleopHighScored",
+					2
+				],
+				"as": "teleopHigh"
+			},
+			{
+				"operator": "multiply",
+				"operands": [
+					"teleopLowScored",
+					1
+				],
+				"as": "teleopLow"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"$teleopHigh",
+					"$teleopLow"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "Teleop points",
+		"id": "teleopPoints",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": -7,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiselect",
+				"id": "successfulClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 4,
+					"Mid": 6,
+					"High": 10,
+					"Traversal": 15
+				}
+			}
+		],
+		"display_as": "number",
+		"label": "Climb points",
+		"id": "climbPoints",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": -6,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "sum",
+				"operands": [
+					"autoHighScored",
+					"teleopHighScored",
+					"autoLowScored",
+					"autoLowMissed"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "Total cargo",
+		"id": "totalCargo",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": -5,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "sum",
+				"operands": [
+					"autoHighScored",
+					"autoLowScored"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "Total cargo",
+		"id": "autoCargo",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 0,
+		"type": "h2",
+		"label": "Autonomous",
+		"id": "lblAuto",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 10,
+		"type": "checkbox",
+		"label": "Did they taxi (move out from the tarmac)?",
+		"id": "didTaxi",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 20,
+		"type": "h3",
+		"label": "Upper Hub",
+		"id": "lblAutoUpperHub",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 30,
+		"type": "counter",
+		"label": "Cargo scored by robot",
+		"id": "autoHighScored",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 40,
+		"type": "badcounter",
+		"label": "Cargo missed by robot",
+		"id": "autoHighMissed",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 50,
+		"type": "h3",
+		"label": "Lower Hub",
+		"id": "lblAutoLowerHub",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 60,
+		"type": "counter",
+		"label": "Cargo scored by robot",
+		"id": "autoLowScored",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 70,
+		"type": "badcounter",
+		"label": "Cargo missed by robot",
+		"id": "autoLowMissed",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 72,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "sum",
+				"operands": [
+					"autoLowScored",
+					"autoLowMissed",
+					"autoHighScored",
+					"autoHighMissed"
+				],
+				"as": "totalShots"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"autoLowScored",
+					"autoHighScored"
+				],
+				"as": "successes"
+			},
+			{
+				"operator": "divide",
+				"operands": [
+					"$successes",
+					"$totalShots"
+				]
+			}
+		],
+		"display_as": "percentage",
+		"label": "Autonomous accuracy",
+		"id": "autoAccuracy",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 80,
+		"type": "checkbox",
+		"label": "Did the human player score? (Only check this if the human player is from Team {{team_number}}!)",
+		"id": "autoHumanMadeShot",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 90,
+		"type": "spacer",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 100,
+		"type": "h2",
+		"label": "Teleop",
+		"id": "teleopLabel",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 110,
+		"type": "h3",
+		"label": "Upper Hub",
+		"id": "lblTeleUpperHub",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 120,
+		"type": "counter",
+		"label": "Cargo scored",
+		"id": "teleopHighScored",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 130,
+		"type": "badcounter",
+		"label": "Cargo missed",
+		"id": "teleopHighMissed",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 140,
+		"type": "h3",
+		"label": "Lower Hub",
+		"id": "lblTeleLowerHub",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 150,
+		"type": "counter",
+		"label": "Cargo scored",
+		"id": "teleopLowScored",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 160,
+		"type": "badcounter",
+		"label": "Cargo missed",
+		"id": "teleopLowMissed",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 162,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "sum",
+				"operands": [
+					"teleopLowScored",
+					"teleopLowMissed",
+					"teleopHighScored",
+					"teleopHighMissed"
+				],
+				"as": "totalShots"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"teleopLowScored",
+					"teleopHighScored"
+				],
+				"as": "successes"
+			},
+			{
+				"operator": "divide",
+				"operands": [
+					"$successes",
+					"$totalShots"
+				]
+			}
+		],
+		"display_as": "percentage",
+		"label": "Teleop accuracy",
+		"id": "teleopAccuracy",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 163,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "sum",
+				"operands": [
+					"autoHighScored",
+					"autoHighMissed",
+					"teleopHighScored",
+					"teleopHighMissed"
+				],
+				"as": "totalShots"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"autoHighScored",
+					"teleopHighScored"
+				],
+				"as": "successes"
+			},
+			{
+				"operator": "divide",
+				"operands": [
+					"$successes",
+					"$totalShots"
+				]
+			}
+		],
+		"display_as": "percentage",
+		"label": "Upper Hub accuracy",
+		"id": "upperAccuracy",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 164,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "sum",
+				"operands": [
+					"autoLowScored",
+					"autoLowMissed",
+					"teleopLowScored",
+					"teleopLowMissed"
+				],
+				"as": "totalShots"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"autoLowScored",
+					"teleopLowScored"
+				],
+				"as": "successes"
+			},
+			{
+				"operator": "divide",
+				"operands": [
+					"$successes",
+					"$totalShots"
+				]
+			}
+		],
+		"display_as": "percentage",
+		"label": "Lower Hub accuracy",
+		"id": "lowerAccuracy",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 170,
+		"type": "spacer",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 180,
+		"type": "h2",
+		"label": "End game",
+		"id": "endgameLabel",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 190,
+		"type": "timeslider",
+		"label": "How much time was on the clock when they started climbing?",
+		"id": "climbTimeStart",
+		"options": {
+			"min": 0,
+			"max": 90,
+			"step": -5
+		},
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 200,
+		"type": "timeslider",
+		"label": "How much time was on the clock when they stopped climbing?",
+		"id": "climbTimeEnd",
+		"options": {
+			"min": 0,
+			"max": 90,
+			"step": -5
+		},
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 210,
+		"type": "multiselect",
+		"label": "Successful climb level:",
+		"options": [
+			"None",
+			"Low",
+			"Mid",
+			"High",
+			"Traversal"
+		],
+		"id": "successfulClimb",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 220,
+		"type": "multiselect",
+		"label": "Attempted climb level:",
+		"options": [
+			"None",
+			"Low",
+			"Mid",
+			"High",
+			"Traversal"
+		],
+		"id": "attemptedClimb",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 221,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiselect",
+				"id": "successfulClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 1,
+					"Mid": 2,
+					"High": 3,
+					"Traversal": 4
+				}
+			}
+		],
+		"display_as": "number",
+		"label": "Climb points",
+		"id": "successfulClimbIndex",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 222,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiselect",
+				"id": "attemptedClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 1,
+					"Mid": 2,
+					"High": 3,
+					"Traversal": 4
+				}
+			}
+		],
+		"display_as": "number",
+		"label": "Climb points",
+		"id": "attemptedClimbIndex",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 223,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiselect",
+				"id": "successfulClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 1,
+					"Mid": 2,
+					"High": 3,
+					"Traversal": 4
+				},
+				"as": "climbSuccess"
+			},
+			{
+				"operator": "multiselect",
+				"id": "attemptedClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 1,
+					"Mid": 2,
+					"High": 3,
+					"Traversal": 4
+				},
+				"as": "climbAttempt"
+			},
+			{
+				"operator": "ne",
+				"operands": [
+					"$climbSuccess",
+					"$climbAttempt"
+				],
+				"as": "ne"
+			},
+			{
+				"operator": "subtract",
+				"operands": [
+					1,
+					"$ne"
+				]
+			}
+		],
+		"display_as": "percentage",
+		"label": "Climb accuracy",
+		"id": "climbGoalRate",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 225,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "subtract",
+				"operands": [
+					"climbTimeStart",
+					"climbTimeEnd"
+				],
+				"as": "climbTimeDelta"
+			},
+			{
+				"operator": "multiselect",
+				"id": "attemptedClimb",
+				"quantifiers": {
+					"None": false,
+					"Low": true,
+					"Mid": true,
+					"High": true,
+					"Traversal": true
+				},
+				"as": "botheredToClimb"
+			},
+			{
+				"operator": "condition",
+				"operands": [
+					"$botheredToClimb",
+					"$climbTimeDelta",
+					null
+				]
+			}
+		],
+		"display_as": "time",
+		"label": "Climb time",
+		"id": "climbTime",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 230,
+		"type": "spacer",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 240,
+		"type": "h2",
+		"label": "General",
+		"id": "generalLabel",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 250,
+		"type": "checkbox",
+		"label": "Defended (stopped or delayed at least one score)?",
+		"id": "defended",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 260,
+		"type": "checkbox",
+		"label": "Attempted to stop or deflect a defender?",
+		"id": "playedCounterDefense",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 270,
+		"type": "checkbox",
+		"label": "Died during the match (or never started)?",
+		"id": "diedDuringMatch",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 280,
+		"type": "checkbox",
+		"label": "Recovered from freeze?",
+		"id": "recoveredFromFreeze",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 281,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiply",
+				"operands": [
+					0.5,
+					"recoveredFromFreeze"
+				],
+				"as": "recover"
+			},
+			{
+				"operator": "subtract",
+				"operands": [
+					1,
+					"diedDuringMatch"
+				],
+				"as": "1minusdied"
+			},
+			{
+				"operator": "sum",
+				"operands": [
+					"$1minusdied",
+					"$recover"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "Reliability factor",
+		"id": "reliabilityFactor",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 290,
+		"type": "spacer",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 300,
+		"type": "checkbox",
+		"label": "Outstanding performance? (If so, definitely explain why!)",
+		"id": "outstandingPerformance",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 310,
+		"type": "textblock",
+		"label": "Other comments and notes:",
+		"id": "otherNotes",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 9991,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "subtract",
+				"operands": [
+					"recoveredFromFreeze",
+					"diedDuringMatch"
+				],
+				"as": "recMinusDied"
+			},
+			{
+				"operator": "gt",
+				"operands": [
+					"$recMinusDied",
+					0
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "",
+		"id": "recoverWithoutFreeze🚩",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 9992,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "multiselect",
+				"id": "successfulClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 1,
+					"Mid": 2,
+					"High": 3,
+					"Traversal": 4
+				},
+				"as": "climbSuccess"
+			},
+			{
+				"operator": "multiselect",
+				"id": "attemptedClimb",
+				"quantifiers": {
+					"None": 0,
+					"Low": 1,
+					"Mid": 2,
+					"High": 3,
+					"Traversal": 4
+				},
+				"as": "climbAttempt"
+			},
+			{
+				"operator": "lt",
+				"operands": [
+					"$climbAttempt",
+					"$climbSuccess"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "",
+		"id": "climbAttemptLtSuccess🚩",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	},
+	{
+		"year": 2022,
+		"order": 9993,
+		"type": "derived",
+		"operations": [
+			{
+				"operator": "lt",
+				"operands": [
+					"climbTimeStart",
+					"climbTimeEnd"
+				]
+			}
+		],
+		"display_as": "number",
+		"label": "",
+		"id": "negativeClimbTime🚩",
+		"form_type": "matchscouting",
+		"org_key": "frc102"
+	}
+]

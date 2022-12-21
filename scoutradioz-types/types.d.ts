@@ -83,6 +83,12 @@ export declare interface Event extends DbDocument {
 	timezone?: string|null;
 }
 
+declare interface FormSliderOptions {
+	min: number;
+	max: number;
+	step: number;
+}
+
 /**
  * A question/metric in the pit or match scouting form.
  * @collection layout
@@ -96,6 +102,7 @@ export declare interface Layout extends DbDocument {
 	org_key: OrgKey;
 	label?: string;
 	id?: string;
+	options?: FormSliderOptions | string[];
 }
 
 /**

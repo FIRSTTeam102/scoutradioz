@@ -38,7 +38,7 @@
 	</Tab>
 </TabBar>
 
-<div style="display: grid; gap: .5em; margin: .5em;">
+<div class="cards">
 	{#each activeData as asg}
 		<Card>
 			<CContent>
@@ -54,3 +54,11 @@
 		</Card>
 	{/each}
 </div>
+
+<style lang="scss">
+	@use '../../../lib/cards.scss' as cards;
+
+	.cards {
+		@include cards.container;
+	}
+</style>
