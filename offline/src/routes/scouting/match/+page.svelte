@@ -30,7 +30,7 @@
 					{#each group as asg}
 						<Item class={asg.alliance} selected={asg.assigned_scorer === $user}>
 							<Text>
-								<PrimaryText>Team {asg.team_key.replace('frc', '')}: Name</PrimaryText>
+								<PrimaryText>Team {asg.team_key.replace('frc', '')}: {asg.team_name}</PrimaryText>
 								<SecondaryText>Assigned to: {asg.assigned_scorer}</SecondaryText>
 							</Text>
 							<Meta>

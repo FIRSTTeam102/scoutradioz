@@ -11,7 +11,7 @@ utilities.config(dbJSON, {
 	stringifyObjectIDs: true, 
 });
 
-// @ts-ignore  - change this later
+// @ts-ignore - change this later
 utilities.refreshTier(); 
 
 export default utilities;

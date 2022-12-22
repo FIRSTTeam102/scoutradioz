@@ -108,17 +108,6 @@
 	</div>
 </AutoAdjust>
 
-<!-- <style>
-	/* Hide everything above this component. */
-	:global(#smui-app),
-	:global(body),
-	:global(html) {
-	  display: block !important;
-	  height: auto !important;
-	  width: auto !important;
-	  position: static !important;
-	}
-  </style> -->
 <style lang="scss">
 	.header-logo {
 		height: 100%;
