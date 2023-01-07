@@ -49,7 +49,8 @@
 	border-color: #eee transparent transparent transparent;
 }
 
-.header{
+// Defines the color of the header bar
+.header-color {
 	background-color: @header;
 
 	@header-color: contrast(@header, @black, @white, 30%);
@@ -59,6 +60,10 @@
 	&.tier-qa{background-color: @header-tier-qa;}
 	&.tier-test{background-color: @header-tier-test;}
 	&.tier-dev{background-color: @header-tier-dev;}
+}
+
+.header{
+	.header-color;
 	& .tierlabel {
 		.monospace;
 		.w3-large;
