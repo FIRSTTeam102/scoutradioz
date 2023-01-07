@@ -17,6 +17,10 @@ async function compileLess() {
 	const lessBase = path.join(pathToLess, 'base.less');
 	const cssOutput = path.join(pathToPublicCss, 'style.css');
 	const mapOutpput = path.join(pathToPublicCss, 'style.css.map');
+	
+	// mkdir public/css if it doesn't exist
+	await fs.promises.mkdir(pathToPublicCss, {recursive: true});
+	
 	let st = Date.now();
 	
 	// Load the base LESS script
