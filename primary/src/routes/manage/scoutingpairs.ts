@@ -61,8 +61,8 @@ router.get('/', wrap(async (req, res) => {
 		);
 	}
 	// Find the number of pit & match assignments WITH data
-	dbPromises.push(utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}}));
-	dbPromises.push(utilities.find('pitscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}}));
+	dbPromises.push(utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$ne: undefined}}));
+	dbPromises.push(utilities.find('pitscouting', {org_key: org_key, event_key: event_key, data: {$ne: undefined}}));
 	
 	//Any team members that are not on a subteam, but are unassigned and present.
 	dbPromises.push(utilities.find('users', 
@@ -450,6 +450,7 @@ router.post('/generatematchallocations2', wrap(async (req, res) => {
 				let thisScout = teamScoutMap[property];
 
 				// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+				// @ts-ignore - this will be fixed in other branch
 				let thisPromise = utilities.update('matchscouting', { 'org_key': org_key, 'match_team_key' : thisMatchTeamKey }, { $set: { 'assigned_scorer' : thisScout }} );
 				assignmentPromisesArray.push(thisPromise);
 			}
@@ -673,8 +674,8 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 	}
 
 	// Two sets of teams - one for each select control
-	let teams1: Team[] = [];
-	let teams2: Team[] = [];
+	let teams1: PitScouting[] = [];
+	let teams2: PitScouting[] = [];
 	if (scoutId) {
 		// find teams which have the specified scout in primary OR secondary OR tertiary
 		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
@@ -1007,7 +1008,7 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
 	let thisEventData = await utilities.find('events', {'key': event_key});
 	let thisEvent = thisEventData[0];
-	let teamArray = [];
+	let teamArray: Team[] = [];
 	if (thisEvent && thisEvent.team_keys && thisEvent.team_keys.length > 0) {
 		logger.trace(thisFuncName + 'thisEvent.team_keys=' + JSON.stringify(thisEvent.team_keys));
 		teamArray = await utilities.find('teams', {'key': {$in: thisEvent.team_keys}}, {sort: {team_number: 1}});

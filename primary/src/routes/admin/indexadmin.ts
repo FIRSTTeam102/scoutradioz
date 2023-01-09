@@ -5,7 +5,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Org, Team } from '@firstteam102/scoutradioz-types';
+import type { Org, Team, Match } from '@firstteam102/scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('indexadmin');
@@ -30,6 +30,12 @@ router.get('/', wrap(async (req, res) => {
 router.get('/sitemap', wrap(async (req, res) => {
 	logger.addContext('funcName', 'sitemap[get]');
 	logger.info('ENTER');
+	
+	// Find a random qualifying match at this event
+	// let matches = await utilities.find('matches', {event_key: req.event.key, comp_level: 'qm', match_number: 5, 'alliances.blue': 'red'}, {});
+	let matches = await utilities.find('matches', {event_key: 'dsfljksdf', match_number: 5, comp_level: 'f', 'alliances.se.sdf.fds.tgsd': {$}});
+	
+	// Find a random team at this event
 	
 	let siteLayout = {
 		'index.ts': {
@@ -89,7 +95,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 		'manage/manualdata.ts': {
 			'/manage/manualdata/teams': 'Manually input teams for current event (Disabled; Not updated for 2020 event/teams data structure yet)',
 			'/manage/manualdata/matchschedule': 'Manually input match schedule for current event',
-			'/manage/manualdata/matches': 'Manually input match results for current event',
+			'/manage/manualdata/matchresults': 'Manually input match results for current event',
 		},
 		'manage/members.ts': {
 			'/manage/members': 'Member management page - Name, subteam, class, role, # years; Sorted by role',

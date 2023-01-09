@@ -390,7 +390,9 @@ router.post('/matchresults', wrap(async (req, res) => {
 	assert(req.teams, new e.InternalDatabaseError('Teams not found'));
 	
 	let mapTeamToOrder: Dict<number> = {};
-	let rankArray: Ranking[] = [];
+	// let rankArray: Ranking[] = [];
+	// 2023-01-09 JL: Temporarily set rankArray to any because the legacy code below adds fields like pointsFor that aren't in the proper schema
+	let rankArray: any[] = [];
 	for (let i = 0; i < req.teams.length; i++) {
 		let team = req.teams[i];
 		let thisRank = {
@@ -569,7 +571,9 @@ router.post('/matchresults', wrap(async (req, res) => {
 			if (a.sort_orders[2] > b.sort_orders[2]) return -1;
 		}
 		// final tiebreaker - inverted (lower team #s -> higher rank)
-		return a.team_number - b.team_number;		
+		let aTeamNum = parseInt(a.team_key.substring(3));
+		let bTeamNum = parseInt(b.team_key.substring(3));
+		return aTeamNum - bTeamNum;
 	};
 	// sort the rankings
 	let sortedRankArray = rankArray.sort(compareRankings);

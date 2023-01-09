@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e from '@firstteam102/http-errors';
+import e, { assert } from '@firstteam102/http-errors';
 import type { Layout, LayoutEdit } from '@firstteam102/scoutradioz-types';
 import type { DeleteResult, InsertManyResult } from 'mongodb';
 //import { write } from 'fs';
@@ -31,6 +31,8 @@ router.get('/editform', wrap(async (req, res) => {
 	if( !await req.authenticate( Permissions.ACCESS_TEAM_ADMIN ) ) return;
 
 	let form_type = req.query.form_type;
+	
+	assert(form_type === 'matchscouting' || form_type === 'pitscouting', new e.UserError('Invalid form type'));
 
 	let org_key = req._user.org_key;
 	

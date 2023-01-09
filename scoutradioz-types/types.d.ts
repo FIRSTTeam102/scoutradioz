@@ -79,7 +79,8 @@ export declare interface Event extends DbDocument {
 	start_date: string;
 	state_prov: string;
 	year: number;
-	team_keys: TeamKey[]
+	team_keys: TeamKey[];
+	timezone?: string|null;
 }
 
 /**
@@ -240,6 +241,7 @@ export declare interface Org extends DbDocument {
 		};
 		columnDefaults: StringDict;
 	}
+	event_key: EventKey|null;
 }
 
 export declare interface OrgSubteam {
@@ -321,6 +323,7 @@ export declare interface PitScouting extends DbDocument {
 	team_key: TeamKey;
 	primary: string;
 	secondary: string;
+	tertiary?: string;
 	actual_scouter?: string;
 	data?: StringDict;
 	useragent?: UserAgent;

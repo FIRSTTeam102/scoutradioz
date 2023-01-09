@@ -34,11 +34,10 @@ router.all('/login-to-org-data', async (req, res, next) => {
 	const org_key = 'demo';
 	const org_passwd = 'demo2022'; // JL note: this isn't much of a secret, and if someone's gone far enough into SR's code to discover hidden passwords, then hello! Wanna join the dev team?
 	
-	// JL note: Remove the "& {_id: ObjectId}" after merging new-scouting-assignments branch
-	let userWithoutPassword: User & {_id: ObjectId} = await utilities.findOne('users', 
+	let userWithoutPassword = await utilities.findOne('users', 
 		{org_key: org_key, password: 'default'}
 	);
-	let userWithPassword: User & {_id: ObjectId} = await utilities.findOne('users',
+	let userWithPassword = await utilities.findOne('users',
 		{org_key: org_key, password: {$ne: 'default'}}
 	);
 	
@@ -78,7 +77,7 @@ router.all('/password-creation-data', async (req, res, next) => {
 		password: 'default'
 	};
 	await utilities.insert('users', tempUser);
-	let newUser: User & {_id: ObjectId} = await utilities.findOne('users', {name: TEMP_USER_NAME});
+	let newUser = await utilities.findOne('users', {name: TEMP_USER_NAME});
 	
 	res.send({
 		userForPasswordCreation: String(newUser._id),

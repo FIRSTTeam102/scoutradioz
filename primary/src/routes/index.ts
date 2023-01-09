@@ -182,7 +182,7 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 	}
 	
 	//Now, sign in to organization's default user
-	let defaultUser = await utilities.findOne('users', 
+	let defaultUser = await utilities.findOne<any>('users', 
 		{org_key: org_key, name: 'default_user'}, {},
 		{allowCache: true}
 	);

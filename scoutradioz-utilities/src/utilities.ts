@@ -8,6 +8,7 @@ import { ObjectId, MongoClient } from 'mongodb';
 import crypto from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
+import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
 
 const Client = require('node-rest-client').Client;
 
@@ -18,6 +19,10 @@ logger.level = process.env.LOG_LEVEL || 'info';
  * Valid primitives for use in mongodb queries
  */
 type ValidQueryPrimitive = string|number|undefined|null|boolean|ObjectId;
+/**
+ * Valid type for the `_id` field in a mongodb query
+ */
+type ValidID = ObjectId|string|FilterOps<ObjectId>;
 
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
@@ -68,9 +73,26 @@ interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperat
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-	_id?: ObjectId|string|FilterOps<ObjectId>;
+	_id?: ValidID;
 	[key: string]: QueryItem|ValidQueryPrimitive;
 }
+/**
+ * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
+ */
+export type FilterQueryTyped<T> = {
+	_id?: ValidID;
+	// Top level dollar operators
+	$or?: FilterQueryTyped<T>[];
+	$and?: FilterQueryTyped<T>[];
+	$expr?: FilterQueryTyped<T>;
+} & {
+	[key in keyof T]?: QueryItem<T[key]>|T[key];
+} & {
+	// JL: TypeScript lets us do limited string validation by using template literals. Can't yet use regexes,
+	// 	but this serves our purpose. Essentially, any string with a . in it is allowed past the schema filter,
+	// 	e.g. 'alliances.blue.team_keys': {$in: ['frc102']}
+	[key: `${string}.${string}`]: QueryItem|ValidQueryPrimitive;
+};
 
 /**
  * Optional settings for configurating SR-Utilities.
@@ -371,18 +393,22 @@ export class Utilities {
 	/**
 	 * Asynchronous "find" function to a collection specified in first parameter.
 	 * @param collection Collection to find in.
-	 * @param query Filter for query.
+	 * @param castQuery Filter for query.
 	 * @param options Query options, such as sort.
 	 * @param cacheOption Caching options.
 	 */
-	async find(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]> {
+	async find<colName extends CollectionName> (
+		collection: colName, 
+		query: FilterQueryTyped<CollectionSchema<colName>>, 
+		options?: FindOptions, 
+		cacheOptions?: UtilitiesCacheOptions
+	): Promise<CollectionSchema<colName>[]> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
 		if (typeof collection != 'string') throw new TypeError('Collection must be specified.');
 		//Query type filter
-		if (!query) query = {};
-		if (typeof query != 'object') throw new TypeError('query must be of type object');
+		if (query && typeof query != 'object') throw new TypeError('query must be of type object');
 		//Options type filter
 		if (!options) options = {};
 		if (typeof options != 'object') throw new TypeError('Options must be of type object');
@@ -393,19 +419,19 @@ export class Utilities {
 		if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
 		if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
-		query = this.castID(query);
+		let castQuery = this.castID(query);
 		
-		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(castQuery)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
 		let timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
-		let returnData: MongoDocument[];
+		let returnData: any[]; // JL note: Schema type is declared in types.d.ts and guaranteed by the database structure rather than TS
 		
 		//If cache is enabled
 		if (cacheOptions.allowCache === true && this.options.cache.enable === true) {
 			
 			if (this.options.debug) logger.trace('Caching enabled');
-			let hashedQuery = await this.hashQuery('find', collection, query, options);
+			let hashedQuery = await this.hashQuery('find', collection, castQuery, options);
 			if (this.options.debug) logger.trace(`(find) Request Hash: ${hashedQuery}`);
 			
 			let cachedRequest: MongoDocument[] | undefined = this.cache.get(hashedQuery);
@@ -425,7 +451,7 @@ export class Utilities {
 				
 				//Request db
 				let db = await this.getDB();
-				cachedRequest = await db.collection(collection).find(query, options).toArray();
+				cachedRequest = await db.collection(collection).find(castQuery, options).toArray();
 				//Cache response (Including maxAge before automatic deletion)
 				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 				
@@ -440,7 +466,7 @@ export class Utilities {
 			
 			let db = await this.getDB();
 			//Request db
-			let data = await db.collection(collection).find(query, options).toArray();
+			let data = await db.collection(collection).find(castQuery, options).toArray();
 			// if (this.options.debug) logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 			this.consoleTimeEnd(timeLogName);
 			
@@ -458,7 +484,11 @@ export class Utilities {
 	 * @param options Query options, such as sort.
 	 * @param cacheOptions Caching options.
 	 */
-	async findOne(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>{
+	async findOne<colName extends CollectionName> (
+		collection: colName, 
+		query: FilterQueryTyped<CollectionSchema<colName>>, 
+		options?: FindOptions, cacheOptions?: UtilitiesCacheOptions
+	): Promise<CollectionSchema<colName>> {
 		logger.addContext('funcName', 'findOne');
 		
 		//Collection type filter
@@ -482,7 +512,7 @@ export class Utilities {
 		let timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
-		let returnData, data;
+		let returnData: any;
 		
 		//If cache is enabled
 		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
@@ -522,11 +552,9 @@ export class Utilities {
 		else {
 			//Request db
 			let db = await this.getDB();
-			data = await db.collection(collection).findOne(query, options);
+			returnData = await db.collection(collection).findOne(query, options);
 			if (this.options.debug) logger.trace(`Not cached (findOne:${collection})`);
 			this.consoleTimeEnd(timeLogName);
-			
-			returnData = data;
 		}
 		
 		logger.removeContext('funcName');
@@ -541,7 +569,14 @@ export class Utilities {
 	 * @param options Query options, such as sort.
 	 * @returns {WriteResult} writeResult
 	 */
-	async update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>{
+	async update<colName extends CollectionName>(
+		collection: colName, 
+		query: FilterQueryTyped<CollectionSchema<colName>>, 
+		update: UpdateFilter<CollectionSchema<colName>>,
+		options?: UpdateOptions
+	): Promise<UpdateResult | MongoDocument>;
+	// JL: Can't remove the separate declaration/implementation function headers cuz TS has this weird bug where it thinks UpdateFilter<MongoDocument> and UpdateFilter<CollectionSchema<colName>> are incompatible though they're the same
+	async update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument> {
 		logger.addContext('funcName', 'update');
 		
 		//Collection filter
@@ -775,7 +810,10 @@ export class Utilities {
 	 * @param query Filter for element/s to remove.
 	 * @return {Promise<DeleteResult>} writeResult
 	 */
-	async remove(collection: string, query?: FilterQuery): Promise<DeleteResult>{
+	async remove<colName extends CollectionName>(
+		collection: colName, 
+		query?: FilterQueryTyped<CollectionSchema<colName>>
+	): Promise<DeleteResult> {
 		logger.addContext('funcName', 'remove');
 		
 		//If the collection is not specified and is not a String, throw an error.

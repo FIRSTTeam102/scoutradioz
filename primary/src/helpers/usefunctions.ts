@@ -6,7 +6,7 @@ import e from '@firstteam102/http-errors';
 import Permissions from './permissions';
 import 'colors';
 import type express from 'express';
-import type { Org } from '@firstteam102/scoutradioz-types';
+import type { Org, Role, Team } from '@firstteam102/scoutradioz-types';
 
 
 const logger = getLogger('usefunctions');
@@ -278,7 +278,7 @@ class UseFunctions {
 		res.locals.url = req.url;
 		
 		//if exist
-		if (thisOrg) {
+		if (thisOrg && thisOrg.event_key) {
 			
 			eventKey = thisOrg.event_key;
 			eventYear = parseInt(eventKey);
@@ -347,7 +347,7 @@ class UseFunctions {
 		
 		//user agent
 		req.shortagent = {
-			ip: String(req.headers['x-forwarded-for']) || req.connection.remoteAddress,
+			ip: String(req.headers['x-forwarded-for']) || req.connection.remoteAddress || 'unknown',
 			device: req.useragent.isMobile ? 'mobile' : req.useragent.isDesktop ? 'desktop' : (req.useragent.isiPad || req.useragent.isAndroidTablet) ? 'tablet' : req.useragent.isBot ? 'bot' : 'other',
 			os: req.useragent.os,
 			browser: req.useragent.browser

@@ -59,7 +59,7 @@ router.post('/disable-subscription', wrap(async (req, res) => {
 	logger.addContext('funcName', 'disable-subscription[post]');
 	logger.info('ENTER');
 	
-	let writeResult = await utilities.update('users', {_id: req._user._id}, {$set: {push_subscription: null}});
+	let writeResult = await utilities.update('users', {_id: req._user._id}, {$unset: {push_subscription: ''}});
 	
 	logger.debug(JSON.stringify(writeResult));
 	logger.info('Success');
@@ -84,7 +84,7 @@ router.all('/*', wrap(async (req, res, next) => {
 
 router.get('/', wrap(async (req, res) => {
 	let usersWithPushNotifs = await utilities.find('users', 
-		{push_subscription: {$ne: null}},
+		{push_subscription: {$ne: undefined}},
 		{sort: {org_key: 1, role_key: 1, name: 1}}
 	);
 	
@@ -147,7 +147,7 @@ router.post('/sendtest', wrap(async (req, res) => {
 	
 	let scoutMatchURL = `${req.protocol}://${req.get('host')}/scouting/match?key=${matchTeamKey}&alliance=${alliance}`;
 	
-	const users = await utilities.find('users', {push_subscription: {$ne: null}});
+	const users = await utilities.find('users', {push_subscription: {$ne: undefined}});
 	
 	const pushSubscription = req._user.push_subscription;
 	

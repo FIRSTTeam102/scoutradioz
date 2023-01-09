@@ -294,7 +294,8 @@ router.post('/create', wrap(async (req, res) => {
 				classes: defaultClasses,
 			},
 			columnDefaults: {}
-		}
+		},
+		event_key: null,
 	};
 	
 	//If a team key is specified
@@ -439,7 +440,7 @@ router.post('/login-to-org', wrap(async (req, res) => {
 		logger.info('Password check completed... Going to log in!');
 		
 		// Get the SR admin user from the DB from the associated org.
-		const SRAdminUser = await utilities.findOne('users', {org_key: org_key, name: 'scoutradioz_admin', role_key: userRole.role_key});
+		const SRAdminUser = await utilities.findOne<any>('users', {org_key: org_key, name: 'scoutradioz_admin', role_key: userRole.role_key});
 		
 		if (!SRAdminUser) {
 			return res.send({status: 500, message: 'Could not find SR admin user in the database.'});

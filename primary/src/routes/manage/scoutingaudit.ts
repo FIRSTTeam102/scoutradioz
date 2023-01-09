@@ -4,6 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import { upload as uploadHelper } from '@firstteam102/scoutradioz-helpers';
+import type { ImageLinks } from '@firstteam102/scoutradioz-helpers/types/uploadhelper';
 import e from '@firstteam102/http-errors';
 import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
 
@@ -169,13 +170,17 @@ router.get('/uploads', wrap(async (req, res) => {
 	});
 	
 	// 2022-03-08 JL: Previous logic didn't work, it always left out at least one document
-	let uploadsByTeamKey: Dict<Upload[]> = {};
+	let uploadsByTeamKey: Dict<(Upload & {links: ImageLinks})[]> = {};
 	for (let upload of uploads) {
-		upload.links = uploadHelper.getLinks(upload);
 		if (upload.hasOwnProperty('team_key')) {
 			let key = upload.team_key;
 			if (!uploadsByTeamKey[key]) uploadsByTeamKey[key] = [];
-			uploadsByTeamKey[key].push(upload);
+			// Clone of the upload but with links added
+			let uploadWithLinks = {
+				...upload,
+				links: uploadHelper.getLinks(upload)
+			};
+			uploadsByTeamKey[key].push(uploadWithLinks);
 		}
 	}
 	
@@ -403,7 +408,7 @@ router.get('/matchscores', wrap(async (req, res) => {
 	let lookbacktoIndex = parseInt(lookbackto) - 1;
 	
 	let matches: Match[] = await utilities.find('matches',
-		{ 'event_key': eventKey, 'match_number': { '$gt': lookbacktoIndex }, 'score_breakdown': { '$ne': null } }, { sort: { match_number: -1 } },
+		{ 'event_key': eventKey, 'match_number': { '$gt': lookbacktoIndex }, 'score_breakdown': { '$ne': undefined } }, { sort: { match_number: -1 } },
 		{allowCache: true, maxCacheAge: 10}
 	);
 
