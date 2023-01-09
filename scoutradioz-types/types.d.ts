@@ -305,6 +305,11 @@ export declare interface WebPushKeys extends DbDocument {
 }
 
 /**
+ * Any of the possible items in the passwords collection.
+ */
+declare type PasswordItem = TBAApiHeaders | FIRSTApiHeaders | TBAWebhookSecret | WebPushKeys;
+
+/**
  * Pit scouting data & assignments for a given team at a given event.
  * @collection pitscouting
  * @interface PitScouting
@@ -494,3 +499,31 @@ export declare interface UserAgent {
 	os: string;
 	browser: string;
 }
+
+/**
+ * Possible collection names in the SR database.
+ */
+export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'teams'|'uploads'|'users';
+/**
+ * Gets the correct schema for the given collection name.
+ */
+export declare type CollectionSchema<colName extends CollectionName> =
+	colName extends 'aggranges' ? AggRange :
+	colName extends 'events' ? Event :
+	// colName extends 'i18n' ?  :
+	colName extends 'layout' ? Layout :
+	colName extends 'matches' ? Match :
+	colName extends 'matchscouting' ? MatchScouting :
+	colName extends 'orgs' ? Org :
+	colName extends 'orgteamvalues' ? OrgTeamValue :
+	colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
+	colName extends 'pitscouting' ? PitScouting :
+	colName extends 'rankingpoints' ? RankingPoints :
+	colName extends 'rankings' ? Ranking :
+	colName extends 'roles' ? Role :
+	colName extends 'scoutingpairs' ? ScoutingPair :
+	colName extends 'sessions' ? Session :
+	colName extends 'teams' ? Team :
+	colName extends 'uploads' ? Upload :
+	colName extends 'users' ? User : 
+	any;
