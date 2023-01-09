@@ -870,6 +870,12 @@ export class Utilities {
 			//Inside promise function, perform client request
 			let request = this.client.get(requestURL, headers, (tbaData: any) => {
 				
+				// If TBA returns null, then we can't use toString()
+				if (!tbaData || typeof tbaData.toString !== 'function') {
+					logger.debug(`TBA response (could not use toString): ${tbaData}`);
+					return resolve(tbaData);
+				}
+				
 				//If newline characters are not deleted, then CloudWatch logs get spammed
 				let str = tbaData.toString().replace(/\n/g, '');
 				
