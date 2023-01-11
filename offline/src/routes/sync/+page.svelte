@@ -1,15 +1,12 @@
-<script lang='ts'>
-	import Tab, { Label } from '@smui/tab';
-	import TabBar from '@smui/tab-bar';
+<script lang="ts">
+	import ScouterSync from './ScouterSync.svelte';
+	import LeadSync from './LeadSync.svelte';
+	import SlidingTabs from '$lib/SlidingTabs.svelte';
 	
-	let activeTab = 'Scouter';
 </script>
 
-<div>
-	<TabBar tabs={['Scouter', 'Scouting lead']} let:tab bind:active={activeTab}>
-		<Tab {tab} color='red'>
-			<Label>{tab}</Label>
-		</Tab>
-	</TabBar>
-	
-</div>
+<SlidingTabs tabs={[
+	{label: 'Scouter', component: ScouterSync},
+	{label: 'Scouting lead', component: LeadSync}
+]}
+/>
