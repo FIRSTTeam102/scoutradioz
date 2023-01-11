@@ -11,3 +11,5 @@ primary/public/js
 build
 *.tsbuildinfo
 .svelte-kit
+# below: temporary
+offline/static
