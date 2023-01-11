@@ -1,17 +1,17 @@
 import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
-import { ObjectId, MongoClient } from 'mongodb';
+import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import type { Request, Response, NextFunction } from 'express';
 import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
 declare const Client: any;
 /**
  * Valid primitives for use in mongodb queries
  */
-declare type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
+type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
 /**
  * Valid type for the `_id` field in a mongodb query
  */
-declare type ValidID = ObjectId | string | FilterOps<ObjectId>;
+type ValidID = ObjectId | string | FilterOps<ObjectId>;
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
@@ -68,7 +68,7 @@ export interface FilterQuery {
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
  */
-export declare type FilterQueryTyped<T> = {
+export type FilterQueryTyped<T> = {
     _id?: ValidID;
     $or?: FilterQueryTyped<T>[];
     $and?: FilterQueryTyped<T>[];
@@ -105,6 +105,10 @@ export declare class UtilitiesOptions {
          */
         maxAge: number;
     };
+    /**
+     * Options for the MongoClient that we are wrapping.
+     */
+    mongoClientOptions?: MongoClientOptions;
     /**
      * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
      */
@@ -297,14 +301,6 @@ export declare class Utilities {
      * @returns Query with _id replaced with an ObjectId
      */
     private castID;
-    /**
-     * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
-     */
-    private stringifyObjectIDs;
-    /**
-     * Casts _id into a string, for when utilities is configured to do so.
-     */
-    private stringifyObjectID;
 }
 declare interface TBAKey extends MongoDocument {
     headers: {

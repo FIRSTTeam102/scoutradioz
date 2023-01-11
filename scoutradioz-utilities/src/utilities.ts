@@ -4,7 +4,7 @@ import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, 
 	Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions,
 	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
-import { ObjectId, MongoClient } from 'mongodb';
+import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import crypto from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
@@ -129,6 +129,10 @@ export class UtilitiesOptions {
 		maxAge: number;
 	};
 	/**
+	 * Options for the MongoClient that we are wrapping.
+	 */
+	mongoClientOptions?: MongoClientOptions;
+	/**
 	 * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
 	 */
 	stringifyObjectIDs?: boolean;
@@ -141,6 +145,7 @@ export class UtilitiesOptions {
 		else this.debug = false;
 		
 		this.stringifyObjectIDs = options?.stringifyObjectIDs || false;
+		this.mongoClientOptions = options?.mongoClientOptions || {};
 		
 		let defaultCacheOpts = {
 			enable: false,
@@ -1135,7 +1140,12 @@ export class Utilities {
 		});
 	}
 
-	private open(url: string): Promise<[MongoClient, Db]> {
+	private async open(url: string): Promise<[MongoClient, Db]> {
+		let options = this.options.mongoClientOptions || {};
+		let client = await MongoClient.connect(url, options);
+		let db = client.db();
+		return [client, db];
+		
 		return new Promise((resolve, reject) => {
 			MongoClient.connect(url, (err, client) => {
 				if (err || !client) return reject(err);
