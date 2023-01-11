@@ -5,102 +5,14 @@
 	//
 extends ../layout
 block content
-
-	mixin subteam(index, subteam)
-		div(id=`subteam_${index}` class="w3-row")
-			div(class="up-caret clickable w3-left" subteam-caret) &#9650;
-			div(class="w3-rest")
-				div(class="w3-col s4 w3-padding-small")
-					input(type="text" class="theme-input" name=`subteams_${index}_label` value=subteam.label)
-				div(class="w3-col s4 w3-padding-small")
-					input(type="text" class="theme-input" name=`subteams_${index}_subteamkey` value=subteam.subteam_key)
-				div(class="w3-col s4 w3-padding-small")
-					select(class="theme-input" name=`subteams_${index}_pitscout`)
-						if subteam.pit_scout == true
-							option(value="0") false
-							option(value="1" selected) true
-						else
-							option(value="0" selected) false
-							option(value="1") true
-	mixin classname(index, classname)
-		div(id=`classname_${index}` class="w3-row")
-			div(class="up-caret clickable w3-left" classname-caret) &#9650;
-			div(class="w3-rest")
-				div(class="w3-col s3 w3-padding-small")
-					input(type="text" class="theme-input" name=`classes_${index}_label` value=classname.label)
-				div(class="w3-col s3 w3-padding-small")
-					input(type="text" class="theme-input" name=`classes_${index}_classkey` value=classname.class_key)
-				div(class="w3-col s3 w3-padding-small")
-					input(type="text" class="theme-input" name=`classes_${index}_seniority` value=classname.seniority)
-				div(class="w3-col s3 w3-padding-small")
-					select(class="theme-input" name=`classes_${index}_youth`)
-						if classname.youth == true
-							option(value="0") false
-							option(value="1" selected) true
-						else
-							option(value="0" selected) false
-							option(value="1") true
+	include ../mixins/orgConfig
 	
-	style.
-		.w3-col input,.w3-col button,.w3-col select{
-			width: 100%;
-		}
-		.up-caret {
-			opacity: 0;
-			padding: 13px 4px;
-		}
-		.w3-row:hover > .up-caret {
-			opacity: 1;
-		}
 	div(class="w3-auto w3-content")
 		h2 Manage organizations
 		each org in orgs
 			div(class="w3-row")
 				hr 
-				//p=JSON.stringify(org)
-				//h4=org.org_key
-				form(id=`updateOrg_${org.org_key}` method="post" action="/admin/orgs")
-					div(class="w3-row")
-						div(class="w3-col s6 m1 w3-padding-small")
-							input(disabled type="text" class="theme-input w3-disabled" value=org.org_key)
-							input(type="hidden" name="org_key" value=org.org_key)
-						div(class="w3-col s6 m3 w3-padding-small")
-							input(type="text" class="theme-input" name="nickname" value=org.nickname)
-						div(class="w3-col s6 m2 w3-padding-small")
-							input(type="text" class="theme-input" name="team_key" value=(org.team_keys ? org.team_keys.join(', ') : org.team_key) placeholder="Team key OR keys (comma separated)")
-						div(class="w3-col s6 m3 w3-padding-small")
-							input(type="text" class="theme-input" name="default_password" placeholder="Reset default password?")
-						div(class="w3-col m2 w3-padding-small")
-							button(type="submit" class="w3-btn theme-submit") Update Org
-						div(class="w3-col m1 w3-padding-small")
-							div(class="w3-btn theme-red" onclick=`deleteOrg('${org.org_key}')`)
-								span(class="sprite sp-24 sp-inline no-margin sp-delete")
-					div(class="w3-row")
-						div(class="w3-col m6 w3-padding-small")
-							h4 Subteams
-							div(class="w3-col s4") Label
-							div(class="w3-col s4") Key
-							div(class="w3-col s4") Pit scout?
-							div(id=`subteams_${org.org_key}`)
-								each subteam, i in org.config.members.subteams 
-									+subteam(i, subteam)
-							div(class="w3-col s6 w3-padding-small")
-								div(class="w3-btn w3-show-block theme-submit" onclick=`addSubteam('${org.org_key}')`) Add New Subteam
-							div(class="w3-col s6 w3-padding-small")
-								div(class="w3-btn w3-show-block theme-red" onclick=`deleteSubteam('${org.org_key}')`) Delete Last Subteam
-						div(class="w3-col m6 w3-padding-small")
-							h4 Classes
-							div(class="w3-col s3") Label
-							div(class="w3-col s3") Key
-							div(class="w3-col s3") Seniority
-							div(class="w3-col s3") Youth?
-							div(id=`classes_${org.org_key}`)
-								each classname, i in org.config.members.classes
-									+classname(i, classname)
-							div(class="w3-col s6 w3-padding-small")
-								div(class="w3-btn w3-show-block theme-submit" onclick=`addClass('${org.org_key}')`) Add New Class
-							div(class="w3-col s6 w3-padding-small")
-								div(class="w3-btn w3-show-block theme-red" onclick=`deleteClass('${org.org_key}')`) Delete Last Class
+				+orgConfig(org, true)
 				br 
 				label(class="w3-label gear-btn") Log in to #{org.nickname}:
 				a(href=`/selectorg-login?org_key=${org.org_key}`)
@@ -119,9 +31,3 @@ block content
 					input(type="text" class="theme-input" name="default_password" placeholder="Default password")
 				div(class="w3-col m2 w3-padding-small")
 					button(type="submit" class="w3-btn theme-submit" id="createOrg") Create Org
-	div(class="w3-hide")
-		div#subteamTemplate
-			+subteam('num', {label: '', key: '', pit_scout: true})
-		div#classTemplate
-			+classname('num', {label: '', key: '', seniority: '', youth: true})
-	script(src=`${fileRoot}/js/script-orgs.js`)
