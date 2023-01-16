@@ -13,3 +13,4 @@ build
 .svelte-kit
 # below: temporary
 offline/static
+.serverless
