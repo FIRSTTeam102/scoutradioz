@@ -370,6 +370,7 @@ router.get('/', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scoringMatches.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoringMatches[scoreIdx] && scoringMatches[scoreIdx] && matchLookup[scoringMatches[scoreIdx].match_key])
+			// @ts-ignore - JL note: don't wanna bother with this rn
 			scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
 	}
 	
@@ -724,6 +725,7 @@ router.get('/matches', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key])
+			// @ts-ignore - JL note: don't wanna bother with this rn
 			scoreData[scoreIdx].predicted_time = matchLookup[scoreData[scoreIdx].match_key].predicted_time;
 	}
 	
@@ -743,9 +745,11 @@ router.get('/matches', wrap(async (req, res) => {
 	
 	for(let i in scoreData) {
 		if (teamKeyMap[scoreData[i].team_key]) {
+			// @ts-ignore - JL note: don't wanna bother with this rn
 			scoreData[i].team_nickname = teamKeyMap[scoreData[i].team_key].nickname;
 		}
 		else {
+			// @ts-ignore - JL note: don't wanna bother with this rn
 			scoreData[i].team_nickname = res.msg('dashboard.none');
 		}
 	}

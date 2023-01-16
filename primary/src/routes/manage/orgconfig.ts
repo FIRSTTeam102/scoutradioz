@@ -1,11 +1,14 @@
+import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
+import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e from '@firstteam102/http-errors';
+import e, { assert } from '@firstteam102/http-errors';
 import type { Layout, LayoutEdit } from '@firstteam102/scoutradioz-types';
 import type { DeleteResult, InsertManyResult } from 'mongodb';
+import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -21,7 +24,65 @@ router.all('/*', wrap(async (req, res, next) => {
 
 router.get('/', wrap(async (req, res) => {
 	
-	res.redirect('/manage');
+	const org = req._user.org;
+	
+	res.render('./manage/config/index', {
+		title: `Configure ${org.nickname}`,
+		org: org
+	});
+	
+}));
+
+router.post('/', wrap(async (req, res) => {
+	logger.addContext('funcName', 'root[post]');
+	
+	const orgKey = req.body.org_key;
+	const nickname = req.body.nickname;
+	
+	assert(orgKey === req._user.org.org_key, new e.UnauthorizedError(`Unauthorized to edit org ${orgKey}`));
+	
+	logger.info(`Updating org ${orgKey}, nickname=${nickname}`);
+	
+	let subteams, classes;
+	try {
+		let ret = getSubteamsAndClasses(req.body);
+		subteams = ret.subteams;
+		classes = ret.classes;
+	}
+	catch (err) {
+		return res.redirect(`/manage/config?alert=${err}&type=error`);
+	}
+	logger.debug(`subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
+	
+	//Create update query
+	let updateQuery: MongoDocument = {
+		$set: {
+			nickname: nickname,
+			'config.members.subteams': subteams,
+			'config.members.classes': classes,
+		},
+	};
+	
+	logger.debug(`updateQuery=${JSON.stringify(updateQuery)}`);
+	
+	const writeResult = await utilities.update('orgs', 
+		{org_key: orgKey}, updateQuery
+	);
+	
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+	
+	res.redirect('/manage/config?alert=Updated successfully.&type=good');
+}));
+
+router.post('/setdefaultpassword', wrap(async (req, res) => {
+	
+	let newDefaultPassword = req.body.defaultPassword;
+	
+	let hash = await bcrypt.hash(newDefaultPassword, 10);
+	
+	await utilities.update('orgs', {org_key: req._user.org_key}, {$set: {default_password: hash}});
+	
+	res.redirect(`/manage?alert=Successfully changed password to ${newDefaultPassword}.`);
 	
 }));
 
@@ -31,6 +92,8 @@ router.get('/editform', wrap(async (req, res) => {
 	if( !await req.authenticate( Permissions.ACCESS_TEAM_ADMIN ) ) return;
 
 	let form_type = req.query.form_type;
+	
+	assert(form_type === 'matchscouting' || form_type === 'pitscouting', new e.UserError('Invalid form type'));
 
 	let org_key = req._user.org_key;
 	

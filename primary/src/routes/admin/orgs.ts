@@ -7,6 +7,7 @@ import Permissions from '../../helpers/permissions';
 import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
 import type { AnyDict, Org, User, Role } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
+import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 
 const router = express.Router();
 const logger = getLogger('orgs');
@@ -49,67 +50,14 @@ router.post('/', wrap(async (req, res) => {
 	
 	logger.info(`${thisFuncName} Updating org ${orgKey}, nickname=${nickname}`);
 	
-	//Aggregate config.members.subteams and config.members.classes
-	// 	note: there is no data structure validation in this code, so when we create an org config
-	// 	page, we can't take this code verbatim
-	let subteams: AnyDict[] = [];
-	let classes: AnyDict[] = [];
-	for (let elem in req.body) {
-		let split = elem.split('_');
-		let elemIdx = parseInt(split[1]);
-		let elemType = split[2];
-		let elemKey, elemValue;
-		let origValue = req.body[elem];
-		
-		switch (elemType) {
-			case 'pitscout':
-				elemKey = 'pit_scout';
-				console.log(origValue);
-				elemValue = (origValue == true);
-				break;
-			case 'youth':
-				elemKey = 'youth';
-				elemValue = (origValue == true);
-				break;
-			case 'subteamkey':
-				elemKey = 'subteam_key';
-				elemValue = origValue;
-				break;
-			case 'classkey':
-				elemKey = 'class_key';
-				elemValue = origValue;
-				break;
-			case 'seniority':
-				elemKey = 'seniority';
-				elemValue = parseInt(origValue);
-				if (isNaN(elemValue)) {
-					logger.error(`${elem} -> ${origValue} is NaN!!`);
-					return res.redirect(`/admin/orgs?alert=${elem} -> ${origValue} is NaN!!&type=error`);
-				}
-				break;
-			default:
-				elemKey = elemType;
-				elemValue = origValue;
-		}
-		
-		//Go through subteams
-		if (elem.includes('subteams')) {
-			//if there is no subteam at this idx, create it
-			if (!subteams[elemIdx]) {
-				subteams[elemIdx] = {};
-			}
-			//pop in this element into the corresponding part of subteams
-			subteams[elemIdx][elemKey] = elemValue;
-		}
-		//Go through classes
-		else if (elem.includes('classes')) {
-			//if there is no subteam at this idx, create it
-			if (!classes[elemIdx]) {
-				classes[elemIdx] = {};
-			}
-			//pop in this element into the corresponding part of classes
-			classes[elemIdx][elemKey] = elemValue;
-		}
+	let subteams, classes;
+	try {
+		let ret = getSubteamsAndClasses(req.body);
+		subteams = ret.subteams;
+		classes = ret.classes;
+	}
+	catch (err) {
+		return res.redirect(`/admin/orgs?alert=${err}&type=error`);
 	}
 	logger.debug(`${thisFuncName} subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
 	
@@ -294,7 +242,8 @@ router.post('/create', wrap(async (req, res) => {
 				classes: defaultClasses,
 			},
 			columnDefaults: {}
-		}
+		},
+		event_key: null,
 	};
 	
 	//If a team key is specified
@@ -439,7 +388,7 @@ router.post('/login-to-org', wrap(async (req, res) => {
 		logger.info('Password check completed... Going to log in!');
 		
 		// Get the SR admin user from the DB from the associated org.
-		const SRAdminUser = await utilities.findOne('users', {org_key: org_key, name: 'scoutradioz_admin', role_key: userRole.role_key});
+		const SRAdminUser = await utilities.findOne<any>('users', {org_key: org_key, name: 'scoutradioz_admin', role_key: userRole.role_key});
 		
 		if (!SRAdminUser) {
 			return res.send({status: 500, message: 'Could not find SR admin user in the database.'});

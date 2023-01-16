@@ -2,11 +2,16 @@ import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
 import { ObjectId, MongoClient } from 'mongodb';
 import type { Request, Response, NextFunction } from 'express';
+import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
 declare const Client: any;
 /**
  * Valid primitives for use in mongodb queries
  */
 declare type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
+/**
+ * Valid type for the `_id` field in a mongodb query
+ */
+declare type ValidID = ObjectId | string | FilterOps<ObjectId>;
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
@@ -54,9 +59,22 @@ interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperat
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-    _id?: ObjectId | string | FilterOps<ObjectId>;
+    _id?: ValidID;
     [key: string]: QueryItem | ValidQueryPrimitive;
 }
+/**
+ * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
+ */
+export declare type FilterQueryTyped<T> = {
+    _id?: ValidID;
+    $or?: FilterQueryTyped<T>[];
+    $and?: FilterQueryTyped<T>[];
+    $expr?: FilterQueryTyped<T>;
+} & {
+    [key in keyof T]?: QueryItem<T[key]> | T[key];
+} & {
+    [key: `${string}.${string}`]: QueryItem | ValidQueryPrimitive;
+};
 /**
  * Optional settings for configurating SR-Utilities.
  * @param cache
@@ -78,6 +96,10 @@ export declare class UtilitiesOptions {
          */
         maxAge: number;
     };
+    /**
+     * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
+     */
+    stringifyObjectIDs?: boolean;
     /**
      * Whether to add extensive logger.trace statements
      */
@@ -141,11 +163,11 @@ export declare class Utilities {
     /**
      * Asynchronous "find" function to a collection specified in first parameter.
      * @param collection Collection to find in.
-     * @param query Filter for query.
+     * @param castQuery Filter for query.
      * @param options Query options, such as sort.
      * @param cacheOption Caching options.
      */
-    find(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]>;
+    find<colName extends CollectionName>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<CollectionSchema<colName>[]>;
     /**
      * Asynchronous "findOne" function to a collection specified in first parameter.
      * @param collection Collection to findOne in.
@@ -153,7 +175,7 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @param cacheOptions Caching options.
      */
-    findOne(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>;
+    findOne<colName extends CollectionName>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<CollectionSchema<colName>>;
     /**
      * Asynchronous "update" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -162,7 +184,7 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @returns {WriteResult} writeResult
      */
-    update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>;
+    update<colName extends CollectionName>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, update: UpdateFilter<CollectionSchema<colName>>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>;
     /**
      * Asynchronous "aggregate" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -201,7 +223,7 @@ export declare class Utilities {
      * @param query Filter for element/s to remove.
      * @return {Promise<DeleteResult>} writeResult
      */
-    remove(collection: string, query?: FilterQuery): Promise<DeleteResult>;
+    remove<colName extends CollectionName>(collection: colName, query?: FilterQueryTyped<CollectionSchema<colName>>): Promise<DeleteResult>;
     /**
      * Asynchronous "insert" function to a collection specified in first parameter.
      * @param collection Collection to insert into.
@@ -264,6 +286,14 @@ export declare class Utilities {
      * @returns Query with _id replaced with an ObjectId
      */
     private castID;
+    /**
+     * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
+     */
+    private stringifyObjectIDs;
+    /**
+     * Casts _id into a string, for when utilities is configured to do so.
+     */
+    private stringifyObjectID;
 }
 declare interface TBAKey extends MongoDocument {
     headers: {

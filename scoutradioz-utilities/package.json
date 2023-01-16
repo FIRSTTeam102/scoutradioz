@@ -1,6 +1,6 @@
 {
   "name": "@firstteam102/scoutradioz-utilities",
-  "version": "1.2.11",
+  "version": "1.2.22",
   "description": "Database utilities package for Scoutradioz",
   "main": "build/utilities.js",
   "scripts": {
@@ -23,7 +23,8 @@
     "@types/node": "^16.x.x"
   },
   "peerDependencies": {
-    "mongodb": ">=4.1.0"
+    "mongodb": ">=4.1.0",
+	"@firstteam102/scoutradioz-types": ">=1.0.15"
   },
   "files": [
     "src",

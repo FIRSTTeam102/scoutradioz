@@ -57,7 +57,7 @@ router.get('/finishedmatches', wrap(async (req, res) => {
 	let matches: Match[] = await utilities.find('matches', {'alliances.red.score': { $ne: -1}, 'event_key' : eventKey}, {sort: {time: -1}});
 
 	// Ranking point info
-	let rankingPoints: RankingPoints[] = await utilities.findOne('rankingpoints', {year: year});
+	let rankingPoints: RankingPoints = await utilities.findOne('rankingpoints', {year: year});
 	//logger.debug("rankingPoints=" + JSON.stringify(rankingPoints));
 	
 	//logger.debug('matches=' + JSON.stringify(matches));
@@ -181,6 +181,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 			let thisScoreData = matchDataMap[matches[matchesIdx].key];
 			if (thisScoreData) {
 				//logger.debug('Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
+				// @ts-ignore JL note - legacy code
 				matches[matchesIdx].scoringdata = thisScoreData;
 			}
 		}
@@ -188,7 +189,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 	logger.trace('matches=' + JSON.stringify(matches));
 
 	// Ranking point info
-	let rankingPoints: RankingPoints[] = await utilities.findOne('rankingpoints', {year: eventYear});
+	let rankingPoints: RankingPoints = await utilities.findOne('rankingpoints', {year: eventYear});
 
 	// Match data layout - use to build dynamic Mongo aggregation query
 	// db.scoringdata.aggregate( [ 
@@ -229,7 +230,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		//pull this layout element from score layout
 		let thisLayout = scorelayout[scoreIdx];
-		thisLayout.key = thisLayout.id;
+		// thisLayout.key = thisLayout.id; 2023-01-09 JL - removing unnecessary line
 		scorelayout[scoreIdx] = thisLayout;
 		//if it is a valid data type, add this layout's ID to groupClause
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
@@ -373,6 +374,7 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 			let thisScoreData = matchDataMap[match.key];
 			if (thisScoreData) {
 				//logger.debug('Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
+				// @ts-ignore JL note - legacy code
 				match.scoringdata = thisScoreData;
 			}
 			// 2020-03-09 JL: get list of all events that these matches contain
@@ -926,7 +928,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		//pull this layout element from score layout
 		let thisLayout = scorelayout[scoreIdx];
-		thisLayout.key = thisLayout.id;
+		// thisLayout.key = thisLayout.id; 2023-01-09 JL - removing unnecessary code
 		scorelayout[scoreIdx] = thisLayout;
 		//if it is a valid data type, add this layout's ID to groupClause
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
@@ -1319,6 +1321,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 		}
 		if(rankMap[thisAgg._id]){
 			thisAgg['rank'] = rankMap[thisAgg._id].rank;
+			// @ts-ignore JL note - investigate this later (Rank.value does not exist)
 			thisAgg['value'] = rankMap[thisAgg._id].value;
 			aggArray[aggIdx] = thisAgg;
 		}
@@ -1358,7 +1361,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	let orgKey = req._user.org_key;
 
 	let dataType = req.query.type;
-	if (typeof dataType !== 'string') {
+	if (dataType !== 'pitscouting' && dataType !== 'matchscouting') {
 		res.redirect('/?alert=' + res.msgUrl('reports.exportData.noType'));
 		return;
 	}
@@ -1408,7 +1411,8 @@ router.get('/exportdata', wrap(async (req, res) => {
 	}
 	logger.debug('queryJson=' + JSON.stringify(queryJson));
 	//var scored = await utilities.find(dataType, {'org_key': orgKey, 'event_key': eventKey, 'data': {$exists: true} }, sortOptions);
-	let scored: PitScouting[]|MatchScouting[] = await utilities.find(dataType, queryJson, sortOptions);
+	let scored: PitScouting[]|MatchScouting[];
+	scored = await utilities.find<any>(dataType, queryJson, sortOptions);
 	
 	// Since team_key sort is string based, we need to manually sort by team number
 	if (sortKey == 'team_key') {
@@ -1466,6 +1470,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 				else
 					dataRow += ',';
 				let thisPivotDataKey = pivotDataKeys[k];
+				// @ts-ignore JL note - legacy code
 				let thisVal = thisScored[thisPivotDataKey];
 				// 2020-03-11 JL: time now exports to date stringj
 				//If this value is a time, then convert it into a Date string

@@ -1,0 +1,7 @@
+extends ../../layout
+block content
+	div(class="w3-auto w3-content")
+		include ../../mixins/orgConfig
+		h2=title
+		div(class="w3-row")
+			+orgConfig(org, false)

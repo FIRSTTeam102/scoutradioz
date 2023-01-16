@@ -3,10 +3,12 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
 import utilities from '@firstteam102/scoutradioz-utilities';
+// import utilities from '../../../scoutradioz-utilities/src/utilities';
 import Permissions from '../helpers/permissions';
-import e from '@firstteam102/http-errors';
+import e, { assert } from '@firstteam102/http-errors';
 import { matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
 import type { Role, Org, User, Layout } from '@firstteam102/scoutradioz-types';
+import { ObjectId } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('user');
@@ -140,7 +142,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	logger.debug(`userID=${userID}`);
 	
 	//If we don't have organization info, redirect user to login
-	if(!org_key || !org_password){
+	if(typeof org_key !== 'string' || typeof org_password !== 'string'){
 		return res.send({
 			status: 400,
 			redirect_url: '/user/login?alert=' + req.msgUrl('user.resubmitlogin')
@@ -148,7 +150,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	}
 	
 	//If no user is selected, send an alert message
-	if(!userID){
+	if(typeof userID !== 'string'){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
@@ -178,7 +180,8 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	}
 	
 	//Find user info that matches selected id
-	let user = await utilities.findOne('users', {_id: userID});
+	// 2023-1-8 JL note: Explicitly declaring it as 'any' because of the req.login not liking Express.User casting to Scoutradioz User
+	let user = await utilities.findOne<any>('users', {_id: new ObjectId(userID)});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
@@ -340,7 +343,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	
 	//Find user info that matches selected id
 	// 2022-05-17 JL: Allowing this variable to be "any" because scoutradioz-types.User is not assignable to express.User (in req.logIn)
-	let user = await utilities.findOne('users', {_id: userID});
+	let user = await utilities.findOne<any>('users', {_id: userID});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user || !user.password){
@@ -449,7 +452,8 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	}
 	
 	//Find user info that matches selected id
-	let user = await utilities.findOne('users', {_id: userID});
+	// 2023-1-8 JL note: Explicitly declaring it as 'any' because of the req.login not liking Express.User casting to Scoutradioz User
+	let user = await utilities.findOne<any>('users', {_id: userID});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
@@ -577,7 +581,7 @@ router.get('/logout', wrap(async (req, res) =>  {
 		);
 		if(!selectedOrg) return res.redirect(500, '/');
 		
-		let defaultUser = await utilities.findOne('users', 
+		let defaultUser = await utilities.findOne<any>('users', 
 			{'org_key': org_key, name: 'default_user'}, {},
 			{allowCache: true}
 		);
@@ -791,12 +795,14 @@ router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, r
 			{org_key: orgKey}, {},
 			{allowCache: true}
 		);
-		let thisConfig = thisOrg.config;
+		// 2023-01-09 JL: Replaced code that generates empty config with an assert, since org config should always be defined now
+		assert(thisOrg.config, new e.InternalDatabaseError('Org config not defined'));
+		// let thisConfig = thisOrg.config;
 		//logger.debug("thisConfig=" + JSON.stringify(thisConfig));
-		if (!thisConfig) {
-			thisConfig = {};
-			thisOrg['config'] = thisConfig;
-		}
+		// if (!thisConfig) {
+		// 	thisConfig = {};
+		// 	thisOrg['config'] = thisConfig;
+		// }
 		let theseColDefaults = thisOrg.config.columnDefaults;
 		if (!theseColDefaults) {
 			theseColDefaults = {};

@@ -1,6 +1,7 @@
 import passport from 'passport';
 import { getLogger } from 'log4js';
 import utilities from '@firstteam102/scoutradioz-utilities';
+import { User } from '@firstteam102/scoutradioz-types';
 
 const logger = getLogger('passport');
 
@@ -17,7 +18,7 @@ passport.deserializeUser(async function(id: string, done) {
 	logger.trace('deserializeUser: ' + id);
 	
 	// JL note: Can't declare the type of this one because of the slight type differences between our extended express.User object (namespace-extensions.d.ts) and our regular User object in the DB
-	let user = await utilities.findOne('users', { '_id': id }, {}, {allowCache: true});
+	let user = await utilities.findOne<any>('users', { '_id': id }, {}, {allowCache: true});
 	
 	if(!user){
 		logger.error('User not found in db: deserializeUser ' + id);

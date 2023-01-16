@@ -36,3 +36,54 @@
 .scouting-counter:disabled{
 	cursor: default;
 }
+
+// match.pug
+
+.dynamicscroll-header {
+	width: 0;
+	height: 0;
+	position: relative;
+	top: -24px;
+}
+.sticky-bar {
+	position: fixed;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	width: 100%;
+	font-size: 2em;
+	.header-color;
+	& div{
+		height: @headerbar-height;
+	}
+}
+.sticky-bar-left {
+	position: relative;
+	float: left;
+	left: 0px;
+	bottom: 0px;
+	padding: 0px 16px;
+	z-index: 10;
+}
+.sticky-bar-right {
+	position: relative;
+	float: right;
+	right: 0px;
+	bottom: 0px;
+	padding: 0px 16px;
+	z-index: 10;
+}
+.sticky-bar-title {
+	position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+	
+	left: 0;
+	right: 0;
+	z-index: 1;
+}
+.disabled-form{
+	opacity: 0.7;
+	filter: blur(2px);
+}

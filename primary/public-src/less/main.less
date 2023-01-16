@@ -23,16 +23,12 @@
 @header: @trim;
 @footer: @black;
 @placeholder-color: #bbb;
+@prompt-color: #f0f5ff;
 
 @headerbar-height: 45px;
 
 :root {
 	color-scheme: dark;
-
-	/* FIRST colors */
-	--first-red: @first-red;
-	--first-blue: @first-blue;
-	--first-gray: @first-gray;
 	
 	/* MMenu customization */
 	--mm-color-background: #444;
@@ -53,17 +49,32 @@
 	--sprites-url: url('/images/sprites.png');
 }
 
-.theme-link{
-	color: @black!important; background-color: @button-primary!important;
-	& .sprite {
-		.sprite.sp-black;
-	}
+.theme-link {
+	@theme-link-color: contrast(@button-primary, @black, @white, 30%);
+	color: @theme-link-color !important;
+	background-color: @button-primary !important;
+	& .sprite when(@theme-link-color = @black) {.sprite.sp-black;}
 }
-.theme-input{color: @black!important; background-color: @secondary!important}
-.theme-input-link{color: @black!important; background-color: @button-primary!important}
-.theme-dim,.theme-grey{color:@text-primary!important;background-color:@dark!important}
-.theme-submit{color:@black!important;background-color:@button-secondary!important}
-.theme-red{color:#fff!important;background-color:@first-red!important}
+.theme-input {
+	color: contrast(@secondary, @black, @white, 30%) !important;
+	background-color: @secondary !important;
+}
+.theme-input-link {
+	color: contrast(@button-primary, @black, @white, 30%) !important;
+	background-color: @button-primary !important;
+}
+.theme-submit {
+	color: contrast(@button-secondary, @black, @white, 30%) !important;
+	background-color: @button-secondary !important;
+}
+.theme-dim, .theme-grey {
+	color: @text-primary !important;
+	background-color: @dark !important;
+}
+.theme-red {
+	color: @white !important;
+	background-color: @first-red !important
+}
 .gear-btn{min-width:100px;margin: 15px 8px 0px 8px;}
 
 .w3-input {
@@ -159,8 +170,8 @@ a.link{
 /* For background */
 .background{
 	position:fixed;
-	top:0px;
-	left:0px;
+	top:0;
+	left:0;
 	width:100%;
 	height:110%;
 	z-index:-1;

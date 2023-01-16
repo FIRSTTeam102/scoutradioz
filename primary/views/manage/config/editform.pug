@@ -1,114 +1,124 @@
 //-
-    Page for teams to edit the JSON which defines their forms (pit scouting, match scouting, ??)
-        manage/orgconfig.ts
-        '/manage/config/pitform' or '/manage/config/matchform'
+	Page for teams to edit the JSON which defines their forms (pit scouting, match scouting, ??)
+		manage/orgconfig.ts
+		'/manage/config/pitform' or '/manage/config/matchform'
 extends ../../layout
 block content
-    h2=title
-    p 
-        br 
-        i Modify, copy, paste from elsewhere, etc. the JSON defining your form
-    div(class="w3-container w3-section w3-auto")
-        textarea(class="w3-input w3-border" id="jsonfield" name="jsonfield" rows="40" cols="80")=layout
-        div(class="gear-btn theme-link w3-btn w3-section" onclick="test()")
-            span Test form [HIT BACK BUTTON TO RETURN]
-        div(class="gear-btn theme-link w3-btn w3-section" onclick="submit()")
-            span Validate and submit
-    form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
-        input(name="jsonData" id="jsonData" type="hidden")
-        input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
-        input(name="year" id="year" type="hidden" value=`${year}`)
-    form(id="testForm" style="visibility:hidden" action="/scouting/testform" method="post")
-        input(name="testData" id="testData" type="hidden")
-        input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
-        input(name="year" id="year" type="hidden" value=`${year}`)
-    script.
-        function validate () {
-            // get the JSON from the form
-            let jsonText = document.getElementById("jsonfield").value;
+	h2=title
+	p 
+		br 
+		i Modify, copy, paste from elsewhere, etc. the JSON defining your form
+	div(class="w3-container w3-section w3-auto")
+		textarea(class="w3-input w3-border" id="jsonfield" name="jsonfield" rows="40" cols="80")=layout
+		div(class="gear-btn theme-link w3-btn w3-section" onclick="test()")
+			span Test form [HIT BACK BUTTON TO RETURN]
+		div(class="gear-btn theme-link w3-btn w3-section" onclick="submit()")
+			span Validate and submit
+	form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
+		input(name="jsonData" id="jsonData" type="hidden")
+		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
+		input(name="year" id="year" type="hidden" value=`${year}`)
+	form(id="testForm" style="visibility:hidden" action="/scouting/testform" method="post")
+		input(name="testData" id="testData" type="hidden")
+		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
+		input(name="year" id="year" type="hidden" value=`${year}`)
+	script.
+		function validate () {
+			// get the JSON from the form
+			let jsonText = document.getElementById("jsonfield").value;
 
-            // parse to JSON (or fail out with an error)
-            let jsonData = {};
-            try {
-                jsonData = JSON.parse(jsonText);
-            } catch (error) {
-                NotificationCard.error('Invalid JSON! Please correct.');
-                return null;
-            }
+			// parse to JSON (or fail out with an error)
+			let jsonData = {};
+			try {
+				jsonData = JSON.parse(jsonText);
+			} catch (error) {
+				NotificationCard.error('Invalid JSON! Please correct.');
+				return null;
+			}
 
-            // make sure 'order' and 'id' are unique; also clear out extraneous stuff
-            let orderDict = {};
-            let orderCount = 0
-            let idDict = {};
-            let idCount = 0;
-            for (var i = 0; i < jsonData.length; i++) {
-                // while we're iterating through, clear out extraneous stuff if needed
-                delete jsonData[i]['_id'];
-                delete jsonData[i]['form_type'];
-                delete jsonData[i]['org_key'];
-                delete jsonData[i]['year'];
+			// make sure 'order' and 'id' are unique; also clear out extraneous stuff
+			let orderDict = {};
+			let orderCount = 0
+			let idDict = {};
+			let idCount = 0;
+			for (var i = 0; i < jsonData.length; i++) {
+				// while we're iterating through, clear out extraneous stuff if needed
+				delete jsonData[i]['_id'];
+				delete jsonData[i]['form_type'];
+				delete jsonData[i]['org_key'];
+				delete jsonData[i]['year'];
 
-                let thisOrder = jsonData[i]['order'];
-                if (thisOrder == null) { 
-                    NotificationCard.error("Missing at least one 'order' attribute! Please correct.");
-                    return null;
-                }
-                orderCount++;
-                orderDict[thisOrder] = thisOrder;
+				let thisOrder = jsonData[i]['order'];
+				if (thisOrder == null) { 
+					console.log('Missing order:', jsonData[i]);
+					NotificationCard.error("Missing at least one 'order' attribute! Please correct.");
+					return null;
+				}
+				orderCount++;
+				orderDict[thisOrder] = thisOrder;
 
-                let thisType = jsonData[i]['type'];
-                if (thisType == null) { 
-                    NotificationCard.error("Missing at least one 'type' attribute! Please correct.");
-                    return null;
-                }
-                if (thisType != 'spacer') {
-                    let thisId = jsonData[i]['id'];
-                    if (thisId == null) { 
-                        NotificationCard.error("Missing at least one 'id' attribute! Please correct.");
-                        return null;
-                    }
-                    idCount++;
-                    idDict[thisId] = thisId;
-                }
-            }
-            if (Object.keys(orderDict).length != orderCount)  { 
-                NotificationCard.error("At least one duplicate 'order' value! Please correct.");
-                return null;
-            }
-            if (Object.keys(idDict).length != idCount)  { 
-                NotificationCard.error("At least one duplicate 'id' value! Please correct.");
-                return null;
-            }
-            let jsonString = JSON.stringify(jsonData);
-            console.log('jsonData=' + jsonString);
+				let thisType = jsonData[i]['type'];
+				if (thisType == null) { 
+					console.log('Missing type:', jsonData[i]);
+					NotificationCard.error("Missing at least one 'type' attribute! Please correct.");
+					return null;
+				}
+				if (thisType != 'spacer') {
+					let thisId = jsonData[i]['id'];
+					if (thisId == null) { 
+						console.log('Missing id:', jsonData[i]);
+						NotificationCard.error("Missing at least one 'id' attribute! Please correct.");
+						return null;
+					}
+					idCount++;
+					if (idDict[thisId]) {
+						console.warn('Duplicate ID?', thisId);
+					}
+					idDict[thisId] = thisId;
+				}
+			}
+			if (Object.keys(orderDict).length != orderCount)  { 
+				console.log('Keys:', Object.keys(orderDict));
+				console.log(`Count: ${orderCount}`);
+				NotificationCard.error("At least one duplicate 'order' value! Please correct.");
+				return null;
+			}
+			if (Object.keys(idDict).length != idCount)  { 
+				console.log('Keys:', Object.keys(idDict));
+				console.log(`Count: ${idCount}`);
+				NotificationCard.error("At least one duplicate 'id' value! Please correct.");
+				return null;
+			}
+			let jsonString = JSON.stringify(jsonData);
+			console.log('jsonData=' + jsonString);
 
-            // verify keys are all 'allowed'
-            // TODO
+			// verify keys are all 'allowed'
+			// TODO
 
-            // make sure required fields exist - otherNotes, contributedPoints
-            // TODO
+			// make sure required fields exist - otherNotes, contributedPoints
+			// TODO
 
-            return jsonString;
-        }
+			return jsonString;
+		}
 
-        function test() {
-            jsonString = validate();
-            if (jsonString == null)
-                return;
+		function test() {
+			jsonString = validate();
+			if (jsonString == null)
+				return;
 
-            // submit the form
-            document.getElementById("testData").value = jsonString;
-            document.forms.testForm.submit();
-        }
+			// submit the form
+			document.getElementById("testData").value = jsonString;
+			document.forms.testForm.submit();
+		}
 
-        function submit() {
-            jsonString = validate();
-            if (jsonString == null)
-                return;
+		function submit() {
+			jsonString = validate();
+			if (jsonString == null)
+				return;
 
-            // submit the form
-            document.getElementById("jsonData").value = jsonString;
-            document.forms.submitForm.submit();
-        }
+			// submit the form
+			document.getElementById("jsonData").value = jsonString;
+			document.forms.submitForm.submit();
+		}
 
 

@@ -6,6 +6,7 @@
 			title		[String] Title of page; if doesn't exist, will be replaced by "Untitled Page"
 			alert		[String] (Optional) When page loads, create JS alert with message.
 	//
+- const themeYear = 2023 // backwards compatibility for various theme-specific elements, todo: sync this with the theme used in base.less
 - function resolveToValue(prop, params) { if (typeof prop == 'function') return property(params); return prop; } // For nav, but may be useful in other places
 - function resolveLabelTemplate(str, teamKey) { if (!str) return ''; if (teamKey) str = str.replace(/\{\{team_number\}\}/g, teamKey.substring(3)); return str; } // for scouting, currently only supports {{team_number}}
 - function displayReportMetric(num, displayType) { 
@@ -15,6 +16,7 @@ include mixins/noDataFound
 doctype html
 html(lang=locale dir=getLocaleDirection(locale))
 	head
+		meta(charset="utf-8")
 		base(href="/")
 		if fulltitle
 			title= fulltitle
@@ -31,14 +33,19 @@ html(lang=locale dir=getLocaleDirection(locale))
 		meta(name="theme-color" content="#333")
 		//- meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
 		meta(name="viewport" content="width=device-width, initial-scale=1")
-		meta(charset="utf-8")
 		link(rel="manifest" href=`${fileRoot}/manifest.json`)
 		link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
 		// Libraries bundled in this stylesheet: mmenu.css (Source code licensed CC-BY-NC-4.0), mburger.css (Source code licensed CC-BY-4.0), W3.css (https://www.w3schools.com/w3css/). Source code is available at https://github.com/FIRSTTeam102/ScoringApp-Serverless/tree/master/primary/public-src/less
 		link(rel="stylesheet" href=`${fileRoot}/css/style.css?v=${functionVersion}`)
+		-
+			const backgrounds = {
+				2020: 'city-light.png',
+				2022: '2022-grid.svg',
+				2023: '2023-halftone.svg',
+			};
 		style.
-			#page{ background-image: url('#{fileRoot}/images/backgrounds/2022-grid.svg');}
+			#page{ --background-image: url('#{fileRoot}/images/backgrounds/#{backgrounds[themeYear]}');}
 			.sprite{ --sprites-url: url('#{fileRoot}/images/sprites.png?v=#{functionVersion}');}
 		
 		script(src=`${fileRoot}/lib/w3.js`)
@@ -134,7 +141,8 @@ html(lang=locale dir=getLocaleDirection(locale))
 					div
 						span(style="display:inline-block;height:100%;vertical-align:middle;")
 						a(href="/home")
-							img(src=`${fileRoot}/images/brand-logos/scoutradioz-white-sm.png` class="header-logo" alt="Scoutradioz")
+							- const darkLogo = [2020].includes(themeYear)
+							img(src=`${fileRoot}/images/brand-logos/scoutradioz-${darkLogo ? 'black' : 'white'}-sm.png` class="header-logo" alt="Scoutradioz")
 					- if (['dev', 'test', 'qa'].includes(process.env.TIER))
 						div(class="tierlabel")= process.env.TIER
 				//-div(class="w3-right w3-show-inline-block")
@@ -158,7 +166,14 @@ html(lang=locale dir=getLocaleDirection(locale))
 			//- main content container, scrolls x independently
 			div(id="content-container")
 				div(id="headerlogo" class="w3-center")
-					img(src=`${fileRoot}/images/rapid-react/horizontal-color.svg` alt="Rapid React" class="w3-image w3-center" style="max-height: 160px;")
+					-
+						const headerlogos = {
+							2020: ['infinite-recharge/Horizontal-reverse.png', 'Infinite Recharge'],
+							2022: ['rapid-react/horizontal-color.svg', 'Rapid React'],
+							2023: ['charged-up/horizontal-color.svg', 'Charged Up'],
+						}
+					if (headerlogos[themeYear])
+						img(src=`${fileRoot}/images/${headerlogos[themeYear][0]}` alt=headerlogos[themeYear][1] class="w3-image w3-center" style="max-height: 160px;")
 					if (!isOrgSelectScreen)
 						h3=eventName
 				main(class="w3-padding w3-mobile w3-center" id="content")
@@ -225,7 +240,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 		- var locales = getLocales();
 		//- CD 2022-05-27: add qqx to list when on dev tier
 		if process.env.TIER == 'dev'
-			- locales.push({lang: 'qqx', name: 'qqx', dir: 'ltr'});
+			- locales.push({lang: 'qqx', name: 'message data', dir: 'ltr'});
 
 		//-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
 		script.
