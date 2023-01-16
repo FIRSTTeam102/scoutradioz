@@ -116,6 +116,15 @@ block content
 								p(class="theme-text-secondary")=eventLabel
 						div(class="w3-quarter w3-hide-small") &nbsp;
 		script.
+			$(function() {
+				if (location.hash === '#learn-more') {
+					//- $('input[name=customer]')
+					//- 	.val('learnMore')
+					//- 	.trigger('change');
+					$('#chbLearnMore')
+						.trigger('click');
+				}
+			})			
 			$('input[name=customer]').on('change', function (e) {
 				requestAnimationFrame(() => {
 					let val = $(e.target).val();
