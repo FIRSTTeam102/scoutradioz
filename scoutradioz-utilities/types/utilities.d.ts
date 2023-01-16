@@ -171,8 +171,11 @@ export declare class Utilities {
      * @example
      * 	const app = express();
      * 	app.use(utilities.refreshTier);
+     * @param req Express req
+     * @param res Express res
+     * @param manuallySpecifiedTier Svelte doesn't use process.env, so in this case, we manually specify the tier from the calling code
      */
-    refreshTier(req: Request, res: Response, next: NextFunction): void;
+    refreshTier(req: Request, res: Response, next: NextFunction, manuallySpecifiedTier?: string): void;
     /**
      * Asynchronous "find" function to a collection specified in first parameter.
      * @param collection Collection to find in.
