@@ -24,6 +24,8 @@ utilities.config(dbJSON, {
 	mongoClientOptions: mongoClientOptions
 });
 
+// JL note: also a dumb temporary fix i need to figure out a less janky solution
+process.env.TIER = env.TIER;
 // @ts-ignore - change this later
 utilities.refreshTier(undefined, undefined, env.TIER); 
 
