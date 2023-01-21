@@ -1,31 +1,30 @@
-<script lang='ts'>
+<script lang="ts">
 	import Tab, { Label } from '@smui/tab';
 	import TabBar from '@smui/tab-bar';
 	import { fly } from 'svelte/transition';
-	
+
 	export let tabs: SlidingTab[];
-	
+
 	interface SlidingTab {
 		label: string;
-		component: any
+		component: any;
 	}
-	
-	let tabLabels = tabs.map(tab => tab.label);
+
+	let tabLabels = tabs.map((tab) => tab.label);
 	let activeTab = tabs[0].label;
-	
+
 	let windowWidth: number;
 	let sliding = false;
-	
+
 	let prevTabIndex = 0;
-	
+
 	// positive or negative 1
 	let direction = -1;
-	
+
 	function handleTabChange(e: any) {
 		if (e.detail.index > prevTabIndex) {
 			direction = 1;
-		}
-		else {
+		} else {
 			direction = -1;
 		}
 		prevTabIndex = e.detail.index;
@@ -39,16 +38,16 @@
 		<Label>{tab}</Label>
 	</Tab>
 </TabBar>
-<div class='container'>
+<div class="container">
 	{#each tabs as tab}
 		{#if activeTab === tab.label}
 			<div
-				transition:fly={{ x: direction * windowWidth, duration: 300 }}
-				on:introstart={() => sliding = true}
-				on:introend={() => sliding = false}
-				on:outrostart={() => sliding = true}
-				on:outroend={() => sliding = false}
-				class:sliding={sliding}
+				transition:fly|local={{ x: direction * windowWidth, duration: 300 }}
+				on:introstart={() => (sliding = true)}
+				on:introend={() => (sliding = false)}
+				on:outrostart={() => (sliding = true)}
+				on:outroend={() => (sliding = false)}
+				class:sliding
 			>
 				<svelte:component this={tab.component}/>
 			</div>
@@ -56,7 +55,7 @@
 	{/each}
 </div>
 
-<style lang='scss'>
+<style lang="scss">
 	.sliding {
 		position: absolute;
 		width: 100%;
@@ -70,6 +69,6 @@
 		position: relative;
 		min-height: 100%;
 		flex-grow: 10;
-		overflow-x: hidden
+		overflow-x: hidden;
 	}
 </style>
