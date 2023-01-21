@@ -10,5 +10,5 @@ Scoutradioz PWA built with [SvelteKit](https://kit.svelte.dev/) and [Material UI
 
 - `npm i -g serverless` - Serverless is the CLI we used to create this cloudformation and using to update the lambda code
 - `sls deploy function --function svelte` - update the function code
-- `aws s3 rm s3://scoutradioz-offline-static-assets --include "*" --recursive` - delete public files - they need to be deleted beforehand cuz there are random numbers appended to the public source code files that change each build
-- `aws s3 sync build/assets s3://scoutradioz-offline-static-assets --acl public-read` - re upload public files
+- `aws s3 rm s3://scoutradioz-voyager-static-assets --include "*" --recursive` - delete public files - they need to be deleted beforehand cuz there are random numbers appended to the public source code files that change each build
+- `aws s3 sync build/assets s3://scoutradioz-voyager-static-assets --acl public-read` - re upload public files

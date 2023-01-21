@@ -14,13 +14,13 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		paths: {
-			assets: 'https://scoutradioz-offline-static-assets.s3.amazonaws.com'
+			assets: 'https://scoutradioz-voyager-static-assets.s3.amazonaws.com'
 		}
 	},
 	
 	package: {
 		// files: {
-		// 	assets: 'https://scoutradioz-offline-static-assets.s3.amazonaws.com',
+		// 	assets: 'https://scoutradioz-voyager-static-assets.s3.amazonaws.com',
 		// },
 	},
 };

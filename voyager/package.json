@@ -17,7 +17,8 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test:unit": "vitest",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"format": "prettier --plugin-search-dir . --write .",
+		"update-tmp": "sls deploy function --function svelte && sls deploy function --function svelte && aws s3 rm s3://scoutradioz-voyager-static-assets --include '*' --recursive && aws s3 sync build/assets s3://scoutradioz-voyager-static-assets --acl public-read"
 	},
 	"devDependencies": {
 		"@firstteam102/scoutradioz-types": "^1.0.13",
@@ -40,10 +41,9 @@
 		"@smui/textfield": "^7.0.0-beta.0",
 		"@smui/top-app-bar": "^7.0.0-beta.0",
 		"@smui/touch-target": "^7.0.0-beta.0",
-		"@sveltejs/adapter-auto": "next",
-		"@sveltejs/kit": "next",
+		"@sveltejs/kit": "1.2.2",
 		"@types/qrcode": "^1.5.0",
-		"@yarbsemaj/adapter-lambda": "^0.12.0",
+		"@yarbsemaj/adapter-lambda": "1.0.0",
 		"autoprefixer": "^10.4.13",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte3": "^4.0.0",

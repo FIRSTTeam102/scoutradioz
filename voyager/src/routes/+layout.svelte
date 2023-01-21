@@ -18,7 +18,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { share } from '$lib/share';
 	import { user, org_key } from '$lib/stores';
-	import { assets } from '$app/paths'; // Assets path -- it returns something like _svelte_assets in localhost but https://scoutradioz-offline-static-assets.s3.amazonaws.com on AWS
+	import { assets } from '$app/paths'; // Assets path -- it returns something like _svelte_assets in localhost but https://scoutradioz-voyager-static-assets.s3.amazonaws.com on AWS
 
 
 	// close menu when changing pages

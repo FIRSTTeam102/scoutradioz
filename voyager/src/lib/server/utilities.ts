@@ -2,11 +2,23 @@ import utilities from '@firstteam102/scoutradioz-utilities';
 import fs from 'fs';
 import dbJSON from '$lib/../databases.json';
 import { env } from '$env/dynamic/private';
+import dotenv from 'dotenv';
+
+console.log(`Environment variables: ${JSON.stringify(env)}, tier=${env.TIER}`);
+
+// hacky temporary fix 
+if (env.TIER) {
+	// JL note: also a dumb temporary fix i need to figure out a less janky solution
+	process.env.TIER = env.TIER;
+}
+else {
+	dotenv.config();
+}
 
 let mongoClientOptions = {};
 // JL note: I find myself often forgetting to run mongod in the background. Setting a low 
 // 	server selection timeout will help remind me/us that the server is not running.
-if (env.TIER === 'dev') {
+if (process.env.TIER === 'dev') {
 	mongoClientOptions = {
 		connectTimeoutMS: 1000,
 		serverSelectionTimeoutMS: 1000,
@@ -24,9 +36,7 @@ utilities.config(dbJSON, {
 	mongoClientOptions: mongoClientOptions
 });
 
-// JL note: also a dumb temporary fix i need to figure out a less janky solution
-process.env.TIER = env.TIER;
 // @ts-ignore - change this later
-utilities.refreshTier(undefined, undefined, env.TIER); 
+utilities.refreshTier(); 
 
 export default utilities;
