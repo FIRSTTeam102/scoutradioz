@@ -6,7 +6,7 @@ import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
 import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import e, { assert } from '@firstteam102/http-errors';
-import type { Layout, LayoutEdit } from '@firstteam102/scoutradioz-types';
+import type { Layout, LayoutEdit, MatchScouting, MatchFormData } from '@firstteam102/scoutradioz-types';
 import type { DeleteResult, InsertManyResult } from 'mongodb';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 //import { write } from 'fs';
@@ -116,18 +116,51 @@ router.get('/editform', wrap(async (req, res) => {
 	});
 	// create a string representation
 	let layout = JSON.stringify(updatedarray, null, 2);
-	logger.debug(thisFuncName + 'layout=\n' + layout);
+	//logger.debug(thisFuncName + 'layout=\n' + layout);
+
+	let existingFormData = new Map<string, string>();
+	let previousDataExists = false;
+	// get existing data schema (if any)
+	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year': year, 'data': {$ne: null}}, {});
+	matchDataFind.forEach( (element) => {
+		let thisMatch: MatchScouting = element;
+		if (thisMatch['data']) {
+			previousDataExists = true;
+			let thisData: MatchFormData  = thisMatch['data'];
+			let dataKeys = Object.keys(thisData);
+			//logger.debug(`dataKeys=${JSON.stringify(dataKeys)}`);
+			dataKeys.forEach(function (value) {
+				//logger.debug(`value=${value}`);
+				existingFormData.set(value, value);
+			});
+		}
+	});
+	//logger.debug(`existingFormData=${JSON.stringify(existingFormData)}`);
+	//logger.debug(`existingFormData=${existingFormData}`);
+	let previousKeys: string[] = [];
+	if (previousDataExists)
+		for (let key of existingFormData.keys())
+			if (key != 'match_team_key') {
+				//logger.debug(`key=${key}`);
+				previousKeys.push(key);
+			}
+	//logger.debug(`previousKeys=${JSON.stringify(previousKeys)}`);
 
 	let title = 'Pit Scouting Layout';
 	if (form_type == 'matchscouting')
 		title = 'Match Scouting Layout';
+
+	logger.debug(`previousDataExists=${previousDataExists}`);
+	logger.debug(`previousKeys=${JSON.stringify(previousKeys)}`);
 
 	res.render('./manage/config/editform', {
 		title: title,
 		layout: layout,
 		form_type: form_type,
 		org_key: org_key,
-		year: year
+		year: year,
+		previousDataExists: previousDataExists,
+		previousKeys: previousKeys
 	});
 }));
 

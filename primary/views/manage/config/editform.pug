@@ -14,6 +14,8 @@ block content
 			span Test form [HIT BACK BUTTON TO RETURN]
 		div(class="gear-btn theme-link w3-btn w3-section" onclick="submit()")
 			span Validate and submit
+		textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
+	
 	form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
 		input(name="jsonData" id="jsonData" type="hidden")
 		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
@@ -22,10 +24,15 @@ block content
 		input(name="testData" id="testData" type="hidden")
 		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
 		input(name="year" id="year" type="hidden" value=`${year}`)
+	
 	script.
 		function validate () {
 			// get the JSON from the form
 			let jsonText = document.getElementById("jsonfield").value;
+			let previousKeys = JSON.parse(document.getElementById("previousKeys").value);
+			//console.log("previousKeys.length=" + previousKeys.length);
+			let formType = document.getElementById("form_type").value;
+			console.log('formType=' + formType);
 
 			// parse to JSON (or fail out with an error)
 			let jsonData = {};
@@ -92,10 +99,27 @@ block content
 			let jsonString = JSON.stringify(jsonData);
 			console.log('jsonData=' + jsonString);
 
-			// verify keys are all 'allowed'
-			// TODO
+			// make sure required fields exist - otherNotes, contributedPoints [for matchScouting only]
+			if (formType == 'matchscouting') {
+				if (!idDict['otherNotes'])
+					NotificationCard.warn("WARNING! You have not defined 'otherNotes'");
+				if (!idDict['contributedPoints'])
+					NotificationCard.warn("WARNING! You have not defined 'contributedPoints'");
+			}
 
-			// make sure required fields exist - otherNotes, contributedPoints
+			// check if any existing data fields are not included
+			// TODO enable for Pit Scouting (will need changes in orgconfig.ts as well)
+			if (formType == 'matchscouting') {
+				for (var j = 0; j < previousKeys.length; j++) {
+					console.log(j + " " + previousKeys[j]);
+					if (!idDict[previousKeys[j]]) {
+						NotificationCard.warn("WARNING! JSON is missing existing data key " + previousKeys[j]);
+						//return null;
+					}
+				} 
+			}
+
+			// verify keys are all 'allowed'
 			// TODO
 
 			return jsonString;
