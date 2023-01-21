@@ -4,7 +4,7 @@ import dbJSON from '$lib/../databases.json';
 import { env } from '$env/dynamic/private';
 import dotenv from 'dotenv';
 
-console.log(`Environment variables: ${JSON.stringify(env)}, tier=${env.TIER}`);
+console.log(`Environment variables: tier=${env.TIER}`);
 
 // hacky temporary fix 
 if (env.TIER) {
