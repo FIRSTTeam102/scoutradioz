@@ -6,10 +6,10 @@
 </script>
 
 <div class="paper-container">
-	{#each data.users as user}
+	{#each data.teams as team}
 		<Paper>
-			<Title>{user.name}</Title>
-			<Subtitle>{user.org_key}</Subtitle>
+			<Title>{team.team_number}</Title>
+			<Subtitle>{team.nickname}</Subtitle>
 		</Paper>
 	{/each}
 </div>
