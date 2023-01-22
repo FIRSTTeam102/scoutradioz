@@ -136,10 +136,12 @@ router.post('/create', wrap(async (req, res) => {
 	const nickname: string = req.body.nickname;
 	const teamKeyOrKeys: string = req.body.team_key;
 	const default_password: string = req.body.default_password;
+	const team_admin_name: string = req.body.team_admin_name;
 	
 	if (!org_key) return res.send({status: 400, message: 'No org key specified.'});
 	if (!nickname) return res.send({status: 400, message: 'No nickname specified.'});
 	if (!default_password) return res.send({status: 400, message: 'No password specified.'});
+	if (!team_admin_name) return res.send({status: 400, message: 'No new team admin name specified.'});
 	
 	let existingOrg = await utilities.findOne('orgs', {org_key: org_key});
 	if (existingOrg) return res.send({status: 400, message: `An org already exists with key ${org_key}!`});
@@ -280,30 +282,64 @@ router.post('/create', wrap(async (req, res) => {
 	
 	// New default users to create
 	// default_user is the one that everyone logs in to when they select an org
-	const newDefaultUser = {
+	const newDefaultUser: User = {
 		org_key: org_key,
 		name: 'default_user',
 		role_key: 'viewer',
 		password: 'default',
-		org_info: {},
-		event_info: {},
+		org_info: {
+			subteam_key: '',
+			class_key: '',
+			years: 0,
+			seniority: 0,
+		},
+		event_info: {
+			present: false,
+			assigned: false
+		},
 		visible: false,
 	};
+	// New Team Admin user who can set up the org
+	const newTeamAdmin: User = {
+		org_key: org_key,
+		name: team_admin_name,
+		role_key: 'team_admin',
+		password: 'default',
+		org_info: {
+			subteam_key: 'nonstudent',
+			class_key: 'mentor',
+			years: 0,
+			seniority: 0,
+		},
+		event_info: {
+			present: false,
+			assigned: false,
+		},
+		visible: true,
+	};
 	// scoutradioz_admin is used for /login-to-org
-	const newScoutradiozAdmin = {
+	const newScoutradiozAdmin: User = {
 		org_key: org_key,
 		name: 'scoutradioz_admin',
 		role_key: 'global_admin',
 		password: 'disabled',
-		org_info: {},
-		event_info: {},
+		org_info: {
+			subteam_key: '',
+			class_key: '',
+			years: 0,
+			seniority: 0,
+		},
+		event_info: {
+			present: false,
+			assigned: false
+		},
 		visible: false,
 	};
 	
 	logger.info(`Creating org: key=${org_key} nick=${nickname} defaultPass=${default_password} teamkeyOrKeys=${teamKeyOrKeys}`);
 	
 	let orgWriteResult = await utilities.insert('orgs', newOrg);
-	let userWriteResult = await utilities.insert('users', [newDefaultUser, newScoutradiozAdmin]);
+	let userWriteResult = await utilities.insert('users', [newDefaultUser, newScoutradiozAdmin, newTeamAdmin]);
 	
 	logger.info(`orgWriteResult=${JSON.stringify(orgWriteResult)} userWriteResult=${JSON.stringify(userWriteResult)}`);
 	

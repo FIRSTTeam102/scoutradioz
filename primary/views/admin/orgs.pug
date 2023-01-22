@@ -21,13 +21,15 @@ block content
 		hr 
 		form(method="post" action="/admin/orgs/create" id="createOrgForm")
 			div(class="w3-row")
-				div(class="w3-col s6 m2 w3-padding-small")
+				div(class="w3-col s6 m1 w3-padding-small")
 					input(type="text" class="theme-input" name="org_key" placeholder="Org key")
 				div(class="w3-col s6 m3 w3-padding-small")
 					input(type="text" class="theme-input" name="nickname" placeholder="Nickname")
 				div(class="w3-col s6 m2 w3-padding-small")
 					input(type="text" class="theme-input" name="team_key" placeholder="Team key OR keys (comma separated)")
-				div(class="w3-col s6 m3 w3-padding-small")
+				div(class="w3-col s6 m2 w3-padding-small")
 					input(type="text" class="theme-input" name="default_password" placeholder="Default password")
+				div(class="w3-col s6 m2 w3-padding-small")
+					input(type="text" class="theme-input" name="team_admin_name" placeholder="Team Admin name")
 				div(class="w3-col m2 w3-padding-small")
 					button(type="submit" class="w3-btn theme-submit" id="createOrg") Create Org
