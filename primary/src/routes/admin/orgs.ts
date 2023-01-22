@@ -25,7 +25,7 @@ router.get('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'orgs[get]');
 	logger.info('ENTER');
 	
-	const orgs = await utilities.find('orgs', {});
+	const orgs = await utilities.find('orgs', {}, {sort: {org_key: 1}});
 	
 	res.render('./admin/orgs', {
 		title: 'Manage organizations',
