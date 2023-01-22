@@ -26,7 +26,10 @@ $(() => {
 	$('#defaultPassword').on('keydown', e => {
 		setTimeout(() => {
 			//- Trigger default password being enabled/disabled... minimum of 3 characters
-			$('#btnSetDefaultPassword').prop('disabled', String($('#defaultPassword').val()).trim().length < 3);
+			let passwordValid = String($('#defaultPassword').val()).trim().length >= 3;
+			$('#btnSetDefaultPassword').prop('disabled', !passwordValid);
+			if (passwordValid) $('#setDefaultPasswordTooltip').addClass('w3-hide');
+			else $('#setDefaultPasswordTooltip').removeClass('w3-hide');
 		}, 1);
 	});
 });
