@@ -8,7 +8,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	
 	const teams: Team[] = await utilities.aggregate('teams', [
 		{$sample: {size: 20}}
-	])
+	]);
 
 	return new Response(JSON.stringify(teams), {
 		headers: {
