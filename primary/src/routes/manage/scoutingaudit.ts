@@ -147,7 +147,7 @@ router.get('/uploads', wrap(async (req, res) => {
 	);
 	
 	// Years that contain any non-removed uploads
-	let years: string[] = await utilities.distinct('uploads', 'year', {org_key: org_key, removed: false});
+	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, removed: false});
 	
 	uploads.sort((a, b) => {
 		let aNum = parseInt(a.team_key.substring(3));

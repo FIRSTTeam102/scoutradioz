@@ -1085,6 +1085,7 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	// scoutDataCol.remove({"event_key": event_key}, function(e, docs) {
 	// 	// Insert the new data
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	// @ts-ignore
 	await utilities.insert('pitscouting', teamassignments);
 	// scoutDataCol.insert(teamassignments, function(e, docs) {
 	// 	//res.redirect("./");	

@@ -69,6 +69,10 @@ interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperat
 	[key: string]: any;
 }
 
+interface FindOptionsWithProjection extends FindOptions {
+	projection: MongoDocument;
+}
+
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
@@ -93,6 +97,15 @@ export type FilterQueryTyped<T> = {
 	// 	e.g. 'alliances.blue.team_keys': {$in: ['frc102']}
 	[key: `${string}.${string}`]: QueryItem|ValidQueryPrimitive;
 };
+
+/**
+ * Update filter for the specified schema, but which allows `'foo.bar'` notation
+ */
+export type UpdateFilterTyped<T> = UpdateFilter<
+	T & {
+		[key: `${string}.${string}`]: any;
+	}
+>
 
 /**
  * Optional settings for configurating SR-Utilities.
@@ -400,15 +413,16 @@ export class Utilities {
 	 * Asynchronous "find" function to a collection specified in first parameter.
 	 * @param collection Collection to find in.
 	 * @param castQuery Filter for query.
-	 * @param options Query options, such as sort.
+	 * @param opts Query options, such as sort.
 	 * @param cacheOption Caching options.
+	 * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
 	 */
-	async find<colName extends CollectionName> (
+	async find<colName extends CollectionName, Opts extends FindOptions = FindOptions> (
 		collection: colName, 
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
-		options?: FindOptions, 
+		options?: Opts, 
 		cacheOptions?: UtilitiesCacheOptions
-	): Promise<CollectionSchema<colName>[]> {
+	): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchema<colName>[]> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
@@ -416,8 +430,8 @@ export class Utilities {
 		//Query type filter
 		if (query && typeof query != 'object') throw new TypeError('query must be of type object');
 		//Options type filter
-		if (!options) options = {};
-		if (typeof options != 'object') throw new TypeError('Options must be of type object');
+		let opts = options || {};
+		if (typeof opts != 'object') throw new TypeError('Options must be of type object');
 		//Cache options
 		if (!cacheOptions) cacheOptions = {};
 		if (typeof cacheOptions != 'object') throw new TypeError('cacheOptions must be of type object');
@@ -427,7 +441,7 @@ export class Utilities {
 		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 		let castQuery = this.castID(query);
 		
-		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(castQuery)}, ${JSON.stringify(options)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(castQuery)}, ${JSON.stringify(opts)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
 		let timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
@@ -437,7 +451,7 @@ export class Utilities {
 		if (cacheOptions.allowCache === true && this.options.cache.enable === true) {
 			
 			if (this.options.debug) logger.trace('Caching enabled');
-			let hashedQuery = await this.hashQuery('find', collection, castQuery, options);
+			let hashedQuery = await this.hashQuery('find', collection, castQuery, opts);
 			if (this.options.debug) logger.trace(`(find) Request Hash: ${hashedQuery}`);
 			
 			let cachedRequest: MongoDocument[] | undefined = this.cache.get(hashedQuery);
@@ -457,7 +471,7 @@ export class Utilities {
 				
 				//Request db
 				let db = await this.getDB();
-				cachedRequest = await db.collection(collection).find(castQuery, options).toArray();
+				cachedRequest = await db.collection(collection).find(castQuery, opts).toArray();
 				//Cache response (Including maxAge before automatic deletion)
 				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 				
@@ -472,7 +486,7 @@ export class Utilities {
 			
 			let db = await this.getDB();
 			//Request db
-			let data = await db.collection(collection).find(castQuery, options).toArray();
+			let data = await db.collection(collection).find(castQuery, opts).toArray();
 			// if (this.options.debug) logger.trace(`non-cached: result: ${JSON.stringify(data)}`);
 			this.consoleTimeEnd(timeLogName);
 			
@@ -490,13 +504,15 @@ export class Utilities {
 	 * Asynchronous "findOne" function to a collection specified in first parameter.
 	 * @param collection Collection to findOne in.
 	 * @param query Filter for query.
-	 * @param options Query options, such as sort.
+	 * @param opts Query options, such as sort.
 	 * @param cacheOptions Caching options.
+	 * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
 	 */
-	async findOne<colName extends CollectionName> (
+	async findOne<colName extends CollectionName, Opts extends FindOptions = FindOptions> (
 		collection: colName, 
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
-		options?: FindOptions, cacheOptions?: UtilitiesCacheOptions
+		options?: Opts, 
+		cacheOptions?: UtilitiesCacheOptions
 	): Promise<CollectionSchema<colName>> {
 		logger.addContext('funcName', 'findOne');
 		
@@ -506,8 +522,8 @@ export class Utilities {
 		if (!query) query = {};
 		if (typeof query != 'object') throw new TypeError('utilities.findOne: query must be of type object');
 		//Options type filter
-		if (!options) options = {};
-		if (typeof options != 'object') throw new TypeError('utilities.findOne: Options must be of type object');
+		let opts = options || {};
+		if (typeof opts != 'object') throw new TypeError('utilities.findOne: Options must be of type object');
 		//Cache options
 		if (!cacheOptions) cacheOptions = {};
 		if (typeof cacheOptions != 'object') throw new TypeError('utilities.findOne: cacheOptions must be of type object');
@@ -517,7 +533,7 @@ export class Utilities {
 		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
 		query = this.castID(query);
 		
-		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(options)}`);
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(opts)}`);
 		let timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
@@ -527,7 +543,7 @@ export class Utilities {
 		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
 			
 			if (this.options.debug) logger.trace('Caching enabled');
-			let hashedQuery = await this.hashQuery('findOne', collection, query, options);
+			let hashedQuery = await this.hashQuery('findOne', collection, query, opts);
 			if (this.options.debug) logger.trace(`(findOne) Request Hash: ${hashedQuery}`);
 			
 			let cachedRequest: MongoDocument | undefined | null = this.cache.get(hashedQuery);
@@ -547,7 +563,7 @@ export class Utilities {
 				
 				//Request db
 				let db = await this.getDB();
-				cachedRequest = await db.collection(collection).findOne(query, options);
+				cachedRequest = await db.collection(collection).findOne(query, opts);
 				//Cache response (Including maxAge before automatic deletion)
 				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
 				
@@ -561,7 +577,7 @@ export class Utilities {
 		else {
 			//Request db
 			let db = await this.getDB();
-			returnData = await db.collection(collection).findOne(query, options);
+			returnData = await db.collection(collection).findOne(query, opts);
 			if (this.options.debug) logger.trace(`Not cached (findOne:${collection})`);
 			this.consoleTimeEnd(timeLogName);
 		}
@@ -583,7 +599,7 @@ export class Utilities {
 	async update<colName extends CollectionName>(
 		collection: colName, 
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
-		update: UpdateFilter<CollectionSchema<colName>>,
+		update: UpdateFilterTyped<CollectionSchema<colName>>,
 		options?: UpdateOptions
 	): Promise<UpdateResult | MongoDocument>;
 	// JL: Can't remove the separate declaration/implementation function headers cuz TS has this weird bug where it thinks UpdateFilter<MongoDocument> and UpdateFilter<CollectionSchema<colName>> are incompatible though they're the same
@@ -632,7 +648,11 @@ export class Utilities {
 	 * @param cacheOptions Caching options.
 	 * @returns Aggregated data.
 	 */
-	async aggregate(collection: string, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any> {
+	async aggregate<colName extends CollectionName>(
+		collection: colName, 
+		pipeline: MongoDocument[], 
+		cacheOptions?: UtilitiesCacheOptions
+	): Promise<any> {
 		logger.addContext('funcName', 'aggregate');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -747,7 +767,11 @@ export class Utilities {
 	 * @param query The query for filtering the set of documents to which we apply the distinct filter.
 	 * @returns Distinct values for the specified field
 	 */
-	async distinct(collection: string, field: string, query: FilterQuery){
+	async distinct<colName extends CollectionName, Field extends (keyof CollectionSchema<colName> | `${string}.${string}`)>(
+		collection: colName, 
+		field: Field, 
+		query: FilterQueryTyped<CollectionSchema<colName>>
+	): Promise<CollectionSchema<colName>[Field][]>{
 		logger.addContext('funcName', 'distinct');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -784,6 +808,11 @@ export class Utilities {
 	 * @param options Optional settings.
 	 * @returns writeResult
 	 */
+	async bulkWrite<colName extends CollectionName>(
+		collection: colName, 
+		operations: AnyBulkWriteOperation<CollectionSchema<colName>>[], 
+		options?: BulkWriteOptions
+	): Promise<BulkWriteResult>;
 	async bulkWrite(collection: string, operations: AnyBulkWriteOperation[], options?: BulkWriteOptions): Promise<BulkWriteResult>{
 		logger.addContext('funcName', 'bulkWrite');
 		
@@ -860,8 +889,14 @@ export class Utilities {
 	 * @param {MongoDocument[] | MongoDocument} elements [Any] Element or array of elements to insert
 	 * @returns {Promise<InsertManyResult | InsertOneResult | undefined>} writeResult
 	 */
-	async insert(collection: string, elements: MongoDocument[]): Promise<InsertManyResult | undefined>;
-	async insert(collection: string, elements: MongoDocument): Promise<InsertOneResult>;
+	async insert<colName extends CollectionName>(
+		collection: colName, 
+		elements: CollectionSchema<colName>[]
+	): Promise<InsertManyResult | undefined>;
+	async insert<colName extends CollectionName>(
+		collection: colName, 
+		elements: CollectionSchema<colName>
+	): Promise<InsertOneResult>;
 
 	async insert(collection: string, elements: MongoDocument[] | MongoDocument): Promise<InsertManyResult | InsertOneResult | undefined>{
 		logger.addContext('funcName', 'insert');
