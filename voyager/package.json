@@ -11,7 +11,6 @@
 		"preview": "vite preview",
 		"prepare": "npm run smui-theme",
 		"smui-theme": "smui-theme compile static/smui.css -i src/theme",
-		"postinstall": "npm run prepare",
 		"test": "playwright test",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -21,7 +20,7 @@
 		"update-tmp": "sls deploy function --function svelte && sls deploy function --function svelte && aws s3 rm s3://scoutradioz-voyager-static-assets --include '*' --recursive && aws s3 sync build/assets s3://scoutradioz-voyager-static-assets --acl public-read"
 	},
 	"devDependencies": {
-		"@firstteam102/scoutradioz-types": "^1.0.13",
+		"@firstteam102/scoutradioz-types": "^1.0.16",
 		"@playwright/test": "^1.28.1",
 		"@smui/button": "^7.0.0-beta.0",
 		"@smui/card": "^7.0.0-beta.0",
@@ -43,7 +42,7 @@
 		"@smui/touch-target": "^7.0.0-beta.0",
 		"@sveltejs/kit": "1.2.2",
 		"@types/qrcode": "^1.5.0",
-		"@yarbsemaj/adapter-lambda": "1.0.0",
+		"@yarbsemaj/adapter-lambda": "^1.0.1",
 		"autoprefixer": "^10.4.13",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte3": "^4.0.0",
