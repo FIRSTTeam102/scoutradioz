@@ -19,7 +19,6 @@ provider:
   
   httpApi:
     name: 'ScoutradiozVoyagerApi'
-    disableDefaultEndpoint: true
     cors: true
 package:
   individually: true
@@ -51,6 +50,8 @@ custom:
 functions:
   #SSR Function
   svelte:
+    name: ${self:provider.stackName}-SvelteFunction
+    reservedConcurrency: 5
     handler: build/server/serverless.handler
     memorySize: 256
     timeout: 15
@@ -80,7 +81,9 @@ functions:
       UTILITIES_DEBUG: 'false'
 
   #Router Function
-  cfLambda:
+  edgeRouter:
+    name: ${self:provider.stackName}-EdgeRouterFunction
+    reservedConcurrency: 5
     handler: build/edge/router.handler
     memorySize: 128
     timeout: 1
@@ -95,7 +98,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         AccessControl: PublicRead
-        BucketName: ${self:service}-static-assets
+        BucketName: ${self:service}
         # cors:
         #   - AllowedHeaders: []
         #     AllowedMethods:
@@ -133,12 +136,13 @@ resources:
           Origins:
             -
               DomainName: !Select [2, !Split ["/", !GetAtt ["SvelteLambdaFunctionUrl", "FunctionUrl"]]]
+              # DomainName: !GetAtt "HttpApi.ApiGatewayV2.DomainName"
               Id: default
               OriginCustomHeaders: 
                 #Lambda@edge does not support ENV vars, so instead we have to pass in a customHeaders.
                 -
                   HeaderName: 's3-host'
-                  HeaderValue: '${self:service}-static-assets.s3.amazonaws.com'
+                  HeaderValue: '${self:service}.s3.amazonaws.com'
               CustomOriginConfig:
                 HTTPPort: 80
                 HTTPSPort: 443

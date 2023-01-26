@@ -6,7 +6,11 @@
 
 <div style="text-align: center">
 	<h1>{$page.error?.message}</h1>
-	<h3>{$page.status} - {$page.error?.name}</h3>
+	{#if $page.error?.name}
+		<h3>{$page.status} - {$page.error?.name}</h3>
+	{:else}
+		<h3>{$page.status}</h3>
+	{/if}
 </div>
 {#if $page.status !== 404}
 	<p>To help us fix this error, please:</p>

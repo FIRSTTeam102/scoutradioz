@@ -5,6 +5,8 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const onlyAssigned = url.searchParams.get('onlyAssigned') !== null ? { assigned_scorer: { $ne: undefined } } : {};
+	
+	let st = performance.now();
 
 	const currentEvent = await utilities.findOne('events',
 		{ key: getStore(event_key) },
@@ -27,6 +29,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		sort: { time: 1, alliance: -1, team_key: 1 }
 	}, { allowCache: true }
 	));
+	
+	console.log(performance.now() - st);
 	
 	let all = matchscouting.map((match) => {
 		return {
