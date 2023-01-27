@@ -110,12 +110,13 @@ mixin orgConfig(org, isGlobalAdminPage)
 					div(class="w3-btn w3-show-block theme-red" onclick=`deleteClass('${org.org_key}')`) Delete Last Class
 	if !isGlobalAdminPage
 		hr 
+		h4 Organization password
 		form#setDefaultPassword(name="setDefaultPassword" method="post" action="/manage/config/setdefaultpassword" class="w3-show-inline-block")
 			div(class="w3-padding-small w3-show-inline-block")
-				input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")
+				input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Password" type="text")
 		div(class="w3-padding-small w3-show-inline-block w3-tooltip")
 			span#setDefaultPasswordTooltip(class="w3-tooltiptext") Password must be at least 3 characters long.
-			button#btnSetDefaultPassword(class="theme-submit w3-btn" onclick="confirmSetDefaultPassword()" disabled) Change default password for #{org.nickname}
+			button#btnSetDefaultPassword(class="theme-submit w3-btn" onclick="confirmSetDefaultPassword()" disabled) Change password for scouters to log in to #{org.nickname}
 //- Load orgs script
 script(src=`${fileRoot}/js/script-orgs.js`)
 
