@@ -6,6 +6,7 @@
 			title		[String] Title of page; if doesn't exist, will be replaced by "Untitled Page"
 			alert		[String] (Optional) When page loads, create JS alert with message.
 	//
+- const themeYear = 2023 // backwards compatibility for various theme-specific elements, todo: sync this with the theme used in base.less
 - function resolveToValue(prop, params) { if (typeof prop == 'function') return property(params); return prop; } // For nav, but may be useful in other places
 - function resolveLabelTemplate(str, teamKey) { if (!str) return ''; if (teamKey) str = str.replace(/\{\{team_number\}\}/g, teamKey.substring(3)); return str; } // for scouting, currently only supports {{team_number}}
 - function displayReportMetric(num, displayType) { 
@@ -15,6 +16,7 @@ include mixins/noDataFound
 doctype html
 html(lang=locale dir=getLocaleDirection(locale))
 	head
+		meta(charset="utf-8")
 		base(href="/")
 		if fulltitle
 			title= fulltitle
@@ -31,25 +33,33 @@ html(lang=locale dir=getLocaleDirection(locale))
 		meta(name="theme-color" content="#333")
 		//- meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
 		meta(name="viewport" content="width=device-width, initial-scale=1")
-		meta(charset="utf-8")
 		link(rel="manifest" href=`${fileRoot}/manifest.json`)
 		link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
 		// Libraries bundled in this stylesheet: mmenu.css (Source code licensed CC-BY-NC-4.0), mburger.css (Source code licensed CC-BY-4.0), W3.css (https://www.w3schools.com/w3css/). Source code is available at https://github.com/FIRSTTeam102/ScoringApp-Serverless/tree/master/primary/public-src/less
-		link(rel="stylesheet" href=`${fileRoot}/css/style.css?v=3`)
+		link(rel="stylesheet" href=`${fileRoot}/css/style.css?v=${functionVersion}`)
+		-
+			const backgrounds = {
+				2020: 'city-light.png',
+				2022: '2022-grid.svg',
+				2023: '2023-halftone.svg',
+			};
 		style.
-			#page{ background-image: url('#{fileRoot}/images/backgrounds/2022-grid.svg');}
-			.sprite{ --sprites-url: url('#{fileRoot}/images/sprites.png?v=4');}
+			#page{ --background-image: url('#{fileRoot}/images/backgrounds/#{backgrounds[themeYear]}');}
+			.sprite{ --sprites-url: url('#{fileRoot}/images/sprites.png?v=#{functionVersion}');}
 		
 		script(src=`${fileRoot}/lib/w3.js`)
 		//script(src=`${fileRoot}/lib/hammer.min.js`)
-		script(src=`${fileRoot}/lib/jquery.min.js`)
+		if useMinifiedJs
+			script(src=`${fileRoot}/lib/jquery.min.js`)
+		else 
+			script(src=`${fileRoot}/lib/jquery.js`)
 		script(src=`${fileRoot}/lib/jscookie-2.2.1.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
 		//- script(src=`${fileRoot}/lib/chart.min.js`) 2022-03-18 JL: Taking chart.js out of the required scripts for all pages & putting it only where needed (as of today, only Drive Team)
 		script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
-		script(src=`${fileRoot}/js/bundle.js`)
+		script(src=`${fileRoot}/js/bundle.js?v=${functionVersion}`)
 		if alert && alert != "undefined"
 			script.
 				$(function(){
@@ -96,9 +106,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 					
 					//add other queries back into url
 					if(queries[0]){
-						
 						url += '?' + queries[0];
-						
 						for(var i = 1; i < queries.length; i++){
 							url += '&' + queries[i];
 						}
@@ -113,15 +121,133 @@ html(lang=locale dir=getLocaleDirection(locale))
 						alert("It appears you are using an unsupported browser. Please use a modern browser (e.g. Chromium, Firefox, Edge, and newer versions of Safari) for Scoutradioz. Note: The site is built for mobile! Try it on your Android or iPhone!");
 					}, 20);
 	body(class="theme-text")
-		//div(class="menu-blank")
-		div(id="page" style="font-size:1.1em")
-			noscript 
+		div(id="page")
+			noscript
 				p(style="display:block;width:100%;background-color:black;color:white;padding:8px 16px;")
 					span It appears JavaScript is disabled on this browser. Scoutradioz needs a modern browser with JavaScript enabled in order to function properly.
-					br 
+					br
 					span Supported browsers include: Chrome and other Chromium-based browsers, Firefox, Edge, Opera, and new versions of Safari.
-			include nav
-			main(class="w3-padding w3-mobile w3-center" id="content") 
-				block content
-			//-include footer
+
+			//- sticky header bar
+			div(id="headerbar" class=`w3-card header tier-${process.env.TIER}`)
+				div(class="header-left")
+					//- Hamburger menu button
+					a(id="burger")
+						button(class="mburger mburger--squeeze" title=msg('layout.menu.main'))
+							b
+							b
+							b
+					//- Scoutradioz logo
+					div
+						span(style="display:inline-block;height:100%;vertical-align:middle;")
+						a(href="/home")
+							- const darkLogo = [2020].includes(themeYear)
+							img(src=`${fileRoot}/images/brand-logos/scoutradioz-${darkLogo ? 'black' : 'white'}-sm.png` class="header-logo" alt="Scoutradioz")
+					- if (['dev', 'test', 'qa'].includes(process.env.TIER))
+						div(class="tierlabel")= process.env.TIER
+				//-div(class="w3-right w3-show-inline-block")
+					img(src=`${fileRoot}/images/infinite-recharge/Horizontal-one-color.png` class="w3-image w3-margin-right" style="max-height: 100%;")
+				//- Share and i18n buttons ***w3-right class cascades from right-to-left**
+				div(class="header-right")
+					//- i18n
+					a(href="javascript:selectLanguage()" class="centered" title="Language")
+						//- div(class="centered")
+						span(class="sprite sp-32 sp-i18n")
+					//- Share
+					- var orgKey = user ? user.org.org_key : 0;
+					a(href=`javascript:share('${orgKey}')` class="centered" title=msg('layout.share'))
+						- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
+						//- div(class="centered")
+						span(class=`sprite sp-32 ${spriteType} sp-white`)
+						//- div(class="centered w3-hide-small")
+						span(class="w3-hide-small" style="font-size:14px; margin-inline-start: 1px; font-family:Tahoma,Geneva,sans-serif;")!=msg('layout.share')
+			div(style="display: none;" class="slidein-overlay" id="overlay")
+
+			//- main content container, scrolls x independently
+			div(id="content-container")
+				div(id="headerlogo" class="w3-center")
+					-
+						const headerlogos = {
+							2020: ['infinite-recharge/Horizontal-reverse.png', 'Infinite Recharge'],
+							2022: ['rapid-react/horizontal-color.svg', 'Rapid React'],
+							2023: ['charged-up/horizontal-color.svg', 'Charged Up'],
+						}
+					if (headerlogos[themeYear])
+						img(src=`${fileRoot}/images/${headerlogos[themeYear][0]}` alt=headerlogos[themeYear][1] class="w3-image w3-center" style="max-height: 160px;")
+					if (!isOrgSelectScreen)
+						h3=eventName
+				main(class="w3-padding w3-mobile w3-center" id="content")
+					block content
+
+		//- outside of page
 		div(class="background")
+		div(style="position: absolute; width: 0px; height: 0px; top: -50px; left: 0px;")
+			input(id='shareURLInput' type='text' style="")
+
+		//- The following mixins are for dynamically creating sliding menu items. See helpers/nav.ts for the nav menu creation process.
+		- const bracketsRegex = /\[\[(.*)\]\]/; // For "unimportant text" in a label, put it inside [[]]
+		- const isRTL = getLocaleDirection(locale) == 'rtl';
+		mixin mmenuLabel(item)
+			span
+				if item.sprite
+					span(class=`sprite sp-24 menu-sprite sp-${resolveToValue(item.sprite)}`)
+				else 
+					span(class="sprite sp-24 menu-sprite")
+				//- Replace [[text]] with faded out text
+				- let label = resolveToValue(item.label);
+				- let match = bracketsRegex.exec(label);
+				if match
+					- label = label.replace(match[0], '')
+					if !isRTL
+						span=label
+						span(class="theme-text-secondary") &nbsp;#{match[1]}
+					else
+						//- CD 2022-11-11: fixme: some ordering gets messed up
+						span(class="theme-text-secondary") #{match[1]}&nbsp;
+						span=label
+				else
+					span=label
+		mixin mmenuItem(item)
+			li
+				- let href = resolveToValue(item.href);
+				if href
+					a(href=href)
+						+mmenuLabel(item)
+				else
+					+mmenuLabel(item)
+				if item.submenu
+					- let submenu = resolveToValue(item.submenu);
+					ul
+						for subitem in submenu
+							+mmenuItem(subitem)
+
+		div(style="display: none;" id="menuParent")
+			nav(id="menu" class="slidein-menu")
+				ul
+					if navcontents
+						for item in navcontents
+							+mmenuItem(item)
+
+		- var navMenuTitle;
+		if user
+			if user.name != 'default_user'
+				- navMenuTitle = msg('layout.menu.user', {user: user.name, org: user.org.nickname});
+			else if user.org
+				- navMenuTitle = user.org.nickname;
+		else 
+			- navMenuTitle = msg('layout.menu.main');
+
+		- var locales = getLocales();
+		//- CD 2022-05-27: add qqx to list when on dev tier
+		if process.env.TIER == 'dev'
+			- locales.push({lang: 'qqx', name: 'message data', dir: 'ltr'});
+
+		//-No other easy way to pass footerContents from pug to JavaScript, to my knowledge.
+		script.
+			var navMenuTitle = `#{navMenuTitle}`;
+			var footerContents = [
+				`<a href="https://team102.org" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-gearheads"></span><span class="w3-tooltiptext">!{msg('layout.footer.copyright', {date: `2018-${new Date().getFullYear()}`})}</span></img></a>`,
+				`<a href="https://thebluealliance.com" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-tba"></span><span class="w3-tooltiptext">!{msg('layout.footer.tba')}</span></img></a>`,
+				`<a href="https://www.firstinspires.org/" target="_blank" class="slidein-brand w3-third w3-tooltip"><span class="sprite sp-32 sp-first"></span><span class="w3-tooltiptext">!{msg('layout.footer.frc')}</span></img></a>`,
+			];
+			var locales = !{JSON.stringify(locales)};

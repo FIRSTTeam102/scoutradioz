@@ -1,9 +1,415 @@
 {
 	"index": {
-		"welcome": "Bienvenue au Scoutradioz"
+		"fulltitle": "Scoutradioz: Repérage FRC en tant que service",
+		"welcome": "Bienvenue à Scoutradioz",
+		"choice": "Cherchez-vous à:",
+		"viewer": {
+			"choice": "Afficher des données",
+			"intro": "Scoutradioz permet aux équipes/organisations de rassembler leurs propres informations personnalisées lors des compétitions.",
+			"action": "Sélectionnez une organisation ci-dessous pour voir les données qu'elle a collectées!"
+		},
+		"scouter": {
+			"choice": "Vous connecter pour faire du repérage"
+		},
+		"info": {
+			"choice": "En savoir plus sur Scoutradioz et comment votre équipe peut l'utiliser",
+			"intro": "Scoutradioz est une application de repérage FRC développée par The Gearheads qui permet aux équipes et aux organisations de **rassembler leurs propres informations personnalisées lors des compétitions**.",
+			"features": {
+				"intro": "Initialement créée en 2018, Scoutradioz n'a cessé d'évoluer et fonctionne désormais sur Amazon Web Services. Voici une liste de certaines des fonctionnalités offertes par Scoutradioz:",
+				"modular": "**Modulaires et configurables** Enquêtes de repérage de puits et de matchs, afin que votre organisation puisse choisir exactement les informations que vous souhaitez enregistrer et afficher",
+				"automatic": "**Automatique**, affectations individualisées de repérage de puits et des matchs",
+				"advanced": "**Avancés** Rapports et statistiques",
+				"management": "Des outils de gestion d'événements tels que l'audit des affectations de match, l'échange de repéreurs et la gestion d'une liste de membres",
+				"free": "Et bien sûr, c'est entièrement gratuit!"
+			},
+			"github": "Voir notre code et notre documentation sur GitHub",
+			"discord": "Rejoignez notre Discord",
+			"partner": "Postulez pour devenir partenaire d'accès anticipé",
+			"first": "En savoir plus sur *FIRST* et FRC"
+		},
+		"view": "Afficher",
+		"login": "Connexion"
 	},
 	"hello": {
-		"world": "Bonjour le monde !",
-		"name": "Bonjour, {name} !"
-	}
+		"world": "Bonjour le monde!",
+		"name": "Bonjour, {name}!"
+	},
+	"selectOrg": "Veuillez sélectionner une organisation.",
+	"error": {
+		"title": "Erreur: {message}",
+		"report": {
+			"intro": "Pour nous aider à corriger cette erreur, veuillez:",
+			"screenshot": "Faites une capture d'écran de ce message d'erreur,",
+			"url": "Copiez l'URL complète de cette page en cliquant sur \"Partager\" en haut de la page,",
+			"send": "Publiez la capture d'écran sur notre serveur Discord ou sur notre {github}page GitHub{/github}, y compris les informations pertinentes, telles que le lien sur lequel vous avez cliqué pour accéder à cette erreur."
+		},
+		"stack": "Trace de la pile:"
+	},
+	"layout": {
+		"untitled": "Page sans titre",
+		"share": "Partager",
+		"menu": {
+			"main": "Menu",
+			"user": "{user} - {org}"
+		},
+		"footer": {
+			"copyright": "Copyright {date} FIRST Team 102 et Robotics Fund Inc.\nOpen-source et sous licence avec AGPLv3.",
+			"tba": "Propulsé par l'Alliance Bleue.",
+			"frc": "Nous sommes fiers de participer au FIRST Robotics Competition."
+		},
+		"nav": {
+			"home": "Accueil",
+			"reports": {
+				"main": "Infos et rapports: [[{event}]]",
+				"teams": "Équipes",
+				"teamList": "{number}: {name}",
+				"teamStats": "Statistiques de l'équipe",
+				"yearStats": "Statistiques complètes pour {year}",
+				"export": {
+					"main": "Exporter vers CSV",
+					"match": "Données de repérage des matchs: [[{event}]]",
+					"pit": "Données de repérage de puits: [[{event}]]",
+					"matchAll": "Données de repérage des matchs: [[All of {year}]]",
+					"pitAll": "Données de repérage de puits: [[All of {year}]]"
+				}
+			},
+			"scouting": "Repérage",
+			"manage": {
+				"main": "Administer: [[{org}]]",
+				"members": {
+					"main": "Membres",
+					"list": "Liste des membres",
+					"passwords": "Auditer/réinitialiser les mots de passe des membres"
+				},
+				"scouters": {
+					"main": "Repéreurs",
+					"event": "Repéreurs: [[{event}]]",
+					"audit": "Audit de repérage",
+					"assignments": "Tâches de repérage",
+					"swapmembers": "Échanger des repéreurs de match",
+					"swappitassignments": "Échanger les tâches de repérage de puits",
+					"present": "Mettre présent"
+				},
+				"event": {
+					"main": "Données d'événement",
+					"event": "Données d'événement: [[{event}]]",
+					"matches": "Matches",
+					"allianceselection": "Données de sélection d'alliance",
+					"getcurrentteams": "Mettre à jour la liste des équipes",
+					"recalcderived": "Recalculer les métriques dérivées",
+					"editmatchresults": "Modifier les résultats de match",
+					"editteams": "Modifier la liste d'équipes",
+					"editmatchschedule": "Modifier le programme des matchs",
+					"setcurrent": "Définir l'événement en cours"
+				}
+			},
+			"admin": "Administrateur",
+			"user": {
+				"main": "Utilisateur: [[{user}]]",
+				"fallback": "Utilisateur",
+				"login": "Connexion: [[{org}]]",
+				"logout": "Se déconnecter",
+				"switchorg": "Changer d'organisation"
+			},
+			"help": "Besoin d'aide? Consultez notre wiki!"
+		}
+	},
+	"home": {
+		"title": "Accueil",
+		"menu": "Cliquez sur le {menu} en haut à gauche pour ouvrir le menu",
+		"tournamentInfo": "Informations sur le tournoi",
+		"teamInfo": "Informations sur l'équipe",
+		"teamNum": "Équipe #",
+		"stats": "Statistiques",
+		"userLogin": "Connexion utilisateur",
+		"scoutingDashboard": "Tableau de bord du repérage",
+		"management": "Gestion",
+		"admin": "Administrateur",
+		"specifyTeam": "Vous devez spécifier une équipe."
+	},
+	"share": {
+		"changeOrg": "Vous consultez {org}.\nPour modifier l'organisation que vous souhaitez afficher, cliquez sur *Org : {org}* dans le menu et sélectionnez *Changer d'organisation*."
+	},
+	"user": {
+		"loginOrg": "Connectez-vous à {org}",
+		"orgpassword": "Mot de passe de l'organisation:",
+		"next": "Prochain",
+		"name": "Nom:",
+		"personalpassword": "Mot de passe personnel:",
+		"createnew": "Veuillez créer un nouveau mot de passe.",
+		"mustcreate": "Vous disposez d'autorisations élevées dans votre organisation, vous devez donc définir un mot de passe pour vous assurer que d'autres ne peuvent pas se connecter en votre nom.",
+		"currentpassword": "Mot de passe actuel:",
+		"newpassword": "Nouveau mot de passe:",
+		"newpassword2": "Confirmer:",
+		"newpasswordmismatch": "Les nouveaux mots de passe ne correspondent pas.",
+		"login": "Connexion",
+		"changepassword": "Changer le mot de passe",
+		"blankpassword": "Laissez vide si vous n'avez pas encore votre propre mot de passe.",
+		"selectorg": "Veuillez sélectionner une organisation à laquelle vous connecter.",
+		"logoutbeforelogin": "Veuillez vous déconnecter avant de pouvoir vous connecter avec un autre utilisateur.",
+		"orgpasswordrequired": "Veuillez entrer le mot de passe de votre organisation. Pour revenir en arrière, ouvrez la navigation en haut à gauche.",
+		"orgpasswordincorrect": "Mot de passe incorrect pour l'organisation {org}.",
+		"resubmitlogin": "Désolé, veuillez soumettre à nouveau les informations de connexion de votre organisation.",
+		"selectuser": "Veuillez sélectionner un utilisateur.",
+		"nouserexists": "Aucun utilisateur de ce type n'existe.",
+		"incorrectpassword": "Mot de passe incorrect.",
+		"incorrectpasswordcurrent": "Mot de passe actuel incorrect.",
+		"passwordalreadyexists": "Un mot de passe existe déjà. Veuillez soumettre votre mot de passe actuel.",
+		"newpasswordboth": "Veuillez remplir les deux formulaires de mot de passe.",
+		"newpasswordsuccess": "Mot de passe défini avec succès.",
+		"reportcolumns": {
+			"title": "Choisir les colonnes du rapport",
+			"saved": "Préférences de colonne enregistrées avec succès.",
+			"clearedorgdefaults": "Les colonnes par défaut de l'organisation ont été effacées avec succès.",
+			"intro": "Si AUCUNE n'est sélectionnée, les pages de rapport afficheront l'ensemble de colonnes par défaut pour l'organisation.\nLes colonnes par défaut de l'organisation sont **gras**.\nSi TOUTES sont sélectionnées, ou CERTAINES sont sélectionnées, les pages de rapport afficheront UNIQUEMENT les colonnes sélectionnées.",
+			"default": "Défaut",
+			"checkAll": "Cochez toutes",
+			"uncheckAll": "Décocher tout",
+			"setOrgDefalts": "Cochez cette case pour définir les valeurs par défaut de l'organisation",
+			"save": "Enregistrer les sélections de colonnes",
+			"clearOrgDefaults": "Effacer les valeurs par défaut de l'organisation",
+			"clearOrgDefaultsConfirmation": "Cela effacera les valeurs par défaut de la colonne de rapport de votre organisation (pour TOUT LE MONDE, pas seulement pour vous). Êtes-vous sûr?"
+		}
+	},
+	"scouting": {
+		"match": "Repérage de matchs",
+		"pit": "Repérage de puits",
+		"subheading": "{team} <span class=\"unimportant\">de {city}, {state}</span>",
+		"pitHeading": "Équipe #{team}",
+		"upload": {
+			"main": "Télécharger la photo principale",
+			"small": "Télécharger petit #{n}",
+			"preprocess": "Prétraitez les photos pour conserver les données mobiles?"
+		},
+		"matchHeading": "Match #{match}, Éequipe #{team}",
+		"dynamicScrolling": "Activer le défilement dynamique",
+		"submit": "Soumettre",
+		"orgManagerActions": "Actions du responsable de l'organisation:",
+		"clearData": "Effacer les données",
+		"clearDataConfirm": "Si vous êtes * SÛR * de vouloir * SUPPRIMER DE FAÇON PERMANENTE * les données de repérage pour ce match, entrez votre mot de passe ci-dessous.",
+		"invalidMatchKey": "Jeu de clés de correspondance non valide.",
+		"invalidTeam": "L'équipe {team} n'existe pas.",
+		"invalidTeamKey": "La clé d'équipe n'est pas définie ou n'est pas valide.",
+		"noDataSubmit": "Aucune donnée n'a été envoyée à {url}.",
+		"submitSuccess": "Données soumises avec succès.",
+		"deleteSuccess": "Données supprimées avec succès. Vous ne serez pas redirigé hors de la page, au cas où vous souhaiteriez soumettre à nouveau les données à l'écran."
+	},
+	"notifications": {
+		"status": "Les notifications de match sont {status} pour cet appareil.",
+		"enabled": "activé",
+		"disabled": "désactivé",
+		"confirmEnable": "Activer les notifications de match sur cet appareil?",
+		"subscribing": "Abonnement aux notifications poussées…",
+		"goneWrong": "Il se peut que quelque chose se soit mal passé. Données:",
+		"error": "Une erreur s'est produite:",
+		"disabling": "Désactivation des notifications poussées…",
+		"noPermission": "Nous n'avons pas obtenu l'autorisation.",
+		"dbSaveFailed": "L'abonnement a été reçu mais nous n'avons pas pu l'enregistrer dans notre base de données.",
+		"testPageTitle": "Page de test des notifications",
+		"invalidKey": "Pas de match et clé d'équipe de match",
+		"invalidMatch": "Match non trouvé",
+		"content": {
+			"title": "Le {match} va bientôt commencer",
+			"body": "Vous êtes affecté à l'équipe {team} de l'alliance {alliance}.",
+			"ifFocused": "N'oubliez pas, le {match} est sur le point de commencer!"
+		},
+		"actions": {
+			"scout": "Repérage de match"
+		}
+	},
+	"dashboard": {
+		"titleUser": "Tableau de bord pour {user}",
+		"group": "Groupe de repérage: {group}",
+		"pitScouting": "Tâches de repérage de puits",
+		"notPitAssigned": "Non affecté au repérage de puits",
+		"pitScoutingPartner": "Tâches de repérage de puits du partenaire",
+		"upcomingMatches": "Prochains matchs à repérer",
+		"matchNumber": "Match {number}",
+		"unassigned": "Non attribué",
+		"unassignedOptions": "Options pour les repéreurs non affectés",
+		"oneOffPit": "Repérage de puits ponctuelle",
+		"oneOffMatch": "Repérage de match ponctuelle",
+		"assigned": "Assigned",
+		"team": "Équipe",
+		"teamName": "Nom de l'équipe",
+		"none": "Aucun",
+		"photo": "Photo",
+		"loadTeamPhotos": "Rafraîchir avec des photos d'équipe"
+	},
+	"driveDashboard": {
+		"title": "Tableau de bord de l'équipe de pilotage",
+		"noTeams": "Aucune équipe n'a été trouvée pour ce tournoi.",
+		"noMatches": "Aucun match à venir pour ce tournoi.",
+		"noMatchesTeam": "Aucun match n'a été trouvé pour l'équipe {team}.",
+		"viewFor": "Afficher le tableau de bord pour…",
+		"chooseTeam": "[Choisissez une équipe]",
+		"viewOr": "ou",
+		"allTeams": "Toutes les équipes",
+		"selectedTeam": "Équipe sélectionnée",
+		"nextMatch": "Prochain match:",
+		"nextMatchTeam": "Prochain match pour l'équipe {team}:",
+		"relativeStrengths": "Atouts relatifs:",
+		"legendShowHide": "Cliquez sur une légende pour masquer/afficher cette équipe",
+		"futureMatches": "Matchs à venir:",
+		"futureMatchesTeam": "Prochains matchs pour l'équipe{team}:",
+		"compareAlliance": "Comparer les alliances"
+	},
+	"allianceselection": {
+		"title": "Sélection d'alliances",
+		"intro": "Appuyez sur une équipe, puis appuyez sur l'emplacement vide [2] ou [3] pour les déplacer vers le haut.\nLorsque les équipes sont sélectionnées pour des alliances, elles seront grisées dans le tableau ci-dessous.",
+		"preferred": "Avant la sélection de l'alliance, vous et votre ou vos chefs d'équipe pouvez marquer vos équipes préférées sur <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">cette page</a>.",
+		"undo": "annuler",
+		"allianceNumber": "Alliance {number}",
+		"showData": "Afficher les données de l'équipe",
+		"wontSave": "Cette page ne sera pas enregistrée.",
+		"noPreviousState": "État précédent non défini",
+		"noLastMove": "Dernier mouvement non défini",
+		"noAllianceAttribute": "Impossible de trouver l'attribut d'alliance pour #{team}",
+		"noTeamStateRankings": "Impossible de trouver l'équipe à partir des classements d'état idx {i}",
+		"priority": "Priorité",
+		"priorityAbbr": "V",
+		"team": "Équipe",
+		"rank": "Classement FRC"
+	},
+	"metrics": {
+		"raw": "Données brutes",
+		"show": "Afficher: ",
+		"AVG": "Moyennes",
+		"AVG1": "Moyenne",
+		"metricAVG": "Métrique (moyenne)",
+		"MAX": "Maximums",
+		"MAX1": "Maximum",
+		"metricMAX": "Métrique (maximum)",
+		"MIN1": "Minimum",
+		"VAR1": "Variance",
+		"metric": "Métrique",
+		"insufficientData": "Données insuffisantes pour le moment, revenez plus tard!"
+	},
+	"alliance": {
+		"red": "Alliance rouge",
+		"redShort": "Rouge",
+		"blue": "Alliance bleue",
+		"blueShort": "Bleue"
+	},
+	"reports": {
+		"redWon": "Rouge a gagné",
+		"blueWon": "Bleue a gagné",
+		"redStats": "Statistiques des rouges: {teams}",
+		"blueStats": "Statistiques des bleues: {teams}",
+		"bothStats": "Statistiques pour les deux alliances",
+		"tie": "Match nul",
+		"match": "{level} Match {number}",
+		"scoutData": "Données de repérage",
+		"firstData": "FIRST données",
+		"score": "Score:",
+		"prediction": {
+			"winner": "{chance}% chance {alliance} victoires",
+			"reports": "Basé sur le total de {count} rapports",
+			"scores": "Scores prévus : Rouge {redA} ± {redS}, Bleu {blueA} ± {blueS}",
+			"noData": "Pas assez de données pour faire une prédiction."
+		},
+		"teamClick": "Cliquez sur un numéro d'équipe pour obtenir des informations sur celle-ci",
+		"teamMatchClick": "Cliquez sur le numéro de l'équipe pour les détails du dépistage du match",
+		"metricClick": "Cliquez sur une métrique pour comparer toutes les équipes d'événement",
+		"headerClick": "Cliquez sur un en-tête de colonne pour trier les équipes selon les informations de cette colonne (cliquez à nouveau pour changer le sens du tri)",
+		"overall": "Données d'événement classées dans l'ensemble",
+		"overallMatchClick": "Cliquez sur le bouton de match pour les performances globales de l'alliance",
+		"compareAlliance": "Comparer les métriques de l'alliance",
+		"compareAllianceMatch": "Comparer les alliances pour le match {match}",
+		"compareAllianceClick": "Cliquez sur une alliance pour voir les statistiques comparatives de chaque équipe:",
+		"team": "Équipe",
+		"rank": "Rang",
+		"allTeams": "toutes les équipes",
+		"teamNumber": "Équipe {team}",
+		"allianceStats": "Statistiques de l'équipe de l'Alliance",
+		"allTeamMetrics": "Tous les indicateurs d'équipe",
+		"completedMatches": "Matchs complétés",
+		"upcomingMatches": "Matchs à venir",
+		"upcomingMatchesTeam": "Prochains matchs pour {team}",
+		"upcomingMatchesFor": "Voir les matchs à venir pour ",
+		"noMatchesYet": "Il n'y a pas de résultats dans le système. Veuillez réessayer plus tard.",
+		"noPreviousMatchesYet": "Pas encore de matchs précédents.",
+		"noMatchDataYet": "Aucune donnée disponible pour ce match pour le moment. Veuillez réessayer plus tard.",
+		"noRankingsYet": "Il n'y a pas de résultats dans le système.",
+		"noPitDataYet": "Pas encore de données de repérage de puits.",
+		"noDataPlaceholder": "[pas de données]",
+		"matchData": "Match données pour le match #{match}",
+		"matchIntel": {
+			"title": "Information: Match {match}",
+			"winner": "Match {match} - Gagnant: {alliance}",
+			"points": "{alliance}: {score} points"
+		},
+		"metricIntel": "Statistiques **{metric}** par équipe",
+		"allTeamMetricsTitle": "Métriques pour toutes les équipes",
+		"allTeamsMetricsSummary": "Résumé statistique sur toutes les équipes",
+		"rankedTitle": "Meilleures équipes par métrique",
+		"currentRankings": {
+			"title": "Classement des événements en cours",
+			"titleShort": "Classements actuels",
+			"wlt": "V-D-N",
+			"wltDesc": "Victoire-Défaite-Nul",
+			"dq": "DQ",
+			"dqDesc": "Disqualifications",
+			"matches": "Matches",
+			"rp": "PC",
+			"rpDesc": "Points de classement"
+		},
+		"matchDataFor": "Données de repérage de match pour l'équipe {number}: {nick}",
+		"matchDataForShort": "Données de repérage de match pour l'équipe {team}",
+		"matchDataShort": "Données de repérage de match",
+		"matchClickAlliance": "Cliquez sur un numéro de match pour voir les données d'alliance pour ce match.",
+		"teamHeader": "Équipe {number} - {nick}",
+		"teamRank": "Actuellement classé #{rank}\n{wins}-{losses}-{ties} record avec {rp} PC",
+		"teamFrom": "De: {city}, {state}, {country}",
+		"teamDataYear": "Toutes les données de l'équipe {team} de cette année",
+		"teamIntel": {
+			"title": "Information : Équipe {team}",
+			"titleHistory": "Historique des informations : Équipe{team}",
+			"show": "Afficher {type}",
+			"hide": "Cacher {type}",
+			"pitScouting": "Repérage de puits",
+			"statistics": "statistiques",
+			"previousMatches": "matchs précédents",
+			"yearStatistics": "statistiques sur l'année {year}",
+			"yearPreviousMatches": "tous les matchs de l'année {year}"
+		},
+		"teamStats": "Statistiques de l'équipe {team}",
+		"teamAllMatchData": "Données de repérage des matchs pour tous les matchs de l'équipe {team}s",
+		"historicalTeamStats": "Statistiques historiques de l'équipe {team}",
+		"allPreviousMatches": "Tous les matchs précédents",
+		"teamMatchIntel": {
+			"title": "Information : {matchType} {match} équipe {team}",
+			"header": "Match #{match} - {alliance} alliance"
+		},
+		"noMatchScoutData": "Aucune donnée de repérage de match disponible pour l'équipe {team} pour le match {match}.",
+		"noMatchScoutData2": "Aucune donnée de repérage de match disponible pour l'équipe {team} pour ce match.",
+		"viewIntelPage": "Voir la page d'information de cette équipe",
+		"upcomingMatchMetrics": "Métriques pour match à venir",
+		"intel": "Information: {type}",
+		"exportData": {
+			"noType": "Aucun type de données (ou non valide) spécifié pour l'exportation.",
+			"noData": "Aucune donnée trouvée pour le type '{type}'."
+		},
+		"rankNumber": "Rang {number}"
+	},
+	"errors": {
+		"teamMissing": "Impossible de trouver les détails de l'équipe {team}. La liste de l'équipe a-t-elle changé depuis que vous avez créé les missions de repérage?",
+		"eventTeamsMissing": "Impossible de trouver la liste des équipes présentes à cet événement. Veuillez demander à votre responsable d'organisation de mettre à jour la liste des équipes actuelles.",
+		"specifyTeamKey": "Veuillez spécifier une clé d'équipe.",
+		"noTeam": "L'équipe {team} n'existe pas ou n'a pas participé à cet événement.",
+		"specifyMatchKey": "Veuillez spécifier une clé de match.",
+		"noMatchFound": "Impossible de trouver le match: {matchKey}",
+		"specifyTeamMatchKey": "Veuillez spécifier une clé de match-équipe.",
+		"specifyTeamCsv": "Veuillez spécifier une liste d'équipes séparées par des virgules.",
+		"specifyMetricKey": "Veuillez spécifier une clé de métrique."
+	},
+	"matchType": {
+		"qm": "Match",
+		"qf": "Quart de finale",
+		"sf": "Demi-finale",
+		"f": "Finale"
+	},
+	"tryAgainLater": "Veuillez réessayer plus tard.",
+	"yes": "Oui",
+	"no": "Non"
 }

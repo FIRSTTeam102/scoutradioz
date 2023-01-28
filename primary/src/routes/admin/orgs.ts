@@ -7,6 +7,7 @@ import Permissions from '../../helpers/permissions';
 import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
 import type { AnyDict, Org, User, Role } from '@firstteam102/scoutradioz-types';
 import e from '@firstteam102/http-errors';
+import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 
 const router = express.Router();
 const logger = getLogger('orgs');
@@ -24,7 +25,7 @@ router.get('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'orgs[get]');
 	logger.info('ENTER');
 	
-	const orgs = await utilities.find('orgs', {});
+	const orgs = await utilities.find('orgs', {}, {sort: {org_key: 1}});
 	
 	res.render('./admin/orgs', {
 		title: 'Manage organizations',
@@ -49,67 +50,14 @@ router.post('/', wrap(async (req, res) => {
 	
 	logger.info(`${thisFuncName} Updating org ${orgKey}, nickname=${nickname}`);
 	
-	//Aggregate config.members.subteams and config.members.classes
-	// 	note: there is no data structure validation in this code, so when we create an org config
-	// 	page, we can't take this code verbatim
-	let subteams: AnyDict[] = [];
-	let classes: AnyDict[] = [];
-	for (let elem in req.body) {
-		let split = elem.split('_');
-		let elemIdx = parseInt(split[1]);
-		let elemType = split[2];
-		let elemKey, elemValue;
-		let origValue = req.body[elem];
-		
-		switch (elemType) {
-			case 'pitscout':
-				elemKey = 'pit_scout';
-				console.log(origValue);
-				elemValue = (origValue == true);
-				break;
-			case 'youth':
-				elemKey = 'youth';
-				elemValue = (origValue == true);
-				break;
-			case 'subteamkey':
-				elemKey = 'subteam_key';
-				elemValue = origValue;
-				break;
-			case 'classkey':
-				elemKey = 'class_key';
-				elemValue = origValue;
-				break;
-			case 'seniority':
-				elemKey = 'seniority';
-				elemValue = parseInt(origValue);
-				if (isNaN(elemValue)) {
-					logger.error(`${elem} -> ${origValue} is NaN!!`);
-					return res.redirect(`/admin/orgs?alert=${elem} -> ${origValue} is NaN!!&type=error`);
-				}
-				break;
-			default:
-				elemKey = elemType;
-				elemValue = origValue;
-		}
-		
-		//Go through subteams
-		if (elem.includes('subteams')) {
-			//if there is no subteam at this idx, create it
-			if (!subteams[elemIdx]) {
-				subteams[elemIdx] = {};
-			}
-			//pop in this element into the corresponding part of subteams
-			subteams[elemIdx][elemKey] = elemValue;
-		}
-		//Go through classes
-		else if (elem.includes('classes')) {
-			//if there is no subteam at this idx, create it
-			if (!classes[elemIdx]) {
-				classes[elemIdx] = {};
-			}
-			//pop in this element into the corresponding part of classes
-			classes[elemIdx][elemKey] = elemValue;
-		}
+	let subteams, classes;
+	try {
+		let ret = getSubteamsAndClasses(req.body);
+		subteams = ret.subteams;
+		classes = ret.classes;
+	}
+	catch (err) {
+		return res.redirect(`/admin/orgs?alert=${err}&type=error`);
 	}
 	logger.debug(`${thisFuncName} subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
 	
@@ -188,10 +136,12 @@ router.post('/create', wrap(async (req, res) => {
 	const nickname: string = req.body.nickname;
 	const teamKeyOrKeys: string = req.body.team_key;
 	const default_password: string = req.body.default_password;
+	const team_admin_name: string = req.body.team_admin_name;
 	
 	if (!org_key) return res.send({status: 400, message: 'No org key specified.'});
 	if (!nickname) return res.send({status: 400, message: 'No nickname specified.'});
 	if (!default_password) return res.send({status: 400, message: 'No password specified.'});
+	if (!team_admin_name) return res.send({status: 400, message: 'No new team admin name specified.'});
 	
 	let existingOrg = await utilities.findOne('orgs', {org_key: org_key});
 	if (existingOrg) return res.send({status: 400, message: `An org already exists with key ${org_key}!`});
@@ -294,7 +244,8 @@ router.post('/create', wrap(async (req, res) => {
 				classes: defaultClasses,
 			},
 			columnDefaults: {}
-		}
+		},
+		event_key: null,
 	};
 	
 	//If a team key is specified
@@ -331,30 +282,64 @@ router.post('/create', wrap(async (req, res) => {
 	
 	// New default users to create
 	// default_user is the one that everyone logs in to when they select an org
-	const newDefaultUser = {
+	const newDefaultUser: User = {
 		org_key: org_key,
 		name: 'default_user',
 		role_key: 'viewer',
 		password: 'default',
-		org_info: {},
-		event_info: {},
+		org_info: {
+			subteam_key: '',
+			class_key: '',
+			years: 0,
+			seniority: 0,
+		},
+		event_info: {
+			present: false,
+			assigned: false
+		},
 		visible: false,
 	};
+	// New Team Admin user who can set up the org
+	const newTeamAdmin: User = {
+		org_key: org_key,
+		name: team_admin_name,
+		role_key: 'team_admin',
+		password: 'default',
+		org_info: {
+			subteam_key: 'nonstudent',
+			class_key: 'mentor',
+			years: 0,
+			seniority: 0,
+		},
+		event_info: {
+			present: false,
+			assigned: false,
+		},
+		visible: true,
+	};
 	// scoutradioz_admin is used for /login-to-org
-	const newScoutradiozAdmin = {
+	const newScoutradiozAdmin: User = {
 		org_key: org_key,
 		name: 'scoutradioz_admin',
 		role_key: 'global_admin',
 		password: 'disabled',
-		org_info: {},
-		event_info: {},
+		org_info: {
+			subteam_key: '',
+			class_key: '',
+			years: 0,
+			seniority: 0,
+		},
+		event_info: {
+			present: false,
+			assigned: false
+		},
 		visible: false,
 	};
 	
 	logger.info(`Creating org: key=${org_key} nick=${nickname} defaultPass=${default_password} teamkeyOrKeys=${teamKeyOrKeys}`);
 	
 	let orgWriteResult = await utilities.insert('orgs', newOrg);
-	let userWriteResult = await utilities.insert('users', [newDefaultUser, newScoutradiozAdmin]);
+	let userWriteResult = await utilities.insert('users', [newDefaultUser, newScoutradiozAdmin, newTeamAdmin]);
 	
 	logger.info(`orgWriteResult=${JSON.stringify(orgWriteResult)} userWriteResult=${JSON.stringify(userWriteResult)}`);
 	
@@ -439,24 +424,25 @@ router.post('/login-to-org', wrap(async (req, res) => {
 		logger.info('Password check completed... Going to log in!');
 		
 		// Get the SR admin user from the DB from the associated org.
-		const SRAdminUser = await utilities.findOne('users', {org_key: org_key, name: 'scoutradioz_admin', role_key: userRole.role_key});
+		const SRAdminUser = await utilities.findOne<any>('users', {org_key: org_key, name: 'scoutradioz_admin', role_key: userRole.role_key});
 		
 		if (!SRAdminUser) {
 			return res.send({status: 500, message: 'Could not find SR admin user in the database.'});
 		}
 		
 		// First, log out
-		req.logout();
-		
-		// Next, log in as the new SR admin user
-		req.logIn(SRAdminUser, (err) => {
-			if (err) {
-				logger.error(err);
-				req.logout();
-				return res.send({status: 500, message: err});
-			}
-			// After they're logged in, send a success message & they'll be redirected from the client script
-			res.send({status: 200});
+		req.logout(() => {
+			// Next, log in as the new SR admin user
+			req.logIn(SRAdminUser, (err) => {
+				if (err) {
+					logger.error(err);
+					return req.logout(() => {
+						res.send({status: 500, message: err});
+					});
+				}
+				// After they're logged in, send a success message & they'll be redirected from the client script
+				res.send({status: 200});
+			});
 		});
 	}
 	else {

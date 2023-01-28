@@ -83,6 +83,9 @@ block content
 			//a(href="/manage/config/pitsurvey") 
 				div(class="gear-btn theme-link w3-btn")
 					span Configure pit survey layout
+			a(href="/manage/config") 
+				div(class="gear-btn theme-link w3-btn")
+					span Organization setup
 			a(href="/manage/config/editform?form_type=pitscouting") 
 				div(class="gear-btn theme-link w3-btn")
 					span Set up Pit Scouting form
@@ -92,11 +95,7 @@ block content
 			a(href="/user/preferences/reportcolumns") 
 				div(class="gear-btn theme-link w3-btn")
 					span Configure report columns
-			form#setDefaultPassword(name="setDefaultPAssword" method="post" action="/manage/setdefaultpassword" class="w3-section")
-				div(class="w3-padding-small w3-show-inline-block")
-					input#defaultPassword(name="defaultPassword" class="theme-input w3-no-border" placeholder="New Default Password" type="text")
-				div(class="w3-padding-small w3-show-inline-block")
-					button#btnSubmit(class="theme-submit w3-btn" onclick="confirmSetDefaultPassword()") Change default password for #{org.nickname}
+			div(class="w3-section")
 		div(class="w3-container w3-section" id="setCurrentEvent")
 			h4!=msg('layout.nav.manage.event.setcurrent')
 			form(name="setCurrentEvent" method="post" action="/manage/setcurrent")
@@ -145,14 +144,5 @@ block content
 				$("#setEvent").val(value);
 				//- $("#setEvent").trigger('input');
 				$('form[name=setCurrentEvent]').submit();
-			}
-		}
-		
-		function confirmSetDefaultPassword(){
-			
-			var newDefaultPassword = $("#defaultPassword").val();
-			
-			if(confirm(`Are you sure you want to change #{org.nickname} password to ${newDefaultPassword}?`)){
-				$("#setDefaultPassword").submit();
 			}
 		}

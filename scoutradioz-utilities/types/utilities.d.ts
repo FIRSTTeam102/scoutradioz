@@ -1,22 +1,89 @@
 import NodeCache from 'node-cache';
-import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators } from 'mongodb';
+import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
 import { ObjectId, MongoClient } from 'mongodb';
 import type { Request, Response, NextFunction } from 'express';
+import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
 declare const Client: any;
 /**
  * Valid primitives for use in mongodb queries
  */
 declare type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
-interface QueryItem<T = any> extends Omit<FilterOperators<T>, '_id'>, RootFilterOperators<T> {
+/**
+ * Valid type for the `_id` field in a mongodb query
+ */
+declare type ValidID = ObjectId | string | FilterOps<ObjectId>;
+/**
+ * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
+ */
+interface FilterOps<TValue> {
+    $eq?: TValue;
+    $gt?: TValue;
+    $gte?: TValue;
+    $in?: ReadonlyArray<TValue>;
+    $lt?: TValue;
+    $lte?: TValue;
+    $ne?: TValue;
+    $nin?: ReadonlyArray<TValue>;
+    $not?: TValue extends string ? FilterOperators<TValue> | RegExp : FilterOperators<TValue>;
+    /**
+     * When `true`, `$exists` matches the documents that contain the field,
+     * including documents where the field value is null.
+     */
+    $exists?: boolean;
+    $type?: BSONType | BSONTypeAlias;
+    $expr?: Record<string, any>;
+    $jsonSchema?: Record<string, any>;
+    $mod?: TValue extends number ? [number, number] : never;
+    $regex?: TValue extends string ? RegExp | BSONRegExp | string : never;
+    $options?: TValue extends string ? string : never;
+    $geoIntersects?: {
+        $geometry: Document;
+    };
+    $geoWithin?: Document;
+    $near?: Document;
+    $nearSphere?: Document;
+    $maxDistance?: number;
+    $all?: ReadonlyArray<any>;
+    $elemMatch?: Document;
+    $size?: TValue extends ReadonlyArray<any> ? number : never;
+    $bitsAllClear?: BitwiseFilter;
+    $bitsAllSet?: BitwiseFilter;
+    $bitsAnyClear?: BitwiseFilter;
+    $bitsAnySet?: BitwiseFilter;
+    $rand?: Record<string, never>;
+}
+interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
     [key: string]: any;
+}
+interface FindOptionsWithProjection extends FindOptions {
+    projection: MongoDocument;
 }
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-    _id?: ObjectId | string | FilterOperators<ObjectId>;
+    _id?: ValidID;
     [key: string]: QueryItem | ValidQueryPrimitive;
 }
+/**
+ * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
+ */
+export declare type FilterQueryTyped<T> = {
+    _id?: ValidID;
+    $or?: FilterQueryTyped<T>[];
+    $and?: FilterQueryTyped<T>[];
+    $expr?: FilterQueryTyped<T>;
+} & {
+    [key in keyof T]?: QueryItem<T[key]> | T[key];
+} & {
+    [key: `${string}.${string}`]: QueryItem | ValidQueryPrimitive;
+};
+/**
+ * Update filter for the specified schema, but which allows `'foo.bar'` notation
+ */
+export declare type UpdateFilterTyped<T> = UpdateFilter<T & {
+    [key: `${string}.${string}`]: any;
+}>;
 /**
  * Optional settings for configurating SR-Utilities.
  * @param cache
@@ -38,6 +105,10 @@ export declare class UtilitiesOptions {
          */
         maxAge: number;
     };
+    /**
+     * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
+     */
+    stringifyObjectIDs?: boolean;
     /**
      * Whether to add extensive logger.trace statements
      */
@@ -101,19 +172,21 @@ export declare class Utilities {
     /**
      * Asynchronous "find" function to a collection specified in first parameter.
      * @param collection Collection to find in.
-     * @param query Filter for query.
-     * @param options Query options, such as sort.
+     * @param castQuery Filter for query.
+     * @param opts Query options, such as sort.
      * @param cacheOption Caching options.
+     * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
      */
-    find(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any[]>;
+    find<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchema<colName>[]>;
     /**
      * Asynchronous "findOne" function to a collection specified in first parameter.
      * @param collection Collection to findOne in.
      * @param query Filter for query.
-     * @param options Query options, such as sort.
+     * @param opts Query options, such as sort.
      * @param cacheOptions Caching options.
+     * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
      */
-    findOne(collection: string, query: FilterQuery, options?: FindOptions, cacheOptions?: UtilitiesCacheOptions): Promise<any>;
+    findOne<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<CollectionSchema<colName>>;
     /**
      * Asynchronous "update" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -122,7 +195,7 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @returns {WriteResult} writeResult
      */
-    update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>;
+    update<colName extends CollectionName>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, update: UpdateFilterTyped<CollectionSchema<colName>>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>;
     /**
      * Asynchronous "aggregate" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -130,7 +203,7 @@ export declare class Utilities {
      * @param cacheOptions Caching options.
      * @returns Aggregated data.
      */
-    aggregate(collection: string, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any>;
+    aggregate<colName extends CollectionName>(collection: colName, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any>;
     dumpCache(): void;
     /**
      * @param type Type of function
@@ -146,7 +219,7 @@ export declare class Utilities {
      * @param query The query for filtering the set of documents to which we apply the distinct filter.
      * @returns Distinct values for the specified field
      */
-    distinct(collection: string, field: string, query: FilterQuery): Promise<any[]>;
+    distinct<colName extends CollectionName, Field extends (keyof CollectionSchema<colName> | `${string}.${string}`)>(collection: colName, field: Field, query: FilterQueryTyped<CollectionSchema<colName>>): Promise<CollectionSchema<colName>[Field][]>;
     /**
      * Asynchronous "bulkWrite" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -154,22 +227,22 @@ export declare class Utilities {
      * @param options Optional settings.
      * @returns writeResult
      */
-    bulkWrite(collection: string, operations: AnyBulkWriteOperation[], options?: BulkWriteOptions): Promise<BulkWriteResult>;
+    bulkWrite<colName extends CollectionName>(collection: colName, operations: AnyBulkWriteOperation<CollectionSchema<colName>>[], options?: BulkWriteOptions): Promise<BulkWriteResult>;
     /**
      * Asynchronous "remove" function to a collection specified in first parameter.
      * @param collection Collection to remove from.
      * @param query Filter for element/s to remove.
      * @return {Promise<DeleteResult>} writeResult
      */
-    remove(collection: string, query?: FilterQuery): Promise<DeleteResult>;
+    remove<colName extends CollectionName>(collection: colName, query?: FilterQueryTyped<CollectionSchema<colName>>): Promise<DeleteResult>;
     /**
      * Asynchronous "insert" function to a collection specified in first parameter.
      * @param collection Collection to insert into.
      * @param {MongoDocument[] | MongoDocument} elements [Any] Element or array of elements to insert
      * @returns {Promise<InsertManyResult | InsertOneResult | undefined>} writeResult
      */
-    insert(collection: string, elements: MongoDocument[]): Promise<InsertManyResult | undefined>;
-    insert(collection: string, elements: MongoDocument): Promise<InsertOneResult>;
+    insert<colName extends CollectionName>(collection: colName, elements: CollectionSchema<colName>[]): Promise<InsertManyResult | undefined>;
+    insert<colName extends CollectionName>(collection: colName, elements: CollectionSchema<colName>): Promise<InsertOneResult>;
     /**
      * Asynchronous request to TheBlueAlliance. Requires a URL ending to execute correctly.
      * @param url ENDING of URL, after "https://.../api/v3/" DO NOT INCLUDE A / AT THE START
@@ -224,6 +297,14 @@ export declare class Utilities {
      * @returns Query with _id replaced with an ObjectId
      */
     private castID;
+    /**
+     * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
+     */
+    private stringifyObjectIDs;
+    /**
+     * Casts _id into a string, for when utilities is configured to do so.
+     */
+    private stringifyObjectID;
 }
 declare interface TBAKey extends MongoDocument {
     headers: {

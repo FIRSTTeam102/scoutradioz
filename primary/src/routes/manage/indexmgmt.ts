@@ -1,4 +1,3 @@
-import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
@@ -54,18 +53,6 @@ router.get('/', wrap(async (req, res) => {
 	});
 	
 	//utilities.dumpCache();
-}));
-
-router.post('/setdefaultpassword', wrap(async (req, res) => {
-	
-	let newDefaultPassword = req.body.defaultPassword;
-	
-	let hash = await bcrypt.hash(newDefaultPassword, 10);
-	
-	await utilities.update('orgs', {org_key: req._user.org_key}, {$set: {default_password: hash}});
-	
-	res.redirect(`/manage?alert=Successfully changed password to ${newDefaultPassword}.`);
-	
 }));
 
 /** POST method to set current event id.

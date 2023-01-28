@@ -361,7 +361,7 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 			
 			let writeResult = await utilities.update('matchscouting', 
 				{org_key: org_key, match_team_key: match_team_key},
-				{$set: {data: null}}
+				{$set: {data: undefined}}
 			);
 			
 			logger.debug(`Done; writeResult=${JSON.stringify(writeResult)}`);

@@ -28,13 +28,16 @@ const binaryMimeTypes = [
 const server = awsServerlessExpress.createServer(app, null, binaryMimeTypes);
 
 exports.handler = (event, context) => {
-  
+
 	var alias = context.invokedFunctionArn.replace(/.*:/g,'');
 	//console.log('ALIAS: '+ alias);
 	
 	process.env.ALIAS = alias;
 	//process.env.TIER is overridden here during every request.
 	process.env.TIER = alias.toLowerCase();
+	
+	// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
+	process.env.LAMBDA_FUNCTION_VERSION = context.functionVersion;
 
 	return awsServerlessExpress.proxy(server, event, context);
 }; 

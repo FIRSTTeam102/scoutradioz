@@ -2066,16 +2066,6 @@ html {
   min-height: 100%;
   min-width: 100%;
 }
-#page::after {
-  content: "";
-  display: block;
-  height: 240px;
-}
-@media (max-width: 600px) {
-  #page::after {
-    height: 160px;
-  }
-}
 /* For templates/upcomingMatch.pug */
 .thick-border {
   border-width: 6.5px !important;

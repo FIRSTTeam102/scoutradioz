@@ -182,7 +182,7 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 	}
 	
 	//Now, sign in to organization's default user
-	let defaultUser = await utilities.findOne('users', 
+	let defaultUser = await utilities.findOne<any>('users', 
 		{org_key: org_key, name: 'default_user'}, {},
 		{allowCache: true}
 	);
@@ -196,24 +196,31 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 	//gotta catch if the person pressed the back button first, then gotta log out before loggin in
 	if( req.user ){
 		//destroy session then log in to default user
-		req.logout();
+		req.logout(() => {
+			doLogin();
+		});
 		logger.debug('req.user is defined, so we are logging them out first');
 	}
-				
-	//Now, log in to defaultUser
-	req.logIn(defaultUser, function(err){
+	else {
+		doLogin();
+	}
+	
+	function doLogin() {	
+		//Now, log in to defaultUser
+		req.logIn(defaultUser, function(err){
 		
-		logger.debug('defaultUser logged in');
+			logger.debug('defaultUser logged in');
 		
-		//set org_key cookie to selected organization
-		logger.debug('Setting org_key cookie');
-		res.cookie('org_key', org_key, {maxAge: 30E9});
+			//set org_key cookie to selected organization
+			logger.debug('Setting org_key cookie');
+			res.cookie('org_key', org_key, {maxAge: 30E9});
 			
-		//If error, then log and return an error
-		if(err){ logger.error(err); return res.status(500).send({alert: err}); }
+			//If error, then log and return an error
+			if(err){ logger.error(err); return res.status(500).send({alert: err}); }
 		
-		cb();
-	});
+			cb();
+		});
+	}
 }
 
 

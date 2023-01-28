@@ -22,7 +22,29 @@ $(() => {
 			}
 		});
 	});
+
+	$('#defaultPassword').on('keydown', e => {
+		setTimeout(() => {
+			//- Trigger default password being enabled/disabled... minimum of 3 characters
+			let passwordValid = String($('#defaultPassword').val()).trim().length >= 3;
+			$('#btnSetDefaultPassword').prop('disabled', !passwordValid);
+			if (passwordValid) $('#setDefaultPasswordTooltip').addClass('w3-hide');
+			else $('#setDefaultPasswordTooltip').removeClass('w3-hide');
+		}, 1);
+	});
 });
+
+function confirmSetDefaultPassword(){
+	
+	let newDefaultPassword = $('#defaultPassword').val();
+	
+	Confirm.show(`Are you sure you want to change the organization password to *${newDefaultPassword}*?`)
+		.then(data => {
+			if (data.cancelled === false) {
+				$('#setDefaultPassword').trigger('submit');
+			}
+		});
+}
 
 async function deleteOrg(key: string) {
 	const result = await PasswordPrompt.show('*DANGER ZONE!!!* Deleting this org will also delete ALL OF ITS USERS.\nIf you are SURE you want to proceed, type your password.');
@@ -146,8 +168,6 @@ function onSubteamCaretClick(this: HTMLElement, e: Event) {
 	let thisIdx = parseInt(thisIdxStr);
 	let aboveIdx = thisIdx - 1;
 	
-	console.log('sdffdsfds');
-	
 	// Get the elements for this row & above row
 	let thisLabel = thisParent.find(`input[name=subteams_${thisIdx}_label]`);
 	let thisKey = thisParent.find(`input[name=subteams_${thisIdx}_subteamkey]`);
@@ -161,6 +181,8 @@ function onSubteamCaretClick(this: HTMLElement, e: Event) {
 	let thisLabelVal = thisLabel.val() || '';
 	let thisKeyVal = thisKey.val() || '';
 	let thisPitscoutVal = thisPitscout.val() || '';
+	
+	// console.log(`above: label=${aboveLabel.val()} key=${aboveKey.val()} pit=${abovePitscout.val()}, this: label=${thisLabelVal} key=${thisKeyVal} pit=${thisPitscoutVal}`);
 	
 	thisLabel.val(aboveLabel.val() || '');
 	thisKey.val(aboveKey.val() || '');
@@ -221,11 +243,11 @@ function addSubteam(orgKey: string) {
 		.clone();
 	newClass.attr('id', `subteam_${newIdx}`)
 		.appendTo(`#subteams_${orgKey}`)
-		.find('[classname-caret]')
+		.find('[subteam-caret]')
 		.on('click', onSubteamCaretClick);
 	$('input[name=subteams_num_label]').attr('name', `subteams_${newIdx}_label`);
 	$('input[name=subteams_num_subteamkey]').attr('name', `subteams_${newIdx}_subteamkey`);
-	$('input[name=subteams_num_pitscout]').attr('name', `subteams_${newIdx}_pitscout`);
+	$('select[name=subteams_num_pitscout]').attr('name', `subteams_${newIdx}_pitscout`);
 }
 function deleteSubteam(orgKey: string) {
 	//find lastmost subteam

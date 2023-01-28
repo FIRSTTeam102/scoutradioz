@@ -1,0 +1,56 @@
+/* 2023 THEME COLORS */
+
+/* FRC's season colors */
+@frc-yellow: #f9b00b; // color from the logo
+@frc-yellow-dark: #d0922a;
+@frc-orange: #d67923;
+@frc-blue: #68c3e2;
+@frc-blue-dark: #2fa6de;
+@frc-white: #fff;
+@frc-black: #000;
+
+/* FIRST ENERGIZE colors */
+@fe-lime: #93d500;
+@fe-royal: #b14fc5;
+@fe-neon: #ffb600;
+@fe-gray: #50555b;
+@fe-black: #101820;
+
+/* custom combinations */
+@dark-gray-blue: desaturate(mix(@fe-black, @frc-blue, 90%), 20%); // shade(@fe-gray, 55%)
+@darkened-blue: darken(@frc-blue-dark, 15%);
+
+@primary: @darkened-blue;
+@secondary: @darkened-blue;
+@trim: @fe-neon;
+@highlight: @frc-yellow;
+
+@button-primary: @frc-yellow;
+@button-secondary: @frc-yellow-dark;
+
+@prompt-color: lighten(@dark-gray-blue, 5%);
+
+@background: @fe-black;
+@header: darken(@frc-blue, 25%);
+@footer: @fe-gray;
+
+// Change the header color based on the tier
+@header-tier-qa: darken(mix(@fe-lime, @header, 60%), 10%);
+@header-tier-test: darken(mix(@fe-neon, @header, 80%), 10%);
+@header-tier-dev: darken(mix(@fe-royal, @header, 80%), 10%);
+
+:root {	
+	/* MMenu customization */
+	--mm-color-background: @dark-gray-blue;
+	--mm-color-background-emphasis: lighten(@dark-gray-blue, 2%); // selected menu item
+	--mm-color-background-highlight: darken(@dark-gray-blue, 2%); // submenu dropdown
+}
+
+/* Background */
+#page {
+	background-image: var(--background-image); // from layout.pug
+	background-position: 60% bottom;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-attachment: fixed;
+}

@@ -43,7 +43,7 @@ router.get('/events', wrap(async (req, res) => {
 	);
 		
 	// Read unique list of years in DB
-	let distinctYears: string[] = await utilities.distinct('events', 'year', {});
+	let distinctYears = await utilities.distinct('events', 'year', {});
 	let uniqueYears = distinctYears.sort();
 
 	logger.debug('uniqueYears=' + uniqueYears);

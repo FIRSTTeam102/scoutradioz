@@ -66,7 +66,7 @@ block content
 					a(class="theme-link w3-btn gear-btn" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki" target="_blank")
 						span(class="sprite sp-22 sp-black sp-github sp-inline")
 						span!=msg('index.info.github')
-				div.w3-center.w3-margin-top 
+				div.w3-center.w3-margin-top(id="discordLink")
 					a(class="theme-link w3-btn gear-btn" href="https://discord.gg/Mr3kyqkSrQ" target="_blank")
 						span(class="sprite sp-22 sp-black sp-discord sp-inline")
 						span!=msg('index.info.discord')
@@ -116,6 +116,15 @@ block content
 								p(class="theme-text-secondary")=eventLabel
 						div(class="w3-quarter w3-hide-small") &nbsp;
 		script.
+			$(function() {
+				if (location.hash === '#learn-more') {
+					//- $('input[name=customer]')
+					//- 	.val('learnMore')
+					//- 	.trigger('change');
+					$('#chbLearnMore')
+						.trigger('click');
+				}
+			})			
 			$('input[name=customer]').on('change', function (e) {
 				requestAnimationFrame(() => {
 					let val = $(e.target).val();

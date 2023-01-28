@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 if(!$){
 	console.error('scoutradioz.js error: jQuery not enabled');
@@ -137,7 +139,7 @@ function scrollToId(id: string) {
 	else console.error(`Element with id ${id} not found.`);
 }
 
-function share(orgKey: string|boolean) {
+async function share(orgKey: string|boolean) {
 	
 	let origin = window.location.origin;
 	let pathname = window.location.pathname;
@@ -151,6 +153,26 @@ function share(orgKey: string|boolean) {
 	let shareURL = origin + pathname + search;
 	
 	console.log(shareURL);
+	
+	// First, attempt to use the browser's native Share functionality
+	if ('share' in navigator && 'canShare' in navigator) {
+		let shareData = {
+			url: shareURL,
+			title: document.title,
+		};
+		console.log(`Attempting to share: ${JSON.stringify(shareData)}`);
+		
+		if (navigator.canShare(shareData)) {
+			try {
+				navigator.share(shareData);
+				console.log('Shared data');
+				return; // exit so we don't copy the link to the clipboard later
+			}
+			catch (err) {
+				console.log('Error sharing data:', err);
+			}
+		}
+	}
 	
 	// Attempt to use navigator.clipboard.writeText
 	if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -172,6 +194,43 @@ function share(orgKey: string|boolean) {
 		console.log('navigator.clipboard.writeText does not exist; falling back to DOM copy');
 		copyClipboardDom(shareURL);
 	}
+}
+
+function selectLanguage() {
+	lightAssert(locales, 'List of languages not found.');
+	
+	let promptItems: PromptItem[] = [];
+	
+	let prompt: Prompt;
+	let currentLang = document.documentElement.lang || 'en';
+	let langNames = new Intl.DisplayNames([currentLang], {type: 'language'});
+	
+	// Create a list of clickable items for each language we have
+	locales.forEach((locale, idx) => {
+		let newElem = document.createElement('div');
+		newElem.classList.add('w3-padding', 'w3-border-bottom', 'clickable', 'flex');
+		if (idx === 0) newElem.classList.add('w3-margin-top'); // top element
+		newElem.innerHTML = `${langNames.of(locale.lang)} (${locale.name})`;
+		newElem.onclick = () => {
+			// On click, hide the promot and set the new language
+			if (prompt) {
+				prompt.hide();
+			}
+			Cookies.set('language', locale.lang);
+			location.reload();
+		};
+		promptItems.push(newElem);
+	});
+	
+	prompt = new Prompt(promptItems, [{
+		label: 'Cancel',
+		action: () => {
+			prompt.cancel();
+		},
+		default: true,
+	}]);
+	
+	prompt.show();
 }
 
 function copyClipboardDom(text: string) {

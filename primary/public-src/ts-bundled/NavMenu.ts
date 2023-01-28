@@ -1,10 +1,32 @@
 'use strict';
-let navMenu;
+let navMenu: NavigationBar;
 
 $(() => {
 	navMenu = new NavigationBar();
-});
 
+	// hide/show header on scroll down/up
+	let headerbar = $('#headerbar'),
+		headerbarHeight = headerbar.outerHeight() as number,
+		$window = $(window),
+		lastScrollTop = 0;
+	$(window).on('scroll', () => {
+		// we want to keep as little code as possible in here for performance reasons
+		// so anything that persists should be declared outside of it
+
+		let scrollTop = $window.scrollTop() as number;
+
+		// only update if there was enough of a change
+		if (navMenu.opened || Math.abs(lastScrollTop - scrollTop) <= headerbarHeight) return;
+
+		// scrolled down, hide
+		if (scrollTop > lastScrollTop) headerbar.addClass('hidden');
+		// scrolled up, show
+		else headerbar.removeClass('hidden');
+
+		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
+		lastScrollTop = scrollTop;
+	});
+});
 
 class NavigationBar{
 	
@@ -50,7 +72,7 @@ class NavigationBar{
 		this.barElem = $('#headerbar');
 		this.overlayElem = $('#overlay');
 
-		//Take menu title & footer branding variables from inline script in nav.pug		
+		//Take menu title & footer branding variables from inline script in layout.pug		
 		if (typeof navMenuTitle === 'string') this.title = navMenuTitle;
 		else this.title = 'Menu';
 		if (footerContents instanceof Array) this.footerContents = footerContents;
@@ -59,6 +81,7 @@ class NavigationBar{
 		else this.locales = [];
 
 		let currentLang = document.documentElement.lang || 'en';
+		let langNames = new Intl.DisplayNames([currentLang], {type: 'language'});
 		//Create Mmenu object
 		this.menu = new Mmenu('#menu',
 			{
@@ -75,13 +98,13 @@ class NavigationBar{
 					'all': ['border-full'],
 				},
 				navbars: [
-					// Locale selector (locales is set in nav.pug)
+					// Locale selector (locales is set in layout.pug)
 					{
 						use: this.locales.length > 0, // only show when there are multiple locales
 						position: 'bottom',
-						content: `<select class="no-outline" id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${locale.name}</option>`)}</select>`
+						content: `<select class="no-outline" id="localeSelector">${this.locales.map(locale => `<option ${locale.lang === currentLang ? 'selected' : ''} value="${locale.lang}" lang="${locale.lang}">${langNames.of(locale.lang)} (${locale.name})</option>`)}</select>`
 					},
-					//Branding on bottom of menu (footerContents is set in nav.pug)
+					//Branding on bottom of menu (footerContents is set in layout.pug)
 					{
 						position: 'bottom',
 						content: this.footerContents,

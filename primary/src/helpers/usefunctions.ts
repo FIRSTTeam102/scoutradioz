@@ -6,6 +6,7 @@ import e from '@firstteam102/http-errors';
 import Permissions from './permissions';
 import 'colors';
 import type express from 'express';
+import type { Org, Role, Team } from '@firstteam102/scoutradioz-types';
 
 
 const logger = getLogger('usefunctions');
@@ -232,6 +233,14 @@ class UseFunctions {
 			return DateTime.fromMillis(millis, {zone: fixedZone, locale: localeString});
 		};
 		
+		// Whether to use minified or un-minified sources (e.g. JQuery)
+		if (process.env.NODE_ENV === 'production') {
+			res.locals.useMinifiedJs = true;
+		}
+		else {
+			res.locals.useMinifiedJs = false;
+		}
+		
 		logger.trace('EXIT');
 		logger.removeContext('funcName');
 		next();
@@ -252,7 +261,7 @@ class UseFunctions {
 		};
 		
 		// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
-		let thisOrg;
+		let thisOrg: Org|undefined = undefined;
 		if (req && req.user && req.user.org_key) {
 			let thisOrgKey = req.user.org_key;
 			thisOrg = await utilities.findOne('orgs', 
@@ -269,7 +278,7 @@ class UseFunctions {
 		res.locals.url = req.url;
 		
 		//if exist
-		if (thisOrg) {
+		if (thisOrg && thisOrg.event_key) {
 			
 			eventKey = thisOrg.event_key;
 			eventYear = parseInt(eventKey);
@@ -308,6 +317,9 @@ class UseFunctions {
 			}
 		}
 		
+		// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
+		res.locals.functionVersion = process.env.LAMBDA_FUNCTION_VERSION;
+		
 		logger.removeContext('funcName');
 		next();
 	}
@@ -335,7 +347,7 @@ class UseFunctions {
 		
 		//user agent
 		req.shortagent = {
-			ip: String(req.headers['x-forwarded-for']) || req.connection.remoteAddress,
+			ip: String(req.headers['x-forwarded-for']) || req.connection.remoteAddress || 'unknown',
 			device: req.useragent.isMobile ? 'mobile' : req.useragent.isDesktop ? 'desktop' : (req.useragent.isiPad || req.useragent.isAndroidTablet) ? 'tablet' : req.useragent.isBot ? 'bot' : 'other',
 			os: req.useragent.os,
 			browser: req.useragent.browser
@@ -479,11 +491,9 @@ class UseFunctions {
 		}
 		
 		//Only provide error stack in development
-		if (req.app.get('env') == 'development') {
-			stack = err.stack;
-		}
+		/*if (req.app.get('env') == 'development')*/ stack = err.stack;
 		
-		logger.error(err.message + '\n' + err.stack);
+		logger.error(err.message + (err.status === 404 ? '' : ('\n' + err.stack)));
 		
 		let viewError = {
 			message: err.message,

@@ -148,8 +148,8 @@ app.use(session({
 		clientPromise: clientPromise,
 		//client: sessionDb,
 		ttl: 7 * 24 * 60 * 60, // Time-to-live, in seconds. 2022-03-07 JL: Increased from 3 days to 7 days.
-		autoRemove: 'interval',
-		autoRemoveInterval: 10, // In minutes. Default
+		autoRemove: 'native',
+		// autoRemoveInterval: 10, // In minutes. Default
 		touchAfter: 24 * 3600, // time period in seconds for lazy loading session
 		mongoOptions: {
 			// useUnifiedTopology: true
@@ -203,6 +203,7 @@ let scoutingpairs = require('./routes/manage/scoutingpairs');
 let assignments = require('./routes/manage/assignments');
 //SCOUTRADIOZ ADMIN ROUTES
 let adminindex = require('./routes/admin/indexadmin');
+let tests = require('./routes/admin/tests');
 let externaldata = require('./routes/admin/externaldata');
 let orgs = require('./routes/admin/orgs');
 
@@ -224,6 +225,7 @@ app.use('/manage/currentevent', currentevent);
 app.use('/manage/scoutingaudit', scoutingaudit);
 app.use('/manage/manualdata', manualdata);
 
+app.use('/admin/tests', tests); // temporary: put it before admin so we don't need authentication
 app.use('/admin', adminindex);
 app.use('/admin/externaldata', externaldata);
 app.use('/admin/orgs', orgs);

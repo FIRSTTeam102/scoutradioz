@@ -1,0 +1,373 @@
+[
+	{
+	  "order": 501,
+	  "type": "derived",
+	  "id": "contributedPoints",
+	  "label": "Contributed Points",
+	  "operations": [
+		{
+		  "operator": "condition",
+		  "operands": ["sandstormStartLevel2", 6, 3],
+		  "as": "crossHabLinePointValue" 
+		},
+		{
+		  "operator": "multiply",
+		  "operands": ["sandstormCrossHabLine", "$crossHabLinePointValue"],
+		  "as": "crossHabLinePoints"
+		},
+		{
+		  "operator": "sum",
+		  "operands": [
+			"sandstormCargoShipPanel",
+			"sandstormRocketPanel",
+			"teleopCargoShipPanel",
+			"teleopRocketPanel"
+		  ],
+		  "as": "totalHatchPanels"
+		},
+		{
+		  "operator": "multiply",
+		  "operands": ["$totalHatchPanels", 2],
+		  "as": "hatchPanelPoints"
+		},
+		{
+		  "operator": "sum",
+		  "operands": [
+			"sandstormCargoShipCargo",
+			"sandstormRocketCargo",
+			"teleopCargoShipCargo",
+			"teleopRocketCargo"
+		  ],
+		  "as": "totalCargo"
+		},
+		{
+		  "operator": "multiply",
+		  "operands": ["$totalCargo", 3],
+		  "as": "cargoPoints"
+		},
+		{
+		  "operator": "multiselect",
+		  "id": "endgameActualScoredClimbLevel",
+		  "quantifiers": {
+			"0": 0,
+			"1": 3,
+			"2": 6,
+			"3": 12
+		  },
+		  "as": "climbPoints"
+		},
+		{
+		  "operator": "sum",
+		  "operands": ["$climbPoints", "$cargoPoints", "$hatchPanelPoints", "$crossHabLinePoints"]
+		}
+	  ]
+	},
+	{
+	  "order": 502,
+	  "type": "derived",
+	  "id": "crossHabLinePoints",
+	  "operations": [
+		{
+		  "operator": "condition",
+		  "operands": ["sandstormStartLevel2", 6, 3],
+		  "as": "crossHabLinePointValue" 
+		},
+		{
+		  "operator": "multiply",
+		  "operands": ["sandstormCrossHabLine", "$crossHabLinePointValue"]
+		}
+	  ]
+	},
+  {
+    "order": 505,
+    "type": "derived",
+    "operations": [
+      {
+        "operator": "multiselect",
+        "id": "endgameActualScoredClimbLevel",
+        "quantifiers": {
+          "0": 0,
+          "1": 3,
+          "2": 6,
+          "3": 12
+        }
+      }
+    ],
+    "display_percentage": false,
+    "id": "climbPoints"
+  },
+  {
+    "order": 510,
+    "type": "derived",
+    "operations": [
+      {
+        "operator": "sum",
+        "operands": [
+          "sandstormCargoShipCargo",
+          "sandstormRocketCargo",
+          "teleopCargoShipCargo",
+          "teleopRocketCargo",
+          "sandstormCargoShipPanel",
+          "sandstormRocketPanel",
+          "teleopCargoShipPanel",
+          "teleopRocketPanel"
+        ]
+      }
+    ],
+    "display_percentage": false,
+    "label": "Total game pieces",
+    "id": "totalPieces"
+  },
+  {
+    "order": 520,
+    "type": "derived",
+    "operations": [
+      {
+        "operator": "sum",
+        "operands": [
+          "sandstormCargoShipCargo",
+          "sandstormRocketCargo",
+          "teleopCargoShipCargo",
+          "teleopRocketCargo"
+        ]
+      }
+    ],
+    "display_percentage": false,
+    "label": "Total cargo",
+    "id": "totalCargo"
+  },
+  {
+    "order": 530,
+    "type": "derived",
+    "operations": [
+      {
+        "operator": "sum",
+        "operands": [
+          "sandstormCargoShipPanel",
+          "sandstormRocketPanel",
+          "teleopCargoShipPanel",
+          "teleopRocketPanel"
+        ]
+      }
+    ],
+    "display_percentage": false,
+    "label": "Total hatches",
+    "id": "totalPanel"
+  },
+  {
+    "order": 540,
+    "type": "derived",
+    "operations": [
+      {
+        "operator": "sum",
+        "operands": [
+          "sandstormCargoShipCargo",
+          "sandstormRocketCargo",
+          "sandstormCargoShipPanel",
+          "sandstormRocketPanel"
+        ]
+      }
+    ],
+    "display_percentage": false,
+    "label": "Total sandstorm",
+    "id": "totalSandstorm"
+  },
+  {
+    "order": 550,
+    "type": "derived",
+    "operations": [
+      {
+        "operator": "sum",
+        "operands": [
+          "teleopCargoShipCargo",
+          "teleopRocketCargo",
+          "teleopCargoShipPanel",
+          "teleopRocketPanel"
+        ]
+      }
+    ],
+    "display_percentage": false,
+    "label": "Total teleop",
+    "id": "totalTeleop"
+  },
+  {
+    "order": "1000",
+    "type": "spacer"
+  },
+  {
+    "order": "1010",
+    "type": "checkbox",
+    "label": "Started on Level 2?",
+    "id": "sandstormStartLevel2"
+  },
+  {
+    "order": "1020",
+    "type": "checkbox",
+    "label": "Did they cross the hab line during sandstorm?",
+    "id": "sandstormCrossHabLine"
+  },
+  {
+    "order": "1098",
+    "type": "spacer"
+  },
+  {
+    "order": "1099",
+    "type": "h2",
+    "label": "Sandstorm",
+    "id": "labelSandstorm"
+  },
+  {
+    "order": "1100",
+    "type": "h3",
+    "label": "Cargo ship",
+    "id": "labelSandstormCargoShip"
+  },
+  {
+    "order": "1110",
+    "type": "counter",
+    "label": "Hatch panel",
+    "id": "sandstormCargoShipPanel"
+  },
+  {
+    "order": "1120",
+    "type": "counter",
+    "label": "Cargo",
+    "id": "sandstormCargoShipCargo"
+  },
+  {
+    "order": "1200",
+    "type": "h3",
+    "label": "Rocket",
+    "id": "labelSandstormRocket"
+  },
+  {
+    "order": "1210",
+    "type": "counter",
+    "label": "Hatch panel",
+    "id": "sandstormRocketPanel"
+  },
+  {
+    "order": "1220",
+    "type": "counter",
+    "label": "Cargo",
+    "id": "sandstormRocketCargo"
+  },
+  {
+    "order": "1990",
+    "type": "spacer"
+  },
+  {
+    "order": "2000",
+    "type": "h2",
+    "label": "Teleop",
+    "id": "labelTeleop"
+  },
+  {
+    "order": "2100",
+    "type": "h3",
+    "label": "Cargo ship",
+    "id": "labelTeleopCargoShip"
+  },
+  {
+    "order": "2110",
+    "type": "counter",
+    "label": "Hatch panel",
+    "id": "teleopCargoShipPanel"
+  },
+  {
+    "order": "2120",
+    "type": "counter",
+    "label": "Cargo",
+    "id": "teleopCargoShipCargo"
+  },
+  {
+    "order": "2200",
+    "type": "h3",
+    "label": "Rocket",
+    "id": "labelTeleopRocket"
+  },
+  {
+    "order": "2210",
+    "type": "counter",
+    "label": "Hatch panel",
+    "id": "teleopRocketPanel"
+  },
+  {
+    "order": "2220",
+    "type": "counter",
+    "label": "Cargo",
+    "id": "teleopRocketCargo"
+  },
+  {
+    "order": "2990",
+    "type": "spacer"
+  },
+  {
+    "order": "3000",
+    "type": "h2",
+    "label": "End Game",
+    "id": "labelEndgame"
+  },
+  {
+    "order": "3110",
+    "type": "counter",
+    "label": "Attempted climb level",
+    "id": "endgameAttemptedClimbLevel"
+  },
+  {
+    "order": "3120",
+    "type": "counter",
+    "label": "Actual scored climb level",
+    "id": "endgameActualScoredClimbLevel"
+  },
+  {
+    "order": "3990",
+    "type": "spacer"
+  },
+  {
+    "order": "4000",
+    "type": "h2",
+    "label": "General",
+    "id": "labelGeneral"
+  },
+  {
+    "order": "4010",
+    "type": "checkbox",
+    "label": "Defended (stopped or delayed at least one score)?",
+    "id": "playedDefense"
+  },
+  {
+    "order": "4011",
+    "type": "checkbox",
+    "label": "Attempted to stop or deflect a defender?",
+    "id": "playedCounterDefense"
+  },
+  {
+    "order": "4020",
+    "type": "checkbox",
+    "label": "Died during the match (or never started)?",
+    "id": "diedDuringMatch"
+  },
+  {
+    "order": "4021",
+    "type": "checkbox",
+    "label": "Recovered from freeze?",
+    "id": "recoveredFromFreeze"
+  },
+  {
+    "order": "4025",
+    "type": "spacer"
+  },
+  {
+    "order": "4027",
+    "type": "checkbox",
+    "label": "Outstanding performance? (if so, definitely explain why!)",
+    "id": "outstandingPerformance"
+  },
+  {
+    "order": "4030",
+    "type": "textblock",
+    "label": "Other comments and notes:",
+    "id": "otherNotes"
+  }
+]

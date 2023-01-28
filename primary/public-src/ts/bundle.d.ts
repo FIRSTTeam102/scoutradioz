@@ -46,7 +46,7 @@ declare class SRResponse {
 interface Dictionary<T> {
     [Key: string]: T;
 }
-declare let navMenu: any;
+declare let navMenu: NavigationBar;
 declare class NavigationBar {
     opened: boolean;
     moving: boolean;
@@ -175,11 +175,11 @@ declare class NotificationCardOptions {
 declare type PromptItem = {
     type: 'password' | 'label' | 'textinput';
     /**
-     * Text value of a label, or placeholder value of a text/password input
+     * Text value of a label, or placeholder value of a text/password input, or raw html value without any parsing
      */
     value: string;
     default?: boolean;
-};
+} | HTMLElement;
 declare type PromptReturnDatum = {
     type: 'password' | 'textinput';
     value: string;
@@ -268,7 +268,8 @@ declare function assert(condition: unknown, message?: any): asserts condition;
  */
 declare function lightAssert(condition: unknown, message?: any): asserts condition;
 declare function scrollToId(id: string): void;
-declare function share(orgKey: string | boolean): void;
+declare function share(orgKey: string | boolean): Promise<void>;
+declare function selectLanguage(): void;
 declare function copyClipboardDom(text: string): void;
 /**
  * Measure the time interval to execute the callback function.

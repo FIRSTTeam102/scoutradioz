@@ -8,6 +8,7 @@ const glob = require('glob');
 const minimatch = require('minimatch');
 const archiver = require('archiver');
 const concat = require('concat-stream');
+require('colors');
 
 const lambda = new aws.Lambda({
 	region: 'us-east-1'
@@ -28,6 +29,7 @@ if (!backupsS3BucketName) {
 var alias = 'test';
 var functionName;
 var folder;
+var justDoArchive = false;
 
 //eslint-disable-next-line
 for (var i in process.argv) {
@@ -43,6 +45,9 @@ for (var i in process.argv) {
 			break;
 		case '--folder':
 			if (nextArg) folder = nextArg;
+			break;
+		case '--archive':
+			justDoArchive = true;
 			break;
 	}
 }
@@ -86,6 +91,7 @@ makeZip(folder, (err, zipBuffer) => {
 					}
 					else {
 						console.log(data);
+						console.log('Done! ' + 'DON\'T FORGET TO SYNC STATIC FILES!!'.brightRed);
 					}
 				});
 			}
@@ -246,7 +252,12 @@ function makeZip(folder, cb) {
 			console.log('Size: ' + sizeBytes / 1000 + ' KB');
 		}
 		
-		// fs.writeFileSync('output.zip', data); return cb('debuggin'); // **for debugging**
+		if (justDoArchive) {
+			fs.writeFileSync('output.zip', data);
+			console.log('Archive has been exported to output.zip');
+			process.exit(0);
+		}
+		
 		cb(null, data);
 	});
 	

@@ -11,7 +11,7 @@ const logger = getLogger('i18n');
 marked.setOptions({
 	gfm: true,
 	breaks: true,
-	headerIds: false
+	headerIds: false,
 });
 
 // Based on i18n-node, but designed for our specific use cases
@@ -23,7 +23,7 @@ export class I18n {
 		directory: '', // Directory to look for locales in
 		cookie: 'language',
 		queryParameter: 'uselang',
-		defaultLocale: 'en'
+		defaultLocale: 'en',
 	};
 	constructor(options: Partial<I18nOptions>) {
 		// Merge options
@@ -41,8 +41,7 @@ export class I18n {
 				try {
 					// eslint-disable-next-line global-require
 					this.locales[locale] = require(path.join(this.config.directory, file));
-				}
-				catch (err) {
+				} catch (err) {
 					logger.error(`Unable to load ${locale} locale`, err);
 				}
 			});
@@ -59,40 +58,41 @@ export class I18n {
 
 			/*
 			 * Guess the locale from the request
-			 * 
+			 *
 			 * Locales are tried in this order:
 			 * - First possible locale
 			 * - Fallbacks of the first possible locale
 			 * - Second possible locale
 			 * - Fallbacks of the second possible locale
 			 * etc.
-			 * 
+			 *
 			 * Inner fallback logic is implemented in _rawMsg()
 			 */
 			let possibleLocales = [
 				// query parameter
-				(req.query && req.query[this.config.queryParameter] && (Array.isArray(req.query[this.config.queryParameter])
-					// express will turn duplicate params into an array- we only want one
-					? (req.query[this.config.queryParameter] as Array<string>)[0]
-					: req.query[this.config.queryParameter]
-				)),
+				req.query &&
+					req.query[this.config.queryParameter] &&
+					(Array.isArray(req.query[this.config.queryParameter])
+						? // express will turn duplicate params into an array- we only want one
+							(req.query[this.config.queryParameter] as Array<string>)[0]
+						: req.query[this.config.queryParameter]),
 				// cookie
-				(req.cookies && req.cookies[this.config.cookie]),
+				req.cookies && req.cookies[this.config.cookie],
 				// Accept-Language header
-				...req.acceptsLanguages()
+				...req.acceptsLanguages(),
 			];
 			this.reqFallbackChain = []; // reset it for each request
 			for (let locale_ of possibleLocales) {
 				try {
-					let locale = (new Intl.Locale(locale_)).baseName?.toLocaleLowerCase();
+					let locale = new Intl.Locale(locale_).baseName?.toLocaleLowerCase();
 					if (
-						!locale // invalid
-						|| this.reqFallbackChain.includes(locale) // already in the chain
-						|| (this.reqFallbackChain.length > 0 && devLocales.includes(locale)) // shouldn't be a fallback
-					) continue;
+						!locale || // invalid
+						this.reqFallbackChain.includes(locale) || // already in the chain
+						(this.reqFallbackChain.length > 0 && devLocales.includes(locale)) // shouldn't be a fallback
+					)
+						continue;
 					this.reqFallbackChain.push(locale);
-				}
-				catch (e) {
+				} catch (e) {
 					// failed to parse locale
 				}
 			}
@@ -150,11 +150,7 @@ export class I18n {
 				item = '';
 
 				// If the current target object (in the locale tree) doesn't exist or doesn't have the next subterm as a member, exit
-				if (
-					!previousValue ||
-					!currentValue ||
-					!Object.prototype.hasOwnProperty.call(previousValue, currentValue)
-				) return '';
+				if (!previousValue || !currentValue || !Object.prototype.hasOwnProperty.call(previousValue, currentValue)) return '';
 
 				// Return a reference to the next deeper level in the tree
 				return (item = (previousValue as LocaleTree)[currentValue]);
@@ -232,9 +228,7 @@ export class I18n {
 		if (parameters && typeof parameters === 'object')
 			return text.replace(/\{([^}]+)\}/g, (match, key) => {
 				let result = parameters[key];
-				return (result !== undefined) ?
-					((typeof result === 'string' ? result : String(result)))
-					: `{${key}}`;
+				return result !== undefined ? (typeof result === 'string' ? result : String(result)) : `{${key}}`;
 			});
 		return text;
 	}
@@ -270,14 +264,14 @@ export class I18n {
 // Decorator to format qqx output
 // @param {Function} outputWrapper - qqx output willl be wrapped in this
 function qqxOutput(outputWrapper = (output: string) => output) {
+	// this is a function for a reason
 	return function (obj: unknown, func: string, descriptor: PropertyDescriptor) {
 		const original = descriptor.value;
 
-		descriptor.value = function(this: I18n, query: string, parameters?: I18nParameters) {
+		descriptor.value = function (this: I18n, query: string, parameters?: I18nParameters) {
 			if (this.locale === 'qqx') {
-				return outputWrapper(this.sanitizeHtml(`${func}(${query}${(parameters && Object.keys(parameters).length !== 0) ? (', ' + JSON.stringify(parameters)) : ''})`));
-			}
-			else {
+				return outputWrapper(this.sanitizeHtml(`${func}(${query}${parameters && Object.keys(parameters).length !== 0 ? ', ' + JSON.stringify(parameters) : ''})`));
+			} else {
 				return original.apply(this, arguments); // eslint-disable-line prefer-rest-params
 			}
 		};
@@ -290,9 +284,10 @@ const fallbackLocales: Record<string, string> = {
 	'en-au': 'en',
 	'en-gb': 'en',
 	'en-us': 'en',
+	'es': 'es-mx',
 	'fr-ca': 'fr',
 	'fr-fr': 'fr',
-	'pt-br': 'pt',
+	'pt': 'pt-br',
 	'yi': 'he',
 	'zh': 'zh-hans',
 	'zh-classical': 'lzh',

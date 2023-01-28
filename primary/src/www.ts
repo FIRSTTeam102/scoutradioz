@@ -27,7 +27,7 @@ for (var i = 0; i < process.argv.length; i++) {
 		// 	break;
 		case '--watch-staticfiles':
 		case '--watch-static':
-			launchChildProcess('npm run watch-staticfiles');
+			launchChildProcess('npm run watch-static');
 			break;
 		default:
 			if (thisArg.substring(0, 2) == '--') {
@@ -41,7 +41,7 @@ for (var i = 0; i < process.argv.length; i++) {
 function launchChildProcess(command: string, onlyErrors = false, logName?: string) {
 	let args = command.split(' ');
 	logName = logName || args[args.length - 1];
-	
+
 	let exec = args.shift();
 	if (!exec) return console.error('Command invalid!');
 
@@ -64,7 +64,6 @@ function launchChildProcess(command: string, onlyErrors = false, logName?: strin
  */
 
 const app = require('./app');
-
 
 let port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
@@ -112,9 +111,7 @@ function onError(error: any) {
 		throw error;
 	}
 
-	let bind = typeof port === 'string'
-		? 'Pipe ' + port
-		: 'Port ' + port;
+	let bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
 	// handle specific listen errors with friendly messages
 	switch (error.code) {
@@ -138,9 +135,7 @@ function onError(error: any) {
 function onListening() {
 	let addr = server.address();
 	if (!addr) return;
-	
-	let bind = typeof addr === 'string'
-		? 'pipe ' + addr
-		: 'port ' + addr.port;
+
+	let bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
 	console.log('Listening on ' + bind);
 }

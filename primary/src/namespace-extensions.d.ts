@@ -14,7 +14,7 @@ declare namespace Express {
 		_id: any;
 		org_key: string;
 		name: string;
-		role_key: string;
+		role_key: 'scouter' | 'viewer' | 'team_admin' | 'global_admin';
 		password: string;
 		org_info: {
 			subteam_key: string;
@@ -87,7 +87,7 @@ declare namespace Express {
 		}
 		
 		shortagent: {
-			ip?: string;
+			ip: string;
 			device: string;
 			os: string;
 			browser: string;
