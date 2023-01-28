@@ -62,8 +62,8 @@ router.get('/', wrap(async (req, res) => {
 		);
 	}
 	// Find the number of pit & match assignments WITH data
-	dbPromises.push(utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}}));
-	dbPromises.push(utilities.find('pitscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}}));
+	dbPromises.push(utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$ne: undefined}}));
+	dbPromises.push(utilities.find('pitscouting', {org_key: org_key, event_key: event_key, data: {$ne: undefined}}));
 	
 	//Any team members that are not on a subteam, but are unassigned and present.
 	dbPromises.push(utilities.find('users', 
@@ -249,7 +249,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	// - matchscouts is the "queue"; need a pointer to indicate where we are
 	// TODO: Use _id, not name, because names can be modified!
 	// 2022-03-01, M.O'C: Adding 'org_key': org_key into the 2nd part of the "or" clause
-	const matchScouts: WithDbId<User>[] = await utilities.find('users', 
+	const matchScouts = await utilities.find('users', 
 		{$or: [
 			{'_id': {$in: availableArray}, 'org_key': org_key}, 
 			// {'event_info.assigned': true, 'org_key': org_key}

@@ -10,6 +10,22 @@
 	//	
 extends ../../layout
 block content
+	style.
+		.scouter-audit-reference-grid {
+			display: grid;
+			grid-template-columns: repeat(2, 50%);
+			gap: 16px;
+		}
+		@media(max-width: 600px) {
+			.scouter-audit-reference-grid {
+				grid-template-columns: repeat(1, 100%);
+			}
+		}
+		.scouter-audit-reference-grid .grid-item {
+			display: flex;
+			align-items: center;
+			flex-direction: column;
+		}
 	h2 Audit trail for match scouting
 	p
 		a(href="/manage/scoutingaudit/comments") 
@@ -28,6 +44,21 @@ block content
 		+noDataFound('No scouting data has been found', 'Please check back later')
 	else
 		div(class="w3-auto")
+			h4 Reference
+			div(class="w3-row")
+				div(class="scouter-audit-reference-grid")
+					div(class="grid-item")
+						div Scouted by assigned scouter
+						div(class="w3-green audit-card w3-margin-top") Y
+					div(class="grid-item")
+						div Not scouted
+						div(class="theme-red audit-card w3-margin-top") N
+					div(class="grid-item")
+						div Covered by another student
+						div(class="w3-yellow audit-card w3-margin-top") C
+					div(class="grid-item")
+						div Covered by an adult
+						div(class="w3-purple audit-card w3-margin-top") A
 			each row in audit
 				if (row.member)
 					hr
@@ -36,7 +67,7 @@ block content
 						- var itemClass = "w3-button theme-hover-white w3-green audit-card"
 						- if (item.char == 'N') itemClass = "w3-button theme-hover-white theme-red audit-card"
 						- if (item.char == 'C') itemClass = "w3-button theme-hover-white w3-yellow audit-card"
-						- if (item.char == 'P') itemClass = "w3-button theme-hover-white w3-purple audit-card"
+						- if (item.char == 'A') itemClass = "w3-button theme-hover-white w3-purple audit-card"
 						- if (item.match_team_key)
 							div(class="w3-show-inline-block")
 								a(class="w3-tooltip" href=`/scouting/match?key=${item.match_team_key}`)

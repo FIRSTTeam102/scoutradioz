@@ -7,6 +7,7 @@ import { upload as uploadHelper } from '@firstteam102/scoutradioz-helpers';
 import type { ImageLinks } from '@firstteam102/scoutradioz-helpers/types/uploadhelper';
 import e from '@firstteam102/http-errors';
 import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
+import type { ObjectId } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('scoutingaudit');
@@ -30,9 +31,9 @@ declare interface AuditElement {
  * @view /manage/index, /manage/scoringaudit
  */
 router.get('/', wrap(async (req, res) =>  {
+	logger.addContext('funcName', 'audit.root[GET]');
 	
-	let thisFuncName = 'audit.root[GET]:';
-	logger.debug(`${thisFuncName} enter`);
+	logger.debug('enter');
 	
 	let eventKey = req.event.key;
 	let org_key = req._user.org_key;
@@ -49,30 +50,44 @@ router.get('/', wrap(async (req, res) =>  {
 	logger.debug('Scoring audit: earliestTimestamp=' + earliestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'assigned_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'assigned_scorer.name': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	if(!scoreData)
 		return res.redirect('/?alert=mongo error at dashboard/matches');
 
 	// Build per-team-member array
 	let memberArr = [];
-	let lastMember: string|undefined = 'NOLASTMEMBER';
+	let lastMemberName: string|undefined = 'NOLASTMEMBER';
 	let thisMemberArr = [];
+	
+	// Gets whether a user is a youth, for adult covering students
+	const scouterIsYouthMap: Dict<boolean> = {};
+	async function isYouth(scouterId: ObjectId) {
+		let scouterIdString = String(scouterId);
+		if (scouterIsYouthMap.hasOwnProperty(scouterIdString)) return scouterIsYouthMap[scouterIdString];
+		const thisScouter = await utilities.findOne('users', {_id: scouterId}, {}, {allowCache: true});
+		for (let thisClass of req._user.org.config.members.classes) {
+			if (thisClass.class_key === thisScouter.org_info.class_key) {
+				scouterIsYouthMap[scouterIdString] = thisClass.youth;
+				return scouterIsYouthMap[scouterIdString];
+			}
+		}
+	}
 
 	if (scoreData && scoreData.length > 0) {
 		for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 			let thisScoreData = scoreData[scoreIdx];
 			let thisMember = thisScoreData.assigned_scorer;
 						
-			if (thisMember != lastMember) {
+			if (thisMember?.name != lastMemberName) {
 				let thisRow = {
-					member: lastMember,
+					member: lastMemberName,
 					record: thisMemberArr
 				};
-				if ('NOLASTMEMBER' != lastMember)
+				if ('NOLASTMEMBER' !== lastMemberName)
 					memberArr.push(thisRow);
 				
-				lastMember = thisMember?.name; // 2022-11-11 JL: ScouterRecord.name
+				lastMemberName = thisMember?.name; // 2022-11-11 JL: ScouterRecord.name
 				thisMemberArr = [];
 			}
 			
@@ -84,18 +99,18 @@ router.get('/', wrap(async (req, res) =>  {
 				auditElement.match_team_key = thisScoreData.match_team_key;
 			}
 			
-			if (thisScoreData.data){
+			if (thisScoreData.data && thisScoreData.actual_scorer){
 				
-				if (thisScoreData.assigned_scorer == thisScoreData.actual_scorer)
+				
+				if (thisScoreData.assigned_scorer?.id.equals(thisScoreData.actual_scorer.id))
 					auditElementChar = 'Y';
-				else
-				// 2019-03-16 JL: App crashed due to actual_scorer being undefined
-				if (thisScoreData.actual_scorer == undefined){
-					logger.debug(`${thisFuncName} actual_scorer undefined`);
-					auditElementChar = 'N';
-				}
 				// 2018-03-22, M.O'C: Adding parent option
 				// 2022-11-02, M.O'C: Eliminating parent option
+				// 2023-01-28, JL: Re-adding parent option, but changed to A = adult
+				else if (await isYouth(thisScoreData.actual_scorer.id) === false) {
+					auditElementChar = 'A';
+					auditElement.actual_scorer = thisScoreData.actual_scorer.name;
+				}
 				// else if (thisScoreData.actual_scorer.toLowerCase().startsWith('mr') || 
 				// 		thisScoreData.actual_scorer.toLowerCase().startsWith('mrs') || 
 				// 		thisScoreData.actual_scorer.toLowerCase().startsWith('ms')){
@@ -110,6 +125,9 @@ router.get('/', wrap(async (req, res) =>  {
 				}		
 			}
 			else{
+				if (!thisScoreData.actual_scorer) {
+					logger.warn(`actual_scorer undefined while data is defined!! match_team_key=${thisScoreData.match_team_key} org_key=${org_key}`);
+				}
 				auditElementChar = 'N';
 			}
 			
@@ -120,7 +138,7 @@ router.get('/', wrap(async (req, res) =>  {
 		}
 		// Write in the last set of records
 		let thisRow = {
-			member: lastMember,
+			member: lastMemberName,
 			record: thisMemberArr
 		};
 		memberArr.push(thisRow);
