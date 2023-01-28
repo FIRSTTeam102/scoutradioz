@@ -522,22 +522,24 @@ export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'match
  * Gets the correct schema for the given collection name.
  */
 export declare type CollectionSchema<colName extends CollectionName> =
-	colName extends 'aggranges' ? AggRange :
-	colName extends 'events' ? Event :
-	// colName extends 'i18n' ?  :
-	colName extends 'layout' ? Layout :
-	colName extends 'matches' ? Match :
-	colName extends 'matchscouting' ? MatchScouting :
-	colName extends 'orgs' ? Org :
-	colName extends 'orgteamvalues' ? OrgTeamValue :
-	colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
-	colName extends 'pitscouting' ? PitScouting :
-	colName extends 'rankingpoints' ? RankingPoints :
-	colName extends 'rankings' ? Ranking :
-	colName extends 'roles' ? Role :
-	colName extends 'scoutingpairs' ? ScoutingPair :
-	colName extends 'sessions' ? Session :
-	colName extends 'teams' ? Team :
-	colName extends 'uploads' ? Upload :
-	colName extends 'users' ? User : 
-	any;
+	WithDbId<
+		colName extends 'aggranges' ? AggRange :
+		colName extends 'events' ? Event :
+		// colName extends 'i18n' ?  :
+		colName extends 'layout' ? Layout :
+		colName extends 'matches' ? Match :
+		colName extends 'matchscouting' ? MatchScouting :
+		colName extends 'orgs' ? Org :
+		colName extends 'orgteamvalues' ? OrgTeamValue :
+		colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
+		colName extends 'pitscouting' ? PitScouting :
+		colName extends 'rankingpoints' ? RankingPoints :
+		colName extends 'rankings' ? Ranking :
+		colName extends 'roles' ? Role :
+		colName extends 'scoutingpairs' ? ScoutingPair :
+		colName extends 'sessions' ? Session :
+		colName extends 'teams' ? Team :
+		colName extends 'uploads' ? Upload :
+		colName extends 'users' ? User : 
+		any
+	>;
