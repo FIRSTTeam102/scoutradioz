@@ -43,3 +43,8 @@ A small NPM package that exposes a small handful of HTTP errors for use inside E
 
 #### scoutradioz-eslint
 ESLint plugin, to assist development, which enforces a title being provided any time a page is rendered.
+
+## Localization
+[![Weblate](https://hosted.weblate.org/widgets/scoutradioz/-/287x66-black.png)](https://hosted.weblate.org/engage/scoutradioz)
+
+We're translating Scoutraioz so FIRST teams and their members, friends, and family from all over the globe can use it in their preferred languages. Translation contributions can be submitted using [Weblate](https://hosted.weblate.org/engage/scoutradioz).
