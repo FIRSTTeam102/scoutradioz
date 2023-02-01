@@ -3,7 +3,6 @@ import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, 
 import { ObjectId, MongoClient } from 'mongodb';
 import type { Request, Response, NextFunction } from 'express';
 import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
-declare const Client: any;
 /**
  * Valid primitives for use in mongodb queries
  */
@@ -81,7 +80,7 @@ export declare type FilterQueryTyped<T> = {
 /**
  * Update filter for the specified schema, but which allows `'foo.bar'` notation
  */
-export type UpdateFilterTyped<T> = UpdateFilter<T & {
+export declare type UpdateFilterTyped<T> = UpdateFilter<T & {
     [key: `${string}.${string}`]: any;
 }>;
 /**
@@ -122,7 +121,6 @@ export declare class Utilities {
     whenReadyQueue: any[];
     cache: NodeCache;
     options: UtilitiesOptions;
-    client: typeof Client;
     static instance: Utilities;
     private _cacheFlushTimeout?;
     constructor();
@@ -260,13 +258,13 @@ export declare class Utilities {
      * Asynchronous function to get our TheBlueAlliance API key from the DB.
      * @return - TBA header arguments
      */
-    getTBAKey(): Promise<TBAKey>;
+    getTBAKey(): Promise<TBAKey['headers']>;
     /**
      * Asynchronous function to get our FIRST API key from the DB.
      * https://frc-api-docs.firstinspires.org/#authorization
      * @returns {FIRSTKey} - FIRST header arguments
      */
-    getFIRSTKey(): Promise<FIRSTKey>;
+    getFIRSTKey(): Promise<FIRSTKey['headers']>;
     consoleTime(name: string): void;
     consoleTimeEnd(name: string): void;
     dbRefs: {
