@@ -10,8 +10,6 @@ import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
 import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
 
-const Client = require('node-rest-client').Client;
-
 const logger = log4js.getLogger('utilities');
 logger.level = process.env.LOG_LEVEL || 'info';
 
@@ -173,7 +171,6 @@ export class Utilities {
 	whenReadyQueue: any[];
 	cache: NodeCache;
 	options: UtilitiesOptions;
-	client: typeof Client;
 	// Utilities is a singleton class. The refreshTier function is passed as a middleware, so the "this" argument gets messed up. 
 	//  To avoid having to change code, we can instead use Utilities.instance.x
 	static instance: Utilities = new Utilities(); 
@@ -187,7 +184,6 @@ export class Utilities {
 		this.whenReadyQueue = [];
 		this.cache = new NodeCache({stdTTL: 30});
 		this.options = new UtilitiesOptions();
-		this.client = new Client();
 	}
 	
 	/**
@@ -961,44 +957,14 @@ export class Utilities {
 		//Get TBA key
 		let headers = await this.getTBAKey();
 		
-		//Create promise first
-		let thisPromise = new Promise((resolve, reject) => {
-			
-			//Inside promise function, perform client request
-			let request = this.client.get(requestURL, headers, (tbaData: any) => {
-				
-				// If TBA returns null, then we can't use toString()
-				if (!tbaData || typeof tbaData.toString !== 'function') {
-					logger.debug(`TBA response (could not use toString): ${tbaData}`);
-					return resolve(tbaData);
-				}
-				
-				//If newline characters are not deleted, then CloudWatch logs get spammed
-				let str = tbaData.toString().replace(/\n/g, '');
-				
-				logger.debug(`TBA response: ${str.substring(0, 200)}...`);
-				if (this.options.debug) logger.trace(`Full TBA response: ${str}`);
-				
-				logger.removeContext('funcName');
-				
-				if (tbaData.hasOwnProperty('Errors') || tbaData.hasOwnProperty('Error')) {
-					// 2022-03-06 JL: If there are errors, don't resolve the data
-					logger.error(`Error when requesting ${url}: ${JSON.stringify(tbaData)}`);
-					reject(tbaData);
-				}
-				else {
-					//Inside client callback, resolve promise
-					resolve(tbaData);
-				}
-			});
-			
-			request.on('error', function (err: any) {
-				reject(err);
-			});
-		});
+		// Fetch from TBA (requires at least Node v18)
+		let response = await fetch(requestURL, {headers});
 		
-		//Resolve promise
-		return thisPromise;
+		let json = await response.json();
+		
+		if (this.options.debug) logger.trace(`Full TBA response: ${JSON.stringify(json)}`);
+		
+		return json;
 	}
 	
 	/**
@@ -1013,46 +979,37 @@ export class Utilities {
 		
 		let headers = await this.getFIRSTKey();
 		
-		let thisPromise = new Promise((resolve, reject) => {
-						
-			let request = this.client.get(requestURL, headers, function (firstData: any, response: any) {
-				
-				if (response.statusCode === 200) {
-					
-					let str = JSON.stringify(firstData);
-					logger.debug(`FIRST response: ${str.substring(0, 200)}...`);
-					
-					resolve(firstData);
-				}
-				else {
-					logger.error(`Error when requesting ${url}: Status=${response.statusCode}, ${response.statusMessage}`);
-					reject(firstData);
-				}
-			});
-			
-			request.on('error', function (err: any) {
-				reject(err);
-			});
-		});
+		// Fetch from FIRST (requires at least Node v18)
+		let response = await fetch(requestURL, {headers});
 		
-		return thisPromise;
+		let json = await response.json();
+		
+		if (json && response.ok) {
+			
+			if (this.options.debug) logger.trace(`Full FIRST response: ${JSON.stringify(json)}`);
+			
+			return json;
+		}
+		else {
+			logger.error(`Error when requesting ${url}: Status=${response.status}, ${response.statusText}`);
+			throw response;
+		}
 	}
 
 	/**
 	 * Asynchronous function to get our TheBlueAlliance API key from the DB.
 	 * @return - TBA header arguments
 	 */
-	async getTBAKey(): Promise<TBAKey>{
+	async getTBAKey(): Promise<TBAKey['headers']>{
 		logger.addContext('funcName', 'getTBAKey');
 		
 		let tbaArgs: TBAKey = await this.findOne('passwords', {name: 'tba-api-headers'}, {}, {allowCache: true});
 		
 		if(tbaArgs){
 			let headers = tbaArgs.headers;
-			let key = {'headers': headers};
 			
 			logger.removeContext('funcName');
-			return key;
+			return headers;
 		}
 		else{
 			//**********CONSIDER ANOTHER OPTION FOR HANDLING "CAN'T FIND REQUEST ARGS"
@@ -1068,7 +1025,7 @@ export class Utilities {
 	 * https://frc-api-docs.firstinspires.org/#authorization
 	 * @returns {FIRSTKey} - FIRST header arguments
 	 */
-	async getFIRSTKey(): Promise<FIRSTKey> {
+	async getFIRSTKey(): Promise<FIRSTKey['headers']> {
 		logger.addContext('funcName', 'getFIRSTKey');
 		
 		
@@ -1076,10 +1033,9 @@ export class Utilities {
 		
 		if (firstKey) {
 			let headers = firstKey.headers;
-			let key = {'headers': headers};
 			
 			logger.removeContext('funcName');
-			return key;
+			return headers;
 		}
 		else {
 			logger.fatal('Could not find first-api-headers in database');
