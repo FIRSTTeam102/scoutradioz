@@ -1,4 +1,4 @@
-service: 'scoutradioz-voyager'
+service: 'sveltekit-app-voyager'
 
 frameworkVersion: "3"
 
@@ -9,15 +9,15 @@ plugins:
 provider:
   name: aws
   runtime: nodejs16.x
-  # lambdaHashingVersion: 20201221 (not necessary b/c 20201221 is used by default)
+  lambdaHashingVersion: 20201221
   region: us-east-1 #Lambda@Edge must be deployed in us-east-1
   stage: ${opt:stage, 'dev'}
-  stackName: ScoutradiozVoyagerStack
 
 package:
   individually: true
-  patterns:
-    - '!./**'
+  exclude:
+    - ./**
+  include:
     - build/server/**
     - build/edge/**
 
@@ -45,8 +45,6 @@ custom:
 functions:
   #SSR Function
   svelte:
-    name: ${self:provider.stackName}-SvelteFunction
-    reservedConcurrency: 5
     handler: build/server/serverless.handler
     memorySize: 256
     timeout: 15
@@ -54,7 +52,6 @@ functions:
 
   #Router Function
   cfLambda:
-    name: ${self:provider.stackName}-EdgeRouterFunction
     handler: build/edge/router.handler
     memorySize: 128
     timeout: 1
