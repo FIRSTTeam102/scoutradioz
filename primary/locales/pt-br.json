@@ -1,415 +1,415 @@
 {
-    "index": {
-        "fulltitle": "Scoutradioz: FRC Scouting as a Service",
-        "welcome": "Bem-vindo a Scoutradioz",
-        "choice": "Você é:",
-        "viewer": {
-            "choice": "Olhando para ver os dados",
-            "intro": "Scoutradioz permite que equipes/organizações reúnam suas próprias informações personalizadas em competições.",
-            "action": "Selecione uma organização abaixo para ver quais dados eles coletaram!"
-        },
-        "scouter": {
-            "choice": "Fazendo login no olheiro"
-        },
-        "info": {
-            "choice": "Interessado em aprender sobre o Scoutradioz e como sua equipe pode usá-lo",
-            "intro": "Scoutradioz é um aplicativo de aferição FRC desenvolvido por The Gearheads que permite que equipes e organizações **reúnam suas próprias informações personalizadas em competições**.",
-            "features": {
-                "intro": "Criado inicialmente em 2018, o Scoutradioz continuou a evoluir e agora roda no Amazon Web Services. Aqui está uma lista de alguns dos recursos que o Scoutradioz oferece:",
-                "modular": "**Modular e configurável** pesquisas de observação de pit & match, para que sua organização possa escolher exatamente quais informações você deseja registrar e mostrar",
-                "automatic": "**Atribuições automáticas**, individualizadas de observação de pit & match",
-                "advanced": "Relatórios e métricas **avançados**",
-                "management": "Ferramentas de gerenciamento de eventos, como auditoria de atribuições de partidas, troca de olheiros dentro e fora e gerenciamento de uma lista de membros",
-                "free": "E claro, é totalmente grátis!"
-            },
-            "github": "Veja nosso código e documentação no GitHub",
-            "discord": "Junte-se ao nosso Discord",
-            "partner": "Inscreva-se para ser um parceiro de acesso antecipado",
-            "first": "Mais sobre *FIRST* e FRC"
-        },
-        "view": "Visualizar",
-        "login": "Conecte-se"
-    },
-    "hello": {
-        "world": "Olá Mundo!",
-        "name": "Olá, {nome}!"
-    },
-    "selectOrg": "Selecione uma organização.",
-    "error": {
-        "title": "Mensagem de erro}",
-        "report": {
-            "intro": "Para nos ajudar a corrigir esse erro, por favor:",
-            "screenshot": "Faça uma captura de tela desta mensagem de erro,",
-            "url": "Copie o URL completo desta página clicando em \"Compartilhar\" na parte superior da página,",
-            "send": "Poste a captura de tela em nosso servidor do Discord ou em nossa {github}página do GitHub{/github}, incluindo informações relevantes, como o link em que você clicou para acessar esse erro."
-        },
-        "stack": "Rastreamento de pilha:"
-    },
-    "layout": {
-        "untitled": "Página não titulada",
-        "share": "Compartilhar",
-        "menu": {
-            "main": "Cardápio",
-            "user": "{usuário} - {org}"
-        },
-        "footer": {
-            "copyright": "Copyright {data} FIRST Team 102 e Robotics Fund Inc.\nCódigo aberto e licenciado com AGPLv3.",
-            "tba": "Alimentado pela Aliança Azul.",
-            "frc": "Temos orgulho de participar da FIRST Robotics Competition."
-        },
-        "nav": {
-            "home": "Casa",
-            "reports": {
-                "main": "Informações e relatórios: [[{evento}]]",
-                "teams": "Equipes",
-                "teamList": "{número}: {nome}",
-                "teamStats": "Estatísticas da equipe",
-                "yearStats": "Estatísticas completas para {year}",
-                "export": {
-                    "main": "Exportar para CSV",
-                    "match": "Dados de observação da partida: [[{event}]]",
-                    "pit": "Dados de observação do poço: [[{event}]]",
-                    "matchAll": "Dados de observação da partida: [[All of {year}]]",
-                    "pitAll": "Dados de observação do poço: [[All of {year}]]"
-                }
-            },
-            "scouting": "Escotismo",
-            "manage": {
-                "main": "Gerenciar: [[{org}]]",
-                "members": {
-                    "main": "Membros",
-                    "list": "Lista de membros",
-                    "passwords": "Auditar/redefinir senhas de membros"
-                },
-                "scouters": {
-                    "main": "Scouters",
-                    "event": "Scouters: [[{evento}]]",
-                    "audit": "Auditoria de reconhecimento",
-                    "assignments": "Atribuições de escotismo",
-                    "swapmembers": "Trocar contas de correspondência de entrada/saída",
-                    "swappitassignments": "Troque as atribuições de observação de poço",
-                    "present": "Definir presente"
-                },
-                "event": {
-                    "main": "Dados do evento",
-                    "event": "Dados do evento: [[{event}]]",
-                    "matches": "Partidas",
-                    "allianceselection": "Dados de seleção da aliança",
-                    "getcurrentteams": "Atualizar lista de equipes",
-                    "recalcderived": "Recalcular métricas derivadas",
-                    "editteams": "Editar lista de equipe",
-                    "editmatchschedule": "Editar calendário de partidas",
-                    "editmatchresults": "Editar resultados da partida",
-                    "setcurrent": "Definir evento atual"
-                }
-            },
-            "admin": "Administrador",
-            "user": {
-                "main": "Usuário: [[{usuário}]]",
-                "fallback": "Do utilizador",
-                "login": "Entrar: [[{org}]]",
-                "logout": "Sair",
-                "switchorg": "Alterar organização"
-            },
-            "help": "Preciso de ajuda? Confira nossa wiki!"
-        }
-    },
-    "home": {
-        "title": "Casa",
-        "menu": "Clique no {menu} no canto superior esquerdo para abrir o menu",
-        "tournamentInfo": "informações do torneio",
-        "teamInfo": "Informações da equipe",
-        "teamNum": "Equipe #",
-        "stats": "Estatísticas",
-        "userLogin": "Login de usuário",
-        "scoutingDashboard": "Painel de prospecção",
-        "management": "Gestão",
-        "admin": "Administrador",
-        "specifyTeam": "Você deve especificar uma equipe."
-    },
-    "share": {
-        "changeOrg": "Você está visualizando {org}.\nPara alterar a organização que deseja visualizar, clique em *Org: {org}* no menu e selecione *Alterar organização*."
-    },
-    "user": {
-        "loginOrg": "Faça login em {org}",
-        "orgpassword": "Senha da organização:",
-        "next": "Próximo",
-        "name": "Nome:",
-        "personalpassword": "Senha pessoal:",
-        "createnew": "Por favor, crie uma nova senha.",
-        "mustcreate": "Você tem permissões elevadas em sua organização, portanto, deve definir uma senha para garantir que outras pessoas não possam fazer login como você.",
-        "currentpassword": "Senha atual:",
-        "newpassword": "Nova Senha:",
-        "newpassword2": "Confirme:",
-        "newpasswordmismatch": "Novas senhas não combinam.",
-        "login": "Conecte-se",
-        "changepassword": "Mudar senha",
-        "blankpassword": "Deixe em branco se ainda não tiver sua própria senha.",
-        "selectorg": "Selecione uma organização para fazer login.",
-        "logoutbeforelogin": "Efetue logout antes de entrar em outro usuário.",
-        "orgpasswordrequired": "Digite a senha da sua organização. Para voltar, abra a navegação no canto superior esquerdo.",
-        "orgpasswordincorrect": "Senha incorreta para organização {org}.",
-        "resubmitlogin": "Desculpe, reenvie as informações de login da sua organização.",
-        "selectuser": "Selecione um usuário.",
-        "nouserexists": "Esse usuário não existe.",
-        "incorrectpassword": "Senha incorreta.",
-        "incorrectpasswordcurrent": "Senha atual incorreta.",
-        "passwordalreadyexists": "A senha já existe. Por favor, envie sua senha atual.",
-        "newpasswordboth": "Por favor, preencha ambos os formulários de senha.",
-        "newpasswordsuccess": "Definir senha com sucesso.",
-        "reportcolumns": {
-            "title": "Escolha as colunas do relatório",
-            "saved": "Preferências de coluna salvas com sucesso.",
-            "clearedorgdefaults": "Colunas padrão da organização limpas com sucesso.",
-            "intro": "Se NENHUM for selecionado, as páginas do relatório mostrarão o conjunto padrão de colunas para a organização.\nAs colunas padrão da organização são **negrito**.\nSe TODAS forem selecionadas ou ALGUMAS forem selecionadas, as páginas do relatório mostrarão APENAS as colunas selecionadas.",
-            "default": "Predefinição",
-            "checkAll": "Verifique tudo",
-            "uncheckAll": "Desmarcar todos",
-            "setOrgDefalts": "Marque isto para definir os padrões da organização",
-            "save": "Salvar seleções de coluna",
-            "clearOrgDefaults": "Limpar padrões da organização",
-            "clearOrgDefaultsConfirmation": "Fazer isso limpará os padrões da coluna de relatório da sua organização (para TODOS, não apenas para você). Tem certeza?"
-        }
-    },
-    "scouting": {
-        "match": "Prospecção de partidas",
-        "pit": "Exploração de poços",
-        "subheading": "{team} <span class=\"unimportant\">de {city}, {state}</span>",
-        "pitHeading": "Equipe #{equipe}",
-        "upload": {
-            "main": "Carregar foto principal",
-            "small": "Carregar pequeno #{n}",
-            "preprocess": "Pré-processar fotos para economizar dados móveis?"
-        },
-        "matchHeading": "Partida #{match}, Equipe #{team}",
-        "dynamicScrolling": "Ativar rolagem dinâmica",
-        "submit": "Enviar",
-        "orgManagerActions": "Ações do gerente da organização:",
-        "clearData": "Apagar os dados",
-        "clearDataConfirm": "Se você tem *CERTO* de que deseja *EXCLUIR PERMANENTEMENTE* os dados de observação para esta partida, digite sua senha abaixo.",
-        "invalidMatchKey": "Conjunto de chaves de correspondência inválido.",
-        "invalidTeam": "A equipe {team} não existe.",
-        "invalidTeamKey": "A chave da equipe não está definida ou é inválida.",
-        "noDataSubmit": "Nenhum dado foi enviado para {url}.",
-        "submitSuccess": "Dados enviados com sucesso.",
-        "deleteSuccess": "Dados excluídos com sucesso. Você não será redirecionado para fora da página, caso queira reenviar os dados na tela."
-    },
-    "notifications": {
-        "status": "As notificações de jogo são {status} para este dispositivo.",
-        "enabled": "ativado",
-        "disabled": "Desativado",
-        "confirmEnable": "Ativar notificações de partidas neste dispositivo?",
-        "subscribing": "Inscrevendo-se para notificações pushâ€¦",
-        "goneWrong": "Algo pode ter dado errado. Dados:",
-        "error": "Um erro ocorreu:",
-        "disabling": "Desativando notificações pushâ€¦",
-        "noPermission": "Não recebemos permissão.",
-        "dbSaveFailed": "A assinatura foi recebida, mas não foi possível salvá-la em nosso banco de dados.",
-        "testPageTitle": "Página de teste de notificações",
-        "invalidKey": "Nenhuma partida e chave de equipe de jogo",
-        "invalidMatch": "Correspondência não encontrada",
-        "content": {
-            "title": "{match} começará em breve",
-            "body": "Você foi designado para a equipe {team} na aliança {alliance}.",
-            "ifFocused": "Não se esqueça, {match} está prestes a começar!"
-        },
-        "actions": {
-            "scout": "partida de escoteiro"
-        }
-    },
-    "dashboard": {
-        "titleUser": "Painel para {usuário}",
-        "group": "Grupo de aferição: {grupo}",
-        "pitScouting": "Tarefas de reconhecimento de poço",
-        "notPitAssigned": "Não designado para aferição de poço",
-        "pitScoutingPartner": "Tarefas de observação de poço do parceiro",
-        "upcomingMatches": "Próximas partidas a serem observadas",
-        "matchNumber": "Corresponde a {número}",
-        "unassigned": "Não atribuído",
-        "unassignedOptions": "Opções para olheiros não designados",
-        "oneOffPit": "Exploração de poços únicos",
-        "oneOffMatch": "Prospecção de jogo único",
-        "assigned": "Atribuído",
-        "team": "Equipe",
-        "teamName": "Nome do time",
-        "none": "Nenhum",
-        "photo": "foto",
-        "loadTeamPhotos": "Atualize com fotos da equipe"
-    },
-    "driveDashboard": {
-        "title": "Painel da equipe do Drive",
-        "noTeams": "Nenhuma equipe foi encontrada para este torneio.",
-        "noMatches": "Não há partidas futuras para este torneio.",
-        "noMatchesTeam": "Nenhuma correspondência foi encontrada para a equipe {team}.",
-        "viewFor": "Exibir painel paraâ€¦",
-        "chooseTeam": "[Escolha um time]",
-        "viewOr": "ou",
-        "allTeams": "Todas as equipes",
-        "selectedTeam": "equipe selecionada",
-        "nextMatch": "Próxima partida:",
-        "nextMatchTeam": "Próxima partida do time {team}:",
-        "relativeStrengths": "Pontos fortes relativos:",
-        "legendShowHide": "Clique em uma legenda para ocultar/mostrar esse time",
-        "futureMatches": "Partidas futuras:",
-        "futureMatchesTeam": "Futuras partidas do time {team}:",
-        "compareAlliance": "Comparar alianças"
-    },
-    "allianceselection": {
-        "title": "seleção de aliança",
-        "intro": "Toque em uma equipe e, em seguida, toque no espaço vazio [2] ou [3] para movê-los para cima.\nÀ medida que as equipes são selecionadas para alianças, elas ficarão esmaecidas na tabela abaixo.",
-        "preferred": "Antes da seleção da aliança, você e o(s) líder(es) de sua equipe podem marcar suas equipes preferidas <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">nesta página</a >.",
-        "undo": "Desfazer",
-        "allianceNumber": "Aliança {número}",
-        "showData": "Mostrar dados da equipe",
-        "wontSave": "Esta página não será salva.",
-        "noPreviousState": "Estado anterior indefinido",
-        "noLastMove": "Última jogada indefinida",
-        "noAllianceAttribute": "Não foi possível encontrar o atributo de aliança para #{team}",
-        "noTeamStateRankings": "Não foi possível encontrar a equipe do ranking estadual idx {i}",
-        "priority": "Prioridade",
-        "priorityAbbr": "V",
-        "team": "Equipe",
-        "rank": "Classificação FRC"
-    },
-    "metrics": {
-        "raw": "Dados não tratados",
-        "show": "Exposição:",
-        "AVG": "Médias",
-        "AVG1": "Média",
-        "metricAVG": "Métrica (média)",
-        "MAX": "Máximos",
-        "MAX1": "Máximo",
-        "metricMAX": "Métrica (máx.)",
-        "MIN1": "Mínimo",
-        "VAR1": "variância",
-        "metric": "Métrica",
-        "insufficientData": "Dados insuficientes neste momento, volte mais tarde!"
-    },
-    "alliance": {
-        "red": "aliança vermelha",
-        "redShort": "Vermelho",
-        "blue": "aliança azul",
-        "blueShort": "Azul"
-    },
-    "reports": {
-        "redWon": "vermelho ganhou",
-        "blueWon": "azul ganhou",
-        "redStats": "Estatísticas para o vermelho: {teams}",
-        "blueStats": "Estatísticas para o azul: {teams}",
-        "bothStats": "Estatísticas para ambas as alianças",
-        "tie": "Amarrar",
-        "match": "{nível} Corresponde a {número}",
-        "scoutData": "Dados de reconhecimento",
-        "firstData": "PRIMEIROS dados",
-        "score": "Pontuação:",
-        "prediction": {
-            "winner": "{chance}% de chance de {alliance} vencer",
-            "reports": "Com base no total de {count} relatórios",
-            "scores": "Pontuações previstas: Red {redA} Â± {redS}, Blue {blueA} Â± {blueS}",
-            "noData": "Não há dados suficientes para fazer uma previsão."
-        },
-        "teamClick": "Clique em um número de equipe para obter informações sobre essa equipe",
-        "teamMatchClick": "Clique no número da equipe para detalhes de observação da partida",
-        "metricClick": "Clique em uma métrica para comparar todas as equipes do evento",
-        "headerClick": "Clique no cabeçalho de uma coluna para classificar as equipes pelas informações dessa coluna (clique novamente para alterar a direção da classificação)",
-        "overall": "Dados gerais do evento classificado",
-        "overallMatchClick": "Clique no botão de correspondência para ver o desempenho geral da aliança",
-        "compareAlliance": "Comparar métricas de aliança",
-        "compareAllianceMatch": "Comparando alianças para correspondência {match}",
-        "compareAllianceClick": "Clique em uma aliança para ver estatísticas comparativas de equipes individuais:",
-        "team": "Equipe",
-        "teamNumber": "Equipe {equipe}",
-        "rank": "Classificação",
-        "rankNumber": "Classificação {número}",
-        "allTeams": "todas as equipes",
-        "allianceStats": "Estatísticas da equipe da aliança",
-        "allTeamMetrics": "Todas as métricas da equipe",
-        "completedMatches": "Partidas concluídas",
-        "upcomingMatches": "Próximas partidas",
-        "upcomingMatchesTeam": "Próximas partidas para {team}",
-        "upcomingMatchesFor": "Veja as próximas partidas de",
-        "noMatchesYet": "Não há correspondências no sistema. Por favor, tente novamente mais tarde.",
-        "noPreviousMatchesYet": "Ainda não há partidas anteriores.",
-        "noMatchDataYet": "Ainda não há dados disponíveis para esta partida. Por favor, tente novamente mais tarde.",
-        "noRankingsYet": "Não há correspondências no sistema.",
-        "noPitDataYet": "Ainda não há dados de observação de poço.",
-        "noDataPlaceholder": "[sem dados]",
-        "matchData": "Dados da partida para a partida #{match}",
-        "matchIntel": {
-            "title": "Intel: Correspondência {correspondência}",
-            "winner": "Partida {match} - Vencedor: {alliance}",
-            "points": "{alliance}: {score} pontos"
-        },
-        "metricIntel": "Estatísticas **{metric}** por equipe",
-        "allTeamMetricsTitle": "Métricas para todas as equipes",
-        "allTeamsMetricsSummary": "Resumo estatístico de todas as equipes",
-        "rankedTitle": "Melhores equipes por métrica",
-        "currentRankings": {
-            "title": "Classificação atual do evento",
-            "titleShort": "Classificações atuais",
-            "wlt": "WLT",
-            "wltDesc": "Vitória-Perda-Empate",
-            "dq": "DQ",
-            "dqDesc": "Desqualificações",
-            "matches": "Partidas",
-            "rp": "PR",
-            "rpDesc": "Pontos de classificação"
-        },
-        "matchDataFor": "Dados de observação da partida para a equipe {number}: {nick}",
-        "matchDataForShort": "Dados de observação de correspondência para a equipe {team}",
-        "matchDataShort": "Dados de observação de partidas",
-        "matchClickAlliance": "Clique em um número de correspondência para ver os dados da aliança para essa correspondência.",
-        "teamHeader": "Equipe {number} - {nick}",
-        "teamRank": "Atualmente classificado em #{classificação}\n{vitórias}-{derrotas}-{empates} recorde com {rp} RP",
-        "teamFrom": "De: {cidade}, {estado}, {país}",
-        "teamDataYear": "Todos os dados da equipe {team} deste ano",
-        "teamIntel": {
-            "title": "Intel: Equipe {equipe}",
-            "titleHistory": "História da Intel: Equipe {equipe}",
-            "show": "Mostrar {tipo}",
-            "hide": "Ocultar {tipo}",
-            "pitScouting": "exploração de poço",
-            "statistics": "Estatisticas",
-            "previousMatches": "partidas anteriores",
-            "yearStatistics": "estatísticas ao longo do ano {year}",
-            "yearPreviousMatches": "todas as partidas do ano {year}"
-        },
-        "teamStats": "Estatísticas da equipe {team}",
-        "teamAllMatchData": "Dados de observação de partidas para todas as partidas da equipe {team}",
-        "historicalTeamStats": "Estatísticas históricas da equipe {team}",
-        "allPreviousMatches": "Todas as partidas anteriores",
-        "teamMatchIntel": {
-            "title": "Intel: {matchType} {match} Equipe {team}",
-            "header": "Correspondência #{match} - aliança {alliance}"
-        },
-        "noMatchScoutData": "Não há dados de observação de partidas disponíveis para a equipe {team} para a partida {match}.",
-        "noMatchScoutData2": "Não há dados de observação de partidas disponíveis para a equipe {team} para esta partida.",
-        "viewIntelPage": "Veja a página de informações desta equipe",
-        "upcomingMatchMetrics": "Métricas para a próxima partida",
-        "intel": "Intel: {tipo}",
-        "exportData": {
-            "noType": "Nenhum tipo de dados (ou inválido) especificado para exportação.",
-            "noData": "Nenhum dado encontrado para o tipo '{type}'."
-        }
-    },
-    "errors": {
-        "teamMissing": "Não foi possível encontrar os detalhes da equipe {team}. A lista da equipe mudou desde que você criou as atribuições de reconhecimento?",
-        "eventTeamsMissing": "Não foi possível encontrar a lista de equipes neste evento. Por favor, peça ao seu gerente de organização para atualizar a lista de equipes atuais.",
-        "specifyTeamKey": "Especifique uma team_key.",
-        "noTeam": "equipe {team} não existe ou não participou deste evento.",
-        "specifyMatchKey": "Especifique uma chave de correspondência.",
-        "noMatchFound": "Não foi possível encontrar correspondência: {matchKey}",
-        "specifyTeamMatchKey": "Especifique uma chave de partida de equipe.",
-        "specifyTeamCsv": "Especifique uma lista de equipes separadas por vírgulas.",
-        "specifyMetricKey": "Especifique uma chave de métrica."
-    },
-    "matchType": {
-        "qm": "Partida",
-        "qf": "quartas de final",
-        "sf": "Semifinal",
-        "f": "Final"
-    },
-    "tryAgainLater": "Por favor, tente novamente mais tarde.",
-    "yes": "Sim",
-    "no": "Não"
+	"index": {
+		"fulltitle": "Scoutradioz: Escotismo FRC como Serviço",
+		"welcome": "Bem-vindo a Scoutradioz",
+		"choice": "Você é:",
+		"viewer": {
+			"choice": "Olhando para ver os dados",
+			"intro": "Scoutradioz permite que equipes/organizações reúnam suas próprias informações personalizadas em competições.",
+			"action": "Selecione uma organização abaixo para ver quais dados eles coletaram!"
+		},
+		"scouter": {
+			"choice": "Fazendo login no olheiro"
+		},
+		"info": {
+			"choice": "Interessado em aprender sobre o Scoutradioz e como sua equipe pode usá-lo",
+			"intro": "Scoutradioz é um aplicativo de aferição FRC desenvolvido por The Gearheads que permite que equipes e organizações **reúnam suas próprias informações personalizadas em competições**.",
+			"features": {
+				"intro": "Criado inicialmente em 2018, o Scoutradioz continuou a evoluir e agora roda no Amazon Web Services. Aqui está uma lista de alguns dos recursos que o Scoutradioz oferece:",
+				"modular": "**Modular e configurável** pesquisas de observação de pit & match, para que sua organização possa escolher exatamente quais informações você deseja registrar e mostrar",
+				"automatic": "**Atribuições automáticas**, individualizadas de observação de pit & match",
+				"advanced": "Relatórios e métricas **avançados**",
+				"management": "Ferramentas de gerenciamento de eventos, como auditoria de atribuições de partidas, troca de olheiros dentro e fora e gerenciamento de uma lista de membros",
+				"free": "E claro, é totalmente grátis!"
+			},
+			"github": "Veja nosso código e documentação no GitHub",
+			"discord": "Junte-se ao nosso Discord",
+			"partner": "Inscreva-se para ser um parceiro de acesso antecipado",
+			"first": "Mais sobre *FIRST* e FRC"
+		},
+		"view": "Visualizar",
+		"login": "Conecte-se"
+	},
+	"hello": {
+		"world": "Olá Mundo!",
+		"name": "Olá, {name}!"
+	},
+	"selectOrg": "Selecione uma organização.",
+	"error": {
+		"title": "Erro: {message}",
+		"report": {
+			"intro": "Para nos ajudar a corrigir esse erro, por favor:",
+			"screenshot": "Faça uma captura de tela desta mensagem de erro,",
+			"url": "Copie o URL completo desta página clicando em \"Compartilhar\" na parte superior da página,",
+			"send": "Poste a captura de tela em nosso servidor do Discord ou em nossa {github}página do GitHub{/github}, incluindo informações relevantes, como o link em que você clicou para acessar esse erro."
+		},
+		"stack": "Rastreamento de pilha:"
+	},
+	"layout": {
+		"untitled": "Página não titulada",
+		"share": "Compartilhar",
+		"menu": {
+			"main": "Cardápio",
+			"user": "{user} - {org}"
+		},
+		"footer": {
+			"copyright": "Copyright {date} FIRST Team 102 e Robotics Fund Inc.\nCódigo aberto e licenciado com AGPLv3.",
+			"tba": "Alimentado pela Aliança Azul.",
+			"frc": "Temos orgulho de participar da FIRST Robotics Competition."
+		},
+		"nav": {
+			"home": "Casa",
+			"reports": {
+				"main": "Informações e relatórios: [[{event}]]",
+				"teams": "Equipes",
+				"teamList": "{number}: {name}",
+				"teamStats": "Estatísticas da equipe",
+				"yearStats": "Estatísticas completas para {year}",
+				"export": {
+					"main": "Exportar para CSV",
+					"match": "Dados de observação da partida: [[{event}]]",
+					"pit": "Dados de observação do poço: [[{event}]]",
+					"matchAll": "Dados de observação da partida: [[All of {year}]]",
+					"pitAll": "Dados de observação do poço: [[All of {year}]]"
+				}
+			},
+			"scouting": "Escotismo",
+			"manage": {
+				"main": "Gerenciar: [[{org}]]",
+				"members": {
+					"main": "Membros",
+					"list": "Lista de membros",
+					"passwords": "Auditar/redefinir senhas de membros"
+				},
+				"scouters": {
+					"main": "Escoteiros",
+					"event": "Escoteiros: [[{event}]]",
+					"audit": "Auditoria de reconhecimento",
+					"assignments": "Atribuições de escotismo",
+					"swapmembers": "Trocar contas de correspondência de entrada/saída",
+					"swappitassignments": "Troque as atribuições de observação de poço",
+					"present": "Definir presente"
+				},
+				"event": {
+					"main": "Dados do evento",
+					"event": "Dados do evento: [[{event}]]",
+					"matches": "Partidas",
+					"allianceselection": "Dados de seleção da aliança",
+					"getcurrentteams": "Atualizar lista de equipes",
+					"recalcderived": "Recalcular métricas derivadas",
+					"editteams": "Editar lista de equipe",
+					"editmatchschedule": "Editar calendário de partidas",
+					"editmatchresults": "Editar resultados da partida",
+					"setcurrent": "Definir evento atual"
+				}
+			},
+			"admin": "Administrador",
+			"user": {
+				"main": "Usuário: [[{user}]]",
+				"fallback": "Do utilizador",
+				"login": "Entrar: [[{org}]]",
+				"logout": "Sair",
+				"switchorg": "Alterar organização"
+			},
+			"help": "Preciso de ajuda? Confira nossa wiki!"
+		}
+	},
+	"home": {
+		"title": "Casa",
+		"menu": "Clique no {menu} no canto superior esquerdo para abrir o menu",
+		"tournamentInfo": "informações do torneio",
+		"teamInfo": "Informações da equipe",
+		"teamNum": "Equipe #",
+		"stats": "Estatísticas",
+		"userLogin": "Login de usuário",
+		"scoutingDashboard": "Painel de prospecção",
+		"management": "Gestão",
+		"admin": "Administrador",
+		"specifyTeam": "Você deve especificar uma equipe."
+	},
+	"share": {
+		"changeOrg": "Você está visualizando {org}.\nPara alterar a organização que deseja visualizar, clique em *Org: {org}* no menu e selecione *Alterar organização*."
+	},
+	"user": {
+		"loginOrg": "Faça login em {org}",
+		"orgpassword": "Senha da organização:",
+		"next": "Próximo",
+		"name": "Nome:",
+		"personalpassword": "Senha pessoal:",
+		"createnew": "Por favor, crie uma nova senha.",
+		"mustcreate": "Você tem permissões elevadas em sua organização, portanto, deve definir uma senha para garantir que outras pessoas não possam fazer login como você.",
+		"currentpassword": "Senha atual:",
+		"newpassword": "Nova Senha:",
+		"newpassword2": "Confirme:",
+		"newpasswordmismatch": "Novas senhas não combinam.",
+		"login": "Conecte-se",
+		"changepassword": "Mudar senha",
+		"blankpassword": "Deixe em branco se ainda não tiver sua própria senha.",
+		"selectorg": "Selecione uma organização para fazer login.",
+		"logoutbeforelogin": "Efetue logout antes de entrar em outro usuário.",
+		"orgpasswordrequired": "Digite a senha da sua organização. Para voltar, abra a navegação no canto superior esquerdo.",
+		"orgpasswordincorrect": "Senha incorreta para organização {org}.",
+		"resubmitlogin": "Desculpe, reenvie as informações de login da sua organização.",
+		"selectuser": "Selecione um usuário.",
+		"nouserexists": "Esse usuário não existe.",
+		"incorrectpassword": "Senha incorreta.",
+		"incorrectpasswordcurrent": "Senha atual incorreta.",
+		"passwordalreadyexists": "A senha já existe. Por favor, envie sua senha atual.",
+		"newpasswordboth": "Por favor, preencha ambos os formulários de senha.",
+		"newpasswordsuccess": "Definir senha com sucesso.",
+		"reportcolumns": {
+			"title": "Escolha as colunas do relatório",
+			"saved": "Preferências de coluna salvas com sucesso.",
+			"clearedorgdefaults": "Colunas padrão da organização limpas com sucesso.",
+			"intro": "Se NENHUM for selecionado, as páginas do relatório mostrarão o conjunto padrão de colunas para a organização.\nAs colunas padrão da organização são **negrito**.\nSe TODAS forem selecionadas ou ALGUMAS forem selecionadas, as páginas do relatório mostrarão APENAS as colunas selecionadas.",
+			"default": "Predefinição",
+			"checkAll": "Verifique tudo",
+			"uncheckAll": "Desmarcar todos",
+			"setOrgDefalts": "Marque isto para definir os padrões da organização",
+			"save": "Salvar seleções de coluna",
+			"clearOrgDefaults": "Limpar padrões da organização",
+			"clearOrgDefaultsConfirmation": "Fazer isso limpará os padrões da coluna de relatório da sua organização (para TODOS, não apenas para você). Tem certeza?"
+		}
+	},
+	"scouting": {
+		"match": "Prospecção de partidas",
+		"pit": "Exploração de poços",
+		"subheading": "{team} <span class=\"unimportant\">de {city}, {state}</span>",
+		"pitHeading": "Equipe #{team}",
+		"upload": {
+			"main": "Carregar foto principal",
+			"small": "Carregar pequeno #{n}",
+			"preprocess": "Pré-processar fotos para economizar dados móveis?"
+		},
+		"matchHeading": "Partida #{match}, Equipe #{team}",
+		"dynamicScrolling": "Ativar rolagem dinâmica",
+		"submit": "Enviar",
+		"orgManagerActions": "Ações do gerente da organização:",
+		"clearData": "Apagar os dados",
+		"clearDataConfirm": "Se você tem *CERTO* de que deseja *EXCLUIR PERMANENTEMENTE* os dados de observação para esta partida, digite sua senha abaixo.",
+		"invalidMatchKey": "Conjunto de chaves de correspondência inválido.",
+		"invalidTeam": "A equipe {team} não existe.",
+		"invalidTeamKey": "A chave da equipe não está definida ou é inválida.",
+		"noDataSubmit": "Nenhum dado foi enviado para {url}.",
+		"submitSuccess": "Dados enviados com sucesso.",
+		"deleteSuccess": "Dados excluídos com sucesso. Você não será redirecionado para fora da página, caso queira reenviar os dados na tela."
+	},
+	"notifications": {
+		"status": "As notificações de jogo são {status} para este dispositivo.",
+		"enabled": "ativado",
+		"disabled": "Desativado",
+		"confirmEnable": "Ativar notificações de partidas neste dispositivo?",
+		"subscribing": "Inscrevendo-se para receber notificações push…",
+		"goneWrong": "Algo pode ter dado errado. Dados:",
+		"error": "Um erro ocorreu:",
+		"disabling": "Desativando notificações push…",
+		"noPermission": "Não recebemos permissão.",
+		"dbSaveFailed": "A assinatura foi recebida, mas não foi possível salvá-la em nosso banco de dados.",
+		"testPageTitle": "Página de teste de notificações",
+		"invalidKey": "Nenhuma partida e chave de equipe de jogo",
+		"invalidMatch": "Correspondência não encontrada",
+		"content": {
+			"title": "{match} começará em breve",
+			"body": "Você foi designado para a equipe {team} na aliança {alliance}.",
+			"ifFocused": "Não se esqueça, {match} está prestes a começar!"
+		},
+		"actions": {
+			"scout": "partida de escoteiro"
+		}
+	},
+	"dashboard": {
+		"titleUser": "Painel para {user}",
+		"group": "Grupo de escotismo: {group}",
+		"pitScouting": "Tarefas de reconhecimento de poço",
+		"notPitAssigned": "Não designado para aferição de poço",
+		"pitScoutingPartner": "Tarefas de observação de poço do parceiro",
+		"upcomingMatches": "Próximas partidas a serem observadas",
+		"matchNumber": "Partida {number}",
+		"unassigned": "Não atribuído",
+		"unassignedOptions": "Opções para olheiros não designados",
+		"oneOffPit": "Exploração de poços únicos",
+		"oneOffMatch": "Prospecção de jogo único",
+		"assigned": "Atribuído",
+		"team": "Equipe",
+		"teamName": "Nome do time",
+		"none": "Nenhum",
+		"photo": "foto",
+		"loadTeamPhotos": "Atualize com fotos da equipe"
+	},
+	"driveDashboard": {
+		"title": "Painel da equipe do Drive",
+		"noTeams": "Nenhuma equipe foi encontrada para este torneio.",
+		"noMatches": "Não há partidas futuras para este torneio.",
+		"noMatchesTeam": "Nenhuma correspondência foi encontrada para a equipe {team}.",
+		"viewFor": "Exibir painel para…",
+		"chooseTeam": "[Escolha um time]",
+		"viewOr": "ou",
+		"allTeams": "Todas as equipes",
+		"selectedTeam": "equipe selecionada",
+		"nextMatch": "Próxima partida:",
+		"nextMatchTeam": "Próxima partida do time {team}:",
+		"relativeStrengths": "Pontos fortes relativos:",
+		"legendShowHide": "Clique em uma legenda para ocultar/mostrar esse time",
+		"futureMatches": "Partidas futuras:",
+		"futureMatchesTeam": "Futuras partidas do time {team}:",
+		"compareAlliance": "Comparar alianças"
+	},
+	"allianceselection": {
+		"title": "seleção de aliança",
+		"intro": "Toque em uma equipe e, em seguida, toque no espaço vazio [2] ou [3] para movê-los para cima.\nÀ medida que as equipes são selecionadas para alianças, elas ficarão esmaecidas na tabela abaixo.",
+		"preferred": "Antes da seleção da aliança, você e o(s) líder(es) de sua equipe podem marcar suas equipes preferidas <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">nesta página</a >.",
+		"undo": "Desfazer",
+		"allianceNumber": "Aliança {number}",
+		"showData": "Mostrar dados da equipe",
+		"wontSave": "Esta página não será salva.",
+		"noPreviousState": "Estado anterior indefinido",
+		"noLastMove": "Última jogada indefinida",
+		"noAllianceAttribute": "Não foi possível encontrar o atributo de aliança para #{team}",
+		"noTeamStateRankings": "Não foi possível encontrar a equipe do ranking estadual idx {i}",
+		"priority": "Prioridade",
+		"priorityAbbr": "V",
+		"team": "Equipe",
+		"rank": "Classificação FRC"
+	},
+	"metrics": {
+		"raw": "Dados não tratados",
+		"show": "Mostrar: ",
+		"AVG": "Médias",
+		"AVG1": "Média",
+		"metricAVG": "Métrica (média)",
+		"MAX": "Máximos",
+		"MAX1": "Máximo",
+		"metricMAX": "Métrica (máx.)",
+		"MIN1": "Mínimo",
+		"VAR1": "variância",
+		"metric": "Métrica",
+		"insufficientData": "Dados insuficientes neste momento, volte mais tarde!"
+	},
+	"alliance": {
+		"red": "aliança vermelha",
+		"redShort": "Vermelho",
+		"blue": "aliança azul",
+		"blueShort": "Azul"
+	},
+	"reports": {
+		"redWon": "vermelho ganhou",
+		"blueWon": "azul ganhou",
+		"redStats": "Estatísticas para o vermelho: {teams}",
+		"blueStats": "Estatísticas para o azul: {teams}",
+		"bothStats": "Estatísticas para ambas as alianças",
+		"tie": "Amarrar",
+		"match": "{level} partida {number}",
+		"scoutData": "Dados de reconhecimento",
+		"firstData": "PRIMEIROS dados",
+		"score": "Pontuação:",
+		"prediction": {
+			"winner": "{chance}% de chance de {alliance} vencer",
+			"reports": "Com base no total de {count} relatórios",
+			"scores": "Pontuações previstas: Red {redA} Â± {redS}, Blue {blueA} Â± {blueS}",
+			"noData": "Não há dados suficientes para fazer uma previsão."
+		},
+		"teamClick": "Clique em um número de equipe para obter informações sobre essa equipe",
+		"teamMatchClick": "Clique no número da equipe para detalhes de observação da partida",
+		"metricClick": "Clique em uma métrica para comparar todas as equipes do evento",
+		"headerClick": "Clique no cabeçalho de uma coluna para classificar as equipes pelas informações dessa coluna (clique novamente para alterar a direção da classificação)",
+		"overall": "Dados gerais do evento classificado",
+		"overallMatchClick": "Clique no botão de correspondência para ver o desempenho geral da aliança",
+		"compareAlliance": "Comparar métricas de aliança",
+		"compareAllianceMatch": "Comparando alianças para correspondência {match}",
+		"compareAllianceClick": "Clique em uma aliança para ver estatísticas comparativas de equipes individuais:",
+		"team": "Equipe",
+		"teamNumber": "Equipe {team}",
+		"rank": "Classificação",
+		"rankNumber": "Classificação {number}",
+		"allTeams": "todas as equipes",
+		"allianceStats": "Estatísticas da equipe da aliança",
+		"allTeamMetrics": "Todas as métricas da equipe",
+		"completedMatches": "Partidas concluídas",
+		"upcomingMatches": "Próximas partidas",
+		"upcomingMatchesTeam": "Próximas partidas para {team}",
+		"upcomingMatchesFor": "Veja as próximas partidas para ",
+		"noMatchesYet": "Não há correspondências no sistema. Por favor, tente novamente mais tarde.",
+		"noPreviousMatchesYet": "Ainda não há partidas anteriores.",
+		"noMatchDataYet": "Ainda não há dados disponíveis para esta partida. Por favor, tente novamente mais tarde.",
+		"noRankingsYet": "Não há correspondências no sistema.",
+		"noPitDataYet": "Ainda não há dados de observação de poço.",
+		"noDataPlaceholder": "[sem dados]",
+		"matchData": "Dados da partida para a partida #{match}",
+		"matchIntel": {
+			"title": "Intel: Partida {match}",
+			"winner": "Partida {match} - Vencedor: {alliance}",
+			"points": "{alliance}: {score} pontos"
+		},
+		"metricIntel": "Estatísticas **{metric}** por equipe",
+		"allTeamMetricsTitle": "Métricas para todas as equipes",
+		"allTeamsMetricsSummary": "Resumo estatístico de todas as equipes",
+		"rankedTitle": "Melhores equipes por métrica",
+		"currentRankings": {
+			"title": "Classificação atual do evento",
+			"titleShort": "Classificações atuais",
+			"wlt": "WLT",
+			"wltDesc": "Vitória-Perda-Empate",
+			"dq": "DQ",
+			"dqDesc": "Desqualificações",
+			"matches": "Partidas",
+			"rp": "PR",
+			"rpDesc": "Pontos de classificação"
+		},
+		"matchDataFor": "Dados de observação da partida para a equipe {number}: {nick}",
+		"matchDataForShort": "Dados de observação de correspondência para a equipe {team}",
+		"matchDataShort": "Dados de observação de partidas",
+		"matchClickAlliance": "Clique em um número de correspondência para ver os dados da aliança para essa correspondência.",
+		"teamHeader": "Equipe {number} - {nick}",
+		"teamRank": "Atualmente classificado #{rank}\nRegistro {wins}-{losses}-{ties} com {rp} RP",
+		"teamFrom": "De: {city}, {state}, {country}",
+		"teamDataYear": "Todos os dados da equipe {team} deste ano",
+		"teamIntel": {
+			"title": "Intel: Equipe {team}",
+			"titleHistory": "História da Intel: Equipe {team}",
+			"show": "Mostrar {type}",
+			"hide": "Esconder {type}",
+			"pitScouting": "exploração de poço",
+			"statistics": "Estatisticas",
+			"previousMatches": "partidas anteriores",
+			"yearStatistics": "estatísticas ao longo do ano {year}",
+			"yearPreviousMatches": "todas as partidas do ano {year}"
+		},
+		"teamStats": "Estatísticas da equipe {team}",
+		"teamAllMatchData": "Dados de observação de partidas para todas as partidas da equipe {team}",
+		"historicalTeamStats": "Estatísticas históricas da equipe {team}",
+		"allPreviousMatches": "Todas as partidas anteriores",
+		"teamMatchIntel": {
+			"title": "Intel: {matchType} {match} Equipe {team}",
+			"header": "Correspondência #{match} - aliança {alliance}"
+		},
+		"noMatchScoutData": "Não há dados de observação de partidas disponíveis para a equipe {team} para a partida {match}.",
+		"noMatchScoutData2": "Não há dados de observação de partidas disponíveis para a equipe {team} para esta partida.",
+		"viewIntelPage": "Veja a página de informações desta equipe",
+		"upcomingMatchMetrics": "Métricas para a próxima partida",
+		"intel": "Intel: {type}",
+		"exportData": {
+			"noType": "Nenhum tipo de dados (ou inválido) especificado para exportação.",
+			"noData": "Nenhum dado encontrado para o tipo '{type}'."
+		}
+	},
+	"errors": {
+		"teamMissing": "Não foi possível encontrar os detalhes da equipe {team}. A lista da equipe mudou desde que você criou as atribuições de reconhecimento?",
+		"eventTeamsMissing": "Não foi possível encontrar a lista de equipes neste evento. Por favor, peça ao seu gerente de organização para atualizar a lista de equipes atuais.",
+		"specifyTeamKey": "Especifique uma team_key.",
+		"noTeam": "equipe {team} não existe ou não participou deste evento.",
+		"specifyMatchKey": "Especifique uma chave de correspondência.",
+		"noMatchFound": "Não foi possível encontrar correspondência: {matchKey}",
+		"specifyTeamMatchKey": "Especifique uma chave de partida de equipe.",
+		"specifyTeamCsv": "Especifique uma lista de equipes separadas por vírgulas.",
+		"specifyMetricKey": "Especifique uma chave de métrica."
+	},
+	"matchType": {
+		"qm": "Partida",
+		"qf": "quartas de final",
+		"sf": "Semifinal",
+		"f": "Final"
+	},
+	"tryAgainLater": "Por favor, tente novamente mais tarde.",
+	"yes": "Sim",
+	"no": "Não"
 }
