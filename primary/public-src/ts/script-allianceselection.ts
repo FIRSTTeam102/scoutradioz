@@ -35,16 +35,19 @@ declare class PreviousState {
 declare type integer = number; // not sure what the & { __int__ } part means, but I got it from a website
 declare type TeamKey = string|null;
 
-declare var state: State;
-declare var previousStates: Array<PreviousState>;
-declare var startingCaptain: TeamKey;
-declare var i18n: Record<string, string>; // select i18n messages are passed through pug
+declare let state: State;
+declare let previousStates: Array<PreviousState>;
+declare let startingCaptain: TeamKey;
+declare let i18n: Record<string, string>; // select i18n messages are passed through pug
+declare let numAlliances: number;
 
 window.onbeforeunload = function(){return i18n['wontSave'];};
 
 const ROW_BASE_COLOR = '#b0b0c057';
 const ROW_HIGHLIGHT_COLOR = 'rgba(220,220,240)';
 const ROW_GRAYED_TEXT_COLOR = '#8d8d8dcf';
+
+console.log(`numAlliances=${numAlliances}`);
 
 $(function(){
 	//gray out first team
@@ -70,7 +73,15 @@ $(function(){
 	$('#undo').click(function(){
 		doUndo();
 	});
+
+	$('#num_alliances').on('change', doNumAllianceChange);
 });
+
+function doNumAllianceChange(){
+	let newAllianceNum = $('#num_alliances').val();
+	console.log(`newAllianceNum=${newAllianceNum}`);
+	location.search = `?numAlliances=${newAllianceNum}`;
+}
 
 function doUndo(){
 	console.log('Undo has been called.');
@@ -82,11 +93,11 @@ function doUndo(){
 
 		requestAnimationFrame(function(){
 
-			var lastState = previousStates.pop();
+			let lastState = previousStates.pop();
 			if (!lastState) throw new Error(i18n['previousStateUndefined']);
 			
-			var parentElem = $('#allianceSelection').parent();
-			var previousHTML = lastState.html;
+			let parentElem = $('#allianceSelection').parent();
+			let previousHTML = lastState.html;
 
 			//replace html
 			$('#allianceSelection').remove();
@@ -102,11 +113,11 @@ function doUndo(){
 			state = lastState.state;
 
 			//get last team thingy
-			var lastMove = state.moveHistory.pop();
+			let lastMove = state.moveHistory.pop();
 			if (!lastMove) throw new Error(i18n['noLastMove']);
-			var lastTeam = lastMove.teamKey;
-			var lastSpot = lastMove.previousSpot;
-			var lastNewCaptain = lastMove.newAllianceCaptain;
+			let lastTeam = lastMove.teamKey;
+			let lastSpot = lastMove.previousSpot;
+			let lastNewCaptain = lastMove.newAllianceCaptain;
 			console.log(lastMove, lastNewCaptain, lastTeam);
 			
 			if (lastTeam)
@@ -122,11 +133,11 @@ function doAllianceTeamClick(this: HTMLElement){
 	const _this = $(this);
 
 	//console.log(`Team ${this.id} has been clicked`);
-	var teamKey = this.id;
+	let teamKey = this.id;
 	let isAvailable = this.getAttribute('available') == 'true' ? true : false;
 	//console.log(isAvailable);
-	var spotIsAvailable = this.getAttribute('spot-available') == 'true' ? true : false;
-	var currentSelectedTeam = state.currentSelectedTeam;
+	let spotIsAvailable = this.getAttribute('spot-available') == 'true' ? true : false;
+	let currentSelectedTeam = state.currentSelectedTeam;
 
 	//isAvailable: if this is a team that can be picked
 	if( isAvailable ){
@@ -165,7 +176,7 @@ function doAllianceTeamClick(this: HTMLElement){
 			$(`#${currentSelectedTeam}`).removeClass('team-highlighted');
 			state.currentSelectedTeam = null;
 
-			var currentSpot = 0;
+			let currentSpot = 0;
 
 			//find rank of team
 			for(let i = 0; i < state.rankings.length; i++){
@@ -176,9 +187,9 @@ function doAllianceTeamClick(this: HTMLElement){
 			if (state.currentRound == 0) console.log(state.rankings[state.currentAlliance + 1]);
 			
 			//Clone this state into previousStates
-			var clonedState = cloneState();
-			var clonedHTML = $('#allianceSelection').clone();
-			var thisMove: Move = {
+			let clonedState = cloneState();
+			let clonedHTML = $('#allianceSelection').clone();
+			let thisMove: Move = {
 				teamKey: currentSelectedTeam,
 				previousSpot: currentSpot,
 				allianceSpot: state.currentRound == 0 ? 2 : 3,
@@ -186,7 +197,7 @@ function doAllianceTeamClick(this: HTMLElement){
 			state.moveHistory.push(thisMove);
 
 			//if team is not a captain, hide team from below list
-			if( currentSpot > 8 ){
+			if( currentSpot > numAlliances ){
 				$(`#${currentSelectedTeam}`).parent().hide();
 
 				//remove team from rankings
@@ -195,13 +206,13 @@ function doAllianceTeamClick(this: HTMLElement){
 			//if team is a captain, move alliances up
 			else{
 				//get alliance num
-				var currentAllianceStr = $(`#${currentSelectedTeam}`).attr('alliance');
+				let currentAllianceStr = $(`#${currentSelectedTeam}`).attr('alliance');
 				if (!currentAllianceStr) throw new Error(i18n['noAllianceAttribute'].replace('{team}', currentSelectedTeam));
 				
-				var currentAlliance = parseInt(currentAllianceStr);
+				let currentAlliance = parseInt(currentAllianceStr);
 
 				//loop through remaining alliances, shifting them up
-				for(let i = currentAlliance; i <= 8; i++){
+				for(let i = currentAlliance; i <= numAlliances; i++){
 
 					let nextTeamInThisSpot: TeamKey = state.rankings[i + 1];
 					let thisSpot = $(`#${state.rankings[i]}`);
@@ -223,7 +234,7 @@ function doAllianceTeamClick(this: HTMLElement){
 				//remove team from rankings
 				state.rankings.splice(currentSpot, 1);
 
-				var allAllianceTeams = $('.alliance-team');
+				let allAllianceTeams = $('.alliance-team');
 
 				for(let i = 1; i < allAllianceTeams.length; i++ ){
 
@@ -250,7 +261,7 @@ function doAllianceTeamClick(this: HTMLElement){
 			//if first round, move selection thingimajiggy down until 8
 			if( state.currentRound == 0 ){
 
-				if( state.currentAlliance < 8 ){
+				if( state.currentAlliance < numAlliances ){
 
 					//switch over to the next alliance to kerfuffle
 					state.currentAlliance++;
@@ -316,7 +327,7 @@ function cloneState(): State{
 	// console.log(clone);
 	
 	//clone currentSelectedTeam, currentRound, currentAlliance
-	var clone: State = {
+	let clone: State = {
 		rankings: rankings,
 		moveHistory: moveHistory,
 		currentSelectedTeam: state.currentSelectedTeam,
@@ -335,7 +346,7 @@ function highlightRow(teamKey: TeamKey){
 		'selectable': 'false'
 	});
 
-	var children = $(`.row_${teamKey}`).children();
+	let children = $(`.row_${teamKey}`).children();
 
 	let targetR = 240, targetG = 240, targetB = 255;
 
@@ -368,7 +379,7 @@ function unHighlightRow(teamKey: TeamKey){
 		'style' : 'background-color:' + ROW_BASE_COLOR
 	});
 
-	var children = $(`.row_${teamKey}`).children();
+	let children = $(`.row_${teamKey}`).children();
 
 	let targetR = 240, targetG = 240, targetB = 255;
 
@@ -459,8 +470,8 @@ function unGrayOutRow(teamKey: TeamKey){
 function prettifyTable(){
 
 	requestAnimationFrame(function(){
-		var table = $('#metricTable').eq(0);
-		var rows = table.find('tr:gt(0)').toArray();
+		let table = $('#metricTable').eq(0);
+		let rows = table.find('tr:gt(0)').toArray();
 
 		for(let i = 0; i < rows.length; i++){
 

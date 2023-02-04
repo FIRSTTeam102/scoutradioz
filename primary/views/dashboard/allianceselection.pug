@@ -79,19 +79,25 @@ block content
 			label(for="showHideData")!=msg('allianceselection.showData')
 		div#data()
 			include allianceselection-info
+	label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numalliances')
+	select(class="theme-input" style="min-width: 100;" name="num_alliances" id="num_alliances")
+		- var n = 0;
+		while n < 8
+			- ++n
+			if n == num_alliances
+				option(selected value=n)=n
+			else 
+				option(value=n)=n
+
+	script var numAlliances = num_alliances;
 	script.
 		//create selection state
 		window.state = {};
+		numAlliances = parseInt(#{num_alliances})
+		console.log(`numAlliances=${numAlliances}`);
 		//CURRENTLY UNUSED
 		state.alliances = {
 			alliance1: ["#{alliances[0].team1}", undefined, undefined],
-			alliance2: ["#{alliances[1].team1}", undefined, undefined],
-			alliance3: ["#{alliances[2].team1}", undefined, undefined],
-			alliance4: ["#{alliances[3].team1}", undefined, undefined],
-			alliance5: ["#{alliances[4].team1}", undefined, undefined],
-			alliance6: ["#{alliances[5].team1}", undefined, undefined],
-			alliance7: ["#{alliances[6].team1}", undefined, undefined],
-			alliance8: ["#{alliances[7].team1}", undefined, undefined],
 		};
 		//Starting alliance 1 captain, before any user input
 		window.startingCaptain = "#{alliances[0].team1}";
