@@ -1,1 +1,401 @@
-{}
+﻿{
+	"index": {
+		"fulltitle": "Scoutradioz: Escultismo FRC como servicio",
+		"welcome": "Bienvenido a Scoutradioz",
+		"choice": "¿Eres tú:",
+		"viewer": {
+			"choice": "Buscando ver datos",
+			"intro": "Scoutradioz permite a los equipos/organizaciones recopilar su propia información personalizada en las competiciones.",
+			"action": "¡Seleccione una organización a continuación para ver qué datos han recopilado!"
+		},
+		"scouter": {
+			"choice": "Iniciando sesión para explorar"
+		},
+		"info": {
+			"choice": "Interesado en aprender sobre Scoutradioz y cómo su equipo puede usarlo",
+			"intro": "Scoutradioz es una aplicación de exploración de FRC desarrollada por The Gearheads que permite a los equipos y organizaciones **reunir su propia información personalizada en las competiciones**.",
+			"features": {
+				"intro": "Inicialmente creado en 2018, Scoutradioz ha seguido evolucionando y ahora se ejecuta en Amazon Web Services. Aquí hay una lista de algunas de las características que ofrece Scoutradioz:",
+				"modular": "**Encuestas modulares y configurables** de exploración de boxes y partidos, para que su organización pueda elegir exactamente qué información desea registrar y mostrar",
+				"automatic": "**Automático**, asignaciones individualizadas de reconocimiento de pits y partidos",
+				"advanced": "**Informes y métricas **avanzados**",
+				"management": "Herramientas de gestión de eventos como la auditoría de asignaciones de partidos, el intercambio de scouters y la gestión de una lista de miembros",
+				"free": "¡Y por supuesto, es completamente gratis!"
+			},
+			"github": "Vea nuestro código y documentación en GitHub",
+			"discord": "Únete a nuestro Discord",
+			"partner": "Solicitar ser socio de acceso anticipado",
+			"first": "Más sobre *FIRST* y FRC"
+		},
+		"view": "Ver",
+		"login": "Iniciar sesión"
+	},
+	"hello": {
+		"world": "¡Hola mundo!",
+		"name": "¡Hola, {name}!"
+	},
+	"selectOrg": "Seleccione una organización.",
+	"error": {
+		"title": "Error: {message}",
+		"report": {
+			"intro": "Para ayudarnos a corregir este error, por favor:",
+			"screenshot": "Haz una captura de pantalla de este mensaje de error",
+			"url": "Copia la URL completa de esta página haciendo clic en \"Compartir\" en la parte superior de la página",
+			"send": "Publique la captura de pantalla en nuestro servidor de Discord o en nuestra {github}página de GitHub{/github}, incluida la información relevante, como el enlace en el que hizo clic para llegar a este error."
+		},
+		"stack": "Seguimiento de la pila:"
+	},
+	"layout": {
+		"untitled": "Página sin título",
+		"share": "Comparte",
+		"menu": {
+			"main": "Menú"
+		},
+		"footer": {
+			"copyright": "Copyright {date} FIRST Team 102 y Robotics Fund Inc.\nCódigo abierto y licenciado con AGPLv3.",
+			"tba": "Con la tecnología de Blue Alliance.",
+			"frc": "Estamos orgullosos de ser participantes de FIRST Robotics Competition."
+		},
+		"nav": {
+			"home": "Hogar",
+			"reports": {
+				"main": "Información e informes: [[{event}]]",
+				"teams": "Equipos",
+				"teamStats": "Estadísticas del equipo",
+				"yearStats": "Estadísticas completas para {year}",
+				"export": {
+					"main": "Exportar a CSV",
+					"match": "Datos de búsqueda de coincidencias: [[{event}]]",
+					"pit": "Datos de exploración de pits: [[{event}]]",
+					"matchAll": "Datos de exploración de partidos: [[Todo {year}]]",
+					"pitAll": "Datos de exploración de foso: [[Todo {year}]]"
+				}
+			},
+			"scouting": "Escultismo",
+			"manage": {
+				"main": "Administrar: [[{org}]]",
+				"members": {
+					"main": "Miembros",
+					"passwords": "Auditorar/restablecer contraseñas de miembros"
+				},
+				"scouters": {
+					"main": "Exploradores",
+					"event": "Exploradores: [[{event}]]",
+					"audit": "Auditoría de exploración",
+					"assignments": "Asignaciones de exploración",
+					"swapmembers": "Intercambiar cuentas de partido de entrada/salida",
+					"swappitassignments": "Intercambiar asignaciones de exploración de pits",
+					"present": "Establecer presente"
+				},
+				"event": {
+					"main": "Datos del evento",
+					"event": "Datos del evento: [[{event}]]",
+					"matches": "coincidencias",
+					"allianceselection": "Datos de selección de alianza",
+					"getcurrentteams": "Actualizar lista de equipos",
+					"recalcderived": "Recalcular métricas derivadas",
+					"editteams": "Editar lista de equipos",
+					"editmatchschedule": "Editar calendario de partidos",
+					"editmatchresults": "Editar resultados de partidos",
+					"setcurrent": "Establecer evento actual"
+				}
+			},
+			"admin": "Administrador",
+			"user": {
+				"main": "Usuario: [[{user}]]",
+				"fallback": "Usuario",
+				"login": "Iniciar sesión: [[{org}]]",
+				"logout": "Cerrar sesión",
+				"switchorg": "Cambiar organización"
+			},
+			"help": "¿Necesitas ayuda? ¡Consulta nuestra wiki!"
+		}
+	},
+	"home": {
+		"title": "Inicio",
+		"menu": "Haz clic en {menu} en la parte superior izquierda para abrir el menú",
+		"tournamentInfo": "Información del torneo",
+		"teamInfo": "Información del equipo",
+		"teamNum": "Equipo #",
+		"stats": "Estadísticas",
+		"userLogin": "Inicio de sesión de usuario",
+		"scoutingDashboard": "Panel de exploración",
+		"management": "Administración",
+		"admin": "Administrador",
+		"specifyTeam": "Debes especificar un equipo."
+	},
+	"share": {
+		"changeOrg": "Está viendo {org}.\nPara cambiar la organización que desea ver, haga clic en *Org: {org}* en el menú y seleccione *Cambiar organización*."
+	},
+	"user": {
+		"loginOrg": "Inicia sesión en {org}",
+		"orgpassword": "Contraseña de la organización:",
+		"next": "Siguiente",
+		"name": "Nombre:",
+		"personalpassword": "Contraseña personal:",
+		"createnew": "Por favor crea una nueva contraseña.",
+		"mustcreate": "Tiene permisos elevados en su organización, por lo que debe establecer una contraseña para asegurarse de que otros no puedan iniciar sesión como usted.",
+		"currentpassword": "Contraseña actual:",
+		"newpassword": "Nueva contraseña:",
+		"newpassword2": "Confirmar:",
+		"newpasswordmismatch": "Las nuevas contraseñas no coinciden.",
+		"login": "Iniciar sesión",
+		"changepassword": "Cambiar contraseña",
+		"blankpassword": "Déjalo en blanco si aún no tienes tu propia contraseña.",
+		"selectorg": "Seleccione una organización para iniciar sesión.",
+		"logoutbeforelogin": "Cerrar sesión antes de poder iniciar sesión con otro usuario.",
+		"orgpasswordrequired": "Por favor ingrese la contraseña de su organización. Para regresar, abra la navegación en la parte superior izquierda.",
+		"orgpasswordincorrect": "Contraseña incorrecta para la organización {org}.",
+		"resubmitlogin": "Lo siento, vuelva a enviar la información de inicio de sesión de su organización.",
+		"selectuser": "Seleccione un usuario.",
+		"nouserexists": "No existe tal usuario.",
+		"incorrectpassword": "Contraseña incorrecta.",
+		"incorrectpasswordcurrent": "Contraseña actual incorrecta.",
+		"passwordalreadyexists": "La contraseña ya existe. Por favor envíe su contraseña actual.",
+		"newpasswordboth": "Por favor complete ambos formularios de contraseña.",
+		"newpasswordsuccess": "Establecer contraseña con éxito.",
+		"reportcolumns": {
+			"title": "Elegir columnas de informe",
+			"saved": "Preferencias de columna guardadas con éxito.",
+			"clearedorgdefaults": "Se borraron correctamente las columnas predeterminadas de la organización.",
+			"intro": "Si se selecciona NINGUNA, las páginas del informe mostrarán un conjunto predeterminado de columnas para la organización.\nLas columnas predeterminadas de la organización están en **negrita**.\nSi se seleccionan TODAS o ALGUNAS, las páginas del informe mostrarán SÓLO las columnas seleccionadas.",
+			"default": "Predeterminado",
+			"checkAll": "Marcar todo",
+			"uncheckAll": "Desmarcar todo",
+			"setOrgDefalts": "Marque esto para configurar los valores predeterminados de la organización",
+			"save": "Guardar selecciones de columna",
+			"clearOrgDefaults": "Borrar los valores predeterminados de la organización",
+			"clearOrgDefaultsConfirmation": "Al hacer esto, se borrarán los valores predeterminados de las columnas de informes de su organización (para TODOS, no solo para usted). ¿Está seguro?"
+		}
+	},
+	"scouting": {
+		"match": "Exploración de partidos",
+		"pit": "Exploración de boxes",
+		"subheading": "{team} <span class=\"unimportant\">de {city}, {state}</span>",
+		"pitHeading": "Equipo #{team}",
+		"upload": {
+			"main": "Subir foto principal",
+			"small": "Subir pequeño #{n}",
+			"preprocess": "¿Preprocesar fotos para conservar datos móviles?"
+		},
+		"matchHeading": "Partido #{match}, Equipo #{team}",
+		"dynamicScrolling": "Habilitar desplazamiento dinámico",
+		"submit": "enviar",
+		"orgManagerActions": "Acciones del administrador de la organización:",
+		"clearData": "Borrar datos",
+		"clearDataConfirm": "Si está *SEGURO* de que desea *ELIMINAR PERMANENTEMENTE* los datos de exploración para este partido, ingrese su contraseña a continuación.",
+		"invalidMatchKey": "Conjunto de claves de coincidencia no válido.",
+		"invalidTeam": "El equipo {team} no existe.",
+		"invalidTeamKey": "La clave del equipo no está definida o no es válida.",
+		"noDataSubmit": "No se enviaron datos a {url}.",
+		"submitSuccess": "Datos enviados con éxito.",
+		"deleteSuccess": "Datos eliminados con éxito. No será redirigido fuera de la página, en caso de que desee volver a enviar los datos en pantalla."
+	},
+	"notifications": {
+		"status": "Las notificaciones de coincidencias son {status} para este dispositivo.",
+		"enabled": "habilitado",
+		"disabled": "deshabilitado",
+		"confirmEnable": "¿Habilitar notificaciones de coincidencias en este dispositivo?",
+		"subscribing": "Suscribiéndose a las notificaciones push…",
+		"goneWrong": "Algo podría haber salido mal. Datos:",
+		"error": "Ocurrió un error:",
+		"disabling": "Deshabilitando las notificaciones push…",
+		"noPermission": "No se nos otorgó el permiso.",
+		"dbSaveFailed": "Se recibió la suscripción pero no pudimos guardarla en nuestra base de datos.",
+		"testPageTitle": "Página de prueba de notificaciones",
+		"invalidKey": "Sin coincidencia y clave de equipo de coincidencia",
+		"invalidMatch": "Coincidencia no encontrada",
+		"content": {
+			"title": "{match} comenzará pronto",
+			"body": "Estás asignado al equipo {team} en la alianza {alliance}.",
+			"ifFocused": "¡No olvides que {match} está a punto de comenzar!"
+		},
+		"actions": {
+			"scout": "Partido de exploradores"
+		}
+	},
+	"dashboard": {
+		"titleUser": "Tablero para {user}",
+		"group": "Grupo de exploración: {group}",
+		"pitScouting": "Asignaciones de reconocimiento de pits",
+		"notPitAssigned": "No asignado a exploración de pits",
+		"pitScoutingPartner": "Asignaciones de exploración de boxes del socio",
+		"upcomingMatches": "Próximos partidos para ser explorados",
+		"matchNumber": "Partido {number}",
+		"unassigned": "Sin asignar",
+		"unassignedOptions": "Opciones para exploradores no asignados",
+		"oneOffPit": "Exploración de boxes única",
+		"oneOffMatch": "Exploración de partidos únicos",
+		"team": "Equipo",
+		"teamName": "Nombre del equipo",
+		"none": "Ninguno",
+		"photo": "Foto",
+		"loadTeamPhotos": "Actualizar con fotos del equipo"
+	},
+	"driveDashboard": {
+		"title": "Panel de control del equipo de Drive",
+		"noTeams": "No se encontraron equipos para este torneo.",
+		"noMatches": "No hay próximas partidas para este torneo.",
+		"noMatchesTeam": "No se encontraron coincidencias para el equipo {team}.",
+		"viewFor": "Ver tablero para…",
+		"chooseTeam": "[Elige un equipo]",
+		"viewOr": "o",
+		"allTeams": "Todos los equipos",
+		"selectedTeam": "Equipo seleccionado",
+		"nextMatch": "Próximo partido:",
+		"nextMatchTeam": "Próximo partido para el equipo {team}:",
+		"relativeStrengths": "Fortalezas relativas:",
+		"legendShowHide": "Haz clic en una leyenda para ocultar/mostrar ese equipo",
+		"futureMatches": "Futuros partidos:",
+		"futureMatchesTeam": "Futuros partidos del equipo {team}:",
+		"compareAlliance": "Comparar alianzas"
+	},
+	"allianceselection": {
+		"title": "Selección de alianza",
+		"intro": "Toca un equipo, luego toca la ranura vacía [2] o [3] para moverlos hacia arriba.\nA medida que se seleccionan equipos para alianzas, aparecerán en gris en la tabla a continuación.",
+		"preferred": "Antes de la selección de alianzas, usted y los líderes de su equipo pueden marcar sus equipos preferidos en <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\"> esta página</a>.",
+		"undo": "Deshacer",
+		"allianceNumber": "Alianza {number}",
+		"showData": "Mostrar datos del equipo",
+		"wontSave": "Esta página no se guardará.",
+		"noPreviousState": "Estado anterior indefinido",
+		"noLastMove": "Último movimiento indefinido",
+		"noAllianceAttribute": "No se pudo encontrar el atributo de alianza para #{team}",
+		"noTeamStateRankings": "No se pudo encontrar el equipo de las clasificaciones estatales idx {i}",
+		"priority": "Prioridad",
+		"priorityAbbr": "V",
+		"team": "Equipo",
+		"rank": "Rango FRC"
+	},
+	"metrics": {
+		"raw": "Datos sin procesar",
+		"show": "Mostrar: ",
+		"AVG": "Promedios",
+		"AVG1": "Promedio",
+		"metricAVG": "Métrica (promedio)",
+		"MAX": "Máximos",
+		"MAX1": "Máximo",
+		"metricMAX": "Métrica (máx.)",
+		"MIN1": "Mínimo",
+		"VAR1": "Varianza",
+		"metric": "métrica",
+		"insufficientData": "¡Datos insuficientes en este momento, vuelva más tarde!"
+	},
+	"reports": {
+		"redWon": "Rojo ganó",
+		"blueWon": "Azul ganó",
+		"redStats": "Estadísticas para rojo: {teams}",
+		"blueStats": "Estadísticas para azul: {teams}",
+		"bothStats": "Estadísticas de ambas alianzas",
+		"tie": "Corbata",
+		"match": "{level} Partido {number}",
+		"scoutData": "Datos del explorador",
+		"firstData": "PRIMERO dato",
+		"score": "Puntuación:",
+		"prediction": {
+			"winner": "{chance}% de probabilidad de que {alliance} gane",
+			"reports": "Basado en {count} informes totales",
+			"scores": "Puntuaciones pronosticadas: Rojo {redA} ± {redS}, Azul {blueA} ± {blueS}",
+			"noData": "No hay suficientes datos para hacer una predicción."
+		},
+		"teamClick": "Haga clic en el número de un equipo para obtener información sobre ese equipo",
+		"teamMatchClick": "Haga clic en el número de equipo para ver los detalles de búsqueda de partidos",
+		"metricClick": "Haz clic en una métrica para comparar todos los equipos de eventos",
+		"headerClick": "Haga clic en el encabezado de una columna para ordenar los equipos por la información de esa columna (haga clic nuevamente para cambiar la dirección de ordenación)",
+		"overall": "Datos generales de eventos clasificados",
+		"overallMatchClick": "Haz clic en el botón de coincidencia para ver el rendimiento general de la alianza",
+		"compareAlliance": "Comparar métricas de alianza",
+		"compareAllianceMatch": "Comparando alianzas para el partido {match}",
+		"compareAllianceClick": "Haga clic en una alianza para ver estadísticas comparativas de equipos individuales:",
+		"team": "Equipo",
+		"teamNumber": "Equipo {team}",
+		"rank": "rango",
+		"rankNumber": "Rango {number}",
+		"allTeams": "todos los equipos",
+		"allianceStats": "Estadísticas del equipo de la Alianza",
+		"allTeamMetrics": "Todas las métricas del equipo",
+		"completedMatches": "Partidos completados",
+		"upcomingMatches": "Próximos partidos",
+		"upcomingMatchesTeam": "Próximos partidos para {team}",
+		"upcomingMatchesFor": "Ver próximos partidos de ",
+		"noMatchesYet": "No hay coincidencias en el sistema. Vuelve a intentarlo más tarde.",
+		"noPreviousMatchesYet": "Todavía no hay coincidencias anteriores.",
+		"noMatchDataYet": "Todavía no hay datos disponibles para este partido. Inténtalo de nuevo más tarde.",
+		"noRankingsYet": "No hay coincidencias en el sistema.",
+		"noPitDataYet": "Aún no hay datos de exploración de boxes.",
+		"noDataPlaceholder": "[sin datos]",
+		"matchData": "Datos de coincidencia para la coincidencia #{match}",
+		"matchIntel": {
+			"title": "Intel: Partido {match}",
+			"winner": "Partido {match} - Ganador: {alliance}",
+			"points": "{alliance}: {score} puntos"
+		},
+		"metricIntel": "Estadísticas **{metric}** por equipo",
+		"allTeamMetricsTitle": "Métricas para todos los equipos",
+		"allTeamsMetricsSummary": "Resumen estadístico de todos los equipos",
+		"rankedTitle": "Mejores equipos por métrica",
+		"currentRankings": {
+			"title": "Clasificaciones de eventos actuales",
+			"titleShort": "Clasificaciones actuales",
+			"wlt": "WLT",
+			"wltDesc": "Ganancia-Pérdida-Empate",
+			"dq": "dq",
+			"dqDesc": "Descalificaciones",
+			"matches": "coincidencias",
+			"rp": "RP",
+			"rpDesc": "Puntos de clasificación"
+		},
+		"matchDataFor": "Datos de búsqueda de coincidencias para el equipo {number}: {nick}",
+		"matchDataForShort": "Datos de búsqueda de coincidencias para el equipo {team}",
+		"matchDataShort": "Datos de búsqueda de coincidencias",
+		"matchClickAlliance": "Haz clic en un número de coincidencia para ver los datos de la alianza para esa coincidencia.",
+		"teamHeader": "Equipo {number} - {nick}",
+		"teamRank": "Actualmente clasificado #{rank}\n{wins}-{losses}-{ties} grabar con {rp} RP",
+		"teamFrom": "De: {city}, {state}, {country}",
+		"teamDataYear": "Todos los datos del equipo {team} de este año",
+		"teamIntel": {
+			"title": "Intel: Equipo {team}",
+			"titleHistory": "Historial de Intel: Equipo {team}",
+			"show": "Mostrar {type}",
+			"hide": "Ocultar {type}",
+			"pitScouting": "exploración de boxes",
+			"statistics": "estadísticas",
+			"previousMatches": "partidos anteriores",
+			"yearStatistics": "estadísticas durante el año {year}",
+			"yearPreviousMatches": "todas las coincidencias del año {year}"
+		},
+		"teamStats": "Estadísticas del equipo {team}",
+		"teamAllMatchData": "Datos de exploración de partidos para todos los partidos del equipo {team}",
+		"historicalTeamStats": "Estadísticas históricas del equipo {team}",
+		"allPreviousMatches": "Todas las coincidencias anteriores",
+		"teamMatchIntel": {
+			"title": "Intel: {matchType} {match} Equipo {team}",
+			"header": "Partido #{match} - {alliance} alianza"
+		},
+		"noMatchScoutData": "No hay datos de exploración de partidos disponibles para el equipo {team} para el partido {match}.",
+		"noMatchScoutData2": "No hay datos de búsqueda de partidos disponibles para el equipo {team} para este partido.",
+		"viewIntelPage": "Ver la página de inteligencia de este equipo",
+		"upcomingMatchMetrics": "Métricas para el próximo partido",
+		"intel": "Intel: {type}"
+	},
+	"errors": {
+		"teamMissing": "No se pudieron encontrar los detalles del equipo {team}. ¿Ha cambiado la lista de equipos desde que creaste las asignaciones de exploración?",
+		"eventTeamsMissing": "No se pudo encontrar la lista de equipos en este evento. Pida al gerente de su organización que actualice la lista de equipos actuales.",
+		"specifyTeamKey": "Por favor, especifica una clave_de_equipo.",
+		"noTeam": "El equipo {team} no existe o no participó en este evento.",
+		"specifyMatchKey": "Por favor, especifique una clave de coincidencia.",
+		"noMatchFound": "No se pudo encontrar la coincidencia: {matchKey}",
+		"specifyTeamMatchKey": "Por favor, especifica una clave de partido de equipo.",
+		"specifyTeamCsv": "Por favor, especifique una lista de equipos separados por comas.",
+		"specifyMetricKey": "Especifique una clave métrica."
+	},
+	"matchType": {
+		"qm": "Coincidencia",
+		"qf": "Cuartos de final",
+		"sf": "Semifinal",
+		"f": "Final"
+	},
+	"tryAgainLater": "Inténtalo de nuevo más tarde.",
+	"yes": "Sí",
+	"no": "No"
+}
