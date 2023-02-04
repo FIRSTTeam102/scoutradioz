@@ -1,1 +1,415 @@
-{}
+{
+    "index": {
+        "fulltitle": "Scoutradioz: Bir Hizmet Olarak FRC İzcilik",
+        "welcome": "Scoutradioz'a hoş geldiniz",
+        "choice": "Sen:",
+        "viewer": {
+            "choice": "Verileri görüntülemek istiyor",
+            "intro": "Scoutradioz, ekiplerin/kuruluşların yarışmalarda kendi özel istihbaratlarını toplamalarını sağlar.",
+            "action": "Hangi verileri topladıklarını görmek için aşağıdan bir kuruluş seçin!"
+        },
+        "scouter": {
+            "choice": "Scout'ta oturum açma"
+        },
+        "info": {
+            "choice": "Scoutradioz ve ekibinizin bunu nasıl kullanabileceği hakkında bilgi edinmekle ilgileniyorsunuz",
+            "intro": "Scoutradioz, The Gearheads tarafından geliştirilen ve ekiplerin ve kuruluşların **yarışmalarda kendi özelleştirilmiş istihbaratlarını toplamalarını** sağlayan bir FRC keşif uygulamasıdır.",
+            "features": {
+                "intro": "Başlangıçta 2018'de oluşturulan Scoutradioz gelişmeye devam etti ve artık Amazon Web Services üzerinde çalışıyor. Scoutradioz'un sunduğu bazı özelliklerin bir listesi:",
+                "modular": "Kuruluşunuzun tam olarak hangi bilgileri kaydetmek ve göstermek istediğinizi seçebilmesi için **modüler ve yapılandırılabilir** pit ve maç keşif anketleri",
+                "automatic": "**Otomatik**, kişiselleştirilmiş pit ve maç izleme atamaları",
+                "advanced": "**Gelişmiş** raporlar ve metrikler",
+                "management": "Maç atamalarını denetleme, gözcüleri içeri ve dışarı değiştirme ve üye listesini yönetme gibi etkinlik yönetimi araçları",
+                "free": "Ve tabii ki tamamen ücretsiz!"
+            },
+            "github": "GitHub'daki kodumuza ve belgelerimize bakın",
+            "discord": "Discord'umuza Katılın",
+            "partner": "Erken Erişim iş ortağı olmak için başvurun",
+            "first": "*FIRST* ve FRC hakkında daha fazla bilgi"
+        },
+        "view": "görüş",
+        "login": "Giriş yapmak"
+    },
+    "hello": {
+        "world": "Selam Dünya!",
+        "name": "Merhaba {isim}!"
+    },
+    "selectOrg": "Lütfen bir kuruluş seçin.",
+    "error": {
+        "title": "Hata mesajı}",
+        "report": {
+            "intro": "Bu hatayı düzeltmemize yardımcı olmak için lütfen:",
+            "screenshot": "Bu hata mesajının ekran görüntüsünü alın,",
+            "url": "Sayfanın üst kısmındaki \"Paylaş\" düğmesini tıklayarak bu sayfanın tam URL'sini kopyalayın,",
+            "send": "Bu hatayı almak için tıkladığınız bağlantı gibi alakalı bilgilerle birlikte ekran görüntüsünü Discord sunucumuzda veya {github}GitHub sayfamızda{/github} yayınlayın."
+        },
+        "stack": "Yığın izleme:"
+    },
+    "layout": {
+        "untitled": "İsimsiz sayfa",
+        "share": "Paylaş",
+        "menu": {
+            "main": "Menü",
+            "user": "{kullanıcı} - {org}"
+        },
+        "footer": {
+            "copyright": "Telif Hakkı {date} FIRST Team 102 ve Robotics Fund Inc.\nAçık kaynaklıdır ve AGPLv3 ile lisanslanmıştır.",
+            "tba": "Mavi İttifak tarafından desteklenmektedir.",
+            "frc": "FIRST Robotics Competition'ın katılımcısı olmaktan gurur duyuyoruz."
+        },
+        "nav": {
+            "home": "Ev",
+            "reports": {
+                "main": "Bilgi ve raporlar: [[{event}]]",
+                "teams": "Takımlar",
+                "teamList": "{sayı}: {isim}",
+                "teamStats": "Takım istatistikleri",
+                "yearStats": "{year} için tam istatistikler",
+                "export": {
+                    "main": "CSV'ye aktar",
+                    "match": "Maç izleme verileri: [[{event}]]",
+                    "pit": "Pit keşif verileri: [[{event}]]",
+                    "matchAll": "Maç izleme verileri: [[{year} yılının tamamı]]",
+                    "pitAll": "Çukur keşif verileri: [[{year} yılının tamamı]]"
+                }
+            },
+            "scouting": "İzcilik",
+            "manage": {
+                "main": "Yönet: [[{org}]]",
+                "members": {
+                    "main": "Üyeler",
+                    "list": "Üye Listesi",
+                    "passwords": "Üye şifrelerini denetle/sıfırla"
+                },
+                "scouters": {
+                    "main": "İzciler",
+                    "event": "Gözcüler: [[{event}]]",
+                    "audit": "İzcilik denetimi",
+                    "assignments": "İzcilik görevleri",
+                    "swapmembers": "Giriş/çıkış maç hesaplarını değiştir",
+                    "swappitassignments": "Çukur keşif görevlerini değiştir",
+                    "present": "hediye ayarla"
+                },
+                "event": {
+                    "main": "Olay verileri",
+                    "event": "Etkinlik verileri: [[{event}]]",
+                    "matches": "Maçlar",
+                    "allianceselection": "İttifak seçim verileri",
+                    "getcurrentteams": "Ekip listesini güncelle",
+                    "recalcderived": "Türetilmiş metrikleri yeniden hesapla",
+                    "editteams": "Ekip listesini düzenle",
+                    "editmatchschedule": "Maç programını düzenle",
+                    "editmatchresults": "Maç sonuçlarını düzenle",
+                    "setcurrent": "Geçerli etkinliği ayarla"
+                }
+            },
+            "admin": "yönetici",
+            "user": {
+                "main": "Kullanıcı: [[{kullanıcı}]]",
+                "fallback": "kullanıcı",
+                "login": "Giriş yap: [[{org}]]",
+                "logout": "Çıkış Yap",
+                "switchorg": "Organizasyonu değiştir"
+            },
+            "help": "Yardıma mı ihtiyacınız var? Wiki'mizi kontrol edin!"
+        }
+    },
+    "home": {
+        "title": "Ev",
+        "menu": "Menüyü açmak için sol üstteki {menü} üzerine tıklayın",
+        "tournamentInfo": "Turnuva bilgisi",
+        "teamInfo": "takım bilgisi",
+        "teamNum": "Takım #",
+        "stats": "İstatistikler",
+        "userLogin": "Kullanıcı Girişi",
+        "scoutingDashboard": "Keşif kontrol paneli",
+        "management": "Yönetmek",
+        "admin": "yönetici",
+        "specifyTeam": "Bir takım belirtmelisiniz."
+    },
+    "share": {
+        "changeOrg": "{org}'u görüntülüyorsunuz.\nGörüntülemek istediğiniz kuruluşu değiştirmek için menüden *Org: {org}*'a tıklayın ve *Organizasyonu Değiştir*'i seçin."
+    },
+    "user": {
+        "loginOrg": "{org}'da oturum açın",
+        "orgpassword": "Organizasyon şifresi:",
+        "next": "Sonraki",
+        "name": "İsim:",
+        "personalpassword": "Kişisel şifre:",
+        "createnew": "Lütfen yeni bir şifre oluşturun.",
+        "mustcreate": "Kuruluşunuzda yükseltilmiş izinleriniz var, bu nedenle başkalarının sizin adınıza oturum açmasını önlemek için bir parola belirlemelisiniz.",
+        "currentpassword": "Mevcut Şifre:",
+        "newpassword": "Yeni Şifre:",
+        "newpassword2": "Teyit etmek:",
+        "newpasswordmismatch": "Yeni şifreler uyuşmuyor.",
+        "login": "Giriş yapmak",
+        "changepassword": "Şifre değiştir",
+        "blankpassword": "Henüz kendi şifreniz yoksa boş bırakın.",
+        "selectorg": "Lütfen oturum açmak için bir kuruluş seçin.",
+        "logoutbeforelogin": "Lütfen başka bir kullanıcıda oturum açmadan önce oturumu kapatın.",
+        "orgpasswordrequired": "Lütfen kuruluşunuzun parolasını girin. Geri dönmek için sol üstteki navigasyonu açın.",
+        "orgpasswordincorrect": "{org} kuruluşu için yanlış şifre.",
+        "resubmitlogin": "Üzgünüz, lütfen kuruluş giriş bilgilerinizi yeniden gönderin.",
+        "selectuser": "Lütfen bir kullanıcı seçin.",
+        "nouserexists": "Böyle bir kullanıcı mevcut değil.",
+        "incorrectpassword": "Yanlış parola.",
+        "incorrectpasswordcurrent": "Yanlış mevcut şifre.",
+        "passwordalreadyexists": "Şifre zaten var. Lütfen mevcut şifrenizi giriniz.",
+        "newpasswordboth": "Lütfen her iki şifre formunu da doldurunuz.",
+        "newpasswordsuccess": "Parolayı başarıyla ayarlayın.",
+        "reportcolumns": {
+            "title": "Rapor sütunlarını seçin",
+            "saved": "Sütun tercihleri başarıyla kaydedildi.",
+            "clearedorgdefaults": "Kuruluş varsayılan sütunları başarıyla temizlendi.",
+            "intro": "HİÇBİRİ seçilirse, rapor sayfaları kuruluş için varsayılan sütun grubunu gösterir.\nKuruluşun varsayılan sütunları **kalındır**.\nTÜMÜ veya BAZIları seçilirse, rapor sayfaları YALNIZCA seçili sütunları gösterir.",
+            "default": "Varsayılan",
+            "checkAll": "hepsini kontrol et",
+            "uncheckAll": "Tümünü işaretleme",
+            "setOrgDefalts": "Kuruluş varsayılanlarını ayarlamak için bunu işaretleyin",
+            "save": "Sütun seçimlerini kaydet",
+            "clearOrgDefaults": "Kuruluş varsayılanlarını temizle",
+            "clearOrgDefaultsConfirmation": "Bunu yapmak, kuruluşunuzun rapor sütunu varsayılanlarını temizleyecektir (yalnızca sizin için değil, HERKES için). Emin misin?"
+        }
+    },
+    "scouting": {
+        "match": "Maç izleme",
+        "pit": "Çukur keşif",
+        "subheading": "{şehir}, {eyalet</span>'den {team} <span class=\"unimportant\">",
+        "pitHeading": "Takım #{takım}",
+        "upload": {
+            "main": "Ana fotoğrafı yükle",
+            "small": "Küçük #{n} yükleyin",
+            "preprocess": "Mobil verileri korumak için fotoğrafları önceden işlemek mi istiyorsunuz?"
+        },
+        "matchHeading": "Maç #{eşleşme}, Takım #{takım}",
+        "dynamicScrolling": "Dinamik kaydırmayı etkinleştir",
+        "submit": "Göndermek",
+        "orgManagerActions": "Organizasyon yöneticisi eylemleri:",
+        "clearData": "Net veriler",
+        "clearDataConfirm": "Bu maç için keşif verilerini *KALICI OLARAK SİLMEK* istediğinizden *EMİN* iseniz, şifrenizi aşağıya girin.",
+        "invalidMatchKey": "Geçersiz eşleşme anahtarı seti.",
+        "invalidTeam": "Takım {takımı} mevcut değil.",
+        "invalidTeamKey": "Ekip anahtarı tanımlanmamış veya geçersiz.",
+        "noDataSubmit": "{url} adresine hiçbir veri gönderilmedi.",
+        "submitSuccess": "Veriler başarıyla gönderildi.",
+        "deleteSuccess": "Veriler başarıyla silindi. Ekrandaki verileri yeniden göndermek istemeniz durumunda sayfadan başka bir yere yönlendirilmeyeceksiniz."
+    },
+    "notifications": {
+        "status": "Maç bildirimleri bu cihaz için {status}.",
+        "enabled": "etkinleştirilmiş",
+        "disabled": "engelli",
+        "confirmEnable": "Bu cihazda maç bildirimleri etkinleştirilsin mi?",
+        "subscribing": "Push bildirimlerine abone olunâ€¦",
+        "goneWrong": "Bir şeyler ters gitmiş olabilir. Veri:",
+        "error": "Bir hata oluştu:",
+        "disabling": "Push bildirimlerini devre dışı bırakmaâ€¦",
+        "noPermission": "Bize izin verilmedi.",
+        "dbSaveFailed": "Abonelik alındı ancak veritabanımıza kaydedemedik.",
+        "testPageTitle": "Bildirimler test sayfası",
+        "invalidKey": "Maç yok ve maç takımı anahtarı",
+        "invalidMatch": "Eşleşme bulunamadı",
+        "content": {
+            "title": "{match} yakında başlayacak",
+            "body": "{alliance} ittifakında {team} ekibine atandınız.",
+            "ifFocused": "Unutmayın, {match} başlamak üzere!"
+        },
+        "actions": {
+            "scout": "İzci maçı"
+        }
+    },
+    "dashboard": {
+        "titleUser": "{user} için kontrol paneli",
+        "group": "Keşif grubu: {group}",
+        "pitScouting": "Çukur keşif görevleri",
+        "notPitAssigned": "Çukur keşfine atanmamış",
+        "pitScoutingPartner": "İş ortağının pit keşif görevleri",
+        "upcomingMatches": "İzlenecek yaklaşan maçlar",
+        "matchNumber": "{sayı} ile eşleş",
+        "unassigned": "Atanmamış",
+        "unassignedOptions": "Atanmamış gözcüler için seçenekler",
+        "oneOffPit": "Tek seferlik pit keşif",
+        "oneOffMatch": "Tek seferlik maç izleme",
+        "assigned": "Atandı",
+        "team": "Takım",
+        "teamName": "Takım adı",
+        "none": "Hiçbiri",
+        "photo": "Fotoğraf",
+        "loadTeamPhotos": "Ekip fotoğraflarıyla yenileyin"
+    },
+    "driveDashboard": {
+        "title": "Drive ekibi kontrol paneli",
+        "noTeams": "Bu turnuva için takım bulunamadı.",
+        "noMatches": "Bu turnuva için yaklaşan maç yok.",
+        "noMatchesTeam": "{team} takımı için eşleşme bulunamadı.",
+        "viewFor": "â€¦ için kontrol panelini görüntüleyin",
+        "chooseTeam": "[Bir takım seçin]",
+        "viewOr": "veya",
+        "allTeams": "Tüm takımlar",
+        "selectedTeam": "Seçilen takım",
+        "nextMatch": "Sıradaki karşılaşma:",
+        "nextMatchTeam": "{team} takımı için bir sonraki maç:",
+        "relativeStrengths": "Göreceli güçlü yönler:",
+        "legendShowHide": "takımı gizlemek/göstermek için bir efsaneye tıklayın",
+        "futureMatches": "Gelecek maçlar:",
+        "futureMatchesTeam": "{team} takımı için gelecek maçlar:",
+        "compareAlliance": "İttifakları karşılaştırın"
+    },
+    "allianceselection": {
+        "title": "İttifak seçimi",
+        "intro": "Bir takıma dokunun, ardından onları yukarı taşımak için boş yuvaya [2] veya [3] dokunun.\nTakımlar ittifaklar için seçildikçe, aşağıdaki tabloda gri renkte görünürler.",
+        "preferred": "İttifak seçiminden önce, siz ve takım lider(ler)iniz <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">bu sayfada</a tercih ettiğiniz takımları işaretleyebilirsiniz. >.",
+        "undo": "Geri alma",
+        "allianceNumber": "ittifak {sayı}",
+        "showData": "Ekip verilerini göster",
+        "wontSave": "Bu sayfa kaydedilmeyecek.",
+        "noPreviousState": "Önceki durum tanımsız",
+        "noLastMove": "Son hamle tanımsız",
+        "noAllianceAttribute": "#{team} için ittifak özelliği bulunamadı",
+        "noTeamStateRankings": "Eyalet sıralamasından takım bulunamadı idx {i}",
+        "priority": "Öncelik",
+        "priorityAbbr": "V",
+        "team": "Takım",
+        "rank": "FRC Sıralaması"
+    },
+    "metrics": {
+        "raw": "İşlenmemiş veri",
+        "show": "Göstermek:",
+        "AVG": "ortalamalar",
+        "AVG1": "Ortalama",
+        "metricAVG": "Metrik (ortalama)",
+        "MAX": "maksimumlar",
+        "MAX1": "Maksimum",
+        "metricMAX": "Metrik (maks)",
+        "MIN1": "Asgari",
+        "VAR1": "Varyans",
+        "metric": "Metrik",
+        "insufficientData": "Şu anda yetersiz veri, daha sonra tekrar gelin!"
+    },
+    "alliance": {
+        "red": "kırmızı ittifak",
+        "redShort": "Kırmızı",
+        "blue": "mavi ittifak",
+        "blueShort": "Mavi"
+    },
+    "reports": {
+        "redWon": "kırmızı kazandı",
+        "blueWon": "mavi kazandı",
+        "redStats": "Kırmızı için istatistikler: {takımlar}",
+        "blueStats": "Mavi için istatistikler: {takımlar}",
+        "bothStats": "Her iki ittifak için istatistikler",
+        "tie": "Bağlamak",
+        "match": "{seviye} Eşleştirme {sayı}",
+        "scoutData": "İzci verileri",
+        "firstData": "İLK veri",
+        "score": "Skor:",
+        "prediction": {
+            "winner": "{alliance}'ın kazanma şansı: %{alliance}",
+            "reports": "Toplam {count} rapora göre",
+            "scores": "Tahmini puanlar: Kırmızı {redA} Â± {redS}, Mavi {blueA} Â± {blueS}",
+            "noData": "Tahmin yapmak için yeterli veri yok."
+        },
+        "teamClick": "O takımla ilgili istihbarat için bir takım numarasına tıklayın",
+        "teamMatchClick": "Maç izleme detayları için takım numarasına tıklayın",
+        "metricClick": "Tüm etkinlik ekiplerini karşılaştırmak için bir metriğe tıklayın",
+        "headerClick": "Takımları o sütunun bilgilerine göre sıralamak için bir sütun başlığına tıklayın (sıralama yönünü değiştirmek için tekrar tıklayın)",
+        "overall": "Genel dereceli etkinlik verileri",
+        "overallMatchClick": "Genel ittifak performansları için eşleştirme düğmesine tıklayın",
+        "compareAlliance": "İttifak metriklerini karşılaştırın",
+        "compareAllianceMatch": "{match} maçı için ittifaklar karşılaştırılıyor",
+        "compareAllianceClick": "Karşılaştırmalı bireysel takım istatistiklerini görmek için bir ittifaka tıklayın:",
+        "team": "Takım",
+        "teamNumber": "Takım {takımı}",
+        "rank": "Rütbe",
+        "rankNumber": "Derece {sayı}",
+        "allTeams": "tüm takımlar",
+        "allianceStats": "İttifak takımı istatistikleri",
+        "allTeamMetrics": "Tüm ekip metrikleri",
+        "completedMatches": "Tamamlanan maçlar",
+        "upcomingMatches": "Yaklaşan maçlar",
+        "upcomingMatchesTeam": "{team} için yaklaşan maçlar",
+        "upcomingMatchesFor": "Şunun için yaklaşan maçları görüntüle:",
+        "noMatchesYet": "Sistemde eşleşme yok. Lütfen daha sonra tekrar deneyiniz.",
+        "noPreviousMatchesYet": "Henüz önceki maçlar yok.",
+        "noMatchDataYet": "Bu maç için henüz veri yok. Lütfen daha sonra tekrar deneyiniz.",
+        "noRankingsYet": "Sistemde eşleşme yok.",
+        "noPitDataYet": "Henüz pit keşif verisi yok.",
+        "noDataPlaceholder": "[veri yok]",
+        "matchData": "Maç #{match} için maç verileri",
+        "matchIntel": {
+            "title": "Intel: Eşleştir {eşleştir}",
+            "winner": "{match} ile eşleştirin - Kazanan: {alliance}",
+            "points": "{alliance}: {score} puan"
+        },
+        "metricIntel": "Takım başına **{metrik}** istatistikler",
+        "allTeamMetricsTitle": "Tüm ekipler için metrikler",
+        "allTeamsMetricsSummary": "Tüm ekipler genelinde istatistiksel özet",
+        "rankedTitle": "Metrik başına en iyi takımlar",
+        "currentRankings": {
+            "title": "Güncel olay sıralamaları",
+            "titleShort": "Mevcut sıralamalar",
+            "wlt": "WLT",
+            "wltDesc": "Kazan-Kaybet-Beraberlik",
+            "dq": "DQ",
+            "dqDesc": "Diskalifiyeler",
+            "matches": "Maçlar",
+            "rp": "RP",
+            "rpDesc": "Sıralama Puanları"
+        },
+        "matchDataFor": "{number} takımı için maç izleme verileri: {nick}",
+        "matchDataForShort": "{team} takımı için maç izleme verileri",
+        "matchDataShort": "Gözlem verilerini eşleştir",
+        "matchClickAlliance": "Bir maç için ittifak verilerini görmek için bir maç numarasına tıklayın.",
+        "teamHeader": "Takım {sayı} - {nick}",
+        "teamRank": "Şu anda {rp} RP ile #{rütbe}\n{kazanç}-{kayıplar}-{bağlar} rekorunda yer alıyor",
+        "teamFrom": "Nereden: {şehir}, {eyalet}, {ülke}",
+        "teamDataYear": "{team} takımı için bu yıla ait tüm veriler",
+        "teamIntel": {
+            "title": "Intel: Takım {takımı}",
+            "titleHistory": "Intel geçmişi: Takım {takımı}",
+            "show": "{tür} göster",
+            "hide": "{type} gizle",
+            "pitScouting": "çukur keşif",
+            "statistics": "İstatistik",
+            "previousMatches": "önceki maçlar",
+            "yearStatistics": "yıl boyunca istatistikler {yıl}",
+            "yearPreviousMatches": "{year} yılından itibaren tüm maçlar"
+        },
+        "teamStats": "{team} takımı için istatistikler",
+        "teamAllMatchData": "{team} takımının tüm maçları için maç gözlemleme verileri",
+        "historicalTeamStats": "{team} takımı için geçmiş istatistikler",
+        "allPreviousMatches": "Önceki tüm maçlar",
+        "teamMatchIntel": {
+            "title": "Intel: {matchType} {match} Ekip {team}",
+            "header": "Maç #{match} - {alliance} ittifak"
+        },
+        "noMatchScoutData": "{match} maçı için {team} takımı için maç gözlemleme verisi yok.",
+        "noMatchScoutData2": "{team} takımı için bu maç için maç izleme verisi yok.",
+        "viewIntelPage": "Bu ekibin istihbarat sayfasını görüntüle",
+        "upcomingMatchMetrics": "Yaklaşan maç için ölçümler",
+        "intel": "Intel: {tür}",
+        "exportData": {
+            "noType": "Dışa aktarma için hiçbir (veya geçersiz) veri türü belirtilmedi.",
+            "noData": "'{type}' türü için veri bulunamadı."
+        }
+    },
+    "errors": {
+        "teamMissing": "{team} ekibi için ayrıntılar bulunamadı. Gözlem atamalarını oluşturduğunuzdan beri ekip listesi değişti mi?",
+        "eventTeamsMissing": "Bu etkinlikte takım listesi bulunamadı. Lütfen organizasyon yöneticinizden mevcut ekiplerin listesini güncellemesini isteyin.",
+        "specifyTeamKey": "Lütfen bir team_key belirtin.",
+        "noTeam": "{team} takımı mevcut değil veya bu etkinliğe katılmadı.",
+        "specifyMatchKey": "Lütfen bir eşleşme anahtarı belirtin.",
+        "noMatchFound": "Eşleşme bulunamadı: {matchKey}",
+        "specifyTeamMatchKey": "Lütfen bir takım eşleştirme anahtarı belirtin.",
+        "specifyTeamCsv": "Lütfen virgülle ayrılmış bir ekip listesi belirtin.",
+        "specifyMetricKey": "Lütfen bir metrik anahtar belirtin."
+    },
+    "matchType": {
+        "qm": "Kibrit",
+        "qf": "Çeyrek final",
+        "sf": "Yarı final",
+        "f": "son"
+    },
+    "tryAgainLater": "Lütfen daha sonra tekrar deneyiniz.",
+    "yes": "Evet",
+    "no": "hayır"
+}

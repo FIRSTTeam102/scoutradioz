@@ -1,1 +1,415 @@
-{}
+{
+    "index": {
+        "fulltitle": " Scoutradioz：FRC 偵察即服務",
+        "welcome": "歡迎來到童軍電台",
+        "choice": "你是：",
+        "viewer": {
+            "choice": "想查看數據",
+            "intro": " Scoutradioz 使團隊/組織能夠在比賽中收集他們自己的定制情報。",
+            "action": "在下面選擇一個組織，看看他們收集了哪些數據！"
+        },
+        "scouter": {
+            "choice": "登錄偵察"
+        },
+        "info": {
+            "choice": "有興趣了解 Scoutradioz 以及您的團隊如何使用它",
+            "intro": " Scoutradioz 是一款由 The Gearheads 開發的 FRC 球探應用程序，它使團隊和組織能夠在比賽中**收集他們自己的、定制的情報**。",
+            "features": {
+                "intro": " Scoutradioz 最初創建於 2018 年，不斷發展，現在在 Amazon Web Services 上運行。以下是 Scoutradioz 提供的一些功能列表：",
+                "modular": "**模塊化和可配置** pit & match 偵察調查，因此您的組織可以準確選擇您想要記錄和顯示的信息",
+                "automatic": " **自動**，個性化的維修站和比賽偵察任務",
+                "advanced": " **高級**報告和指標",
+                "management": "事件管理工具，例如審核比賽分配、交換球探進出以及管理成員列表",
+                "free": "當然，它是完全免費的！"
+            },
+            "github": "在 GitHub 上查看我們的代碼和文檔",
+            "discord": "加入我們的 Discord",
+            "partner": "申請成為搶先體驗合作夥伴",
+            "first": "有關 *FIRST* 和 FRC 的更多信息"
+        },
+        "view": "看法",
+        "login": "登錄"
+    },
+    "hello": {
+        "world": "你好世界！",
+        "name": "你好，{名字}！"
+    },
+    "selectOrg": "請選擇一個組織。",
+    "error": {
+        "title": "錯誤信息}",
+        "report": {
+            "intro": "為了幫助我們修復此錯誤，請：",
+            "screenshot": "截取此錯誤消息的屏幕截圖，",
+            "url": "單擊頁面頂部的“共享”，複製此頁面的完整 URL，",
+            "send": "將屏幕截圖發佈到我們的 Discord 服務器或我們的 {github}GitHub 頁面{/github}，包括相關信息，例如您點擊了導致此錯誤的鏈接。"
+        },
+        "stack": "堆棧跟踪："
+    },
+    "layout": {
+        "untitled": "無標題頁",
+        "share": "分享",
+        "menu": {
+            "main": "菜單",
+            "user": "{用戶} - {組織}"
+        },
+        "footer": {
+            "copyright": "版權所有 {date} FIRST Team 102 和 Robotics Fund Inc.\n開源並獲得 AGPLv3 許可。",
+            "tba": "由藍色聯盟提供支持。",
+            "frc": "我們很自豪能成為 FIRST 機器人競賽的參與者。"
+        },
+        "nav": {
+            "home": "家",
+            "reports": {
+                "main": "信息和報告：[[{event}]]",
+                "teams": "團隊",
+                "teamList": " {number}: {name}",
+                "teamStats": "球隊數據",
+                "yearStats": " {year}的完整統計數據",
+                "export": {
+                    "main": "導出為 CSV",
+                    "match": "匹配球探數據：[[{event}]]",
+                    "pit": "場地偵察數據：[[{event}]]",
+                    "matchAll": "匹配球探數據：[[所有 {year}]]",
+                    "pitAll": "場地勘探數據：[[{year} 年]]"
+                }
+            },
+            "scouting": "偵察",
+            "manage": {
+                "main": "管理：[[{org}]]",
+                "members": {
+                    "main": "成員",
+                    "list": "會員名單",
+                    "passwords": "審核/重置會員密碼"
+                },
+                "scouters": {
+                    "main": "童子軍",
+                    "event": "童子軍：[[{event}]]",
+                    "audit": "偵察審核",
+                    "assignments": "偵察任務",
+                    "swapmembers": "換入/換出比賽賬戶",
+                    "swappitassignments": "交換礦坑偵察任務",
+                    "present": "設置禮物"
+                },
+                "event": {
+                    "main": "事件數據",
+                    "event": "事件數據：[[{event}]]",
+                    "matches": "火柴",
+                    "allianceselection": "聯盟選擇數據",
+                    "getcurrentteams": "更新球隊名單",
+                    "recalcderived": "重新計算衍生指標",
+                    "editteams": "編輯團隊列表",
+                    "editmatchschedule": "修改比賽日程",
+                    "editmatchresults": "編輯比賽結果",
+                    "setcurrent": "設置當前事件"
+                }
+            },
+            "admin": "行政",
+            "user": {
+                "main": "用戶：[[{用戶}]]",
+                "fallback": "用戶",
+                "login": "登錄：[[{org}]]",
+                "logout": "登出",
+                "switchorg": "改變組織"
+            },
+            "help": "需要幫忙？檢查我們的維基！"
+        }
+    },
+    "home": {
+        "title": "家",
+        "menu": "點擊左上角的{menu}打開菜單",
+        "tournamentInfo": "賽事信息",
+        "teamInfo": "團隊信息",
+        "teamNum": "團隊 ＃",
+        "stats": "統計數據",
+        "userLogin": "用戶登錄",
+        "scoutingDashboard": "偵察儀表板",
+        "management": "管理",
+        "admin": "行政",
+        "specifyTeam": "您必須指定一個團隊。"
+    },
+    "share": {
+        "changeOrg": "您正在查看 {org}。\n要更改您希望查看的組織，請單擊菜單中的 *Org: {org}* 並選擇 *Change Organization*。"
+    },
+    "user": {
+        "loginOrg": "登錄到{組織}",
+        "orgpassword": "機構密碼：",
+        "next": "下一個",
+        "name": "名稱：",
+        "personalpassword": "個人密碼：",
+        "createnew": "請創建一個新密碼。",
+        "mustcreate": "您在您的組織中擁有提升的權限，因此您必須設置密碼以確保其他人無法以您的身份登錄。",
+        "currentpassword": "當前密碼：",
+        "newpassword": "新密碼：",
+        "newpassword2": "確認：",
+        "newpasswordmismatch": "新密碼不匹配。",
+        "login": "登錄",
+        "changepassword": "更改密碼",
+        "blankpassword": "如果您還沒有自己的密碼，請留空。",
+        "selectorg": "請選擇要登錄的組織。",
+        "logoutbeforelogin": "請先註銷，然後才能登錄其他用戶。",
+        "orgpasswordrequired": "請輸入您所在組織的密碼。要返回，請打開左上角的導航。",
+        "orgpasswordincorrect": "組織 {org} 的密碼不正確。",
+        "resubmitlogin": "抱歉，請重新提交您的組織登錄信息。",
+        "selectuser": "請選擇一個用戶。",
+        "nouserexists": "不存在這樣的用戶。",
+        "incorrectpassword": "密碼錯誤。",
+        "incorrectpasswordcurrent": "當前密碼不正確。",
+        "passwordalreadyexists": "密碼已經存在。請提交您當前的密碼。",
+        "newpasswordboth": "請填寫兩個密碼表格。",
+        "newpasswordsuccess": "設置密碼成功。",
+        "reportcolumns": {
+            "title": "選擇報告列",
+            "saved": "已成功保存列首選項。",
+            "clearedorgdefaults": "已成功清除組織默認列。",
+            "intro": "如果選擇“無”，報告頁面將顯示組織的默認列集。\n組織的默認列為**粗體**。\n如果選擇“全部”或“部分”，報告頁面將僅顯示選定的列。",
+            "default": "默認",
+            "checkAll": "選擇所有",
+            "uncheckAll": "取消所有",
+            "setOrgDefalts": "選中此項以設置組織默認值",
+            "save": "保存列選擇",
+            "clearOrgDefaults": "清除組織默認值",
+            "clearOrgDefaultsConfirmation": "這樣做將清除您組織的報告列默認值（對每個人，而不僅僅是您）。你確定嗎？"
+        }
+    },
+    "scouting": {
+        "match": "比賽偵察",
+        "pit": "坑偵察",
+        "subheading": "{team} <span class=\"unimportant\">來自{city}，{state}</span>",
+        "pitHeading": "團隊#{團隊}",
+        "upload": {
+            "main": "上傳主圖",
+            "small": "上傳小#{n}",
+            "preprocess": "預處理照片以節省移動數據？"
+        },
+        "matchHeading": "比賽#{match}，球隊#{team}",
+        "dynamicScrolling": "啟用動態滾動",
+        "submit": "提交",
+        "orgManagerActions": "組織經理行動：",
+        "clearData": "清除數據",
+        "clearDataConfirm": "如果您*確定*想要*永久刪除*本場比賽的球探數據，請在下方輸入您的密碼。",
+        "invalidMatchKey": "無效的匹配鍵集。",
+        "invalidTeam": "團隊 {team} 不存在。",
+        "invalidTeamKey": "團隊密鑰未定義或無效。",
+        "noDataSubmit": "沒有數據發送到 {url}。",
+        "submitSuccess": "提交數據成功。",
+        "deleteSuccess": "刪除數據成功。如果您希望在屏幕上重新提交數據，您將不會被重定向離開該頁面。"
+    },
+    "notifications": {
+        "status": "匹配通知是此設備的 {status}。",
+        "enabled": "啟用",
+        "disabled": "禁用",
+        "confirmEnable": "在此設備上啟用匹配通知？",
+        "subscribing": "訂閱推送通知â€¦",
+        "goneWrong": "可能出了什麼問題。數據：",
+        "error": "發生錯誤：",
+        "disabling": "禁用推送通知â€¦",
+        "noPermission": "我們沒有獲得許可。",
+        "dbSaveFailed": "已收到訂閱，但我們無法將其保存到我們的數據庫中。",
+        "testPageTitle": "通知測試頁面",
+        "invalidKey": "沒有匹配 & 匹配團隊密鑰",
+        "invalidMatch": "未找到匹配項",
+        "content": {
+            "title": " {match} 即將開始",
+            "body": "您被分配到 {alliance} 聯盟的團隊 {team}。",
+            "ifFocused": "別忘了，{match} 即將開始！"
+        },
+        "actions": {
+            "scout": "球探比賽"
+        }
+    },
+    "dashboard": {
+        "titleUser": "{user} 的儀表板",
+        "group": "偵察組：{group}",
+        "pitScouting": "勘探任務",
+        "notPitAssigned": "沒有分配到坑偵察",
+        "pitScoutingPartner": "合作夥伴的勘探任務",
+        "upcomingMatches": "即將到來的比賽被偵察",
+        "matchNumber": "匹配 {number}",
+        "unassigned": "未分配",
+        "unassignedOptions": "未分配偵察員的選項",
+        "oneOffPit": "一次性坑偵察",
+        "oneOffMatch": "一次性球探",
+        "assigned": "已分配",
+        "team": "團隊",
+        "teamName": "隊名",
+        "none": "沒有任何",
+        "photo": "照片",
+        "loadTeamPhotos": "刷新團隊照片"
+    },
+    "driveDashboard": {
+        "title": "驅動團隊儀表板",
+        "noTeams": "沒有找到參加本次錦標賽的球隊。",
+        "noMatches": "本次錦標賽沒有即將到來的比賽。",
+        "noMatchesTeam": "找不到團隊 {team} 的匹配項。",
+        "viewFor": "查看 â€¦ 的儀表板",
+        "chooseTeam": " [選擇團隊]",
+        "viewOr": "或者",
+        "allTeams": "所有球隊",
+        "selectedTeam": "入選團隊",
+        "nextMatch": "下一場比賽：",
+        "nextMatchTeam": " {team} 隊的下一場比賽：",
+        "relativeStrengths": "相對優勢：",
+        "legendShowHide": "單擊圖例以隱藏/顯示該團隊",
+        "futureMatches": "未來比賽：",
+        "futureMatchesTeam": " {team} 隊的未來比賽：",
+        "compareAlliance": "比較聯盟"
+    },
+    "allianceselection": {
+        "title": "聯盟選擇",
+        "intro": "點擊一個團隊，然後點擊空位 [2] 或 [3] 將其向上移動。\n當團隊被選中加入聯盟時，它們將在下表中顯示為灰色。",
+        "preferred": "在選擇聯盟之前，您和您的團隊領導可以在<a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">此頁面</a 標記您喜歡的團隊>。",
+        "undo": "撤消",
+        "allianceNumber": "聯盟 {number}",
+        "showData": "顯示團隊數據",
+        "wontSave": "此頁面不會被保存。",
+        "noPreviousState": "以前的狀態未定義",
+        "noLastMove": "最後一步未定義",
+        "noAllianceAttribute": "找不到#{team} 的聯盟屬性",
+        "noTeamStateRankings": "無法從州排名 idx {i} 中找到球隊",
+        "priority": "優先",
+        "priorityAbbr": " V",
+        "team": "團隊",
+        "rank": " FRC排名"
+    },
+    "metrics": {
+        "raw": "原始數據",
+        "show": "展示：",
+        "AVG": "平均值",
+        "AVG1": "平均的",
+        "metricAVG": "公制（平均）",
+        "MAX": "最大值",
+        "MAX1": "最大限度",
+        "metricMAX": "公制（最大）",
+        "MIN1": "最低限度",
+        "VAR1": "方差",
+        "metric": "公制",
+        "insufficientData": "暫時數據不足，稍後再來！"
+    },
+    "alliance": {
+        "red": "紅色聯盟",
+        "redShort": "紅色的",
+        "blue": "藍色聯盟",
+        "blueShort": "藍色的"
+    },
+    "reports": {
+        "redWon": "紅贏了",
+        "blueWon": "藍贏了",
+        "redStats": "紅色統計數據：{teams}",
+        "blueStats": "藍色統計數據：{teams}",
+        "bothStats": "兩個聯盟的統計數據",
+        "tie": "領帶",
+        "match": "{level} 匹配 {number}",
+        "scoutData": "偵察數據",
+        "firstData": "第一數據",
+        "score": "分數：",
+        "prediction": {
+            "winner": " {chance}% 機會 {alliance} 獲勝",
+            "reports": "基於 {count} 份報告",
+            "scores": "預測分數：紅色 {redA} Â± {redS}，藍色 {blueA} Â± {blueS}",
+            "noData": "數據不足，無法做出預測。"
+        },
+        "teamClick": "單擊該團隊的英特爾團隊編號",
+        "teamMatchClick": "點擊隊號查看比賽球探詳情",
+        "metricClick": "單擊一個指標以比較所有事件團隊",
+        "headerClick": "單擊列標題以按該列的信息對團隊進行排序（再次單擊可更改排序方向）",
+        "overall": "總排名事件數據",
+        "overallMatchClick": "點擊比賽按鈕查看聯盟整體表現",
+        "compareAlliance": "比較聯盟指標",
+        "compareAllianceMatch": "比較匹配 {match} 的聯盟",
+        "compareAllianceClick": "單擊一個聯盟以查看比較的個人團隊統計數據：",
+        "team": "團隊",
+        "teamNumber": "團隊{團隊}",
+        "rank": "秩",
+        "rankNumber": "排名 {number}",
+        "allTeams": "所有團隊",
+        "allianceStats": "聯盟球隊統計",
+        "allTeamMetrics": "所有團隊指標",
+        "completedMatches": "完成的比賽",
+        "upcomingMatches": "即將到來的比賽",
+        "upcomingMatchesTeam": "{team} 即將到來的比賽",
+        "upcomingMatchesFor": "查看即將到來的比賽",
+        "noMatchesYet": "系統中沒有匹配項。請稍後再試。",
+        "noPreviousMatchesYet": "還沒有以前的比賽。",
+        "noMatchDataYet": "目前還沒有關於這場比賽的數據。請稍後再試。",
+        "noRankingsYet": "系統中沒有匹配項。",
+        "noPitDataYet": "還沒有坑偵察數據。",
+        "noDataPlaceholder": " [沒有數據]",
+        "matchData": "匹配#{match}的匹配數據",
+        "matchIntel": {
+            "title": "英特爾：匹配{匹配}",
+            "winner": "比賽 {match} - 獲勝者：{alliance}",
+            "points": " {alliance}：{score} 分"
+        },
+        "metricIntel": "每個團隊 **{metric}** 統計數據",
+        "allTeamMetricsTitle": "所有團隊的指標",
+        "allTeamsMetricsSummary": "所有團隊的統計摘要",
+        "rankedTitle": "每個指標的頂級團隊",
+        "currentRankings": {
+            "title": "當前賽事排名",
+            "titleShort": "當前排名",
+            "wlt": " WLT",
+            "wltDesc": "輸贏平局",
+            "dq": " DQ",
+            "dqDesc": "取消資格",
+            "matches": "火柴",
+            "rp": "回波",
+            "rpDesc": "排名積分"
+        },
+        "matchDataFor": "為團隊 {number} 匹配球探數據：{nick}",
+        "matchDataForShort": "匹配球隊{team}的球探數據",
+        "matchDataShort": "匹配球探數據",
+        "matchClickAlliance": "單擊比賽編號以查看該比賽的聯盟數據。",
+        "teamHeader": "團隊 {number} - {nick}",
+        "teamRank": "目前排名 #{rank}\n{wins}-{losses}-{ties} 記錄，得分為 {rp}",
+        "teamFrom": "來自：{city}、{state}、{country}",
+        "teamDataYear": "今年團隊 {team} 的所有數據",
+        "teamIntel": {
+            "title": "英特爾：團隊{團隊}",
+            "titleHistory": "英特爾歷史：團隊 {team}",
+            "show": "顯示{類型}",
+            "hide": "隱藏{type}",
+            "pitScouting": "坑偵察",
+            "statistics": "統計數據",
+            "previousMatches": "以前的比賽",
+            "yearStatistics": " {year}年的統計數據",
+            "yearPreviousMatches": " {year} 年的所有比賽"
+        },
+        "teamStats": "團隊 {team} 的統計數據",
+        "teamAllMatchData": "匹配所有球隊 {team} 比賽的球探數據",
+        "historicalTeamStats": "團隊 {team} 的歷史統計數據",
+        "allPreviousMatches": "所有之前的比賽",
+        "teamMatchIntel": {
+            "title": "英特爾：{matchType} {match} 團隊 {team}",
+            "header": "匹配#{match} - {alliance} 聯盟"
+        },
+        "noMatchScoutData": "沒有可用於球隊 {team} 的比賽球探數據用於比賽 {match}。",
+        "noMatchScoutData2": "本場比賽沒有球隊{team}的球探數據可用。",
+        "viewIntelPage": "查看該團隊的情報頁面",
+        "upcomingMatchMetrics": "即將到來的比賽的指標",
+        "intel": "英特爾：{type}",
+        "exportData": {
+            "noType": "沒有為導出指定（或無效）數據類型。",
+            "noData": "找不到類型“{type}”的數據。"
+        }
+    },
+    "errors": {
+        "teamMissing": "找不到團隊 {team} 的詳細信息。自從您創建球探任務以來，團隊列表是否發生了變化？",
+        "eventTeamsMissing": "找不到參加此活動的團隊列表。請讓您的組織經理更新當前團隊的列表。",
+        "specifyTeamKey": "請指定一個 team_key。",
+        "noTeam": "團隊 {team} 不存在或未參加此活動。",
+        "specifyMatchKey": "請指定一個匹配鍵。",
+        "noMatchFound": "找不到匹配項：{matchKey}",
+        "specifyTeamMatchKey": "請指定一個團隊匹配鍵。",
+        "specifyTeamCsv": "請指定以逗號分隔的團隊列表。",
+        "specifyMetricKey": "請指定一個指標鍵。"
+    },
+    "matchType": {
+        "qm": "匹配",
+        "qf": "四分之一決賽",
+        "sf": "半決賽",
+        "f": "最終的"
+    },
+    "tryAgainLater": "請稍後再試。",
+    "yes": "是的",
+    "no": "不"
+}

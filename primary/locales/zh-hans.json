@@ -1,1 +1,415 @@
-{}
+{
+    "index": {
+        "fulltitle": "Scoutradioz：FRC 侦察即服务",
+        "welcome": "欢迎来到童军电台",
+        "choice": "你是：",
+        "viewer": {
+            "choice": "想查看数据",
+            "intro": "Scoutradioz 使团队/组织能够在比赛中收集他们自己的定制情报。",
+            "action": "在下面选择一个组织，看看他们收集了哪些数据！"
+        },
+        "scouter": {
+            "choice": "登录侦察"
+        },
+        "info": {
+            "choice": "有兴趣了解 Scoutradioz 以及您的团队如何使用它",
+            "intro": "Scoutradioz 是一款由 The Gearheads 开发的 FRC 球探应用程序，它使团队和组织能够在比赛中**收集他们自己的、定制的情报**。",
+            "features": {
+                "intro": "Scoutradioz 最初创建于 2018 年，不断发展，现在在 Amazon Web Services 上运行。以下是 Scoutradioz 提供的一些功能列表：",
+                "modular": "**模块化和可配置** pit & match 侦察调查，因此您的组织可以准确选择您想要记录和显示的信息",
+                "automatic": "**自动**，个性化的维修站和比赛侦察任务",
+                "advanced": "**高级**报告和指标",
+                "management": "事件管理工具，例如审核比赛分配、交换球探进出以及管理成员列表",
+                "free": "当然，它是完全免费的！"
+            },
+            "github": "在 GitHub 上查看我们的代码和文档",
+            "discord": "加入我们的 Discord",
+            "partner": "申请成为抢先体验合作伙伴",
+            "first": "有关 *FIRST* 和 FRC 的更多信息"
+        },
+        "view": "看法",
+        "login": "登录"
+    },
+    "hello": {
+        "world": "你好世界！",
+        "name": "你好，{名字}！"
+    },
+    "selectOrg": "请选择一个组织。",
+    "error": {
+        "title": "错误信息}",
+        "report": {
+            "intro": "为了帮助我们修复此错误，请：",
+            "screenshot": "截取此错误消息的屏幕截图，",
+            "url": "单击页面顶部的“共享”，复制此页面的完整 URL，",
+            "send": "将屏幕截图发布到我们的 Discord 服务器或我们的 {github}GitHub 页面{/github}，包括相关信息，例如您点击了导致此错误的链接。"
+        },
+        "stack": "堆栈跟踪："
+    },
+    "layout": {
+        "untitled": "无标题页",
+        "share": "分享",
+        "menu": {
+            "main": "菜单",
+            "user": "{用户} - {组织}"
+        },
+        "footer": {
+            "copyright": "版权所有 {date} FIRST Team 102 和 Robotics Fund Inc.\n开源并获得 AGPLv3 许可。",
+            "tba": "由蓝色联盟提供支持。",
+            "frc": "我们很自豪能成为 FIRST 机器人竞赛的参与者。"
+        },
+        "nav": {
+            "home": "家",
+            "reports": {
+                "main": "信息和报告：[[{event}]]",
+                "teams": "团队",
+                "teamList": "{number}: {name}",
+                "teamStats": "球队数据",
+                "yearStats": "{year}的完整统计数据",
+                "export": {
+                    "main": "导出为 CSV",
+                    "match": "匹配球探数据：[[{event}]]",
+                    "pit": "场地侦察数据：[[{event}]]",
+                    "matchAll": "匹配球探数据：[[所有 {year}]]",
+                    "pitAll": "场地勘探数据：[[{year} 年]]"
+                }
+            },
+            "scouting": "侦察",
+            "manage": {
+                "main": "管理：[[{org}]]",
+                "members": {
+                    "main": "成员",
+                    "list": "会员名单",
+                    "passwords": "审核/重置会员密码"
+                },
+                "scouters": {
+                    "main": "童子军",
+                    "event": "童子军：[[{event}]]",
+                    "audit": "侦察审核",
+                    "assignments": "侦察任务",
+                    "swapmembers": "换入/换出比赛账户",
+                    "swappitassignments": "交换矿坑侦察任务",
+                    "present": "设置礼物"
+                },
+                "event": {
+                    "main": "事件数据",
+                    "event": "事件数据：[[{event}]]",
+                    "matches": "火柴",
+                    "allianceselection": "联盟选择数据",
+                    "getcurrentteams": "更新球队名单",
+                    "recalcderived": "重新计算衍生指标",
+                    "editteams": "编辑团队列表",
+                    "editmatchschedule": "修改比赛日程",
+                    "editmatchresults": "编辑比赛结果",
+                    "setcurrent": "设置当前事件"
+                }
+            },
+            "admin": "行政",
+            "user": {
+                "main": "用户：[[{用户}]]",
+                "fallback": "用户",
+                "login": "登录：[[{org}]]",
+                "logout": "登出",
+                "switchorg": "改变组织"
+            },
+            "help": "需要帮忙？检查我们的维基！"
+        }
+    },
+    "home": {
+        "title": "家",
+        "menu": "点击左上角的{menu}打开菜单",
+        "tournamentInfo": "赛事信息",
+        "teamInfo": "团队信息",
+        "teamNum": "团队 ＃",
+        "stats": "统计数据",
+        "userLogin": "用户登录",
+        "scoutingDashboard": "侦察仪表板",
+        "management": "管理",
+        "admin": "行政",
+        "specifyTeam": "您必须指定一个团队。"
+    },
+    "share": {
+        "changeOrg": "您正在查看 {org}。\n要更改您希望查看的组织，请单击菜单中的 *Org: {org}* 并选择 *Change Organization*。"
+    },
+    "user": {
+        "loginOrg": "登录到{组织}",
+        "orgpassword": "机构密码：",
+        "next": "下一个",
+        "name": "名称：",
+        "personalpassword": "个人密码：",
+        "createnew": "请创建一个新密码。",
+        "mustcreate": "您在您的组织中拥有提升的权限，因此您必须设置密码以确保其他人无法以您的身份登录。",
+        "currentpassword": "当前密码：",
+        "newpassword": "新密码：",
+        "newpassword2": "确认：",
+        "newpasswordmismatch": "新密码不匹配。",
+        "login": "登录",
+        "changepassword": "更改密码",
+        "blankpassword": "如果您还没有自己的密码，请留空。",
+        "selectorg": "请选择要登录的组织。",
+        "logoutbeforelogin": "请先注销，然后才能登录其他用户。",
+        "orgpasswordrequired": "请输入您所在组织的密码。要返回，请打开左上角的导航。",
+        "orgpasswordincorrect": "组织 {org} 的密码不正确。",
+        "resubmitlogin": "抱歉，请重新提交您的组织登录信息。",
+        "selectuser": "请选择一个用户。",
+        "nouserexists": "不存在这样的用户。",
+        "incorrectpassword": "密码错误。",
+        "incorrectpasswordcurrent": "当前密码不正确。",
+        "passwordalreadyexists": "密码已经存在。请提交您当前的密码。",
+        "newpasswordboth": "请填写两个密码表格。",
+        "newpasswordsuccess": "设置密码成功。",
+        "reportcolumns": {
+            "title": "选择报告列",
+            "saved": "已成功保存列首选项。",
+            "clearedorgdefaults": "已成功清除组织默认列。",
+            "intro": "如果选择“无”，报告页面将显示组织的默认列集。\n组织的默认列为**粗体**。\n如果选择“全部”或“部分”，报告页面将仅显示选定的列。",
+            "default": "默认",
+            "checkAll": "选择所有",
+            "uncheckAll": "取消所有",
+            "setOrgDefalts": "选中此项以设置组织默认值",
+            "save": "保存列选择",
+            "clearOrgDefaults": "清除组织默认值",
+            "clearOrgDefaultsConfirmation": "这样做将清除您组织的报告列默认值（对每个人，而不仅仅是您）。你确定吗？"
+        }
+    },
+    "scouting": {
+        "match": "比赛侦察",
+        "pit": "坑侦察",
+        "subheading": "{team} <span class=\"unimportant\">来自{city}，{state}</span>",
+        "pitHeading": "团队#{团队}",
+        "upload": {
+            "main": "上传主图",
+            "small": "上传小#{n}",
+            "preprocess": "预处理照片以节省移动数据？"
+        },
+        "matchHeading": "比赛#{match}，球队#{team}",
+        "dynamicScrolling": "启用动态滚动",
+        "submit": "提交",
+        "orgManagerActions": "组织经理行动：",
+        "clearData": "清除数据",
+        "clearDataConfirm": "如果您*确定*想要*永久删除*本场比赛的球探数据，请在下方输入您的密码。",
+        "invalidMatchKey": "无效的匹配键集。",
+        "invalidTeam": "团队 {team} 不存在。",
+        "invalidTeamKey": "团队密钥未定义或无效。",
+        "noDataSubmit": "没有数据发送到 {url}。",
+        "submitSuccess": "提交数据成功。",
+        "deleteSuccess": "删除数据成功。如果您希望在屏幕上重新提交数据，您将不会被重定向离开该页面。"
+    },
+    "notifications": {
+        "status": "匹配通知是此设备的 {status}。",
+        "enabled": "启用",
+        "disabled": "禁用",
+        "confirmEnable": "在此设备上启用匹配通知？",
+        "subscribing": "订阅推送通知â€¦",
+        "goneWrong": "可能出了什么问题。数据：",
+        "error": "发生错误：",
+        "disabling": "禁用推送通知â€¦",
+        "noPermission": "我们没有获得许可。",
+        "dbSaveFailed": "已收到订阅，但我们无法将其保存到我们的数据库中。",
+        "testPageTitle": "通知测试页面",
+        "invalidKey": "没有匹配 & 匹配团队密钥",
+        "invalidMatch": "未找到匹配项",
+        "content": {
+            "title": "{match} 即将开始",
+            "body": "您被分配到 {alliance} 联盟的团队 {team}。",
+            "ifFocused": "别忘了，{match} 即将开始！"
+        },
+        "actions": {
+            "scout": "球探比赛"
+        }
+    },
+    "dashboard": {
+        "titleUser": "{user} 的仪表板",
+        "group": "侦察组：{group}",
+        "pitScouting": "勘探任务",
+        "notPitAssigned": "没有分配到坑侦察",
+        "pitScoutingPartner": "合作伙伴的勘探任务",
+        "upcomingMatches": "即将到来的比赛被侦察",
+        "matchNumber": "匹配 {number}",
+        "unassigned": "未分配",
+        "unassignedOptions": "未分配侦察员的选项",
+        "oneOffPit": "一次性坑侦察",
+        "oneOffMatch": "一次性球探",
+        "assigned": "已分配",
+        "team": "团队",
+        "teamName": "队名",
+        "none": "没有任何",
+        "photo": "照片",
+        "loadTeamPhotos": "刷新团队照片"
+    },
+    "driveDashboard": {
+        "title": "驱动团队仪表板",
+        "noTeams": "没有找到参加本次锦标赛的球队。",
+        "noMatches": "本次锦标赛没有即将到来的比赛。",
+        "noMatchesTeam": "找不到团队 {team} 的匹配项。",
+        "viewFor": "查看 â€¦ 的仪表板",
+        "chooseTeam": "[选择团队]",
+        "viewOr": "或者",
+        "allTeams": "所有球队",
+        "selectedTeam": "入选团队",
+        "nextMatch": "下一场比赛：",
+        "nextMatchTeam": "{team} 队的下一场比赛：",
+        "relativeStrengths": "相对优势：",
+        "legendShowHide": "单击图例以隐藏/显示该团队",
+        "futureMatches": "未来比赛：",
+        "futureMatchesTeam": "{team} 队的未来比赛：",
+        "compareAlliance": "比较联盟"
+    },
+    "allianceselection": {
+        "title": "联盟选择",
+        "intro": "点击一个团队，然后点击空位 [2] 或 [3] 将其向上移动。\n当团队被选中加入联盟时，它们将在下表中显示为灰色。",
+        "preferred": "在选择联盟之前，您和您的团队领导可以在<a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">此页面</a 标记您喜欢的团队>。",
+        "undo": "撤消",
+        "allianceNumber": "联盟 {number}",
+        "showData": "显示团队数据",
+        "wontSave": "此页面不会被保存。",
+        "noPreviousState": "以前的状态未定义",
+        "noLastMove": "最后一步未定义",
+        "noAllianceAttribute": "找不到#{team} 的联盟属性",
+        "noTeamStateRankings": "无法从州排名 idx {i} 中找到球队",
+        "priority": "优先",
+        "priorityAbbr": "V",
+        "team": "团队",
+        "rank": "FRC排名"
+    },
+    "metrics": {
+        "raw": "原始数据",
+        "show": "展示：",
+        "AVG": "平均值",
+        "AVG1": "平均的",
+        "metricAVG": "公制（平均）",
+        "MAX": "最大值",
+        "MAX1": "最大限度",
+        "metricMAX": "公制（最大）",
+        "MIN1": "最低限度",
+        "VAR1": "方差",
+        "metric": "公制",
+        "insufficientData": "暂时数据不足，稍后再来！"
+    },
+    "alliance": {
+        "red": "红色联盟",
+        "redShort": "红色的",
+        "blue": "蓝色联盟",
+        "blueShort": "蓝色的"
+    },
+    "reports": {
+        "redWon": "红赢了",
+        "blueWon": "蓝赢了",
+        "redStats": "红色统计数据：{teams}",
+        "blueStats": "蓝色统计数据：{teams}",
+        "bothStats": "两个联盟的统计数据",
+        "tie": "领带",
+        "match": "{level} 匹配 {number}",
+        "scoutData": "侦察数据",
+        "firstData": "第一数据",
+        "score": "分数：",
+        "prediction": {
+            "winner": "{chance}% 机会 {alliance} 获胜",
+            "reports": "基于 {count} 份报告",
+            "scores": "预测分数：红色 {redA} Â± {redS}，蓝色 {blueA} Â± {blueS}",
+            "noData": "数据不足，无法做出预测。"
+        },
+        "teamClick": "单击该团队的英特尔团队编号",
+        "teamMatchClick": "点击队号查看比赛球探详情",
+        "metricClick": "单击一个指标以比较所有事件团队",
+        "headerClick": "单击列标题以按该列的信息对团队进行排序（再次单击可更改排序方向）",
+        "overall": "总排名事件数据",
+        "overallMatchClick": "点击比赛按钮查看联盟整体表现",
+        "compareAlliance": "比较联盟指标",
+        "compareAllianceMatch": "比较匹配 {match} 的联盟",
+        "compareAllianceClick": "单击一个联盟以查看比较的个人团队统计数据：",
+        "team": "团队",
+        "teamNumber": "团队{团队}",
+        "rank": "秩",
+        "rankNumber": "排名 {number}",
+        "allTeams": "所有团队",
+        "allianceStats": "联盟球队统计",
+        "allTeamMetrics": "所有团队指标",
+        "completedMatches": "完成的比赛",
+        "upcomingMatches": "即将到来的比赛",
+        "upcomingMatchesTeam": "{team} 即将到来的比赛",
+        "upcomingMatchesFor": "查看即将到来的比赛",
+        "noMatchesYet": "系统中没有匹配项。请稍后再试。",
+        "noPreviousMatchesYet": "还没有以前的比赛。",
+        "noMatchDataYet": "目前还没有关于这场比赛的数据。请稍后再试。",
+        "noRankingsYet": "系统中没有匹配项。",
+        "noPitDataYet": "还没有坑侦察数据。",
+        "noDataPlaceholder": "[没有数据]",
+        "matchData": "匹配#{match}的匹配数据",
+        "matchIntel": {
+            "title": "英特尔：匹配{匹配}",
+            "winner": "比赛 {match} - 获胜者：{alliance}",
+            "points": "{alliance}：{score} 分"
+        },
+        "metricIntel": "每个团队 **{metric}** 统计数据",
+        "allTeamMetricsTitle": "所有团队的指标",
+        "allTeamsMetricsSummary": "所有团队的统计摘要",
+        "rankedTitle": "每个指标的顶级团队",
+        "currentRankings": {
+            "title": "当前赛事排名",
+            "titleShort": "当前排名",
+            "wlt": "WLT",
+            "wltDesc": "输赢平局",
+            "dq": "DQ",
+            "dqDesc": "取消资格",
+            "matches": "火柴",
+            "rp": "回波",
+            "rpDesc": "排名积分"
+        },
+        "matchDataFor": "为团队 {number} 匹配球探数据：{nick}",
+        "matchDataForShort": "匹配球队{team}的球探数据",
+        "matchDataShort": "匹配球探数据",
+        "matchClickAlliance": "单击比赛编号以查看该比赛的联盟数据。",
+        "teamHeader": "团队 {number} - {nick}",
+        "teamRank": "目前排名 #{rank}\n{wins}-{losses}-{ties} 记录，得分为 {rp}",
+        "teamFrom": "来自：{city}、{state}、{country}",
+        "teamDataYear": "今年团队 {team} 的所有数据",
+        "teamIntel": {
+            "title": "英特尔：团队{团队}",
+            "titleHistory": "英特尔历史：团队 {team}",
+            "show": "显示{类型}",
+            "hide": "隐藏{type}",
+            "pitScouting": "坑侦察",
+            "statistics": "统计数据",
+            "previousMatches": "以前的比赛",
+            "yearStatistics": "{year}年的统计数据",
+            "yearPreviousMatches": "{year} 年的所有比赛"
+        },
+        "teamStats": "团队 {team} 的统计数据",
+        "teamAllMatchData": "匹配所有球队 {team} 比赛的球探数据",
+        "historicalTeamStats": "团队 {team} 的历史统计数据",
+        "allPreviousMatches": "所有之前的比赛",
+        "teamMatchIntel": {
+            "title": "英特尔：{matchType} {match} 团队 {team}",
+            "header": "匹配#{match} - {alliance} 联盟"
+        },
+        "noMatchScoutData": "没有可用于球队 {team} 的比赛球探数据用于比赛 {match}。",
+        "noMatchScoutData2": "本场比赛没有球队{team}的球探数据可用。",
+        "viewIntelPage": "查看该团队的情报页面",
+        "upcomingMatchMetrics": "即将到来的比赛的指标",
+        "intel": "英特尔：{type}",
+        "exportData": {
+            "noType": "没有为导出指定（或无效）数据类型。",
+            "noData": "找不到类型“{type}”的数据。"
+        }
+    },
+    "errors": {
+        "teamMissing": "找不到团队 {team} 的详细信息。自从您创建球探任务以来，团队列表是否发生了变化？",
+        "eventTeamsMissing": "找不到参加此活动的团队列表。请让您的组织经理更新当前团队的列表。",
+        "specifyTeamKey": "请指定一个 team_key。",
+        "noTeam": "团队 {team} 不存在或未参加此活动。",
+        "specifyMatchKey": "请指定一个匹配键。",
+        "noMatchFound": "找不到匹配项：{matchKey}",
+        "specifyTeamMatchKey": "请指定一个团队匹配键。",
+        "specifyTeamCsv": "请指定以逗号分隔的团队列表。",
+        "specifyMetricKey": "请指定一个指标键。"
+    },
+    "matchType": {
+        "qm": "匹配",
+        "qf": "四分之一决赛",
+        "sf": "半决赛",
+        "f": "最终的"
+    },
+    "tryAgainLater": "请稍后再试。",
+    "yes": "是的",
+    "no": "不"
+}
