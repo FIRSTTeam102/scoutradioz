@@ -1,415 +1,415 @@
 {
-    "index": {
-        "fulltitle": "Scoutradioz: FRC Scouting as a Service",
-        "welcome": "ברוכים הבאים ל-Scoutradioz",
-        "choice": "האם אתה:",
-        "viewer": {
-            "choice": "מחפש להציג נתונים",
-            "intro": "Scoutradioz מאפשרת לצוותים/ארגונים לאסוף מידע מותאם אישית משלהם בתחרויות.",
-            "action": "בחר ארגון למטה כדי לראות אילו נתונים הם אספו!"
-        },
-        "scouter": {
-            "choice": "מתחבר לסקאוט"
-        },
-        "info": {
-            "choice": "מעוניין ללמוד על Scoutradioz וכיצד הצוות שלך יכול להשתמש בו",
-            "intro": "Scoutradioz היא אפליקציית צופי FRC שפותחה על ידי The Gearheads המאפשרת לצוותים ולארגונים **לאסוף מידע מותאם אישית משלהם בתחרויות**.",
-            "features": {
-                "intro": "Scoutradioz, שנוצרה לראשונה ב-2018, המשיכה להתפתח והיא פועלת כעת בשירותי האינטרנט של אמזון. הנה רשימה של כמה מהתכונות ש-Scoutradioz מציעה:",
-                "modular": "**מודולרי וניתן להגדרה** סקרי סקאוטינג pit & match, כך שהארגון שלך יכול לבחור בדיוק איזה מידע אתה רוצה להקליט ולהראות",
-                "automatic": "**אוטומטי**, מטלות צפיית פיט והתאמה אישית",
-                "advanced": "דוחות ומדדים **מתקדמים**",
-                "management": "כלים לניהול אירועים כגון ביקורת מטלות התאמה, החלפת צופים פנימה והחוצה וניהול רשימת חברים",
-                "free": "וכמובן, זה לגמרי בחינם!"
-            },
-            "github": "ראה את הקוד והתיעוד שלנו ב-GitHub",
-            "discord": "הצטרפו לדיסקורד שלנו",
-            "partner": "הגש בקשה להיות שותף בגישה מוקדמת",
-            "first": "עוד על *FIRST* ו-FRC"
-        },
-        "view": "נוף",
-        "login": "התחברות"
-    },
-    "hello": {
-        "world": "שלום עולם!",
-        "name": "שלום, {שם}!"
-    },
-    "selectOrg": "אנא בחר ארגון.",
-    "error": {
-        "title": "הודעת שגיאה}",
-        "report": {
-            "intro": "כדי לעזור לנו לתקן שגיאה זו, בבקשה:",
-            "screenshot": "צלם צילום מסך של הודעת השגיאה הזו,",
-            "url": "העתק את כתובת האתר המלאה של דף זה על ידי לחיצה על \"שתף\" בראש העמוד,",
-            "send": "פרסם את צילום המסך בשרת Discord שלנו או ב{github}דף GitHub{/github} שלנו, כולל מידע רלוונטי, כגון הקישור שלחצתם כדי להגיע לשגיאה זו."
-        },
-        "stack": "עקבות מחסנית:"
-    },
-    "layout": {
-        "untitled": "עמוד ללא כותרת",
-        "share": "לַחֲלוֹק",
-        "menu": {
-            "main": "תַפרִיט",
-            "user": "{משתמש} - {org}"
-        },
-        "footer": {
-            "copyright": "זכויות יוצרים {date} FIRST Team 102 and Robotics Fund Inc.\nקוד פתוח וברישיון עם AGPLv3.",
-            "tba": "מופעל על ידי הברית הכחולה.",
-            "frc": "אנו גאים להיות משתתפים בתחרות רובוטיקה FIRST."
-        },
-        "nav": {
-            "home": "בית",
-            "reports": {
-                "main": "מידע ודוחות: [[{event}]]",
-                "teams": "צוותים",
-                "teamList": "{number}: {name}",
-                "teamStats": "סטטיסטיקה של הקבוצה",
-                "yearStats": "נתונים סטטיסטיים מלאים עבור {year}",
-                "export": {
-                    "main": "ייצוא ל-CSV",
-                    "match": "התאמה של נתוני צופים: [[{event}]]",
-                    "pit": "נתוני סיור בורות: [[{event}]]",
-                    "matchAll": "נתוני חיפוש התאמה: [[כל השנה}]]",
-                    "pitAll": "נתוני סיור בורות: [[כל השנה}]]"
-                }
-            },
-            "scouting": "צוֹפִיוּת",
-            "manage": {
-                "main": "נהל: [[{org}]]",
-                "members": {
-                    "main": "חברים",
-                    "list": "רשימת חברים",
-                    "passwords": "ביקורת/אפס סיסמאות חברים"
-                },
-                "scouters": {
-                    "main": "צופים",
-                    "event": "צופים: [[{event}]]",
-                    "audit": "ביקורת צופית",
-                    "assignments": "משימות צופיות",
-                    "swapmembers": "החלף נקודות התאמה לכניסה/יציאה",
-                    "swappitassignments": "החלפת משימות צופי בורות",
-                    "present": "הגדר מתנה"
-                },
-                "event": {
-                    "main": "נתוני אירועים",
-                    "event": "נתוני אירוע: [[{event}]]",
-                    "matches": "התאמות",
-                    "allianceselection": "נתוני בחירת ברית",
-                    "getcurrentteams": "עדכון רשימת הקבוצות",
-                    "recalcderived": "חישוב מחדש של מדדים נגזרים",
-                    "editteams": "ערוך רשימת צוותים",
-                    "editmatchschedule": "ערוך את לוח המשחקים",
-                    "editmatchresults": "ערוך תוצאות התאמה",
-                    "setcurrent": "הגדר את האירוע הנוכחי"
-                }
-            },
-            "admin": "מנהל מערכת",
-            "user": {
-                "main": "משתמש: [[{משתמש}]]",
-                "fallback": "מִשׁתַמֵשׁ",
-                "login": "התחבר: [[{org}]]",
-                "logout": "להתנתק",
-                "switchorg": "שנה ארגון"
-            },
-            "help": "זקוק לעזרה? בדוק את הוויקי שלנו!"
-        }
-    },
-    "home": {
-        "title": "בית",
-        "menu": "לחץ על {תפריט} בפינה השמאלית העליונה כדי לפתוח את התפריט",
-        "tournamentInfo": "מידע על הטורניר",
-        "teamInfo": "מידע על הצוות",
-        "teamNum": "צוות מס'",
-        "stats": "סטטיסטיקות",
-        "userLogin": "כניסת משתמש",
-        "scoutingDashboard": "לוח מחוונים לצופים",
-        "management": "הַנהָלָה",
-        "admin": "מנהל מערכת",
-        "specifyTeam": "עליך לציין צוות."
-    },
-    "share": {
-        "changeOrg": "אתה צופה ב-{org}.\nכדי לשנות את הארגון שברצונך להציג, לחץ על *Org: {org}* בתפריט ובחר *Change Organization*."
-    },
-    "user": {
-        "loginOrg": "התחבר אל {org}",
-        "orgpassword": "סיסמת ארגון:",
-        "next": "הַבָּא",
-        "name": "שֵׁם:",
-        "personalpassword": "סיסמה אישית:",
-        "createnew": "נא ליצור סיסמה חדשה.",
-        "mustcreate": "יש לך הרשאות גבוהות בארגון שלך, לכן עליך להגדיר סיסמה כדי להבטיח שאחרים לא יוכלו להיכנס כמוך.",
-        "currentpassword": "סיסמה נוכחית:",
-        "newpassword": "סיסמה חדשה:",
-        "newpassword2": "לְאַשֵׁר:",
-        "newpasswordmismatch": "סיסמאות חדשות אינן תואמות.",
-        "login": "התחברות",
-        "changepassword": "שנה סיסמא",
-        "blankpassword": "השאר ריק אם אין לך עדיין סיסמה משלך.",
-        "selectorg": "אנא בחר ארגון להתחבר אליו.",
-        "logoutbeforelogin": "אנא צא לפני שתוכל להיכנס למשתמש אחר.",
-        "orgpasswordrequired": "אנא הזן את הסיסמה של הארגון שלך. כדי לחזור אחורה, פתח את הניווט בצד שמאל למעלה.",
-        "orgpasswordincorrect": "סיסמה שגויה עבור הארגון {org}.",
-        "resubmitlogin": "מצטערים, אנא שלח מחדש את פרטי ההתחברות של הארגון שלך.",
-        "selectuser": "אנא בחר משתמש.",
-        "nouserexists": "לא קיים משתמש כזה.",
-        "incorrectpassword": "סיסמא לא נכונה.",
-        "incorrectpasswordcurrent": "סיסמה נוכחית שגויה.",
-        "passwordalreadyexists": "הסיסמה כבר קיימת. אנא שלח את הסיסמה הנוכחית שלך.",
-        "newpasswordboth": "אנא מלא את שני טפסי הסיסמאות.",
-        "newpasswordsuccess": "הגדר סיסמה בהצלחה.",
-        "reportcolumns": {
-            "title": "בחר עמודות דוח",
-            "saved": "העדפות העמודות נשמרו בהצלחה.",
-            "clearedorgdefaults": "עמודות ברירת המחדל של הארגון נמחקו בהצלחה.",
-            "intro": "אם לא נבחר, דפי הדוח יציגו קבוצת ברירת מחדל של עמודות עבור הארגון.\nעמודות ברירת המחדל של הארגון הן **מודגשות**.\nאם נבחרו כולם, או חלקם נבחרו, דפי הדוח יציגו רק את העמודות שנבחרו.",
-            "default": "בְּרִירַת מֶחדָל",
-            "checkAll": "סמן הכל",
-            "uncheckAll": "בטל את הסימון של הכל",
-            "setOrgDefalts": "סמן זאת כדי להגדיר את ברירת המחדל של הארגון",
-            "save": "שמור את בחירת העמודות",
-            "clearOrgDefaults": "נקה את ברירת המחדל של הארגון",
-            "clearOrgDefaultsConfirmation": "פעולה זו תנקה את ברירת המחדל של עמודת הדוחות של הארגון שלך (עבור כולם, לא רק לך). האם אתה בטוח?"
-        }
-    },
-    "scouting": {
-        "match": "התאמה בצופים",
-        "pit": "צופי בורות",
-        "subheading": "{team} <span class=\"unimportant\">מ-{city}, {state}</span>",
-        "pitHeading": "צוות מס' {צוות}",
-        "upload": {
-            "main": "העלה תמונה ראשית",
-            "small": "העלה #{n} קטן",
-            "preprocess": "האם לעבד תמונות מראש כדי לחסוך בנתונים ניידים?"
-        },
-        "matchHeading": "משחק #{match}, צוות #{team}",
-        "dynamicScrolling": "אפשר גלילה דינמית",
-        "submit": "שלח",
-        "orgManagerActions": "פעולות מנהל הארגון:",
-        "clearData": "נקה נתונים",
-        "clearDataConfirm": "אם אתה *בטוח* שברצונך *למחוק* לצמיתות את נתוני הסקאוטינג עבור המשחק הזה, הזן את הסיסמה שלך למטה.",
-        "invalidMatchKey": "הוגדר מפתח התאמה לא חוקי.",
-        "invalidTeam": "צוות {team} אינו קיים.",
-        "invalidTeamKey": "מפתח הצוות אינו מוגדר או אינו חוקי.",
-        "noDataSubmit": "לא נשלחו נתונים אל {url}.",
-        "submitSuccess": "הנתונים נשלחו בהצלחה.",
-        "deleteSuccess": "הנתונים נמחקו בהצלחה. לא תופנה מהדף, למקרה שתרצה לשלוח מחדש את הנתונים על המסך."
-    },
-    "notifications": {
-        "status": "התראות התאמה הן {status} עבור מכשיר זה.",
-        "enabled": "מופעל",
-        "disabled": "נָכֶה",
-        "confirmEnable": "להפעיל התראות התאמה במכשיר הזה?",
-        "subscribing": "נרשם כמנוי להתראות דחיפהâ€¦",
-        "goneWrong": "אולי משהו השתבש. נתונים:",
-        "error": "חלה שגיאה:",
-        "disabling": "השבתת התראות דחיפהâ€¦",
-        "noPermission": "לא קיבלנו רשות.",
-        "dbSaveFailed": "המנוי התקבל אך לא הצלחנו לשמור אותו במסד הנתונים שלנו.",
-        "testPageTitle": "דף בדיקת התראות",
-        "invalidKey": "אין מפתח צוות התאמה והתאמה",
-        "invalidMatch": "התאמה לא נמצאה",
-        "content": {
-            "title": "{match} יתחיל בקרוב",
-            "body": "אתה מוקצה לצוות {team} בברית {alliance}.",
-            "ifFocused": "אל תשכח, {match} עומד להתחיל!"
-        },
-        "actions": {
-            "scout": "משחק צופים"
-        }
-    },
-    "dashboard": {
-        "titleUser": "לוח מחוונים עבור {user}",
-        "group": "קבוצת צופים: {קבוצה}",
-        "pitScouting": "משימות צופי בורות",
-        "notPitAssigned": "לא מוקצה לצופית בורות",
-        "pitScoutingPartner": "משימות צופי בורות של פרטנר",
-        "upcomingMatches": "המשחקים הקרובים לסקר",
-        "matchNumber": "התאמה ל-{number}",
-        "unassigned": "לא הוקצה",
-        "unassignedOptions": "אפשרויות לצופים לא מוקצה",
-        "oneOffPit": "סיור בורות חד פעמי",
-        "oneOffMatch": "סקאוטינג במשחק חד פעמי",
-        "assigned": "שהוקצה",
-        "team": "קְבוּצָה",
-        "teamName": "שם קבוצה",
-        "none": "אף אחד",
-        "photo": "תמונה",
-        "loadTeamPhotos": "רענן עם תמונות צוות"
-    },
-    "driveDashboard": {
-        "title": "לוח המחוונים של צוות Drive",
-        "noTeams": "לא נמצאו קבוצות לטורניר זה.",
-        "noMatches": "אין משחקים קרובים לטורניר הזה.",
-        "noMatchesTeam": "לא נמצאו התאמות עבור הצוות {team}.",
-        "viewFor": "הצג את לוח המחוונים עבורâ€¦",
-        "chooseTeam": "[בחר צוות]",
-        "viewOr": "אוֹ",
-        "allTeams": "כל הקבוצות",
-        "selectedTeam": "צוות נבחר",
-        "nextMatch": "המשחק הבא:",
-        "nextMatchTeam": "המשחק הבא של הקבוצה {team}:",
-        "relativeStrengths": "חוזקות יחסיות:",
-        "legendShowHide": "לחץ על אגדה כדי להסתיר/להראות את הצוות",
-        "futureMatches": "משחקים עתידיים:",
-        "futureMatchesTeam": "משחקים עתידיים לקבוצה {team}:",
-        "compareAlliance": "השוו בריתות"
-    },
-    "allianceselection": {
-        "title": "בחירת ברית",
-        "intro": "הקש על צוות ולאחר מכן הקש על המשבצת הריקה [2] או [3] כדי להעלות אותם למעלה.\nככל שצוותים נבחרים לבריתות, הם יופיעו באפור בטבלה למטה.",
-        "preferred": "לפני בחירת ברית, אתה וראשי הצוות שלך יכולים לסמן את הצוותים המועדפים עליך ב<a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">דף זה</a >.",
-        "undo": "לבטל",
-        "allianceNumber": "ברית {number}",
-        "showData": "הצג נתוני צוות",
-        "wontSave": "דף זה לא יישמר.",
-        "noPreviousState": "מצב קודם לא מוגדר",
-        "noLastMove": "המהלך האחרון לא מוגדר",
-        "noAllianceAttribute": "לא ניתן למצוא את מאפיין הברית עבור #{team}",
-        "noTeamStateRankings": "לא ניתן היה למצוא צוות מדירוג המדינה idx {i}",
-        "priority": "עדיפות",
-        "priorityAbbr": "V",
-        "team": "קְבוּצָה",
-        "rank": "דירוג FRC"
-    },
-    "metrics": {
-        "raw": "נתונים גולמיים",
-        "show": "הופעה:",
-        "AVG": "ממוצעים",
-        "AVG1": "מְמוּצָע",
-        "metricAVG": "מדד (ממוצע)",
-        "MAX": "מקסימום",
-        "MAX1": "מַקסִימוּם",
-        "metricMAX": "מדד (מקסימום)",
-        "MIN1": "מִינִימוּם",
-        "VAR1": "שׁוֹנוּת",
-        "metric": "מֶטרִי",
-        "insufficientData": "אין מספיק נתונים בשלב זה, חזור מאוחר יותר!"
-    },
-    "alliance": {
-        "red": "ברית אדומה",
-        "redShort": "אָדוֹם",
-        "blue": "ברית כחולה",
-        "blueShort": "כָּחוֹל"
-    },
-    "reports": {
-        "redWon": "אדום ניצח",
-        "blueWon": "כחול ניצח",
-        "redStats": "סטטיסטיקות עבור אדום: {teams}",
-        "blueStats": "סטטיסטיקות עבור כחול: {teams}",
-        "bothStats": "נתונים סטטיסטיים עבור שתי הבריתות",
-        "tie": "עניבה",
-        "match": "{level} התאמה ל-{number}",
-        "scoutData": "נתוני הצופים",
-        "firstData": "נתונים ראשונים",
-        "score": "ציון:",
-        "prediction": {
-            "winner": "סיכוי של {chance}% ש-{alliance} ינצח",
-            "reports": "מבוסס על {count} דוחות בסך הכל",
-            "scores": "ציונים חזויים: אדום {redA} Â± {redS}, כחול {blueA} Â± {blueS}",
-            "noData": "אין מספיק נתונים כדי לבצע תחזית."
-        },
-        "teamClick": "לחץ על מספר צוות לקבלת מידע על הצוות",
-        "teamMatchClick": "לחץ על מספר הקבוצה לפרטי סקאוטינג במשחק",
-        "metricClick": "לחץ על מדד כדי להשוות את כל צוותי האירועים",
-        "headerClick": "לחץ על כותרת עמודה כדי למיין צוותים לפי המידע של אותה עמודה (לחץ שוב כדי לשנות את כיוון המיון)",
-        "overall": "נתוני אירועים מדורגים הכוללים",
-        "overallMatchClick": "לחץ על כפתור ההתאמה לביצועי הברית הכוללים",
-        "compareAlliance": "השווה מדדי ברית",
-        "compareAllianceMatch": "השוואת בריתות עבור התאמה {match}",
-        "compareAllianceClick": "לחץ על ברית כדי לראות נתונים סטטיסטיים השוואתיים של צוות אישי:",
-        "team": "קְבוּצָה",
-        "teamNumber": "צוות {צוות}",
-        "rank": "דַרגָה",
-        "rankNumber": "דירוג {number}",
-        "allTeams": "כל הקבוצות",
-        "allianceStats": "סטטיסטיקות של צוות הברית",
-        "allTeamMetrics": "כל מדדי הצוות",
-        "completedMatches": "התאמות שהושלמו",
-        "upcomingMatches": "משחקים קרובים",
-        "upcomingMatchesTeam": "משחקים קרובים עבור {team}",
-        "upcomingMatchesFor": "צפה במשחקים הקרובים עבור",
-        "noMatchesYet": "אין התאמות במערכת. בבקשה נסה שוב מאוחר יותר.",
-        "noPreviousMatchesYet": "אין עדיין משחקים קודמים.",
-        "noMatchDataYet": "עדיין אין נתונים זמינים עבור המשחק הזה. בבקשה נסה שוב מאוחר יותר.",
-        "noRankingsYet": "אין התאמות במערכת.",
-        "noPitDataYet": "עדיין אין נתונים על בדיקת בור.",
-        "noDataPlaceholder": "[אין מידע]",
-        "matchData": "התאמה של נתוני התאמה #{match}",
-        "matchIntel": {
-            "title": "אינטל: התאמה {match}",
-            "winner": "התאמה {match} - הזוכה: {alliance}",
-            "points": "{ברית}: {ציון} נקודות"
-        },
-        "metricIntel": "סטטיסטיקות **{metric}** לכל צוות",
-        "allTeamMetricsTitle": "מדדים לכל הקבוצות",
-        "allTeamsMetricsSummary": "סיכום סטטיסטי בכל הקבוצות",
-        "rankedTitle": "צוותים מובילים לכל מדד",
-        "currentRankings": {
-            "title": "דירוג האירועים הנוכחי",
-            "titleShort": "דירוגים נוכחיים",
-            "wlt": "WLT",
-            "wltDesc": "ניצחון-הפסד-תיקו",
-            "dq": "DQ",
-            "dqDesc": "פסילות",
-            "matches": "התאמות",
-            "rp": "RP",
-            "rpDesc": "דירוג נקודות"
-        },
-        "matchDataFor": "התאמת נתוני סקאוטינג עבור צוות {number}: {nick}",
-        "matchDataForShort": "התאמת נתוני סקאוטינג עבור צוות {team}",
-        "matchDataShort": "התאם נתוני צופים",
-        "matchClickAlliance": "לחץ על מספר התאמה כדי לראות נתוני ברית עבור אותו התאמה.",
-        "teamHeader": "צוות {number} - {nick}",
-        "teamRank": "כרגע מדורגת #{rank}\n{wins}-{losses}-{ties} שיא עם {rp} RP",
-        "teamFrom": "מ: {city}, {state}, {country}",
-        "teamDataYear": "כל הנתונים של הצוות {team} מהשנה הזו",
-        "teamIntel": {
-            "title": "אינטל: צוות {צוות}",
-            "titleHistory": "היסטוריית אינטל: צוות {צוות}",
-            "show": "הצג {סוג}",
-            "hide": "הסתר {סוג}",
-            "pitScouting": "צופי בורות",
-            "statistics": "סטָטִיסטִיקָה",
-            "previousMatches": "משחקים קודמים",
-            "yearStatistics": "נתונים סטטיסטיים על פני שנה {year}",
-            "yearPreviousMatches": "כל המשחקים מהשנה {שנה}"
-        },
-        "teamStats": "סטטיסטיקה עבור צוות {team}",
-        "teamAllMatchData": "נתוני סקאוטינג התאימו עבור כל משחקי הקבוצה {team}",
-        "historicalTeamStats": "נתונים סטטיסטיים היסטוריים עבור צוות {team}",
-        "allPreviousMatches": "כל המשחקים הקודמים",
-        "teamMatchIntel": {
-            "title": "אינטל: צוות {matchType} {match} {צוות}",
-            "header": "התאמה #{match} - ברית {alliance}"
-        },
-        "noMatchScoutData": "אין נתוני סקאוטינג זמינים עבור הקבוצה {team} עבור המשחק {match}.",
-        "noMatchScoutData2": "אין נתוני סקאוטינג זמינים עבור קבוצה {team} עבור משחק זה.",
-        "viewIntelPage": "הצג את דף המידע של הצוות הזה",
-        "upcomingMatchMetrics": "מדדים למשחק הקרוב",
-        "intel": "אינטל: {סוג}",
-        "exportData": {
-            "noType": "לא צוין סוג נתונים (או לא חוקי) לייצוא.",
-            "noData": "לא נמצאו נתונים עבור סוג '{type}'."
-        }
-    },
-    "errors": {
-        "teamMissing": "לא ניתן היה למצוא פרטים עבור הצוות {team}. האם רשימת הצוות השתנתה מאז שיצרת את משימות הסקאוטינג?",
-        "eventTeamsMissing": "לא ניתן למצוא רשימה של צוותים באירוע זה. אנא בקש ממנהל הארגון שלך לעדכן את רשימת הצוותים הנוכחיים.",
-        "specifyTeamKey": "נא לציין team_key אחד.",
-        "noTeam": "הצוות {team} אינו קיים או לא השתתף באירוע זה.",
-        "specifyMatchKey": "נא לציין מפתח התאמה אחד.",
-        "noMatchFound": "לא ניתן למצוא התאמה: {matchKey}",
-        "specifyTeamMatchKey": "נא לציין מפתח אחד למשחק קבוצה.",
-        "specifyTeamCsv": "נא לציין רשימה של צוותים מופרדים בפסיקים.",
-        "specifyMetricKey": "נא לציין מפתח מדד אחד."
-    },
-    "matchType": {
-        "qm": "התאמה",
-        "qf": "רבע גמר",
-        "sf": "חצי גמר",
-        "f": "סופי"
-    },
-    "tryAgainLater": "בבקשה נסה שוב מאוחר יותר.",
-    "yes": "כן",
-    "no": "לא"
+	"index": {
+		"fulltitle": "Scoutradioz: צופיות FRC כשירות",
+		"welcome": "ברוכים הבאים ל-Scoutradioz",
+		"choice": "האם אתה:",
+		"viewer": {
+			"choice": "מחפש להציג נתונים",
+			"intro": "Scoutradioz מאפשרת לצוותים/ארגונים לאסוף מידע מותאם אישית משלהם בתחרויות.",
+			"action": "בחר ארגון למטה כדי לראות אילו נתונים הם אספו!"
+		},
+		"scouter": {
+			"choice": "מתחבר לסקאוט"
+		},
+		"info": {
+			"choice": "מעוניין ללמוד על Scoutradioz וכיצד הצוות שלך יכול להשתמש בו",
+			"intro": "Scoutradioz היא אפליקציית צופי FRC שפותחה על ידי The Gearheads המאפשרת לצוותים ולארגונים **לאסוף מידע מותאם אישית משלהם בתחרויות**.",
+			"features": {
+				"intro": "Scoutradioz, שנוצרה לראשונה ב-2018, המשיכה להתפתח והיא פועלת כעת בשירותי האינטרנט של אמזון. הנה רשימה של כמה מהתכונות ש-Scoutradioz מציעה:",
+				"modular": "**מודולרי וניתן להגדרה** סקרי סקאוטינג pit & match, כך שהארגון שלך יכול לבחור בדיוק איזה מידע אתה רוצה להקליט ולהראות",
+				"automatic": "**אוטומטי**, מטלות צפיית פיט והתאמה אישית",
+				"advanced": "דוחות ומדדים **מתקדמים**",
+				"management": "כלים לניהול אירועים כגון ביקורת מטלות התאמה, החלפת צופים פנימה והחוצה וניהול רשימת חברים",
+				"free": "וכמובן, זה לגמרי בחינם!"
+			},
+			"github": "ראה את הקוד והתיעוד שלנו ב-GitHub",
+			"discord": "הצטרפו לדיסקורד שלנו",
+			"partner": "הגש בקשה להיות שותף בגישה מוקדמת",
+			"first": "עוד על *FIRST* ו-FRC"
+		},
+		"view": "נוף",
+		"login": "התחברות"
+	},
+	"hello": {
+		"world": "שלום עולם!",
+		"name": "שלום, {name}!"
+	},
+	"selectOrg": "אנא בחר ארגון.",
+	"error": {
+		"title": "שגיאה: {message}",
+		"report": {
+			"intro": "כדי לעזור לנו לתקן שגיאה זו, בבקשה:",
+			"screenshot": "צלם צילום מסך של הודעת השגיאה הזו,",
+			"url": "העתק את כתובת האתר המלאה של דף זה על ידי לחיצה על \"שתף\" בראש העמוד,",
+			"send": "פרסם את צילום המסך בשרת Discord שלנו או ב{github}דף GitHub{/github} שלנו, כולל מידע רלוונטי, כגון הקישור שלחצתם כדי להגיע לשגיאה זו."
+		},
+		"stack": "עקבות מחסנית:"
+	},
+	"layout": {
+		"untitled": "עמוד ללא כותרת",
+		"share": "לַחֲלוֹק",
+		"menu": {
+			"main": "תַפרִיט",
+			"user": "{user} - {org}"
+		},
+		"footer": {
+			"copyright": "זכויות יוצרים {date} FIRST Team 102 and Robotics Fund Inc.\nקוד פתוח וברישיון עם AGPLv3.",
+			"tba": "מופעל על ידי הברית הכחולה.",
+			"frc": "אנו גאים להיות משתתפים בתחרות רובוטיקה FIRST."
+		},
+		"nav": {
+			"home": "בית",
+			"reports": {
+				"main": "מידע ודוחות: [[{event}]]",
+				"teams": "צוותים",
+				"teamList": "{number}: {name}",
+				"teamStats": "סטטיסטיקה של הקבוצה",
+				"yearStats": "נתונים סטטיסטיים מלאים עבור {year}",
+				"export": {
+					"main": "ייצוא ל-CSV",
+					"match": "התאמה של נתוני צופים: [[{event}]]",
+					"pit": "נתוני סיור בורות: [[{event}]]",
+					"matchAll": "נתוני סקאוטינג תואמים: [[כל {year}]]",
+					"pitAll": "נתוני סיור בורות: [[כל {year}]]"
+				}
+			},
+			"scouting": "צוֹפִיוּת",
+			"manage": {
+				"main": "נהל: [[{org}]]",
+				"members": {
+					"main": "חברים",
+					"list": "רשימת חברים",
+					"passwords": "ביקורת/אפס סיסמאות חברים"
+				},
+				"scouters": {
+					"main": "צופים",
+					"event": "צופים: [[{event}]]",
+					"audit": "ביקורת צופית",
+					"assignments": "משימות צופיות",
+					"swapmembers": "החלף נקודות התאמה לכניסה/יציאה",
+					"swappitassignments": "החלפת משימות צופי בורות",
+					"present": "הגדר מתנה"
+				},
+				"event": {
+					"main": "נתוני אירועים",
+					"event": "נתוני אירוע: [[{event}]]",
+					"matches": "התאמות",
+					"allianceselection": "נתוני בחירת ברית",
+					"getcurrentteams": "עדכון רשימת הקבוצות",
+					"recalcderived": "חישוב מחדש של מדדים נגזרים",
+					"editteams": "ערוך רשימת צוותים",
+					"editmatchschedule": "ערוך את לוח המשחקים",
+					"editmatchresults": "ערוך תוצאות התאמה",
+					"setcurrent": "הגדר את האירוע הנוכחי"
+				}
+			},
+			"admin": "מנהל מערכת",
+			"user": {
+				"main": "משתמש: [[{user}]]",
+				"fallback": "מִשׁתַמֵשׁ",
+				"login": "התחבר: [[{org}]]",
+				"logout": "להתנתק",
+				"switchorg": "שנה ארגון"
+			},
+			"help": "זקוק לעזרה? בדוק את הוויקי שלנו!"
+		}
+	},
+	"home": {
+		"title": "בית",
+		"menu": "לחץ על {menu} בפינה השמאלית העליונה כדי לפתוח את התפריט",
+		"tournamentInfo": "מידע על הטורניר",
+		"teamInfo": "מידע על הצוות",
+		"teamNum": "צוות מס'",
+		"stats": "סטטיסטיקות",
+		"userLogin": "כניסת משתמש",
+		"scoutingDashboard": "לוח מחוונים לצופים",
+		"management": "הַנהָלָה",
+		"admin": "מנהל מערכת",
+		"specifyTeam": "עליך לציין צוות."
+	},
+	"share": {
+		"changeOrg": "אתה צופה ב-{org}.\nכדי לשנות את הארגון שברצונך להציג, לחץ על *Org: {org}* בתפריט ובחר *Change Organization*."
+	},
+	"user": {
+		"loginOrg": "התחבר אל {org}",
+		"orgpassword": "סיסמת ארגון:",
+		"next": "הַבָּא",
+		"name": "שֵׁם:",
+		"personalpassword": "סיסמה אישית:",
+		"createnew": "נא ליצור סיסמה חדשה.",
+		"mustcreate": "יש לך הרשאות גבוהות בארגון שלך, לכן עליך להגדיר סיסמה כדי להבטיח שאחרים לא יוכלו להיכנס כמוך.",
+		"currentpassword": "סיסמה נוכחית:",
+		"newpassword": "סיסמה חדשה:",
+		"newpassword2": "לְאַשֵׁר:",
+		"newpasswordmismatch": "סיסמאות חדשות אינן תואמות.",
+		"login": "התחברות",
+		"changepassword": "שנה סיסמא",
+		"blankpassword": "השאר ריק אם אין לך עדיין סיסמה משלך.",
+		"selectorg": "אנא בחר ארגון להתחבר אליו.",
+		"logoutbeforelogin": "אנא צא לפני שתוכל להיכנס למשתמש אחר.",
+		"orgpasswordrequired": "אנא הזן את הסיסמה של הארגון שלך. כדי לחזור אחורה, פתח את הניווט בצד שמאל למעלה.",
+		"orgpasswordincorrect": "סיסמה שגויה עבור הארגון {org}.",
+		"resubmitlogin": "מצטערים, אנא שלח מחדש את פרטי ההתחברות של הארגון שלך.",
+		"selectuser": "אנא בחר משתמש.",
+		"nouserexists": "לא קיים משתמש כזה.",
+		"incorrectpassword": "סיסמא לא נכונה.",
+		"incorrectpasswordcurrent": "סיסמה נוכחית שגויה.",
+		"passwordalreadyexists": "הסיסמה כבר קיימת. אנא שלח את הסיסמה הנוכחית שלך.",
+		"newpasswordboth": "אנא מלא את שני טפסי הסיסמאות.",
+		"newpasswordsuccess": "הגדר סיסמה בהצלחה.",
+		"reportcolumns": {
+			"title": "בחר עמודות דוח",
+			"saved": "העדפות העמודות נשמרו בהצלחה.",
+			"clearedorgdefaults": "עמודות ברירת המחדל של הארגון נמחקו בהצלחה.",
+			"intro": "אם לא נבחר, דפי הדוח יציגו קבוצת ברירת מחדל של עמודות עבור הארגון.\nעמודות ברירת המחדל של הארגון הן **מודגשות**.\nאם נבחרו כולם, או חלקם נבחרו, דפי הדוח יציגו רק את העמודות שנבחרו.",
+			"default": "בְּרִירַת מֶחדָל",
+			"checkAll": "סמן הכל",
+			"uncheckAll": "בטל את הסימון של הכל",
+			"setOrgDefalts": "סמן זאת כדי להגדיר את ברירת המחדל של הארגון",
+			"save": "שמור את בחירת העמודות",
+			"clearOrgDefaults": "נקה את ברירת המחדל של הארגון",
+			"clearOrgDefaultsConfirmation": "פעולה זו תנקה את ברירת המחדל של עמודת הדוחות של הארגון שלך (עבור כולם, לא רק לך). האם אתה בטוח?"
+		}
+	},
+	"scouting": {
+		"match": "התאמה בצופים",
+		"pit": "צופי בורות",
+		"subheading": "{team} <span class=\"unimportant\">מ-{city}, {state}</span>",
+		"pitHeading": "צוות #{team}",
+		"upload": {
+			"main": "העלה תמונה ראשית",
+			"small": "העלה #{n} קטן",
+			"preprocess": "האם לעבד תמונות מראש כדי לחסוך בנתונים ניידים?"
+		},
+		"matchHeading": "משחק #{match}, צוות #{team}",
+		"dynamicScrolling": "אפשר גלילה דינמית",
+		"submit": "שלח",
+		"orgManagerActions": "פעולות מנהל הארגון:",
+		"clearData": "נקה נתונים",
+		"clearDataConfirm": "אם אתה *בטוח* שברצונך *למחוק* לצמיתות את נתוני הסקאוטינג עבור המשחק הזה, הזן את הסיסמה שלך למטה.",
+		"invalidMatchKey": "הוגדר מפתח התאמה לא חוקי.",
+		"invalidTeam": "צוות {team} אינו קיים.",
+		"invalidTeamKey": "מפתח הצוות אינו מוגדר או אינו חוקי.",
+		"noDataSubmit": "לא נשלחו נתונים אל {url}.",
+		"submitSuccess": "הנתונים נשלחו בהצלחה.",
+		"deleteSuccess": "הנתונים נמחקו בהצלחה. לא תופנה מהדף, למקרה שתרצה לשלוח מחדש את הנתונים על המסך."
+	},
+	"notifications": {
+		"status": "התראות התאמה הן {status} עבור מכשיר זה.",
+		"enabled": "מופעל",
+		"disabled": "נָכֶה",
+		"confirmEnable": "להפעיל התראות התאמה במכשיר הזה?",
+		"subscribing": "נרשם כמנוי להתראות דחיפה…",
+		"goneWrong": "אולי משהו השתבש. נתונים:",
+		"error": "חלה שגיאה:",
+		"disabling": "משבית הודעות דחיפה…",
+		"noPermission": "לא קיבלנו רשות.",
+		"dbSaveFailed": "המנוי התקבל אך לא הצלחנו לשמור אותו במסד הנתונים שלנו.",
+		"testPageTitle": "דף בדיקת התראות",
+		"invalidKey": "אין מפתח צוות התאמה והתאמה",
+		"invalidMatch": "התאמה לא נמצאה",
+		"content": {
+			"title": "{match} יתחיל בקרוב",
+			"body": "אתה מוקצה לצוות {team} בברית {alliance}.",
+			"ifFocused": "אל תשכח, {match} עומד להתחיל!"
+		},
+		"actions": {
+			"scout": "משחק צופים"
+		}
+	},
+	"dashboard": {
+		"titleUser": "לוח מחוונים עבור {user}",
+		"group": "קבוצת צופים: {group}",
+		"pitScouting": "משימות צופי בורות",
+		"notPitAssigned": "לא מוקצה לצופית בורות",
+		"pitScoutingPartner": "משימות צופי בורות של פרטנר",
+		"upcomingMatches": "המשחקים הקרובים לסקר",
+		"matchNumber": "התאמה ל-{number}",
+		"unassigned": "לא הוקצה",
+		"unassignedOptions": "אפשרויות לצופים לא מוקצה",
+		"oneOffPit": "סיור בורות חד פעמי",
+		"oneOffMatch": "סקאוטינג במשחק חד פעמי",
+		"assigned": "שהוקצה",
+		"team": "קְבוּצָה",
+		"teamName": "שם קבוצה",
+		"none": "אף אחד",
+		"photo": "תמונה",
+		"loadTeamPhotos": "רענן עם תמונות צוות"
+	},
+	"driveDashboard": {
+		"title": "לוח המחוונים של צוות Drive",
+		"noTeams": "לא נמצאו קבוצות לטורניר זה.",
+		"noMatches": "אין משחקים קרובים לטורניר הזה.",
+		"noMatchesTeam": "לא נמצאו התאמות עבור הצוות {team}.",
+		"viewFor": "הצג את לוח המחוונים עבור…",
+		"chooseTeam": "[בחר צוות]",
+		"viewOr": "אוֹ",
+		"allTeams": "כל הקבוצות",
+		"selectedTeam": "צוות נבחר",
+		"nextMatch": "המשחק הבא:",
+		"nextMatchTeam": "המשחק הבא של הקבוצה {team}:",
+		"relativeStrengths": "חוזקות יחסיות:",
+		"legendShowHide": "לחץ על אגדה כדי להסתיר/להראות את הצוות",
+		"futureMatches": "משחקים עתידיים:",
+		"futureMatchesTeam": "משחקים עתידיים לקבוצה {team}:",
+		"compareAlliance": "השוו בריתות"
+	},
+	"allianceselection": {
+		"title": "בחירת ברית",
+		"intro": "הקש על צוות ולאחר מכן הקש על המשבצת הריקה [2] או [3] כדי להעלות אותם למעלה.\nככל שצוותים נבחרים לבריתות, הם יופיעו באפור בטבלה למטה.",
+		"preferred": "לפני בחירת ברית, אתה וראשי הצוות שלך יכולים לסמן את הצוותים המועדפים עליך ב<a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">דף זה</a >.",
+		"undo": "לבטל",
+		"allianceNumber": "ברית {number}",
+		"showData": "הצג נתוני צוות",
+		"wontSave": "דף זה לא יישמר.",
+		"noPreviousState": "מצב קודם לא מוגדר",
+		"noLastMove": "המהלך האחרון לא מוגדר",
+		"noAllianceAttribute": "לא ניתן למצוא את מאפיין הברית עבור #{team}",
+		"noTeamStateRankings": "לא ניתן היה למצוא צוות מדירוג המדינה idx {i}",
+		"priority": "עדיפות",
+		"priorityAbbr": "V",
+		"team": "קְבוּצָה",
+		"rank": "דירוג FRC"
+	},
+	"metrics": {
+		"raw": "נתונים גולמיים",
+		"show": "הופעה: ",
+		"AVG": "ממוצעים",
+		"AVG1": "מְמוּצָע",
+		"metricAVG": "מדד (ממוצע)",
+		"MAX": "מקסימום",
+		"MAX1": "מַקסִימוּם",
+		"metricMAX": "מדד (מקסימום)",
+		"MIN1": "מִינִימוּם",
+		"VAR1": "שׁוֹנוּת",
+		"metric": "מֶטרִי",
+		"insufficientData": "אין מספיק נתונים בשלב זה, חזור מאוחר יותר!"
+	},
+	"alliance": {
+		"red": "ברית אדומה",
+		"redShort": "אָדוֹם",
+		"blue": "ברית כחולה",
+		"blueShort": "כָּחוֹל"
+	},
+	"reports": {
+		"redWon": "אדום ניצח",
+		"blueWon": "כחול ניצח",
+		"redStats": "סטטיסטיקות עבור אדום: {teams}",
+		"blueStats": "סטטיסטיקות עבור כחול: {teams}",
+		"bothStats": "נתונים סטטיסטיים עבור שתי הבריתות",
+		"tie": "עניבה",
+		"match": "{level} התאמה ל-{number}",
+		"scoutData": "נתוני הצופים",
+		"firstData": "נתונים ראשונים",
+		"score": "ציון:",
+		"prediction": {
+			"winner": "סיכוי של {chance}% ש-{alliance} ינצח",
+			"reports": "מבוסס על {count} דוחות בסך הכל",
+			"scores": "ציונים חזויים: אדום {redA} Â± {redS}, כחול {blueA} Â± {blueS}",
+			"noData": "אין מספיק נתונים כדי לבצע תחזית."
+		},
+		"teamClick": "לחץ על מספר צוות לקבלת מידע על הצוות",
+		"teamMatchClick": "לחץ על מספר הקבוצה לפרטי סקאוטינג במשחק",
+		"metricClick": "לחץ על מדד כדי להשוות את כל צוותי האירועים",
+		"headerClick": "לחץ על כותרת עמודה כדי למיין צוותים לפי המידע של אותה עמודה (לחץ שוב כדי לשנות את כיוון המיון)",
+		"overall": "נתוני אירועים מדורגים הכוללים",
+		"overallMatchClick": "לחץ על כפתור ההתאמה לביצועי הברית הכוללים",
+		"compareAlliance": "השווה מדדי ברית",
+		"compareAllianceMatch": "השוואת בריתות עבור התאמה {match}",
+		"compareAllianceClick": "לחץ על ברית כדי לראות נתונים סטטיסטיים השוואתיים של צוות אישי:",
+		"team": "קְבוּצָה",
+		"teamNumber": "צוות {team}",
+		"rank": "דַרגָה",
+		"rankNumber": "דירוג {number}",
+		"allTeams": "כל הקבוצות",
+		"allianceStats": "סטטיסטיקות של צוות הברית",
+		"allTeamMetrics": "כל מדדי הצוות",
+		"completedMatches": "התאמות שהושלמו",
+		"upcomingMatches": "משחקים קרובים",
+		"upcomingMatchesTeam": "משחקים קרובים עבור {team}",
+		"upcomingMatchesFor": "צפה במשחקים הקרובים עבור ",
+		"noMatchesYet": "אין התאמות במערכת. בבקשה נסה שוב מאוחר יותר.",
+		"noPreviousMatchesYet": "אין עדיין משחקים קודמים.",
+		"noMatchDataYet": "עדיין אין נתונים זמינים עבור המשחק הזה. בבקשה נסה שוב מאוחר יותר.",
+		"noRankingsYet": "אין התאמות במערכת.",
+		"noPitDataYet": "עדיין אין נתונים על בדיקת בור.",
+		"noDataPlaceholder": "[אין מידע]",
+		"matchData": "התאמה של נתוני התאמה #{match}",
+		"matchIntel": {
+			"title": "אינטל: התאמה {match}",
+			"winner": "התאמה {match} - הזוכה: {alliance}",
+			"points": "{alliance}: {score} נקודות"
+		},
+		"metricIntel": "סטטיסטיקות **{metric}** לכל צוות",
+		"allTeamMetricsTitle": "מדדים לכל הקבוצות",
+		"allTeamsMetricsSummary": "סיכום סטטיסטי בכל הקבוצות",
+		"rankedTitle": "צוותים מובילים לכל מדד",
+		"currentRankings": {
+			"title": "דירוג האירועים הנוכחי",
+			"titleShort": "דירוגים נוכחיים",
+			"wlt": "WLT",
+			"wltDesc": "ניצחון-הפסד-תיקו",
+			"dq": "DQ",
+			"dqDesc": "פסילות",
+			"matches": "התאמות",
+			"rp": "RP",
+			"rpDesc": "דירוג נקודות"
+		},
+		"matchDataFor": "התאמת נתוני סקאוטינג עבור צוות {number}: {nick}",
+		"matchDataForShort": "התאמת נתוני סקאוטינג עבור צוות {team}",
+		"matchDataShort": "התאם נתוני צופים",
+		"matchClickAlliance": "לחץ על מספר התאמה כדי לראות נתוני ברית עבור אותו התאמה.",
+		"teamHeader": "צוות {number} - {nick}",
+		"teamRank": "כרגע מדורגת #{rank}\n{wins}-{losses}-{ties} שיא עם {rp} RP",
+		"teamFrom": "מ: {city}, {state}, {country}",
+		"teamDataYear": "כל הנתונים של הצוות {team} מהשנה הזו",
+		"teamIntel": {
+			"title": "אינטל: צוות {team}",
+			"titleHistory": "היסטוריית אינטל: צוות {team}",
+			"show": "הצג {type}",
+			"hide": "הסתר {type}",
+			"pitScouting": "צופי בורות",
+			"statistics": "סטָטִיסטִיקָה",
+			"previousMatches": "משחקים קודמים",
+			"yearStatistics": "נתונים סטטיסטיים על פני שנה {year}",
+			"yearPreviousMatches": "כל ההתאמות מהשנה {year}"
+		},
+		"teamStats": "סטטיסטיקה עבור צוות {team}",
+		"teamAllMatchData": "נתוני סקאוטינג התאימו עבור כל משחקי הקבוצה {team}",
+		"historicalTeamStats": "נתונים סטטיסטיים היסטוריים עבור צוות {team}",
+		"allPreviousMatches": "כל המשחקים הקודמים",
+		"teamMatchIntel": {
+			"title": "אינטל: צוות {matchType} {match} {team}",
+			"header": "התאמה #{match} - ברית {alliance}"
+		},
+		"noMatchScoutData": "אין נתוני סקאוטינג זמינים עבור הקבוצה {team} עבור המשחק {match}.",
+		"noMatchScoutData2": "אין נתוני סקאוטינג זמינים עבור קבוצה {team} עבור משחק זה.",
+		"viewIntelPage": "הצג את דף המידע של הצוות הזה",
+		"upcomingMatchMetrics": "מדדים למשחק הקרוב",
+		"intel": "אינטל: {type}",
+		"exportData": {
+			"noType": "לא צוין סוג נתונים (או לא חוקי) לייצוא.",
+			"noData": "לא נמצאו נתונים עבור סוג '{type}'."
+		}
+	},
+	"errors": {
+		"teamMissing": "לא ניתן היה למצוא פרטים עבור הצוות {team}. האם רשימת הצוות השתנתה מאז שיצרת את משימות הסקאוטינג?",
+		"eventTeamsMissing": "לא ניתן למצוא רשימה של צוותים באירוע זה. אנא בקש ממנהל הארגון שלך לעדכן את רשימת הצוותים הנוכחיים.",
+		"specifyTeamKey": "נא לציין team_key אחד.",
+		"noTeam": "הצוות {team} אינו קיים או לא השתתף באירוע זה.",
+		"specifyMatchKey": "נא לציין מפתח התאמה אחד.",
+		"noMatchFound": "לא ניתן למצוא התאמה: {matchKey}",
+		"specifyTeamMatchKey": "נא לציין מפתח אחד למשחק קבוצה.",
+		"specifyTeamCsv": "נא לציין רשימה של צוותים מופרדים בפסיקים.",
+		"specifyMetricKey": "נא לציין מפתח מדד אחד."
+	},
+	"matchType": {
+		"qm": "התאמה",
+		"qf": "רבע גמר",
+		"sf": "חצי גמר",
+		"f": "סופי"
+	},
+	"tryAgainLater": "בבקשה נסה שוב מאוחר יותר.",
+	"yes": "כן",
+	"no": "לא"
 }
