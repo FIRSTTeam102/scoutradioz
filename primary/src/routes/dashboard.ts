@@ -569,8 +569,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		});
 		
 		let sortedTeams: Array<{rank: number, team_key: TeamKey}> = [];
-		for(let i = 8; i < rankings.length; i++){
-			sortedTeams[i - 8] = {
+		for(let i = num_alliances; i < rankings.length; i++){
+			sortedTeams[i - num_alliances] = {
 				rank: rankings[i].rank,
 				team_key: rankings[i].team_key
 			};
