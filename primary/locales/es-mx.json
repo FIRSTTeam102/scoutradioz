@@ -49,8 +49,7 @@
 		"untitled": "Página sin título",
 		"share": "Comparte",
 		"menu": {
-			"main": "Menú",
-			"usuario": "{usuario} - {org}"
+			"main": "Menú"
 		},
 		"footer": {
 			"copyright": "Copyright {fecha} FIRST Team 102 y Robotics Fund Inc.\nCódigo abierto y con licencia AGPLv3.",
@@ -62,7 +61,6 @@
 			"reports": {
 				"main": "Información e informes: [[{event}]]",
 				"teams": "Equipos",
-				"teamsList": "{número}: {nombre}",
 				"teamStats": "Estadísticas del equipo",
 				"yearStats": "Estadísticas completas para {año}",
 				"export": {
@@ -78,7 +76,6 @@
 				"main": "Administrar: [[{org}]]",
 				"members": {
 					"main": "Miembros",
-					"lists": "Lista de miembros",
 					"passwords": "Auditorar/restablecer contraseñas de miembros"
 				},
 				"scouters": {
@@ -161,7 +158,7 @@
 			"title": "Elegir columnas de informe",
 			"saved": "Preferencias de columna guardadas con éxito.",
 			"clearedorgdefaults": "Se borraron correctamente las columnas predeterminadas de la organización.",
-			"intro": "Si se selecciona NINGUNA, las páginas del informe mostrarán un conjunto predeterminado de columnas para la organización.\nLas columnas predeterminadas de la organización están en **negrita**.\nSi se seleccionan TODAS o ALGUNAS, las páginas del informe mostrarán SÓLO las columnas seleccionadas." ,
+			"intro": "Si se selecciona NINGUNA, las páginas del informe mostrarán un conjunto predeterminado de columnas para la organización.\nLas columnas predeterminadas de la organización están en **negrita**.\nSi se seleccionan TODAS o ALGUNAS, las páginas del informe mostrarán SÓLO las columnas seleccionadas.",
 			"default": "Predeterminado",
 			"checkAll": "Marcar todo",
 			"uncheckAll": "Desmarcar todo",
@@ -229,7 +226,6 @@
 		"unassignedOptions": "Opciones para exploradores no asignados",
 		"oneOffPit": "Exploración de boxes única",
 		"oneOffMatch": "Exploración de partidos únicos",
-		"asignado": "Asignado",
 		"team": "Equipo",
 		"teamName": "Nombre del equipo",
 		"none": "Ninguno",
@@ -286,9 +282,7 @@
 		"insufficientData": "¡Datos insuficientes en este momento, vuelva más tarde!"
 	},
 	"aliance": {
-		"red": "Alianza roja",
 		"redShort": "Rojo",
-		"blue": "Alianza azul",
 		"blueShort": "Azul"
 	},
 	"reports": {
@@ -388,7 +382,6 @@
 		"upcomingMatchMetrics": "Métricas para el próximo partido",
 		"intel": "Intel: {tipo}",
 		"exportDate": {
-			"noType": "No se especificó ningún tipo de datos (o no es válido) para la exportación.",
 			"noData": "No se encontraron datos para el tipo '{type}'."
 		}
 	},
