@@ -86,7 +86,7 @@
 					"event": "Scouters: [[{event}]]",
 					"audit": "Scouting audit",
 					"assignments": "Scouting assignments",
-					"swapmembers": "Swap in/out match acouts",
+					"swapmembers": "Swap in/out match scouts",
 					"swappitassignments": "Swap pit scouting assignments",
 					"present": "Set present"
 				},

@@ -262,7 +262,7 @@ router.get('/', wrap(async (req, res) => {
 	let assignedTeams: PitScouting[] = await utilities.find('pitscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
-		'primary': thisUserName
+		'primary': thisUserName // ***pit***
 	}, {
 		sort: { 'team_key': 1 }
 	});
@@ -320,7 +320,7 @@ router.get('/', wrap(async (req, res) => {
 			'org_key': org_key, 
 			'event_key': eventKey,
 			$or:
-				[{'secondary': thisUserName},
+				[{'secondary': thisUserName}, // ***pit***
 					{'tertiary': thisUserName}]
 		}, {
 			sort: {'team_key': 1} 
@@ -621,7 +621,7 @@ router.get('/pits', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	let teamAssignments: PitScouting[] = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
+	let teamAssignments: PitScouting[] = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { }); // ***pit*** check view
 		
 	//sort teams list by number
 	teamAssignments.sort(function(a, b) {

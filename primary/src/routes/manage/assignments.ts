@@ -20,8 +20,8 @@ router.all('/*', wrap(async (req, res, next) => {
 
 /**
  * Admin page to control and assign pairs of students for scouting. TODO REVAMP
- * @url /manage/scoutingpairs/
- * @views /manage/scoutingpairs
+ * @url /manage/assignments/
+ * @views /manage/assignments/index
  */
 router.get('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'scoutingassignments(root)');
@@ -180,8 +180,6 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	const event_year = req.event.year;
 	
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
-	
-	console.log(req.body);
 	
 	const availableArray: ObjectId[] = []; // User IDs
 	logger.trace('*** Tagged as available:');
@@ -399,5 +397,213 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	// all done, go to the matches list
 	res.redirect('/dashboard/matches');
 }));
+
+
+router.get('/swapmatchscouters', wrap(async (req, res) => {
+	logger.addContext('funcName', 'swapmembers[get]');
+	
+	// for later querying by event_key
+	let eventKey = req.event.key;
+	let org_key = req._user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info('ENTER eventKey=' + eventKey + ',org_key=' + org_key);
+
+	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
+
+	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
+	let earliestTimestamp = 9999999999;
+	if (matchDocs && matchDocs[0]) {
+		let earliestMatch = matchDocs[0];
+		earliestTimestamp = earliestMatch.time;
+	}
+		
+	// Get the distinct list of scorers from the unresolved matches
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }});
+	logger.debug('distinct assigned_scorers: ' + JSON.stringify(scorers));
+	
+	// 2022-02-07 JL: sorting le scorers' names
+	scorers.sort((a, b) => a.name.localeCompare(b.name));
+
+	// Get list of all users for this org
+	let users = await utilities.find('users', {org_key: org_key, visible: true}, {sort:{ 'name': 1 }});
+	
+	// 2023-02-07 JL: added (assigned) to the end of names 
+	users.forEach(user => {
+		if (user.event_info.assigned === true) user.name += ' (assigned)';
+	});
+
+	// Go to a Pug to show two lists & a button to do the swap - form with button
+	res.render('./manage/assignments/swapmatchscouters', {
+		title: 'Swap Match Scouts',
+		scorers: scorers,
+		users: users
+	});
+}));
+
+router.post('/swapmatchscouters', wrap(async (req, res) => {
+	
+	let thisFuncName = 'scoutingpairs.swapmembers[post]: ';
+	
+	// for later querying by event_key
+	let event_key = req.event.key;
+	let org_key = req._user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
+	
+	// Extract 'from' & 'to' from req
+	let swapoutID = req.body.swapout;
+	let swapinID = req.body.swapin;
+	
+	if (!swapoutID || !swapinID) return res.redirect('?alert=Please select both users to swap.&type=error');
+	
+	logger.info(thisFuncName + 'swap out ' + swapinID + ', swap in ' + swapoutID);
+	
+	let swapout = await utilities.findOne('users', {_id: swapoutID});
+	let swapin = await utilities.findOne('users', {_id: swapinID});
+	
+	assert(swapout && swapin, new e.InternalDatabaseError('Could not find both users in database!')); // Make sure users are found in the db
+
+	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// matchCol.find({ event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+
+	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
+	let earliestTimestamp = 9999999999;
+	if (matchDocs && matchDocs[0]) {
+		let earliestMatch = matchDocs[0];
+		earliestTimestamp = earliestMatch.time;
+	}
+		
+	// Do the updateMany - change instances of swapout to swapin
+	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+	// 2023-02-07 JL: changing scouter name to ScouterRecord
+	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': new ObjectId(swapoutID), org_key, event_key, time: { $gte: earliestTimestamp } }, 
+		update:{ $set: { assigned_scorer: {
+			id: swapin._id,
+			name: swapin.name
+		}}}}}]);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+
+	res.redirect('/dashboard/matches');
+}));
+
+router.get('/swappitassignments', wrap(async (req, res) => {
+
+	logger.addContext('funcName', 'swappitassignments[get]');
+	logger.info('ENTER');
+	
+	// for later querying by event_key
+	let event_key = req.event.key;
+	let org_key = req._user.org_key;
+
+	// who is the scout we're querying (if specified)
+	let scoutId = req.query.scoutId;
+	
+	let doEveryone = req.query.all;
+	if (doEveryone == 'true') {
+		logger.debug('"All scouters" set to true; redirecting to get rid of the scoutId= and all= parameters');
+		return res.redirect('/manage/assignments/swappitassignments');
+	}
+
+	// Two sets of teams - one for each select control
+	let teams1: PitScouting[] = [];
+	let teams2: PitScouting[] = [];
+	if (scoutId) {
+		// find teams which have the specified scout in primary OR secondary OR tertiary
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
+		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, primary: {$not: new RegExp('^'+scoutId+'$')}, secondary: {$not: new RegExp('^'+scoutId+'$')}, tertiary: {$not: new RegExp('^'+scoutId+'$')} }, { });
+	}
+	else {
+		// just get two sets of all teams
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}}, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}}, { });
+	}
+	//sort teams lists by number
+	teams1.sort(function(a, b) {
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
+		return aNum - bNum;
+	});
+	teams2.sort(function(a, b) {
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
+		return aNum - bNum;
+	});
+	logger.debug('teams1.length=' + teams1.length);
+	logger.debug('teams2.length=' + teams2.length);
+
+	// get the list of assigned scouts
+	let pitScouts = await utilities.distinct('pitscouting', 'primary', {'org_key': org_key, 'event_key': event_key});
+	logger.debug('distinct pitScouts=' + JSON.stringify(pitScouts));
+
+	res.render('./manage/assignments/swappitassignments', {
+		title: 'Team Assignments',
+		teams1: teams1,
+		teams2: teams2,
+		pitScouts: pitScouts,
+		scoutId: scoutId
+	});	
+}));
+
+router.post('/swappitassignments', wrap(async (req, res) => {
+	logger.addContext('funcName', 'swappitassignments[post]');
+	
+	// for later querying by event_key
+	let event_key = req.event.key;
+	let org_key = req._user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info('ENTER org_key=' + org_key);
+	
+	let scoutId = req.body.scoutId || req.query.scoutId;
+	// Extract from req the two teams to be swapped
+	let team1 = req.body.team1;
+	let team2 = req.body.team2;
+	logger.info('team1=' + team1 + ',team2=' + team2 + ';scoutId=' + scoutId);
+	
+	if (!team1 || !team2) {
+		let redirect = req.getURLWithQueryParameters('/manage/assignments/swappitassignments', {
+			scoutId: scoutId,
+			alert: 'Please specify two teams to be swapped.',
+			type: 'bad'
+		});
+		return res.redirect(redirect);
+	}
+	
+	// create keys from the team values
+	let team_key1 = 'frc' + team1;
+	let team_key2 = 'frc' + team2;
+	// use a temporary value during the swapping process
+	let team_key2_temp = team_key2 + 'SWAP';
+
+	// updates
+	// set team1 record key to team2+SWAP
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key1 },
+		{ $set: { 'team_key': team_key2_temp } }
+	);
+	// set team2 record key to team1
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key2 },
+		{ $set: { 'team_key': team_key1 } }
+	);
+	// set team1 record key to team2+SWAP
+	await utilities.update(
+		'pitscouting',
+		{ 'org_key': org_key, 'event_key': event_key, 'team_key': team_key2_temp },
+		{ $set: { 'team_key': team_key2 } }
+	);
+
+	let redirect = req.getURLWithQueryParameters('/manage/assignments/swappitassignments', {scoutId: scoutId});
+	res.redirect(redirect);
+}));
+
 
 module.exports = router;

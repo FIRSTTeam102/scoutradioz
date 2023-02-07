@@ -317,10 +317,10 @@ router.get('/pit*', wrap(async (req, res) => {
 router.post('/pit/submit', wrap(async (req, res) => {
 	logger.addContext('funcName', 'pit/submit[post]');
 	logger.info('ENTER');
-	
+
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
-	
+
 	let pitData = req.body;
 	let teamKey = pitData.teamkey;
 	delete pitData.teamkey;
@@ -332,10 +332,20 @@ router.post('/pit/submit', wrap(async (req, res) => {
 
 	// TODO: Verify pit data against layout, to avoid malicious/bogus data inserted into db?
 
-	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	await utilities.update('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, { $set: { 'data' : pitData, 'actual_scouter': thisUserName, useragent: req.shortagent } });
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key,
+	await utilities.update(
+		'pitscouting',
+		{ org_key: org_key, event_key: event_key, team_key: teamKey },
+		{
+			$set: {
+				data: pitData,
+				actual_scouter: thisUserName, // ***pit***
+				useragent: req.shortagent,
+			},
+		}
+	);
 
-	return res.send({message: req.msg('scouting.submitSuccess'), status: 200});
+	return res.send({ message: req.msg('scouting.submitSuccess'), status: 200 });
 }));
 
 router.get('/', wrap(async (req, res) => {

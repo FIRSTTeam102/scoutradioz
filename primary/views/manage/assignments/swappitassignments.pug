@@ -6,7 +6,7 @@
 		manage/swappitassignments.js	
 		'/manage/swappitassignments'
 	//
-extends ../layout
+extends ../../layout
 block content
 	h2 Swap Pit Scouts
 	br 
@@ -18,6 +18,7 @@ block content
 					if !scoutId
 						option(selected value='') [Select a scouter]
 				each scout in pitScouts 
+					//- option(selected=())
 					if scoutId == scout 
 						option(selected value=scout)=scout
 					else 

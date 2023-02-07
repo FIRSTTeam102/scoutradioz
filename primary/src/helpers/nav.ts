@@ -217,15 +217,15 @@ class NavHelpers {
 						},
 						{
 							label: '!layout.nav.manage.scouters.assignments',
-							href: '/manage/scoutingpairs'
+							href: '/manage/assignments'
 						},
 						{
 							label: '!layout.nav.manage.scouters.swapmembers',
-							href: '/manage/scoutingpairs/swapmembers'
+							href: '/manage/assignments/swapmatchscouters'
 						},
 						{
 							label: '!layout.nav.manage.scouters.swappitassignments',
-							href: '/manage/scoutingpairs/swappitassignments'
+							href: '/manage/assignments/swappitassignments'
 						},
 						{
 							label: '!layout.nav.manage.scouters.present',
