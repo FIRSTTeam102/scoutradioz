@@ -47,11 +47,12 @@ block content
 			let idDict = {};
 			let idCount = 0;
 			for (var i = 0; i < jsonData.length; i++) {
-				// while we're iterating through, clear out extraneous stuff if needed
+				// since jsonData gets loaded back to the user, remove backend keys
 				delete jsonData[i]['_id'];
 				delete jsonData[i]['form_type'];
 				delete jsonData[i]['org_key'];
 				delete jsonData[i]['year'];
+				delete jsonData[i]['order'];
 
 				let thisType = jsonData[i]['type'];
 				if (thisType == null) { 
