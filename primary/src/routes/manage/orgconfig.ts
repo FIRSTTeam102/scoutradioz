@@ -183,13 +183,15 @@ router.post('/submitform', wrap(async (req, res) => {
 	logger.debug('form_type=' + form_type);
 
 	let formdata: Layout[] = JSON.parse(jsonString);
-	formdata.forEach( (element) => {
+	formdata.forEach((element, i) => {
 		// just in case the submission has '_id' attributes, remove them
 		delete element['_id'];
 		// write (or override existing) attributes
 		element.form_type = form_type;
 		element.org_key = org_key;
 		element.year = year;
+		// add order key to each object
+		element.order = i;
 	});
 	let updatedString = JSON.stringify(formdata);
 	logger.debug('updatedString=' + updatedString);
