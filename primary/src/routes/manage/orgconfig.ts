@@ -103,19 +103,19 @@ router.get('/editform', wrap(async (req, res) => {
 	else throw new e.UserError('Either "year" or "key" must be set.');
 	
 	// load form definition data from the database
-	let layoutarray: Layout[] = await utilities.find('layout', {org_key: org_key, year: year, form_type: form_type}, {sort: {'order': 1}});
-	// strip out _id, form_type, org_key, year
-	let updatedarray: LayoutEdit[] = [];
-	layoutarray.forEach( (element) => {
-		let newelement: LayoutEdit = element;
-		delete newelement['_id'];
-		delete newelement['form_type'];
-		delete newelement['org_key'];
-		delete newelement['year'];
-		updatedarray.push(newelement);
+	let layoutArray: Layout[] = await utilities.find('layout', {org_key: org_key, year: year, form_type: form_type}, {sort: {'order': 1}});
+	// strip out _id, form_type, org_key, year, order
+	let updatedArray = layoutArray.map((element) => {
+		let newElement: LayoutEdit = element;
+		delete newElement['_id'];
+		delete newElement['form_type'];
+		delete newElement['org_key'];
+		delete newElement['year'];
+		delete newElement['order'];
+		return newElement;
 	});
 	// create a string representation
-	let layout = JSON.stringify(updatedarray, null, 2);
+	let layout = JSON.stringify(updatedArray, null, 2);
 	//logger.debug(thisFuncName + 'layout=\n' + layout);
 
 	let existingFormData = new Map<string, string>();
@@ -183,13 +183,15 @@ router.post('/submitform', wrap(async (req, res) => {
 	logger.debug('form_type=' + form_type);
 
 	let formdata: Layout[] = JSON.parse(jsonString);
-	formdata.forEach( (element) => {
+	formdata.forEach((element, i) => {
 		// just in case the submission has '_id' attributes, remove them
 		delete element['_id'];
 		// write (or override existing) attributes
 		element.form_type = form_type;
 		element.org_key = org_key;
 		element.year = year;
+		// add order key to each object
+		element.order = i;
 	});
 	let updatedString = JSON.stringify(formdata);
 	logger.debug('updatedString=' + updatedString);
