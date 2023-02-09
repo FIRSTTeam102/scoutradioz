@@ -24,7 +24,14 @@ mixin classname(index, classname)
 			div(class="w3-col s3 w3-padding-small")
 				input(type="text" class="theme-input" name=`classes_${index}_classkey` value=classname.class_key)
 			div(class="w3-col s3 w3-padding-small")
-				input(type="number" class="theme-input" name=`classes_${index}_seniority` value=classname.seniority)
+				input(
+					type="number"
+					class="theme-input"
+					name=`classes_${index}_seniority`
+					min=0
+					max=1000
+					value=classname.seniority
+					)
 			div(class="w3-col s3 w3-padding-small")
 				select(class="theme-input" name=`classes_${index}_youth`)
 					if classname.youth == true
