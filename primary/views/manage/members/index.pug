@@ -82,7 +82,15 @@ block content
 											option(value=role.role_key)= role.label
 							//years
 							div(class="w3-col s6 m1 w3-padding-small")
-								input(type="number" value=member.org_info.years name="years" placeholder="Yrs. on team" class="w3-input theme-input w3-no-border theme-inline-padding")
+								input(
+										type="number"
+										value=member.org_info.years
+										name="years"
+										min=0
+										max=150
+										placeholder="Yrs. on team"
+										class="w3-input theme-input w3-no-border theme-inline-padding"
+									)
 			br 
 		hr
 		//new member
@@ -113,7 +121,14 @@ block content
 							option(value=role.role_key)= role.label
 				//years
 				div(class="w3-col s6 m1 w3-padding-small")
-					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="Yrs. on team")
+					input(
+						name="years" 
+						type="number" 
+						placeholder="Yrs. on team"
+						min=0
+						max=150
+						class="w3-input theme-input w3-no-border theme-inline-padding" 
+						)
 		h6
 			i If you create a Team Admin user, please make sure they log in and create a secure password for themselves. Otherwise, a student could log in as them.
 			i 
