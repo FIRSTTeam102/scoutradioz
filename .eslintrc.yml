@@ -15,7 +15,7 @@ globals:
   SharedArrayBuffer: readonly
   NotificationCard: writable
   Confirm: writable
-  Pa1swordPrompt: writable
+  PasswordPrompt: writable
   FormSubmission: writable
   $: readonly
   luxon: readonly
