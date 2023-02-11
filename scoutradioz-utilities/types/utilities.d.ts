@@ -6,11 +6,11 @@ import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz
 /**
  * Valid primitives for use in mongodb queries
  */
-type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
+declare type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
 /**
  * Valid type for the `_id` field in a mongodb query
  */
-type ValidID = ObjectId | string | FilterOps<ObjectId>;
+declare type ValidID = ObjectId | string | FilterOps<ObjectId>;
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
@@ -67,7 +67,7 @@ export interface FilterQuery {
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
  */
-export type FilterQueryTyped<T> = {
+export declare type FilterQueryTyped<T> = {
     _id?: ValidID;
     $or?: FilterQueryTyped<T>[];
     $and?: FilterQueryTyped<T>[];
