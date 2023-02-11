@@ -171,7 +171,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 			let text = agg.key.replace( /([A-Z])/g, ' $1' ); 
 			let label = (text.charAt(0).toUpperCase() + text.slice(1)).split(' ');
 			dataForChartJS.labels.push(label);
-			console.log(label, agg);
+			logger.trace(label, agg);
 		}
 	}
 	
@@ -436,7 +436,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				team3: undefined
 			};
 		}
-		logger.debug(`alliances=${JSON.stringify(alliances)}`)
+		logger.debug(`alliances=${JSON.stringify(alliances)}`);
 			
 		let rankMap: Dict<Ranking> = {};
 		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
