@@ -1,15 +1,16 @@
 extends ../../layout
 block content
 	div.w3-auto
-		h4=title
-		h2 Team@Match Allocation v2.0
-		h6 Check all:
+		h2=title
+		hr
+		h4 Check/uncheck all members of a given subteam:
 		div(class=`responsive-grid rg-4`)
 			each subteam in subteams
 				div(class="w3-padding w3-left-align")
 					input(type="checkbox" class="w3-check subteamToggle" id=`toggleSubteam_${subteam.subteam_key}` data-pit-scout=(subteam.pit_scout) checked=(subteam.pit_scout) data-subteam-key=subteam.subteam_key)
 					label(for=`toggleSubteam_${subteam.subteam_key}`) &nbsp;#{subteam.label}
 		hr
+		h4 Available potential scouters
 		form(action="/manage/assignments/matches/generate" method="post")
 			div(class="responsive-grid rg-4 w3-left-align")
 				each member in available
@@ -28,6 +29,8 @@ block content
 					else
 						option(value=val class="w3-bar-item") #{val}
 			label &nbsp;matches
+			span(class="sprite sp-18 sp-help sp-inline w3-tooltip")
+				span(class="w3-tooltiptext") hello
 			p
 			button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
 	script.

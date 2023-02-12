@@ -2,11 +2,11 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities, { MongoDocument } from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import e, { assert } from '@firstteam102/http-errors';
-import type { Match, MatchScouting, OrgSubteam, PitScouting, ScouterRecord, ScoutingPair, Team, TeamKey, User, WithDbId} from '@firstteam102/scoutradioz-types';
-import { ObjectId } from 'mongodb';
+import type { Match, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, WithDbId} from '@firstteam102/scoutradioz-types';
+import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('assignments');
@@ -398,6 +398,194 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	res.redirect('/dashboard/matches');
 }));
 
+/* POST to Set scoutingPair Service */
+router.post('/setscoutingpair', wrap(async (req, res) => {
+	logger.addContext('funcName', 'setscoutingpair[post]');
+	
+	// Get our form values. These rely on the "name" attributes of form elements (e.g., named 'data' in the form)
+	const data = req.body.data;
+	const org_key = req._user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info('ENTER org_key=' + org_key);
+	
+	// The javascript Object was JSON.stringify() on the client end; we need to re-hydrate it with JSON.parse()
+	let selectedMembers: {
+		member1: string,
+		member2: string,
+		member3?: string
+	} = JSON.parse(data);
+	
+	assert(selectedMembers.member1 && selectedMembers.member2, 'Select at least two members.');
+	
+	logger.trace(`Selected members: ${data}`);
+	
+	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key});
+	let member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key});
+	let member3;
+	if (selectedMembers.member3)
+		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key});
+	
+	let idList = [member1._id, member2._id]; // for bulkWrite operation
+	let newScoutingPair: ScoutingPair = {
+		org_key,
+		member1: {
+			id: member1._id,
+			name: member1.name,
+		},
+		member2: {
+			id: member2._id,
+			name: member2.name,
+		},
+	};
+	if (member3) {
+		idList.push(member3._id);
+		newScoutingPair.member3 = {
+			id: member3._id,
+			name: member3.name
+		};
+	}
+	
+	logger.trace(`Inserting into scoutingpairs: ${JSON.stringify(newScoutingPair)}. idList=${JSON.stringify(idList)}`);
+	
+	await utilities.insert('scoutingpairs', newScoutingPair);
+	
+	let bulkWriteResult = await utilities.bulkWrite('users', [{updateMany: {
+		filter: {_id: {$in: idList}},
+		update: {
+			$set: {
+				'event_info.assigned': true
+			}
+		}
+	}}]);
+
+	logger.debug('bulkWriteResult=', bulkWriteResult);
+	
+	res.redirect('./');
+}));
+
+
+// ================================== SCOUTING PAIRS ==================================
+
+router.post('/deletescoutingpair', wrap(async (req, res) => {
+	logger.addContext('funcName', 'deletescoutingpair[post]');
+	
+	let thisPairId = req.body.data;
+	let org_key = req._user.org_key;
+
+	// Log message so we can see on the server side when we enter this
+	logger.info(`ENTER org_key=${org_key}, thisPairId=${thisPairId}`);
+	
+	// 2023-02-12 JL: Switching to findOne
+	let thisPair = await utilities.findOne('scoutingpairs', {_id: thisPairId, org_key});
+	assert(thisPair, 'Scouting pair could not be found!');
+		
+	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
+
+	logger.trace('thisPair=', thisPair);
+	
+	
+	let idList = [thisPair.member1.id, thisPair.member2.id];
+	if (thisPair.member3) idList.push(thisPair.member3.id);
+	
+	logger.trace(`idList=${idList}`);
+	
+	// 2023-02-12 JL: Switching query to scouter IDs
+	let writeResult = await utilities.bulkWrite('users', [{
+		updateMany: {
+			filter: {
+				_id: {$in: idList}
+			},
+			update: {
+				$set: {
+					'event_info.assigned': false
+				}
+			}
+		}
+	}]);
+	
+	logger.debug('writeResult=', writeResult);
+	
+	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
+	await utilities.remove('scoutingpairs', {org_key, '_id': thisPair._id});
+	res.redirect('./');	
+	
+	logger.trace('DONE');
+}));
+
+// Originally named /setallunassigned, but now also deletes all scouting pairs, for ease of use
+router.post('/clearscoutingpairs', wrap(async (req, res) => {
+	logger.addContext('funcName', 'clearscoutingpairs[post]');
+	logger.debug('ENTER');
+	
+	const org_key = req._user.org_key;
+	
+	logger.info(`Deleting all scouting pairs under ${org_key}`);
+	
+	let deleteResult = await utilities.remove('scoutingpairs', {org_key: org_key});
+	logger.debug(`writeResult=${JSON.stringify(deleteResult)}`);
+	
+	logger.info(`Setting everyone under ${org_key} to assigned=false`);
+	
+	let writeResult = await utilities.bulkWrite('users', [{updateMany: {
+		filter: {org_key: org_key},
+		update: {$set: {'event_info.assigned': false}}
+	}}]);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+	
+	return res.send({status: 200, message: 'Cleared scouting pairs successfully.'});
+}));
+
+
+router.post('/generateteamallocations', wrap(async (req, res) => {
+	
+	generateTeamAllocations(req, res);
+}));
+
+
+router.post('/clearpitallocations', wrap(async (req, res) => {
+	
+	let thisFuncName = 'scoutingpairs.generateteamallocations[post]: ';
+	let org_key = req._user.org_key;
+	let event_key = req.event.key;
+	let passCheckSuccess;
+		
+	if( !req.body.password || req.body.password == ''){
+		
+		return res.send({status: 401, message: 'No password entered.'});
+	}
+
+	// Log message so we can see on the server side when we enter this
+	logger.info(thisFuncName + 'ENTER');
+
+	// TODO: Use _id, not name, because names can be modified!
+	//	also, change to findOne instead of doing stuff with user[0] and whatever
+	let user = await utilities.find('users', { name: req._user.name, 'org_key': org_key });
+
+	if(!user[0]){
+		res.send({status: 500, message:'Passport error: no user found in db?'});
+		return logger.error('no user found? generateteamallocations');
+	}
+	
+	bcrypt.compare( req.body.password, user[0].password, async function(e, out){
+		if(e)
+			return logger.error(e);
+		if(out == true)
+			passCheckSuccess = true;
+		else
+			return res.send({status: 401, message: 'Password incorrect.'});
+		
+		if(passCheckSuccess){
+			let writeResult = await utilities.remove('pitscouting', {org_key, event_key});
+			logger.debug('writeResult=', writeResult);
+			return res.send({
+				status: 200, message: 'Cleared pit scouting data successfully.'
+			});
+		}
+	});
+}));
+
+// ================================== MATCH SCOUTING ==================================
 
 router.get('/swapmatchscouters', wrap(async (req, res) => {
 	logger.addContext('funcName', 'swapmembers[get]');
@@ -513,10 +701,12 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 	let teams1: PitScouting[] = [];
 	let teams2: PitScouting[] = [];
 	if (scoutId) {
+		assert(typeof scoutId === 'string', 'Invalid scout ID provided');
+		let scoutObjectId = new ObjectId(scoutId);
 		// find teams which have the specified scout in primary OR secondary OR tertiary
-		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ primary: scoutId}, {secondary: scoutId}, {tertiary: scoutId}]}, { });
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ 'primary.id': scoutObjectId}, {'secondary.id': scoutId}, {'tertiary.id': scoutId}]}, { });
 		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
-		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, primary: {$not: new RegExp('^'+scoutId+'$')}, secondary: {$not: new RegExp('^'+scoutId+'$')}, tertiary: {$not: new RegExp('^'+scoutId+'$')} }, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, 'primary.id': {$ne: scoutObjectId}, 'secondary.id': {$ne: scoutObjectId}, 'tertiary.id': {$ne: scoutObjectId} }, { });
 	}
 	else {
 		// just get two sets of all teams
@@ -605,5 +795,161 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 	res.redirect(redirect);
 }));
 
+async function generateTeamAllocations(req: express.Request, res: express.Response) {
+	logger.addContext('funcName', 'generateTEAMallocations');
+	
+	const event_key = req.event.key;
+	const year = req.event.year;
+	const org_key = req._user.org_key;
+	
+	// Pull 'active team key' from DB
+	let thisOrg = await utilities.findOne('orgs', {'org_key': org_key});
+	// Get a list of all the active team keys in this org. Usually only 1 long, sometimes multiple, should never be 0 long but accounting for it just in case.
+	let activeTeamKeys = (thisOrg.team_key ? [thisOrg.team_key] : thisOrg.team_keys) || [];
+	
+	//
+	// Get the current set of already-assigned pairs; make a map of {"id": {"prim", "seco", "tert"}}
+	//
+	const scoutingpairs = await utilities.find('scoutingpairs', {org_key});
+	
+	// Iterate through scoutingpairs; create {1st: 2nd: 3rd:} and add to 'dict' keying off 1st <1, or 1/2 2/1, or 1/2/3 2/3/1 3/1/2>
+	let primaryAndBackupMap: Dict<PitScoutingSet> = {};
+	let scoutingAssignedArray: ObjectId[] = [];
+	
+	for (let i in scoutingpairs) {
+		const thisPair = scoutingpairs[i];
+		
+		// 2023-02-12 JL: Scoutingpairs are now required to have at least 2 members each, so I removed the third case where there's no member2
+		assert(thisPair.member1 &&thisPair.member2, 'Each scouting pair must have at least 2 members!');
+		
+		// Group of 3
+		if (thisPair.member3) {
+			let set1: PitScoutingSet = {
+				primary: thisPair.member1,
+				secondary: thisPair.member2,
+				tertiary: thisPair.member3,
+			};
+			let set2: PitScoutingSet = {
+				primary: thisPair.member2,
+				secondary: thisPair.member3,
+				tertiary: thisPair.member1,
+			};
+			let set3: PitScoutingSet = {
+				primary: thisPair.member3,
+				secondary: thisPair.member1,
+				tertiary: thisPair.member2
+			};
+			// JL note: Can't use ObjectId as a dictionary key, so they have to be typecast to a string
+			primaryAndBackupMap[String(set1.primary.id)] = set1;
+			primaryAndBackupMap[String(set2.primary.id)] = set2;
+			primaryAndBackupMap[String(set3.primary.id)] = set3;
+			scoutingAssignedArray.push(set1.primary.id, set2.primary.id, set3.primary.id);
+		}
+		else {
+			let set1: PitScoutingSet = {
+				primary: thisPair.member1,
+				secondary: thisPair.member2,
+			};
+			let set2: PitScoutingSet = {
+				primary: thisPair.member2,
+				secondary: thisPair.member1,
+			};
+			primaryAndBackupMap[String(set1.primary.id)] = set1;
+			primaryAndBackupMap[String(set2.primary.id)] = set2;
+			scoutingAssignedArray.push(set1.primary.id, set2.primary.id);
+		}
+	}
+	
+	//
+	// Read all present members, ordered by 'seniority' ~ have an array ordered by seniority
+	//
+	const teamMembers = await utilities.find('users',
+		{_id: {$in: scoutingAssignedArray}, org_key},
+		{sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, name: 1}}
+	);
+	
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	// 2023-02-12 JL: Switching to req.teams
+	assert(req.teams, 'List of teams not defined! Make sure to click "Update current teams"');
+	const teamArray = req.teams;
+	
+	// 2023-02-12 JL: Added a query to get existing scouting data on a per-team basis
+	const existingScoutingData = await utilities.find('pitscouting', {event_key, org_key, data: {$ne: undefined}});
+	
+	//
+	// Cycle through teams, adding 1st 2nd 3rd to each based on array of 1st2nd3rds
+	//
+	let teamAssignments: PitScouting[] = [];
+	// 2023-02-12 JL: Removed unused teamassignmentsbyTeam
+	let assigneePointer = 0;
+	for (let i in teamArray) {
+		const thisTbaTeam = teamArray[i];
+		let thisTeammember = teamMembers[assigneePointer];
+		let thisTeammemberId = String(thisTeammember._id);
+		let thisPrimaryAndBackup = primaryAndBackupMap[thisTeammemberId];
+		logger.trace(`i=${i}, assigneePointer=${assigneePointer}, team=${thisTbaTeam.key}, thisTeamMember=${thisTeammember.name}`);
+		logger.trace('thisPrimaryAndBackup', thisPrimaryAndBackup);
+		
+		const team_key = thisTbaTeam.key;
+		
+		let thisAssignment: PitScouting = {
+			year,
+			event_key,
+			org_key,
+			team_key,
+		};
+		
+		// 2018-03-15, M.O'C: Skip assigning if this teams is the "active" team
+		// 2023-02-12 JL: Switched to supporting multiple "active" teams
+		if (!activeTeamKeys.some(key => key === team_key)) {
+			thisAssignment.primary = thisPrimaryAndBackup.primary;
+			thisAssignment.secondary = thisPrimaryAndBackup.secondary;
+			if (thisPrimaryAndBackup.tertiary)
+				thisAssignment.tertiary = thisPrimaryAndBackup.tertiary;
+			
+			// Update assignee pointer
+			assigneePointer++;
+			if (assigneePointer >= teamMembers.length)
+				assigneePointer = 0;
+		}
+		else {
+			logger.trace(`Skipping team ${team_key}`);
+		}
+		
+		// 2023-02-12 JL: Check for existing scouting data and insert it 
+		for (let thisEntry of existingScoutingData) {
+			if (thisEntry.team_key === team_key) {
+				logger.trace(`Appending data for team_key ${team_key}`);
+				thisAssignment.data = thisEntry.data;
+			}
+		}
+		
+		// Array for mass insert
+		teamAssignments.push(thisAssignment);
+	}
+	logger.trace('****** New/updated teamassignments:');
+	for (let assignment of teamAssignments) {
+		logger.trace(`team=${assignment.team_key}, primary=${assignment.primary?.name}, secondary=${assignment.secondary?.name}, tertiary=${assignment.tertiary?.name}`);
+	}
+	
+	// Sanity check for data deletion
+	let teamAssignmentsWithData = 0;
+	for (let assignment of teamAssignments) if (assignment.data) teamAssignmentsWithData++;
+	logger.info(`Generated team assignments with data inserted: ${teamAssignmentsWithData}. Previously found: ${existingScoutingData.length}`);
+	if (teamAssignmentsWithData !== existingScoutingData.length) {
+		logger.warn('Numbers do not match!!!');
+		logger.debug('Data dump:', existingScoutingData.map(item => {
+			return {key: item.team_key, data: item.data};
+		}));
+	}
+	
+	// Delete ALL the old elements first for the 'current' event
+	await utilities.remove('pitscouting', {org_key, event_key});
+	
+	// Insert the new data
+	await utilities.insert('pitscouting', teamAssignments);
+	
+	res.redirect('./?alert=Generated pit scouting assignments successfully.');
+}
 
 module.exports = router;

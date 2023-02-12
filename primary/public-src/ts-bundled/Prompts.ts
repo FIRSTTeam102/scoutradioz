@@ -293,6 +293,23 @@ class Confirm {
 	}
 }
 
+class Alert {
+	static show(text: string) {
+		assert(typeof text === 'string', 'Alert: text must be string');
+		return Prompt.show([{
+			type: 'label',
+			value: text,
+		}], [{
+			label: 'OK',
+			default: true,
+			timeout: 0,
+			action: function () {
+				this.resolve();
+			}
+		}]);
+	}
+}
+
 /**
  * Returns a set of PromptButtons for something like Yes/No, with the first one highlighted.
  */

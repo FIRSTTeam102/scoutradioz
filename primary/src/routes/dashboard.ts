@@ -262,7 +262,7 @@ router.get('/', wrap(async (req, res) => {
 	let assignedTeams: PitScouting[] = await utilities.find('pitscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
-		'primary': thisUserName // ***pit***
+		'primary.id': thisUserId
 	}, {
 		sort: { 'team_key': 1 }
 	});
@@ -296,9 +296,9 @@ router.get('/', wrap(async (req, res) => {
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
 	let pairsData: ScoutingPair[] = await utilities.find('scoutingpairs', { 'org_key': org_key, 
 		$or:
-			[{'member1': thisUserName},
-				{'member2': thisUserName},
-				{'member3': thisUserName}]
+			[{'member1.id': thisUserId},
+				{'member2.id': thisUserId},
+				{'member3.id': thisUserId}]
 	}, {});
 
 	let backupTeams: PitScouting[] = [];
@@ -308,11 +308,11 @@ router.get('/', wrap(async (req, res) => {
 		let thisPair = pairsData[0];
 		
 		//Sets up pair label
-		thisPairLabel = thisPair.member1;
+		thisPairLabel = thisPair.member1.name;
 		if (thisPair.member2)
-			thisPairLabel = thisPairLabel + ', ' + thisPair.member2;
+			thisPairLabel = thisPairLabel + ', ' + thisPair.member2.name;
 		if (thisPair.member3)
-			thisPairLabel = thisPairLabel + ', ' + thisPair.member3;
+			thisPairLabel = thisPairLabel + ', ' + thisPair.member3.name;
 		
 		//Get teams where they're backup (if any) from scout data collection
 		// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
@@ -320,8 +320,8 @@ router.get('/', wrap(async (req, res) => {
 			'org_key': org_key, 
 			'event_key': eventKey,
 			$or:
-				[{'secondary': thisUserName}, // ***pit***
-					{'tertiary': thisUserName}]
+				[{'secondary.id': thisUserId},
+					{'tertiary.id': thisUserId}]
 		}, {
 			sort: {'team_key': 1} 
 		});
@@ -621,7 +621,7 @@ router.get('/pits', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	let teamAssignments: PitScouting[] = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { }); // ***pit*** check view
+	let teamAssignments: PitScouting[] = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { }); 
 		
 	//sort teams list by number
 	teamAssignments.sort(function(a, b) {

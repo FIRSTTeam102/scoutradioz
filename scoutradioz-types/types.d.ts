@@ -323,19 +323,30 @@ export declare interface WebPushKeys extends DbDocument {
 declare type PasswordItem = TBAApiHeaders | FIRSTApiHeaders | TBAWebhookSecret | WebPushKeys;
 
 /**
- * Pit scouting data & assignments for a given team at a given event.
+ * Set of scouters for a pit scouting assignment. NOTE: primary/secondary are REQUIRED
+ * @collection pitscouting
+ * @interface PitScoutingSet
+ */
+export declare interface PitScoutingSet extends DbDocument {
+	primary: ScouterRecord;
+	secondary: ScouterRecord;
+	tertiary?: ScouterRecord;
+}
+
+/**
+ * Pit scouting data & assignments for a given team at a given event. NOTE: primary/secondary/tertiary all optional
  * @collection pitscouting
  * @interface PitScouting
  */
-export declare interface PitScouting extends DbDocument {
+export declare interface PitScouting {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
 	team_key: TeamKey;
-	primary: string;
-	secondary: string;
-	tertiary?: string;
-	actual_scouter?: string;
+	primary?: ScouterRecord;
+	secondary?: ScouterRecord;
+	tertiary?: ScouterRecord;
+	actual_scouter?: ScouterRecord;
 	data?: StringDict;
 	useragent?: UserAgent;
 }
@@ -394,9 +405,9 @@ export declare interface Role extends DbDocument {
  * @interface ScoutingPair
  */
 export declare interface ScoutingPair extends DbDocument {
-	member1: string;
-	member2: string;
-	member3?: string;
+	member1: ScouterRecord;
+	member2: ScouterRecord;
+	member3?: ScouterRecord;
 	org_key: OrgKey;
 }
 

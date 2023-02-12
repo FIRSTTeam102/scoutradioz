@@ -339,7 +339,10 @@ router.post('/pit/submit', wrap(async (req, res) => {
 		{
 			$set: {
 				data: pitData,
-				actual_scouter: thisUserName, // ***pit***
+				actual_scouter: {
+					id: thisUser._id,
+					name: thisUserName
+				},
 				useragent: req.shortagent,
 			},
 		}

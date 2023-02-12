@@ -8,65 +8,39 @@ extends ../../layout
 block content
 	table(class="w3-table")
 		each subteam in subteams
-			th(class="w3-center")=subteam.label
+			th(class="w3-center" style=`width: ${99.999 * 1/subteams.length}%;`)=subteam.label
 		tr
 			each subteam in subteams
 				td 
 					ul(class="w3-ul")
 						each member in subteam.members
 							li(class="w3-no-border")
-								button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member.name onclick=`toggle("${member.name}")`)= member.name
+								button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member._id onclick=`toggle("${member._id}")`)= member.name
 	form#setmemberpair(name="setmemberpair" method="post" action="/manage/assignments/setscoutingpair")
 		input#setmemberpairdata(type="hidden", name="data")
 	button(class="w3-btn w3-block theme-submit" onclick="submitPair()") Submit selected members as a new scouting group
 
 	hr 
 	if assigned.length > 0
-		h2 Scouting pairs
+		h4 Scouting pairs
 	ul(class="w3-ul w3-left-align")
 		each pair in assigned
 			li(class="w3-no-border")
-				- var selectedArray = [];
-				- var pairId;
-				- for (var key in pair) if (key != "_id" && key != "org_key") selectedArray.push(" "+pair[key]);
-				- for (var key in pair) if (key == "_id") pairId=pair[key];
-				- thisButtonLabel = selectedArray.toString();
-				button(onclick=`deletePair("${pairId}")` class="w3-btn theme-red") Delete pair
+				- var thisButtonLabel = pair.member1.name + ', ' + pair.member2.name;
+				- if (pair.member3) thisButtonLabel += ', ' + pair.member3.name;
+				button(onclick=`deletePair("${pair._id}")` class="w3-btn theme-red") Delete pair
 				|	#{thisButtonLabel}
 	button(onclick="clearScoutingPairs()" class="w3-btn theme-red") Clear all scouting pairs
 	form(method="post" action="/manage/assignments/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
 	hr 
-	div( onclick=`promptPass('*WARNING:* Erases existing PIT SCOUTING data for the current event.', '/manage/assignments/generateteamallocations', ${pitScoutingCount});`)
-		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams to PIT SCOUTING members
+	
+	form(action='/manage/assignments/generateteamallocations' method='post')
+		button(class="w3-btn theme-submit" type="submit") Assign teams to pit scouting pairs
 	br
-	div( onclick=`promptPass('*WARNING:* Erases existing MATCH SCOUTING data for the current event.', '/manage/assignments/generatematchallocations', ${matchScoutingCount});`)
-		button(class="w3-btn theme-submit" type="submit") (Re)Allocate teams@matches to MATCH SCORING members
 	br 
-	br 
-	div( onclick="promptPass('*WARNING:* Erases MATCH SCOUTING ASSIGNMENTS for the current event.', '/manage/assignments/clearmatchallocations');")
-		button(class="w3-btn theme-red strong" type="submit") Clear all MATCH SCORING assignments
-	hr 
-	h2 Team@Match Allocation v2.0
-	form(action="/manage/assignments/generatematchallocations2" method="post")
-		each member in available
-			div(class="w3-container" style="max-width:300px;margin:auto;")
-				div(class="w3-left w3-margin-left")
-					input(type="checkbox" class="w3-check" name=member.name id='chk_'+member.name)
-					label(class="w3-text-white" for='chk_'+member.name) &nbsp;#{member.name} (#{member.org_info.subteam_key})
-					br
-		- var defaultBlockSize = 5;
-		p
-		label Allocate in blocks of&nbsp;
-		select(class="theme-input theme-inline-padding w3-no-border" style="float: none" type="text" name="blockSize")
-			each val in [1, 2, 3, 4, 5, 6, 7, 8]
-				if( val == defaultBlockSize )
-					option(value=val class="w3-bar-item" selected) #{val}
-				else
-					option(value=val class="w3-bar-item") #{val}
-		label &nbsp;matches
-		p
-		button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
+	div( onclick=`promptPass('*WARNING:* Erases all pit scouting assignments and data for the current event.', '/manage/assignments/clearpitallocations', ${pitScoutingCount});`)
+		button(class="w3-btn theme-red strong" type="submit") Clear all pit scouting data
 	script.
 	
 		function clearScoutingPairs() {
