@@ -1,3 +1,4 @@
+# Backup of the serverless cli configuration
 service: 'scoutradioz-voyager'
 
 frameworkVersion: "3"

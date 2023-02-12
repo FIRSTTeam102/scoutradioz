@@ -1,17 +1,23 @@
 <script lang="ts">
-	import type { PageServerData } from './$types';
-	import Paper, { Title, Subtitle, Content } from '@smui/paper';
-
-	export let data: PageServerData;
+	import type { Team } from '@firstteam102/scoutradioz-types';
+	import { fetchJSON } from '$lib/fetcher';
+	import AwaitLoader from '$lib/AwaitLoader.svelte';
+	import Paper, { Title, Subtitle } from '@smui/paper';
+	
+	const pTeams = fetchJSON<Team[]>('/api/teams');
+	console.log(pTeams);
 </script>
 
 <div class="paper-container">
-	{#each data.teams as team}
+	<AwaitLoader dataToAwait={pTeams} let:data={teams}>
+		
+		{#each teams as team}
 		<Paper>
-			<Title>{team.team_number}</Title>
+			<Title>Team # {team.team_number}</Title>
 			<Subtitle>{team.nickname}</Subtitle>
 		</Paper>
-	{/each}
+		{/each}
+	</AwaitLoader>
 </div>
 
 <style lang="scss">
