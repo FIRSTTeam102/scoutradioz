@@ -171,7 +171,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 			let text = agg.key.replace( /([A-Z])/g, ' $1' ); 
 			let label = (text.charAt(0).toUpperCase() + text.slice(1)).split(' ');
 			dataForChartJS.labels.push(label);
-			console.log(label, agg);
+			logger.trace(label, agg);
 		}
 	}
 	
@@ -410,25 +410,33 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	let event_year = req.event.year;
 	let thisUser = req._user;
 	let org_key = thisUser.org_key;
-	
+
+	let numAlliancesStr = req.query.numAlliances || '8';
+	let num_alliances: number;
+	num_alliances = 8;
+	if (typeof numAlliancesStr === 'string') num_alliances = parseInt(numAlliancesStr);
+	logger.debug(`num_alliances: ${num_alliances}`);
+
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// 2019-11-11 JL: Put everything inside a try/catch block with error conditionals throwing
 	try {
 		
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 		//var rankings = await utilities.find("currentrankings", {}, {});
-		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
+		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, { sort: {'rank': 1} });
 		if(!rankings[0])
 			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
 		
+		// num_alliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
 		let alliances = [];
-		for(let i = 0; i < 8; i++){
+		for(let i = 0; i < num_alliances; i++){
 			alliances[i] = {
 				team1: rankings[i].team_key,
 				team2: undefined,
 				team3: undefined
 			};
 		}
+		logger.debug(`alliances=${JSON.stringify(alliances)}`);
 			
 		let rankMap: Dict<Ranking> = {};
 		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
@@ -561,8 +569,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		});
 		
 		let sortedTeams: Array<{rank: number, team_key: TeamKey}> = [];
-		for(let i = 8; i < rankings.length; i++){
-			sortedTeams[i - 8] = {
+		for(let i = num_alliances; i < rankings.length; i++){
+			sortedTeams[i - num_alliances] = {
 				rank: rankings[i].rank,
 				team_key: rankings[i].team_key
 			};
@@ -594,6 +602,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			title: res.msg('allianceselection.title'),
 			rankings: rankings,
 			alliances: alliances,
+			num_alliances: num_alliances,
 			aggdata: aggArray,
 			currentAggRanges: currentAggRanges,
 			layout: scoreLayout,

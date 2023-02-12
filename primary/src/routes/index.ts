@@ -190,7 +190,7 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 	
 	if(!defaultUser){
 		logger.debug('No default user');
-		return res.redirect(`/?alert=Error: No default user for organization ${org_key} exists in database.`);
+		return res.redirect(`/user/switchorg?alert=Error: No default user for organization ${org_key} exists in database.`);
 	}
 	
 	//gotta catch if the person pressed the back button first, then gotta log out before loggin in

@@ -1,0 +1,153 @@
+{
+	"index": {
+		"welcome": "Velkommen til Scoutradioz",
+		"choice": "Vil du:",
+		"viewer": {
+			"choice": "Utforske data",
+			"intro": "Soutradioz lar lag/orgnisasjoner samle sin egen info i konkurranser.",
+			"action": "Velg en organisasjon nedenfor for å finne ut hvilken data de har samlet."
+		},
+		"scouter": {
+			"choice": "Innlogging på scout"
+		},
+		"info": {
+			"choice": "Finne ut mer om Scoutradioz og hvordan ditt lag kan bruke det"
+		}
+	},
+	"layout": {
+		"nav": {
+			"reports": {
+				"teamList": "{number}: {name}",
+				"main": "Info og rapporter: [[{event}]]",
+				"teams": "Lag",
+				"yearStats": "Fullstendig statistikk for {year}",
+				"teamStats": "Lagstatistikk",
+				"export": {
+					"main": "Eksporter til CSV"
+				}
+			},
+			"manage": {
+				"main": "Håndter: [[{org}]]",
+				"members": {
+					"list": "Medlemsliste",
+					"main": "Medlemmer"
+				}
+			},
+			"user": {
+				"fallback": "Bruker",
+				"main": "Bruker: [[{user}]]",
+				"switchorg": "Bytt organisasjon",
+				"login": "Logg inn: [[{org}]]",
+				"logout": "Logg ut"
+			},
+			"admin": "Administrator"
+		}
+	},
+	"home": {
+		"specifyTeam": "Du må angi et lag.",
+		"teamNum": "Lag #",
+		"admin": "Administrator",
+		"title": "Hjem",
+		"management": "Håndtering",
+		"tournamentInfo": "Turneringsinfo",
+		"teamInfo": "Laginfo",
+		"stats": "Statistikk",
+		"userLogin": "Brukerinnlogging"
+	},
+	"user": {
+		"nouserexists": "Ingen slik bruker finnes.",
+		"newpasswordboth": "Fyll inn begge passordfeltene.",
+		"personalpassword": "Personlig passord:",
+		"login": "Logg inn",
+		"loginOrg": "Logg inn på {org}",
+		"orgpassword": "Organisasjonspassord:",
+		"name": "Navn:",
+		"next": "Neste",
+		"newpassword": "Nytt passord:",
+		"changepassword": "Endre passord",
+		"createnew": "Opprett et nytt passord.",
+		"currentpassword": "Nåværende passord:",
+		"newpassword2": "Bekreft:",
+		"incorrectpassword": "Feil passord.",
+		"reportcolumns": {
+			"saved": "Kolonneinnstillinger lagret.",
+			"uncheckAll": "Fravelg alle",
+			"title": "Velg rapportkolonner",
+			"default": "Forvalg",
+			"checkAll": "Velg alle"
+		},
+		"incorrectpasswordcurrent": "Feil nåværende passord.",
+		"passwordalreadyexists": "Passordet finnes allerede. Angi ditt nåværende passord.",
+		"newpasswordsuccess": "Passord satt."
+	},
+	"alliance": {
+		"red": "Rød allianse",
+		"blueShort": "Blå",
+		"redShort": "Rød",
+		"blue": "Blå allianse"
+	},
+	"driveDashboard": {
+		"viewOr": "eller",
+		"viewFor": "Vis oversikt for …",
+		"chooseTeam": "[Velg et lag]",
+		"allTeams": "Alle lag",
+		"selectedTeam": "Valgt lag"
+	},
+	"allianceselection": {
+		"allianceNumber": "Allianse {number}",
+		"team": "Lag",
+		"undo": "Angre",
+		"showData": "Vis lagdata",
+		"priority": "Prioritet"
+	},
+	"scouting": {
+		"clearData": "Tøm data",
+		"invalidTeam": "Det finnes ikke noe «{team}»-lag.",
+		"submit": "Send inn"
+	},
+	"dashboard": {
+		"none": "Ingen",
+		"teamName": "Lagnavn",
+		"team": "Lag",
+		"photo": "Bilde",
+		"loadTeamPhotos": "Oppdater med lagbilder"
+	},
+	"reports": {
+		"redStats": "Statistik for rød: {teams}",
+		"score": "Poengsum:",
+		"redWon": "Rød seiret",
+		"blueStats": "Statistik for blå: {teams}",
+		"tie": "Uavgjort",
+		"allTeams": "alle lag",
+		"blueWon": "Blå seiret",
+		"prediction": {
+			"reports": "Basert på {count} rapporter"
+		},
+		"teamIntel": {
+			"hide": "Skjul {type}",
+			"show": "Vis {type}",
+			"statistics": "statistikk",
+			"yearStatistics": "statistikk for året {year}"
+		},
+		"teamStats": "Statistikk for «{team}»-laget"
+	},
+	"no": "Nei",
+	"metrics": {
+		"AVG": "Gjennomsnitt",
+		"raw": "Rådata",
+		"show": "Vis: ",
+		"AVG1": "Gjennomsnitt"
+	},
+	"notifications": {
+		"content": {
+			"title": "{match} vil starte snart"
+		}
+	},
+	"matchType": {
+		"qf": "Kvartfinale",
+		"sf": "Semifinale",
+		"f": "Finale"
+	},
+	"yes": "Ja",
+	"tryAgainLater": "Prøv igjen senere."
+}

@@ -173,3 +173,24 @@ input:focus:not(.no-outline),select:focus:not(.no-outline){outline: 2px solid rg
 		width: 100%;
 	}
 }
+
+// Makes an input element's outline flash slowly.
+.animate-outline {
+	outline-width: 3px;
+	outline-style: solid;
+	outline-color: @text-primary;
+	animation-name: animate-outline;
+	animation-duration: 2s;
+	animation-timing-function: ease-in-out;
+	animation-direction: alternate;
+	animation-iteration-count: infinite;
+}
+
+@keyframes animate-outline {
+	from {
+		outline-color: fadeout(@text-primary, 100%);
+	}
+	to {
+		outline-color: @text-primary;
+	}
+}

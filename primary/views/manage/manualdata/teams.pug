@@ -40,7 +40,7 @@ block content
 	//-Table that is lazyloaded as it is filled
 	form(id="ManualInputTeams" action="/manage/manualdata/teams" method="post")
 		div(class="w3-section w3-auto" id="TeamsTable")
-			- for(var i = 0; i < teams.length; i++)
+			- for(var i = 0; i < teams?.length; i++)
 				- let team = teams[i];
 				- let row_number = i;
 				include templates/teaminput

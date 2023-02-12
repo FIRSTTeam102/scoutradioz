@@ -159,6 +159,30 @@ router.post('/updatemember', wrap(async (req, res) => {
 		});
 	}
 	
+	const thisOrg = thisUser.org;
+	
+	if (!class_key || !subteam_key) {
+		return res.send({
+			status: 400,
+			message: 'Please provide a subteam and a class.'
+		});
+	}
+	
+	// Check whether the specified class key exists in the org config
+	if (!thisOrg.config.members.classes.some((thisClass) => thisClass.class_key === class_key)) {
+		return res.send({
+			status: 500,
+			message: 'The provided class could not be found in your organization\'s configuration.'
+		});
+	}
+	
+	if (!thisOrg.config.members.subteams.some((thisSubteam) => thisSubteam.subteam_key === subteam_key)) {
+		return res.send({
+			status: 500,
+			message: 'The provided subteam could not be found in your organization\'s configuration.'
+		});
+	}
+	
 	// recalculate seniority
 	let seniority = years;
 	// sanity-check! use '0' if it's not already a parseable int
