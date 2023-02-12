@@ -279,7 +279,8 @@ export class Utilities {
 						this.leaveDbLock(); 
 					})
 					.catch(err => {
-						logger.error(JSON.stringify(err));
+						logger.error('(getDB)', JSON.stringify(err));
+						reject(err);
 					});
 			}
 			
@@ -309,8 +310,8 @@ export class Utilities {
 						// Resolve with old db (even if it's closed) (this shouldn't occur)
 						logger.error('(getDB) Error connecting');
 						
-						reject(err);
 						this.leaveDbLock();
+						reject(err);
 					});
 			}
 			else {
