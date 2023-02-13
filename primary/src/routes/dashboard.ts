@@ -259,13 +259,15 @@ router.get('/', wrap(async (req, res) => {
 
 	// Check to see if the logged in user is one of the scouting/scoring assignees
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	// 2023-02-13 JL: Sorting manually by team number in JS
 	let assignedTeams: PitScouting[] = await utilities.find('pitscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
 		'primary.id': thisUserId
-	}, {
-		sort: { 'team_key': 1 }
 	});
+	
+	const teamKeySort = (a: PitScouting, b: PitScouting) => parseInt(a.team_key.substring(3)) - parseInt(b.team_key.substring(3));
+	assignedTeams.sort(teamKeySort);
 
 	// 2020-03-07, M.O'C: Allowing for scouts assigned to matches but NOT to pits
 	if (assignedTeams.length == 0) {
@@ -316,15 +318,16 @@ router.get('/', wrap(async (req, res) => {
 		
 		//Get teams where they're backup (if any) from scout data collection
 		// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+		// 2023-02-13 JL: Sorting manually by team number in JS
 		backupTeams = await utilities.find('pitscouting', {
 			'org_key': org_key, 
 			'event_key': eventKey,
 			$or:
 				[{'secondary.id': thisUserId},
 					{'tertiary.id': thisUserId}]
-		}, {
-			sort: {'team_key': 1} 
 		});
+		
+		backupTeams.sort(teamKeySort);
 			
 		//logs backup teams to console
 		for (let backupIdx = 0; backupIdx < backupTeams.length; backupIdx++)

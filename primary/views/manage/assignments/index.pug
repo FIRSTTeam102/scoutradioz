@@ -1,11 +1,11 @@
 //-
-	Org mgmt page to create/delete pit scouting pairs, 
-	and create match scouting assignments.
-		manage/scoutingpairs.js	
+	Org mgmt page to create/delete pit scouting pairs.
+		manage/assignments.ts	
 		'/manage/assignments'
 	//
 extends ../../layout
 block content
+	h2=title
 	table(class="w3-table")
 		each subteam in subteams
 			th(class="w3-center" style=`width: ${99.999 * 1/subteams.length}%;`)=subteam.label

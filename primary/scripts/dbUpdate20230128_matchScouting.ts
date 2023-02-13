@@ -55,7 +55,7 @@ function prompt(question) {
 		let assigned_scorer = (await utilities.findOne('users', {name: match.assigned_scorer})) || deletedUsersMap[match.org_key];
 		let actual_scorer = (await utilities.findOne('users', {name: match.actual_scorer})) || deletedUsersMap[match.org_key];
 		// update assigned scorer
-		if (assigned_scorer) {
+		if (match.assigned_scorer && assigned_scorer) {
 			bulkWriteOps.push({
 				updateOne: {
 					filter: {
@@ -73,7 +73,7 @@ function prompt(question) {
 			});
 		}
 		// update actual scorer
-		if (actual_scorer) {
+		if (match.actual_scorer && actual_scorer) {
 			bulkWriteOps.push({
 				updateOne: {
 					filter: {

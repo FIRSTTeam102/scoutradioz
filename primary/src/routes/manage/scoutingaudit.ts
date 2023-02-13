@@ -5,7 +5,7 @@ import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import { upload as uploadHelper } from '@firstteam102/scoutradioz-helpers';
 import type { ImageLinks } from '@firstteam102/scoutradioz-helpers/types/uploadhelper';
-import e from '@firstteam102/http-errors';
+import e, { assert } from '@firstteam102/http-errors';
 import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
 import type { ObjectId } from 'mongodb';
 
@@ -66,6 +66,7 @@ router.get('/', wrap(async (req, res) =>  {
 		let scouterIdString = String(scouterId);
 		if (scouterIsYouthMap.hasOwnProperty(scouterIdString)) return scouterIsYouthMap[scouterIdString];
 		const thisScouter = await utilities.findOne('users', {_id: scouterId}, {}, {allowCache: true});
+		assert(thisScouter, new e.InternalDatabaseError(`Could not find scouter with id ${scouterId}`));
 		for (let thisClass of req._user.org.config.members.classes) {
 			if (thisClass.class_key === thisScouter.org_info.class_key) {
 				scouterIsYouthMap[scouterIdString] = thisClass.youth;
@@ -380,11 +381,11 @@ router.get('/bymatch', wrap(async (req, res) => {
 
 router.get('/comments', wrap(async (req, res) => {
 	
-	let eventKey = req.event.key;
+	let event_key = req.event.key;
 	let org_key = req._user.org_key;
 		
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matches: Match[] = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', {event_key: event_key, 'alliances.red.score': -1}, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	let earliestTimestamp = 9999999999;
@@ -397,19 +398,15 @@ router.get('/comments', wrap(async (req, res) => {
 	logger.debug('Comments audit: earliestTimestamp=' + earliestTimestamp);
 		
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'actual_scorer': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
-	
-	let audit = [];
-	
-	for(let item of scoreData){
-		if(item.data && item.data.otherNotes != ''){
-			audit.push(item);
-		}
-	}
+	// 2023-02-13 JL: Added the otherNotes check into the DB query instead of a JS loop later
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', 
+		{org_key, event_key, time: { $lt: earliestTimestamp }, 'data.otherNotes': {$regex: '.+'}}, 
+		{ sort: {'actual_scorer.name': 1, 'time': 1, 'alliance': 1, 'team_key': 1} }
+	);
 	
 	res.render('./manage/audit/comments', {
 		title: 'Scouter Comments Audit',
-		'audit': audit
+		'audit': scoreData
 	});
 }));
 

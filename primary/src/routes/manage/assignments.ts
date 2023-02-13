@@ -19,7 +19,7 @@ router.all('/*', wrap(async (req, res, next) => {
 }));
 
 /**
- * Admin page to control and assign pairs of students for scouting. TODO REVAMP
+ * Admin page to control and assign pairs of students for pit scouting.
  * @url /manage/assignments/
  * @views /manage/assignments/index
  */
@@ -101,7 +101,7 @@ router.get('/', wrap(async (req, res) => {
 			logger.trace('Rendering');
 		
 			res.render('./manage/assignments/index', {
-				title: 'Scouting Assignments',
+				title: 'Pit Scouting Assignments',
 				subteams: pitScoutSubteams,
 				assigned: assigned,
 				available: available,

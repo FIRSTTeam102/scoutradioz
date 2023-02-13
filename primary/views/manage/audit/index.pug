@@ -44,21 +44,6 @@ block content
 		+noDataFound('No scouting data has been found', 'Please check back later')
 	else
 		div(class="w3-auto")
-			h4 Reference
-			div(class="w3-row")
-				div(class="scouter-audit-reference-grid")
-					div(class="grid-item")
-						div Scouted by assigned scouter
-						div(class="w3-green audit-card w3-margin-top") Y
-					div(class="grid-item")
-						div Not scouted
-						div(class="theme-red audit-card w3-margin-top") N
-					div(class="grid-item")
-						div Covered by another student
-						div(class="w3-yellow audit-card w3-margin-top") C
-					div(class="grid-item")
-						div Covered by an adult
-						div(class="w3-purple audit-card w3-margin-top") A
 			each row in audit
 				if (row.member)
 					hr
@@ -81,3 +66,20 @@ block content
 						- else
 							div(class=`${itemClass}`)
 								span= item.char
+			hr 
+			
+			h2 Reference
+			div(class="w3-row")
+				div(class="scouter-audit-reference-grid")
+					div(class="grid-item")
+						div Scouted by assigned scouter
+						div(class="w3-green audit-card w3-margin-top") Y
+					div(class="grid-item")
+						div Not scouted
+						div(class="theme-red audit-card w3-margin-top") N
+					div(class="grid-item")
+						div Covered by another student
+						div(class="w3-yellow audit-card w3-margin-top") C
+					div(class="grid-item")
+						div Covered by an adult
+						div(class="w3-purple audit-card w3-margin-top") A
