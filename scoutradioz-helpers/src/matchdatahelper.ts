@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput } from '@firstteam102/scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation } from '@firstteam102/scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -33,6 +33,7 @@ export class MatchDataHelper {
 		switch (type) {
 			case 'checkbox':
 			case 'counter':
+			case 'counterallownegative':
 			case 'badcounter':
 			case 'derived':
 			case 'slider':
@@ -65,6 +66,7 @@ export class MatchDataHelper {
 				break;
 			}
 			case 'counter':
+			case 'counterallownegative':
 			case 'badcounter':
 			case 'slider':
 			case 'timeslider': {
@@ -129,7 +131,7 @@ export class MatchDataHelper {
 			let length = operations.length;
 			
 			for (let i = 0; i < length; i++) {
-				let thisOp: Operation = operations[i];
+				let thisOp: DerivedOperation = operations[i];
 				// let operands = thisOp.operands;
 				switch (thisOp.operator) {
 					// sum operands: [a, b, c, ...]
@@ -171,7 +173,7 @@ export class MatchDataHelper {
 						
 						let minuendKey = operands[0];
 						let subtrahendKey = operands[1];
-						let difference;
+						let difference: number;
 						
 						if (typeof minuendKey === 'number') difference = minuendKey;
 						else if (minuendKey.startsWith('$')) difference = variables[minuendKey];
@@ -193,7 +195,7 @@ export class MatchDataHelper {
 						
 						let dividendKey = operands[0];
 						let divisorKey = operands[1];
-						let dividend, divisor, quotient;
+						let dividend: number, divisor: number, quotient: number;
 						
 						if (typeof dividendKey === 'number') dividend = dividendKey;
 						else if (dividendKey.startsWith('$')) dividend = variables[dividendKey];
@@ -209,6 +211,70 @@ export class MatchDataHelper {
 						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = quotient;
 						else derivedMetric = quotient;
 						logger.trace(`Divide: ${quotient} -> ${thisOp.as || ''}`);
+						break;
+					}
+					// Min / Max between two numbers
+					// operands: [a, b] => max(a, b) or min(a, b)
+					case 'min': case 'max': {
+						let thisOp: MinMaxOperation = operations[i];
+						let operands = thisOp.operands;
+						
+						let aKey = operands[0];
+						let bKey = operands[1];
+						let a: number, b: number, result: number;
+						
+						if (typeof aKey === 'number') a = aKey;
+						else if (aKey.startsWith('$')) a = variables[aKey];
+						else a = parseNumber(matchData[aKey]);
+						
+						if (typeof bKey === 'number') b = bKey;
+						else if (bKey.startsWith('$')) b = variables[bKey];
+						else b = parseNumber(matchData[bKey]);
+						
+						if (thisOp.operator === 'min') result = Math.min(a, b);
+						else result = Math.max(a, b);
+						
+						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
+						else derivedMetric = result;
+						logger.trace(`${thisOp.operator}: ${result} -> ${thisOp.as || ''}`);
+						break;
+					}
+					// Log operands: [x, base] => log(x) / log(base)
+					case 'log': {
+						let thisOp: LogOperation = operations[i];
+						let operands = thisOp.operands;
+						
+						let inputKey = operands[0];
+						let base = operands[1];
+						let input: number, result: number;
+						
+						if (typeof inputKey === 'number') input = inputKey;
+						else if (inputKey.startsWith('$')) input = variables[inputKey];
+						else input = parseNumber(matchData[inputKey]);
+						
+						result = Math.log(input) / Math.log(base);
+						
+						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
+						else derivedMetric = result;
+						logger.trace(`${thisOp.operator}: ${result} -> ${thisOp.as || ''}`);
+						break;
+					}
+					// abs operands: [a] => Math.abs(a)
+					case 'abs': {
+						let thisOp: AbsoluteValueOperation = operations[i];
+						let operands = thisOp.operands;
+						
+						let inputKey = operands[0];
+						let input: number;
+						
+						if (typeof inputKey === 'number') input = inputKey;
+						else if (inputKey.startsWith('$')) input = variables[inputKey];
+						else input = parseNumber(matchData[inputKey]);
+						
+						let result = Math.abs(input);
+						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
+						else derivedMetric = result;
+						logger.trace(`Log: ${result} -> ${thisOp.as || ''}`);
 						break;
 					}
 					// multiselect quantifiers: {option1: value1, option2: value2, ...}; variables not supported
@@ -278,7 +344,7 @@ export class MatchDataHelper {
 						
 						let aKey = operands[0];
 						let bKey = operands[1];
-						let a, b;
+						let a: number, b: number;
 						let result: boolean;
 						
 						if (typeof aKey === 'number') a = aKey;
@@ -403,7 +469,6 @@ export class MatchDataHelper {
 			// Weed out unselected columns
 			for (let thisLayout of scorelayoutDB) {
 				//var thisLayout = scorelayoutDB[i];
-				//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 				if (this.isQuantifiableType(thisLayout.type)) {
 					if (savedCols[thisLayout.id]) 
 						scorelayout.push(thisLayout);
@@ -439,7 +504,7 @@ export class MatchDataHelper {
 		);
 		logger.trace('scorelayout=' + JSON.stringify(scorelayout));        
 		
-		let aggQuery = [];
+		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
 	
 		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
@@ -477,7 +542,6 @@ export class MatchDataHelper {
 	
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (this.isQuantifiableType(thisLayout.type)) {
 				//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 				groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
@@ -496,12 +560,11 @@ export class MatchDataHelper {
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggArray: MongoDocument[] = await utilities.aggregate('matchscouting', aggQuery);
 				
-		let aggMinMaxArray = [];
+		let aggMinMaxArray: MongoDocument[] = [];
 	
 		// Cycle through & build a map of min/max values per scoring type per aggregation
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
 			if (this.isQuantifiableType(thisLayout.type)) {
 				let thisMinMax: MongoDocument = {};
 				// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -674,7 +737,7 @@ export class MatchDataHelper {
 		// 4. Use those to calculate probability of one distribution over the other (z-table for lookup)
 	
 		// get aggregations for all teams
-		let aggQuery = [];
+		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': org_key, 'event_key': event_key } });
 	
 		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
@@ -822,7 +885,7 @@ export class MatchDataHelper {
 		let colCookie = cookies[cookie_key];
 		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	
-		let aggQuery = [];
+		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match : { 'team_key': {$in: teamList}, 'org_key': org_key, 'event_key': event_key } });
 	
 		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
@@ -861,7 +924,6 @@ export class MatchDataHelper {
 	
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (this.isQuantifiableType(thisLayout.type)) {
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
@@ -892,7 +954,6 @@ export class MatchDataHelper {
 	
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (this.isQuantifiableType(thisLayout.type)) {
 				let avgRow: MetricRow = {
 					key: thisLayout.id
@@ -1053,12 +1114,20 @@ export declare interface MetricRow {
 }
 
 export declare interface UpcomingMatchData {
-	matches: Match[];
+	matches: UpcomingMatch[];
 	teamRanks: {
 		[team_key: string]: number;
 	};
 	team?: TeamKey;
 	teamNumbers: number[];
+	hasPredictive?: boolean;
+	// predictive?: PredictiveBlock; 2023-12-13 JL: UpcomingMatchData.predictive is not used
+}
+
+/**
+ * FRC Match with optional predictive stuff added
+ */
+export declare interface UpcomingMatch extends Match {
 	hasPredictive?: boolean;
 	predictive?: PredictiveBlock;
 }
@@ -1078,46 +1147,4 @@ declare interface NumericalDict {
 
 declare interface StringDict {
 	[key: string]: string;
-}
-
-declare type operand = number|string;
-
-declare interface Operation {
-	operator: string;
-	id: string;
-	as?: string;
-}
-
-declare interface MultiplyOperation extends Operation {
-	operator: 'multiply';
-	operands: operand[];
-}
-
-declare interface SumOperation extends Operation {
-	operator: 'sum'|'add';
-	operands: operand[];
-}
-
-declare interface SubtractOperation extends Operation {
-	operator: 'subtract';
-	operands: [operand, operand];
-}
-
-declare interface DivideOperation extends Operation {
-	operator: 'divide';
-	operands: [operand, operand];
-}
-
-declare interface MultiselectOperation extends Operation {
-	quantifiers: NumericalDict;
-}
-
-declare interface ConditionOperation extends Operation {
-	operator: 'condition';
-	operands: [string, string|number|null, string|number|null];
-}
-
-declare interface CompareOperation extends Operation {
-	operator: 'gt'|'gte'|'lt'|'lte'|'eq'|'ne';
-	operands: [operand, operand];
 }

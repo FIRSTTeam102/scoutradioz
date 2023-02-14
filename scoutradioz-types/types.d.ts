@@ -12,7 +12,6 @@ declare interface StringDict {
 }
 
 declare type integer = number;
-declare type operand = number|string;
 export declare type formDataOutput = number|boolean|string|null;
 
 export declare interface MatchFormData {
@@ -135,6 +134,8 @@ export declare interface DerivedOperation {
 	as?: string;
 }
 
+declare type operand = number|string;
+
 export declare interface MultiplyOperation extends DerivedOperation {
 	operator: 'multiply';
 	operands: operand[];
@@ -167,6 +168,21 @@ export declare interface ConditionOperation extends DerivedOperation {
 export declare interface CompareOperation extends DerivedOperation {
 	operator: 'gt'|'gte'|'lt'|'lte'|'eq'|'ne';
 	operands: [operand, operand];
+}
+
+export declare interface MinMaxOperation extends DerivedOperation {
+	operator: 'min'|'max';
+	operands: [operand, operand];
+}
+
+export declare interface LogOperation extends DerivedOperation {
+	operator: 'log';
+	operands: [operand, number];
+}
+
+export declare interface AbsoluteValueOperation extends DerivedOperation {
+	operator: 'abs';
+	operands: [operand];
 }
 
 /**

@@ -1,5 +1,5 @@
-import { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import { Match, TeamKey, AggRange, MatchFormData } from '@firstteam102/scoutradioz-types';
+import type { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import type { Match, TeamKey, AggRange, MatchFormData } from '@firstteam102/scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -91,12 +91,18 @@ export declare interface MetricRow {
     [team_key: TeamKey]: string;
 }
 export declare interface UpcomingMatchData {
-    matches: Match[];
+    matches: UpcomingMatch[];
     teamRanks: {
         [team_key: string]: number;
     };
     team?: TeamKey;
     teamNumbers: number[];
+    hasPredictive?: boolean;
+}
+/**
+ * FRC Match with optional predictive stuff added
+ */
+export declare interface UpcomingMatch extends Match {
     hasPredictive?: boolean;
     predictive?: PredictiveBlock;
 }
