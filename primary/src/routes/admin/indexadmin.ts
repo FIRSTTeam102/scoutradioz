@@ -125,7 +125,7 @@ router.get('/sitemap', wrap(async (req, res) => {
 		},
 		'manage/scoutingpairs.ts': {
 			'/manage/scoutingpairs': 'Manage pairs for pit scouting and assignments for match scouting',
-			'/manage/scoutingpairs/swapmembers': 'Match scouting swap ',
+			'/manage/scoutingpairs/swapmatchscouters': 'Match scouting swap ',
 		},
 		'admin/indexadmin.ts': {
 			'/admin': 'Admin index page ',

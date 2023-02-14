@@ -248,6 +248,7 @@ router.get('/', wrap(async (req, res) => {
 	
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
+	let thisUserId = thisUser._id;
 	let org_key = thisUser.org_key;
 
 	// for later querying by event_key
@@ -258,20 +259,22 @@ router.get('/', wrap(async (req, res) => {
 
 	// Check to see if the logged in user is one of the scouting/scoring assignees
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+	// 2023-02-13 JL: Sorting manually by team number in JS
 	let assignedTeams: PitScouting[] = await utilities.find('pitscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
-		'primary': thisUserName
-	}, {
-		sort: { 'team_key': 1 }
+		'primary.id': thisUserId
 	});
+	
+	const teamKeySort = (a: PitScouting, b: PitScouting) => parseInt(a.team_key.substring(3)) - parseInt(b.team_key.substring(3));
+	assignedTeams.sort(teamKeySort);
 
 	// 2020-03-07, M.O'C: Allowing for scouts assigned to matches but NOT to pits
 	if (assignedTeams.length == 0) {
 		let assignedMatches: MatchScouting[] = await utilities.find('matchscouting', {
 			org_key: org_key, 
 			event_key: eventKey, 
-			assigned_scorer: thisUserName
+			'assigned_scorer.id': thisUserId
 		});
 		if (assignedMatches.length > 0)
 			noAssignments = false;		
@@ -295,9 +298,9 @@ router.get('/', wrap(async (req, res) => {
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
 	let pairsData: ScoutingPair[] = await utilities.find('scoutingpairs', { 'org_key': org_key, 
 		$or:
-			[{'member1': thisUserName},
-				{'member2': thisUserName},
-				{'member3': thisUserName}]
+			[{'member1.id': thisUserId},
+				{'member2.id': thisUserId},
+				{'member3.id': thisUserId}]
 	}, {});
 
 	let backupTeams: PitScouting[] = [];
@@ -307,23 +310,24 @@ router.get('/', wrap(async (req, res) => {
 		let thisPair = pairsData[0];
 		
 		//Sets up pair label
-		thisPairLabel = thisPair.member1;
+		thisPairLabel = thisPair.member1.name;
 		if (thisPair.member2)
-			thisPairLabel = thisPairLabel + ', ' + thisPair.member2;
+			thisPairLabel = thisPairLabel + ', ' + thisPair.member2.name;
 		if (thisPair.member3)
-			thisPairLabel = thisPairLabel + ', ' + thisPair.member3;
+			thisPairLabel = thisPairLabel + ', ' + thisPair.member3.name;
 		
 		//Get teams where they're backup (if any) from scout data collection
 		// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
+		// 2023-02-13 JL: Sorting manually by team number in JS
 		backupTeams = await utilities.find('pitscouting', {
 			'org_key': org_key, 
 			'event_key': eventKey,
 			$or:
-				[{'secondary': thisUserName},
-					{'tertiary': thisUserName}]
-		}, {
-			sort: {'team_key': 1} 
+				[{'secondary.id': thisUserId},
+					{'tertiary.id': thisUserId}]
 		});
+		
+		backupTeams.sort(teamKeySort);
 			
 		//logs backup teams to console
 		for (let backupIdx = 0; backupIdx < backupTeams.length; backupIdx++)
@@ -357,7 +361,7 @@ router.get('/', wrap(async (req, res) => {
 	let scoringMatches: MatchScouting[] = await utilities.find('matchscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
-		'assigned_scorer': thisUserName, 
+		'assigned_scorer.id': thisUserId, 
 		'time': { $gte: earliestTimestamp }
 	}, { 
 		limit: 10, 
@@ -629,7 +633,7 @@ router.get('/pits', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	let teamAssignments: PitScouting[] = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { });
+	let teamAssignments: PitScouting[] = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key}, { }); 
 		
 	//sort teams list by number
 	teamAssignments.sort(function(a, b) {

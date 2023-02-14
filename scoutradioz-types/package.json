@@ -1,6 +1,6 @@
 {
 	"name": "@firstteam102/scoutradioz-types",
-	"version": "1.0.19",
+	"version": "1.0.20",
 	"description": "Type declarations for objects in the Scoutradioz database.",
 	"types": "types.d.ts",
 	"scripts": {

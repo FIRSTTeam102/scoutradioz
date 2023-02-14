@@ -6,7 +6,7 @@
 		manage/swappitassignments.js	
 		'/manage/swappitassignments'
 	//
-extends ../layout
+extends ../../layout
 block content
 	h2 Swap Pit Scouts
 	br 
@@ -17,11 +17,9 @@ block content
 				noscript
 					if !scoutId
 						option(selected value='') [Select a scouter]
-				each scout in pitScouts 
-					if scoutId == scout 
-						option(selected value=scout)=scout
-					else 
-						option(value=scout)=scout
+				each scout in pitScouts
+					- var thisScoutId = String(scout.id)
+					option(selected=(scoutId===thisScoutId) value=thisScoutId)=scout.name
 			noscript
 				button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true") Selected scouter
 		span(class="w3-mobile w3-margin-top")
@@ -37,9 +35,9 @@ block content
 				option
 				each team, i in teams1
 					- var teamNum = team.team_key.substring(3)
-					- var optionStr = teamNum + ' - ' + team.primary
-					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary }
-					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary }
+					- var optionStr = teamNum + ' - ' + team.primary?.name || 'None'
+					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary.name }
+					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary.name }
 					option(value=teamNum class="w3-bar-item") !{optionStr}
 		div(class="w3-container w3-padding-16")
 			label(class="w3-quarter w3-label theme-inline-padding") Team #2 to be swapped: 
@@ -47,9 +45,9 @@ block content
 				option
 				each team, i in teams2
 					- var teamNum = team.team_key.substring(3)
-					- var optionStr = teamNum + ' - ' + team.primary
-					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary }
-					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary }
+					- var optionStr = teamNum + ' - ' + team.primary?.name || 'None'
+					- if (team.secondary) { optionStr = optionStr + ', ' + team.secondary.name }
+					- if (team.tertiary) { optionStr = optionStr + ', ' + team.tertiary.name }
 					option(value=teamNum class="w3-bar-item") !{optionStr}
 		input#scoutId(type="hidden", name="scoutId", value=scoutId)
 		div(class="w3-padding-16")

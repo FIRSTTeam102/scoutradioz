@@ -348,7 +348,7 @@ export class Utilities {
 				//if no config is provided
 				if (!this.dbConfig) {
 					logger.warn('No database config provided; Defaulting to localhost:27017/app');
-					return resolve('mongodb://localhost:27017/app');
+					return resolve('mongodb://127.0.0.1:27017/app');
 				}
 				//if no tier exists, something went wrong
 				if (!this.activeTier) {

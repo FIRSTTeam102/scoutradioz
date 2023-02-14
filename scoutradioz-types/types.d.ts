@@ -209,6 +209,17 @@ declare class MatchVideo {
 }
 
 /**
+ * Record of who is assigned to / completed a scouting assignment.
+ */
+export declare interface ScouterRecord {
+	/**
+	 * {@link User}'s _id
+	 */
+	id: ObjectId;
+	name: string;
+}
+
+/**
  * Match scouting data & assignments for a given team at a given match.
  * @collection matchscouting
  * @interface MatchScouting
@@ -223,8 +234,8 @@ export declare interface MatchScouting extends DbDocument {
 	alliance: 'red' | 'blue';
 	team_key: TeamKey;
 	match_team_key: MatchTeamKey;
-	assigned_scorer?: string;
-	actual_scorer?: string;
+	assigned_scorer?: ScouterRecord;
+	actual_scorer?: ScouterRecord;
 	data?: MatchFormData;
 	useragent?: UserAgent;
 }
@@ -320,19 +331,30 @@ export declare interface WebPushKeys extends DbDocument {
 declare type PasswordItem = TBAApiHeaders | FIRSTApiHeaders | TBAWebhookSecret | WebPushKeys;
 
 /**
- * Pit scouting data & assignments for a given team at a given event.
+ * Set of scouters for a pit scouting assignment. NOTE: primary/secondary are REQUIRED
+ * @collection pitscouting
+ * @interface PitScoutingSet
+ */
+export declare interface PitScoutingSet extends DbDocument {
+	primary: ScouterRecord;
+	secondary: ScouterRecord;
+	tertiary?: ScouterRecord;
+}
+
+/**
+ * Pit scouting data & assignments for a given team at a given event. NOTE: primary/secondary/tertiary all optional
  * @collection pitscouting
  * @interface PitScouting
  */
-export declare interface PitScouting extends DbDocument {
+export declare interface PitScouting {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
 	team_key: TeamKey;
-	primary: string;
-	secondary: string;
-	tertiary?: string;
-	actual_scouter?: string;
+	primary?: ScouterRecord;
+	secondary?: ScouterRecord;
+	tertiary?: ScouterRecord;
+	actual_scouter?: ScouterRecord;
 	data?: StringDict;
 	useragent?: UserAgent;
 }
@@ -391,9 +413,9 @@ export declare interface Role extends DbDocument {
  * @interface ScoutingPair
  */
 export declare interface ScoutingPair extends DbDocument {
-	member1: string;
-	member2: string;
-	member3?: string;
+	member1: ScouterRecord;
+	member2: ScouterRecord;
+	member3?: ScouterRecord;
 	org_key: OrgKey;
 }
 
@@ -519,22 +541,24 @@ export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'match
  * Gets the correct schema for the given collection name.
  */
 export declare type CollectionSchema<colName extends CollectionName> =
-	colName extends 'aggranges' ? AggRange :
-	colName extends 'events' ? Event :
-	// colName extends 'i18n' ?  :
-	colName extends 'layout' ? Layout :
-	colName extends 'matches' ? Match :
-	colName extends 'matchscouting' ? MatchScouting :
-	colName extends 'orgs' ? Org :
-	colName extends 'orgteamvalues' ? OrgTeamValue :
-	colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
-	colName extends 'pitscouting' ? PitScouting :
-	colName extends 'rankingpoints' ? RankingPoints :
-	colName extends 'rankings' ? Ranking :
-	colName extends 'roles' ? Role :
-	colName extends 'scoutingpairs' ? ScoutingPair :
-	colName extends 'sessions' ? Session :
-	colName extends 'teams' ? Team :
-	colName extends 'uploads' ? Upload :
-	colName extends 'users' ? User : 
-	any;
+	WithDbId<
+		colName extends 'aggranges' ? AggRange :
+		colName extends 'events' ? Event :
+		// colName extends 'i18n' ?  :
+		colName extends 'layout' ? Layout :
+		colName extends 'matches' ? Match :
+		colName extends 'matchscouting' ? MatchScouting :
+		colName extends 'orgs' ? Org :
+		colName extends 'orgteamvalues' ? OrgTeamValue :
+		colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
+		colName extends 'pitscouting' ? PitScouting :
+		colName extends 'rankingpoints' ? RankingPoints :
+		colName extends 'rankings' ? Ranking :
+		colName extends 'roles' ? Role :
+		colName extends 'scoutingpairs' ? ScoutingPair :
+		colName extends 'sessions' ? Session :
+		colName extends 'teams' ? Team :
+		colName extends 'uploads' ? Upload :
+		colName extends 'users' ? User : 
+		any
+	>;

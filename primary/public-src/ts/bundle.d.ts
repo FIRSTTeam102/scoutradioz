@@ -240,6 +240,9 @@ declare class PasswordPrompt {
 declare class Confirm {
     static show(text: string, options?: ConfirmOptions): Promise<PromptReturn>;
 }
+declare class Alert {
+    static show(text: string): Promise<PromptReturn>;
+}
 /**
  * Returns a set of PromptButtons for something like Yes/No, with the first one highlighted.
  */
