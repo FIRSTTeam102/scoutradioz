@@ -1,13 +1,14 @@
 {
 	"compilerOptions": {
 		"target": "es2020",
-		"module": "commonjs",
+		"module": "CommonJS",
 		"rootDir": "./src",
 		"outDir": "./build",
 		"esModuleInterop": true,
 		"strict": true,
 		"declaration": true,
-		"declarationDir": "./types"
+		"declarationDir": "./types",
+		"moduleResolution": "node"
 		//   "removeComments": true,
 	},
 	"include": [

@@ -83,6 +83,12 @@ export declare interface Event extends DbDocument {
 	timezone?: string|null;
 }
 
+declare interface FormSliderOptions {
+	min: number;
+	max: number;
+	step: number;
+}
+
 /**
  * A question/metric in the pit or match scouting form.
  * @collection layout
@@ -96,6 +102,7 @@ export declare interface Layout extends DbDocument {
 	org_key: OrgKey;
 	label?: string;
 	id?: string;
+	options?: FormSliderOptions | string[];
 }
 
 /**
@@ -104,10 +111,11 @@ export declare interface Layout extends DbDocument {
  * @collection layoutedit
  * @interface LayoutEdit
  */
-export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key' | 'year'> {
+export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key' | 'year' | 'order'> {
 	year?: number;
 	form_type?: 'matchscouting'|'pitscouting';
 	org_key?: OrgKey;
+	order?: number|string;
 }
 
 /**

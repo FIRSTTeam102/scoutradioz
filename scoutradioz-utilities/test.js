@@ -94,11 +94,15 @@ async function testMultipleDbs(){
 	var teamAvatars = await utilities.requestFIRST('2022/avatars?eventCode=mrcmp');
 	console.log(teamAvatars);
 	
+	var eventTeams = await utilities.requestTheBlueAlliance('event/2022mttd/teams/simple');
+	console.log(eventTeams);
+	
 	try {
 		var result = await utilities.requestTheBlueAlliance('aklsfejslakfjd');
 	}
 	catch (err) {
 		console.log('Error from TBA:', err);
+		console.log('If the above is an error, then this individual test was successful.');
 	}
 	
 	logger.info('Done');

@@ -617,7 +617,8 @@ router.get('/switchorg', wrap(async (req, res) => {
 			res.clearCookie('org_key');
 			
 			//now, redirect to index
-			res.redirect('/');
+			if (req.query.alert) res.redirect(`/?alert=${req.query.alert}`);
+			else res.redirect('/');
 		});
 	});
 }));

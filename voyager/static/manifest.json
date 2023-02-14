@@ -1,0 +1,32 @@
+{
+	"name": "Scoutradioz Voyager",
+	"description": "Scoutradioz enables multiple teams/organizations to gather their own customized intel at FIRST Robotics competitions",
+	"theme_color": "#ff7200",
+	"background_color": "#333",
+	"display": "standalone",
+	"start_url": "/",
+	"orientation": "portrait-primary",
+	"icons": [
+		{
+			"src": "/icon-32.png",
+			"sizes": "32x32",
+			"type": "image/png"
+		},
+		{
+			"src": "/icon-64.png",
+			"sizes": "64x64",
+			"type": "image/png"
+		},
+		{
+			"src": "/icon-128.png",
+			"sizes": "128x128",
+			"type": "image/png"
+		},
+		{
+			"src": "/icon-maskable-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	]
+}

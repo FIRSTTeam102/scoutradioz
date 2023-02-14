@@ -1,9 +1,8 @@
 import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
-import { ObjectId, MongoClient } from 'mongodb';
+import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import type { Request, Response, NextFunction } from 'express';
 import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
-declare const Client: any;
 /**
  * Valid primitives for use in mongodb queries
  */
@@ -106,6 +105,10 @@ export declare class UtilitiesOptions {
         maxAge: number;
     };
     /**
+     * Options for the MongoClient that we are wrapping.
+     */
+    mongoClientOptions?: MongoClientOptions;
+    /**
      * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
      */
     stringifyObjectIDs?: boolean;
@@ -122,7 +125,6 @@ export declare class Utilities {
     whenReadyQueue: any[];
     cache: NodeCache;
     options: UtilitiesOptions;
-    client: typeof Client;
     static instance: Utilities;
     private _cacheFlushTimeout?;
     constructor();
@@ -167,8 +169,11 @@ export declare class Utilities {
      * @example
      * 	const app = express();
      * 	app.use(utilities.refreshTier);
+     * @param req Express req
+     * @param res Express res
+     * @param manuallySpecifiedTier Svelte doesn't use process.env, so in this case, we manually specify the tier from the calling code
      */
-    refreshTier(req: Request, res: Response, next: NextFunction): void;
+    refreshTier(req: Request, res: Response, next: NextFunction, manuallySpecifiedTier?: string): void;
     /**
      * Asynchronous "find" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -260,13 +265,13 @@ export declare class Utilities {
      * Asynchronous function to get our TheBlueAlliance API key from the DB.
      * @return - TBA header arguments
      */
-    getTBAKey(): Promise<TBAKey>;
+    getTBAKey(): Promise<TBAKey['headers']>;
     /**
      * Asynchronous function to get our FIRST API key from the DB.
      * https://frc-api-docs.firstinspires.org/#authorization
      * @returns {FIRSTKey} - FIRST header arguments
      */
-    getFIRSTKey(): Promise<FIRSTKey>;
+    getFIRSTKey(): Promise<FIRSTKey['headers']>;
     consoleTime(name: string): void;
     consoleTimeEnd(name: string): void;
     dbRefs: {
@@ -297,14 +302,6 @@ export declare class Utilities {
      * @returns Query with _id replaced with an ObjectId
      */
     private castID;
-    /**
-     * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
-     */
-    private stringifyObjectIDs;
-    /**
-     * Casts _id into a string, for when utilities is configured to do so.
-     */
-    private stringifyObjectID;
 }
 declare interface TBAKey extends MongoDocument {
     headers: {

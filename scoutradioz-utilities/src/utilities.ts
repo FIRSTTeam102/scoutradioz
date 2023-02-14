@@ -4,13 +4,11 @@ import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, 
 	Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions,
 	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
-import { ObjectId, MongoClient } from 'mongodb';
+import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import crypto from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
 import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
-
-const Client = require('node-rest-client').Client;
 
 const logger = log4js.getLogger('utilities');
 logger.level = process.env.LOG_LEVEL || 'info';
@@ -129,6 +127,10 @@ export class UtilitiesOptions {
 		maxAge: number;
 	};
 	/**
+	 * Options for the MongoClient that we are wrapping.
+	 */
+	mongoClientOptions?: MongoClientOptions;
+	/**
 	 * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
 	 */
 	stringifyObjectIDs?: boolean;
@@ -141,6 +143,7 @@ export class UtilitiesOptions {
 		else this.debug = false;
 		
 		this.stringifyObjectIDs = options?.stringifyObjectIDs || false;
+		this.mongoClientOptions = options?.mongoClientOptions || {};
 		
 		let defaultCacheOpts = {
 			enable: false,
@@ -168,7 +171,6 @@ export class Utilities {
 	whenReadyQueue: any[];
 	cache: NodeCache;
 	options: UtilitiesOptions;
-	client: typeof Client;
 	// Utilities is a singleton class. The refreshTier function is passed as a middleware, so the "this" argument gets messed up. 
 	//  To avoid having to change code, we can instead use Utilities.instance.x
 	static instance: Utilities = new Utilities(); 
@@ -182,7 +184,6 @@ export class Utilities {
 		this.whenReadyQueue = [];
 		this.cache = new NodeCache({stdTTL: 30});
 		this.options = new UtilitiesOptions();
-		this.client = new Client();
 	}
 	
 	/**
@@ -278,7 +279,8 @@ export class Utilities {
 						this.leaveDbLock(); 
 					})
 					.catch(err => {
-						logger.error(JSON.stringify(err));
+						logger.error('(getDB)', JSON.stringify(err));
+						reject(err);
 					});
 			}
 			
@@ -308,8 +310,8 @@ export class Utilities {
 						// Resolve with old db (even if it's closed) (this shouldn't occur)
 						logger.error('(getDB) Error connecting');
 						
-						reject(err);
 						this.leaveDbLock();
+						reject(err);
 					});
 			}
 			else {
@@ -394,12 +396,15 @@ export class Utilities {
 	 * @example 
 	 * 	const app = express();
 	 * 	app.use(utilities.refreshTier);
+	 * @param req Express req
+	 * @param res Express res
+	 * @param manuallySpecifiedTier Svelte doesn't use process.env, so in this case, we manually specify the tier from the calling code
 	 */
-	refreshTier(req: Request, res: Response, next: NextFunction) {
+	refreshTier(req: Request, res: Response, next: NextFunction, manuallySpecifiedTier?: string) {
 		
 		//set ready to true
 		Utilities.instance.ready = true;
-		Utilities.instance.activeTier = process.env.TIER;
+		Utilities.instance.activeTier = manuallySpecifiedTier || process.env.TIER;
 		
 		while (Utilities.instance.whenReadyQueue.length > 0) {
 			let cb = Utilities.instance.whenReadyQueue.splice(0, 1)[0];
@@ -494,7 +499,9 @@ export class Utilities {
 		}
 		
 		// 2022-06-12 JL: Optionally stringify IDs
-		if (this.options.stringifyObjectIDs) this.stringifyObjectIDs(returnData);
+		// 	Since some DB structures contain ObjectIDs (e.g. ScouterRecord), we can't just loop through
+		// 	and do a shallow cast. JSON.stringify() automatically casts ObjectID to string & is fast enough.
+		if (this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -582,7 +589,7 @@ export class Utilities {
 			this.consoleTimeEnd(timeLogName);
 		}
 		// 2022-06-12 JL: Optionally stringify IDs
-		if (returnData && this.options.stringifyObjectIDs) this.stringifyObjectID(returnData);
+		if (returnData && this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -722,8 +729,6 @@ export class Utilities {
 		}
 		
 		// 2022-12-06 JL: Optionally stringify IDs
-		// 	Since aggregate calls can attach objects as sub-objects (including their _ids), we can't just
-		// 	loop through and do a shallow cast. JSON.stringify() automatically casts ObjectID to string & is fast enough.
 		if (this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
@@ -953,44 +958,14 @@ export class Utilities {
 		//Get TBA key
 		let headers = await this.getTBAKey();
 		
-		//Create promise first
-		let thisPromise = new Promise((resolve, reject) => {
-			
-			//Inside promise function, perform client request
-			let request = this.client.get(requestURL, headers, (tbaData: any) => {
-				
-				// If TBA returns null, then we can't use toString()
-				if (!tbaData || typeof tbaData.toString !== 'function') {
-					logger.debug(`TBA response (could not use toString): ${tbaData}`);
-					return resolve(tbaData);
-				}
-				
-				//If newline characters are not deleted, then CloudWatch logs get spammed
-				let str = tbaData.toString().replace(/\n/g, '');
-				
-				logger.debug(`TBA response: ${str.substring(0, 200)}...`);
-				if (this.options.debug) logger.trace(`Full TBA response: ${str}`);
-				
-				logger.removeContext('funcName');
-				
-				if (tbaData.hasOwnProperty('Errors') || tbaData.hasOwnProperty('Error')) {
-					// 2022-03-06 JL: If there are errors, don't resolve the data
-					logger.error(`Error when requesting ${url}: ${JSON.stringify(tbaData)}`);
-					reject(tbaData);
-				}
-				else {
-					//Inside client callback, resolve promise
-					resolve(tbaData);
-				}
-			});
-			
-			request.on('error', function (err: any) {
-				reject(err);
-			});
-		});
+		// Fetch from TBA (requires at least Node v18)
+		let response = await fetch(requestURL, {headers});
 		
-		//Resolve promise
-		return thisPromise;
+		let json = await response.json();
+		
+		if (this.options.debug) logger.trace(`Full TBA response: ${JSON.stringify(json)}`);
+		
+		return json;
 	}
 	
 	/**
@@ -1005,46 +980,37 @@ export class Utilities {
 		
 		let headers = await this.getFIRSTKey();
 		
-		let thisPromise = new Promise((resolve, reject) => {
-						
-			let request = this.client.get(requestURL, headers, function (firstData: any, response: any) {
-				
-				if (response.statusCode === 200) {
-					
-					let str = JSON.stringify(firstData);
-					logger.debug(`FIRST response: ${str.substring(0, 200)}...`);
-					
-					resolve(firstData);
-				}
-				else {
-					logger.error(`Error when requesting ${url}: Status=${response.statusCode}, ${response.statusMessage}`);
-					reject(firstData);
-				}
-			});
-			
-			request.on('error', function (err: any) {
-				reject(err);
-			});
-		});
+		// Fetch from FIRST (requires at least Node v18)
+		let response = await fetch(requestURL, {headers});
 		
-		return thisPromise;
+		let json = await response.json();
+		
+		if (json && response.ok) {
+			
+			if (this.options.debug) logger.trace(`Full FIRST response: ${JSON.stringify(json)}`);
+			
+			return json;
+		}
+		else {
+			logger.error(`Error when requesting ${url}: Status=${response.status}, ${response.statusText}`);
+			throw response;
+		}
 	}
 
 	/**
 	 * Asynchronous function to get our TheBlueAlliance API key from the DB.
 	 * @return - TBA header arguments
 	 */
-	async getTBAKey(): Promise<TBAKey>{
+	async getTBAKey(): Promise<TBAKey['headers']>{
 		logger.addContext('funcName', 'getTBAKey');
 		
 		let tbaArgs: TBAKey = await this.findOne('passwords', {name: 'tba-api-headers'}, {}, {allowCache: true});
 		
 		if(tbaArgs){
 			let headers = tbaArgs.headers;
-			let key = {'headers': headers};
 			
 			logger.removeContext('funcName');
-			return key;
+			return headers;
 		}
 		else{
 			//**********CONSIDER ANOTHER OPTION FOR HANDLING "CAN'T FIND REQUEST ARGS"
@@ -1060,7 +1026,7 @@ export class Utilities {
 	 * https://frc-api-docs.firstinspires.org/#authorization
 	 * @returns {FIRSTKey} - FIRST header arguments
 	 */
-	async getFIRSTKey(): Promise<FIRSTKey> {
+	async getFIRSTKey(): Promise<FIRSTKey['headers']> {
 		logger.addContext('funcName', 'getFIRSTKey');
 		
 		
@@ -1068,10 +1034,9 @@ export class Utilities {
 		
 		if (firstKey) {
 			let headers = firstKey.headers;
-			let key = {'headers': headers};
 			
 			logger.removeContext('funcName');
-			return key;
+			return headers;
 		}
 		else {
 			logger.fatal('Could not find first-api-headers in database');
@@ -1135,7 +1100,12 @@ export class Utilities {
 		});
 	}
 
-	private open(url: string): Promise<[MongoClient, Db]> {
+	private async open(url: string): Promise<[MongoClient, Db]> {
+		let options = this.options.mongoClientOptions || {};
+		let client = await MongoClient.connect(url, options);
+		let db = client.db();
+		return [client, db];
+		
 		return new Promise((resolve, reject) => {
 			MongoClient.connect(url, (err, client) => {
 				if (err || !client) return reject(err);
@@ -1157,25 +1127,6 @@ export class Utilities {
 			query._id = new ObjectId(query._id);
 		}
 		return query;
-	}
-	
-	/**
-	 * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
-	 */
-	private stringifyObjectIDs(results: MongoDocument[]) {
-		if (this.options.debug) logger.trace('Stringifying ObjectIDs');
-		for (let result of results) {
-			this.stringifyObjectID(result);
-		}
-	}
-	
-	/**
-	 * Casts _id into a string, for when utilities is configured to do so.
-	 */
-	private stringifyObjectID(result: MongoDocument) {
-		if (result._id instanceof ObjectId) {
-			result._id = result._id.toString();
-		}
 	}
 }
 

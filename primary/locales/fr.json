@@ -53,7 +53,7 @@
 			"user": "{user} - {org}"
 		},
 		"footer": {
-			"copyright": "Copyright {date} FIRST Team 102 et Robotics Fund Inc.\nOpen-source et sous licence avec AGPLv3.",
+			"copyright": "Copyright {date} FIRST Team 102 et Robotics Fund Inc.\nCode ouvert et sous licence AGPLv3.",
 			"tba": "Propulsé par l'Alliance Bleue.",
 			"frc": "Nous sommes fiers de participer au FIRST Robotics Competition."
 		},
@@ -93,7 +93,7 @@
 				"event": {
 					"main": "Données d'événement",
 					"event": "Données d'événement: [[{event}]]",
-					"matches": "Matches",
+					"matches": "Matchs",
 					"allianceselection": "Données de sélection d'alliance",
 					"getcurrentteams": "Mettre à jour la liste des équipes",
 					"recalcderived": "Recalculer les métriques dérivées",
@@ -350,7 +350,7 @@
 			"wltDesc": "Victoire-Défaite-Nul",
 			"dq": "DQ",
 			"dqDesc": "Disqualifications",
-			"matches": "Matches",
+			"matches": "Matchs",
 			"rp": "PC",
 			"rpDesc": "Points de classement"
 		},

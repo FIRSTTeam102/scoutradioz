@@ -270,7 +270,8 @@
 		"priority": "Priority",
 		"priorityAbbr": "V",
 		"team": "Team",
-		"rank": "FRC Rank"
+		"rank": "FRC Rank",
+		"numalliances": "Number of alliances:"
 	},
 	"metrics": {
 		"raw": "Raw data",

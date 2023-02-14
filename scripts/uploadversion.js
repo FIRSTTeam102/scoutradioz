@@ -16,88 +16,89 @@ const lambda = new aws.Lambda({
 const s3 = new aws.S3({
 	region: 'us-east-1'
 });
-
-const packageJson = require('../package.json');
+const packageJson = require('../package.json'); // SR root
 const backupsS3BucketName = packageJson.config.backupsS3BucketName;
 
-console.log(`Backups S3 Bucket: ${backupsS3BucketName}`);
-
-if (!backupsS3BucketName) {
-	throw Error('No backups S3 bucket provided in the root package.json.');
-}
-
-var alias = 'test';
-var functionName;
-var folder;
-var justDoArchive = false;
-
-//eslint-disable-next-line
-for (var i in process.argv) {
-	let thisArg = process.argv[i];
-	let nextArg = process.argv[i - -1];
+async function main() {
 	
-	switch (thisArg) {
-		case '--alias':
-			if (nextArg) alias = nextArg;
-			break;
-		case '--function-name':
-			if (nextArg) functionName = nextArg;
-			break;
-		case '--folder':
-			if (nextArg) folder = nextArg;
-			break;
-		case '--archive':
-			justDoArchive = true;
-			break;
+	console.log(`Backups S3 Bucket: ${backupsS3BucketName}`);
+	
+	if (!backupsS3BucketName) {
+		throw Error('No backups S3 bucket provided in the root package.json.');
 	}
-}
-
-if (alias.toUpperCase() == 'PROD' || alias.toUpperCase() == 'PREVIOUS') {
-	throw 'Do not upload code directly to PROD or to PREVIOUS.';
-}
-else {
-	alias = alias.toUpperCase();
-}
-
-if (!folder) {
-	throw 'Folder is not defined.';
-}
-
-console.log(`alias=${alias} functionName=${functionName} folder=${folder}`);
-
-//const folderPath = path.resolve(__filename, '../../zips');
-//const zipPath = path.join('zips', `${folder}.zip`);
-//console.log(folderPath);
-//if (!file_system.existsSync(folderPath)) {
-//	console.log('Making folderPath ' + folderPath);
-//	file_system.mkdirSync(folderPath);
-//}
-
-makeZip(folder, (err, zipBuffer) => {
-	if (err) {
-		throw err;
+	
+	var alias = 'test';
+	var functionName;
+	var folder;
+	var justDoArchive = false;
+	
+	//eslint-disable-next-line
+	for (var i in process.argv) {
+		let thisArg = process.argv[i];
+		let nextArg = process.argv[i - -1];
+		
+		switch (thisArg) {
+			case '--alias':
+				if (nextArg) alias = nextArg;
+				break;
+			case '--function-name':
+				if (nextArg) functionName = nextArg;
+				break;
+			case '--folder':
+				if (nextArg) folder = nextArg;
+				break;
+			case '--archive':
+				justDoArchive = true;
+				break;
+		}
+	}
+	
+	if (alias.toUpperCase() == 'PROD' || alias.toUpperCase() == 'PREVIOUS') {
+		throw 'Do not upload code directly to PROD or to PREVIOUS.';
 	}
 	else {
-		updateCode(zipBuffer, (err, data) => {
-			if (err) {
-				throw err;
-			}
-			else {
-				console.log(data);
-				var functionVersion = data.FunctionVersion;
-				uploadToS3(zipBuffer, functionVersion, (err, data) => {
-					if (err) {
-						throw err;
-					}
-					else {
-						console.log(data);
-						console.log('Done! ' + 'DON\'T FORGET TO SYNC STATIC FILES!!'.brightRed);
-					}
-				});
-			}
-		});
+		alias = alias.toUpperCase();
 	}
-});
+	
+	if (!folder) {
+		throw 'Folder is not defined.';
+	}
+	
+	console.log(`alias=${alias} functionName=${functionName} folder=${folder}`);
+	
+	//const folderPath = path.resolve(__filename, '../../zips');
+	//const zipPath = path.join('zips', `${folder}.zip`);
+	//console.log(folderPath);
+	//if (!file_system.existsSync(folderPath)) {
+	//	console.log('Making folderPath ' + folderPath);
+	//	file_system.mkdirSync(folderPath);
+	//}
+	
+	const zipBuffer = await makeZip(folder, justDoArchive);
+	updateCode(zipBuffer, functionName, (err, data) => {
+		if (err) {
+			throw err;
+		}
+		else {
+			console.log(data);
+			var functionVersion = data.FunctionVersion;
+			uploadToS3(zipBuffer, functionVersion, (err, data) => {
+				if (err) {
+					throw err;
+				}
+				else {
+					console.log(data);
+					console.log('Done! ' + 'DON\'T FORGET TO SYNC STATIC FILES!!'.brightRed);
+				}
+			});
+		}
+	});
+}
+
+// Code to run if it's run from the command line
+if (require.main === module) {
+	main();
+}
 
 function uploadToS3(zipBuffer, functionVersion, cb) {
 	
@@ -128,9 +129,8 @@ function uploadToS3(zipBuffer, functionVersion, cb) {
 	});
 }
 
-function updateCode(zipBuffer, cb) {
+function updateCode(zipBuffer, functionName, cb) {
 	
-	const time = new Date().toISOString().replace('T','_').replace(/\:|\-/g,'').split('.')[0];
 	
 	var params = {
 		FunctionName: functionName,
@@ -144,7 +144,7 @@ function updateCode(zipBuffer, cb) {
 		else {
 			console.log(`Uploaded function code:\n\t FunctionName=${data.FunctionName}\n\t Role=${data.Role}\n\t CodeSha256=${data.CodeSha256}`);
 			
-			publishVersion(data, time, cb);
+			publishVersion(data, functionName, cb);
 		}
 	});
 }
@@ -152,7 +152,9 @@ function updateCode(zipBuffer, cb) {
 /**
  * @param {aws.Lambda.FunctionConfiguration} data from updateFunctionCode result
  */
-async function publishVersion(data, time, cb) {
+async function publishVersion(data, functionName, cb) {
+	
+	const time = new Date().toISOString().replace('T','_').replace(/\:|\-/g,'').split('.')[0];
 	
 	console.log('Waiting for function update to be complete...');
 	
@@ -230,67 +232,64 @@ async function waitUntilNotPending(lambda, functionName, timeout, retries) {
 	);
 }
 
-function makeZip(folder, cb) {
-	//if (file_system.existsSync(zipPath)) {
-	//	console.log('Zip file already exists. Deleting existing zip...');
-	//	file_system.unlinkSync(zipPath);
-	//}
-	//var output = file_system.createWriteStream(zipPath);
-	
-	var folderPath = path.resolve(__filename, '../../', folder);
-	
-	var output = concat(data => {
+/**
+ * @param {string} folder 
+ * @returns {Promise<Buffer>}
+ */
+function makeZip(folder, justDoArchive) {
+	return new Promise((resolve, reject) => {
 		
-		console.log(`Archive has been completed and stored in memory after ${Date.now()-startTime} ms`);
+		var folderPath = path.resolve(__filename, '../../', folder);
 		
-		var sizeBytes = parseInt(archive.pointer());
-		
-		if (sizeBytes > 1000000) {
-			console.log('Size: ' + sizeBytes / 1000000 + ' MB');
-		}
-		else {
-			console.log('Size: ' + sizeBytes / 1000 + ' KB');
-		}
-		
-		if (justDoArchive) {
-			fs.writeFileSync('output.zip', data);
-			console.log('Archive has been exported to output.zip');
-			process.exit(0);
-		}
-		
-		cb(null, data);
-	});
-	
-	var archive = archiver('zip');//, {zlib: {level: 0}});
-	
-	//output.on('close', function () {
-	//	console.log(done);
-	//});
-	
-	archive.on('error', function(err){
-		cb(err);
-	});
-	
-	var startTime = Date.now();
-	console.log(`Directory: "${folderPath}"`);
-	console.log('Zipping directory...');
-	archive.pipe(output);
-	
-	
-	getFileListWithIgnore(folderPath)
-		.catch(err => {
-			console.error(err);
-			process.exit(1);
-		})
-		.then(paths => {
-			for (let file of paths) {
-				archive.file(file, {name: path.relative(folderPath, file)});
+		var output = concat(data => {
+			
+			console.log(`Archive has been completed and stored in memory after ${Date.now()-startTime} ms`);
+			
+			var sizeBytes = parseInt(archive.pointer());
+			
+			if (sizeBytes > 1000000) {
+				console.log('Size: ' + sizeBytes / 1000000 + ' MB');
 			}
-		
-			// finalize the archive (ie we are done appending files but streams have to finish yet)
-			// 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
-			archive.finalize();
+			else {
+				console.log('Size: ' + sizeBytes / 1000 + ' KB');
+			}
+			
+			if (justDoArchive) {
+				fs.writeFileSync('output.zip', data);
+				console.log('Archive has been exported to output.zip');
+				process.exit(0);
+			}
+			
+			resolve(data);
 		});
+		
+		var archive = archiver('zip');//, {zlib: {level: 0}});
+		
+		archive.on('error', function(err){
+			reject(err);
+		});
+		
+		var startTime = Date.now();
+		console.log(`Directory: "${folderPath}"`);
+		console.log('Zipping directory...');
+		archive.pipe(output);
+		
+		
+		getFileListWithIgnore(folderPath)
+			.catch(err => {
+				console.error(err);
+				process.exit(1);
+			})
+			.then(paths => {
+				for (let file of paths) {
+					archive.file(file, {name: path.relative(folderPath, file)});
+				}
+			
+				// finalize the archive (ie we are done appending files but streams have to finish yet)
+				// 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
+				archive.finalize();
+			});
+	});
 }
 
 // Get a complete file list of the archive including the contents of a .archiveignore file.
@@ -342,4 +341,15 @@ function getFileListWithIgnore(pathToArchive) {
 			}
 		);
 	});
+}
+
+// Export to other scripts
+module.exports = {
+	uploadToS3,
+	updateCode,
+	publishVersion,
+	waitUntilNotPending,
+	makeZip,
+	getFileListWithIgnore,
+	backupsS3BucketName,
 }

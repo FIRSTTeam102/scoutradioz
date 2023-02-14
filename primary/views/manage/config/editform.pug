@@ -44,25 +44,15 @@ block content
 			}
 
 			// make sure 'order' and 'id' are unique; also clear out extraneous stuff
-			let orderDict = {};
-			let orderCount = 0
 			let idDict = {};
 			let idCount = 0;
 			for (var i = 0; i < jsonData.length; i++) {
-				// while we're iterating through, clear out extraneous stuff if needed
+				// since jsonData gets loaded back to the user, remove backend keys
 				delete jsonData[i]['_id'];
 				delete jsonData[i]['form_type'];
 				delete jsonData[i]['org_key'];
 				delete jsonData[i]['year'];
-
-				let thisOrder = jsonData[i]['order'];
-				if (thisOrder == null) { 
-					console.log('Missing order:', jsonData[i]);
-					NotificationCard.error("Missing at least one 'order' attribute! Please correct.");
-					return null;
-				}
-				orderCount++;
-				orderDict[thisOrder] = thisOrder;
+				delete jsonData[i]['order'];
 
 				let thisType = jsonData[i]['type'];
 				if (thisType == null) { 
@@ -70,6 +60,7 @@ block content
 					NotificationCard.error("Missing at least one 'type' attribute! Please correct.");
 					return null;
 				}
+
 				if (thisType != 'spacer') {
 					let thisId = jsonData[i]['id'];
 					if (thisId == null) { 
@@ -84,12 +75,7 @@ block content
 					idDict[thisId] = thisId;
 				}
 			}
-			if (Object.keys(orderDict).length != orderCount)  { 
-				console.log('Keys:', Object.keys(orderDict));
-				console.log(`Count: ${orderCount}`);
-				NotificationCard.error("At least one duplicate 'order' value! Please correct.");
-				return null;
-			}
+
 			if (Object.keys(idDict).length != idCount)  { 
 				console.log('Keys:', Object.keys(idDict));
 				console.log(`Count: ${idCount}`);

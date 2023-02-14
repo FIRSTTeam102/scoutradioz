@@ -22,4 +22,4 @@ if [ ! -f $dbsfile ]; then
 fi
 
 # Install node modules
-cd primary && npm ci
+npm install && cd primary && npm install

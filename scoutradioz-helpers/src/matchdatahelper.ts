@@ -696,7 +696,7 @@ export class MatchDataHelper {
 		outputClause['contributedPointsEMA'] = thisEMAclause;
 	
 		setWindowFieldsClause['output'] = outputClause;
-		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
+		logger.trace('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 		let groupClause: MongoDocument = {};
@@ -852,7 +852,7 @@ export class MatchDataHelper {
 			}
 		}
 		setWindowFieldsClause['output'] = outputClause;
-		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
+		logger.trace('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 		
 		let groupClause: MongoDocument = {};
@@ -871,7 +871,7 @@ export class MatchDataHelper {
 		}
 	
 		aggQuery.push({ $group: groupClause });
-		// logger.trace('aggQuery=' + JSON.stringify(aggQuery,0,2));
+		logger.debug('aggQuery=', aggQuery);
 	
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggR = await utilities.aggregate('matchscouting', aggQuery);
