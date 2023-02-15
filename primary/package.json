@@ -57,7 +57,7 @@
 	"dependencies": {
 		"@firstteam102/connect-mongo": "~4.6.1-test1",
 		"@firstteam102/http-errors": "^1.0.9",
-		"@firstteam102/scoutradioz-helpers": "^1.1.4",
+		"@firstteam102/scoutradioz-helpers": "file:../scoutradioz-helpers",
 		"@firstteam102/scoutradioz-utilities": "^1.3.0",
 		"aws-serverless-express": "^3.4.0",
 		"bcryptjs": "^2.4.3",
