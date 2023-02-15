@@ -395,12 +395,12 @@ router.get('/comments', wrap(async (req, res) => {
 	});
 }));
 
-router.get('/matchscores', wrap(async (req, res) => {
-	logger.addContext('funcName', 'matchscores[get]');
+router.get('/spr', wrap(async (req, res) => {
+	logger.addContext('funcName', 'spr[get]');
 	logger.info('ENTER');
 
 	let eventKey = req.event.key;
-	let orgKey = req._user.org_key;
+	//let orgKey = req._user.org_key;
 	
 	let lookbackto = req.query.lookbackto;
 	if (typeof lookbackto !== 'string')
@@ -437,6 +437,125 @@ router.get('/matchscores', wrap(async (req, res) => {
 			}
 			else {
 				let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
+
+				// 2023-02-13, M.O'C: Revising to only use 'totalPoints' minus 'foulPoints'
+				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
+				let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
+				let frcTot = totalPoints - foulPoints;
+
+				let orgTot = 0;
+				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
+					let thisScoutReport = matchScoutReports[scoutIdx].data;
+					orgTot += getNumberFrom(thisScoutReport, 'contributedPoints');
+				}
+
+				// score
+				let errDiff = Math.abs(orgTot - frcTot);
+				let errRatio = errDiff / frcTot;
+				if (errRatio > 1.0)
+					errRatio = 1.0;
+
+				// track scores
+				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
+					let thisScoutName = matchScoutReports[scoutIdx].actual_scorer;
+					if (!thisScoutName) {
+						logger.trace('No actual_scorer for scout report idx=' + scoutIdx);
+						continue;
+					}
+					let thisScoutRecord = scoutScoreDict[thisScoutName];
+					if (!thisScoutRecord) {
+						scoutScoreDict[thisScoutName] = {count: 1, avgDiff: errDiff, avgRatio: errRatio, totDiff: errDiff, totRatio: errRatio};
+					}
+					else {
+						let newCount = thisScoutRecord.count + 1;
+						let newTotDiff = thisScoutRecord.totDiff + errDiff;
+						let avgDiff = newTotDiff / newCount;
+						let newTotRatio = thisScoutRecord.totRatio + errRatio;
+						let avgRatio = newTotRatio / newCount;
+						scoutScoreDict[thisScoutName] = {count: newCount, avgDiff: avgDiff, avgRatio: avgRatio, totDiff: newTotDiff, totRatio: newTotRatio};
+					}
+				}
+
+				let frcRow = [];
+				frcRow.push(thisMatch.key + ' - ' + thisAlliance);
+				frcRow.push('');
+				frcRow.push('');
+				frcRow.push(frcTot);
+
+				let orgRow = [];
+				if (!matchScoutReports[0].actual_scorer || !matchScoutReports[1].actual_scorer || !matchScoutReports[2].actual_scorer) {
+					throw new e.InternalServerError('actual_scorer not defined for the first three matchScoutReports');
+				}
+				orgRow.push(matchScoutReports[0].actual_scorer.split(' ')[0]
+					+ ', ' + matchScoutReports[1].actual_scorer.split(' ')[0]
+					+ ', ' + matchScoutReports[2].actual_scorer.split(' ')[0]);
+				orgRow.push(errDiff);
+				orgRow.push(errRatio);
+				orgRow.push(orgTot);
+				
+				console.log('FRC=' + JSON.stringify(frcRow));
+				console.log('Org=' + JSON.stringify(orgRow));
+
+				returnCompareTable.push(frcRow);
+				returnCompareTable.push(orgRow);
+			}
+		}
+	}
+	// final results
+	console.log('scoutScoreDict=' + JSON.stringify(scoutScoreDict));
+
+	//logger.debug('match=' + JSON.stringify(match));
+	res.render('./manage/audit/spr', { // TODO: change url to something more representative of what it is
+		title: 'Scouter Performance Rating',
+		compareTable: returnCompareTable,
+		scouterScoring: scoutScoreDict
+	});
+}));
+
+router.get('/matchscores', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matchscores[get]');
+	logger.info('ENTER');
+
+	let eventKey = req.event.key;
+	//let orgKey = req._user.org_key;
+	
+	let lookbackto = req.query.lookbackto;
+	if (typeof lookbackto !== 'string')
+		lookbackto = '1';
+	let lookbacktoIndex = parseInt(lookbackto) - 1;
+	
+	let matches: Match[] = await utilities.find('matches',
+		{ 'event_key': eventKey, 'match_number': { '$gt': lookbacktoIndex }, 'score_breakdown': { '$ne': undefined } }, { sort: { match_number: -1 } },
+		{allowCache: true, maxCacheAge: 10}
+	);
+
+	// set up the return data table - we'll add alternating rows of FRC & scouting data
+	let returnCompareTable = [];
+	// dictionary of scouts - each item should be keyed by scout name and contain (a) total matches scouted + (b) total error point diffs & ratios	
+	let scoutScoreDict: Dict<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number}> = {};
+
+	// cycle through match objects; for each one, cycle through 'red' and 'blue' array
+	// for each alliance, pull scouting data - if less than 3 found, can't compare
+	let allianceArray: Array<'red'|'blue'> = ['red', 'blue'];
+	for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
+		let thisMatch = matches[matchIdx];
+		for (let allianceIdx = 0; allianceIdx < allianceArray.length; allianceIdx++) {
+			let thisAlliance = allianceArray[allianceIdx];
+			console.log('thisAlliance=' + thisAlliance + ',thisMatch.key=' + thisMatch.key);
+
+			// retrieve the scouting data for this match
+			let matchScoutReports: MatchScouting[] = await utilities.find('matchscouting',
+				{ 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { '$ne': null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
+			);
+			console.debug('matchScoutReports.length=' + matchScoutReports.length);
+			// can't compare if we don't have three (3) scouting reports
+			if (matchScoutReports.length != 3) {
+				// TODO
+			}
+			else {
+				let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
+
+				// 2023-02-13, M.O'C: Revising to only use 'totalPoints' & 'foulPoints'
 				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
 				let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
 				let teleopPoints = getNumberFrom(thisScoreBreakdown, 'teleopPoints');

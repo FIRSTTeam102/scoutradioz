@@ -1,0 +1,60 @@
+//-
+	New as of 2023 scoring audits - flexible for multiple orgs & multiple years
+		reports.js
+		'/manage/scoutingaudit/spr'
+			QUERY: lookbackto (the match # to look back to; if omitted, will show & calculate across all matches so far at the current event
+extends ../../layout
+include ../../reports/mixins/metricTables
+block content
+	style.
+		.w3-tooltip .w3-tooltiptext{
+			width: 120px;
+			padding: 8px 16px;
+			margin-left: -60px;
+		}
+
+	h2(class="theme-text") Per-match auditing
+
+	div(class="w3-show-inline-block")
+		table(class="w3-table")
+			tr
+				th(class="w3-center") Match/scouts
+				th(class="w3-right-align w3-tooltip") Point diff
+					span.w3-tooltiptext Count of matches scouted
+				th(class="w3-right-align w3-tooltip") Err Ratio
+					span.w3-tooltiptext Average points difference
+				th(class="w3-right-align w3-tooltip") Total Points
+					span.w3-tooltiptext Average ratio of error
+			each matchall, i in compareTable
+				tr
+					td(class="w3-text-light-gray w3-center")= matchall[0]
+					td(class="w3-text-light-gray w3-center")= matchall[1]
+					td(class="w3-text-light-gray w3-center")= Math.round(matchall[2]*10)/10
+					td(class="w3-text-light-gray w3-center")= matchall[3]
+
+	h2(class="theme-text") Scouter scores
+	h6 <i>Click on a column header to sort by that column's information (click again to change sort direction)</i>
+
+	div(class="w3-show-inline-block")
+		table(class="w3-table" id="metricTable")
+			tr
+				th(class="w3-center") Scout
+				th(class="w3-right-align w3-tooltip")  Count
+					span.w3-tooltiptext Count of matches scouted
+				th(class="w3-right-align w3-tooltip")  AvgDiff
+					span.w3-tooltiptext Average points difference
+				th(class="w3-right-align w3-tooltip")  AvgRatio
+					span.w3-tooltiptext Average ratio of error
+				th(class="w3-right-align w3-tooltip")  TotalDiff
+					span.w3-tooltiptext Total cumulative difference
+				th(class="w3-right-align w3-tooltip")  TotalRatio
+					span.w3-tooltiptext Total cumulative error
+			each scout, i in scouterScoring
+				tr
+					td(class="w3-text-light-gray w3-center")= i
+					td(class="w3-text-light-gray w3-center")= scout.count
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.avgDiff*10)/10
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.avgRatio*10)/10
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.totDiff*10)/10
+					td(class="w3-text-light-gray w3-center")= Math.round(scout.totRatio*10)/10
+	+tableSorter()
