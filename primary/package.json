@@ -86,6 +86,7 @@
 		"ext": "js,ts,pug,json"
 	},
 	"devDependencies": {
-		"@firstteam102/scoutradioz-types": "file:../scoutradioz-types"
+		"@firstteam102/scoutradioz-types": "file:../scoutradioz-types",
+		"typescript-json-schema": "^0.55.0"
 	}
 }

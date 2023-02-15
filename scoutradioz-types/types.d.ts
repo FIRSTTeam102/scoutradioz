@@ -82,27 +82,12 @@ export declare interface Event extends DbDocument {
 	timezone?: string|null;
 }
 
-declare interface FormSliderOptions {
-	min: number;
-	max: number;
-	step: number;
-}
-
 /**
  * A question/metric in the pit or match scouting form.
  * @collection layout
  * @interface Layout
  */
-export declare interface Layout extends DbDocument {
-	year: number;
-	order: number|string;
-	type: 'checkbox'|'counter'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
-	form_type: 'matchscouting'|'pitscouting';
-	org_key: OrgKey;
-	label?: string;
-	id?: string;
-	options?: FormSliderOptions | string[];
-}
+export declare type Layout = StandardLayout | MultiSelectLayout | SliderLayout | DerivedLayout;
 
 /**
  * Identical to pit/match scouting BUT sets year, order, and form_type to optional
@@ -110,11 +95,39 @@ export declare interface Layout extends DbDocument {
  * @collection layoutedit
  * @interface LayoutEdit
  */
-export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key' | 'year' | 'order'> {
-	year?: number;
-	form_type?: 'matchscouting'|'pitscouting';
-	org_key?: OrgKey;
-	order?: number|string;
+export declare type LayoutEdit = Partial<Layout> & Omit<Layout, 'form_type' | 'org_key' | 'year' | 'order'>;
+
+/**
+ * The most basic layout there is
+ */
+export declare interface GenericLayout extends DbDocument {
+	year: number;
+	order: number | string;
+	form_type: 'matchscouting' | 'pitscouting';
+	org_key: OrgKey;
+	label?: string;
+	id?: string;
+	type: string;
+}
+
+export declare interface StandardLayout extends GenericLayout {
+	type: 'checkbox' | 'counter' | 'badcounter' | 'textblock' | 'h2' | 'h3' | 'spacer';
+}
+
+export declare interface MultiSelectLayout extends GenericLayout {
+	type: 'multiselect';
+	options?: string[];
+}
+
+export declare interface SliderLayout extends GenericLayout {
+	type: 'slider' | 'timeslider';
+	options: FormSliderOptions;
+}
+
+declare interface FormSliderOptions {
+	min: number;
+	max: number;
+	step: number;
 }
 
 /**
@@ -122,7 +135,7 @@ export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key'
  * @collection layout
  * @interface DerivedLayout
  */
-export declare interface DerivedLayout extends Layout{
+export declare interface DerivedLayout extends GenericLayout {
 	type: 'derived';
 	operations: DerivedOperation[];
 	id: string;
