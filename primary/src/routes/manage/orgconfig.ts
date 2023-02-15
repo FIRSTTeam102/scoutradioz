@@ -201,7 +201,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	logger.info(`Removed ${removeResult.deletedCount} prior form records`);
 
 	// 2. write in new/updated data
-	let writeResult: InsertManyResult<Document> | undefined = await utilities.insert('layout', formdata);
+	let writeResult: InsertManyResult<MongoDocument> | undefined = await utilities.insert('layout', formdata);
 	if (writeResult)
 		logger.info(`Inserted ${writeResult.insertedCount} new form records`);
 	else

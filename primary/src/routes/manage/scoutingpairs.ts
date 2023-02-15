@@ -493,7 +493,7 @@ async function generateMatchAllocations(req: express.Request, res: express.Respo
 	}
 	
 	// Build up the scoringdata array
-	let scoringDataArray = [];
+	let scoringDataArray: MatchScouting[] = [];
 	// Loop through each match
 	let matchLen = matchArray.length;
 	

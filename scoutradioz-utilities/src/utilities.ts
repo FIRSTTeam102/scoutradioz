@@ -8,7 +8,7 @@ import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import crypto from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
-import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
+import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from '@firstteam102/scoutradioz-types';
 
 const logger = log4js.getLogger('utilities');
 logger.level = process.env.LOG_LEVEL || 'info';
@@ -47,14 +47,14 @@ interface FilterOps<TValue> {
     $regex?: TValue extends string ? RegExp | BSONRegExp | string : never;
     $options?: TValue extends string ? string : never;
     $geoIntersects?: {
-        $geometry: Document;
+        $geometry: MongoDocument
     };
-    $geoWithin?: Document;
-    $near?: Document;
-    $nearSphere?: Document;
+    $geoWithin?: MongoDocument
+    $near?: MongoDocument
+    $nearSphere?: MongoDocument
     $maxDistance?: number;
     $all?: ReadonlyArray<any>;
-    $elemMatch?: Document;
+    $elemMatch?: MongoDocument
     $size?: TValue extends ReadonlyArray<any> ? number : never;
     $bitsAllClear?: BitwiseFilter;
     $bitsAllSet?: BitwiseFilter;
@@ -427,7 +427,7 @@ export class Utilities {
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
 		options?: Opts, 
 		cacheOptions?: UtilitiesCacheOptions
-	): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchema<colName>[]> {
+	): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchemaWithId<colName>[]> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
@@ -520,7 +520,7 @@ export class Utilities {
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
 		options?: Opts, 
 		cacheOptions?: UtilitiesCacheOptions
-	): Promise<CollectionSchema<colName>> {
+	): Promise<CollectionSchemaWithId<colName>> {
 		logger.addContext('funcName', 'findOne');
 		
 		//Collection type filter
@@ -776,7 +776,7 @@ export class Utilities {
 		collection: colName, 
 		field: Field, 
 		query: FilterQueryTyped<CollectionSchema<colName>>
-	): Promise<CollectionSchema<colName>[Field][]>{
+	): Promise<CollectionSchemaWithId<colName>[Field][]>{
 		logger.addContext('funcName', 'distinct');
 		
 		//If the collection is not specified and is not a String, throw an error.

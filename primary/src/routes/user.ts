@@ -707,7 +707,7 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 	
 	logger.trace('req.body=' + JSON.stringify(req.body));
 	
-	let columnArray = [];
+	let columnArray: string[] = [];
 	for (let key in req.body) {
 		if (key === 'setOrgDefault') {
 			setOrgDefault = true;

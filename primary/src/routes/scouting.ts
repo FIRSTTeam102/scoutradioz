@@ -6,7 +6,7 @@ import utilities from '@firstteam102/scoutradioz-utilities';
 import Permissions from '../helpers/permissions';
 import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
 import e from '@firstteam102/http-errors';
-import type { MatchScouting, Team, Layout, PitScouting, User, ScouterRecord } from '@firstteam102/scoutradioz-types';
+import type { MatchScouting, Team, Layout, PitScouting, User, ScouterRecord, MatchFormData } from '@firstteam102/scoutradioz-types';
 import { ObjectId } from 'mongodb';
 
 const router = express.Router();
@@ -46,7 +46,7 @@ router.get('/match*', wrap(async (req, res) => {
 	let scoringdata: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
 		
 	//scouting answers for this match are initialized as null for visibility
-	let answers = null;
+	let answers: MatchFormData|null = null;
 	
 	if( scoringdata && scoringdata[0] ){
 		
@@ -293,7 +293,7 @@ router.get('/pit*', wrap(async (req, res) => {
 	
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
-	let pitData = null;
+	let pitData: StringDict|null = null;
 	if (pitFind && pitFind[0])
 		if (pitFind[0].data)
 			pitData = pitFind[0].data;

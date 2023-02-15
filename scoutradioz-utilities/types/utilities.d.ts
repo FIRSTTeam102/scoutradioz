@@ -2,7 +2,7 @@ import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
 import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import type { Request, Response, NextFunction } from 'express';
-import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
+import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from '@firstteam102/scoutradioz-types';
 /**
  * Valid primitives for use in mongodb queries
  */
@@ -36,14 +36,14 @@ interface FilterOps<TValue> {
     $regex?: TValue extends string ? RegExp | BSONRegExp | string : never;
     $options?: TValue extends string ? string : never;
     $geoIntersects?: {
-        $geometry: Document;
+        $geometry: MongoDocument;
     };
-    $geoWithin?: Document;
-    $near?: Document;
-    $nearSphere?: Document;
+    $geoWithin?: MongoDocument;
+    $near?: MongoDocument;
+    $nearSphere?: MongoDocument;
     $maxDistance?: number;
     $all?: ReadonlyArray<any>;
-    $elemMatch?: Document;
+    $elemMatch?: MongoDocument;
     $size?: TValue extends ReadonlyArray<any> ? number : never;
     $bitsAllClear?: BitwiseFilter;
     $bitsAllSet?: BitwiseFilter;
@@ -182,7 +182,7 @@ export declare class Utilities {
      * @param cacheOption Caching options.
      * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
      */
-    find<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchema<colName>[]>;
+    find<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchemaWithId<colName>[]>;
     /**
      * Asynchronous "findOne" function to a collection specified in first parameter.
      * @param collection Collection to findOne in.
@@ -191,7 +191,7 @@ export declare class Utilities {
      * @param cacheOptions Caching options.
      * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
      */
-    findOne<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<CollectionSchema<colName>>;
+    findOne<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<CollectionSchemaWithId<colName>>;
     /**
      * Asynchronous "update" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -224,7 +224,7 @@ export declare class Utilities {
      * @param query The query for filtering the set of documents to which we apply the distinct filter.
      * @returns Distinct values for the specified field
      */
-    distinct<colName extends CollectionName, Field extends (keyof CollectionSchema<colName> | `${string}.${string}`)>(collection: colName, field: Field, query: FilterQueryTyped<CollectionSchema<colName>>): Promise<CollectionSchema<colName>[Field][]>;
+    distinct<colName extends CollectionName, Field extends (keyof CollectionSchema<colName> | `${string}.${string}`)>(collection: colName, field: Field, query: FilterQueryTyped<CollectionSchema<colName>>): Promise<CollectionSchemaWithId<colName>[Field][]>;
     /**
      * Asynchronous "bulkWrite" function to a collection specified in first parameter.
      * @param collection Collection to find in.

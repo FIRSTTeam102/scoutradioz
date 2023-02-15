@@ -87,8 +87,8 @@ router.post('/', wrap(async (req, res) => {
 		// If it's a comma separated list, then set team_keys instead of team_key
 		if (teamKey.includes(',')) {
 			let teamKeys = teamKey.split(',');
-			let fixedTeamKeys = [];
-			let teamNumbers = [];
+			let fixedTeamKeys: string[] = [];
+			let teamNumbers: number[] = [];
 			for (let key of teamKeys) {
 				key = key.trim();
 				if (!key.startsWith('frc')) throw new e.UserError('Team key is invalid.');
