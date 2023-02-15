@@ -253,7 +253,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			// {'event_info.assigned': true, 'org_key': org_key}
 		]}, 
 		{ sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, 'name': 1} }
-	);
+	) as WithDbId<User>[]; // JL: temporary
 	
 	logger.trace('*** Assigned + available, by seniority:');
 	for (let i in matchScouts)
@@ -420,11 +420,11 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 	
 	logger.trace(`Selected members: ${data}`);
 	
-	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key});
-	let member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key});
+	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key}) as WithDbId<User>; // JL: Temporary until i fix the most recent version of utilities
+	let member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key}) as WithDbId<User>;
 	let member3;
 	if (selectedMembers.member3)
-		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key});
+		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key}) as WithDbId<User>;
 	
 	let idList = [member1._id, member2._id]; // for bulkWrite operation
 	let newScoutingPair: ScoutingPair = {
@@ -609,7 +609,7 @@ router.get('/swapmatchscouters', wrap(async (req, res) => {
 		
 	// Get the distinct list of scorers from the unresolved matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }});
+	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}) as ScouterRecord[];
 	logger.debug('distinct assigned_scorers: ' + JSON.stringify(scorers));
 	
 	// 2022-02-07 JL: sorting le scorers' names
@@ -651,7 +651,7 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	logger.info(thisFuncName + 'swap out ' + swapinID + ', swap in ' + swapoutID);
 	
 	let swapout = await utilities.findOne('users', {_id: swapoutID});
-	let swapin = await utilities.findOne('users', {_id: swapinID});
+	let swapin = await utilities.findOne('users', {_id: swapinID}) as WithDbId<User>; // JL: temporary till i fix utilities
 	
 	assert(swapout && swapin, new e.InternalDatabaseError('Could not find both users in database!')); // Make sure users are found in the db
 
