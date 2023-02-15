@@ -2,7 +2,8 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation } from '@firstteam102/scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, CollectionSchema, DerivedLayout, Layout } from '@firstteam102/scoutradioz-types';
+import assert from 'assert';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -118,14 +119,17 @@ export class MatchDataHelper {
 			{org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived'}, 
 			{sort: {'order': 1}},
 			{allowCache: true}
-		);
+		) as DerivedLayout[];
+		
 		// let dt = performance.now();
 
-		for (let thisItem of derivedLayout) {
+		for (let i in derivedLayout) {
+			const thisItem: DerivedLayout = derivedLayout[i];
 			let derivedMetric: number|null = NaN;
 			// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
 			//	Error checking should be done at the time of creating the layout. (TODO: error checking :] )
 			//	The very last operator must NOT have an "as", and every consequent operator should probably have an "as"
+			
 			let operations = thisItem.operations;
 			let variables: NumericalDict = {};
 			let length = operations.length;
@@ -136,7 +140,7 @@ export class MatchDataHelper {
 				switch (thisOp.operator) {
 					// sum operands: [a, b, c, ...]
 					case 'sum': case 'add': {
-						let thisOp: SumOperation = operations[i];
+						let thisOp = operations[i] as SumOperation;
 						let operands = thisOp.operands;
 						
 						let sum = 0;
@@ -152,7 +156,7 @@ export class MatchDataHelper {
 					}
 					// multiply operands: [a, b, c, ...]
 					case 'multiply': {
-						let thisOp: MultiplyOperation = operations[i];
+						let thisOp = operations[i] as MultiplyOperation;
 						let operands = thisOp.operands;
 						
 						let product = 1;
@@ -168,7 +172,7 @@ export class MatchDataHelper {
 					}
 					// subtract operands: [minuend, subtrahend] (a - b -> [a, b])
 					case 'subtract': {
-						let thisOp: SubtractOperation = operations[i];
+						let thisOp = operations[i] as SubtractOperation;
 						let operands = thisOp.operands;
 						
 						let minuendKey = operands[0];
@@ -190,7 +194,7 @@ export class MatchDataHelper {
 					}
 					// divide operands: [dividend, divisor] (a/b -> [a, b])
 					case 'divide': {
-						let thisOp: DivideOperation = operations[i];
+						let thisOp = operations[i] as DivideOperation;
 						let operands = thisOp.operands;
 						
 						let dividendKey = operands[0];
@@ -216,7 +220,7 @@ export class MatchDataHelper {
 					// Min / Max between two numbers
 					// operands: [a, b] => max(a, b) or min(a, b)
 					case 'min': case 'max': {
-						let thisOp: MinMaxOperation = operations[i];
+						let thisOp = operations[i] as MinMaxOperation;
 						let operands = thisOp.operands;
 						
 						let aKey = operands[0];
@@ -241,7 +245,7 @@ export class MatchDataHelper {
 					}
 					// Log operands: [x, base] => log(x) / log(base)
 					case 'log': {
-						let thisOp: LogOperation = operations[i];
+						let thisOp = operations[i] as LogOperation;
 						let operands = thisOp.operands;
 						
 						let inputKey = operands[0];
@@ -261,7 +265,7 @@ export class MatchDataHelper {
 					}
 					// abs operands: [a] => Math.abs(a)
 					case 'abs': {
-						let thisOp: AbsoluteValueOperation = operations[i];
+						let thisOp = operations[i] as AbsoluteValueOperation;
 						let operands = thisOp.operands;
 						
 						let inputKey = operands[0];
@@ -279,7 +283,7 @@ export class MatchDataHelper {
 					}
 					// multiselect quantifiers: {option1: value1, option2: value2, ...}; variables not supported
 					case 'multiselect': {
-						let thisOp: MultiselectOperation = operations[i];
+						let thisOp = operations[i] as MultiselectOperation;
 						
 						// TODO: enforce that multiselect only applies to multiselect data type
 						let key = matchData[thisOp.id]; 
@@ -291,7 +295,7 @@ export class MatchDataHelper {
 					}
 					// condition operands: [boolean, valueIfTrue, valueIfFalse]
 					case 'condition': {
-						let thisOp: ConditionOperation = operations[i];
+						let thisOp = operations[i] as ConditionOperation;
 						let operands = thisOp.operands;
 						
 						let conditionKey = operands[0];
@@ -339,7 +343,7 @@ export class MatchDataHelper {
 					//	Future note for building an error checking script: Make sure that the output of any of these operators is NOT used in sum, multiply, etc. Only in conditionals.
 					//	operands ex: gt: [a, b] -> true if a > b, false if a <= b
 					case 'gt': case 'gte': case 'lt': case 'lte': case 'eq': case 'ne': {
-						let thisOp: CompareOperation = operations[i];
+						let thisOp = operations[i] as CompareOperation;
 						let operands = thisOp.operands;
 						
 						let aKey = operands[0];
@@ -433,10 +437,7 @@ export class MatchDataHelper {
 			let thisConfig = thisOrg.config;
 			logger.trace('thisConfig=' + JSON.stringify(thisConfig));
 			
-			if (!thisConfig) {
-				thisConfig = {};
-				thisOrg['config'] = thisConfig;
-			}
+			assert(thisConfig, 'Org has no config!'); // 2023-02-14 JL: Changed if (!thisConfig) thisConfig = {}; to an assert b/c orgs should always have a config
 			let theseColDefaults = thisOrg.config.columnDefaults;
 			if (!theseColDefaults) {
 				theseColDefaults = {};
@@ -470,6 +471,7 @@ export class MatchDataHelper {
 			for (let thisLayout of scorelayoutDB) {
 				//var thisLayout = scorelayoutDB[i];
 				if (this.isQuantifiableType(thisLayout.type)) {
+					assert(thisLayout.id, `Layout element has no ID: ${JSON.stringify(thisLayout)}`);
 					if (savedCols[thisLayout.id]) 
 						scorelayout.push(thisLayout);
 				}
@@ -521,7 +523,7 @@ export class MatchDataHelper {
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			//pull this layout element from score layout
 			let thisLayout = scorelayout[scoreIdx];
-			thisLayout.key = thisLayout.id;
+			// thisLayout.key = thisLayout.id; // 2023-02-14 JL: Changed thisLayout.key back to thisLayout.id because thisLayout.key was already set to thisLayout.id anyways
 			scorelayout[scoreIdx] = thisLayout;
 			//if it is a valid data type, add this layout's ID to groupClause
 			if (this.isQuantifiableType(thisLayout.type)) {
@@ -560,17 +562,17 @@ export class MatchDataHelper {
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggArray: MongoDocument[] = await utilities.aggregate('matchscouting', aggQuery);
 				
-		let aggMinMaxArray: MongoDocument[] = [];
+		let aggMinMaxArray: AggRange[] = [];
 	
 		// Cycle through & build a map of min/max values per scoring type per aggregation
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
 			if (this.isQuantifiableType(thisLayout.type)) {
-				let thisMinMax: MongoDocument = {};
+				// let thisMinMax: MongoDocument = {};
 				// 2020-02-08, M.O'C: Tweaking agg ranges
 				// This data element is specifically for this organization & a specific event
-				thisMinMax['org_key'] = org_key;
-				thisMinMax['event_key'] = event_key;
+				// thisMinMax['org_key'] = org_key;
+				// thisMinMax['event_key'] = event_key;
 	
 				// initialize ranges
 				let MINmin = 999999; let MINmax = 0; let AVGmin = 999999; let AVGmax = 0; let VARmin = 999999; let VARmax = 0; let MAXmin = 999999; let MAXmax = 0;
@@ -594,11 +596,24 @@ export class MatchDataHelper {
 				VARmin = parseFloat(VARmin.toFixed(1)); VARmax = parseFloat(VARmax.toFixed(1));
 				MAXmin = parseFloat(MAXmin.toFixed(1)); MAXmax = parseFloat(MAXmax.toFixed(1));
 	
-				thisMinMax['key'] = thisLayout.key;
-				thisMinMax['MINmin'] = MINmin; thisMinMax['MINmax'] = MINmax;
-				thisMinMax['AVGmin'] = AVGmin; thisMinMax['AVGmax'] = AVGmax;
-				thisMinMax['VARmin'] = VARmin; thisMinMax['VARmax'] = VARmax;
-				thisMinMax['MAXmin'] = MAXmin; thisMinMax['MAXmax'] = MAXmax;
+				// thisMinMax['key'] = thisLayout.id; // 2023-02-14 JL: Changed thisLayout.key back to thisLayout.id because thisLayout.key was already set to thisLayout.id anyways
+				// thisMinMax['MINmin'] = MINmin; thisMinMax['MINmax'] = MINmax;
+				// thisMinMax['AVGmin'] = AVGmin; thisMinMax['AVGmax'] = AVGmax;
+				// thisMinMax['VARmin'] = VARmin; thisMinMax['VARmax'] = VARmax;
+				// thisMinMax['MAXmin'] = MAXmin; thisMinMax['MAXmax'] = MAXmax;
+				
+				assert(thisLayout.id, `Layout element does not have an ID!!! ${JSON.stringify(thisLayout)}`);
+				
+				// 2023-02-14 JL: Switched to creating the object all at once, to make TypeScript happy
+				let thisMinMax: AggRange = {
+					org_key,
+					event_key,
+					key: thisLayout.id,
+					MINmin, MINmax,
+					AVGmin, AVGmax,
+					VARmin, VARmax,
+					MAXmin, MAXmax
+				};
 	
 				logger.trace('thisMinMax=' + JSON.stringify(thisMinMax));
 	

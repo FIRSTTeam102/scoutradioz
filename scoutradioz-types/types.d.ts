@@ -125,12 +125,12 @@ export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key'
 export declare interface DerivedLayout extends Layout{
 	type: 'derived';
 	operations: DerivedOperation[];
+	id: string;
 	display_as?: string;
 }
 
 export declare interface DerivedOperation {
 	operator: string;
-	id: string;
 	as?: string;
 }
 
@@ -158,6 +158,7 @@ export declare interface DivideOperation extends DerivedOperation {
 
 export declare interface MultiselectOperation extends DerivedOperation {
 	quantifiers: NumericalDict;
+	id: string;
 }
 
 export declare interface ConditionOperation extends DerivedOperation {

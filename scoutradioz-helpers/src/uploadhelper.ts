@@ -1,7 +1,8 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import { Utilities } from '@firstteam102/scoutradioz-utilities';
-import { Team, Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-types';
+import type { Utilities } from '@firstteam102/scoutradioz-utilities';
+import type { Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-types';
+import { Team } from '@firstteam102/scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -136,6 +137,7 @@ export class UploadHelper {
 				let bNum = parseInt(b.team_key.substring(3));
 				return aNum - bNum;
 			}
+			return 0;
 		});
 		
 		//Array of ImageLinks, ordered by team

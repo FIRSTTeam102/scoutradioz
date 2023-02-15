@@ -9,6 +9,7 @@
 		"declaration": true,
 		"declarationDir": "./types",
 		"noImplicitAny": true,
+		"skipLibCheck": true,
 		//   "removeComments": true,
 	},
 	"include": [

@@ -1,5 +1,5 @@
-import { Utilities } from '@firstteam102/scoutradioz-utilities';
-import { Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-types';
+import type { Utilities } from '@firstteam102/scoutradioz-utilities';
+import type { Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-types';
 export declare class UploadHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
