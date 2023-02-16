@@ -46,7 +46,7 @@
 		"@smui/textfield": "^7.0.0-beta.0",
 		"@smui/top-app-bar": "^7.0.0-beta.0",
 		"@smui/touch-target": "^7.0.0-beta.0",
-		"@sveltejs/kit": "1.5.5",
+		"@sveltejs/kit": "1.7.1",
 		"@types/qrcode": "^1.5.0",
 		"@yarbsemaj/adapter-lambda": "^1.0.1",
 		"autoprefixer": "^10.4.13",
