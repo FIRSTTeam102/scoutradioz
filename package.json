@@ -7,10 +7,10 @@
 	},
 	"scripts": {
 		"lint": "./node_modules/.bin/eslint primary/app.js",
-		"update": "yarn && cd scoutradioz-helpers && npm run update && npm run build && cd ../primary && npm run update",
-		"setup": "yarn && npm run setup-packages && npm run setup-express-functions",
+		"update": "yarn && cd scoutradioz-helpers && yarn run update && yarn run build && cd ../primary && yarn run update",
+		"setup": "yarn && yarn run setup-packages && yarn run setup-express-functions",
 		"setup-express-functions": "cd primary && yarn && cd public-src && yarn && cd ../../upload && yarn && cd ../webhook && yarn",
-		"setup-packages": "cd scoutradioz-utilities && yarn && npm run build && cd ../scoutradioz-http-errors && npm run build && cd ../scoutradioz-helpers && yarn && npm run build",
+		"setup-packages": "cd scoutradioz-utilities && yarn && yarn run build && cd ../scoutradioz-http-errors && yarn run build && cd ../scoutradioz-helpers && yarn && yarn run build",
 		"start": "node scripts/dev.js"
 	},
 	"devDependencies": {
