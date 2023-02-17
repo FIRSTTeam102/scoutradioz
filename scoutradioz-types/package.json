@@ -1,5 +1,5 @@
 {
-	"name": "@firstteam102/scoutradioz-types",
+	"name": "scoutradioz-types",
 	"version": "2.0.0",
 	"description": "Type declarations for objects in the Scoutradioz database.",
 	"types": "types.d.ts",

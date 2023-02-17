@@ -2,12 +2,12 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 // import utilities from '../../../scoutradioz-utilities/src/utilities';
 import Permissions from '../helpers/permissions';
-import e, { assert } from '@firstteam102/http-errors';
-import { matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import type { Role, Org, User, Layout } from '@firstteam102/scoutradioz-types';
+import e, { assert } from 'scoutradioz-http-errors';
+import { matchData as matchDataHelper } from 'scoutradioz-helpers';
+import type { Role, Org, User, Layout } from 'scoutradioz-types';
 import { ObjectId } from 'mongodb';
 
 const router = express.Router();

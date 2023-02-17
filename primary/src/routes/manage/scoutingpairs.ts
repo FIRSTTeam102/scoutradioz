@@ -2,10 +2,10 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e from '@firstteam102/http-errors';
-import type { Match, MatchScouting, OrgSubteam, PitScouting, ScoutingPair, Team, TeamKey} from '@firstteam102/scoutradioz-types';
+import e from 'scoutradioz-http-errors';
+import type { Match, MatchScouting, OrgSubteam, PitScouting, ScoutingPair, Team, TeamKey} from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('scoutingpairs');

@@ -1,7 +1,7 @@
 // This will restructure entries in previous years' derived metrics to match the new format
 process.env.TIER = 'prod';
 
-const utilities = require('@firstteam102/scoutradioz-utilities');
+const utilities = require('scoutradioz-utilities');
 const helpers = require('@firstteam102/scoutradioz-helpers');
 const mdh = helpers.matchData;
 const csv = require('csv');

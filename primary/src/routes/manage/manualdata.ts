@@ -1,10 +1,10 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e, { assert } from '@firstteam102/http-errors';
-import type { Org, Event, Match, RankingPoints, Ranking } from '@firstteam102/scoutradioz-types';
+import e, { assert } from 'scoutradioz-http-errors';
+import type { Org, Event, Match, RankingPoints, Ranking } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('manualdata');

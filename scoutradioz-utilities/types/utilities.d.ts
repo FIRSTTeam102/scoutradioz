@@ -1,16 +1,15 @@
 import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions, InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
 import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
-import type { Request, Response, NextFunction } from 'express';
-import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from '@firstteam102/scoutradioz-types';
+import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from 'scoutradioz-types';
 /**
  * Valid primitives for use in mongodb queries
  */
-declare type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
+type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
 /**
  * Valid type for the `_id` field in a mongodb query
  */
-declare type ValidID = ObjectId | string | FilterOps<ObjectId>;
+type ValidID = ObjectId | string | FilterOps<ObjectId>;
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
@@ -67,7 +66,7 @@ export interface FilterQuery {
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
  */
-export declare type FilterQueryTyped<T> = {
+export type FilterQueryTyped<T> = {
     _id?: ValidID;
     $or?: FilterQueryTyped<T>[];
     $and?: FilterQueryTyped<T>[];
@@ -80,7 +79,7 @@ export declare type FilterQueryTyped<T> = {
 /**
  * Update filter for the specified schema, but which allows `'foo.bar'` notation
  */
-export declare type UpdateFilterTyped<T> = UpdateFilter<T & {
+export type UpdateFilterTyped<T> = UpdateFilter<T & {
     [key: `${string}.${string}`]: any;
 }>;
 /**
@@ -169,11 +168,11 @@ export declare class Utilities {
      * @example
      * 	const app = express();
      * 	app.use(utilities.refreshTier);
-     * @param req Express req
-     * @param res Express res
      * @param manuallySpecifiedTier Svelte doesn't use process.env, so in this case, we manually specify the tier from the calling code
+     * @param unused
+     * @param nextFunction Express middleware next function
      */
-    refreshTier(req: Request, res: Response, next: NextFunction, manuallySpecifiedTier?: string): void;
+    refreshTier(...args: unknown[]): void;
     /**
      * Asynchronous "find" function to a collection specified in first parameter.
      * @param collection Collection to find in.

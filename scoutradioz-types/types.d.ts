@@ -561,7 +561,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'aggranges' ? AggRange :
 	colName extends 'events' ? Event :
 	// colName extends 'i18n' ?  :
-	colName extends 'layout' ? Layout :
+	colName extends 'layout' ? (DerivedLayout|Layout) :
 	colName extends 'matches' ? Match :
 	colName extends 'matchscouting' ? MatchScouting :
 	colName extends 'orgs' ? Org :
@@ -581,3 +581,5 @@ export declare type CollectionSchema<colName extends CollectionName> =
  * Gets the correct schema for the given collection name, with a guaranteed `_id` ObjectId.
  */
 export declare type CollectionSchemaWithId<colName extends CollectionName> = WithDbId<CollectionSchema<colName>>;
+
+declare let x: CollectionSchema<'layout'>;

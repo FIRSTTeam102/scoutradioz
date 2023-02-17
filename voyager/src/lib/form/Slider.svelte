@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Slider from '@smui/slider';
 	import type { LayoutField } from '$lib/types';
-	import type { FormSliderOptions } from '@firstteam102/scoutradioz-types';
+	import type { FormSliderOptions } from 'scoutradioz-types';
 
 	export let value: any = 0; // any because of weird casting to generic data
 	export let isTime = false;

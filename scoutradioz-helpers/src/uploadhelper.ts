@@ -1,8 +1,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import type { Utilities } from '@firstteam102/scoutradioz-utilities';
-import type { Upload, TeamKey, OrgKey } from '@firstteam102/scoutradioz-types';
-import { Team } from '@firstteam102/scoutradioz-types';
+import type { Utilities } from 'scoutradioz-utilities';
+import type { Upload, TeamKey, OrgKey } from 'scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';

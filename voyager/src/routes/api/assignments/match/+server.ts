@@ -1,6 +1,6 @@
 import utilities from '$lib/server/utilities';
 import { org_key, event_key, getStore } from '$lib/stores';
-import type { MatchScouting, StringDict } from '@firstteam102/scoutradioz-types';
+import type { MatchScouting, StringDict } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {

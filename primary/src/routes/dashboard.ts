@@ -1,12 +1,12 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../helpers/permissions';
-import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import e from '@firstteam102/http-errors';
-import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from '@firstteam102/scoutradioz-types';
+import { upload as uploadHelper, matchData as matchDataHelper } from 'scoutradioz-helpers';
+import e from 'scoutradioz-http-errors';
+import type { MongoDocument } from 'scoutradioz-utilities';
+import type { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('dashboard');

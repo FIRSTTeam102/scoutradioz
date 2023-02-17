@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { User, Event, Layout, Match, TeamKey, MatchScouting, Team } from '@firstteam102/scoutradioz-types';
+import type { User, Event, Layout, Match, TeamKey, MatchScouting, Team } from 'scoutradioz-types';
 
 /**
  * Minimal version of the User interface, for transferring via QR code.

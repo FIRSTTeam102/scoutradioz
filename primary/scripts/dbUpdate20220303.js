@@ -1,7 +1,7 @@
 // This will restructure entries in previous years' derived metrics to match the new format
 process.env.TIER = 'test';
 
-const utilities = require('@firstteam102/scoutradioz-utilities');
+const utilities = require('scoutradioz-utilities');
 const readline = require('readline');
 
 utilities.config(require('../databases.json'), {

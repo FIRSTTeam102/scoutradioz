@@ -46,7 +46,7 @@ const colIndexes = {
 
 process.env.TIER = 'dev';
 
-const utilities = require('@firstteam102/scoutradioz-utilities');
+const utilities = require('scoutradioz-utilities');
 const readline = require('./readline');
 
 utilities.config(require('../databases.json'), {

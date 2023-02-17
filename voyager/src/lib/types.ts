@@ -1,4 +1,4 @@
-import type { Layout } from '@firstteam102/scoutradioz-types';
+import type { Layout } from 'scoutradioz-types';
 export declare interface LayoutField extends Layout {
 	id: string;
 }

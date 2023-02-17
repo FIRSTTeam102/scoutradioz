@@ -1,5 +1,5 @@
 import utilities from '$lib/server/utilities';
-// import type { User } from '@firstteam102/scoutradioz-types';
+// import type { User } from 'scoutradioz-types';
 import type { LightUser } from '$lib/localDB';
 import type { RequestHandler } from './$types';
 

@@ -1,5 +1,5 @@
 import utilities from '$lib/server/utilities';
-import type { Team } from '@firstteam102/scoutradioz-types';
+import type { Team } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {

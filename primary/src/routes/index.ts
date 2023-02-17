@@ -1,8 +1,8 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
-import e from '@firstteam102/http-errors';
+import utilities from 'scoutradioz-utilities';
+import e from 'scoutradioz-http-errors';
 
 const router = express.Router();
 const logger = getLogger('index');

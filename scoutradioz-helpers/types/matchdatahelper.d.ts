@@ -1,5 +1,5 @@
-import type { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData } from '@firstteam102/scoutradioz-types';
+import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
+import type { Match, TeamKey, AggRange, MatchFormData } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.

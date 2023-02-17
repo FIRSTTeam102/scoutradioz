@@ -1,8 +1,8 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
-import type { Org } from '@firstteam102/scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import type { Org } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('share');

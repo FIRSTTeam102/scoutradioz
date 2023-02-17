@@ -5,7 +5,7 @@
 	import Multiselect from './Multiselect.svelte';
 	import Textblock from './Textblock.svelte';
 
-	// import type { AnyDict } from '@firstteam102/scoutradioz-types';
+	// import type { AnyDict } from 'scoutradioz-types';
 	import type { LayoutField } from '$lib/types';
 
 	export let layout: LayoutField[];

@@ -7,7 +7,10 @@
 	},
 	"scripts": {
 		"lint": "./node_modules/.bin/eslint primary/app.js",
-		"setup": "npm ci && cd primary && npm ci && cd ../upload && npm ci && cd ../webhook && npm ci",
+		"update": "yarn && cd scoutradioz-helpers && npm run update && npm run build && cd ../primary && npm run update",
+		"setup": "yarn && npm run setup-packages && npm run setup-express-functions",
+		"setup-express-functions": "cd primary && yarn && cd public-src && yarn && cd ../../upload && yarn && cd ../webhook && yarn",
+		"setup-packages": "cd scoutradioz-utilities && yarn && npm run build && cd ../scoutradioz-http-errors && npm run build && cd ../scoutradioz-helpers && yarn && npm run build",
 		"start": "node scripts/dev.js"
 	},
 	"devDependencies": {
@@ -19,9 +22,9 @@
 		"@types/express": "^4.17.13",
 		"@types/express-session": "^1.17.4",
 		"@types/express-useragent": "^1.0.2",
-		"@types/jquery": "3.5.14",
 		"@types/luxon": "^2.3.2",
 		"@types/marked": "^4.0.3",
+		"@types/node": "^18.13.0",
 		"@types/passport": "^1.0.11",
 		"@types/qunit": "^2.19.3",
 		"@types/sanitize-html": "^2.6.2",
@@ -50,6 +53,6 @@
 		"prettier-plugin-svelte": "^2.8.1",
 		"react": "^18.2.0",
 		"ts-node": "^10.7.0",
-		"typescript": "^4.6.2"
+		"typescript": "^4.9.5"
 	}
 }
