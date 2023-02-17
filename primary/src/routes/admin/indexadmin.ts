@@ -123,9 +123,11 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/manage/scoutingaudit/bymatch': 'Match-scouting audit- Sorted by match, Grouped by team',
 			'/manage/scoutingaudit/uploads': 'Audit page for students\' photo uploads',
 		},
-		'manage/scoutingpairs.ts': {
-			'/manage/scoutingpairs': 'Manage pairs for pit scouting and assignments for match scouting',
-			'/manage/scoutingpairs/swapmatchscouters': 'Match scouting swap ',
+		'manage/assignments.ts': {
+			'/manage/assignments': 'Manage pairs and assignments for pit scouting',
+			'/manage/assignments/matches': 'Generate match scouting assignments',
+			'/manage/assignments/swapmatchscouters': 'Match scouting swap ',
+			'/manage/assignments/swappitassignments': 'Swap teams for existing pit scouters',
 		},
 		'admin/indexadmin.ts': {
 			'/admin': 'Admin index page ',
