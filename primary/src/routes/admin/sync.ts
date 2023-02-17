@@ -1,9 +1,9 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
-import { matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import type { Event, MatchScouting } from '@firstteam102/scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import { matchData as matchDataHelper } from 'scoutradioz-helpers';
+import type { Event, MatchScouting } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('sync');

@@ -6,9 +6,8 @@ import type { Db, Document as MongoDocument,
 	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
 import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import crypto from 'crypto';
-import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
-import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from '@firstteam102/scoutradioz-types';
+import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from 'scoutradioz-types';
 
 const logger = log4js.getLogger('utilities');
 logger.level = process.env.LOG_LEVEL || 'info';
@@ -396,22 +395,27 @@ export class Utilities {
 	 * @example 
 	 * 	const app = express();
 	 * 	app.use(utilities.refreshTier);
-	 * @param req Express req
-	 * @param res Express res
 	 * @param manuallySpecifiedTier Svelte doesn't use process.env, so in this case, we manually specify the tier from the calling code
+	 * @param unused
+	 * @param nextFunction Express middleware next function
 	 */
-	refreshTier(req: Request, res: Response, next: NextFunction, manuallySpecifiedTier?: string) {
+	refreshTier(...args: unknown[]) {
 		
+		let manuallySpecifiedTier = args[0];
+		// Grab the tier -- either the first parameter or process.env.TIER
+		if (typeof manuallySpecifiedTier === 'string') Utilities.instance.activeTier = manuallySpecifiedTier;
+		else Utilities.instance.activeTier = process.env.TIER;
 		//set ready to true
 		Utilities.instance.ready = true;
-		Utilities.instance.activeTier = manuallySpecifiedTier || process.env.TIER;
 		
 		while (Utilities.instance.whenReadyQueue.length > 0) {
 			let cb = Utilities.instance.whenReadyQueue.splice(0, 1)[0];
 			cb();
 		}
 		
-		if (typeof next === 'function') next();
+		let nextFunction = args[2]; // optional next() callback is the third parameter
+		if (typeof nextFunction === 'function') nextFunction();
+		else logger.warn('next() callback is not a function!');
 	}
 
 	/**

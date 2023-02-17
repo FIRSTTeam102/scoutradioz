@@ -1,7 +1,7 @@
 import passport from 'passport';
 import { getLogger } from 'log4js';
-import utilities from '@firstteam102/scoutradioz-utilities';
-import { User } from '@firstteam102/scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import { User } from 'scoutradioz-types';
 
 const logger = getLogger('passport');
 

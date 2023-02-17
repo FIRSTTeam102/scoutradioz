@@ -1,10 +1,10 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import type { Match, Ranking } from '@firstteam102/scoutradioz-types';
+import { matchData as matchDataHelper } from 'scoutradioz-helpers';
+import type { Match, Ranking } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('currentevent');

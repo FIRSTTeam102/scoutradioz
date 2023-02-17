@@ -1,8 +1,8 @@
 /* eslint-disable global-require */
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import type { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, CollectionSchema, DerivedLayout, Layout } from '@firstteam102/scoutradioz-types';
+import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout } from 'scoutradioz-types';
 import assert from 'assert';
 
 const logger = log4js.getLogger('helpers.matchData');
@@ -135,7 +135,7 @@ export class MatchDataHelper {
 			let length = operations.length;
 			
 			for (let i = 0; i < length; i++) {
-				let thisOp: DerivedOperation = operations[i];
+				let thisOp = operations[i] as DerivedOperation;
 				// let operands = thisOp.operands;
 				switch (thisOp.operator) {
 					// sum operands: [a, b, c, ...]

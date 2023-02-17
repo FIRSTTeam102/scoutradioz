@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Team } from '@firstteam102/scoutradioz-types';
+	import type { Team } from 'scoutradioz-types';
 	import { fetchJSON } from '$lib/fetcher';
 	import AwaitLoader from '$lib/AwaitLoader.svelte';
 	import Paper, { Title, Subtitle } from '@smui/paper';

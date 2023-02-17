@@ -1,4 +1,4 @@
-import type { AnyDict } from '@firstteam102/scoutradioz-types';
+import type { AnyDict } from 'scoutradioz-types';
 import type express from 'express';
 
 export function getSubteamsAndClasses(reqBody: {[key: string]: any}) {

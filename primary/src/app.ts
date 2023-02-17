@@ -7,7 +7,7 @@ import session from 'express-session';							// Session middleware
 import cookieParser from 'cookie-parser';						// Cookies
 import useragent from 'express-useragent';						// Info on connected users
 import log4js from 'log4js';									// Extensive logging functionality
-import utilities from '@firstteam102/scoutradioz-utilities'; 	// Database utilities
+import utilities from 'scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
 
@@ -63,7 +63,7 @@ utilities.config(require('../databases.json'), {
 	debug: (process.env.UTILITIES_DEBUG === 'true'),
 });
 //Load helper functions
-const helpers = require('@firstteam102/scoutradioz-helpers');
+const helpers = require('scoutradioz-helpers');
 //Configure helper functions by passing our already-configured utilities module
 helpers.config(utilities);
 

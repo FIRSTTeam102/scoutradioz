@@ -2,10 +2,10 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities, { MongoDocument } from '@firstteam102/scoutradioz-utilities';
+import utilities, { MongoDocument } from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e, { assert } from '@firstteam102/http-errors';
-import type { Match, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, WithDbId} from '@firstteam102/scoutradioz-types';
+import e, { assert } from 'scoutradioz-http-errors';
+import type { Match, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, WithDbId} from 'scoutradioz-types';
 import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
 
 const router = express.Router();

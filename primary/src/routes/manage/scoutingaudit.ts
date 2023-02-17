@@ -1,12 +1,12 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import { upload as uploadHelper } from '@firstteam102/scoutradioz-helpers';
-import type { ImageLinks } from '@firstteam102/scoutradioz-helpers/types/uploadhelper';
-import e, { assert } from '@firstteam102/http-errors';
-import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
+import { upload as uploadHelper } from 'scoutradioz-helpers';
+import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
+import e, { assert } from 'scoutradioz-http-errors';
+import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from 'scoutradioz-types';
 import type { ObjectId } from 'mongodb';
 
 const router = express.Router();

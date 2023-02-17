@@ -2,11 +2,11 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import bcrypt from 'bcryptjs';
 import wrap from '../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../helpers/permissions';
-import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import e from '@firstteam102/http-errors';
-import type { MatchScouting, Team, Layout, PitScouting, User, ScouterRecord, MatchFormData } from '@firstteam102/scoutradioz-types';
+import { upload as uploadHelper, matchData as matchDataHelper } from 'scoutradioz-helpers';
+import e from 'scoutradioz-http-errors';
+import type { MatchScouting, Team, Layout, PitScouting, User, ScouterRecord, MatchFormData } from 'scoutradioz-types';
 import { ObjectId } from 'mongodb';
 
 const router = express.Router();

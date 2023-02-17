@@ -1,5 +1,5 @@
 import type { PageLoad } from './$types';
-import type { MatchScouting } from '@firstteam102/scoutradioz-types';
+import type { MatchScouting } from 'scoutradioz-types';
 
 export const load: PageLoad = async ({ fetch }) => {
 	const all: (MatchScouting & { team_name: string })[] = await (await fetch('/api/assignments/match?onlyAssigned')).json();

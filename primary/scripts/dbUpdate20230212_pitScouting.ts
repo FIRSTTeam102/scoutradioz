@@ -1,10 +1,10 @@
-import { User } from '@firstteam102/scoutradioz-types';
-import type { Utilities } from '@firstteam102/scoutradioz-utilities';
+import { User } from 'scoutradioz-types';
+import type { Utilities } from 'scoutradioz-utilities';
 import type { AnyBulkWriteOperation } from 'mongodb';
 
 process.env.TIER = 'dev';
 
-const utilities: Utilities = require('@firstteam102/scoutradioz-utilities');
+const utilities: Utilities = require('scoutradioz-utilities');
 const ObjectId = require('mongodb').ObjectId;
 
 const readline = require('readline');
