@@ -4,6 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import { matchData as matchDataHelper } from 'scoutradioz-helpers';
 import type { Event, MatchScouting } from 'scoutradioz-types';
+import { assert } from 'scoutradioz-http-errors';
 
 const router = express.Router();
 const logger = getLogger('sync');
@@ -66,6 +67,63 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	logger.info(`${removeResult.deletedCount} removed, ${insertResult ? insertResult.insertedCount : 0} inserted`);
 	
 	res.send({message: `Found ${events.length} events.`, length: events.length});
+}));
+
+// Function to refresh the teams of specific events of the given year, with a start and end number, with events being pulled from the DB
+// 	(should be called after /resynceventlist)
+router.get('/resynceventteams', wrap(async (req, res) => {
+	logger.addContext('funcName', 'resynceventteams[get]');
+	logger.info('ENTER');
+	
+	assert(typeof req.query.year === 'string', 'Year must be defined');
+	const year = parseInt(req.query.year);
+	
+	assert(typeof req.query.start === 'string', 'Start must be defined');
+	assert(typeof req.query.end === 'string', 'End must be defined');
+	const start = parseInt(req.query.start);
+	const end = parseInt(req.query.end); // note: splice() treats end as EXCLUSIVE, so do start=0 end=10, then start=10 end=20, etc.
+	
+	logger.debug(`Year=${year}, start=${start}, end=${end}`);
+	
+	// Grab event keys from the db, and sort them by string
+	const eventKeys = await utilities.distinct('events', 'key', {year});
+	eventKeys.sort();
+	
+	let keysToRequest = eventKeys.slice(start, end);
+	logger.debug(`Going to request teams from these event keys: ${keysToRequest}`);
+	
+	let updatedNum = 0;
+	for (let thisEventKey of keysToRequest) {
+		
+		let eventTeamsUrl = `event/${thisEventKey}/teams/keys`;
+		let thisTeamKeys = [];
+		
+		let retries = 3;
+		while (retries > 0) {
+			let readSuccess = false;
+			try {
+				thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
+				readSuccess = true;
+			}
+			catch (err) {
+				console.log('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
+				retries -= 1;
+			}
+			
+			if (readSuccess) {
+				break;
+			}
+		}
+		
+		let writeResult = await utilities.update('events', {key: thisEventKey}, {$set: {team_keys: thisTeamKeys}});
+		logger.debug(`Updated for ${thisEventKey}, writeResult=${JSON.stringify(writeResult)}`);
+		updatedNum += 1;
+		
+		await promiseTimeout(200); // Wait a short bit
+	}
+	
+	//return a simple SUCCESS message if it works
+	return res.send('SUCCESS ' + year + ' updated ' + updatedNum);
 }));
 
 // Function to refresh the list of events for the current year (and) to refresh all teams data
