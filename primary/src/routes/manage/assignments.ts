@@ -291,6 +291,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	// 2022-11-10 JL: changed scoutArray to be a list of _ids and names
 	let scoutArray: ScouterRecord[] = [];  // the current set of scouts (gets regenerated every N matches)
 	let scoutAvailableMap: Dict<ScouterRecord> = {};  // pool of available scouts
+	let scoutAssignedList: string[] = []; // list of IDs of assigned scouters
 	
 	let redBlueToggle = 0;  // flips between 0 and 1, signals whether to allocate red alliance or blue alliance first
 	
@@ -379,6 +380,11 @@ router.post('/matches/generate', wrap(async (req, res) => {
 				// Write the assignment to the DB!
 				let thisMatchTeamKey = thisMatchKey + '_' + property;
 				let thisScout = teamScoutMap[property];
+				
+				// Save this scouter as being assigned
+				let thisScoutId = String(thisScout.id);
+				if (!scoutAssignedList.includes(thisScoutId)) 
+					scoutAssignedList.push(thisScoutId);
 
 				let thisPromise = utilities.update('matchscouting', 
 					{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
@@ -388,11 +394,32 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			}
 		}									
 		// wait for all the updates to finish
-		Promise.all(assignmentPromisesArray);
+		await Promise.all(assignmentPromisesArray);
 		
 		// update the 'lastMatchTimestamp' so we can track until a break
 		lastMatchTimestamp = comingMatches[matchesIdx].time;
 	}
+	
+	// lastly, mark assigned scouters as assigned
+	let scoutAssignedObjectIdList = scoutAssignedList.map(id => new ObjectId(id));
+	
+	let writeResult = await utilities.bulkWrite('users', [
+		
+		// JL: TODO LATER AFTER WE MAKE SURE THIS DOESN'T BREAK THINGS: Set scouters NOT assigend to match scouting to event_info.assigned = false
+		// {
+		// 	updateMany: {
+		// 		filter: {_id: {$not: {$in: scoutAssignedObjectIdList}}},
+		// 		update: {$set: {'event_info.assigned': false}}
+		// 	}
+		// }, 
+		{
+			updateMany: {
+				filter: {_id: {$in: scoutAssignedObjectIdList}},
+				update: {$set: {'event_info.assigned': true}}
+			}
+		}
+	]);
+	logger.debug('writeResult=', writeResult);
 
 	// all done, go to the matches list
 	res.redirect('/dashboard/matches');
