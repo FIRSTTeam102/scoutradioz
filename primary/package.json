@@ -42,7 +42,7 @@
     "rollback-prod": "node ../scripts/rollbackversion.js --function-name $npm_package_config_functionFullName",
     "---readme3---": "Scripts related to compiling static files from Typescript -> JS and LESS -> CSS.",
     "compile-less": "echo 'Compiling and minifying LESS' && node ../scripts/compileLess.js",
-    "compile-ts": "echo 'Compiling TypeScript' && cd public-src && npm install && cd ts-bundled && tsc && cd ../ts && (mv ../../public/js/bundle.d.ts . || move ../../public/js/bundle.d.ts .) && tsc",
+    "compile-ts": "echo 'Compiling TypeScript' && cd public-src && yarn && cd ts-bundled && tsc && cd ../ts && (mv ../../public/js/bundle.d.ts . || move ../../public/js/bundle.d.ts .) && tsc",
     "compile-static": "yarn run compile-less && yarn run compile-ts"
   },
   "license": "Apache-2.0",
