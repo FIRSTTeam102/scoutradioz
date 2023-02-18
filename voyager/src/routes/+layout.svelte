@@ -1,6 +1,7 @@
 <script lang="ts">
-	import TopAppBar, { Row, Section, AutoAdjust } from '@smui/top-app-bar';
-	import Drawer, {
+	import BottomAppBar, { Section, AutoAdjust } from '@smui-extra/bottom-app-bar';
+	import Drawer, { 
+		AppContent,
 		Content as DContent,
 		Header as DHeader,
 		Title as DTitle,
@@ -14,26 +15,41 @@
 		Separator as LSeparator,
 		Subheader as LSubheader
 	} from '@smui/list';
-	import IconButton from '@smui/icon-button';
-	import { afterNavigate } from '$app/navigation';
-	import { share } from '$lib/share';
+	
+	import BottomNavBar from '$lib/nav/BottomNavBar.svelte';
+	import type { NavBarItem } from '$lib/nav/BottomNavBar.svelte';
+	
 	import { user, org_key } from '$lib/stores';
-	import { assets } from '$app/paths'; // Assets path -- it returns something like _svelte_assets in localhost but https://scoutradioz-voyager.s3.amazonaws.com on AWS
+	import { afterNavigate } from '$app/navigation';
 
-
-	// close menu when changing pages
 	afterNavigate(() => (menuOpen = false));
-
-	let topAppBar: TopAppBar;
-	let topBarHeight = 48; // todo: autocalculate
+	
+	let bottomAppBar: BottomAppBar;
 	let menuOpen = false;
+	
+	// JL note: I think maybe these items can change contextually depending on 
+	// 	what the user is doing?
+	let navItems: NavBarItem[] = [{
+		label: 'Menu',
+		onClick: () => menuOpen = true,
+		icon: 'menu',
+	}, {
+		label: 'Match scouting',
+		icon: 'stadium',
+		href: '/',
+	}, {
+		label: 'Pit scouting',
+		icon: 'handyman',
+		href: '/'
+	}]
 </script>
+
 
 <!-- modal is better but it won't close, so dismissible with position:fixed works -->
 <Drawer
-	variant="dismissible"
+	variant="modal"
 	bind:open={menuOpen}
-	style={`margin-top: ${topBarHeight}px; position: fixed; height: calc(100% - ${topBarHeight}px); overflow-y: auto;`}
+	fixed={true}
 >
 	<DHeader>
 		<DTitle>Welcome, {$user}</DTitle>
@@ -60,6 +76,10 @@
 				<LGraphic class="material-icons" aria-hidden="true">stadium</LGraphic>
 				<LText>Match scouting</LText>
 			</LItem>
+			<LItem href="/sync/scouter">
+				<LGraphic class="material-icons" aria-hidden="true">sync</LGraphic>
+				<LText>Sync</LText>
+			</LItem>
 
 			<LSeparator />
 			<LSubheader tag="h6">Lead</LSubheader>
@@ -71,63 +91,34 @@
 				<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
 				<LText>Log in</LText>
 			</LItem>
+			<LItem href="/sync/lead">
+				<LGraphic class="material-icons" aria-hidden="true">sync</LGraphic>
+				<LText>Sync</LText>
+			</LItem>
 		</List>
 	</DContent>
 </Drawer>
 
-<!-- if using modal then it just works, otherwise we have to implement scrim ourselves -->
-<!-- <Scrim /> -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-	class="mdc-drawer-scrim"
-	style="background-color: rgba(255, 255, 255, 0.32); position: fixed"
-	on:click={() => (menuOpen = false)}
-/>
-
-<TopAppBar bind:this={topAppBar} variant={menuOpen ? 'fixed' : 'standard'} dense style="z-index: 5">
-	<Row>
-		<Section>
-			<IconButton
-				class="material-icons"
-				aria-label="Open menu"
-				on:click={() => {
-					menuOpen = !menuOpen;
-				}}>menu</IconButton
-			>
-			<a href="/" class="header-logo">
-				<img src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`} alt="Scoutradioz logo" />
-			</a>
-		</Section>
-		<Section align="end" toolbar>
-			<IconButton class="material-icons" aria-label="Sync" href="/sync">sync</IconButton>
-			<!-- <IconButton class="material-icons" aria-label="Change language">language</IconButton> -->
-			<IconButton class="material-icons" aria-label="Share" on:click={() => share()}
-				>share</IconButton
-			>
-		</Section>
-	</Row>
-</TopAppBar>
-
-<AutoAdjust {topAppBar}>
-	<div id="page">
+<Scrim/>
+<AutoAdjust {bottomAppBar}>
+	<AppContent>
 		<slot />
-	</div>
+	</AppContent>
 </AutoAdjust>
 
+<BottomNavBar bind:bottomAppBar items={navItems}/>
+
 <style lang="scss">
-	.header-logo {
-		height: 100%;
-		display: block;
-		padding: 6px;
-		box-sizing: border-box;
+	/* Hide everything above this component. */
+	:global(app),
+	:global(body),
+	:global(html) {
+		display: block !important;
+		height: auto !important;
+		width: auto !important;
+		position: static !important;
 	}
-	.header-logo img {
-		max-height: 100%;
-		max-width: 100%;
-		vertical-align: middle;
-		padding-left: 8px;
-	}
-	#page {
-		padding: 0 0.5em;
+	:global(.mdc-drawer--modal) {
+		top: 0;
 	}
 </style>

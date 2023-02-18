@@ -23,8 +23,10 @@
 
 	function handleTabChange(e: any) {
 		if (e.detail.index > prevTabIndex) {
+			console.log('Positive dir');
 			direction = 1;
 		} else {
+			console.log('Negative dir');
 			direction = -1;
 		}
 		prevTabIndex = e.detail.index;
@@ -42,7 +44,7 @@
 	{#each tabs as tab}
 		{#if activeTab === tab.label}
 			<div
-				transition:fly|local={{ x: direction * windowWidth, duration: 300 }}
+				transition:fly|local={{ x: direction * windowWidth, duration: 1200 }}
 				on:introstart={() => (sliding = true)}
 				on:introend={() => (sliding = false)}
 				on:outrostart={() => (sliding = true)}
