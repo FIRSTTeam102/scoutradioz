@@ -269,7 +269,8 @@
 		"priority": "Priorité",
 		"priorityAbbr": "V",
 		"team": "Équipe",
-		"rank": "Classement FRC"
+		"rank": "Classement FRC",
+		"numalliances": "Nombre d'alliances :"
 	},
 	"metrics": {
 		"raw": "Données brutes",

@@ -5,7 +5,7 @@
 		"viewer": {
 			"choice": "Utforske data",
 			"intro": "Soutradioz lar lag/orgnisasjoner samle sin egen info i konkurranser.",
-			"action": "Velg en organisasjon nedenfor for å finne ut hvilken data de har samlet."
+			"action": "Velg en organisasjon nedenfor for å finne ut hvilken data de har samlet!"
 		},
 		"scouter": {
 			"choice": "Innlogging på scout"
