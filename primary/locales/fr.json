@@ -1,8 +1,8 @@
 {
 	"index": {
-		"fulltitle": "Scoutradioz: Repérage FRC en tant que service",
-		"welcome": "Bienvenue à Scoutradioz",
-		"choice": "Cherchez-vous à:",
+		"fulltitle": "Scoutradioz : Repérage FRC en tant que service",
+		"welcome": "Bienvenue sur Scoutradioz",
+		"choice": "Cherchez-vous à :",
 		"viewer": {
 			"choice": "Afficher des données",
 			"intro": "Scoutradioz permet aux équipes/organisations de rassembler leurs propres informations personnalisées lors des compétitions.",
