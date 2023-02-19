@@ -85,7 +85,6 @@
 					"main": "Repéreurs",
 					"event": "Repéreurs: [[{event}]]",
 					"audit": "Audit de repérage",
-					"assignments": "Tâches de repérage",
 					"swapmembers": "Échanger des repéreurs de match",
 					"swappitassignments": "Échanger les tâches de repérage de puits",
 					"present": "Mettre présent"

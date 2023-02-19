@@ -82,7 +82,6 @@
 					"main": "Exploradores",
 					"event": "Exploradores: [[{event}]]",
 					"audit": "Auditoría de exploración",
-					"assignments": "Asignaciones de exploración",
 					"swapmembers": "Intercambiar cuentas de partido de entrada/salida",
 					"swappitassignments": "Intercambiar asignaciones de exploración de pits",
 					"present": "Establecer presente"

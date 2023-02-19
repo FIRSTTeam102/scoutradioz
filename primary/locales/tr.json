@@ -85,7 +85,6 @@
 					"main": "İzciler",
 					"event": "Gözcüler: [[{event}]]",
 					"audit": "İzcilik denetimi",
-					"assignments": "İzcilik görevleri",
 					"swapmembers": "Giriş/çıkış maç hesaplarını değiştir",
 					"swappitassignments": "Çukur keşif görevlerini değiştir",
 					"present": "hediye ayarla"
