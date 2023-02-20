@@ -8,6 +8,8 @@ import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 import e, { assert } from 'scoutradioz-http-errors';
 import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from 'scoutradioz-types';
 import type { ObjectId } from 'mongodb';
+import type Mathjs from 'mathjs';
+const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
 const router = express.Router();
 const logger = getLogger('scoutingaudit');
@@ -410,12 +412,216 @@ router.get('/comments', wrap(async (req, res) => {
 	});
 }));
 
+router.get('/spr', wrap(async (req, res) => {
+	logger.addContext('funcName', 'spr[get]');
+	logger.info('ENTER');
+
+	let eventKey = req.event.key;
+	let orgKey = req._user.org_key;
+	
+	let lookbackto = req.query.lookbackto;
+	if (typeof lookbackto !== 'string')
+		lookbackto = '1';
+	let lookbacktoIndex = parseInt(lookbackto) - 1;
+	
+	let lookforwardto = req.query.lookforwardto;
+	if (typeof lookforwardto !== 'string')
+		lookforwardto = '99999';
+	let lookforwardtoIndex = parseInt(lookforwardto) + 1;
+	
+	let matches: Match[] = await utilities.find('matches',
+		{ 'event_key': eventKey, 'match_number': { '$gt': lookbacktoIndex, '$lt': lookforwardtoIndex }, 'score_breakdown': { '$ne': undefined } }, { sort: { match_number: -1 } },
+		{allowCache: true, maxCacheAge: 10}
+	);
+
+	// set up the return data table - we'll add alternating rows of FRC & scouting data
+	let returnCompareTable = [];
+	// dictionary of scouts - each item should be keyed by scout name and contain (a) total matches scouted + (b) total error point diffs & ratios	
+	let scoutScoreDict: Dict<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = {};
+
+	// SPR arrays setup
+	let scoutSprList:string[] = [];
+	let emptyRow:number[] = [];
+	let matrix:number[][] = [];
+	let vector:number[][] = [];
+
+	// cycle through match objects; for each one, cycle through 'red' and 'blue' array
+	// for each alliance, pull scouting data - if less than 3 found, can't compare
+	let allianceArray: Array<'red'|'blue'> = ['red', 'blue'];
+	for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
+		let thisMatch = matches[matchIdx];
+		for (let allianceIdx = 0; allianceIdx < allianceArray.length; allianceIdx++) {
+			let thisAlliance = allianceArray[allianceIdx];
+
+			// retrieve the scouting data for this match
+			let matchScoutReports: MatchScouting[] = await utilities.find('matchscouting',
+				{ 'org_key': orgKey, 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { '$ne': null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
+			);
+			logger.debug(`thisAlliance=${thisAlliance},thisMatch.key=${thisMatch.key} ...matchScoutReports.length=${matchScoutReports.length}`);
+			// can't compare if we don't have three (3) scouting reports
+			if (matchScoutReports.length != 3) {
+				logger.warn('matchScoutReports.length is not 3, skipping!');
+			}
+			else {
+				let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
+
+				// 2023-02-13, M.O'C: Revising to only use 'totalPoints' minus 'foulPoints'
+				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
+				let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
+				let frcTot = totalPoints - foulPoints;
+
+				let orgTot = 0;
+				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
+					let thisScoutReport = matchScoutReports[scoutIdx].data;
+					orgTot += getNumberFrom(thisScoutReport, 'contributedPoints');
+				}
+
+				// score
+				let errDiff = Math.abs(orgTot - frcTot);
+				let errRatio = errDiff / frcTot;
+				if (errRatio > 1.0)
+					errRatio = 1.0;
+
+				// track scores
+				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
+					let thisScoutName = matchScoutReports[scoutIdx].actual_scorer;
+					if (!thisScoutName) {
+						logger.trace('No actual_scorer for scout report idx=' + scoutIdx);
+						continue;
+					}
+					let thisScoutRecord = scoutScoreDict[thisScoutName];
+					if (!thisScoutRecord) {
+						// add rows & cols to matrix, and add an element to the vector
+						let thisScoutIndex = vector.length;
+						vector.push([0]);
+						logger.trace(`thisScoutName=${thisScoutName},thisScoutIndex=${thisScoutIndex}`);
+						scoutSprList.push(thisScoutName);
+
+						emptyRow = [];
+						for (let i = 0; i < matrix.length; i++) {
+							emptyRow.push(0);
+							matrix[i].push(0);
+						}
+						emptyRow.push(0);
+						matrix.push(emptyRow);
+						//logger.debug(`ADD vector=${JSON.stringify(vector)}`);
+						//logger.debug(`ADD matrix=${JSON.stringify(matrix)}`);
+
+						scoutScoreDict[thisScoutName] = {count: 1, avgDiff: errDiff, avgRatio: errRatio, totDiff: errDiff, totRatio: errRatio, sprIndex: thisScoutIndex, sprScore: 0};
+					}
+					else {
+						let newCount = thisScoutRecord.count + 1;
+						let newTotDiff = thisScoutRecord.totDiff + errDiff;
+						let avgDiff = newTotDiff / newCount;
+						let newTotRatio = thisScoutRecord.totRatio + errRatio;
+						let avgRatio = newTotRatio / newCount;
+						scoutScoreDict[thisScoutName] = {count: newCount, avgDiff: avgDiff, avgRatio: avgRatio, totDiff: newTotDiff, totRatio: newTotRatio, sprIndex: thisScoutRecord.sprIndex, sprScore: 0};
+					}
+				}
+
+				let frcRow = [];
+				frcRow.push(thisMatch.key + ' - ' + thisAlliance);
+				frcRow.push('');
+				frcRow.push('');
+				frcRow.push(frcTot);
+
+				let orgRow = [];
+				if (!matchScoutReports[0].actual_scorer || !matchScoutReports[1].actual_scorer || !matchScoutReports[2].actual_scorer) {
+					throw new e.InternalServerError('actual_scorer not defined for all three matchScoutReports');
+				}
+				orgRow.push(matchScoutReports[0].actual_scorer + ', ' + matchScoutReports[1].actual_scorer + ', ' + matchScoutReports[2].actual_scorer);
+				orgRow.push(errDiff);
+				orgRow.push(errRatio);
+				orgRow.push(orgTot);
+				
+				// SPR matrix & vector updates
+				for (let x = 0; x < matchScoutReports.length; x++) {
+					let thisScoutName = matchScoutReports[x].actual_scorer;
+					if (!thisScoutName) {
+						logger.trace('No actual_scorer for scout report idx=' + x);
+						continue;
+					}
+					let xIndex = scoutScoreDict[thisScoutName].sprIndex;
+					vector[xIndex][0] = vector[xIndex][0] + errDiff;
+					for (let y = 0; y < matchScoutReports.length; y++) {
+						let thisScoutName2 = matchScoutReports[y].actual_scorer;
+						if (!thisScoutName2) {
+							logger.trace('No actual_scorer 2 for scout report idx=' + x);
+							continue;
+						}
+						let yIndex = scoutScoreDict[thisScoutName2].sprIndex;
+						matrix[yIndex][xIndex] = matrix[yIndex][xIndex] + 1;
+					}
+				}
+				//logger.debug(`typeof=${instanceof matrix[0]}`);
+				//logger.debug(`matrix=${JSON.stringify(matrix, function(k,v) { if(typeof v === 'object') return JSON.stringify(v); return v; }, 2)}`);
+				logger.trace(`matrix=${JSON.stringify(matrix)}`);
+				logger.trace(`vector=${JSON.stringify(vector)}`);
+
+				logger.trace('FRC=' + JSON.stringify(frcRow));
+				logger.trace('Org=' + JSON.stringify(orgRow));
+
+				returnCompareTable.push(frcRow);
+				returnCompareTable.push(orgRow);
+			}
+		}
+	}
+	// what is the determinant?
+	logger.debug(`matrix=${JSON.stringify(matrix)}`);
+	logger.debug(`...math.det(matrix)=${mathjs.det(matrix)}`);
+	logger.debug(`vector=${JSON.stringify(vector)}`);
+
+	// solve!
+	try {
+		let solution = mathjs.lusolve(matrix, vector) as Mathjs.MathNumericType[][];
+		logger.debug(`solution=${JSON.stringify(solution)}`);
+
+		for (let key in scoutScoreDict) {
+			let thisSprIndex:number = scoutScoreDict[key].sprIndex;
+			scoutScoreDict[key].sprScore = Number(solution[thisSprIndex][0]);
+		}
+	}
+	catch (err) {
+		logger.warn(`could not calculate solution! err=${err}`);
+	}
+				
+	// sort scoutScoreDict by sprScore
+	let sortedValues:Array<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = Object.values(scoutScoreDict);
+	// reverse sort!
+	sortedValues.sort((a, b) => b.sprScore - a.sprScore);
+	logger.trace('sortedValues=' + JSON.stringify(sortedValues));
+
+	// reconstruct scoutScoreDict
+	scoutScoreDict = {};
+	for (let thisIdx in sortedValues) {
+		let thisValue = sortedValues[thisIdx];
+		logger.trace(`thisValue=${thisValue}`);
+		logger.trace(`thisValue.sprIndex=${thisValue.sprIndex}`);
+		logger.trace(`scoutSprList[thisValue.sprIndex]=${scoutSprList[thisValue.sprIndex]}`);
+		scoutScoreDict[scoutSprList[thisValue.sprIndex]] = thisValue;
+	}
+
+	// final results
+	logger.debug('scoutScoreDict=' + JSON.stringify(scoutScoreDict));
+
+	for (let sprIdx = 0; sprIdx < scoutSprList.length; sprIdx++) {
+		logger.trace(`sprIdx=${sprIdx}, scoutSprList[${sprIdx}]=${scoutSprList[sprIdx]}`);
+	}
+
+	//logger.debug('match=' + JSON.stringify(match));
+	res.render('./manage/audit/spr', { // TODO: change url to something more representative of what it is
+		title: 'Scouter Performance Rating',
+		compareTable: returnCompareTable,
+		scouterScoring: scoutScoreDict
+	});
+}));
+
 router.get('/matchscores', wrap(async (req, res) => {
 	logger.addContext('funcName', 'matchscores[get]');
 	logger.info('ENTER');
 
 	let eventKey = req.event.key;
-	let orgKey = req._user.org_key;
+	//let orgKey = req._user.org_key;
 	
 	let lookbackto = req.query.lookbackto;
 	if (typeof lookbackto !== 'string')
@@ -452,6 +658,8 @@ router.get('/matchscores', wrap(async (req, res) => {
 			}
 			else {
 				let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
+
+				// 2023-02-13, M.O'C: Revising to only use 'totalPoints' & 'foulPoints'
 				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
 				let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
 				let teleopPoints = getNumberFrom(thisScoreBreakdown, 'teleopPoints');
