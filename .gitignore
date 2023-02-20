@@ -9,7 +9,9 @@ primary/public/uploads/responsive
 primary/public/css
 primary/public/js
 build
+yarn.lock
 *.tsbuildinfo
 .svelte-kit
 # below: temporary
 offline/static
+.serverless

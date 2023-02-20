@@ -1,8 +1,9 @@
 /* eslint-disable global-require */
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import type { Utilities, MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput } from '@firstteam102/scoutradioz-types';
+import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout } from 'scoutradioz-types';
+import assert from 'assert';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -33,6 +34,7 @@ export class MatchDataHelper {
 		switch (type) {
 			case 'checkbox':
 			case 'counter':
+			case 'counterallownegative':
 			case 'badcounter':
 			case 'derived':
 			case 'slider':
@@ -65,6 +67,7 @@ export class MatchDataHelper {
 				break;
 			}
 			case 'counter':
+			case 'counterallownegative':
 			case 'badcounter':
 			case 'slider':
 			case 'timeslider': {
@@ -116,25 +119,28 @@ export class MatchDataHelper {
 			{org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived'}, 
 			{sort: {'order': 1}},
 			{allowCache: true}
-		);
+		) as DerivedLayout[];
+		
 		// let dt = performance.now();
 
-		for (let thisItem of derivedLayout) {
+		for (let i in derivedLayout) {
+			const thisItem: DerivedLayout = derivedLayout[i];
 			let derivedMetric: number|null = NaN;
 			// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
 			//	Error checking should be done at the time of creating the layout. (TODO: error checking :] )
 			//	The very last operator must NOT have an "as", and every consequent operator should probably have an "as"
+			
 			let operations = thisItem.operations;
 			let variables: NumericalDict = {};
 			let length = operations.length;
 			
 			for (let i = 0; i < length; i++) {
-				let thisOp: Operation = operations[i];
+				let thisOp = operations[i] as DerivedOperation;
 				// let operands = thisOp.operands;
 				switch (thisOp.operator) {
 					// sum operands: [a, b, c, ...]
 					case 'sum': case 'add': {
-						let thisOp: SumOperation = operations[i];
+						let thisOp = operations[i] as SumOperation;
 						let operands = thisOp.operands;
 						
 						let sum = 0;
@@ -150,7 +156,7 @@ export class MatchDataHelper {
 					}
 					// multiply operands: [a, b, c, ...]
 					case 'multiply': {
-						let thisOp: MultiplyOperation = operations[i];
+						let thisOp = operations[i] as MultiplyOperation;
 						let operands = thisOp.operands;
 						
 						let product = 1;
@@ -166,12 +172,12 @@ export class MatchDataHelper {
 					}
 					// subtract operands: [minuend, subtrahend] (a - b -> [a, b])
 					case 'subtract': {
-						let thisOp: SubtractOperation = operations[i];
+						let thisOp = operations[i] as SubtractOperation;
 						let operands = thisOp.operands;
 						
 						let minuendKey = operands[0];
 						let subtrahendKey = operands[1];
-						let difference;
+						let difference: number;
 						
 						if (typeof minuendKey === 'number') difference = minuendKey;
 						else if (minuendKey.startsWith('$')) difference = variables[minuendKey];
@@ -188,12 +194,12 @@ export class MatchDataHelper {
 					}
 					// divide operands: [dividend, divisor] (a/b -> [a, b])
 					case 'divide': {
-						let thisOp: DivideOperation = operations[i];
+						let thisOp = operations[i] as DivideOperation;
 						let operands = thisOp.operands;
 						
 						let dividendKey = operands[0];
 						let divisorKey = operands[1];
-						let dividend, divisor, quotient;
+						let dividend: number, divisor: number, quotient: number;
 						
 						if (typeof dividendKey === 'number') dividend = dividendKey;
 						else if (dividendKey.startsWith('$')) dividend = variables[dividendKey];
@@ -211,9 +217,73 @@ export class MatchDataHelper {
 						logger.trace(`Divide: ${quotient} -> ${thisOp.as || ''}`);
 						break;
 					}
+					// Min / Max between two numbers
+					// operands: [a, b] => max(a, b) or min(a, b)
+					case 'min': case 'max': {
+						let thisOp = operations[i] as MinMaxOperation;
+						let operands = thisOp.operands;
+						
+						let aKey = operands[0];
+						let bKey = operands[1];
+						let a: number, b: number, result: number;
+						
+						if (typeof aKey === 'number') a = aKey;
+						else if (aKey.startsWith('$')) a = variables[aKey];
+						else a = parseNumber(matchData[aKey]);
+						
+						if (typeof bKey === 'number') b = bKey;
+						else if (bKey.startsWith('$')) b = variables[bKey];
+						else b = parseNumber(matchData[bKey]);
+						
+						if (thisOp.operator === 'min') result = Math.min(a, b);
+						else result = Math.max(a, b);
+						
+						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
+						else derivedMetric = result;
+						logger.trace(`${thisOp.operator}: ${result} -> ${thisOp.as || ''}`);
+						break;
+					}
+					// Log operands: [x, base] => log(x) / log(base)
+					case 'log': {
+						let thisOp = operations[i] as LogOperation;
+						let operands = thisOp.operands;
+						
+						let inputKey = operands[0];
+						let base = operands[1];
+						let input: number, result: number;
+						
+						if (typeof inputKey === 'number') input = inputKey;
+						else if (inputKey.startsWith('$')) input = variables[inputKey];
+						else input = parseNumber(matchData[inputKey]);
+						
+						result = Math.log(input) / Math.log(base);
+						
+						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
+						else derivedMetric = result;
+						logger.trace(`${thisOp.operator}: ${result} -> ${thisOp.as || ''}`);
+						break;
+					}
+					// abs operands: [a] => Math.abs(a)
+					case 'abs': {
+						let thisOp = operations[i] as AbsoluteValueOperation;
+						let operands = thisOp.operands;
+						
+						let inputKey = operands[0];
+						let input: number;
+						
+						if (typeof inputKey === 'number') input = inputKey;
+						else if (inputKey.startsWith('$')) input = variables[inputKey];
+						else input = parseNumber(matchData[inputKey]);
+						
+						let result = Math.abs(input);
+						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = result;
+						else derivedMetric = result;
+						logger.trace(`Log: ${result} -> ${thisOp.as || ''}`);
+						break;
+					}
 					// multiselect quantifiers: {option1: value1, option2: value2, ...}; variables not supported
 					case 'multiselect': {
-						let thisOp: MultiselectOperation = operations[i];
+						let thisOp = operations[i] as MultiselectOperation;
 						
 						// TODO: enforce that multiselect only applies to multiselect data type
 						let key = matchData[thisOp.id]; 
@@ -225,7 +295,7 @@ export class MatchDataHelper {
 					}
 					// condition operands: [boolean, valueIfTrue, valueIfFalse]
 					case 'condition': {
-						let thisOp: ConditionOperation = operations[i];
+						let thisOp = operations[i] as ConditionOperation;
 						let operands = thisOp.operands;
 						
 						let conditionKey = operands[0];
@@ -273,12 +343,12 @@ export class MatchDataHelper {
 					//	Future note for building an error checking script: Make sure that the output of any of these operators is NOT used in sum, multiply, etc. Only in conditionals.
 					//	operands ex: gt: [a, b] -> true if a > b, false if a <= b
 					case 'gt': case 'gte': case 'lt': case 'lte': case 'eq': case 'ne': {
-						let thisOp: CompareOperation = operations[i];
+						let thisOp = operations[i] as CompareOperation;
 						let operands = thisOp.operands;
 						
 						let aKey = operands[0];
 						let bKey = operands[1];
-						let a, b;
+						let a: number, b: number;
 						let result: boolean;
 						
 						if (typeof aKey === 'number') a = aKey;
@@ -367,10 +437,7 @@ export class MatchDataHelper {
 			let thisConfig = thisOrg.config;
 			logger.trace('thisConfig=' + JSON.stringify(thisConfig));
 			
-			if (!thisConfig) {
-				thisConfig = {};
-				thisOrg['config'] = thisConfig;
-			}
+			assert(thisConfig, 'Org has no config!'); // 2023-02-14 JL: Changed if (!thisConfig) thisConfig = {}; to an assert b/c orgs should always have a config
 			let theseColDefaults = thisOrg.config.columnDefaults;
 			if (!theseColDefaults) {
 				theseColDefaults = {};
@@ -403,8 +470,8 @@ export class MatchDataHelper {
 			// Weed out unselected columns
 			for (let thisLayout of scorelayoutDB) {
 				//var thisLayout = scorelayoutDB[i];
-				//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 				if (this.isQuantifiableType(thisLayout.type)) {
+					assert(thisLayout.id, `Layout element has no ID: ${JSON.stringify(thisLayout)}`);
 					if (savedCols[thisLayout.id]) 
 						scorelayout.push(thisLayout);
 				}
@@ -439,7 +506,7 @@ export class MatchDataHelper {
 		);
 		logger.trace('scorelayout=' + JSON.stringify(scorelayout));        
 		
-		let aggQuery = [];
+		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
 	
 		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
@@ -456,7 +523,7 @@ export class MatchDataHelper {
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			//pull this layout element from score layout
 			let thisLayout = scorelayout[scoreIdx];
-			thisLayout.key = thisLayout.id;
+			// thisLayout.key = thisLayout.id; // 2023-02-14 JL: Changed thisLayout.key back to thisLayout.id because thisLayout.key was already set to thisLayout.id anyways
 			scorelayout[scoreIdx] = thisLayout;
 			//if it is a valid data type, add this layout's ID to groupClause
 			if (this.isQuantifiableType(thisLayout.type)) {
@@ -477,7 +544,6 @@ export class MatchDataHelper {
 	
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (this.isQuantifiableType(thisLayout.type)) {
 				//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 				groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
@@ -496,18 +562,17 @@ export class MatchDataHelper {
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggArray: MongoDocument[] = await utilities.aggregate('matchscouting', aggQuery);
 				
-		let aggMinMaxArray = [];
+		let aggMinMaxArray: AggRange[] = [];
 	
 		// Cycle through & build a map of min/max values per scoring type per aggregation
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter')
 			if (this.isQuantifiableType(thisLayout.type)) {
-				let thisMinMax: MongoDocument = {};
+				// let thisMinMax: MongoDocument = {};
 				// 2020-02-08, M.O'C: Tweaking agg ranges
 				// This data element is specifically for this organization & a specific event
-				thisMinMax['org_key'] = org_key;
-				thisMinMax['event_key'] = event_key;
+				// thisMinMax['org_key'] = org_key;
+				// thisMinMax['event_key'] = event_key;
 	
 				// initialize ranges
 				let MINmin = 999999; let MINmax = 0; let AVGmin = 999999; let AVGmax = 0; let VARmin = 999999; let VARmax = 0; let MAXmin = 999999; let MAXmax = 0;
@@ -531,11 +596,24 @@ export class MatchDataHelper {
 				VARmin = parseFloat(VARmin.toFixed(1)); VARmax = parseFloat(VARmax.toFixed(1));
 				MAXmin = parseFloat(MAXmin.toFixed(1)); MAXmax = parseFloat(MAXmax.toFixed(1));
 	
-				thisMinMax['key'] = thisLayout.key;
-				thisMinMax['MINmin'] = MINmin; thisMinMax['MINmax'] = MINmax;
-				thisMinMax['AVGmin'] = AVGmin; thisMinMax['AVGmax'] = AVGmax;
-				thisMinMax['VARmin'] = VARmin; thisMinMax['VARmax'] = VARmax;
-				thisMinMax['MAXmin'] = MAXmin; thisMinMax['MAXmax'] = MAXmax;
+				// thisMinMax['key'] = thisLayout.id; // 2023-02-14 JL: Changed thisLayout.key back to thisLayout.id because thisLayout.key was already set to thisLayout.id anyways
+				// thisMinMax['MINmin'] = MINmin; thisMinMax['MINmax'] = MINmax;
+				// thisMinMax['AVGmin'] = AVGmin; thisMinMax['AVGmax'] = AVGmax;
+				// thisMinMax['VARmin'] = VARmin; thisMinMax['VARmax'] = VARmax;
+				// thisMinMax['MAXmin'] = MAXmin; thisMinMax['MAXmax'] = MAXmax;
+				
+				assert(thisLayout.id, `Layout element does not have an ID!!! ${JSON.stringify(thisLayout)}`);
+				
+				// 2023-02-14 JL: Switched to creating the object all at once, to make TypeScript happy
+				let thisMinMax: AggRange = {
+					org_key,
+					event_key,
+					key: thisLayout.id,
+					MINmin, MINmax,
+					AVGmin, AVGmax,
+					VARmin, VARmax,
+					MAXmin, MAXmax
+				};
 	
 				logger.trace('thisMinMax=' + JSON.stringify(thisMinMax));
 	
@@ -674,7 +752,7 @@ export class MatchDataHelper {
 		// 4. Use those to calculate probability of one distribution over the other (z-table for lookup)
 	
 		// get aggregations for all teams
-		let aggQuery = [];
+		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': org_key, 'event_key': event_key } });
 	
 		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
@@ -696,7 +774,7 @@ export class MatchDataHelper {
 		outputClause['contributedPointsEMA'] = thisEMAclause;
 	
 		setWindowFieldsClause['output'] = outputClause;
-		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
+		logger.trace('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 	
 		let groupClause: MongoDocument = {};
@@ -822,7 +900,7 @@ export class MatchDataHelper {
 		let colCookie = cookies[cookie_key];
 		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	
-		let aggQuery = [];
+		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match : { 'team_key': {$in: teamList}, 'org_key': org_key, 'event_key': event_key } });
 	
 		// M.O'C, 2022-03-38: Replacing $avg with $expMovingAvg
@@ -852,7 +930,7 @@ export class MatchDataHelper {
 			}
 		}
 		setWindowFieldsClause['output'] = outputClause;
-		logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
+		logger.trace('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
 		aggQuery.push({$setWindowFields: setWindowFieldsClause});
 		
 		let groupClause: MongoDocument = {};
@@ -861,7 +939,6 @@ export class MatchDataHelper {
 	
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (this.isQuantifiableType(thisLayout.type)) {
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
@@ -871,7 +948,7 @@ export class MatchDataHelper {
 		}
 	
 		aggQuery.push({ $group: groupClause });
-		// logger.trace('aggQuery=' + JSON.stringify(aggQuery,0,2));
+		logger.debug('aggQuery=', aggQuery);
 	
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggR = await utilities.aggregate('matchscouting', aggQuery);
@@ -892,7 +969,6 @@ export class MatchDataHelper {
 	
 		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 			let thisLayout = scorelayout[scoreIdx];
-			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (this.isQuantifiableType(thisLayout.type)) {
 				let avgRow: MetricRow = {
 					key: thisLayout.id
@@ -1053,12 +1129,20 @@ export declare interface MetricRow {
 }
 
 export declare interface UpcomingMatchData {
-	matches: Match[];
+	matches: UpcomingMatch[];
 	teamRanks: {
 		[team_key: string]: number;
 	};
 	team?: TeamKey;
 	teamNumbers: number[];
+	hasPredictive?: boolean;
+	// predictive?: PredictiveBlock; 2023-12-13 JL: UpcomingMatchData.predictive is not used
+}
+
+/**
+ * FRC Match with optional predictive stuff added
+ */
+export declare interface UpcomingMatch extends Match {
 	hasPredictive?: boolean;
 	predictive?: PredictiveBlock;
 }
@@ -1078,46 +1162,4 @@ declare interface NumericalDict {
 
 declare interface StringDict {
 	[key: string]: string;
-}
-
-declare type operand = number|string;
-
-declare interface Operation {
-	operator: string;
-	id: string;
-	as?: string;
-}
-
-declare interface MultiplyOperation extends Operation {
-	operator: 'multiply';
-	operands: operand[];
-}
-
-declare interface SumOperation extends Operation {
-	operator: 'sum'|'add';
-	operands: operand[];
-}
-
-declare interface SubtractOperation extends Operation {
-	operator: 'subtract';
-	operands: [operand, operand];
-}
-
-declare interface DivideOperation extends Operation {
-	operator: 'divide';
-	operands: [operand, operand];
-}
-
-declare interface MultiselectOperation extends Operation {
-	quantifiers: NumericalDict;
-}
-
-declare interface ConditionOperation extends Operation {
-	operator: 'condition';
-	operands: [string, string|number|null, string|number|null];
-}
-
-declare interface CompareOperation extends Operation {
-	operator: 'gt'|'gte'|'lt'|'lte'|'eq'|'ne';
-	operands: [operand, operand];
 }

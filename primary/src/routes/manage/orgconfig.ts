@@ -2,11 +2,11 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import type { MongoDocument } from 'scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e, { assert } from '@firstteam102/http-errors';
-import type { Layout, LayoutEdit, MatchScouting, MatchFormData } from '@firstteam102/scoutradioz-types';
+import e, { assert } from 'scoutradioz-http-errors';
+import type { Layout, LayoutEdit, MatchScouting, MatchFormData } from 'scoutradioz-types';
 import type { DeleteResult, InsertManyResult } from 'mongodb';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 //import { write } from 'fs';
@@ -201,7 +201,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	logger.info(`Removed ${removeResult.deletedCount} prior form records`);
 
 	// 2. write in new/updated data
-	let writeResult: InsertManyResult<Document> | undefined = await utilities.insert('layout', formdata);
+	let writeResult: InsertManyResult<MongoDocument> | undefined = await utilities.insert('layout', formdata);
 	if (writeResult)
 		logger.info(`Inserted ${writeResult.insertedCount} new form records`);
 	else

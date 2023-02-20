@@ -1,9 +1,9 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import type { Org, Role, User } from '@firstteam102/scoutradioz-types';
+import type { Org, Role, User } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('members');
@@ -156,6 +156,30 @@ router.post('/updatemember', wrap(async (req, res) => {
 	if (name.toLowerCase() === 'default_user' || name.toLowerCase() === 'scoutradioz_admin') {
 		return res.send({
 			status: 400, message: 'You cannot give a user that name.'
+		});
+	}
+	
+	const thisOrg = thisUser.org;
+	
+	if (!class_key || !subteam_key) {
+		return res.send({
+			status: 400,
+			message: 'Please provide a subteam and a class.'
+		});
+	}
+	
+	// Check whether the specified class key exists in the org config
+	if (!thisOrg.config.members.classes.some((thisClass) => thisClass.class_key === class_key)) {
+		return res.send({
+			status: 500,
+			message: 'The provided class could not be found in your organization\'s configuration.'
+		});
+	}
+	
+	if (!thisOrg.config.members.subteams.some((thisSubteam) => thisSubteam.subteam_key === subteam_key)) {
+		return res.send({
+			status: 500,
+			message: 'The provided subteam could not be found in your organization\'s configuration.'
 		});
 	}
 	

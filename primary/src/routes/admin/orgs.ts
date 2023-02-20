@@ -2,11 +2,11 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { AnyDict, Org, User, Role } from '@firstteam102/scoutradioz-types';
-import e from '@firstteam102/http-errors';
+import type { MongoDocument } from 'scoutradioz-utilities';
+import type { AnyDict, Org, User, Role } from 'scoutradioz-types';
+import e from 'scoutradioz-http-errors';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 
 const router = express.Router();
@@ -87,8 +87,8 @@ router.post('/', wrap(async (req, res) => {
 		// If it's a comma separated list, then set team_keys instead of team_key
 		if (teamKey.includes(',')) {
 			let teamKeys = teamKey.split(',');
-			let fixedTeamKeys = [];
-			let teamNumbers = [];
+			let fixedTeamKeys: string[] = [];
+			let teamNumbers: number[] = [];
 			for (let key of teamKeys) {
 				key = key.trim();
 				if (!key.startsWith('frc')) throw new e.UserError('Team key is invalid.');

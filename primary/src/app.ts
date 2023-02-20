@@ -7,7 +7,7 @@ import session from 'express-session';							// Session middleware
 import cookieParser from 'cookie-parser';						// Cookies
 import useragent from 'express-useragent';						// Info on connected users
 import log4js from 'log4js';									// Extensive logging functionality
-import utilities from '@firstteam102/scoutradioz-utilities'; 	// Database utilities
+import utilities from 'scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
 
@@ -63,7 +63,7 @@ utilities.config(require('../databases.json'), {
 	debug: (process.env.UTILITIES_DEBUG === 'true'),
 });
 //Load helper functions
-const helpers = require('@firstteam102/scoutradioz-helpers');
+const helpers = require('scoutradioz-helpers');
 //Configure helper functions by passing our already-configured utilities module
 helpers.config(utilities);
 
@@ -199,7 +199,7 @@ let config = require('./routes/manage/orgconfig');
 let manualdata = require('./routes/manage/manualdata');
 let orgmembers = require('./routes/manage/members');
 let scoutingaudit = require('./routes/manage/scoutingaudit');
-let scoutingpairs = require('./routes/manage/scoutingpairs');
+let assignments = require('./routes/manage/assignments');
 //SCOUTRADIOZ ADMIN ROUTES
 let adminindex = require('./routes/admin/indexadmin');
 let tests = require('./routes/admin/tests');
@@ -217,7 +217,7 @@ app.use('/notifications', notifications);
 app.use('/manage', manageindex);
 app.use('/manage/allianceselection', allianceselection);
 app.use('/manage/config', config);
-app.use('/manage/scoutingpairs', scoutingpairs);
+app.use('/manage/assignments', assignments);
 app.use('/manage/members', orgmembers);
 app.use('/manage/currentevent', currentevent);
 app.use('/manage/scoutingaudit', scoutingaudit);

@@ -2,10 +2,10 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { Org, Team, Match } from '@firstteam102/scoutradioz-types';
+import type { MongoDocument } from 'scoutradioz-utilities';
+import type { Org, Team, Match } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('indexadmin');
@@ -123,9 +123,11 @@ router.get('/sitemap', wrap(async (req, res) => {
 			'/manage/scoutingaudit/bymatch': 'Match-scouting audit- Sorted by match, Grouped by team',
 			'/manage/scoutingaudit/uploads': 'Audit page for students\' photo uploads',
 		},
-		'manage/scoutingpairs.ts': {
-			'/manage/scoutingpairs': 'Manage pairs for pit scouting and assignments for match scouting',
-			'/manage/scoutingpairs/swapmembers': 'Match scouting swap ',
+		'manage/assignments.ts': {
+			'/manage/assignments': 'Manage pairs and assignments for pit scouting',
+			'/manage/assignments/matches': 'Generate match scouting assignments',
+			'/manage/assignments/swapmatchscouters': 'Match scouting swap ',
+			'/manage/assignments/swappitassignments': 'Swap teams for existing pit scouters',
 		},
 		'admin/indexadmin.ts': {
 			'/admin': 'Admin index page ',

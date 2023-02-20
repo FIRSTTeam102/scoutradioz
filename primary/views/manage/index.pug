@@ -20,83 +20,97 @@ block content
 			.events-container::-webkit-scrollbar-thumb {background: #808090;}
 			.events-container::-webkit-scrollbar-thumb:hover {background: #555;}
 		}
+		/* JL note: might put this in the LESS... */
+		.gear-btn {
+			margin: 8px 4px;
+		}
 	div(class="w3-auto")
 		h3=title
-		div(class="w3-container w3-section")
-			h4 Member Management
-			a(href="/manage/scoutingaudit")
-				div(class="gear-btn theme-link w3-btn")
-					span Scouting audit
-			a(href="/manage/scoutingpairs")
-				div(class="gear-btn theme-link w3-btn")
-					span Scouting assignments
-			a(href="/manage/scoutingpairs/swappitassignments")
-				div(class="gear-btn theme-link w3-btn")
-					span Swap out/in pit scouts
-			a(href="/manage/scoutingpairs/swapmembers")
-				div(class="gear-btn theme-link w3-btn")
-					span Swap out/in match scouts
-			a(href="/manage/members")
-				div(class="gear-btn theme-link w3-btn")
-					span Manage members
-			a(href="/manage/members/present")
-				div(class="gear-btn theme-link w3-btn")
-					span Set who is present at current event
-			a(href="/manage/members/passwords")
-				div(class="gear-btn theme-link w3-btn")
-					span Audit/reset member passwords
-		div(class="w3-container w3-section")
-			h4 
-				div Current Event - #{event_key}
-				div(class="unimportant") (#{eventName})
-			a(href="/manage/currentevent/matches") 
-				div(class="gear-btn theme-link w3-btn")
-					span See matches for current event
-			a(href="/manage/allianceselection") 
-				div(class="gear-btn theme-link w3-btn")
-					span Alliance selection data
-			//- 2022-03-19 JL: No need to put dashboard/allianceselection in the manage homepage
-			//- a(href="/dashboard/allianceselection") 
-			//- 	div(class="gear-btn theme-link w3-btn")
-			//- 		span Track/simulate alliance selection
-			a(href="manage/currentevent/getcurrentteams") 
-				div(class="gear-btn theme-link w3-btn")
-					span Update list of current teams
-			a(href="/admin/sync/recalcderived") 
-				div(class="gear-btn theme-link w3-btn")
-					span Recalculate derived metrics
-			//- Manual data links
-			a(href="/manage/manualdata/teams")
-				div(class="gear-btn theme-link w3-btn")
-					span(class="sprite sp-16 sp-edit sp-inline")
-					span!=msg('layout.nav.manage.event.editteams')
-			a(href="/manage/manualdata/matchschedule")
-				div(class="gear-btn theme-link w3-btn")
-					span(class="sprite sp-16 sp-edit sp-inline")
-					span!=msg('layout.nav.manage.event.editmatchschedule')
-			a(href="/manage/manualdata/matchresults")
-				div(class="gear-btn theme-link w3-btn")
-					span(class="sprite sp-16 sp-edit sp-inline")
-					span!=msg('layout.nav.manage.event.editmatchresults')
-		div(class="w3-container w3-section")
-			h4 Organization Configuration
-			//a(href="/manage/config/pitsurvey") 
-				div(class="gear-btn theme-link w3-btn")
-					span Configure pit survey layout
-			a(href="/manage/config") 
-				div(class="gear-btn theme-link w3-btn")
-					span Organization setup
-			a(href="/manage/config/editform?form_type=pitscouting") 
-				div(class="gear-btn theme-link w3-btn")
-					span Set up Pit Scouting form
-			a(href="/manage/config/editform?form_type=matchscouting") 
-				div(class="gear-btn theme-link w3-btn")
-					span Set up Match Scouting form
-			a(href="/user/preferences/reportcolumns") 
-				div(class="gear-btn theme-link w3-btn")
-					span Configure report columns
-			div(class="w3-section")
-		div(class="w3-container w3-section" id="setCurrentEvent")
+		hr 
+		h4 
+			div Current Event - #{event_key}
+			div(class="unimportant") (#{eventName})
+		//- Scouters
+		h5!=msg('layout.nav.manage.scouters.main')
+				
+		a(href="/manage/scoutingaudit")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.scouters.audit')
+		a(href="/manage/assignments")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.scouters.pitassignments')
+		a(href="/manage/assignments/matches")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.scouters.matchassignments')
+		a(href="/manage/assignments/swappitassignments")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.scouters.swappitassignments')
+		a(href="/manage/assignments/swapmatchscouters")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.scouters.swapmembers')
+		a(href="/manage/members/present")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.scouters.present') 
+		//- Event data
+		br 
+		h5!=msg('layout.nav.manage.event.main')
+		a(href="/manage/currentevent/matches") 
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.event.matches') 
+		a(href="/manage/allianceselection") 
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.event.allianceselection')
+		//- 2022-03-19 JL: No need to put dashboard/allianceselection in the manage homepage
+		//- a(href="/dashboard/allianceselection") 
+		//- 	div(class="gear-btn theme-link w3-btn")
+		//- 		span Track/simulate alliance selection
+		a(href="manage/currentevent/getcurrentteams") 
+			div(class="gear-btn theme-link w3-btn")
+				span Update list of current teams
+		a(href="/admin/sync/recalcderived") 
+			div(class="gear-btn theme-link w3-btn")
+				span Recalculate derived metrics
+		//- Manual data links
+		a(href="/manage/manualdata/teams")
+			div(class="gear-btn theme-link w3-btn")
+				span(class="sprite sp-16 sp-edit sp-inline")
+				span!=msg('layout.nav.manage.event.editteams')
+		a(href="/manage/manualdata/matchschedule")
+			div(class="gear-btn theme-link w3-btn")
+				span(class="sprite sp-16 sp-edit sp-inline")
+				span!=msg('layout.nav.manage.event.editmatchschedule')
+		a(href="/manage/manualdata/matchresults")
+			div(class="gear-btn theme-link w3-btn")
+				span(class="sprite sp-16 sp-edit sp-inline")
+				span!=msg('layout.nav.manage.event.editmatchresults')
+		hr
+		//- Member Management
+		h4!=msg('layout.nav.manage.members.main')
+		a(href="/manage/members")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.members.list')
+		a(href="/manage/members/passwords")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.manage.members.passwords')
+		
+		h4 Organization configuration
+		//a(href="/manage/config/pitsurvey") 
+			div(class="gear-btn theme-link w3-btn")
+				span Configure pit survey layout
+		a(href="/manage/config") 
+			div(class="gear-btn theme-link w3-btn")
+				span Organization setup
+		a(href="/manage/config/editform?form_type=pitscouting") 
+			div(class="gear-btn theme-link w3-btn")
+				span Set up Pit Scouting form
+		a(href="/manage/config/editform?form_type=matchscouting") 
+			div(class="gear-btn theme-link w3-btn")
+				span Set up Match Scouting form
+		a(href="/user/preferences/reportcolumns") 
+			div(class="gear-btn theme-link w3-btn")
+				span Configure report columns
+		div(class="w3-section")
+		div(class="" id="setCurrentEvent")
 			h4!=msg('layout.nav.manage.event.setcurrent')
 			form(name="setCurrentEvent" method="post" action="/manage/setcurrent")
 				div(class="w3-threequarter")

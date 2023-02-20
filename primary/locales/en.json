@@ -85,15 +85,16 @@
 					"main": "Scouters",
 					"event": "Scouters: [[{event}]]",
 					"audit": "Scouting audit",
-					"assignments": "Scouting assignments",
-					"swapmembers": "Swap in/out match acouts",
-					"swappitassignments": "Swap pit scouting assignments",
-					"present": "Set present"
+					"pitassignments": "Pit scouting assignments",
+					"matchassignments": "Match scouting assignments",
+					"swapmembers": "Swap in/out match scouts",
+					"swappitassignments": "Swap teams between pit scout pairs",
+					"present": "Set who is present at current event"
 				},
 				"event": {
 					"main": "Event data",
 					"event": "Event data: [[{event}]]",
-					"matches": "Matches",
+					"matches": "Matches (FIRST data)",
 					"allianceselection": "Alliance selection data",
 					"getcurrentteams": "Update list of teams",
 					"recalcderived": "Recalculate derived metrics",

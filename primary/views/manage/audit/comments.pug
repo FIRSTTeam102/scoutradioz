@@ -30,7 +30,7 @@ block content
 		each row in audit
 			div(class="w3-col theme-spacer")
 				div(class="w3-col m2 w3-padding")
-					span=row.actual_scorer
+					span=row.actual_scorer ? row.actual_scorer.name : 'Unknown'
 				div(class="w3-col m4 w3-padding")
 					- var key = row.match_team_key
 					- var titlePortion = key.substring(key.indexOf('_')+1).replace('_',', ').replace('qm','Match #').replace('frc','Team #');

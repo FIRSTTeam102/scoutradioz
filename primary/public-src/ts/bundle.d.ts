@@ -1,4 +1,6 @@
 /// <reference types="jquery" />
+/// <reference types="jquery" />
+/// <reference types="jquery" />
 declare class FormSubmission {
     /**
      * JL note 2022-04-03: Since all uses of FormSubmission follow the following response system:
@@ -172,7 +174,7 @@ declare class NotificationCardOptions {
     textColor?: string | undefined | null;
     constructor();
 }
-declare type PromptItem = {
+type PromptItem = {
     type: 'password' | 'label' | 'textinput';
     /**
      * Text value of a label, or placeholder value of a text/password input, or raw html value without any parsing
@@ -180,7 +182,7 @@ declare type PromptItem = {
     value: string;
     default?: boolean;
 } | HTMLElement;
-declare type PromptReturnDatum = {
+type PromptReturnDatum = {
     type: 'password' | 'textinput';
     value: string;
 };
@@ -189,11 +191,11 @@ declare type PromptReturnDatum = {
  * 	e.g.: if contents[0] is a label, contents[1] is a textinput, contents[2] is a label, and contents[3] is a password,
  * 	then data will be [{type: 'textinput', value: string}, {type: 'password', value: string}]
  */
-declare type PromptReturn = {
+type PromptReturn = {
     cancelled: boolean;
     data: PromptReturnDatum[];
 };
-declare type PromptButton = {
+type PromptButton = {
     /**
      * Text to show in the button
      */
@@ -208,7 +210,7 @@ declare type PromptButton = {
     action: (this: Prompt) => void;
     timeout?: number;
 };
-declare type PromptOptions = {
+type PromptOptions = {
     allowClickAway?: boolean;
 };
 declare class Prompt {
@@ -239,6 +241,9 @@ declare class PasswordPrompt {
 }
 declare class Confirm {
     static show(text: string, options?: ConfirmOptions): Promise<PromptReturn>;
+}
+declare class Alert {
+    static show(text: string): Promise<PromptReturn>;
 }
 /**
  * Returns a set of PromptButtons for something like Yes/No, with the first one highlighted.

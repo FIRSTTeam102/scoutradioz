@@ -38,5 +38,5 @@ block content
 							div(class="w3-btn w3-block theme-hover-white")
 								a(href=`/scouting/match?key=${match_team.match_team_key}`)
 									div Team: #{match_team.team_key.substring(3)}
-									div Assigned Scorer: #{match_team.assigned_scorer}
-									div Scored by: #{match_team.actual_scorer || "None"}
+									div Assigned Scorer: #{match_team.assigned_scorer.name}
+									div Scored by: #{match_team.actual_scorer ? match_team.actual_scorer.name : "None"}

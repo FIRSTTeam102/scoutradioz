@@ -12,7 +12,6 @@ declare interface StringDict {
 }
 
 declare type integer = number;
-declare type operand = number|string;
 export declare type formDataOutput = number|boolean|string|null;
 
 export declare interface MatchFormData {
@@ -83,6 +82,12 @@ export declare interface Event extends DbDocument {
 	timezone?: string|null;
 }
 
+declare interface FormSliderOptions {
+	min: number;
+	max: number;
+	step: number;
+}
+
 /**
  * A question/metric in the pit or match scouting form.
  * @collection layout
@@ -96,6 +101,7 @@ export declare interface Layout extends DbDocument {
 	org_key: OrgKey;
 	label?: string;
 	id?: string;
+	options?: FormSliderOptions | string[];
 }
 
 /**
@@ -119,14 +125,16 @@ export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key'
 export declare interface DerivedLayout extends Layout{
 	type: 'derived';
 	operations: DerivedOperation[];
+	id: string;
 	display_as?: string;
 }
 
 export declare interface DerivedOperation {
 	operator: string;
-	id: string;
 	as?: string;
 }
+
+declare type operand = number|string;
 
 export declare interface MultiplyOperation extends DerivedOperation {
 	operator: 'multiply';
@@ -150,6 +158,7 @@ export declare interface DivideOperation extends DerivedOperation {
 
 export declare interface MultiselectOperation extends DerivedOperation {
 	quantifiers: NumericalDict;
+	id: string;
 }
 
 export declare interface ConditionOperation extends DerivedOperation {
@@ -160,6 +169,21 @@ export declare interface ConditionOperation extends DerivedOperation {
 export declare interface CompareOperation extends DerivedOperation {
 	operator: 'gt'|'gte'|'lt'|'lte'|'eq'|'ne';
 	operands: [operand, operand];
+}
+
+export declare interface MinMaxOperation extends DerivedOperation {
+	operator: 'min'|'max';
+	operands: [operand, operand];
+}
+
+export declare interface LogOperation extends DerivedOperation {
+	operator: 'log';
+	operands: [operand, number];
+}
+
+export declare interface AbsoluteValueOperation extends DerivedOperation {
+	operator: 'abs';
+	operands: [operand];
 }
 
 /**
@@ -202,6 +226,17 @@ declare class MatchVideo {
 }
 
 /**
+ * Record of who is assigned to / completed a scouting assignment.
+ */
+export declare interface ScouterRecord {
+	/**
+	 * {@link User}'s _id
+	 */
+	id: ObjectId;
+	name: string;
+}
+
+/**
  * Match scouting data & assignments for a given team at a given match.
  * @collection matchscouting
  * @interface MatchScouting
@@ -216,8 +251,8 @@ export declare interface MatchScouting extends DbDocument {
 	alliance: 'red' | 'blue';
 	team_key: TeamKey;
 	match_team_key: MatchTeamKey;
-	assigned_scorer?: string;
-	actual_scorer?: string;
+	assigned_scorer?: ScouterRecord;
+	actual_scorer?: ScouterRecord;
 	data?: MatchFormData;
 	useragent?: UserAgent;
 }
@@ -313,19 +348,30 @@ export declare interface WebPushKeys extends DbDocument {
 declare type PasswordItem = TBAApiHeaders | FIRSTApiHeaders | TBAWebhookSecret | WebPushKeys;
 
 /**
- * Pit scouting data & assignments for a given team at a given event.
+ * Set of scouters for a pit scouting assignment. NOTE: primary/secondary are REQUIRED
+ * @collection pitscouting
+ * @interface PitScoutingSet
+ */
+export declare interface PitScoutingSet extends DbDocument {
+	primary: ScouterRecord;
+	secondary: ScouterRecord;
+	tertiary?: ScouterRecord;
+}
+
+/**
+ * Pit scouting data & assignments for a given team at a given event. NOTE: primary/secondary/tertiary all optional
  * @collection pitscouting
  * @interface PitScouting
  */
-export declare interface PitScouting extends DbDocument {
+export declare interface PitScouting {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
 	team_key: TeamKey;
-	primary: string;
-	secondary: string;
-	tertiary?: string;
-	actual_scouter?: string;
+	primary?: ScouterRecord;
+	secondary?: ScouterRecord;
+	tertiary?: ScouterRecord;
+	actual_scouter?: ScouterRecord;
 	data?: StringDict;
 	useragent?: UserAgent;
 }
@@ -384,9 +430,9 @@ export declare interface Role extends DbDocument {
  * @interface ScoutingPair
  */
 export declare interface ScoutingPair extends DbDocument {
-	member1: string;
-	member2: string;
-	member3?: string;
+	member1: ScouterRecord;
+	member2: ScouterRecord;
+	member3?: ScouterRecord;
 	org_key: OrgKey;
 }
 
@@ -515,7 +561,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'aggranges' ? AggRange :
 	colName extends 'events' ? Event :
 	// colName extends 'i18n' ?  :
-	colName extends 'layout' ? Layout :
+	colName extends 'layout' ? (DerivedLayout|Layout) :
 	colName extends 'matches' ? Match :
 	colName extends 'matchscouting' ? MatchScouting :
 	colName extends 'orgs' ? Org :
@@ -531,3 +577,9 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'uploads' ? Upload :
 	colName extends 'users' ? User : 
 	any;
+/**
+ * Gets the correct schema for the given collection name, with a guaranteed `_id` ObjectId.
+ */
+export declare type CollectionSchemaWithId<colName extends CollectionName> = WithDbId<CollectionSchema<colName>>;
+
+declare let x: CollectionSchema<'layout'>;

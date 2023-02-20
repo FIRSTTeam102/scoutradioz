@@ -1,5 +1,5 @@
 'use strict';
-import { Utilities } from '@firstteam102/scoutradioz-utilities';
+import type { Utilities } from 'scoutradioz-utilities';
 
 import upload from './uploadhelper';
 import matchData from './matchdatahelper';
@@ -11,7 +11,7 @@ export class Helpers {
 	
 	/**
 	 * Required: 
-	 * @param {object} utilities Already-configured @firstteam102/scoutradioz-utilities module
+	 * @param {object} utilities Already-configured scoutradioz-utilities module
 	 */
 	static config = (utilities: Utilities) => {
 		this.upload.config(utilities);

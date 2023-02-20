@@ -2,7 +2,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
 import Permissions from '../helpers/permissions';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import webpush, { WebPushError } from 'web-push';
 import type { PushSubscription } from 'web-push';
 

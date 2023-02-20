@@ -2,11 +2,12 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import bcrypt from 'bcryptjs';
 import wrap from '../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../helpers/permissions';
-import { upload as uploadHelper, matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import e from '@firstteam102/http-errors';
-import type { MatchScouting, Team, Layout, PitScouting, User } from '@firstteam102/scoutradioz-types';
+import { upload as uploadHelper, matchData as matchDataHelper } from 'scoutradioz-helpers';
+import e from 'scoutradioz-http-errors';
+import type { MatchScouting, Team, Layout, PitScouting, User, ScouterRecord, MatchFormData } from 'scoutradioz-types';
+import { ObjectId } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('scouting');
@@ -45,7 +46,7 @@ router.get('/match*', wrap(async (req, res) => {
 	let scoringdata: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
 		
 	//scouting answers for this match are initialized as null for visibility
-	let answers = null;
+	let answers: MatchFormData|null = null;
 	
 	if( scoringdata && scoringdata[0] ){
 		
@@ -164,25 +165,28 @@ router.post('/match/submit', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match/submit[post]');
 	logger.info('ENTER');
 	
-	let thisUser, thisUserName;
+	let thisScouterRecord: ScouterRecord;
 	
-	if(req.user && req.user.name){
-		thisUser = req.user;
-		thisUserName = thisUser.name;
-	}
-	else{
-		thisUser = { name: 'Mr. Unknown' };
-		thisUserName = 'Mr. Unknown';
-	}
+	if(req.user && req.user.name)
+		thisScouterRecord = {
+			name: req.user.name,
+			id: req.user._id
+		};
+	else
+		thisScouterRecord = { 
+			name: 'Mr. Unknown', 
+			id: new ObjectId() 
+		};
+	
 	let matchData = req.body;
 	if(!matchData)
 		return res.send({status: 500, message: req.msg('scouting.noDataSubmit', {url: '/scouting/match/submit'})});
 	
 	let event_year = req.event.year;
 	let match_team_key = matchData.match_team_key;
-	let org_key = req._user.org_key;
+	let org_key = req._user.org_key; // JL note: this probably throws an error if the user is not logged in
 
-	logger.debug('match_key=' + match_team_key + ' ~ thisUserName=' + thisUserName);
+	logger.debug('match_key=' + match_team_key + ' ~ thisUserName=' + thisScouterRecord.name);
 	delete matchData.match_key;
 	logger.debug('matchData(pre-modified)=' + JSON.stringify(matchData));
 	//logger.debug('match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
@@ -243,13 +247,21 @@ router.post('/match/submit', wrap(async (req, res) => {
 
 	// Post modified data to DB
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	await utilities.update('matchscouting', { 'org_key': org_key, 'match_team_key' : match_team_key }, { $set: { 'data' : matchData, 'actual_scorer': thisUserName, useragent: req.shortagent } });
+	await utilities.update('matchscouting', { 
+		org_key, 
+		match_team_key 
+	}, { 
+		$set: { data: matchData, 
+			actual_scorer: thisScouterRecord, 
+			useragent: req.shortagent 
+		} 
+	});
 
 	// Simply to check if the user is assigned (2022-03-24 JL)
 	const oneAssignedMatch: MatchScouting = await utilities.findOne('matchscouting', {
 		org_key: org_key, 
 		event_key: req.event.key, 
-		assigned_scorer: thisUserName
+		'assigned_scorer.id': thisScouterRecord.id
 	});
 	let assigned = !!oneAssignedMatch;
 	
@@ -281,7 +293,7 @@ router.get('/pit*', wrap(async (req, res) => {
 	
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
-	let pitData = null;
+	let pitData: StringDict|null = null;
 	if (pitFind && pitFind[0])
 		if (pitFind[0].data)
 			pitData = pitFind[0].data;
@@ -305,10 +317,10 @@ router.get('/pit*', wrap(async (req, res) => {
 router.post('/pit/submit', wrap(async (req, res) => {
 	logger.addContext('funcName', 'pit/submit[post]');
 	logger.info('ENTER');
-	
+
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
-	
+
 	let pitData = req.body;
 	let teamKey = pitData.teamkey;
 	delete pitData.teamkey;
@@ -320,10 +332,23 @@ router.post('/pit/submit', wrap(async (req, res) => {
 
 	// TODO: Verify pit data against layout, to avoid malicious/bogus data inserted into db?
 
-	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	await utilities.update('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, { $set: { 'data' : pitData, 'actual_scouter': thisUserName, useragent: req.shortagent } });
+	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key,
+	await utilities.update(
+		'pitscouting',
+		{ org_key: org_key, event_key: event_key, team_key: teamKey },
+		{
+			$set: {
+				data: pitData,
+				actual_scouter: {
+					id: thisUser._id,
+					name: thisUserName
+				},
+				useragent: req.shortagent,
+			},
+		}
+	);
 
-	return res.send({message: req.msg('scouting.submitSuccess'), status: 200});
+	return res.send({ message: req.msg('scouting.submitSuccess'), status: 200 });
 }));
 
 router.get('/', wrap(async (req, res) => {

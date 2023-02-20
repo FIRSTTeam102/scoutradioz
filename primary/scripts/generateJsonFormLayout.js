@@ -1,4 +1,4 @@
-const utilities = require('@firstteam102/scoutradioz-utilities');
+const utilities = require('scoutradioz-utilities');
 const readline = require('readline');
 
 let tier = process.argv[2];

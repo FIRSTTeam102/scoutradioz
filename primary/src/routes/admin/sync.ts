@@ -1,9 +1,10 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
-import { matchData as matchDataHelper } from '@firstteam102/scoutradioz-helpers';
-import type { Event, MatchScouting } from '@firstteam102/scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import { matchData as matchDataHelper } from 'scoutradioz-helpers';
+import type { Event, MatchScouting } from 'scoutradioz-types';
+import { assert } from 'scoutradioz-http-errors';
 
 const router = express.Router();
 const logger = getLogger('sync');
@@ -58,14 +59,83 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	logger.info(`Enriched ${events.length} events with the following keys: ${keysToAdd.join(', ')}`);
 	
 	//Remove matching existing events
-	console.log({year: year});
-	let removeResult = await utilities.remove('events', { year: year });
+	let removeResult = await utilities.remove('events', { year });
 	//Now insert new events list
 	let insertResult = await utilities.insert('events', events);
 	
 	logger.info(`${removeResult.deletedCount} removed, ${insertResult ? insertResult.insertedCount : 0} inserted`);
 	
 	res.send({message: `Found ${events.length} events.`, length: events.length});
+}));
+
+// Function to refresh the teams of specific events of the given year, with a start and end number, with events being pulled from the DB
+// 	(should be called after /resynceventlist)
+router.get('/resynceventteams', wrap(async (req, res) => {
+	logger.addContext('funcName', 'resynceventteams[get]');
+	logger.info('ENTER');
+	
+	
+	if (typeof req.query.year !== 'string' || typeof req.query.start !== 'string' || typeof req.query.end !== 'string') {
+		return res.send({
+			success: false,
+			message: 'start, year, and end must be defined'
+		});
+	}
+	const year = parseInt(req.query.year);
+	const start = parseInt(req.query.start);
+	const end = parseInt(req.query.end); // note: splice() treats end as EXCLUSIVE, so do start=0 end=10, then start=10 end=20, etc.
+	
+	if (isNaN(year) || isNaN(start) || isNaN(end)) {
+		return res.send({
+			success: false,
+			message: `start and/or year and/or end are NaN! start=${start}, year=${year}, end=${end}`
+		});
+	}
+	
+	logger.debug(`Year=${year}, start=${start}, end=${end}`);
+	
+	// Grab event keys from the db, and sort them by string
+	const eventKeys = await utilities.distinct('events', 'key', {year});
+	eventKeys.sort();
+	
+	let keysToRequest = eventKeys.slice(start, end);
+	logger.debug(`Going to request teams from these event keys: ${keysToRequest}`);
+	
+	let updatedNum = 0;
+	for (let thisEventKey of keysToRequest) {
+		
+		let eventTeamsUrl = `event/${thisEventKey}/teams/keys`;
+		let thisTeamKeys = [];
+		
+		let retries = 3;
+		while (retries > 0) {
+			let readSuccess = false;
+			try {
+				thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
+				readSuccess = true;
+			}
+			catch (err) {
+				logger.warn('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
+				retries -= 1;
+			}
+			
+			if (readSuccess) {
+				break;
+			}
+		}
+		
+		let writeResult = await utilities.update('events', {key: thisEventKey}, {$set: {team_keys: thisTeamKeys}});
+		logger.debug(`Updated for ${thisEventKey}, writeResult=${JSON.stringify(writeResult)}`);
+		updatedNum += 1;
+		
+		await promiseTimeout(200); // Wait a short bit
+	}
+	
+	//return a simple SUCCESS message if it works
+	return res.send({
+		success: true,
+		updated: updatedNum
+	});
 }));
 
 // Function to refresh the list of events for the current year (and) to refresh all teams data
@@ -133,7 +203,7 @@ router.get('/resyncevents', wrap(async (req, res) => {
 				readSuccess = true;
 			}
 			catch (err) {
-				console.log('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
+				logger.warn('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
 				retries -= 1;
 			}
 			

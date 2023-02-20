@@ -25,7 +25,7 @@ const logger = log4js.getLogger();
 logger.level = 'trace';
 
 utilities.config({
-	app: {url: 'mongodb://localhost:27017/app'},
+	app: {url: 'mongodb://127.0.0.1:27017/app'},
 	dev: {url: 'mongodb://localhost:27017/dev'}
 }, {cache: {enable: true}, debug: true});
 

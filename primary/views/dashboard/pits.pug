@@ -21,7 +21,7 @@ block content
 					- style = "";
 				tr(class=`w3-margin ${style}`)
 					td(class="theme-spacer")
-						h4(class=`${style}`) #{team.primary}
+						h4(class=`${style}`) #{team.primary ? team.primary.name : ''}
 					td(class="theme-spacer")
 						if team.data
 							a(href=`/scouting/pit?team_key=${team.team_key}`) 

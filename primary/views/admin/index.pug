@@ -10,7 +10,7 @@ block content
 		h4 Resync
 		a(href="/admin/sync/resyncteams") 
 			div(class="gear-btn theme-link w3-btn w3-section")
-				span Resync teams
+				span Resync all teams in the database
 		a(href="/admin/sync/recalcderived") 
 			div(class="gear-btn theme-link w3-btn w3-section")
 				span Recalc derived metrics
@@ -58,7 +58,7 @@ block content
 		$('#btnResync').on('click', resyncEvents);
 	
 		function resyncEvents() {
-			var alphabet = 'abcdefghijklmnopqrstuvwxyz'; // Events are synced by letter in sync.js
+			//- var alphabet = 'abcdefghijklmnopqrstuvwxyz'; // Events are synced by letter in sync.js
 			
 			const year = $('input[name=year]').val();
 			const appender = ' _X to cancel syncing teams_'
@@ -80,6 +80,37 @@ block content
 					card.setText(data.message + appender); // show message
 					let numCompleted = 0;
 					let totalEvents = data.length;
+					
+					//- 2023-02-17 JL: Sync events in blocks of 10 instead of by letter, b/c there are too many that start with the letter m & sometimes leads to timeouts
+					const INTERVAL = 10;
+					for (let i = 0; i < totalEvents; i += INTERVAL) {
+						let start = i;
+						let end = Math.min(i + INTERVAL, totalEvents);
+						console.log(`Requesting ${start} to ${end}`);
+						
+						card.setText(`Getting teams for events... [${start+1}-${end} of ${totalEvents}] ${appender}`);
+						
+						if (cancelled) return;
+						
+						let url = `/admin/sync/resynceventteams?year=${year}&start=${start}&end=${end}`;
+						let result = await promisify(url);
+						
+						if (result.success) {
+							//- get number of events enriched
+							let number = result.updated;
+							if (number !== INTERVAL) console.warn(`Number completed this step and request interval does not match!! numCompletedThisStep=${number} interval=${INTERVAL}`);
+							numCompleted += number;
+						}
+						else {
+							card.remove();
+							NotificationCard.error(`Sync not successful. Message: ${result.message}`, {ttl: 0, exitable: true});
+							return;
+						}
+					}
+					card.remove();
+					NotificationCard.good(`Done syncing events: ${numCompleted} of ${totalEvents}`, {ttl: 0, exitable: true})
+					
+					/*
 					for (let letter of alphabet) {
 						if (cancelled) return;
 						
@@ -98,6 +129,7 @@ block content
 					}
 					card.remove();
 					NotificationCard.good(`Done syncing events: ${numCompleted} of ${totalEvents}`, {ttl: 0, exitable: true})
+					*/
 				}
 			);
 			function promisify(url) {

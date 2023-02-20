@@ -56,30 +56,24 @@ block content
 							div(class="w3-col s6 m3 w3-padding-small")
 								select(class="w3-select theme-input w3-no-border" name="subteam_key")
 									//- 2019-9-26 JL: Now cycles through configured member "subteam" names, and gives options based on the configuration.
+									//- 2023-02-11 JL: Added blank option so we can see which users have an invalid subteam key
 									- subteams = config.subteams;
+									option
 									each option in subteams
-										- if (member.org_info.subteam_key == option.subteam_key)
-											option(value=option.subteam_key selected)= option.label
-										- else
-											option(value=option.subteam_key)= option.label
+										option(value=option.subteam_key selected=(member.org_info.subteam_key === option.subteam_key))= option.label
 							//class
 							div(class="w3-col s6 m2 w3-padding-small")
 								select(class="w3-select theme-input w3-no-border" name="class_key")
 									//- 2019-9-26 JL: Now cycles through configured member "class" names, and gives options based on the configured class names.
 									- classes = config.classes;
+									option 
 									each option in classes
-										- if (member.org_info.class_key == option.class_key)
-											option(value=option.class_key selected)= option.label
-										- else
-											option(value=option.class_key)= option.label
+										option(value=option.class_key selected=(member.org_info.class_key == option.class_key))= option.label
 							//role
 							div(class="w3-col s6 m2 w3-padding-small")
 								select(name="role_key" class="w3-select theme-input w3-no-border")
 									each role in roles
-										- if (member.role_key == role.role_key)
-											option(value=role.role_key selected)= role.label
-										- else
-											option(value=role.role_key)= role.label
+										option(value=role.role_key selected=(member.role_key == role.role_key))= role.label
 							//years
 							div(class="w3-col s6 m1 w3-padding-small")
 								input(type="number" value=member.org_info.years name="years" placeholder="Yrs. on team" class="w3-input theme-input w3-no-border theme-inline-padding")
@@ -124,6 +118,12 @@ block content
 			doBatch('incrementYears', "Are you sure you want to perform this batch action (incrementing # years by 1)? THE PAGE WILL REFRESH AND YOUR CURRENT CHANGES WILL BE LOST.");
 		});
 		
+		//- Make the update button flash on a member who has not yet been updated.
+		$('input:visible,select:visible').on('change', (e) => {
+			let thisUpdateButton = $(e.target).closest('form').find('button[type=submit]');
+			thisUpdateButton.addClass('animate-outline');
+		});
+		
 		function doBatch(key, question) {
 			let doProceed = true;
 			if (question) {
@@ -160,6 +160,10 @@ block content
 				//This is the page-determined response status code
 				if (response.status == 200) {
 					NotificationCard.show(response.message);
+					
+					//- Now, clear the outline from the update button
+					let thisUpdateButton = $(`#updateMember_${memberId}`).find('button[type=submit]');
+					thisUpdateButton.removeClass('animate-outline');
 				}
 				else {
 					NotificationCard.error(response.message);

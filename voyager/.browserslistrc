@@ -1,0 +1,12 @@
+# This file is used to adjust CSS and JS output to support the specified browsers below.
+# For additional information regarding the format and rule options see:
+# https://github.com/browserslist/browserslist#queries
+# You can see what browsers were selected by your queries by running:
+# npx browserslist
+
+> 1% in US
+last 2 chrome major version
+last 3 android major version
+last 2 safari major version
+last 2 ios major version
+not dead

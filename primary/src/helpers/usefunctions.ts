@@ -1,12 +1,12 @@
 import { getLogger } from 'log4js';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import { DateTime, IANAZone, FixedOffsetZone } from 'luxon';	// Luxon lets us handle timezones and localization
-import type { HttpError } from '@firstteam102/http-errors';
-import e from '@firstteam102/http-errors';
+import type { HttpError } from 'scoutradioz-http-errors';
+import e from 'scoutradioz-http-errors';
 import Permissions from './permissions';
 import 'colors';
 import type express from 'express';
-import type { Org, Role, Team } from '@firstteam102/scoutradioz-types';
+import type { Org, Role, Team } from 'scoutradioz-types';
 
 
 const logger = getLogger('usefunctions');

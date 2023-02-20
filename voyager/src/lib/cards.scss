@@ -1,0 +1,16 @@
+@mixin container($card-width: 25em, $card-height: 10em) {
+	margin: 0.5em auto;
+
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax($card-width, 1fr));
+	gap: 0.5em;
+	justify-items: center;
+
+	:global {
+		.mdc-card {
+			min-width: $card-width;
+			width: 100%;
+			min-height: $card-height;
+		}
+	}
+}

@@ -1,10 +1,12 @@
 {
-	"name": "@firstteam102/scoutradioz-helpers",
-	"version": "1.1.4",
+	"name": "scoutradioz-helpers",
+	"version": "2.0.0",
 	"description": "A series of helper files for Scoutradioz functions",
 	"main": "./build/index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"update": "yarn upgrade --pattern 'scoutradioz*'",
+		"build": "tsc"
 	},
 	"types": "types/index.d.ts",
 	"repository": {
@@ -19,10 +21,8 @@
 	"homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
 	"dependencies": {
 		"@log4js-node/log4js-api": "^1.0.2",
+		"scoutradioz-types": "file:../scoutradioz-types",
+		"scoutradioz-utilities": "file:../scoutradioz-utilities",
 		"ztable": "^1.0.7"
-	},
-	"peerDependencies": {
-		"@firstteam102/scoutradioz-utilities": ">=1.2.4",
-		"@firstteam102/scoutradioz-types": ">=1.0.8-test1"
 	}
 }

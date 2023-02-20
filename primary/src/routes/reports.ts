@@ -1,12 +1,12 @@
 import express from 'express';
 import { getLogger } from 'log4js';
 import wrap from '../helpers/express-async-handler';
-import utilities from '@firstteam102/scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
 import Permissions from '../helpers/permissions';
-import { matchData as matchDataHelper, upload as uploadHelper } from '@firstteam102/scoutradioz-helpers';
-import e from '@firstteam102/http-errors';
-import type { MongoDocument } from '@firstteam102/scoutradioz-utilities';
-import type { AggRange, Event, Layout, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, Team } from '@firstteam102/scoutradioz-types';
+import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
+import e, { assert } from 'scoutradioz-http-errors';
+import type { MongoDocument } from 'scoutradioz-utilities';
+import type { AggRange, Event, Layout, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, Team } from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('reports');
@@ -747,7 +747,9 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	logger.debug(`matchKey: ${matchKey}`);
 
 	// get the specified match object
-	let match: Match = await utilities.findOne('matches', {'key': matchKey}, {}) || {};
+	let match: Match = await utilities.findOne('matches', {'key': matchKey}, {});
+	
+	assert(match, 'Match not found: ' + matchKey);
 	
 	logger.trace(`match: ${JSON.stringify(match)}`);
 

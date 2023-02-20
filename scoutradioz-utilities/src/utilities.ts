@@ -4,11 +4,10 @@ import NodeCache from 'node-cache';
 import type { Db, Document as MongoDocument, 
 	Filter, UpdateFilter, FindOptions, UpdateOptions, AnyBulkWriteOperation, BulkWriteOptions,
 	InsertManyResult, InsertOneResult, BulkWriteResult, UpdateResult, DeleteResult, FilterOperators, RootFilterOperators, BSONType, BitwiseFilter, BSONRegExp, BSONTypeAlias } from 'mongodb';
-import { ObjectId, MongoClient } from 'mongodb';
+import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import crypto from 'crypto';
-import type { Request, Response, NextFunction } from 'express';
 import log4js from '@log4js-node/log4js-api';
-import type { CollectionName, CollectionSchema } from '@firstteam102/scoutradioz-types';
+import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from 'scoutradioz-types';
 
 const logger = log4js.getLogger('utilities');
 logger.level = process.env.LOG_LEVEL || 'info';
@@ -47,14 +46,14 @@ interface FilterOps<TValue> {
     $regex?: TValue extends string ? RegExp | BSONRegExp | string : never;
     $options?: TValue extends string ? string : never;
     $geoIntersects?: {
-        $geometry: Document;
+        $geometry: MongoDocument
     };
-    $geoWithin?: Document;
-    $near?: Document;
-    $nearSphere?: Document;
+    $geoWithin?: MongoDocument
+    $near?: MongoDocument
+    $nearSphere?: MongoDocument
     $maxDistance?: number;
     $all?: ReadonlyArray<any>;
-    $elemMatch?: Document;
+    $elemMatch?: MongoDocument
     $size?: TValue extends ReadonlyArray<any> ? number : never;
     $bitsAllClear?: BitwiseFilter;
     $bitsAllSet?: BitwiseFilter;
@@ -127,6 +126,10 @@ export class UtilitiesOptions {
 		maxAge: number;
 	};
 	/**
+	 * Options for the MongoClient that we are wrapping.
+	 */
+	mongoClientOptions?: MongoClientOptions;
+	/**
 	 * 2022-06-12 JL: Whether to convert ObjectIDs into strings before returning DB results. Used in cases like Svelte, where ObjectIDs cannot be stringified properly.
 	 */
 	stringifyObjectIDs?: boolean;
@@ -139,6 +142,7 @@ export class UtilitiesOptions {
 		else this.debug = false;
 		
 		this.stringifyObjectIDs = options?.stringifyObjectIDs || false;
+		this.mongoClientOptions = options?.mongoClientOptions || {};
 		
 		let defaultCacheOpts = {
 			enable: false,
@@ -274,7 +278,8 @@ export class Utilities {
 						this.leaveDbLock(); 
 					})
 					.catch(err => {
-						logger.error(JSON.stringify(err));
+						logger.error('(getDB)', JSON.stringify(err));
+						reject(err);
 					});
 			}
 			
@@ -304,8 +309,8 @@ export class Utilities {
 						// Resolve with old db (even if it's closed) (this shouldn't occur)
 						logger.error('(getDB) Error connecting');
 						
-						reject(err);
 						this.leaveDbLock();
+						reject(err);
 					});
 			}
 			else {
@@ -342,7 +347,7 @@ export class Utilities {
 				//if no config is provided
 				if (!this.dbConfig) {
 					logger.warn('No database config provided; Defaulting to localhost:27017/app');
-					return resolve('mongodb://localhost:27017/app');
+					return resolve('mongodb://127.0.0.1:27017/app');
 				}
 				//if no tier exists, something went wrong
 				if (!this.activeTier) {
@@ -390,19 +395,27 @@ export class Utilities {
 	 * @example 
 	 * 	const app = express();
 	 * 	app.use(utilities.refreshTier);
+	 * @param manuallySpecifiedTier Svelte doesn't use process.env, so in this case, we manually specify the tier from the calling code
+	 * @param unused
+	 * @param nextFunction Express middleware next function
 	 */
-	refreshTier(req: Request, res: Response, next: NextFunction) {
+	refreshTier(...args: unknown[]) {
 		
+		let manuallySpecifiedTier = args[0];
+		// Grab the tier -- either the first parameter or process.env.TIER
+		if (typeof manuallySpecifiedTier === 'string') Utilities.instance.activeTier = manuallySpecifiedTier;
+		else Utilities.instance.activeTier = process.env.TIER;
 		//set ready to true
 		Utilities.instance.ready = true;
-		Utilities.instance.activeTier = process.env.TIER;
 		
 		while (Utilities.instance.whenReadyQueue.length > 0) {
 			let cb = Utilities.instance.whenReadyQueue.splice(0, 1)[0];
 			cb();
 		}
 		
-		if (typeof next === 'function') next();
+		let nextFunction = args[2]; // optional next() callback is the third parameter
+		if (typeof nextFunction === 'function') nextFunction();
+		else logger.warn('next() callback is not a function!');
 	}
 
 	/**
@@ -418,7 +431,7 @@ export class Utilities {
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
 		options?: Opts, 
 		cacheOptions?: UtilitiesCacheOptions
-	): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchema<colName>[]> {
+	): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchemaWithId<colName>[]> {
 		logger.addContext('funcName', 'find');
 		
 		//Collection type filter
@@ -490,7 +503,9 @@ export class Utilities {
 		}
 		
 		// 2022-06-12 JL: Optionally stringify IDs
-		if (this.options.stringifyObjectIDs) this.stringifyObjectIDs(returnData);
+		// 	Since some DB structures contain ObjectIDs (e.g. ScouterRecord), we can't just loop through
+		// 	and do a shallow cast. JSON.stringify() automatically casts ObjectID to string & is fast enough.
+		if (this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -509,7 +524,7 @@ export class Utilities {
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
 		options?: Opts, 
 		cacheOptions?: UtilitiesCacheOptions
-	): Promise<CollectionSchema<colName>> {
+	): Promise<CollectionSchemaWithId<colName>> {
 		logger.addContext('funcName', 'findOne');
 		
 		//Collection type filter
@@ -578,7 +593,7 @@ export class Utilities {
 			this.consoleTimeEnd(timeLogName);
 		}
 		// 2022-06-12 JL: Optionally stringify IDs
-		if (returnData && this.options.stringifyObjectIDs) this.stringifyObjectID(returnData);
+		if (returnData && this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
 		return returnData;
@@ -718,8 +733,6 @@ export class Utilities {
 		}
 		
 		// 2022-12-06 JL: Optionally stringify IDs
-		// 	Since aggregate calls can attach objects as sub-objects (including their _ids), we can't just
-		// 	loop through and do a shallow cast. JSON.stringify() automatically casts ObjectID to string & is fast enough.
 		if (this.options.stringifyObjectIDs) returnData = JSON.parse(JSON.stringify(returnData));
 		
 		logger.removeContext('funcName');
@@ -767,7 +780,7 @@ export class Utilities {
 		collection: colName, 
 		field: Field, 
 		query: FilterQueryTyped<CollectionSchema<colName>>
-	): Promise<CollectionSchema<colName>[Field][]>{
+	): Promise<CollectionSchemaWithId<colName>[Field][]>{
 		logger.addContext('funcName', 'distinct');
 		
 		//If the collection is not specified and is not a String, throw an error.
@@ -1091,7 +1104,12 @@ export class Utilities {
 		});
 	}
 
-	private open(url: string): Promise<[MongoClient, Db]> {
+	private async open(url: string): Promise<[MongoClient, Db]> {
+		let options = this.options.mongoClientOptions || {};
+		let client = await MongoClient.connect(url, options);
+		let db = client.db();
+		return [client, db];
+		
 		return new Promise((resolve, reject) => {
 			MongoClient.connect(url, (err, client) => {
 				if (err || !client) return reject(err);
@@ -1113,25 +1131,6 @@ export class Utilities {
 			query._id = new ObjectId(query._id);
 		}
 		return query;
-	}
-	
-	/**
-	 * Shallowly casts ObjectIDs from an array of Mongo results into strings, for when utilities is configured to do so.
-	 */
-	private stringifyObjectIDs(results: MongoDocument[]) {
-		if (this.options.debug) logger.trace('Stringifying ObjectIDs');
-		for (let result of results) {
-			this.stringifyObjectID(result);
-		}
-	}
-	
-	/**
-	 * Casts _id into a string, for when utilities is configured to do so.
-	 */
-	private stringifyObjectID(result: MongoDocument) {
-		if (result._id instanceof ObjectId) {
-			result._id = result._id.toString();
-		}
 	}
 }
 

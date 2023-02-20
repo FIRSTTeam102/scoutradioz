@@ -216,16 +216,20 @@ class NavHelpers {
 							href: '/manage/scoutingaudit'
 						},
 						{
-							label: '!layout.nav.manage.scouters.assignments',
-							href: '/manage/scoutingpairs'
+							label: '!layout.nav.manage.scouters.pitassignments',
+							href: '/manage/assignments'
+						},
+						{
+							label: '!layout.nav.manage.scouters.matchassignments',
+							href: '/manage/assignments/matches'
 						},
 						{
 							label: '!layout.nav.manage.scouters.swapmembers',
-							href: '/manage/scoutingpairs/swapmembers'
+							href: '/manage/assignments/swapmatchscouters'
 						},
 						{
 							label: '!layout.nav.manage.scouters.swappitassignments',
-							href: '/manage/scoutingpairs/swappitassignments'
+							href: '/manage/assignments/swappitassignments'
 						},
 						{
 							label: '!layout.nav.manage.scouters.present',
