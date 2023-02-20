@@ -85,7 +85,6 @@
 					"main": "童子軍",
 					"event": "童子軍：[[{event}]]",
 					"audit": "偵察審核",
-					"assignments": "偵察任務",
 					"swapmembers": "換入/換出比賽賬戶",
 					"swappitassignments": "交換礦坑偵察任務",
 					"present": "設置禮物"

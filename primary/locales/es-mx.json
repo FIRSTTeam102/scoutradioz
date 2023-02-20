@@ -4,8 +4,8 @@
 		"welcome": "Bienvenido a Scoutradioz",
 		"choice": "¿Eres tú:",
 		"viewer": {
-			"choice": "Buscando ver datos",
-			"intro": "Scoutradioz permite a los equipos/organizaciones recopilar su propia información personalizada en las competiciones.",
+			"choice": "Buscando a ver datos",
+			"intro": "Scoutradioz permite a los equipos/organizaciones recolectar información personalizada en las competiciones.",
 			"action": "¡Seleccione una organización a continuación para ver qué datos han recopilado!"
 		},
 		"scouter": {
@@ -17,12 +17,12 @@
 			"features": {
 				"intro": "Inicialmente creado en 2018, Scoutradioz ha seguido evolucionando y ahora se ejecuta en Amazon Web Services. Aquí hay una lista de algunas de las características que ofrece Scoutradioz:",
 				"modular": "**Encuestas modulares y configurables** de exploración de boxes y partidos, para que su organización pueda elegir exactamente qué información desea registrar y mostrar",
-				"automatic": "**Automático**, asignaciones individualizadas de reconocimiento de pits y partidos",
+				"automatic": "**Automático**, asignaciones individualizadas para explorar y notar los partidos y los equipos que estan trabajando en los robots antes que vayan a un partido",
 				"advanced": "**Informes y métricas **avanzados**",
 				"management": "Herramientas de gestión de eventos como la auditoría de asignaciones de partidos, el intercambio de scouters y la gestión de una lista de miembros",
 				"free": "¡Y por supuesto, es completamente gratis!"
 			},
-			"github": "Vea nuestro código y documentación en GitHub",
+			"github": "Vea nuestro código y documentación en el sitio de GitHub",
 			"discord": "Únete a nuestro Discord",
 			"partner": "Solicitar ser socio de acceso anticipado",
 			"first": "Más sobre *FIRST* y FRC"
@@ -32,34 +32,35 @@
 	},
 	"hello": {
 		"world": "¡Hola mundo!",
-		"name": "¡Hola, {name}!"
+		"name": "¡Hola, {nombre}!"
 	},
-	"selectOrg": "Seleccione una organización.",
+	"selectOrg": "Selecciona una organización.",
 	"error": {
 		"title": "Error: {message}",
 		"report": {
 			"intro": "Para ayudarnos a corregir este error, por favor:",
 			"screenshot": "Haz una captura de pantalla de este mensaje de error",
-			"url": "Copia la URL completa de esta página haciendo clic en \"Compartir\" en la parte superior de la página",
-			"send": "Publique la captura de pantalla en nuestro servidor de Discord o en nuestra {github}página de GitHub{/github}, incluida la información relevante, como el enlace en el que hizo clic para llegar a este error."
+			"url": "Copia la URL completa de esta página por haciendo clic en \"Compartir\" en la parte superior de la página",
+			"send": "Publique la captura de pantalla en nuestro servidor de Discord o en nuestra {github}página de GitHub{/github}, incluye la información relevante, como el enlace en el que hizo clic para llegar a este error."
 		},
 		"stack": "Seguimiento de la pila:"
 	},
 	"layout": {
 		"untitled": "Página sin título",
-		"share": "Comparte",
+		"share": "Compartir",
 		"menu": {
-			"main": "Menú"
+			"main": "Menú",
+			"user": "{user} - {org}"
 		},
 		"footer": {
 			"copyright": "Copyright {date} FIRST Team 102 y Robotics Fund Inc.\nCódigo abierto y licenciado con AGPLv3.",
-			"tba": "Con la tecnología de Blue Alliance.",
-			"frc": "Estamos orgullosos de ser participantes de FIRST Robotics Competition."
+			"tba": "Con la ayuda de la Blue Alliance.",
+			"frc": "Estamos orgullosos de ser participantes de FIRST Competition de Roboticos."
 		},
 		"nav": {
-			"home": "Hogar",
+			"home": "Casa",
 			"reports": {
-				"main": "Información e informes: [[{event}]]",
+				"main": "Información y informes: [[{event}]]",
 				"teams": "Equipos",
 				"teamStats": "Estadísticas del equipo",
 				"yearStats": "Estadísticas completas para {year}",
@@ -68,29 +69,32 @@
 					"match": "Datos de búsqueda de coincidencias: [[{event}]]",
 					"pit": "Datos de exploración de pits: [[{event}]]",
 					"matchAll": "Datos de exploración de partidos: [[Todo {year}]]",
-					"pitAll": "Datos de exploración de foso: [[Todo {year}]]"
-				}
+					"pitAll": "Datos de exploración de pit: [[Todo {year}]]"
+				},
+				"teamList": "{numero}: {nombre}"
 			},
-			"scouting": "Escultismo",
+			"scouting": "exploracion",
 			"manage": {
 				"main": "Administrar: [[{org}]]",
 				"members": {
 					"main": "Miembros",
-					"passwords": "Auditorar/restablecer contraseñas de miembros"
+					"passwords": "Auditorar/restablecer contraseñas de miembros",
+					"list": "lista de miembros"
 				},
 				"scouters": {
 					"main": "Exploradores",
 					"event": "Exploradores: [[{event}]]",
 					"audit": "Auditoría de exploración",
-					"assignments": "Asignaciones de exploración",
 					"swapmembers": "Intercambiar cuentas de partido de entrada/salida",
 					"swappitassignments": "Intercambiar asignaciones de exploración de pits",
-					"present": "Establecer presente"
+					"present": "colocar quien esta presente al evento corriente",
+					"matchassignments": "asignaciones para exploracion de partidos",
+					"pitassignments": "asignaciones para expolracion del pit"
 				},
 				"event": {
 					"main": "Datos del evento",
 					"event": "Datos del evento: [[{event}]]",
-					"matches": "coincidencias",
+					"matches": "partidas (datos de FIRST)",
 					"allianceselection": "Datos de selección de alianza",
 					"getcurrentteams": "Actualizar lista de equipos",
 					"recalcderived": "Recalcular métricas derivadas",
@@ -135,19 +139,19 @@
 		"personalpassword": "Contraseña personal:",
 		"createnew": "Por favor crea una nueva contraseña.",
 		"mustcreate": "Tiene permisos elevados en su organización, por lo que debe establecer una contraseña para asegurarse de que otros no puedan iniciar sesión como usted.",
-		"currentpassword": "Contraseña actual:",
+		"currentpassword": "Contraseña concurrente:",
 		"newpassword": "Nueva contraseña:",
 		"newpassword2": "Confirmar:",
 		"newpasswordmismatch": "Las nuevas contraseñas no coinciden.",
 		"login": "Iniciar sesión",
 		"changepassword": "Cambiar contraseña",
 		"blankpassword": "Déjalo en blanco si aún no tienes tu propia contraseña.",
-		"selectorg": "Seleccione una organización para iniciar sesión.",
+		"selectorg": "Selecciona una organización para iniciar sesión.",
 		"logoutbeforelogin": "Cerrar sesión antes de poder iniciar sesión con otro usuario.",
 		"orgpasswordrequired": "Por favor ingrese la contraseña de su organización. Para regresar, abra la navegación en la parte superior izquierda.",
 		"orgpasswordincorrect": "Contraseña incorrecta para la organización {org}.",
 		"resubmitlogin": "Lo siento, vuelva a enviar la información de inicio de sesión de su organización.",
-		"selectuser": "Seleccione un usuario.",
+		"selectuser": "Selecciona un usuario.",
 		"nouserexists": "No existe tal usuario.",
 		"incorrectpassword": "Contraseña incorrecta.",
 		"incorrectpasswordcurrent": "Contraseña actual incorrecta.",
@@ -160,7 +164,7 @@
 			"clearedorgdefaults": "Se borraron correctamente las columnas predeterminadas de la organización.",
 			"intro": "Si se selecciona NINGUNA, las páginas del informe mostrarán un conjunto predeterminado de columnas para la organización.\nLas columnas predeterminadas de la organización están en **negrita**.\nSi se seleccionan TODAS o ALGUNAS, las páginas del informe mostrarán SÓLO las columnas seleccionadas.",
 			"default": "Predeterminado",
-			"checkAll": "Marcar todo",
+			"checkAll": "buscar todo",
 			"uncheckAll": "Desmarcar todo",
 			"setOrgDefalts": "Marque esto para configurar los valores predeterminados de la organización",
 			"save": "Guardar selecciones de columna",

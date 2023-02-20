@@ -1,8 +1,8 @@
 {
 	"index": {
-		"fulltitle": "Scoutradioz: Repérage FRC en tant que service",
-		"welcome": "Bienvenue à Scoutradioz",
-		"choice": "Cherchez-vous à:",
+		"fulltitle": "Scoutradioz : Repérage FRC en tant que service",
+		"welcome": "Bienvenue sur Scoutradioz",
+		"choice": "Cherchez-vous à :",
 		"viewer": {
 			"choice": "Afficher des données",
 			"intro": "Scoutradioz permet aux équipes/organisations de rassembler leurs propres informations personnalisées lors des compétitions.",
@@ -85,7 +85,6 @@
 					"main": "Repéreurs",
 					"event": "Repéreurs: [[{event}]]",
 					"audit": "Audit de repérage",
-					"assignments": "Tâches de repérage",
 					"swapmembers": "Échanger des repéreurs de match",
 					"swappitassignments": "Échanger les tâches de repérage de puits",
 					"present": "Mettre présent"
@@ -269,7 +268,8 @@
 		"priority": "Priorité",
 		"priorityAbbr": "V",
 		"team": "Équipe",
-		"rank": "Classement FRC"
+		"rank": "Classement FRC",
+		"numalliances": "Nombre d'alliances :"
 	},
 	"metrics": {
 		"raw": "Données brutes",

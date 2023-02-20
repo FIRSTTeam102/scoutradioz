@@ -85,7 +85,6 @@
 					"main": "צופים",
 					"event": "צופים: [[{event}]]",
 					"audit": "ביקורת צופית",
-					"assignments": "משימות צופיות",
 					"swapmembers": "החלף נקודות התאמה לכניסה/יציאה",
 					"swappitassignments": "החלפת משימות צופי בורות",
 					"present": "הגדר מתנה"

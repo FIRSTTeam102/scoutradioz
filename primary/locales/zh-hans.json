@@ -85,7 +85,6 @@
 					"main": "童子军",
 					"event": "童子军：[[{event}]]",
 					"audit": "侦察审核",
-					"assignments": "侦察任务",
 					"swapmembers": "换入/换出比赛账户",
 					"swappitassignments": "交换矿坑侦察任务",
 					"present": "设置礼物"
