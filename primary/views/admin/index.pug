@@ -94,16 +94,18 @@ block content
 						
 						let url = `/admin/sync/resynceventteams?year=${year}&start=${start}&end=${end}`;
 						let result = await promisify(url);
-						//- sanity check
-						if (!result.includes('SUCCESS')) {
+						
+						if (result.success) {
+							//- get number of events enriched
+							let number = result.updated;
+							if (number !== INTERVAL) console.warn(`Number completed this step and request interval does not match!! numCompletedThisStep=${number} interval=${INTERVAL}`);
+							numCompleted += number;
+						}
+						else {
 							card.remove();
-							NotificationCard.error(`Sync not successful. Message: ${result}`, {ttl: 0, exitable: true});
+							NotificationCard.error(`Sync not successful. Message: ${result.message}`, {ttl: 0, exitable: true});
 							return;
 						}
-						//- get number of events enriched
-						let number = parseInt(result.replace(/SUCCESS.*updated /g, ''));
-						if (number !== INTERVAL) console.warn(`Number completed this step and request interval does not match!! numCompletedThisStep=${number} interval=${INTERVAL}`);
-						numCompleted += number;
 					}
 					card.remove();
 					NotificationCard.good(`Done syncing events: ${numCompleted} of ${totalEvents}`, {ttl: 0, exitable: true})
