@@ -544,8 +544,8 @@ router.get('/spr', wrap(async (req, res) => {
 				logger.trace(`matrix=${JSON.stringify(matrix)}`);
 				logger.trace(`vector=${JSON.stringify(vector)}`);
 
-				logger.debug('FRC=' + JSON.stringify(frcRow));
-				logger.debug('Org=' + JSON.stringify(orgRow));
+				logger.trace('FRC=' + JSON.stringify(frcRow));
+				logger.trace('Org=' + JSON.stringify(orgRow));
 
 				returnCompareTable.push(frcRow);
 				returnCompareTable.push(orgRow);
@@ -571,8 +571,24 @@ router.get('/spr', wrap(async (req, res) => {
 		logger.warn(`could not calculate solution! err=${err}`);
 	}
 				
+	// sort scoutScoreDict by sprScore
+	let sortedValues:Array<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = Object.values(scoutScoreDict);
+	// reverse sort!
+	sortedValues.sort((a, b) => b.sprScore - a.sprScore);
+	logger.trace('sortedValues=' + JSON.stringify(sortedValues));
+
+	// reconstruct scoutScoreDict
+	scoutScoreDict = {};
+	for (let thisIdx in sortedValues) {
+		let thisValue = sortedValues[thisIdx];
+		logger.trace(`thisValue=${thisValue}`);
+		logger.trace(`thisValue.sprIndex=${thisValue.sprIndex}`);
+		logger.trace(`scoutSprList[thisValue.sprIndex]=${scoutSprList[thisValue.sprIndex]}`);
+		scoutScoreDict[scoutSprList[thisValue.sprIndex]] = thisValue;
+	}
+
 	// final results
-	console.log('scoutScoreDict=' + JSON.stringify(scoutScoreDict));
+	logger.debug('scoutScoreDict=' + JSON.stringify(scoutScoreDict));
 
 	for (let sprIdx = 0; sprIdx < scoutSprList.length; sprIdx++) {
 		logger.trace(`sprIdx=${sprIdx}, scoutSprList[${sprIdx}]=${scoutSprList[sprIdx]}`);
