@@ -436,7 +436,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				team3: undefined
 			};
 		}
-		logger.debug(`alliances=${JSON.stringify(alliances)}`)
+		logger.debug(`alliances=${JSON.stringify(alliances)}`);
 			
 		let rankMap: Dict<Ranking> = {};
 		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
