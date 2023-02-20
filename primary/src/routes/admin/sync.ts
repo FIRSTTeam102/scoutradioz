@@ -59,8 +59,7 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	logger.info(`Enriched ${events.length} events with the following keys: ${keysToAdd.join(', ')}`);
 	
 	//Remove matching existing events
-	console.log({year: year});
-	let removeResult = await utilities.remove('events', { year: year });
+	let removeResult = await utilities.remove('events', { year });
 	//Now insert new events list
 	let insertResult = await utilities.insert('events', events);
 	
@@ -75,13 +74,23 @@ router.get('/resynceventteams', wrap(async (req, res) => {
 	logger.addContext('funcName', 'resynceventteams[get]');
 	logger.info('ENTER');
 	
-	assert(typeof req.query.year === 'string', 'Year must be defined');
-	const year = parseInt(req.query.year);
 	
-	assert(typeof req.query.start === 'string', 'Start must be defined');
-	assert(typeof req.query.end === 'string', 'End must be defined');
+	if (typeof req.query.year !== 'string' || typeof req.query.start !== 'string' || typeof req.query.end !== 'string') {
+		return res.send({
+			success: false,
+			message: 'start, year, and end must be defined'
+		});
+	}
+	const year = parseInt(req.query.year);
 	const start = parseInt(req.query.start);
 	const end = parseInt(req.query.end); // note: splice() treats end as EXCLUSIVE, so do start=0 end=10, then start=10 end=20, etc.
+	
+	if (isNaN(year) || isNaN(start) || isNaN(end)) {
+		return res.send({
+			success: false,
+			message: `start and/or year and/or end are NaN! start=${start}, year=${year}, end=${end}`
+		});
+	}
 	
 	logger.debug(`Year=${year}, start=${start}, end=${end}`);
 	
@@ -106,7 +115,7 @@ router.get('/resynceventteams', wrap(async (req, res) => {
 				readSuccess = true;
 			}
 			catch (err) {
-				console.log('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
+				logger.warn('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
 				retries -= 1;
 			}
 			
@@ -123,7 +132,10 @@ router.get('/resynceventteams', wrap(async (req, res) => {
 	}
 	
 	//return a simple SUCCESS message if it works
-	return res.send('SUCCESS ' + year + ' updated ' + updatedNum);
+	return res.send({
+		success: true,
+		updated: updatedNum
+	});
 }));
 
 // Function to refresh the list of events for the current year (and) to refresh all teams data
@@ -191,7 +203,7 @@ router.get('/resyncevents', wrap(async (req, res) => {
 				readSuccess = true;
 			}
 			catch (err) {
-				console.log('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
+				logger.warn('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
 				retries -= 1;
 			}
 			
