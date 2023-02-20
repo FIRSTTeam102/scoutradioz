@@ -8,7 +8,6 @@ import type { ImageLinks } from '@firstteam102/scoutradioz-helpers/types/uploadh
 import e from '@firstteam102/http-errors';
 import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from '@firstteam102/scoutradioz-types';
 import type Mathjs from 'mathjs';
-import { NumberLiteralType } from 'typescript';
 const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
 const router = express.Router();
