@@ -280,6 +280,12 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		}}]
 	);
 	
+	// Special case for no scouters assigned: Stop the re-assigning process and render the match scouting dashboard
+	if (matchScouts.length === 0) {
+		logger.info('No available match scouts were selected; Leaving the match scouting assignments blank');
+		return res.redirect('/dashboard/matches?alert=No scouters were selected, so the assignments were left blank.');
+	}
+	
 	let comingMatches: Match[] = await utilities.find('matches', 
 		{event_key: event_key, time: {$gte: earliestTimestamp}},
 		{sort: {time: 1}}
