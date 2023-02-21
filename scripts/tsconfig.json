@@ -8,6 +8,7 @@
 		"skipLibCheck": true,
 		"noImplicitAny": false,
 		"noImplicitThis": false,
-		"moduleResolution": "node"
+		"moduleResolution": "node",
+		"newLine": "crlf",
 	}
 }
