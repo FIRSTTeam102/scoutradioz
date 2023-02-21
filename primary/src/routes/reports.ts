@@ -26,6 +26,49 @@ router.get('/', wrap(async (req, res) => {
 	res.redirect('/?alert=No index page for /reports/');
 }));
 
+router.get('/browseevents', wrap(async (req, res) => {
+	
+	const org_key = req._user.org_key;
+	
+	// Get list of event keys for which this org has any data
+	let pitscoutingEventKeys = await utilities.distinct('pitscouting', 'event_key', {org_key});
+	let matchscoutingEventKeys = await utilities.distinct('matchscouting', 'event_key', {org_key});
+	
+	let event_keys = pitscoutingEventKeys;
+	matchscoutingEventKeys.forEach(key => {
+		if (!event_keys.includes(key)) event_keys.push(key);
+	});
+	
+	const events = await utilities.find('events', {key: {$in: event_keys}});
+	
+	res.render('./reports/browseevents', {
+		title: 'WIP - Browse events',
+		events
+	});
+}));
+
+router.get('/browseevent', wrap(async (req, res) => {
+	
+	// Event key requested
+	let event_key = req.query.event_key;
+	assert(typeof event_key === 'string', 'eventKey required');
+	
+	const event = await utilities.findOne('events', {key: event_key});
+	
+	assert(event, `Event with key ${event_key} not found!`);
+	
+	res.cookie('event_key', event_key);
+	
+	res.redirect(`/?alert=Now browsing event ${event.name}`);
+}));
+
+router.get('/clearbrowsedevent', wrap(async (req, res) => {
+	
+	res.clearCookie('event_key');
+	
+	res.redirect('/?alert=Switched back to your org\'s current event.');
+}));
+
 router.get('/rankings', wrap(async (req, res) => {
 	logger.addContext('funcName', 'rankings[get]');
 	logger.info('ENTER');

@@ -258,6 +258,7 @@ class UseFunctions {
 			name: 'undefined',
 			year: -1,
 			timezone: 'UTC',
+			isOrgCurrent: true
 		};
 		
 		// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
@@ -280,13 +281,26 @@ class UseFunctions {
 		//if exist
 		if (thisOrg && thisOrg.event_key) {
 			
-			eventKey = thisOrg.event_key;
+			eventKey = thisOrg.event_key;			
+			
+			// 2023-02-22 JL: added event_key cookie
+			if (req.cookies['event_key']) {
+				logger.debug('Found event_key cookie; setting custom browsing event key for user');
+				eventKey = req.cookies['event_key'];
+				req.event.isOrgCurrent = false;
+			}
+			
 			eventYear = parseInt(eventKey);
+			
 			//set event key
 			req.event.key = eventKey;
 			req.event.year = eventYear;
 			res.locals.event_key = req.event.key;
 			res.locals.event_year = req.event.year;
+			// whether event is the org's current event
+			res.locals.eventIsOrgCurrent = req.event.isOrgCurrent;
+			
+			logger.debug(`eventIsOrgCurrent=${req.event.isOrgCurrent}`);
 			
 			let currentEvent = await utilities.findOne('events', 
 				{key: eventKey}, 
@@ -314,6 +328,10 @@ class UseFunctions {
 					req.teams = teams;
 					res.locals.teams = teams;
 				}
+			}
+			else {
+				// delete event_key cookie, just in case it's corrupt and there's no event in the db with that key
+				res.clearCookie('event_key');
 			}
 		}
 		
