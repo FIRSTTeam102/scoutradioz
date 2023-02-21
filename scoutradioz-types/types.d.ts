@@ -211,6 +211,8 @@ export declare interface Match extends DbDocument {
 	actual_time: number|'';
 	predicted_time: number;
 	post_result_time?: number;
+	/** Whether the match data was manually entered */
+	manually_entered?: boolean;
 }
 
 declare class MatchAllianceInfo {
