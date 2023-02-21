@@ -262,6 +262,7 @@ router.post('/matchschedule', wrap(async (req, res) => {
 				blue: {},
 			},
 			videos: [],
+			manually_entered: true, // 2023-02-20 JL: added manually_entered
 		};
 	}
 	
@@ -376,6 +377,8 @@ router.post('/matchresults', wrap(async (req, res) => {
 			match.score_breakdown.blue[rp.name] = !!userInputThisMatch[`Blue${rp.name}`]; // ex: BluecompleteRocketRankingPoint
 			match.score_breakdown.red[rp.name] = !!userInputThisMatch[`Red${rp.name}`];
 		}
+		
+		match.manually_entered = true; // 2023-02-20 JL: added manually entered
 	}
 	
 	//Remove matches
