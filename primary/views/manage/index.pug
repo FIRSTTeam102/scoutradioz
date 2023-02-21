@@ -28,8 +28,8 @@ block content
 		h3=title
 		hr 
 		h4 
-			div Current Event - #{event_key}
-			div(class="unimportant") (#{eventName})
+			div Current Event - #{currentEvent.key}
+			div(class="unimportant") (#{currentEvent.name})
 		//- Scouters
 		h5!=msg('layout.nav.manage.scouters.main')
 				

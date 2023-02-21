@@ -125,6 +125,10 @@ class NavHelpers {
 						href: '/reports/allteammetrics',
 					},
 					{
+						label: 'Browse data from other events',
+						href: '/reports/browseevents',
+					},
+					{
 						label: '!layout.nav.reports.export.main',
 						sprite: 'download',
 						submenu: [

@@ -1,0 +1,7 @@
+extends ../layout
+block content
+	h2=title
+	ul
+		each event in events
+			li 
+				a(class="u" href=`/reports/browseevent?event_key=${event.key}`) #{event.name}

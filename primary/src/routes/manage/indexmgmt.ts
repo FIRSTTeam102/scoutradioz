@@ -39,6 +39,11 @@ router.get('/', wrap(async (req, res) => {
 		{allowCache: true}
 	);
 	
+	// 2023-02-20 JL: Forced to org current event instead of req.event because of the new WIP cookie thingy
+	let currentEvent: Event|undefined = undefined;
+	if (org.event_key)
+		currentEvent = await utilities.findOne('events', {key: org.event_key});
+	
 	// Read unique list of years in DB
 	const distinctYears = await utilities.distinct('events', 'year', {});
 	const uniqueYears = distinctYears.sort();
@@ -46,7 +51,7 @@ router.get('/', wrap(async (req, res) => {
 	res.render('./manage/index', { 
 		title: `Manage ${org.nickname}`,
 		org: org,
-		current: req.event.key,
+		currentEvent,
 		events: events,
 		years: uniqueYears,
 		eventListYear: eventListYear
