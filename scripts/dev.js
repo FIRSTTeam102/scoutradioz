@@ -20,8 +20,6 @@ let childMongod,
 let gracefulShutdown = false;
 
 function init() {
-	console.clear();
-	
 	// MONGODB
 	
 	const mongodbOptions = [];
@@ -174,7 +172,7 @@ function init() {
 	// This event fires when Ctrl+C is typed in the console, which is how to shut down the program.
 	process.on('SIGINT', function () {
 		gracefulShutdown = true; // Track that this was a user-requested shutdown.
-		console.clear();
+		
 		console.log('Gracefully shutting down...');
 		
 		// Close our file watchers and kill our child processes
