@@ -10,6 +10,7 @@
 		"declarationDir": "./types",
 		"noImplicitAny": true,
 		"skipLibCheck": true,
+		"newLine": "crlf",
 		//   "removeComments": true,
 	},
 	"include": [
