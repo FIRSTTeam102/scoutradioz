@@ -85,8 +85,20 @@ router.post('/setcurrent', wrap(async (req, res) => {
 			// 2022-03-26 JL: In the background, update list of teams when setting the current event, so the team admin doesn't have to do it manually
 			let eventTeamsUrl = `event/${eventKey}/teams/keys`;
 			let thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
-			logger.info(`Updating list of team keys, event=${eventKey} team_keys.length=${thisTeamKeys.length}`);
-			await utilities.update( 'events', {'key': eventKey}, {$set: {'team_keys': thisTeamKeys}} );
+			
+			
+			// 2023-02-20 JL: Added check to make sure TBA sends back an array
+			if (!Array.isArray(thisTeamKeys)) {
+				logger.error('TBA didn\'t send back an array!! They sent: ', thisTeamKeys);
+			}
+			// 2023-02-20 JL: Added check to not override team keys if TBA sends back none
+			else if (req.teams && req.teams.length > 0 && thisTeamKeys.length === 0) {
+				logger.info('TBA sent back a list of 0 teams and a nonzero amount of teams were detected in the database. Not updating.');
+			}
+			else {
+				logger.info(`Updating list of team keys, event=${eventKey} team_keys.length=${thisTeamKeys.length}`);
+				await utilities.update( 'events', {'key': eventKey}, {$set: {'team_keys': thisTeamKeys}} );
+			}
 		}
 		//If invalid, send an error
 		else {
