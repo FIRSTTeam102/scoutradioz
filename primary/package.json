@@ -16,7 +16,7 @@
 	},
 	"scripts": {
 		"start": "npx nodemon --ext ts ./src/www.ts",
-	"update": "yarn upgrade --pattern 'scoutradioz*'",
+		"update": "yarn upgrade --pattern 'scoutradioz*'",
 		"build": "tsc && yarn run compile-static",
 		"win-build": "yarn run build",
 		"---readme---": "Use the win-X scripts if you're using Windows. Always upload to test or QA first, then extensively test before promoting to prod.",
