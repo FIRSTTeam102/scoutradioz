@@ -14,6 +14,7 @@ block content
 		}
 	form#updatematches(name="updatematches" method="post" action="/manage/currentevent/updatematches")
 		button#btnSubmit(type="submit" class="w3-button theme-hover-white theme-submit w3-text-white") Update all matches
+	p.info.w3-center Match data is shared among all organizations using Scoutradioz.
 	p.info.w3-center To re-scout a replay match, click "Reset" on the match in the list.
 	br
 	if matches
@@ -56,22 +57,44 @@ block content
 						button(class="w3-button theme-red" onClick=`resetMatch('${match.key}')`) Reset
 	br
 	form#resetmatches(name="resetmatches" method="post" action="/manage/currentevent/resetmatches")
-		button#btnSubmit(type="submit" class="w3-button theme-red strong w3-text-white") RESET ALL MATCHES
+	button#btnResetMatches(type="submit" class="w3-button theme-red strong w3-text-white") RESET ALL MATCHES
 	form#updatematchdata(name="updatematchdata" method="post" action="/manage/currentevent/updatematch")
 		input#updateMatchId(type="hidden", name="matchId")
 	form#resetmatchdata(name="updatematchdata" method="post" action="/manage/currentevent/resetmatch")
 		input#resetMatchId(type="hidden", name="matchId")
 	br 
+	script const numOrgsAtThisEvent = #{numOrgsAtThisEvent};
 	script.
+		$('#btnResetMatches').on('click', async () => {
+			confirmIfOtherOrgs('reset match data', () => {
+				$('#resetmatches').submit();
+			})
+		})
 		function updateMatch(matchId)
 		{
 			console.log('matchId='+matchId);
-			document.getElementById("updateMatchId").value = matchId;
-			document.getElementById("updatematchdata").submit();
+			confirmIfOtherOrgs(`reset match "${matchId}"`, () => {
+				document.getElementById("updateMatchId").value = matchId;
+				document.getElementById("updatematchdata").submit();
+			});
 		}
 		function resetMatch(matchId)
 		{
 			console.log('matchId='+matchId);
-			document.getElementById("resetMatchId").value = matchId;
-			document.getElementById("resetmatchdata").submit();
+			confirmIfOtherOrgs(`reset match "${matchId}"`, () => {
+				document.getElementById("resetMatchId").value = matchId;
+				document.getElementById("resetmatchdata").submit();
+			});
+		}
+		
+		//- send a confirmation prompt for the requested action if there are other orgs at the event
+		async function confirmIfOtherOrgs(action, cb) {
+			if (numOrgsAtThisEvent > 1) {
+				let result = await Confirm.show(`There is/are ${numOrgsAtThisEvent - 1} other org(s) at this event. Are you sure you want to ${action}?\n(it WILL affect them! Be careful!)`, {yesTimeout: 1000});
+				if (result.cancelled === false) {
+					cb();
+				}
+				else console.log('Cancelled');
+			}
+			else cb();
 		}
