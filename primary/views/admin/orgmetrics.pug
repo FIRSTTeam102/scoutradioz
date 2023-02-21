@@ -1,0 +1,49 @@
+extends ../layout
+include ../reports/mixins/metricTables
+block content
+	style.
+		table {
+			margin: auto;
+		}
+		td, th {
+			padding: 8px;
+			text-align: left;
+		}
+	h3 Match scouting data
+	table(class="W3-table")
+		tr
+			th Org key
+			th Org name
+			th # Match scouting entries
+			th # Pit scouting entries
+			th # Scouting pairs
+			th # Users
+			th # Team admins
+			th # Image uploads
+			th # Deleted uploads
+			th # Org team values
+		each org in orgMetrics
+			tr 
+				td=org.org_key
+				td=org.nickname
+				td=org.matchScoutingData
+				td=org.pitScoutingData
+				td=org.scoutingPairs
+				td=org.users
+				td=org.teamAdmins
+				td=org.imageUploads
+				td=org.deletedImageUploads
+				td=org.orgTeamValues
+	+tableSorter()
+	//- h3 Pit scouting data
+	//- table(class="W3-table w3-left-align")
+	//- 	tr
+	//- 		th Org key
+	//- 		th Org name
+	//- 		th # Pit scouting entries
+	//- 	each item in pitScouting
+	//- 		- let org = item.org[0];
+	//- 		tr
+	//- 			td=org.org_key
+	//- 			td=org.nickname
+	//- 			td=item.count
