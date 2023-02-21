@@ -484,17 +484,21 @@ router.get('/spr', wrap(async (req, res) => {
 
 				// track scores
 				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
-					let thisScoutName = matchScoutReports[scoutIdx].actual_scorer;
-					if (!thisScoutName) {
+					let thisScout = matchScoutReports[scoutIdx].actual_scorer;
+					if (!thisScout) {
 						logger.trace('No actual_scorer for scout report idx=' + scoutIdx);
 						continue;
 					}
-					let thisScoutRecord = scoutScoreDict[thisScoutName];
+					// 2022-02-20 JL: renamed thisScoutName to thisScout, added thisScoutId
+					let thisScoutId = String(thisScout.id); 
+					let thisScoutName = thisScout.name;
+					
+					let thisScoutRecord = scoutScoreDict[thisScoutId];
 					if (!thisScoutRecord) {
 						// add rows & cols to matrix, and add an element to the vector
 						let thisScoutIndex = vector.length;
 						vector.push([0]);
-						logger.trace(`thisScoutName=${thisScoutName},thisScoutIndex=${thisScoutIndex}`);
+						logger.trace(`thisScoutName=${thisScoutName},thisScoutId=${thisScoutId},thisScoutIndex=${thisScoutIndex}`);
 						scoutSprList.push(thisScoutName);
 
 						emptyRow = [];
@@ -507,7 +511,7 @@ router.get('/spr', wrap(async (req, res) => {
 						//logger.debug(`ADD vector=${JSON.stringify(vector)}`);
 						//logger.debug(`ADD matrix=${JSON.stringify(matrix)}`);
 
-						scoutScoreDict[thisScoutName] = {count: 1, avgDiff: errDiff, avgRatio: errRatio, totDiff: errDiff, totRatio: errRatio, sprIndex: thisScoutIndex, sprScore: 0};
+						scoutScoreDict[thisScoutId] = {count: 1, avgDiff: errDiff, avgRatio: errRatio, totDiff: errDiff, totRatio: errRatio, sprIndex: thisScoutIndex, sprScore: 0};
 					}
 					else {
 						let newCount = thisScoutRecord.count + 1;
@@ -515,7 +519,7 @@ router.get('/spr', wrap(async (req, res) => {
 						let avgDiff = newTotDiff / newCount;
 						let newTotRatio = thisScoutRecord.totRatio + errRatio;
 						let avgRatio = newTotRatio / newCount;
-						scoutScoreDict[thisScoutName] = {count: newCount, avgDiff: avgDiff, avgRatio: avgRatio, totDiff: newTotDiff, totRatio: newTotRatio, sprIndex: thisScoutRecord.sprIndex, sprScore: 0};
+						scoutScoreDict[thisScoutId] = {count: newCount, avgDiff: avgDiff, avgRatio: avgRatio, totDiff: newTotDiff, totRatio: newTotRatio, sprIndex: thisScoutRecord.sprIndex, sprScore: 0};
 					}
 				}
 
@@ -529,27 +533,33 @@ router.get('/spr', wrap(async (req, res) => {
 				if (!matchScoutReports[0].actual_scorer || !matchScoutReports[1].actual_scorer || !matchScoutReports[2].actual_scorer) {
 					throw new e.InternalServerError('actual_scorer not defined for all three matchScoutReports');
 				}
-				orgRow.push(matchScoutReports[0].actual_scorer + ', ' + matchScoutReports[1].actual_scorer + ', ' + matchScoutReports[2].actual_scorer);
+				orgRow.push(matchScoutReports[0].actual_scorer.name + ', ' + matchScoutReports[1].actual_scorer.name + ', ' + matchScoutReports[2].actual_scorer.name);
 				orgRow.push(errDiff);
 				orgRow.push(errRatio);
 				orgRow.push(orgTot);
 				
 				// SPR matrix & vector updates
 				for (let x = 0; x < matchScoutReports.length; x++) {
-					let thisScoutName = matchScoutReports[x].actual_scorer;
-					if (!thisScoutName) {
+					let thisScout = matchScoutReports[x].actual_scorer;
+					if (!thisScout) {
 						logger.trace('No actual_scorer for scout report idx=' + x);
 						continue;
 					}
-					let xIndex = scoutScoreDict[thisScoutName].sprIndex;
+					// 2022-02-20 JL: renamed thisScoutName to thisScout, added thisScoutId
+					let thisScoutId = String(thisScout.id); 
+					// let thisScoutName = thisScout.name;
+					
+					let xIndex = scoutScoreDict[thisScoutId].sprIndex;
 					vector[xIndex][0] = vector[xIndex][0] + errDiff;
 					for (let y = 0; y < matchScoutReports.length; y++) {
-						let thisScoutName2 = matchScoutReports[y].actual_scorer;
-						if (!thisScoutName2) {
+						let thisScout2 = matchScoutReports[y].actual_scorer;
+						if (!thisScout2) {
 							logger.trace('No actual_scorer 2 for scout report idx=' + x);
 							continue;
 						}
-						let yIndex = scoutScoreDict[thisScoutName2].sprIndex;
+						let thisScoutId2 = String(thisScout2.id);
+						
+						let yIndex = scoutScoreDict[thisScoutId2].sprIndex;
 						matrix[yIndex][xIndex] = matrix[yIndex][xIndex] + 1;
 					}
 				}
