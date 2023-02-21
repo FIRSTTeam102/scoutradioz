@@ -207,7 +207,7 @@ export declare class Utilities {
      * @param cacheOptions Caching options.
      * @returns Aggregated data.
      */
-    aggregate<colName extends CollectionName>(collection: colName, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any>;
+    aggregate<colName extends CollectionName>(collection: colName, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any[]>;
     dumpCache(): void;
     /**
      * @param type Type of function
