@@ -457,10 +457,10 @@ router.get('/spr', wrap(async (req, res) => {
 			let matchScoutReports: MatchScouting[] = await utilities.find('matchscouting',
 				{ 'org_key': orgKey, 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { '$ne': null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
 			);
-			logger.debug(`thisAlliance=${thisAlliance},thisMatch.key=${thisMatch.key} ...matchScoutReports.length=${matchScoutReports.length}`);
+			logger.trace(`thisAlliance=${thisAlliance},thisMatch.key=${thisMatch.key} ...matchScoutReports.length=${matchScoutReports.length}`); // JL: changed frequent log to trace 
 			// can't compare if we don't have three (3) scouting reports
 			if (matchScoutReports.length != 3) {
-				logger.warn('matchScoutReports.length is not 3, skipping!');
+				logger.warn(`matchScoutReports.length is not 3, skipping! - match key = ${thisMatch.key}`);
 			}
 			else {
 				let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
