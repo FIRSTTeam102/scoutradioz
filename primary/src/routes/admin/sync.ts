@@ -309,6 +309,8 @@ router.get('/recalcderived', wrap(async (req, res) => {
 		}
 	}
 	
+	if (writeQueries.length === 0) return res.send('No match data to calculate!'); // 2023-02-21 JL: avoid empty bulkWrite call
+	
 	// 2022-03-04 JL: fixed bug & put the update stuff into a bulkWrite
 	let writeResult = await utilities.bulkWrite('matchscouting', writeQueries);
 	res.send(`SUCCESS - done in ${Date.now() - startTime} ms - writeResult = ${JSON.stringify(writeResult)}`);
