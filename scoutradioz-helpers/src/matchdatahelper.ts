@@ -145,9 +145,13 @@ export class MatchDataHelper {
 						
 						let sum = 0;
 						for (let key of operands) {
-							if (typeof key === 'number') sum += key;
-							else if (key.startsWith('$')) sum += variables[key]; // local "as" variable higher in the chain
-							else sum += parseNumber(matchData[key]);
+							let thisValue: number;
+							if (typeof key === 'number') thisValue = key;
+							else if (key.startsWith('$')) thisValue = variables[key]; // local "as" variable higher in the chain
+							else thisValue = parseNumber(matchData[key]);
+							
+							logger.trace(`[sum loop] key=${key}, type=${typeof key}, value=${thisValue}`);
+							sum += thisValue;
 						}
 						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = sum;
 						else derivedMetric = sum;
