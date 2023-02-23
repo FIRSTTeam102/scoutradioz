@@ -203,7 +203,7 @@ export class MatchDataHelper {
 						
 						if (typeof dividendKey === 'number') dividend = dividendKey;
 						else if (dividendKey.startsWith('$')) dividend = variables[dividendKey];
-						else dividend = parseNumber(matchData[divisorKey]);
+						else dividend = parseNumber(matchData[dividendKey]);
 						
 						if (typeof divisorKey === 'number') divisor = divisorKey;
 						else if (divisorKey.startsWith('$')) divisor = variables[divisorKey];
