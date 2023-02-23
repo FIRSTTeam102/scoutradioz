@@ -148,6 +148,7 @@ export class MatchDataHelper {
 							if (typeof key === 'number') sum += key;
 							else if (key.startsWith('$')) sum += variables[key]; // local "as" variable higher in the chain
 							else sum += parseNumber(matchData[key]);
+							//logger.trace(`...sum after ${key} is ${sum}`);
 						}
 						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = sum;
 						else derivedMetric = sum;
@@ -203,14 +204,17 @@ export class MatchDataHelper {
 						
 						if (typeof dividendKey === 'number') dividend = dividendKey;
 						else if (dividendKey.startsWith('$')) dividend = variables[dividendKey];
-						else dividend = parseNumber(matchData[divisorKey]);
+						else dividend = parseNumber(matchData[dividendKey]);
+						logger.trace(`...dividend is ${dividend}`);
 						
 						if (typeof divisorKey === 'number') divisor = divisorKey;
 						else if (divisorKey.startsWith('$')) divisor = variables[divisorKey];
 						else divisor = parseNumber(matchData[divisorKey]);
+						logger.trace(`...divisor is ${divisor}`);
 						
 						if (divisor === 0) quotient = 0; // Making divisions by 0 equal to 0 provides more helpful metrics, even if it doesn't make mathematical sense
 						else quotient = dividend / divisor;
+						logger.trace(`...quotient is ${quotient}`);
 						
 						if (typeof thisOp.as === 'string') variables['$' + thisOp.as] = quotient;
 						else derivedMetric = quotient;
