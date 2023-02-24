@@ -15,7 +15,3 @@
 </Paper>
 
 <QrCodeScanner on:data={onQrCodeData} enabled={qrcodeEnabled} />
-
-<style>
-	
-</style>

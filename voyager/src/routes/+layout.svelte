@@ -100,8 +100,8 @@
 </Drawer>
 
 <Scrim/>
-<AutoAdjust {bottomAppBar}>
-	<AppContent>
+<AutoAdjust {bottomAppBar} style='display: flex; min-height: 100vh; box-sizing: border-box;'>
+	<AppContent style='flex-grow: 1;'>
 		<slot />
 	</AppContent>
 </AutoAdjust>

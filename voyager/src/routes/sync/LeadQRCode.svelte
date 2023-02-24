@@ -11,7 +11,7 @@
 			errorCorrectionLevel: 'low'
 		}, function (err) {
 			if (err) console.error(err);
-			else console.log('success');
+			// else console.log('success');
 		})
 	});
 </script>
