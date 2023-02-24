@@ -17,7 +17,7 @@ const config = {
 			// assets: 'https://scoutradioz-voyager.s3.amazonaws.com'
 		},
 		serviceWorker: {
-			register: true
+			register: false
 		}
 	},
 	
