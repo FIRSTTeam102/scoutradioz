@@ -1,0 +1,19 @@
+// This file is for styles unrelated to Svelte Material UI
+@use "@material/typography/mdc-typography";
+
+:root {
+	--mdc-typography-font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.smaller {
+	font-size: 0.875em;
+}
+
+section.pad {
+	padding: 16px 8px;
+}
+@media(max-width: 600px) {
+	section.pad {
+		padding: 8px 4px;
+	}
+}
