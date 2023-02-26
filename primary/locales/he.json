@@ -88,18 +88,6 @@
 					"swapmembers": "החלף נקודות התאמה לכניסה/יציאה",
 					"swappitassignments": "החלפת משימות צופי בורות",
 					"present": "הגדר מתנה"
-				},
-				"event": {
-					"main": "נתוני אירועים",
-					"event": "נתוני אירוע: [[{event}]]",
-					"matches": "התאמות",
-					"allianceselection": "נתוני בחירת ברית",
-					"getcurrentteams": "עדכון רשימת הקבוצות",
-					"recalcderived": "חישוב מחדש של מדדים נגזרים",
-					"editteams": "ערוך רשימת צוותים",
-					"editmatchschedule": "ערוך את לוח המשחקים",
-					"editmatchresults": "ערוך תוצאות התאמה",
-					"setcurrent": "הגדר את האירוע הנוכחי"
 				}
 			},
 			"admin": "מנהל מערכת",
@@ -407,6 +395,20 @@
 		"qf": "רבע גמר",
 		"sf": "חצי גמר",
 		"f": "סופי"
+	},
+	"manage": {
+		"event": {
+			"main": "נתוני אירועים",
+			"allianceSelection": "נתוני בחירת ברית",
+			"editMatchResults": "ערוך תוצאות התאמה",
+			"editMatchSchedule": "ערוך את לוח המשחקים",
+			"editTeams": "ערוך רשימת צוותים",
+			"eventData": "נתוני אירוע: [[{event}]]",
+			"getCurrentTeams": "עדכון רשימת הקבוצות",
+			"matches": "התאמות",
+			"recalcDerived": "חישוב מחדש של מדדים נגזרים",
+			"setCurrentEvent": "הגדר את האירוע הנוכחי"
+		}
 	},
 	"tryAgainLater": "בבקשה נסה שוב מאוחר יותר.",
 	"yes": "כן",

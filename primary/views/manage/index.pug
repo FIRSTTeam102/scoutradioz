@@ -56,36 +56,36 @@ block content
 				span!=msg('layout.nav.manage.scouters.present') 
 		//- Event data
 		br 
-		h5!=msg('layout.nav.manage.event.main')
+		h5!=msg('manage.event.main')
 		a(href="/manage/currentevent/matches") 
 			div(class="gear-btn theme-link w3-btn")
-				span!=msg('layout.nav.manage.event.matches') 
+				span!=msg('manage.event.matches') 
 		a(href="/manage/allianceselection") 
 			div(class="gear-btn theme-link w3-btn")
-				span!=msg('layout.nav.manage.event.allianceselection')
+				span!=msg('manage.event.allianceSelection')
 		//- 2022-03-19 JL: No need to put dashboard/allianceselection in the manage homepage
 		//- a(href="/dashboard/allianceselection") 
 		//- 	div(class="gear-btn theme-link w3-btn")
 		//- 		span Track/simulate alliance selection
 		a(href="manage/currentevent/getcurrentteams") 
 			div(class="gear-btn theme-link w3-btn")
-				span!=msg('layout.nav.manage.event.getcurrentteams')
+				span!=msg('manage.event.getCurrentTeams')
 		a(href="/admin/sync/recalcderived") 
 			div(class="gear-btn theme-link w3-btn")
-				span!=msg('layout.nav.manage.event.recalcderived')
+				span!=msg('manage.event.recalcderived')
 		//- Manual data links
 		a(href="/manage/manualdata/teams")
 			div(class="gear-btn theme-link w3-btn")
 				span(class="sprite sp-16 sp-edit sp-inline")
-				span!=msg('layout.nav.manage.event.editteams')
+				span!=msg('manage.event.editTeams')
 		a(href="/manage/manualdata/matchschedule")
 			div(class="gear-btn theme-link w3-btn")
 				span(class="sprite sp-16 sp-edit sp-inline")
-				span!=msg('layout.nav.manage.event.editmatchschedule')
+				span!=msg('manage.event.editMatchSchedule')
 		a(href="/manage/manualdata/matchresults")
 			div(class="gear-btn theme-link w3-btn")
 				span(class="sprite sp-16 sp-edit sp-inline")
-				span!=msg('layout.nav.manage.event.editmatchresults')
+				span!=msg('manage.event.editMatchResults')
 		hr
 		//- Member Management
 		h4!=msg('layout.nav.manage.members.main')
@@ -114,7 +114,7 @@ block content
 				span Configure report columns
 		div(class="w3-section")
 		div(class="" id="setCurrentEvent")
-			h4!=msg('layout.nav.manage.event.setcurrent')
+			h4!=msg('manage.event.setCurrentEvent')
 			form(name="setCurrentEvent" method="post" action="/manage/setcurrent")
 				div(class="w3-threequarter")
 					div(class="w3-left w3-padding-small")
@@ -123,14 +123,14 @@ block content
 					div(class="w3-rest w3-padding-small")
 						input#setEvent(class="theme-input w3-rest w3-no-border theme-inline-padding w3-block" placeholder="Search for events from this year, or enter an event key directly" type="text", name="event_key")
 			div(class="w3-padding-small w3-rest")
-				button#btnSubmit(class="theme-submit w3-btn w3-block" type="submit")!=msg('manage.event.setKey')
+				button#btnSubmit(class="theme-submit w3-btn w3-block" type="submit")!=msg('manage.event.setCurrentEventKey')
 			hr 
 			div(class="events-container")
 				table#events(class="w3-table w3-bordered")
 					tr 
-						th(style="width: 60%")!=msg('general.name') 
-						th!=msg('general.date') 
-						th!=msg('general.key') 
+						th(style="width: 60%")!=msg('name') 
+						th!=msg('date') 
+						th!=msg('key') 
 					each event in events
 						tr(class="w3-hover-white event-row item" onclick=`fillSetEvent('${event.key}')`)
 							td(class="w3-padding-16" event-name-for=event.key)=event.name 
