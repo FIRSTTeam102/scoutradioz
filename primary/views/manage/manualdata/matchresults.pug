@@ -10,15 +10,15 @@ block content
 	a(href="/manage/manualdata/teams")
 		div(class="gear-btn theme-link w3-btn")
 			span(class="sprite sp-16 sp-edit sp-inline")
-			span!=msg('layout.nav.manage.event.editteams')
+			span!=msg('manage.event.editTeams')
 	a(href="/manage/manualdata/matchschedule")
 		div(class="gear-btn theme-link w3-btn")
 			span(class="sprite sp-16 sp-edit sp-inline")
-			span!=msg('layout.nav.manage.event.editmatchschedule')
+			span!=msg('manage.event.editMatchSchedule')
 	a(href="/manage/manualdata/matchresults")
 		div(class="gear-btn theme-link w3-btn")
 			span(class="sprite sp-16 sp-edit sp-inline")
-			span!=msg('layout.nav.manage.event.editmatchresults')
+			span!=msg('manage.event.editMatchResults')
 	hr 
 	if locals.matches
 		form(id="ManualInputMatches" action="/manage/manualdata/matchresults" method="post")

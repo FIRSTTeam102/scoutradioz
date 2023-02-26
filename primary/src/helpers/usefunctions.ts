@@ -252,10 +252,12 @@ class UseFunctions {
 	static async getEventInfo(req: express.Request, res: express.Response, next: express.NextFunction) {
 		logger.addContext('funcName', 'getEventInfo');
 		
+		const noEventDefinedStr = req.msg('manage.event.noEvent');
+		
 		//Define req.event
 		req.event = {
-			key: 'undefined',
-			name: 'undefined',
+			key: noEventDefinedStr,
+			name: noEventDefinedStr,
 			year: -1,
 			timezone: 'UTC',
 			isOrgCurrent: true
@@ -273,9 +275,9 @@ class UseFunctions {
 		}
 	
 		//sets locals to no event defined just in case we don't find thing and we can just do next();
-		let eventKey = req.msg('manage.event.noEvent');
+		let eventKey = noEventDefinedStr;
 		let eventYear = -1;
-		res.locals.eventName = eventKey;
+		res.locals.eventName = noEventDefinedStr;
 		res.locals.url = req.url;
 		
 		//if exist

@@ -88,18 +88,6 @@
 					"swapmembers": "Trocar contas de correspondência de entrada/saída",
 					"swappitassignments": "Troque as atribuições de observação de poço",
 					"present": "Definir presente"
-				},
-				"event": {
-					"main": "Dados do evento",
-					"event": "Dados do evento: [[{event}]]",
-					"matches": "Partidas",
-					"allianceselection": "Dados de seleção da aliança",
-					"getcurrentteams": "Atualizar lista de equipes",
-					"recalcderived": "Recalcular métricas derivadas",
-					"editteams": "Editar lista de equipe",
-					"editmatchschedule": "Editar calendário de partidas",
-					"editmatchresults": "Editar resultados da partida",
-					"setcurrent": "Definir evento atual"
 				}
 			},
 			"admin": "Administrador",
@@ -407,6 +395,20 @@
 		"qf": "quartas de final",
 		"sf": "Semifinal",
 		"f": "Final"
+	},
+	"manage": {
+		"event": {
+			"main": "Dados do evento",
+			"allianceSelection": "Dados de seleção da aliança",
+			"editMatchResults": "Editar resultados da partida",
+			"editMatchSchedule": "Editar calendário de partidas",
+			"editTeams": "Editar lista de equipe",
+			"eventData": "Dados do evento: [[{event}]]",
+			"getCurrentTeams": "Atualizar lista de equipes",
+			"matches": "Partidas",
+			"recalcDerived": "Recalcular métricas derivadas",
+			"setCurrentEvent": "Definir evento atual"
+		}
 	},
 	"tryAgainLater": "Por favor, tente novamente mais tarde.",
 	"yes": "Sim",
