@@ -41,7 +41,8 @@ export class I18n {
 				try {
 					// eslint-disable-next-line global-require
 					this.locales[locale] = require(path.join(this.config.directory, file));
-				} catch (err) {
+				}
+				catch (err) {
 					logger.error(`Unable to load ${locale} locale`, err);
 				}
 			});
@@ -74,7 +75,7 @@ export class I18n {
 					req.query[this.config.queryParameter] &&
 					(Array.isArray(req.query[this.config.queryParameter])
 						? // express will turn duplicate params into an array- we only want one
-							(req.query[this.config.queryParameter] as Array<string>)[0]
+						(req.query[this.config.queryParameter] as Array<string>)[0]
 						: req.query[this.config.queryParameter]),
 				// cookie
 				req.cookies && req.cookies[this.config.cookie],
@@ -92,7 +93,8 @@ export class I18n {
 					)
 						continue;
 					this.reqFallbackChain.push(locale);
-				} catch (e) {
+				}
+				catch (e) {
 					// failed to parse locale
 				}
 			}
@@ -223,7 +225,7 @@ export class I18n {
 	}
 
 	// Replace named keywords (eg. {name}) with arguments
-	_paramterize(text: string, parameters?: I18nParameters) {
+	_parameterize(text: string, parameters?: I18nParameters) {
 		// @todo: Make escaping work (eg. \{c} or {c\}c})
 		if (parameters && typeof parameters === 'object')
 			return text.replace(/\{([^}]+)\}/g, (match, key) => {
@@ -236,7 +238,7 @@ export class I18n {
 	// Returns a plain message with substituted args
 	@qqxOutput()
 	msg(name: string, parameters?: I18nParameters) {
-		return this.sanitizeHtml(this._paramterize(this._rawMsg(name, this.locale), parameters), false);
+		return this.sanitizeHtml(this._parameterize(this._rawMsg(name, this.locale), parameters), false);
 	}
 
 	// Returns a URL-encoded message
@@ -254,7 +256,7 @@ export class I18n {
 	// Returns a message with parsed markdown
 	@qqxOutput()
 	msgMarked(name: string, parameters: I18nParameters) {
-		return this.sanitizeHtml(marked.parseInline(this._paramterize(this._rawMsg(name, this.locale), parameters)));
+		return this.sanitizeHtml(marked.parseInline(this._parameterize(this._rawMsg(name, this.locale), parameters)));
 	}
 
 	// @todo: Implement pluralization function?
@@ -271,7 +273,8 @@ function qqxOutput(outputWrapper = (output: string) => output) {
 		descriptor.value = function (this: I18n, query: string, parameters?: I18nParameters) {
 			if (this.locale === 'qqx') {
 				return outputWrapper(this.sanitizeHtml(`${func}(${query}${parameters && Object.keys(parameters).length !== 0 ? ', ' + JSON.stringify(parameters) : ''})`));
-			} else {
+			}
+			else {
 				return original.apply(this, arguments); // eslint-disable-line prefer-rest-params
 			}
 		};
