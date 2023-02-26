@@ -273,7 +273,7 @@ class UseFunctions {
 		}
 	
 		//sets locals to no event defined just in case we don't find thing and we can just do next();
-		let eventKey = 'No event defined';
+		let eventKey = req.msg('manage.event.noEvent');
 		let eventYear = -1;
 		res.locals.eventName = eventKey;
 		res.locals.url = req.url;
@@ -297,8 +297,6 @@ class UseFunctions {
 			req.event.year = eventYear;
 			res.locals.event_key = req.event.key;
 			res.locals.event_year = req.event.year;
-			// whether event is the org's current event
-			res.locals.eventIsOrgCurrent = req.event.isOrgCurrent;
 			
 			logger.debug(`eventIsOrgCurrent=${req.event.isOrgCurrent}`);
 			
@@ -334,6 +332,9 @@ class UseFunctions {
 				res.clearCookie('event_key');
 			}
 		}
+		
+		// whether event is the org's current event (JL note 2023-02-25: Must be outside the "if" in case event_key is null)
+		res.locals.eventIsOrgCurrent = req.event.isOrgCurrent;
 		
 		// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
 		res.locals.functionVersion = process.env.LAMBDA_FUNCTION_VERSION;

@@ -65,50 +65,57 @@ router.get('/', wrap(async (req, res) => {
  * @redirect /admin
  */
 router.post('/setcurrent', wrap(async (req, res) => {
+	logger.addContext('funcName', 'setcurrent[post]');
 	
-	let thisFuncName = 'manage.setcurrent[post]: ';
 	let eventKey = req.body.event_key;
-	logger.info(thisFuncName + 'ENTER eventKey=' + eventKey);
-
+	logger.info('ENTER eventKey=' + eventKey);
+	
 	//Now, insert the new data
 	// 2020-02-08, M.O'C - moving "current event" info into 'orgs'
-	if (req && req.user && req.user.org_key) {
-		let thisOrgKey = req.user.org_key;
+	let thisOrgKey = req._user.org_key;
+	
+	// 2023-02-25 JL: Added the ability to clear the event key from the org
+	if (typeof eventKey === 'string' && eventKey.trim() === '') {
+		logger.info(`Clearing event_key from org ${thisOrgKey}, setting null`);
 		
-		let event: Event = await utilities.findOne('events', 
-			{key: eventKey}, {},
-			{allowCache: true}
-		);
+		let writeResult = await utilities.update('orgs', {org_key: thisOrgKey}, {$set: {event_key: null}});
+		logger.debug('writeResult=', writeResult);
+		return res.redirect(`/manage?alert=${res.msgUrl('manage.event.successClear')}&type=good`);
+	}
+	
+	let event: Event = await utilities.findOne('events', 
+		{key: eventKey}, {},
+		{allowCache: true}
+	);
 		
-		//If eventKey is valid, then update
-		if (event) {
-			await utilities.update( 'orgs', {'org_key': thisOrgKey}, {$set: {'event_key': eventKey}} );
-			logger.debug(thisFuncName + 'Inserted current');
+	//If eventKey is valid, then update
+	if (event) {
+		await utilities.update( 'orgs', {'org_key': thisOrgKey}, {$set: {'event_key': eventKey}} );
+		logger.debug('Inserted current');
 			
-			res.redirect(`/manage?alert=Set current event to *${event.name}* successfuly.`);
+		res.redirect(`/manage?alert=${res.msgUrl('manage.event.successSetEvent', {eventName: event.name})}`);
 			
-			// 2022-03-26 JL: In the background, update list of teams when setting the current event, so the team admin doesn't have to do it manually
-			let eventTeamsUrl = `event/${eventKey}/teams/keys`;
-			let thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
+		// 2022-03-26 JL: In the background, update list of teams when setting the current event, so the team admin doesn't have to do it manually
+		let eventTeamsUrl = `event/${eventKey}/teams/keys`;
+		let thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
 			
 			
-			// 2023-02-20 JL: Added check to make sure TBA sends back an array
-			if (!Array.isArray(thisTeamKeys)) {
-				logger.error('TBA didn\'t send back an array!! They sent: ', thisTeamKeys);
-			}
-			// 2023-02-20 JL: Added check to not override team keys if TBA sends back none
-			else if (req.teams && req.teams.length > 0 && thisTeamKeys.length === 0) {
-				logger.info('TBA sent back a list of 0 teams and a nonzero amount of teams were detected in the database. Not updating.');
-			}
-			else {
-				logger.info(`Updating list of team keys, event=${eventKey} team_keys.length=${thisTeamKeys.length}`);
-				await utilities.update( 'events', {'key': eventKey}, {$set: {'team_keys': thisTeamKeys}} );
-			}
+		// 2023-02-20 JL: Added check to make sure TBA sends back an array
+		if (!Array.isArray(thisTeamKeys)) {
+			logger.error('TBA didn\'t send back an array!! They sent: ', thisTeamKeys);
 		}
-		//If invalid, send an error
+		// 2023-02-20 JL: Added check to not override team keys if TBA sends back none
+		else if (req.teams && req.teams.length > 0 && thisTeamKeys.length === 0) {
+			logger.info('TBA sent back a list of 0 teams and a nonzero amount of teams were detected in the database. Not updating.');
+		}
 		else {
-			res.redirect(`/manage?alert=Invalid event key: '${eventKey}'. Click on an event in the list to set it automatically.&type=error`);
+			logger.info(`Updating list of team keys, event=${eventKey} team_keys.length=${thisTeamKeys.length}`);
+			await utilities.update( 'events', {'key': eventKey}, {$set: {'team_keys': thisTeamKeys}} );
 		}
+	}
+	//If invalid, send an error
+	else {
+		res.redirect(`/manage?alert=${res.msgUrl('manage.event.invalidEventKey', {eventKey})}&type=error`);
 	}
 
 }));
