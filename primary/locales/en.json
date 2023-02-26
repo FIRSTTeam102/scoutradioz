@@ -411,6 +411,23 @@
 		"sf": "Semifinal",
 		"f": "Final"
 	},
+	"manage": {
+		"event": {
+			"noEvent": "No event has been set",
+			"currentEvent": "Current event - {event}",
+			"confirmSetEvent": "Set *{eventName}* as the current event for *{orgName}*?",
+			"confirmClear": "Are you sure you want to clear the current event for *{orgName}*?",
+			"successClear": "Cleared current event successfully.",
+			"successSetEvent": "Set current event to *{eventName}* successfuly.",
+			"invalidEventKey": "Invalid event key: '{eventKey}'. Click on an event in the list to set it automatically.",
+			"setKey": "Set current event key"
+		}
+	},
+	"general": {
+		"name": "Name",
+		"date": "Date",
+		"key": "Key"
+	},
 	"tryAgainLater": "Please try again later.",
 	"yes": "Yes",
 	"no": "No"

@@ -28,8 +28,11 @@ block content
 		h3=title
 		hr 
 		h4 
-			div Current Event - #{currentEvent.key}
-			div(class="unimportant") (#{currentEvent.name})
+			if currentEvent
+				div!=msg('manage.event.currentEvent', {event: currentEvent.key})
+				div(class="unimportant") (#{currentEvent.name})
+			else 
+				div!=msg('manage.event.currentEvent', {event: msg('manage.event.noEvent')})
 		//- Scouters
 		h5!=msg('layout.nav.manage.scouters.main')
 				
@@ -66,10 +69,10 @@ block content
 		//- 		span Track/simulate alliance selection
 		a(href="manage/currentevent/getcurrentteams") 
 			div(class="gear-btn theme-link w3-btn")
-				span Update list of current teams
+				span!=msg('layout.nav.manage.event.getcurrentteams')
 		a(href="/admin/sync/recalcderived") 
 			div(class="gear-btn theme-link w3-btn")
-				span Recalculate derived metrics
+				span!=msg('layout.nav.manage.event.recalcderived')
 		//- Manual data links
 		a(href="/manage/manualdata/teams")
 			div(class="gear-btn theme-link w3-btn")
@@ -119,15 +122,15 @@ block content
 							+yearsSelect(years, eventListYear)
 					div(class="w3-rest w3-padding-small")
 						input#setEvent(class="theme-input w3-rest w3-no-border theme-inline-padding w3-block" placeholder="Search for events from this year, or enter an event key directly" type="text", name="event_key")
-				div(class="w3-padding-small w3-rest")
-					button#btnSubmit(class="theme-submit w3-btn w3-block" type="submit") Set current event key
+			div(class="w3-padding-small w3-rest")
+				button#btnSubmit(class="theme-submit w3-btn w3-block" type="submit")!=msg('manage.event.setKey')
 			hr 
 			div(class="events-container")
 				table#events(class="w3-table w3-bordered")
 					tr 
-						th(style="width: 60%") Name 
-						th Date
-						th Key
+						th(style="width: 60%")!=msg('general.name') 
+						th!=msg('general.date') 
+						th!=msg('general.key') 
 					each event in events
 						tr(class="w3-hover-white event-row item" onclick=`fillSetEvent('${event.key}')`)
 							td(class="w3-padding-16" event-name-for=event.key)=event.name 
@@ -148,12 +151,28 @@ block content
 				location.hash = 'setCurrentEvent';
 				location.search = 'eventListYear=' + ev.target.value;
 			})
+			
+			
+			$('#btnSubmit').on('click', async () => {
+				let eventKey = $('#setEvent').val();
+				//- If they click "set event key" with nothing written, prompt to confirm that they wanna clear the set event
+				if (!eventKey.trim()) {
+					let result = await Confirm.show(!{msgJs("manage.event.confirmClear", {orgName: org.nickname})})
+					if (result.cancelled === false) {
+						$('form[name=setCurrentEvent]').submit();
+					}
+				}
+				//- Submit as normal if an event key has been typed in
+				else {
+					$('form[name=setCurrentEvent]').submit();
+				}
+			});
 		});
 		
 		async function fillSetEvent(value){
 			//- 2022-03-26 JL: Clicking on the header will now show a prompt & submit the form instead of just populating the key input
 			var eventName = $(`[event-name-for=${value}]`).text();
-			var result = await Confirm.show(`Set *${eventName}* as the current event?`);
+			var result = await Confirm.show(!{msgJs("manage.event.confirmSetEvent", {eventName, orgName: org.nickname})});
 			if (result.cancelled === false) {
 				$("#setEvent").val(value);
 				//- $("#setEvent").trigger('input');

@@ -90,7 +90,7 @@ block content
 						- else if (org.team_number) orglabel = org.team_number + ' - ' + org.nickname;
 						h4= orglabel
 						if org.event_label
-						p.theme-text-secondary @ #{org.event_label}
+							p.theme-text-secondary @ #{org.event_label}
 						//- JL: Making the "view" buttons links to the "share" feature so that web crawlers can be somewhat aware of our site structure (/frc102/home instead of /selectorg?redirectURL=home)
 						div(class="org-view" style=viewDataVisible)
 							- if (!redirectURL) redirectURL = '/home';
