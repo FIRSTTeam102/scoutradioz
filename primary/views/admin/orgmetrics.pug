@@ -9,7 +9,13 @@ block content
 			padding: 8px;
 			text-align: left;
 		}
-	h3 Match scouting data
+		th {
+			max-width: 80px;
+		}
+		th:nth-child(0), td:nth-child(1) {
+			max-width: unset;
+		}
+	h3=title
 	table(class="W3-table")
 		tr
 			th Org key
@@ -19,6 +25,7 @@ block content
 			th # Scouting pairs
 			th # Users
 			th # Team admins
+			th # Team admins with password
 			th # Image uploads
 			th # Deleted uploads
 			th # Org team values
@@ -31,6 +38,7 @@ block content
 				td=org.scoutingPairs
 				td=org.users
 				td=org.teamAdmins
+				td=org.teamAdminsWithPassword
 				td=org.imageUploads
 				td=org.deletedImageUploads
 				td=org.orgTeamValues
