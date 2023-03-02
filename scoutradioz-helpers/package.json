@@ -6,9 +6,9 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"update": "yarn upgrade --pattern 'scoutradioz*'",
-		"build": "tsc"
+		"build": "esbuild src/*.ts --outdir=build --platform=node --format=cjs"
 	},
-	"types": "types/index.d.ts",
+	"types": "src/index.ts",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/firstteam102/ScoringApp-Serverless.git"

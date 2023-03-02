@@ -1,9 +1,11 @@
 {
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"target": "es2020",
 		"module": "commonjs",
-		"rootDir": "./src",
 		"outDir": "./build",
+		"sourceMap": true,
+		"sourceRoot": "./src",
 		"esModuleInterop": true,
 		"strict": true,
 		"declaration": true,
@@ -11,6 +13,7 @@
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 		"newLine": "crlf",
+		"composite": true,
 		//   "removeComments": true,
 	},
 	"include": [

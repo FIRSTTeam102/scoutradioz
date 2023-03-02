@@ -1,0 +1,16 @@
+{
+	"files": [
+		"./scoutradioz-utilities/src/utilities.ts",
+		"./scoutradioz-helpers/src/index.ts",
+		// "./webhook/src/webhook.ts",
+	],
+	"compilerOptions": {
+		"module": "ES2022",
+		"rootDir": "."
+	},
+	"references": [
+		// {
+		// 	"path": "./scoutradioz-utilities"
+		// }
+	]
+}

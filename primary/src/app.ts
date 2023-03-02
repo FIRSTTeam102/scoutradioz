@@ -10,6 +10,7 @@ import log4js from 'log4js';									// Extensive logging functionality
 import utilities from 'scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
+import helpers from 'scoutradioz-helpers';
 
 const appStartupTime = Date.now();
 
@@ -62,8 +63,6 @@ utilities.config(require('../databases.json'), {
 	},
 	debug: (process.env.UTILITIES_DEBUG === 'true'),
 });
-//Load helper functions
-const helpers = require('scoutradioz-helpers');
 //Configure helper functions by passing our already-configured utilities module
 helpers.config(utilities);
 

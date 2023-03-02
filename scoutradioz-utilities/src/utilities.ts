@@ -7,7 +7,7 @@ import type { Db, Document as MongoDocument,
 import { ObjectId, MongoClient, type MongoClientOptions } from 'mongodb';
 import crypto from 'crypto';
 import log4js from '@log4js-node/log4js-api';
-import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from 'scoutradioz-types';
+import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from '../../scoutradioz-types';
 
 const logger = log4js.getLogger('utilities');
 logger.level = process.env.LOG_LEVEL || 'info';
@@ -216,7 +216,7 @@ export class Utilities {
 	 * @param {number} [options.cache.maxAge=30] Default maximum age of cached requests, in seconds
 	 * @param {debug} [options.debug=false] Whether to enable extra debug logging (Performance, timing, etc.)
 	 */
-	config(databaseConfig: UtilitiesConfig, options: UtilitiesOptions): void{
+	config(databaseConfig: UtilitiesConfig, options?: UtilitiesOptions): void{
 		if (typeof databaseConfig != 'object') throw new TypeError('opts.databaseConfig must be provided. Use require("databases.json").');
 		
 		if (!options) options = new UtilitiesOptions(options);
@@ -1182,5 +1182,5 @@ export { Document as MongoDocument } from 'mongodb';
 // Note: module.exports provides the CommonJS export, which in Utilities' case is a singleton class.
 // Other "export" statements export types for utilities.d.ts.
 
-module.exports = Utilities.instance;
+// module.exports = Utilities.instance;
 export default Utilities.instance;

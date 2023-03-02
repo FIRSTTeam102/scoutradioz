@@ -1,5 +1,5 @@
 'use strict';
-import type { Utilities } from 'scoutradioz-utilities';
+import type { Utilities } from '../../scoutradioz-utilities';
 
 import upload from './uploadhelper';
 import matchData from './matchdatahelper';
@@ -19,7 +19,7 @@ export class Helpers {
 	};
 }
 
-module.exports = Helpers;
+// module.exports = Helpers;
 export default Helpers;
 
 // To allow individual imports

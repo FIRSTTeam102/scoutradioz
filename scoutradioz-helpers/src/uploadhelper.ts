@@ -1,6 +1,6 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import type { Utilities } from 'scoutradioz-utilities';
+import type { Utilities } from '../../scoutradioz-utilities';
 import type { Upload, TeamKey, OrgKey } from 'scoutradioz-types';
 
 const logger = log4js.getLogger('helpers.matchData');
@@ -214,7 +214,7 @@ export class UploadHelper {
 	}
 }
 
-module.exports = UploadHelper;
+// module.exports = UploadHelper;
 export default UploadHelper;
 
 export interface ImageLinks {

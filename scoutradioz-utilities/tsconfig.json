@@ -10,6 +10,7 @@
 		"declarationDir": "./types",
 		"moduleResolution": "node",
 		"newLine": "crlf",
+		"composite": true
 		//   "removeComments": true,
 	},
 	"include": [

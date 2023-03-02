@@ -7,9 +7,8 @@ process.env.local = 'true';
  * Module dependencies.
  */
 
-let webhook = require('./webhook');
-let http = require('http');
-
+import webhook from './webhook';
+import http from 'http';
 /**
  * Get port from environment and store in Express.
  */
@@ -96,6 +95,6 @@ function onListening() {
 	let addr = server.address();
 	let bind = typeof addr === 'string'
 		? 'pipe ' + addr
-		: 'port ' + addr.port;
+		: 'port ' + addr?.port;
 	console.log('Listening on ' + bind);
 }

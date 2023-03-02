@@ -1,6 +1,7 @@
 'use strict';
-const awsServerlessExpress = require(process.env.NODE_ENV === 'test' ? '../../index' : 'aws-serverless-express');
-const app = require('./build/webhook');
+import type { APIGatewayProxyEvent, Context} from 'aws-lambda';
+import awsServerlessExpress from 'aws-serverless-express';
+import webhook from './webhook';
 
 // NOTE: If you get ERR_CONTENT_DECODING_FAILED in your browser, this is likely
 // due to a compressed response (e.g. gzip) which has not been handled correctly
@@ -25,11 +26,11 @@ const binaryMimeTypes = [
 	'text/text',
 	'text/xml'
 ];
-const server = awsServerlessExpress.createServer(app, null, binaryMimeTypes);
+const server = awsServerlessExpress.createServer(webhook, undefined, binaryMimeTypes);
 
-exports.handler = (event, context) => {
+exports.handler = (event: APIGatewayProxyEvent, context: Context) => {
   
-	var alias = context.invokedFunctionArn.replace(/.*:/g,'');
+	let alias = context.invokedFunctionArn.replace(/.*:/g,'');
 	console.log('ALIAS: '+ alias);
   
 	process.env.ALIAS = alias;

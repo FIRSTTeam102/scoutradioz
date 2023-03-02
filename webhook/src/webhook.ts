@@ -1,5 +1,6 @@
-import { LoggingEvent } from 'log4js';
-import express, { RequestHandler, Request, Response } from 'express';
+import type { LoggingEvent } from 'log4js';
+import type { RequestHandler, Request, Response } from 'express';
+import express from 'express';
 
 type AsyncHandler = (cb: RequestHandler2) => RequestHandler2;
 
@@ -11,15 +12,17 @@ class HttpError extends Error {
 	status?: number;
 }
 
+import _crypto from 'crypto';
+import log4js from 'log4js';
+import webpush from 'web-push';
+import utilities from '../../scoutradioz-utilities/src/utilities';
+import helpers from '../../scoutradioz-helpers/src/index';
+import type { Match, Org, User } from '../../scoutradioz-types';
+import dotenv from 'dotenv';
 
-require('dotenv').config();
-const _crypto = require('crypto');
-// const express: Express = require('express');
-const log4js = require('log4js');
+dotenv.config();
+
 const wrap: AsyncHandler = require('express-async-handler');
-const webpush = require('web-push');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const helpers = require('@firstteam102/scoutradioz-helpers');
 const matchDataHelper = helpers.matchData;
 
 //utililties config
@@ -54,7 +57,7 @@ logger.level = process.env.LOG_LEVEL || 'debug';
 
 //EXPRESS APP SETUP
 const webhook = express();
-module.exports = webhook;
+export default webhook;
 
 //utilities tier refresh
 webhook.use(utilities.refreshTier);
@@ -72,6 +75,7 @@ const options = {
 	verify: function(req: Request, res: Response, buf: Buffer, encoding: string) {
 		
 		const secret = req.tba_secret;
+		if (!secret) throw new Error('req.tba_secret not defined');
 		
 		//Generate hash to compare with TBA's hmac hash.
 		const hash = _crypto.createHmac('sha256', secret)
@@ -323,15 +327,11 @@ async function handleMatchScore( data: {match: Match} ) {
 		else 
 			data.match.winning_alliance = '';
 	}
-	// Renaming the 'teams' attribute
-	if (!data.match.alliances.blue.team_keys) {
-		let blue_team_keys = data.match.alliances.blue.teams;
-		data.match.alliances.blue.team_keys = blue_team_keys;
+	
+	if (!data.match.alliances.blue.hasOwnProperty('team_keys')) {
+		throw new Error('Seems like the API is still sending APIv2...' + JSON.stringify(data.match));
 	}
-	if (!data.match.alliances.red.team_keys) {
-		let red_team_keys = data.match.alliances.red.teams;
-		data.match.alliances.red.team_keys = red_team_keys;
-	}
+	
 	// Setting actual_time
 	if (!data.match.actual_time) {
 		let actual_time = data.match.time;
@@ -509,7 +509,10 @@ async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>)
 		
 		for (let userArr of users) {			
 			if (userArr && userArr[0]) {
-				const user = userArr[0]; // Aggregate returns an array, get first element instead
+				const user: User & {
+					assigned_team: TeamKey,
+					org: Org[]
+				} = userArr[0]; // Aggregate returns an array, get first element instead
 				const teamKey = user.assigned_team; // from the aggregate statement above
 				
 				// All the code below was written based on a for-i-in-teamKeys loop, so here we can recreate i
@@ -613,7 +616,7 @@ async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>)
 }
 
 // Push notification function
-async function sendPushMessage(subscription: PushSubscription, dataToSend: string) {
+async function sendPushMessage(subscription: webpush.PushSubscription, dataToSend: string) {
 	logger.addContext('funcName', 'sendPushMessage');
 	logger.info('ENTER');
 	

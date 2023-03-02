@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 'use strict';
 import log4js from '@log4js-node/log4js-api';
-import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
+import type { Utilities, MongoDocument } from '../../scoutradioz-utilities';
 import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout } from 'scoutradioz-types';
 import assert from 'assert';
 
@@ -1099,7 +1099,7 @@ export class MatchDataHelper {
 	}
 }
 
-module.exports = MatchDataHelper;
+// module.exports = MatchDataHelper;
 export default MatchDataHelper;
 
 // parseInt in reality can accept any type.

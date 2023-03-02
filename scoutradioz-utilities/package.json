@@ -3,11 +3,12 @@
 	"version": "2.0.1",
 	"description": "Database utilities package for Scoutradioz",
 	"main": "build/utilities.js",
+	"module": "src/utilities.ts",
 	"type": "commonjs",
 	"scripts": {
 		"test": "tsc && node test.js",
 		"update": "yarn upgrade --pattern 'scoutradioz*'",
-		"build": "tsc"
+		"build": "esbuild src/*.ts --outdir=build --platform=node --format=cjs"
 	},
 	"engines": {
 		"node": ">=18.0.0"
@@ -37,7 +38,7 @@
 		"types",
 		"tsconfig.json"
 	],
-	"types": "types/utilities.d.ts",
+	"types": "src/utilities.ts",
 	"dependencies": {
 		"@log4js-node/log4js-api": "^1.0.2",
 		"node-cache": "~5.1.2",

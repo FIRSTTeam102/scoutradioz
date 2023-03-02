@@ -1,6 +1,7 @@
 // JL: Should these be put into a separate package?
 
 import type { ObjectId } from 'mongodb';
+import type { PushSubscription } from 'web-push';
 
 // General interfaces/types that don't need to be exported
 declare interface NumericalDict {

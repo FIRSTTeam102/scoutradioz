@@ -34,40 +34,9 @@ declare class ScheduleUpdated {
 	event_name: string;
 }
 
-declare class Match {
-	key: MatchKey;
-	event_key: EventKey;
-	comp_level: CompLevel;
-	set_number: number;
-	match_number: number;
-	alliances: {
-		red: MatchAllianceInfo,
-		blue: MatchAllianceInfo,
-	};
-	winning_alliance: 'red' | 'blue' | '';
-	score_breakdown: {
-		red: ScoreBreakdown;
-		blue: ScoreBreakdown;
-	};
-	videos: Array<MatchVideo>;
-	time: number;
-	actual_time: number;
-	predicted_time: number;
-	post_result_time?: number;
-}
-
 declare class MatchVideo {
 	type: string;
 	key: string;
-}
-
-declare class MatchAllianceInfo {
-	team_keys: Array<TeamKey>;
-	score: number;
-	surrogate_team_keys: Array<TeamKey>;
-	dq_team_keys: Array<TeamKey>;
-	
-	teams?: any; // old from apiv2 
 }
 
 declare type EventKey = string;
