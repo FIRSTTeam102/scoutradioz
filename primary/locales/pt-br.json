@@ -215,7 +215,7 @@
 		"upcomingMatches": "Próximas partidas a serem analizadas",
 		"matchNumber": "Partida {number}",
 		"unassigned": "Não atribuído",
-		"unassignedOptions": "Opções para scoutersnão designados",
+		"unassignedOptions": "Opções para scouters não designados",
 		"oneOffPit": "Exploração de poços únicos",
 		"oneOffMatch": "Prospecção de jogo único",
 		"assigned": "Atribuído",
@@ -322,7 +322,7 @@
 		"noPreviousMatchesYet": "Ainda não há partidas anteriores.",
 		"noMatchDataYet": "Ainda não há dados disponíveis para esta partida. Por favor, tente novamente mais tarde.",
 		"noRankingsYet": "Não há partidas no sistema.",
-		"noPitDataYet": "Ainda não há dados da análise do pit",
+		"noPitDataYet": "Ainda não há dados da análise do pit.",
 		"noDataPlaceholder": "[sem dados]",
 		"matchData": "Dados da partida para a partida #{match}",
 		"matchIntel": {
@@ -337,56 +337,56 @@
 		"currentRankings": {
 			"title": "Classificação atual do evento",
 			"titleShort": "Classificações atuais",
-			"wlt": "WLT",
-			"wltDesc": "Vitória-Perda-Empate",
+			"wlt": "W-L-T",
+			"wltDesc": "Ganhou-Perdeu-Empatou",
 			"dq": "DQ",
 			"dqDesc": "Desqualificações",
 			"matches": "Partidas",
-			"rp": "PR",
-			"rpDesc": "Pontos de classificação"
+			"rp": "Ranking Points",
+			"rpDesc": "Pontos de Classificação"
 		},
-		"matchDataFor": "Dados de observação da partida para a equipe {number}: {nick}",
-		"matchDataForShort": "Dados de observação de correspondência para a equipe {team}",
-		"matchDataShort": "Dados de observação de partidas",
-		"matchClickAlliance": "Clique em um número de correspondência para ver os dados da aliança para essa correspondência.",
+		"matchDataFor": "Dados da análise da partida para a equipe {number}: {nick}",
+		"matchDataForShort": "Dados da análise da partida para a equipe {team}",
+		"matchDataShort": "Dados de análise da partida",
+		"matchClickAlliance": "Clique em um número de uma partida para ver os dados da aliança para essa partida.",
 		"teamHeader": "Equipe {number} - {nick}",
-		"teamRank": "Atualmente classificado #{rank}\nRegistro {wins}-{losses}-{ties} com {rp} RP",
+		"teamRank": "Classificação atual #{rank}\nRegistro {wins}-{losses}-{ties} com {rp} RP",
 		"teamFrom": "De: {city}, {state}, {country}",
 		"teamDataYear": "Todos os dados da equipe {team} deste ano",
 		"teamIntel": {
-			"title": "Intel: Equipe {team}",
-			"titleHistory": "História da Intel: Equipe {team}",
+			"title": "Informações: Equipe {team}",
+			"titleHistory": "Histórico de informações: Equipe {team}",
 			"show": "Mostrar {type}",
 			"hide": "Esconder {type}",
-			"pitScouting": "exploração de poço",
-			"statistics": "Estatisticas",
-			"previousMatches": "partidas anteriores",
-			"yearStatistics": "estatísticas ao longo do ano {year}",
-			"yearPreviousMatches": "todas as partidas do ano {year}"
+			"pitScouting": "Análise do pit",
+			"statistics": "Estatísticas",
+			"previousMatches": "Partidas anteriores",
+			"yearStatistics": "Estatísticas ao longo do ano {year}",
+			"yearPreviousMatches": "Todas as partidas do ano {year}"
 		},
 		"teamStats": "Estatísticas da equipe {team}",
-		"teamAllMatchData": "Dados de observação de partidas para todas as partidas da equipe {team}",
-		"historicalTeamStats": "Estatísticas históricas da equipe {team}",
+		"teamAllMatchData": "Dados da análise da partida para todas as partidas da equipe {team}",
+		"historicalTeamStats": "Histórico das estatísticas da equipe {team}",
 		"allPreviousMatches": "Todas as partidas anteriores",
 		"teamMatchIntel": {
-			"title": "Intel: {matchType} {match} Equipe {team}",
-			"header": "Correspondência #{match} - aliança {alliance}"
+			"title": "Informações: {matchType} {match} Equipe {team}",
+			"header": "Partida #{match} - Aliança {alliance}"
 		},
-		"noMatchScoutData": "Não há dados de observação de partidas disponíveis para a equipe {team} para a partida {match}.",
-		"noMatchScoutData2": "Não há dados de observação de partidas disponíveis para a equipe {team} para esta partida.",
+		"noMatchScoutData": "Não há dados da análise das partidas disponíveis para a equipe {team} para a partida {match}.",
+		"noMatchScoutData2": "Não há dados da análise das partidas disponíveis para a equipe {team} para esta partida.",
 		"viewIntelPage": "Veja a página de informações desta equipe",
 		"upcomingMatchMetrics": "Métricas para a próxima partida",
 		"intel": "Intel: {type}",
 		"exportData": {
-			"noType": "Nenhum tipo de dados (ou inválido) especificado para exportação.",
+			"noType": "Nenhum tipo de dados (ou tipos inválidos) especificados para exportação.",
 			"noData": "Nenhum dado encontrado para o tipo '{type}'."
 		}
 	},
 	"errors": {
-		"teamMissing": "Não foi possível encontrar os detalhes da equipe {team}. A lista da equipe mudou desde que você criou as atribuições de reconhecimento?",
-		"eventTeamsMissing": "Não foi possível encontrar a lista de equipes neste evento. Por favor, peça ao seu gerente de organização para atualizar a lista de equipes atuais.",
+		"teamMissing": "Não foi possível encontrar os detalhes da equipe {team}. A lista da equipe mudou desde que você criou as atribuições da análise?",
+		"eventTeamsMissing": "Não foi possível encontrar a lista de equipes deste evento. Por favor, peça ao seu responsáveis para atualizar a lista das equipes atuais.",
 		"specifyTeamKey": "Especifique uma team_key.",
-		"noTeam": "equipe {team} não existe ou não participou deste evento.",
+		"noTeam": "A equipe {team} não existe ou não participou deste evento.",
 		"specifyMatchKey": "Especifique uma chave de correspondência.",
 		"noMatchFound": "Não foi possível encontrar correspondência: {matchKey}",
 		"specifyTeamMatchKey": "Especifique uma chave de partida de equipe.",
@@ -395,7 +395,7 @@
 	},
 	"matchType": {
 		"qm": "Partida",
-		"qf": "quartas de final",
+		"qf": "Quartas de final",
 		"sf": "Semifinal",
 		"f": "Final"
 	},
@@ -410,10 +410,18 @@
 			"getCurrentTeams": "Atualizar lista de equipes",
 			"matches": "Partidas",
 			"recalcDerived": "Recalcular métricas derivadas",
-			"setCurrentEvent": "Definir evento atual"
+			"setCurrentEvent": "Definir evento atual",
+			"confirmClear": "Você tem certeza que quer limpar o evento atual de {orgName}?",
+			"confirmSetEvent": "Definir *{eventName}* como o evento atual para *{orgName}*?",
+			"currentEvent": "Evento atual - {event}",
+			"noEvent": "Nenhum evento foi definido",
+			"successClear": "Evento atual limpo com sucesso.",
+			"successSetEvent": "Evento atual definido para {eventName} com sucesso."
 		}
 	},
 	"tryAgainLater": "Por favor, tente novamente mais tarde.",
 	"yes": "Sim",
-	"no": "Não"
+	"no": "Não",
+	"name": "Nome",
+	"date": "Data"
 }
