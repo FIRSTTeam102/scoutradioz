@@ -467,6 +467,7 @@ router.get('/metrics', wrap(async (req, res) => {
 			scoutingPairs: 0,
 			users: 0,
 			teamAdmins: 0,
+			teamAdminsWithPassword: 0,
 			imageUploads: 0,
 			deletedImageUploads: 0,
 			orgTeamValues: 0,
@@ -497,6 +498,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	const scoutingPairs = await utilities.aggregate('scoutingpairs', [...groupByOrgKeyAndSort]);
 	const users = await utilities.aggregate('users', [...groupByOrgKeyAndSort]);
 	const teamAdmins = await utilities.aggregate('users', [{$match: {role_key: 'team_admin'}}, ...groupByOrgKeyAndSort]);
+	const teamAdminsWithPassword = await utilities.aggregate('users', [{$match: {role_key: 'team_admin', password: {$ne: 'default'}}}, ...groupByOrgKeyAndSort]);
 	const uploads = await utilities.aggregate('uploads', [{$match: {removed: {$ne: true}}}, ...groupByOrgKeyAndSort]);
 	const deletedUploads = await utilities.aggregate('uploads', [{$match: {removed: true}}, ...groupByOrgKeyAndSort]);
 	const orgTeamValues = await utilities.aggregate('orgteamvalues', [...groupByOrgKeyAndSort]);
@@ -515,6 +517,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	tieCountToOrgMetric(pitScouting, 'pitScoutingData');
 	tieCountToOrgMetric(users, 'users');
 	tieCountToOrgMetric(teamAdmins, 'teamAdmins');
+	tieCountToOrgMetric(teamAdminsWithPassword, 'teamAdminsWithPassword');
 	tieCountToOrgMetric(uploads, 'imageUploads');
 	tieCountToOrgMetric(deletedUploads, 'deletedImageUploads');
 	tieCountToOrgMetric(scoutingPairs, 'scoutingPairs');

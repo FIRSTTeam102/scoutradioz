@@ -90,18 +90,6 @@
 					"present": "colocar quien esta presente al evento corriente",
 					"matchassignments": "asignaciones para exploracion de partidos",
 					"pitassignments": "asignaciones para expolracion del pit"
-				},
-				"event": {
-					"main": "Datos del evento",
-					"event": "Datos del evento: [[{event}]]",
-					"matches": "partidas (datos de FIRST)",
-					"allianceselection": "Datos de selección de alianza",
-					"getcurrentteams": "Actualizar lista de equipos",
-					"recalcderived": "Recalcular métricas derivadas",
-					"editteams": "Editar lista de equipos",
-					"editmatchschedule": "Editar calendario de partidos",
-					"editmatchresults": "Editar resultados de partidos",
-					"setcurrent": "Establecer evento actual"
 				}
 			},
 			"admin": "Administrador",
@@ -398,6 +386,20 @@
 		"qf": "Cuartos de final",
 		"sf": "Semifinal",
 		"f": "Final"
+	},
+	"manage": {
+		"event": {
+			"main": "Datos del evento",
+			"allianceSelection": "Datos de selección de alianza",
+			"editMatchResults": "Editar resultados de partidos",
+			"editMatchSchedule": "Editar calendario de partidos",
+			"editTeams": "Editar lista de equipos",
+			"eventData": "Datos del evento: [[{event}]]",
+			"getCurrentTeams": "Actualizar lista de equipos",
+			"matches": "partidas (datos de FIRST)",
+			"recalcDerived": "Recalcular métricas derivadas",
+			"setCurrentEvent": "Establecer evento actual"
+		}
 	},
 	"tryAgainLater": "Inténtalo de nuevo más tarde.",
 	"yes": "Sí",
