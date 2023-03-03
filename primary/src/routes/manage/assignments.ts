@@ -445,32 +445,38 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 	// The javascript Object was JSON.stringify() on the client end; we need to re-hydrate it with JSON.parse()
 	let selectedMembers: {
 		member1: string,
-		member2: string,
+		member2?: string,
 		member3?: string
 	} = JSON.parse(data);
 	
-	assert(selectedMembers.member1 && selectedMembers.member2, 'Select at least two members.');
+	assert(selectedMembers.member1, 'Select at least one member.');
 	
 	logger.trace(`Selected members: ${data}`);
 	
-	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key}) as WithDbId<User>; // JL: Temporary until i fix the most recent version of utilities
-	let member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key}) as WithDbId<User>;
+	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
+	let member2;
+	if (selectedMembers.member2)
+		member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key});
 	let member3;
 	if (selectedMembers.member3)
-		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key}) as WithDbId<User>;
+		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key});
 	
-	let idList = [member1._id, member2._id]; // for bulkWrite operation
+	let idList = [member1._id]; // for bulkWrite operation
+	
 	let newScoutingPair: ScoutingPair = {
 		org_key,
 		member1: {
 			id: member1._id,
 			name: member1.name,
 		},
-		member2: {
+	};
+	if (member2) {
+		idList.push(member2._id);
+		newScoutingPair.member2 = {
 			id: member2._id,
 			name: member2.name,
-		},
-	};
+		};
+	}
 	if (member3) {
 		idList.push(member3._id);
 		newScoutingPair.member3 = {
@@ -518,7 +524,8 @@ router.post('/deletescoutingpair', wrap(async (req, res) => {
 	logger.trace('thisPair=', thisPair);
 	
 	
-	let idList = [thisPair.member1.id, thisPair.member2.id];
+	let idList = [thisPair.member1.id];
+	if (thisPair.member2) idList.push(thisPair.member2.id);
 	if (thisPair.member3) idList.push(thisPair.member3.id);
 	
 	logger.trace(`idList=${idList}`);
@@ -851,12 +858,12 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	
 	for (let i in scoutingpairs) {
 		const thisPair = scoutingpairs[i];
-		
-		// 2023-02-12 JL: Scoutingpairs are now required to have at least 2 members each, so I removed the third case where there's no member2
-		assert(thisPair.member1 &&thisPair.member2, 'Each scouting pair must have at least 2 members!');
+		logger.trace('Current pair:', thisPair);
 		
 		// Group of 3
 		if (thisPair.member3) {
+			assert(thisPair.member2, 'If member3 is defined, then member2 must also be defined!');
+			
 			let set1: PitScoutingSet = {
 				primary: thisPair.member1,
 				secondary: thisPair.member2,
@@ -878,7 +885,8 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 			primaryAndBackupMap[String(set3.primary.id)] = set3;
 			scoutingAssignedArray.push(set1.primary.id, set2.primary.id, set3.primary.id);
 		}
-		else {
+		// group of 2
+		else if (thisPair.member2) {
 			let set1: PitScoutingSet = {
 				primary: thisPair.member1,
 				secondary: thisPair.member2,
@@ -890,6 +898,14 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 			primaryAndBackupMap[String(set1.primary.id)] = set1;
 			primaryAndBackupMap[String(set2.primary.id)] = set2;
 			scoutingAssignedArray.push(set1.primary.id, set2.primary.id);
+		}
+		// group of 1
+		else {
+			let set1: PitScoutingSet = {
+				primary: thisPair.member1
+			};
+			primaryAndBackupMap[String(set1.primary.id)] = set1;
+			scoutingAssignedArray.push(set1.primary.id);
 		}
 	}
 	
