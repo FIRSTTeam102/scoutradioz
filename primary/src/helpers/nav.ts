@@ -258,7 +258,7 @@ class NavHelpers {
 							href: '/manage/currentevent/getcurrentteams'
 						},
 						{
-							label: '!manage.event.recalcderived',
+							label: '!manage.event.recalcDerived',
 							href: '/admin/sync/recalcderived'
 						},
 						{

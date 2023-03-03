@@ -578,7 +578,10 @@ router.get('/spr', wrap(async (req, res) => {
 	}
 	// what is the determinant?
 	logger.debug(`matrix=${JSON.stringify(matrix)}`);
-	logger.debug(`...math.det(matrix)=${mathjs.det(matrix)}`);
+	if (matrix.length > 0)
+		logger.debug(`...math.det(matrix)=${mathjs.det(matrix)}`);
+	else
+		logger.debug(`...math.det(matrix)=matrix_is_zero_size`);
 	logger.debug(`vector=${JSON.stringify(vector)}`);
 
 	// solve!

@@ -455,12 +455,54 @@ router.post('/login-to-org', wrap(async (req, res) => {
 
 router.get('/metrics', wrap(async (req, res) => {
 	
-	const orgs = await utilities.find('orgs', {});
+	const orgs: Array<Org & {
+		event: Event[],
+		matchscouting: {count: number}[],
+		pitscouting: {count: number}[],
+	}> = await utilities.aggregate('orgs', [
+		{$lookup: {
+			from: 'events',
+			localField: 'event_key',
+			foreignField: 'key',
+			as: 'event'
+		}},
+		{$lookup: {
+			from: 'matchscouting',
+			localField: 'event_key',
+			foreignField: 'event_key',
+			let: { org_key: '$org_key' },
+			pipeline: [
+				{$match: {$expr: {$and: [
+					{$eq: ['$org_key', '$$org_key']},
+					{$ne: ['$data', undefined]}
+				]}}},
+				{$count: 'count'}
+			],
+			as: 'matchscouting'
+		}},
+		{$lookup: {
+			from: 'pitscouting',
+			localField: 'event_key',
+			foreignField: 'event_key',
+			let: { org_key: '$org_key' },
+			pipeline: [
+				{$match: {$expr: {$and: [
+					{$eq: ['$org_key', '$$org_key']},
+					{$ne: ['$data', undefined]}
+				]}}},
+				{$count: 'count'}
+			],
+			as: 'pitscouting'
+		}},
+	]);
 	
 	// get metrics for each org, starting with 0 and adding as we create agg queries
 	const orgMetrics = orgs.map(org => {
 		return {
 			org_key: org.org_key,
+			event: org.event[0],
+			matchscoutingAtEvent: org.matchscouting[0]?.count || 0, 
+			pitscoutingAtEvent: org.pitscouting[0]?.count || 0, 
 			nickname: org.nickname,
 			matchScoutingData: 0,
 			pitScoutingData: 0,

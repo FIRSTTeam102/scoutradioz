@@ -356,7 +356,7 @@ declare type PasswordItem = TBAApiHeaders | FIRSTApiHeaders | TBAWebhookSecret |
  */
 export declare interface PitScoutingSet extends DbDocument {
 	primary: ScouterRecord;
-	secondary: ScouterRecord;
+	secondary?: ScouterRecord;
 	tertiary?: ScouterRecord;
 }
 
@@ -433,7 +433,7 @@ export declare interface Role extends DbDocument {
  */
 export declare interface ScoutingPair extends DbDocument {
 	member1: ScouterRecord;
-	member2: ScouterRecord;
+	member2?: ScouterRecord;
 	member3?: ScouterRecord;
 	org_key: OrgKey;
 }
