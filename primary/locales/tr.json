@@ -85,8 +85,6 @@
 					"main": "İzciler",
 					"event": "Gözcüler: [[{event}]]",
 					"audit": "İzcilik denetimi",
-					"swapmembers": "Giriş/çıkış maç hesaplarını değiştir",
-					"swappitassignments": "Çukur keşif görevlerini değiştir",
 					"present": "hediye ayarla"
 				}
 			},
@@ -338,7 +336,6 @@
 			"wltDesc": "Kazan-Kaybet-Beraberlik",
 			"dq": "DQ",
 			"dqDesc": "Diskalifiyeler",
-			"matches": "Maçlar",
 			"rp": "RP",
 			"rpDesc": "Sıralama Puanları"
 		},
@@ -407,9 +404,14 @@
 			"getCurrentTeams": "Ekip listesini güncelle",
 			"recalcDerived": "Türetilmiş metrikleri yeniden hesapla",
 			"setCurrentEvent": "Geçerli etkinliği ayarla"
+		},
+		"assignments": {
+			"swapMatchAssignments": "Giriş/çıkış maç hesaplarını değiştir",
+			"swapPitAssignments": "Çukur keşif görevlerini değiştir"
 		}
 	},
 	"tryAgainLater": "Lütfen daha sonra tekrar deneyiniz.",
 	"yes": "Evet",
-	"no": "hayır"
+	"no": "hayır",
+	"matches": "Maçlar"
 }

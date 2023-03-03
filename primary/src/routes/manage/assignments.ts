@@ -101,7 +101,7 @@ router.get('/', wrap(async (req, res) => {
 			logger.trace('Rendering');
 		
 			res.render('./manage/assignments/index', {
-				title: 'Pit Scouting Assignments',
+				title: req.msg('manage.assignments.pit'),
 				subteams: pitScoutSubteams,
 				assigned: assigned,
 				available: available,
@@ -152,7 +152,7 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.trace('Awaiting all db requests');
 	
 	res.render('./manage/assignments/matches', {
-		title: 'Match Scouting Assignments',
+		title: req.msg('manage.assignments.match'),
 		available: available,
 		subteams: subteams,
 		matchAssignmentsCount: matchAssignmentsCount

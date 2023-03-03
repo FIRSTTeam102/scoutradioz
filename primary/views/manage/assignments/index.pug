@@ -29,7 +29,7 @@ block content
 				- var thisButtonLabel = pair.member1.name;
 				- if (pair.member2) thisButtonLabel += ', ' + pair.member2.name;
 				- if (pair.member3) thisButtonLabel += ', ' + pair.member3.name;
-				button(onclick=`deletePair("${pair._id}")` class="w3-btn theme-red")!=msg('deleteGroup')
+				button(onclick=`deletePair("${pair._id}")` class="w3-btn theme-red")!=msg('manage.assignments.deleteGroup')
 				|	#{thisButtonLabel}
 	button(onclick="clearScoutingPairs()" class="w3-btn theme-red")!=msg('manage.assignments.clearGroups')
 	form(method="post" action="/manage/assignments/deletescoutingpair" id="deletememberpair")

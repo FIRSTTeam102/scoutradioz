@@ -85,10 +85,6 @@
 					"main": "Scouters",
 					"event": "Scouters: [[{event}]]",
 					"audit": "Scouting audit",
-					"pitassignments": "Pit scouting assignments",
-					"matchassignments": "Match scouting assignments",
-					"swapmembers": "Swap in/out match scouts",
-					"swappitassignments": "Swap teams between pit scout pairs",
 					"present": "Set who is present at current event"
 				}
 			},
@@ -341,7 +337,6 @@
 			"wltDesc": "Win-Loss-Tie",
 			"dq": "DQ",
 			"dqDesc": "Disqualifications",
-			"matches": "Matches",
 			"rp": "RP",
 			"rpDesc": "Ranking Points"
 		},
@@ -421,18 +416,37 @@
 			"successSetEvent": "Set current event to *{eventName}* successfuly."
 		},
 		"assignments": {
+			"pit": "Pit scouting assignments",
+			"match": "Match scouting assignments",
 			"assignPitTeams": "Assign teams to pit scouting groups",
+			"assignMatchTeams": "Assign matches to selected scouters",
+			"availablePotentialScouters": {
+				"main": "Available potential scouters",
+				"tooltip": "The scouters and members that appear in this list are only those who are [marked as present](/manage/members/present).",
+				"noneFound": "No members were found. You must [mark some as present](/manage/members/present)."
+			},
+			"blockSize": {
+				"main": "Allocate in blocks of...",
+				"1": "If you have only 6 assignees then they’ll be doing every match with no breaks.",
+				"2": "If you have 12 assignees total, they’ll be doing N matches on, then N matches off, loop. Or if you have more than 12 assignees, they might occasionally get 2xN matches off. A suggested “N” is 5.",
+				"3": "If you have 7 to 11 assignees, they will occasionally do 2xN matches on before getting N matches off. A suggested “N” is 3."
+			},
+			"checkUncheckSubteamMembers": "Check/uncheck all members of a given subteam",
 			"clearAllPit": "Clear all pit scouting data and assignments",
+			"clearAllMatch": "Clear all match scouting data and assignments",
 			"clearGroups": "Clear all scouting groups",
 			"deleteGroup": "Delete group",
 			"scoutingGroups": "Scouting groups",
-			"submitNewGroup": "Submit selected members as a new scouting group"
+			"submitNewGroup": "Submit selected members as a new scouting group",
+			"swapMatchAssignments": "Swap in/out match scouts",
+			"swapPitAssignments": "Swap teams between pit scout pairs"
 		}
 	},
-	"tryAgainLater": "Please try again later.",
-	"yes": "Yes",
-	"no": "No",
-	"name": "Name",
 	"date": "Date",
-	"key": "Key"
+	"key": "Key",
+	"matches": "Matches",
+	"name": "Name",
+	"no": "No",
+	"tryAgainLater": "Please try again later.",
+	"yes": "Yes"
 }
