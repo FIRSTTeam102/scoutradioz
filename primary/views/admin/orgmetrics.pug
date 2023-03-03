@@ -4,31 +4,37 @@ block content
 	style.
 		table {
 			margin: auto;
+			border-collapse: collapse;
+			overflow-x: scroll;
 		}
 		td, th {
 			padding: 8px;
 			text-align: left;
+			border-left: 1px solid rgba(255, 255, 255, 0.2);
 		}
 		th {
 			max-width: 80px;
 		}
-		th:nth-child(0), td:nth-child(1) {
-			max-width: unset;
+		tr:nth-child(odd) {
+			background: rgba(255, 255, 255, 0.2)
 		}
 	h3=title
 	table(class="W3-table")
 		tr
-			th Org key
-			th Org name
+			th(style="max-width: unset;") Org key
+			th(style="max-width: 120px;") Org name
 			th # Match scouting entries
 			th # Pit scouting entries
-			th # Scouting pairs
+			th # Scouting groups
 			th # Users
 			th # Team admins
-			th # Team admins with password
+			th # Team admins with passwd
 			th # Image uploads
 			th # Deleted uploads
 			th # Org team values
+			th Event
+			th # Match scouting @ event
+			th # Pit scouting @ event
 		each org in orgMetrics
 			tr 
 				td=org.org_key
@@ -42,6 +48,9 @@ block content
 				td=org.imageUploads
 				td=org.deletedImageUploads
 				td=org.orgTeamValues
+				td!=org.event ? `${org.event.name} <span class="unimportant">${org.event.key}</span>` : ''
+				td=org.matchscoutingAtEvent 
+				td=org.pitscoutingAtEvent 
 	+tableSorter()
 	//- h3 Pit scouting data
 	//- table(class="W3-table w3-left-align")
