@@ -209,6 +209,8 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	logger.debug('Checking for length mismatch...'); // Note: if matchScoutingAssignments is empty, this block will catch it so we don't need to check explicitly for length == 0
 	if (matchScoutingAssignments.length !== matchArray.length * 6) {
 		logger.warn(`Matches need re-generation due to length mismatch. matchArray * 6 = ${matchArray.length * 6}, matchScoutingAssignments = ${matchScoutingAssignments.length}`);
+		// No need to write any special notes if there were no assignments to begin with.
+		if (matchScoutingAssignments.length > 0) outputNotes.push('A mismatch was detected between the match schedule and the existing list of assignments, so the list of assignments has been regenerated.');
 		needsReGeneration = true;
 	}
 	
@@ -322,6 +324,9 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			}
 			logger.debug(`Retrieved submission data from ${Object.keys(matchTeamKeyToSubmissionsMap).length} matches`);
 			
+			if (Object.keys(matchTeamKeyToSubmissionsMap).length > 0)
+				outputNotes.push('Existing match scouting data was detected, so it has been re-attached to the new list of assignments.');
+			
 			// Now, populate newMatchAssignmentsArray with the data from the old array
 			for (let matchTeam of newMatchAssignmentsArray) {
 				let thisSubmission = matchTeamKeyToSubmissionsMap[matchTeam.match_team_key];
@@ -335,8 +340,6 @@ router.post('/matches/generate', wrap(async (req, res) => {
 					delete matchTeamKeyToSubmissionsMap[matchTeam.match_team_key];
 				}
 			}
-			
-			outputNotes.push('Existing match scouting data was detected, so it has been re-attached to the new list of assignments.');
 			
 			let matchTeamKeysNotRestored = Object.keys(matchTeamKeyToSubmissionsMap);
 			if (matchTeamKeysNotRestored.length > 0) {
