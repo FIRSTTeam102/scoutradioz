@@ -419,6 +419,14 @@
 			"setCurrentEventKey": "Set current event key",
 			"successClear": "Cleared current event successfully.",
 			"successSetEvent": "Set current event to *{eventName}* successfuly."
+		},
+		"assignments": {
+			"assignPitTeams": "Assign teams to pit scouting groups",
+			"clearAllPit": "Clear all pit scouting data and assignments",
+			"clearGroups": "Clear all scouting groups",
+			"deleteGroup": "Delete group",
+			"scoutingGroups": "Scouting groups",
+			"submitNewGroup": "Submit selected members as a new scouting group"
 		}
 	},
 	"tryAgainLater": "Please try again later.",
