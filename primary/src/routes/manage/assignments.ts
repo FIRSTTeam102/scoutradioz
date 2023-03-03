@@ -5,7 +5,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities, { MongoDocument } from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { Match, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, WithDbId} from 'scoutradioz-types';
+import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, UserAgent, WithDbId} from 'scoutradioz-types';
 import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
 
 const router = express.Router();
@@ -192,19 +192,79 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
-		{org_key, event_key}
+		{org_key, event_key},
+		{sort: {time: 1}}
 	);
 	
-	// Generate blank match data
-	if (matchScoutingAssignments.length == 0) {
-		logger.debug('No match data found');
+	const matchArray: Match[] = await utilities.find('matches', 
+		{event_key, comp_level: 'qm'},
+		{sort: {time: 1}}
+	);
+	
+	let outputNotes: string[] = []; // Notes to display to the scouting lead about what went on behind the scenes
+	
+	// Check whether the list of match assignments matches the schedule
+	let needsReGeneration = false;
+	
+	logger.debug('Checking for length mismatch...'); // Note: if matchScoutingAssignments is empty, this block will catch it so we don't need to check explicitly for length == 0
+	if (matchScoutingAssignments.length !== matchArray.length * 6) {
+		logger.warn(`Matches need re-generation due to length mismatch. matchArray * 6 = ${matchArray.length * 6}, matchScoutingAssignments = ${matchScoutingAssignments.length}`);
+		// No need to write any special notes if there were no assignments to begin with.
+		if (matchScoutingAssignments.length > 0) outputNotes.push('A mismatch was detected between the match schedule and the existing list of assignments, so the list of assignments has been regenerated.');
+		needsReGeneration = true;
+	}
+	
+	if (!needsReGeneration) {
+		logger.debug('Checking for time and team_key mismatch...');
+		// This is O(n^2) but there should rarely be more than ~120 matches (therefore ~720 matchscouting entries), so it should only take a few ms maximum.
+		for (let i in matchScoutingAssignments) {
+			const matchTeam = matchScoutingAssignments[i];
+			const match_team_key = matchTeam.match_team_key;
+			// logger.trace(`Testing ${match_team_key}`);
+			
+			let thisMatch; // Associated match with this matchTeam entry
+			for (let match of matchArray) {
+				if (match.match_number === matchTeam.match_number) {
+					thisMatch = match;
+					break;
+				}
+			}
+			// If match was not found
+			if (!thisMatch) {
+				logger.warn(`Associated match not found for match_team_key ${match_team_key}. Regeneration needed.`);
+				needsReGeneration = true;
+				break;
+			}
+			// If times mismatch
+			if (thisMatch.time !== matchTeam.time) {
+				logger.warn(`Time mismatch for match_team_key ${match_team_key}. Assignment's time: ${matchTeam.time}, match's time: ${thisMatch.time}. Regeneration needed.`);
+				needsReGeneration = true;
+				break;
+			}
+			// Check to make sure this team is on the list of team keys for the match
+			if (matchTeam.alliance === 'blue') {
+				if (!thisMatch.alliances.blue.team_keys.includes(matchTeam.team_key)) {
+					logger.warn(`Team ${matchTeam.team_key} not found in alliance BLUE for match ${thisMatch.key}. Regeneration needed.`);
+					needsReGeneration = true;
+					break;
+				}
+			}
+			else {
+				if (!thisMatch.alliances.red.team_keys.includes(matchTeam.team_key)) {
+					logger.warn(`Team ${matchTeam.team_key} not found in alliance RED for match ${thisMatch.key}. Regeneration needed.`);
+					needsReGeneration = true;
+					break;
+				}
+			}
+		}
 		
-		const matchArray: Match[] = await utilities.find('matches', 
-			{event_key, comp_level: 'qm'},
-			{sort: {time: 1}}
-		);
+		if (needsReGeneration) outputNotes.push('A change to the schedule has been detected, so the list of match assignments have been regenerated.');
+	}
+	
+	if (needsReGeneration) {
 		
-		// All of the matchscouting data to be generated
+		// First, generate blank match data
+		logger.debug('Generating blank match data');
 		const newMatchAssignmentsArray: MatchScouting[] = [];
 		
 		for (let matchIdx in matchArray) {
@@ -233,14 +293,68 @@ router.post('/matches/generate', wrap(async (req, res) => {
 					newMatchAssignmentsArray.push(thisMatchAssignment);
 				}
 			}
-			
 		}
 		
-		// now, update db
-		let writeResult = await utilities.insert('matchscouting', newMatchAssignmentsArray);
-		logger.debug(`Inserted ${writeResult?.insertedCount} new blank matchData`);
-		matchScoutingAssignments = newMatchAssignmentsArray;
+		// If there are none in the db, we can simply insert the new ones and call it a day
+		if (matchScoutingAssignments.length === 0) {
+			logger.debug('No exiting assignments; simply inserting');
+			let writeResult = await utilities.insert('matchscouting', newMatchAssignmentsArray);
+			logger.debug(`Inserted ${writeResult?.insertedCount} new blank matchData`);
+			matchScoutingAssignments = newMatchAssignmentsArray;
+		}
+		// If not.....
+		else {
+			logger.info('There are existing assignments in the DB, so we will attempt to re-populate existing data when re-generating...');
+			
+			// Populate a dict of all the existing data for the match
+			const matchTeamKeyToSubmissionsMap: Dict<{
+				data: MatchFormData;
+				actual_scorer?: ScouterRecord;
+				useragent?: UserAgent;
+			}> = {};
+			// Note to future coders: make sure matchScoutingAssignments is not re-populated before this
+			for (let matchTeam of matchScoutingAssignments) {
+				if (matchTeam.data) {
+					matchTeamKeyToSubmissionsMap[matchTeam.match_team_key] = {
+						data: matchTeam.data,
+						actual_scorer: matchTeam.actual_scorer,
+						useragent: matchTeam.useragent,
+					};
+				}
+			}
+			logger.debug(`Retrieved submission data from ${Object.keys(matchTeamKeyToSubmissionsMap).length} matches`);
+			
+			if (Object.keys(matchTeamKeyToSubmissionsMap).length > 0)
+				outputNotes.push('Existing match scouting data was detected, so it has been re-attached to the new list of assignments.');
+			
+			// Now, populate newMatchAssignmentsArray with the data from the old array
+			for (let matchTeam of newMatchAssignmentsArray) {
+				let thisSubmission = matchTeamKeyToSubmissionsMap[matchTeam.match_team_key];
+				if (thisSubmission) {
+					logger.trace(`Repopulating data for ${matchTeam.match_team_key}`);
+					matchTeam.data = thisSubmission.data;
+					// JL note: actual_scouter and useragent could be undefined, so I'd rather not add the keys unless they're defined
+					if (thisSubmission.actual_scorer) matchTeam.actual_scorer = thisSubmission.actual_scorer;
+					if (thisSubmission.useragent) matchTeam.useragent = thisSubmission.useragent;
+					// Now, delete the key from the submissions map so we can keep track of which entries have NOT yet been repopulated into the new array
+					delete matchTeamKeyToSubmissionsMap[matchTeam.match_team_key];
+				}
+			}
+			
+			let matchTeamKeysNotRestored = Object.keys(matchTeamKeyToSubmissionsMap);
+			if (matchTeamKeysNotRestored.length > 0) {
+				logger.warn(`There has been some match submission data that has not been restored during regeneration!!! Dumping here: ${JSON.stringify(matchTeamKeyToSubmissionsMap)}`);
+				outputNotes.push('[Warning] Match submissions could not be restored for the following match_team_keys: ' + matchTeamKeysNotRestored.join(', ') + ' - Data for those match_team_keys have been deleted.');
+			}
+			
+			logger.debug('Wiping matchscouting data and re-inserting new data');
+			await utilities.remove('matchscouting', {org_key, event_key});
+			let writeResult = await utilities.insert('matchscouting', newMatchAssignmentsArray);
+			logger.debug(`Inserted ${writeResult?.insertedCount} new blank matchData`);
+			matchScoutingAssignments = newMatchAssignmentsArray;
+		}
 	}
+	
 	//
 	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
 	//
@@ -425,10 +539,18 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			}
 		}
 	]);
-	logger.debug('writeResult=', writeResult);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
 
 	// all done, go to the matches list
-	res.redirect('/dashboard/matches');
+	let alert;
+	if (outputNotes.length > 0) {
+		alert = `Generated match assignments. Notes of what occurred during the process: \n - ${outputNotes.join('\n - ')}`;
+	}
+	else {
+		alert = 'Generated match assignments successfully.';
+	}
+	
+	res.redirect(`/dashboard/matches?alert=${alert}`);
 }));
 
 /* POST to Set scoutingPair Service */
@@ -498,7 +620,7 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 		}
 	}}]);
 
-	logger.debug('bulkWriteResult=', bulkWriteResult);
+	logger.debug('bulkWriteResult=' + JSON.stringify(bulkWriteResult));
 	
 	res.redirect('./');
 }));
@@ -544,7 +666,7 @@ router.post('/deletescoutingpair', wrap(async (req, res) => {
 		}
 	}]);
 	
-	logger.debug('writeResult=', writeResult);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
 	
 	// 2020-02-12, M.O'C - Adding "org_key": org_key, 
 	await utilities.remove('scoutingpairs', {org_key, '_id': thisPair._id});
@@ -617,7 +739,7 @@ router.post('/clearpitallocations', wrap(async (req, res) => {
 		
 		if(passCheckSuccess){
 			let writeResult = await utilities.remove('pitscouting', {org_key, event_key});
-			logger.debug('writeResult=', writeResult);
+			logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
 			return res.send({
 				status: 200, message: 'Cleared pit scouting data successfully.'
 			});
