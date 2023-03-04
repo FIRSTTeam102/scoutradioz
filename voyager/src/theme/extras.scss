@@ -2,7 +2,12 @@
 @use "@material/typography/mdc-typography";
 
 :root {
-	--mdc-typography-font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;
+	--font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;
+	--mdc-typography-font-family: var(--font-family);
+}
+
+body, html {
+	font-family: var(--font-family);
 }
 
 .smaller {

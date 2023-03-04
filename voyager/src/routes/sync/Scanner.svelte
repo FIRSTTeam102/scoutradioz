@@ -10,8 +10,4 @@
 	
 </script>
 
-<Paper>
-	This is the Scouter Sync page!
-</Paper>
-
 <QrCodeScanner on:data={onQrCodeData} enabled={qrcodeEnabled} />

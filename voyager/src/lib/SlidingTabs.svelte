@@ -1,6 +1,30 @@
+<!--
+	@component 
+	Tab bar that slickly slides between tabs. Each tab label must be unique, and each tab attaches a component that is imported.
+	 
+	Example usage:
+	
+		<script lang="ts">
+			import Scanner from '../Scanner.svelte';
+			import LeadQRCode from '../LeadQRCode.svelte';
+			import LeadSyncMothership from '../LeadSyncMothership.svelte';
+			import SlidingTabs from '$lib/SlidingTabs.svelte';
+			
+		</script>
+		
+		<SlidingTabs tabs={[
+			{label: 'Scan', component: Scanner},
+			{label: 'Show QR', component: LeadQRCode},
+			{label: 'Server', component: LeadSyncMothership},
+		]}
+		/>
+ -->
+
+
 <script lang="ts">
 	import Tab, { Label } from '@smui/tab';
 	import TabBar from '@smui/tab-bar';
+	import type { ComponentType } from 'svelte';
 	import {  } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 
@@ -8,7 +32,7 @@
 
 	interface SlidingTab {
 		label: string;
-		component: any;
+		component: ComponentType;
 	}
 
 	let tabLabels = tabs.map((tab) => tab.label);

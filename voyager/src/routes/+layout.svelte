@@ -101,7 +101,7 @@
 
 <Scrim/>
 <AutoAdjust {bottomAppBar} style='display: flex; min-height: 100vh; box-sizing: border-box;'>
-	<AppContent style='flex-grow: 1;'>
+	<AppContent style='flex-grow: 1;' class='mdc-typography'>
 		<slot />
 	</AppContent>
 </AutoAdjust>
