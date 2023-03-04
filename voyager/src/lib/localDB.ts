@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { User, Event, Layout, Match, TeamKey, MatchScouting, Team } from 'scoutradioz-types';
+import type { Org, User, Event, Layout, Match, TeamKey, MatchScouting, Team, PitScouting } from 'scoutradioz-types';
 
 /**
  * Minimal version of the User interface, for transferring via QR code.
@@ -45,18 +45,22 @@ export class LocalDB extends Dexie {
 	events!: Table<WithStringDbId<Event>>;
 	layout!: Table<WithStringDbId<Layout>>;
 	matchscouting!: Table<WithStringDbId<MatchScouting>>;
+	pitscouting!: Table<WithStringDbId<PitScouting>>;
 	teams!: Table<WithStringDbId<Team>>;
+	orgs!: Table<WithStringDbId<Org>>;
 	
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(3).stores({
+		this.version(4).stores({
 			lightusers: '&_id, org_key, name, role_key, event_info.present, event_info.assigned',
 			lightmatches: '&key, time',
 			
 			events: '&_id, &key, year',
 			layout: '&_id, [org_key+year+form_type]',
 			matchscouting: '&_id, &match_team_key, org_key, event_key, team_key, year',
-			teams: '&_id, &key, team_number'
+			pitscouting: '&_id, [org_key+event_key], [org_key+event_key+team_key], primary.id, secondary.id, tertiary.id',
+			teams: '&_id, &key, team_number',
+			orgs: '&_id, &org_key',
 		});
 	}
 }
