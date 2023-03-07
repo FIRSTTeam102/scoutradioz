@@ -12,6 +12,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"update": "yarn upgrade --pattern 'scoutradioz*'",
 		"preview": "vite preview",
 		"prepare": "yarn sass-extras && yarn smui-theme",
 		"sass-extras": "sass src/theme/extras.scss static/extras.css --load-path=node_modules",
