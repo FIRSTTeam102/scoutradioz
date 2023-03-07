@@ -490,6 +490,19 @@ export declare interface Team extends DbDocument {
 }
 
 /**
+ * Simplified Team info -- from TBA API. Not stored explicitly in the database, but can be achieved through projection in a DB query.
+ */
+export declare interface TeamSimple extends DbDocument {
+	city: string|null;
+	country: string|null;
+	key: TeamKey;
+	name: string;
+	nickname: string;
+	state_prov: string|null;
+	team_number: number;
+}
+
+/**
  * Contains info for a user-uploaded image.
  * @collection uploads
  * @interface Upload

@@ -36,11 +36,11 @@
 	}, {
 		label: 'Match scouting',
 		icon: 'stadium',
-		href: '/',
+		href: '/scouting/match',
 	}, {
 		label: 'Pit scouting',
 		icon: 'handyman',
-		href: '/'
+		href: '/scouting/pit'
 	}]
 </script>
 

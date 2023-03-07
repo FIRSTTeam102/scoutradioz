@@ -1,5 +1,10 @@
 // This file is for styles unrelated to Svelte Material UI
 @use "@material/typography/mdc-typography";
+// See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-snackbar
+@use '@material/snackbar/mixins';
+// See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-theme
+@use '@material/theme/color-palette';
+@use '@material/theme/theme-color';
 
 :root {
 	--font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;
@@ -21,4 +26,11 @@ section.pad {
 	section.pad {
 		padding: 8px 4px;
 	}
+}
+
+
+
+.mdc-snackbar.demo-error {
+	@include mixins.fill-color(color-palette.$red-500);
+	@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$red-500));
 }

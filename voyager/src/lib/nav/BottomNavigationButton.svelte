@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { afterNavigate } from '$app/navigation';
 	import Ripple from '@smui/ripple';
 	
 	export let href = '#';
@@ -6,6 +7,12 @@
 	export let icon: string;
 	export let style = '';
 	export let onClick: () => void = () => {};
+	
+	// The menu button is a bit of an oddball, since its href is "#" and we probably want to make that one visible always
+	let selected = (href.startsWith('#') || location.pathname.startsWith(href));
+	afterNavigate(() => {
+		selected = (href.startsWith('#') || location.pathname.startsWith(href));
+	});
 </script>
 
 <a
@@ -15,12 +22,16 @@
 	tabindex="0"
 	class="bottom-nav-button"
 	style={style}
+	class:unselected={!selected}
 >
 	<div class="material-icons icon">{icon}</div>
 	<span class="label">{label}</span>
 </a>
 
 <style lang='scss'>
+	.unselected {
+		opacity: 60%;
+	}
 	.bottom-nav-button {
 		margin: -12px 8px;
 		font-size: 0.875rem;

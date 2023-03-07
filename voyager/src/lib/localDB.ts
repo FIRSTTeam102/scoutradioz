@@ -32,10 +32,14 @@ export interface LightMatch {
 	time: number;
 }
 
+export interface MatchScoutingWithTeamName extends WithStringDbId<MatchScouting> {
+	team_name?: string;
+}
+
 /**
  * Svelte can't transmit ObjectIds from server to client, so they have to be transformed into strings.
  */
-type WithStringDbId<T> = Omit<T, '_id'> & {_id: string};
+export type WithStringDbId<T> = Omit<T, '_id'> & {_id: string};
 
 export class LocalDB extends Dexie {
 	// Lightweight schemas that contain only the info necessary to transmit via QR code
@@ -44,20 +48,20 @@ export class LocalDB extends Dexie {
 	// Schemas straight from the DB
 	events!: Table<WithStringDbId<Event>>;
 	layout!: Table<WithStringDbId<Layout>>;
-	matchscouting!: Table<WithStringDbId<MatchScouting>>;
+	matchscouting!: Table<MatchScoutingWithTeamName>;
 	pitscouting!: Table<WithStringDbId<PitScouting>>;
 	teams!: Table<WithStringDbId<Team>>;
 	orgs!: Table<WithStringDbId<Org>>;
 	
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(4).stores({
+		this.version(6).stores({
 			lightusers: '&_id, org_key, name, role_key, event_info.present, event_info.assigned',
 			lightmatches: '&key, time',
 			
 			events: '&_id, &key, year',
 			layout: '&_id, [org_key+year+form_type]',
-			matchscouting: '&_id, &match_team_key, org_key, event_key, team_key, year',
+			matchscouting: '&_id, &match_team_key, [org_key+event_key], team_key, year',
 			pitscouting: '&_id, [org_key+event_key], [org_key+event_key+team_key], primary.id, secondary.id, tertiary.id',
 			teams: '&_id, &key, team_number',
 			orgs: '&_id, &org_key',

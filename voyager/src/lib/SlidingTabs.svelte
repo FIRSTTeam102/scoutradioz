@@ -24,6 +24,7 @@
 <script lang="ts">
 	import Tab, { Label } from '@smui/tab';
 	import TabBar from '@smui/tab-bar';
+	import { onMount } from 'svelte';
 	import type { ComponentType } from 'svelte';
 	import {  } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
@@ -36,7 +37,18 @@
 	}
 
 	let tabLabels = tabs.map((tab) => tab.label);
-	let activeTab = tabs[0].label;
+	let activeTab: string;
+	
+	onMount(() => {
+		// Default to first tab; otherwise, retrieve the tab from location.hash
+		let hash = parseInt(location.hash.substring(1));
+		if (hash && hash < tabs.length) {
+			activeTab = tabs[hash].label;
+		}
+		else { 
+			activeTab = tabs[0].label;
+		}
+	})
 	
 	let sliding = false;
 
@@ -45,7 +57,8 @@
 	let movingRight = true;
 
 	function handleTabChange(e: {detail: {index: number}}) {
-
+		console.log('tabChange');
+		location.hash = String(e.detail.index);
 		movingRight = e.detail.index > prevTabIndex;
 		prevTabIndex = e.detail.index;
 	}
@@ -66,6 +79,10 @@
 			y: direction * 50,
 			duration: animationDuration
 		});
+	}
+	
+	function tabLabelToHash(label: string) {
+		return label.toLowerCase().replace(/[ ]/g, '_');
 	}
 </script>
 

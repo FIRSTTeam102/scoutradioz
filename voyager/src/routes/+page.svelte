@@ -4,7 +4,7 @@
 	import AwaitLoader from '$lib/AwaitLoader.svelte';
 	import Paper, { Title, Subtitle } from '@smui/paper';
 	
-	const pTeams = fetchJSON<Team[]>('/api/teams');
+	const pTeams = fetchJSON<Team[]>('/api/2019paca/teams');
 	console.log(pTeams);
 </script>
 
