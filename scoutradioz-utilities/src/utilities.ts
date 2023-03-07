@@ -15,16 +15,16 @@ logger.level = process.env.LOG_LEVEL || 'info';
 /**
  * Valid primitives for use in mongodb queries
  */
-type ValidQueryPrimitive = string|number|undefined|null|boolean|ObjectId;
+export type ValidQueryPrimitive = string|number|undefined|null|boolean|ObjectId;
 /**
  * Valid type for the `_id` field in a mongodb query
  */
-type ValidID = ObjectId|string|FilterOps<ObjectId>;
+export type ValidID = ObjectId|string|FilterOps<ObjectId>;
 
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
-interface FilterOps<TValue> {
+export interface FilterOps<TValue> {
     $eq?: TValue;
     $gt?: TValue;
     $gte?: TValue;
@@ -62,11 +62,11 @@ interface FilterOps<TValue> {
     $rand?: Record<string, never>;
 }
 
-interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
+export interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
 	[key: string]: any;
 }
 
-interface FindOptionsWithProjection extends FindOptions {
+export interface FindOptionsWithProjection extends FindOptions {
 	projection: MongoDocument;
 }
 
