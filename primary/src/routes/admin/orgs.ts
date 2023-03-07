@@ -451,4 +451,125 @@ router.post('/login-to-org', wrap(async (req, res) => {
 	
 }));
 
+
+
+router.get('/metrics', wrap(async (req, res) => {
+	
+	const orgs: Array<Org & {
+		event: Event[],
+		matchscouting: {count: number}[],
+		pitscouting: {count: number}[],
+	}> = await utilities.aggregate('orgs', [
+		{$lookup: {
+			from: 'events',
+			localField: 'event_key',
+			foreignField: 'key',
+			as: 'event'
+		}},
+		{$lookup: {
+			from: 'matchscouting',
+			localField: 'event_key',
+			foreignField: 'event_key',
+			let: { org_key: '$org_key' },
+			pipeline: [
+				{$match: {$expr: {$and: [
+					{$eq: ['$org_key', '$$org_key']},
+					{$ne: ['$data', undefined]}
+				]}}},
+				{$count: 'count'}
+			],
+			as: 'matchscouting'
+		}},
+		{$lookup: {
+			from: 'pitscouting',
+			localField: 'event_key',
+			foreignField: 'event_key',
+			let: { org_key: '$org_key' },
+			pipeline: [
+				{$match: {$expr: {$and: [
+					{$eq: ['$org_key', '$$org_key']},
+					{$ne: ['$data', undefined]}
+				]}}},
+				{$count: 'count'}
+			],
+			as: 'pitscouting'
+		}},
+	]);
+	
+	// get metrics for each org, starting with 0 and adding as we create agg queries
+	const orgMetrics = orgs.map(org => {
+		return {
+			org_key: org.org_key,
+			event: org.event[0],
+			matchscoutingAtEvent: org.matchscouting[0]?.count || 0, 
+			pitscoutingAtEvent: org.pitscouting[0]?.count || 0, 
+			nickname: org.nickname,
+			matchScoutingData: 0,
+			pitScoutingData: 0,
+			scoutingPairs: 0,
+			users: 0,
+			teamAdmins: 0,
+			teamAdminsWithPassword: 0,
+			imageUploads: 0,
+			deletedImageUploads: 0,
+			orgTeamValues: 0,
+		};
+	});
+	
+	// first do a $match, but most queries group by org_key the same
+	const groupByOrgKeyAndSort = [
+		{$group: {
+			_id: '$org_key',
+			count: {$count: {}}
+		}},
+		{$sort: {
+			count: -1
+		}},
+	];
+	
+	// Same aggQuery works for both pitscouting and matchscouting
+	const matchPitScoutingQuery = [
+		{$match: {
+			data: {$ne: undefined}
+		}},
+		...groupByOrgKeyAndSort
+	];
+	
+	const matchScouting = await utilities.aggregate('matchscouting', matchPitScoutingQuery);
+	const pitScouting = await utilities.aggregate('pitscouting', matchPitScoutingQuery);
+	const scoutingPairs = await utilities.aggregate('scoutingpairs', [...groupByOrgKeyAndSort]);
+	const users = await utilities.aggregate('users', [...groupByOrgKeyAndSort]);
+	const teamAdmins = await utilities.aggregate('users', [{$match: {role_key: 'team_admin'}}, ...groupByOrgKeyAndSort]);
+	const teamAdminsWithPassword = await utilities.aggregate('users', [{$match: {role_key: 'team_admin', password: {$ne: 'default'}}}, ...groupByOrgKeyAndSort]);
+	const uploads = await utilities.aggregate('uploads', [{$match: {removed: {$ne: true}}}, ...groupByOrgKeyAndSort]);
+	const deletedUploads = await utilities.aggregate('uploads', [{$match: {removed: true}}, ...groupByOrgKeyAndSort]);
+	const orgTeamValues = await utilities.aggregate('orgteamvalues', [...groupByOrgKeyAndSort]);
+	
+	function tieCountToOrgMetric(array: {count: number, _id: string}[], field: keyof typeof orgMetrics[0]) {
+		array.forEach((item) => {
+			orgMetrics.forEach(org => {
+				// @ts-ignore idk why it's talking about "never", this code works
+				if (org.org_key === item._id) org[field] = item.count;
+			});
+		});
+	}
+	
+	// Tie the data to the orgMetrics array
+	tieCountToOrgMetric(matchScouting, 'matchScoutingData');
+	tieCountToOrgMetric(pitScouting, 'pitScoutingData');
+	tieCountToOrgMetric(users, 'users');
+	tieCountToOrgMetric(teamAdmins, 'teamAdmins');
+	tieCountToOrgMetric(teamAdminsWithPassword, 'teamAdminsWithPassword');
+	tieCountToOrgMetric(uploads, 'imageUploads');
+	tieCountToOrgMetric(deletedUploads, 'deletedImageUploads');
+	tieCountToOrgMetric(scoutingPairs, 'scoutingPairs');
+	tieCountToOrgMetric(orgTeamValues, 'orgTeamValues');
+	
+	// const pitScouting = await utilities.aggregate()
+	res.render('./admin/orgmetrics', {
+		title: 'Org metrics',
+		orgMetrics
+	});
+}));
+
 module.exports = router;

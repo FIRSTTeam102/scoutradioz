@@ -26,7 +26,8 @@ block content
 	ul(class="w3-ul w3-left-align")
 		each pair in assigned
 			li(class="w3-no-border")
-				- var thisButtonLabel = pair.member1.name + ', ' + pair.member2.name;
+				- var thisButtonLabel = pair.member1.name;
+				- if (pair.member2) thisButtonLabel += ', ' + pair.member2.name;
 				- if (pair.member3) thisButtonLabel += ', ' + pair.member3.name;
 				button(onclick=`deletePair("${pair._id}")` class="w3-btn theme-red") Delete pair
 				|	#{thisButtonLabel}

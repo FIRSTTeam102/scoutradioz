@@ -8,7 +8,8 @@
 		"strict": true,
 		"declaration": true,
 		"declarationDir": "./types",
-		"moduleResolution": "node"
+		"moduleResolution": "node",
+		"newLine": "crlf",
 		//   "removeComments": true,
 	},
 	"include": [

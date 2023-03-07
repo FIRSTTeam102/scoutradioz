@@ -11,6 +11,8 @@ block content
 					label(for=`toggleSubteam_${subteam.subteam_key}`) &nbsp;#{subteam.label}
 		hr
 		h4 Available potential scouters
+			span(class="sprite sp-20 sp-info sp-inline w3-tooltip")
+				span(class="w3-tooltiptext w3-medium") The scouters and members that appear in this list are only those who are <a class="link" href="/manage/members/present">marked as present</a>.
 		form(action="/manage/assignments/matches/generate" method="post")
 			div(class="responsive-grid rg-4 w3-left-align")
 				each member in available
@@ -30,7 +32,12 @@ block content
 						option(value=val class="w3-bar-item") #{val}
 			label &nbsp;matches
 			span(class="sprite sp-18 sp-help sp-inline w3-tooltip")
-				span(class="w3-tooltiptext") hello
+				span(class="w3-tooltiptext w3-left-align")
+					ul
+						li If you have only 6 assignees then they’ll be doing every match with no breaks.
+						li If you have 12 assignees total, they’ll be doing N matches on, then N matches off, loop. Or if you have more than 12 assignees, they might occasionally get 2xN matches off. A suggested “N” is 5.
+						li If you have 7 to 11 assignees, they will occasionally do 2xN matches on before getting N matches off. A suggested “N” is 3.
+
 			p
 			button(type="submit" class="w3-btn theme-submit") (Re)Allocate teams@matches to ASSIGNED + CHECKED
 	script.

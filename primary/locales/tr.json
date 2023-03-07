@@ -85,22 +85,9 @@
 					"main": "İzciler",
 					"event": "Gözcüler: [[{event}]]",
 					"audit": "İzcilik denetimi",
-					"assignments": "İzcilik görevleri",
 					"swapmembers": "Giriş/çıkış maç hesaplarını değiştir",
 					"swappitassignments": "Çukur keşif görevlerini değiştir",
 					"present": "hediye ayarla"
-				},
-				"event": {
-					"main": "Olay verileri",
-					"event": "Etkinlik verileri: [[{event}]]",
-					"matches": "Maçlar",
-					"allianceselection": "İttifak seçim verileri",
-					"getcurrentteams": "Ekip listesini güncelle",
-					"recalcderived": "Türetilmiş metrikleri yeniden hesapla",
-					"editteams": "Ekip listesini düzenle",
-					"editmatchschedule": "Maç programını düzenle",
-					"editmatchresults": "Maç sonuçlarını düzenle",
-					"setcurrent": "Geçerli etkinliği ayarla"
 				}
 			},
 			"admin": "yönetici",
@@ -408,6 +395,19 @@
 		"qf": "Çeyrek final",
 		"sf": "Yarı final",
 		"f": "son"
+	},
+	"manage": {
+		"event": {
+			"main": "Olay verileri",
+			"allianceSelection": "İttifak seçim verileri",
+			"editMatchResults": "Maç sonuçlarını düzenle",
+			"editMatchSchedule": "Maç programını düzenle",
+			"editTeams": "Ekip listesini düzenle",
+			"eventData": "Etkinlik verileri: [[{event}]]",
+			"getCurrentTeams": "Ekip listesini güncelle",
+			"recalcDerived": "Türetilmiş metrikleri yeniden hesapla",
+			"setCurrentEvent": "Geçerli etkinliği ayarla"
+		}
 	},
 	"tryAgainLater": "Lütfen daha sonra tekrar deneyiniz.",
 	"yes": "Evet",

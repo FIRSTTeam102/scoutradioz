@@ -6,6 +6,7 @@
 	"type": "commonjs",
 	"scripts": {
 		"test": "tsc && node test.js",
+		"update": "yarn upgrade --pattern 'scoutradioz*'",
 		"build": "tsc"
 	},
 	"engines": {

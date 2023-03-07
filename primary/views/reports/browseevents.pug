@@ -1,0 +1,8 @@
+extends ../layout
+block content
+	h2=title
+	h6 Below is a list of all events for which your org has data.
+	ul
+		each event in events
+			li 
+				a(class="link" href=`/reports/browseevent?event_key=${event.key}`) #{event.name}

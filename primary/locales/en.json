@@ -90,18 +90,6 @@
 					"swapmembers": "Swap in/out match scouts",
 					"swappitassignments": "Swap teams between pit scout pairs",
 					"present": "Set who is present at current event"
-				},
-				"event": {
-					"main": "Event data",
-					"event": "Event data: [[{event}]]",
-					"matches": "Matches (FIRST data)",
-					"allianceselection": "Alliance selection data",
-					"getcurrentteams": "Update list of teams",
-					"recalcderived": "Recalculate derived metrics",
-					"editteams": "Edit team list",
-					"editmatchschedule": "Edit match schedule",
-					"editmatchresults": "Edit match results",
-					"setcurrent": "Set current event"
 				}
 			},
 			"admin": "Admin",
@@ -411,7 +399,32 @@
 		"sf": "Semifinal",
 		"f": "Final"
 	},
+	"manage": {
+		"event": {
+			"main": "Event data",
+			"allianceSelection": "Alliance selection data",
+			"confirmClear": "Are you sure you want to clear the current event for *{orgName}*?",
+			"confirmSetEvent": "Set *{eventName}* as the current event for *{orgName}*?",
+			"currentEvent": "Current event - {event}",
+			"editMatchResults": "Edit match results",
+			"editMatchSchedule": "Edit match schedule",
+			"editTeams": "Edit team list",
+			"eventData": "Event data: [[{event}]]",
+			"getCurrentTeams": "Update list of teams",
+			"invalidEventKey": "Invalid event key: '{eventKey}'. Click on an event in the list to set it automatically.",
+			"matches": "Matches (FIRST data)",
+			"noEvent": "No event has been set",
+			"recalcDerived": "Recalculate derived metrics",
+			"setCurrentEvent": "Set current event",
+			"setCurrentEventKey": "Set current event key",
+			"successClear": "Cleared current event successfully.",
+			"successSetEvent": "Set current event to *{eventName}* successfuly."
+		}
+	},
 	"tryAgainLater": "Please try again later.",
 	"yes": "Yes",
-	"no": "No"
+	"no": "No",
+	"name": "Name",
+	"date": "Date",
+	"key": "Key"
 }

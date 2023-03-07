@@ -85,22 +85,9 @@
 					"main": "童子军",
 					"event": "童子军：[[{event}]]",
 					"audit": "侦察审核",
-					"assignments": "侦察任务",
 					"swapmembers": "换入/换出比赛账户",
 					"swappitassignments": "交换矿坑侦察任务",
 					"present": "设置礼物"
-				},
-				"event": {
-					"main": "事件数据",
-					"event": "事件数据：[[{event}]]",
-					"matches": "火柴",
-					"allianceselection": "联盟选择数据",
-					"getcurrentteams": "更新球队名单",
-					"recalcderived": "重新计算衍生指标",
-					"editteams": "编辑团队列表",
-					"editmatchschedule": "修改比赛日程",
-					"editmatchresults": "编辑比赛结果",
-					"setcurrent": "设置当前事件"
 				}
 			},
 			"admin": "行政",
@@ -408,6 +395,20 @@
 		"qf": "四分之一决赛",
 		"sf": "半决赛",
 		"f": "最终的"
+	},
+	"manage": {
+		"event": {
+			"main": "事件数据",
+			"allianceSelection": "联盟选择数据",
+			"currentEvent": "事件数据：[[{event}]]",
+			"editMatchResults": "编辑比赛结果",
+			"editMatchSchedule": "修改比赛日程",
+			"editTeams": "编辑团队列表",
+			"getCurrentTeams": "更新球队名单",
+			"matches": "火柴",
+			"recalcDerived": "重新计算衍生指标",
+			"setCurrentEvent": "设置当前事件"
+		}
 	},
 	"tryAgainLater": "请稍后再试。",
 	"yes": "是的",

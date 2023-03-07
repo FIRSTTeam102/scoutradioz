@@ -663,7 +663,7 @@ export class Utilities {
 		collection: colName, 
 		pipeline: MongoDocument[], 
 		cacheOptions?: UtilitiesCacheOptions
-	): Promise<any> {
+	): Promise<any[]> {
 		logger.addContext('funcName', 'aggregate');
 		
 		//If the collection is not specified and is not a String, throw an error.

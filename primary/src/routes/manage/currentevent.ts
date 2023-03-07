@@ -25,10 +25,13 @@ router.get('/matches', wrap(async (req, res) => {
 		
 	// Read matches from DB for specified event
 	let matches: Match[] = await utilities.find('matches', {'event_key': eventKey}, {sort: {'time': 1}});
+	
+	let orgsAtThisEvent = await utilities.find('orgs', {event_key: eventKey});
 		
 	res.render('./manage/currentevent/matches', {
 		title: 'Matches',
 		matches: matches,
+		numOrgsAtThisEvent: orgsAtThisEvent.length
 	});
 }));
 
@@ -39,13 +42,24 @@ router.get('/getcurrentteams', wrap(async (req, res) => {
 	// 2020-02-09, M.O'C: Refactoring to just update the team_keys for the current event
 	let event_key = req.event.key;
 
-	// Get the current event
-	//var thisEventData = await utilities.find("events", {"key": event_key});
-	//var thisEvent = thisEventData[0];
+	const doForce = (req.query.force === 'true'); // just in case we actually wanna force it
 
 	// Refresh the teams list from TBA
 	let eventTeamsUrl = `event/${event_key}/teams/keys`;
 	let thisTeamKeys = await utilities.requestTheBlueAlliance(eventTeamsUrl);
+	
+	// 2023-02-20 JL: Added check to make sure TBA sends back an array
+	if (!Array.isArray(thisTeamKeys)) {
+		logger.error('TBA didn\'t send back an array!! They sent: ', thisTeamKeys);
+		return res.redirect('/manage?alert=Request from The Blue Alliance failed.&type=error');
+	}
+	
+	// 2023-02-20 JL: Added check to not override team keys if TBA sends back none
+	if (req.teams && req.teams.length > 0 && thisTeamKeys.length === 0 && !doForce) {
+		logger.info('TBA sent back a list of 0 teams and a nonzero amount of teams were detected in the database. Not updating.');
+		return res.redirect('/manage?alert=The Blue Alliance sent back a list of 0 teams, but we found a (potentially manually-entered) list of teams in the database. Not overriding.');
+	}
+	
 	await utilities.update( 'events', {'key': event_key}, {$set: {'team_keys': thisTeamKeys}} );
 
 	res.redirect('/manage?alert=Updated team keys for the current event successfully.');

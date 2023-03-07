@@ -125,6 +125,10 @@ class NavHelpers {
 						href: '/reports/allteammetrics',
 					},
 					{
+						label: 'WIP - Browse data from other events',
+						href: '/reports/browseevents',
+					},
+					{
 						label: '!layout.nav.reports.export.main',
 						sprite: 'download',
 						submenu: [
@@ -239,43 +243,43 @@ class NavHelpers {
 				},
 				// Manage event data
 				{
-					label: (req, res) => req.event ? req.msg('layout.nav.manage.event.event', {event: req.event.name}) : '!layout.nav.manage.event.main',
+					label: (req, res) => req.event ? req.msg('manage.event.eventData', {event: req.event.name}) : '!manage.event.main',
 					submenu: [
 						{
-							label: '!layout.nav.manage.event.matches',
+							label: '!manage.event.matches',
 							href: '/manage/currentevent/matches'
 						},
 						{
-							label: '!layout.nav.manage.event.allianceselection',
+							label: '!manage.event.allianceSelection',
 							href: '/manage/allianceselection'
 						},
 						{
-							label: '!layout.nav.manage.event.getcurrentteams',
+							label: '!manage.event.getCurrentTeams',
 							href: '/manage/currentevent/getcurrentteams'
 						},
 						{
-							label: '!layout.nav.manage.event.recalcderived',
+							label: '!manage.event.recalcDerived',
 							href: '/admin/sync/recalcderived'
 						},
 						{
-							label: '!layout.nav.manage.event.editteams', 
+							label: '!manage.event.editTeams', 
 							href: '/manage/manualdata/teams',
 							sprite: 'edit',
 						},
 						{
-							label: '!layout.nav.manage.event.editmatchschedule',
+							label: '!manage.event.editMatchSchedule',
 							href: '/manage/manualdata/matchschedule',
 							sprite: 'edit',
 						},
 						{
-							label: '!layout.nav.manage.event.editmatchresults',
+							label: '!manage.event.editMatchResults',
 							href: '/manage/manualdata/matchresults',
 							sprite: 'edit',
 						},
 					]
 				},
 				{
-					label: (req, res) => req.msg('layout.nav.manage.event.setcurrent'),
+					label: (req, res) => req.msg('manage.event.setCurrentEvent'),
 					href: '/manage#setCurrentEvent',
 					// sprite: 'first',
 				}

@@ -1,8 +1,8 @@
 {
 	"index": {
-		"fulltitle": "Scoutradioz: Repérage FRC en tant que service",
-		"welcome": "Bienvenue à Scoutradioz",
-		"choice": "Cherchez-vous à:",
+		"fulltitle": "Scoutradioz : Repérage FRC en tant que service",
+		"welcome": "Bienvenue sur Scoutradioz",
+		"choice": "Cherchez-vous à :",
 		"viewer": {
 			"choice": "Afficher des données",
 			"intro": "Scoutradioz permet aux équipes/organisations de rassembler leurs propres informations personnalisées lors des compétitions.",
@@ -85,22 +85,9 @@
 					"main": "Repéreurs",
 					"event": "Repéreurs: [[{event}]]",
 					"audit": "Audit de repérage",
-					"assignments": "Tâches de repérage",
 					"swapmembers": "Échanger des repéreurs de match",
 					"swappitassignments": "Échanger les tâches de repérage de puits",
 					"present": "Mettre présent"
-				},
-				"event": {
-					"main": "Données d'événement",
-					"event": "Données d'événement: [[{event}]]",
-					"matches": "Matchs",
-					"allianceselection": "Données de sélection d'alliance",
-					"getcurrentteams": "Mettre à jour la liste des équipes",
-					"recalcderived": "Recalculer les métriques dérivées",
-					"editmatchresults": "Modifier les résultats de match",
-					"editteams": "Modifier la liste d'équipes",
-					"editmatchschedule": "Modifier le programme des matchs",
-					"setcurrent": "Définir l'événement en cours"
 				}
 			},
 			"admin": "Administrateur",
@@ -269,7 +256,8 @@
 		"priority": "Priorité",
 		"priorityAbbr": "V",
 		"team": "Équipe",
-		"rank": "Classement FRC"
+		"rank": "Classement FRC",
+		"numalliances": "Nombre d'alliances :"
 	},
 	"metrics": {
 		"raw": "Données brutes",
@@ -408,6 +396,20 @@
 		"qf": "Quart de finale",
 		"sf": "Demi-finale",
 		"f": "Finale"
+	},
+	"manage": {
+		"event": {
+			"main": "Données d'événement",
+			"allianceSelection": "Données de sélection d'alliance",
+			"editMatchResults": "Modifier les résultats de match",
+			"editMatchSchedule": "Modifier le programme des matchs",
+			"editTeams": "Modifier la liste d'équipes",
+			"eventData": "Données d'événement: [[{event}]]",
+			"getCurrentTeams": "Mettre à jour la liste des équipes",
+			"matches": "Matchs",
+			"recalcDerived": "Recalculer les métriques dérivées",
+			"setCurrentEvent": "Définir l'événement en cours"
+		}
 	},
 	"tryAgainLater": "Veuillez réessayer plus tard.",
 	"yes": "Oui",

@@ -252,12 +252,15 @@ class UseFunctions {
 	static async getEventInfo(req: express.Request, res: express.Response, next: express.NextFunction) {
 		logger.addContext('funcName', 'getEventInfo');
 		
+		const noEventDefinedStr = req.msg('manage.event.noEvent');
+		
 		//Define req.event
 		req.event = {
-			key: 'undefined',
-			name: 'undefined',
+			key: noEventDefinedStr,
+			name: noEventDefinedStr,
 			year: -1,
 			timezone: 'UTC',
+			isOrgCurrent: true
 		};
 		
 		// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
@@ -272,21 +275,32 @@ class UseFunctions {
 		}
 	
 		//sets locals to no event defined just in case we don't find thing and we can just do next();
-		let eventKey = 'No event defined';
+		let eventKey = noEventDefinedStr;
 		let eventYear = -1;
-		res.locals.eventName = eventKey;
+		res.locals.eventName = noEventDefinedStr;
 		res.locals.url = req.url;
 		
 		//if exist
 		if (thisOrg && thisOrg.event_key) {
 			
-			eventKey = thisOrg.event_key;
+			eventKey = thisOrg.event_key;			
+			
+			// 2023-02-22 JL: added event_key cookie
+			if (req.cookies['event_key']) {
+				logger.debug('Found event_key cookie; setting custom browsing event key for user');
+				eventKey = req.cookies['event_key'];
+				req.event.isOrgCurrent = false;
+			}
+			
 			eventYear = parseInt(eventKey);
+			
 			//set event key
 			req.event.key = eventKey;
 			req.event.year = eventYear;
 			res.locals.event_key = req.event.key;
 			res.locals.event_year = req.event.year;
+			
+			logger.debug(`eventIsOrgCurrent=${req.event.isOrgCurrent}`);
 			
 			let currentEvent = await utilities.findOne('events', 
 				{key: eventKey}, 
@@ -315,7 +329,14 @@ class UseFunctions {
 					res.locals.teams = teams;
 				}
 			}
+			else {
+				// delete event_key cookie, just in case it's corrupt and there's no event in the db with that key
+				res.clearCookie('event_key');
+			}
 		}
+		
+		// whether event is the org's current event (JL note 2023-02-25: Must be outside the "if" in case event_key is null)
+		res.locals.eventIsOrgCurrent = req.event.isOrgCurrent;
 		
 		// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
 		res.locals.functionVersion = process.env.LAMBDA_FUNCTION_VERSION;

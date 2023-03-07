@@ -85,22 +85,9 @@
 					"main": "童子軍",
 					"event": "童子軍：[[{event}]]",
 					"audit": "偵察審核",
-					"assignments": "偵察任務",
 					"swapmembers": "換入/換出比賽賬戶",
 					"swappitassignments": "交換礦坑偵察任務",
 					"present": "設置禮物"
-				},
-				"event": {
-					"main": "事件數據",
-					"event": "事件數據：[[{event}]]",
-					"matches": "火柴",
-					"allianceselection": "聯盟選擇數據",
-					"getcurrentteams": "更新球隊名單",
-					"recalcderived": "重新計算衍生指標",
-					"editteams": "編輯團隊列表",
-					"editmatchschedule": "修改比賽日程",
-					"editmatchresults": "編輯比賽結果",
-					"setcurrent": "設置當前事件"
 				}
 			},
 			"admin": "行政",
@@ -408,6 +395,19 @@
 		"qf": "四分之一決賽",
 		"sf": "半決賽",
 		"f": "最終的"
+	},
+	"manage": {
+		"event": {
+			"allianceSelection": "聯盟選擇數據",
+			"editMatchResults": "編輯比賽結果",
+			"editMatchSchedule": "修改比賽日程",
+			"editTeams": "編輯團隊列表",
+			"eventData": "事件數據：[[{event}]]",
+			"getCurrentTeams": "更新球隊名單",
+			"matches": "火柴",
+			"recalcDerived": "重新計算衍生指標",
+			"setCurrentEvent": "設置當前事件"
+		}
 	},
 	"tryAgainLater": "請稍後再試。",
 	"yes": "是的",

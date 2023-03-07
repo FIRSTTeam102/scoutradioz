@@ -84,6 +84,7 @@ declare namespace Express {
 			name: string;
 			year: number;
 			timezone: string;
+			isOrgCurrent: boolean;
 		}
 		
 		shortagent: {
