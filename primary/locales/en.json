@@ -214,6 +214,8 @@
 		"titleUser": "Dashboard for {user}",
 		"group": "Scouting group: {group}",
 		"pitScouting": "Pit scouting assignments",
+		"noMatchAssignments": "There are no match scouting assignments in the system now",
+		"noPitAssignments": "There are no pit scouting assignments in the system now",
 		"notPitAssigned": "Not assigned to pit scouting",
 		"pitScoutingPartner": "Partner's pit scouting assignments",
 		"upcomingMatches": "Upcoming matches to be scouted",
@@ -426,6 +428,7 @@
 		}
 	},
 	"tryAgainLater": "Please try again later.",
+	"returnLater": "Please check later",
 	"yes": "Yes",
 	"no": "No",
 	"name": "Name",

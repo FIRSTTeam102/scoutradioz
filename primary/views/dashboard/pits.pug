@@ -7,38 +7,43 @@
 extends ../layout
 block content
 	if teams.length > 0
-		h3(class="theme-text")=title
-		table(class="w3-content w3-center theme-contains-spacer")
-			th!=msg('dashboard.assigned')
-			th!=msg('dashboard.team')
-			th!=msg('dashboard.teamName')
-			if images
-				th!=msg('dashboard.photo')
-			each team, i in teamAssignments
-				if( user.name == team.primary )
-					- style = "strong";
-				else
-					- style = "";
-				tr(class=`w3-margin ${style}`)
-					td(class="theme-spacer")
-						h4(class=`${style}`) #{team.primary ? team.primary.name : ''}
-					td(class="theme-spacer")
-						if team.data
-							a(href=`/scouting/pit?team_key=${team.team_key}`) 
-								div(class="gear-btn w3-dark-grey w3-btn w3-section")
-									span= team.team_key.substring(3)
-						else
-							a(href=`/scouting/pit?team_key=${team.team_key}`) 
-								div(class="gear-btn theme-link w3-btn w3-section")
-									span= team.team_key.substring(3)
-					td(class='w3-left-align theme-spacer')
-						h4(class=`${style}`) #{teamKeyMap[team.team_key].nickname}
-					if images
+		if teamAssignments.length === 0
+			+noDataFound(msg("dashboard.noPitAssignments"), msg("returnLater"))
+			a(href="/scouting/practice-pit")
+				div(class="theme-link w3-btn gear-btn")!=msg('scouting.practicePitScouting')
+		else
+			h3(class="theme-text")=title
+			table(class="w3-content w3-center theme-contains-spacer")
+				th!=msg('dashboard.assigned')
+				th!=msg('dashboard.team')
+				th!=msg('dashboard.teamName')
+				if images
+					th!=msg('dashboard.photo')
+				each team, i in teamAssignments
+					if( user.name == team.primary )
+						- style = "strong";
+					else
+						- style = "";
+					tr(class=`w3-margin ${style}`)
 						td(class="theme-spacer")
-							//- console.log(images[i])
-							- if (images[i] && images[i].main)
-								a(href=images[i].main.lg target="_blank")
-									img(src=images[i].main.sm alt="" style="max-height:80px; max-width: 50px;")
-		h6
-			a(class="gear-btn theme-link w3-btn" href="/dashboard/pits?loadPhotos=1")!=msg('dashboard.loadTeamPhotos')
+							h4(class=`${style}`) #{team.primary ? team.primary.name : ''}
+						td(class="theme-spacer")
+							if team.data
+								a(href=`/scouting/pit?team_key=${team.team_key}`) 
+									div(class="gear-btn w3-dark-grey w3-btn w3-section")
+										span= team.team_key.substring(3)
+							else
+								a(href=`/scouting/pit?team_key=${team.team_key}`) 
+									div(class="gear-btn theme-link w3-btn w3-section")
+										span= team.team_key.substring(3)
+						td(class='w3-left-align theme-spacer')
+							h4(class=`${style}`) #{teamKeyMap[team.team_key].nickname}
+						if images
+							td(class="theme-spacer")
+								//- console.log(images[i])
+								- if (images[i] && images[i].main)
+									a(href=images[i].main.lg target="_blank")
+										img(src=images[i].main.sm alt="" style="max-height:80px; max-width: 50px;")
+			h6
+				a(class="gear-btn theme-link w3-btn" href="/dashboard/pits?loadPhotos=1")!=msg('dashboard.loadTeamPhotos')
 
