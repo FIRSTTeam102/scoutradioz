@@ -170,6 +170,7 @@ class NavHelpers {
 			sprite: 'sheet',
 			visible: userLoggedIn
 		},
+		// Scouting
 		{
 			label: '!layout.nav.scouting',
 			href: '/dashboard',
@@ -178,16 +179,40 @@ class NavHelpers {
 			submenu: [
 				{
 					label: '!scouting.pit',
-					href: '/dashboard/pits'
+					href: '/dashboard/pits',
+					submenu: [{
+						label: '!scouting.practicePitScouting',
+						href: '/scouting/practice-pit',
+					}]
 				},
 				{
 					label: '!scouting.match',
 					href: '/dashboard/matches',
+					submenu: [{
+						label: '!scouting.practiceMatchScouting',
+						href: '/scouting/practice-match',
+					}]
 				},
 				{
 					label: '!allianceselection.title',
 					href: '/dashboard/allianceselection',
 				}
+			]
+		},
+		// Practice scouting for non scouters
+		{
+			label: '!layout.nav.scouting',
+			sprite: 'radio',
+			visible: (req, res) => !!req.user && req._user.role.access_level < Permissions.ACCESS_SCOUTER,
+			submenu: [
+				{
+					label: '!scouting.practicePitScouting',
+					href: '/scouting/practice-pit',
+				},
+				{
+					label: '!scouting.practiceMatchScouting',
+					href: '/scouting/practice-match',
+				},
 			]
 		},
 		// Org Management submenu

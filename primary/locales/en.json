@@ -180,6 +180,10 @@
 		"invalidTeam": "Team {team} does not exist.",
 		"invalidTeamKey": "Team key is either not defined or invalid.",
 		"noDataSubmit": "No data was sent to {url}.",
+		"practiceMatch": "Practice match",
+		"practiceMatchScouting": "Practice match scouting",
+		"practicePitScouting": "Practice pit scouting",
+		"practiceTeam": "Practice team",
 		"submitSuccess": "Submitted data successfully.",
 		"deleteSuccess": "Deleted data successfully. You will not be redirected away from the page, in case you wish to re-submit the data on screen."
 	},

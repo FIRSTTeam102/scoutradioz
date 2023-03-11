@@ -18,8 +18,11 @@ block content
 		}
 	script(src=`${fileRoot}/lib/jimp.min.js`)
 	script(src=`${fileRoot}/js/script-pitscouting.js?v=10`)
-	h3!=msg('scouting.pitHeading', {team: key.replace('frc', '')})
-	h5!=msgMarked('scouting.subheading', {team: team.nickname, city: team.city, state: team.state_prov})
+	if practice
+		h3!=msg('scouting.practiceTeam')
+	else
+		h3!=msg('scouting.pitHeading', {team: key.replace('frc', '')})
+		h5!=msgMarked('scouting.subheading', {team: team.nickname, city: team.city, state: team.state_prov})
 	p
 	if images
 		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")
@@ -45,28 +48,29 @@ block content
 				img#imgC(src=images.c.sm alt="" class="w3-image team-image-sm")
 			else 
 				img#imgC(alt="" class="w3-image team-image-sm")
-	form#imageform(action="javascript:void(0)" method="post")
-		//-Image inputs
-		input#imageMain(type="file" class="image-input" index="0" name="imageMain")
-		input#imageA(type="file" class="image-input" index="1" name="imageA")
-		input#imageB(type="file" class="image-input" index="2" name="imageB")
-		input#imageC(type="file" class="image-input" index="3" name="imageC")
-		//-Hidden inputs that contain uploadURL (upload.scoutradioz.com/app/image) and event year
-		input(type="hidden" name="uploadURL" value=uploadURL)
-		input(type="hidden" name="year" value=event_year)
-		input(type="hidden" name="org_key" value=user.org_key)
-		input(type="hidden" name="team_key" value=key)
-		input(type="hidden" name="user" value=user._id)
-		//-The buttons are actually labels for each image input
-		div(class="w3-container w3-padding")
-			label#uploadMain(for="imageMain" class="w3-btn theme-submit")!=msg('scouting.upload.main')
-		div(class="w3-container")
-			div(class="w3-padding w3-show-inline-block")
-				label#uploadA(for="imageA" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 1})
-			div(class="w3-padding w3-show-inline-block")
-				label#uploadB(for="imageB" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 2})
-			div(class="w3-padding w3-show-inline-block")
-				label#uploadC(for="imageC" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 3})
+	if !practice 
+		form#imageform(action="javascript:void(0)" method="post")
+			//-Image inputs
+			input#imageMain(type="file" class="image-input" index="0" name="imageMain")
+			input#imageA(type="file" class="image-input" index="1" name="imageA")
+			input#imageB(type="file" class="image-input" index="2" name="imageB")
+			input#imageC(type="file" class="image-input" index="3" name="imageC")
+			//-Hidden inputs that contain uploadURL (upload.scoutradioz.com/app/image) and event year
+			input(type="hidden" name="uploadURL" value=uploadURL)
+			input(type="hidden" name="year" value=event_year)
+			input(type="hidden" name="org_key" value=user.org_key)
+			input(type="hidden" name="team_key" value=key)
+			input(type="hidden" name="user" value=user._id)
+			//-The buttons are actually labels for each image input
+			div(class="w3-container w3-padding")
+				label#uploadMain(for="imageMain" class="w3-btn theme-submit")!=msg('scouting.upload.main')
+			div(class="w3-container")
+				div(class="w3-padding w3-show-inline-block")
+					label#uploadA(for="imageA" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 1})
+				div(class="w3-padding w3-show-inline-block")
+					label#uploadB(for="imageB" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 2})
+				div(class="w3-padding w3-show-inline-block")
+					label#uploadC(for="imageC" class="w3-btn theme-submit")!=msg('scouting.upload.small', {n: 3})
 	//- Preprocess images: Temporarily disabled
 	div(class="w3-container w3-hide")
 		input(type="checkbox" name="chkPreprocess" id="chkPreprocess" class="w3-check")

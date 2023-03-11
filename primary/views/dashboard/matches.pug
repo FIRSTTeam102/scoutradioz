@@ -8,6 +8,8 @@ extends ../layout
 block content
 	if matches.length === 0
 		+noDataFound("There are no match scouting assignments in the system now", "Please check back later")
+		a(href="/scouting/practice-match")
+			div(class="theme-link w3-btn gear-btn")!=msg('dashboard.practiceMatch')
 	else
 		h3(class="theme-text w3-margin-bottom")!=msg('scouting.match')
 		div(class="w3-col w3-container")

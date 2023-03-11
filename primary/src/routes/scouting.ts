@@ -12,6 +12,51 @@ import { ObjectId } from 'mongodb';
 const router = express.Router();
 const logger = getLogger('scouting');
 
+// Allow non scouters to open the practice pages
+router.get('/practice-match', wrap(async (req, res) => {
+	
+	let event_year = req.event.year;
+	if (event_year === -1) event_year = new Date().getFullYear(); // if no event is specified, just grab the current year 
+	const org_key = req._user.org_key;
+	
+	let layout = await utilities.find('layout', 
+		{org_key: org_key, year: event_year, form_type: 'matchscouting'}, 
+		{sort: {'order': 1}},
+		{allowCache: true}
+	);
+	
+	res.render('./scouting/match', {
+		title: req.msg('scouting.match'),
+		layout: layout,
+		practice: true,
+		alliance: 'blue',
+		teamKey: '___Practice team'
+	});
+}));
+
+router.get('/practice-pit', wrap(async (req, res) => {
+	
+	let event_year = req.event.year;
+	let org_key = req._user.org_key;
+		
+	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
+	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
+	let layout: Layout[] = await utilities.find('layout', 
+		{org_key: org_key, year: event_year, form_type: 'pitscouting'}, 
+		{sort: {'order': 1}},
+		{allowCache: true}
+	);
+	
+	res.render('./scouting/pit', {
+		practice: true,
+		title: req.msg('scouting.pit'),
+		layout: layout, 
+		key: req.msg('scouting.practiceTeam'),
+		teamKey: '___' + req.msg('scouting.practiceTeam'), // resolveLabelTemplate cuts off the first 3 characters of teamKey
+	});
+	
+}));
+
 router.all('/*', wrap(async (req, res, next) => {
 	//Must remove from logger context to avoid unwanted persistent funcName.
 	logger.removeContext('funcName');
