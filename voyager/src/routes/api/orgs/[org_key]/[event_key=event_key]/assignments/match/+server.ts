@@ -14,10 +14,9 @@ export const GET: RequestHandler = async ({ url, params }) => {
 	const currentEvent = await utilities.findOne('events',
 		{ key: event_key },
 		{ },
-		{ allowCache: true, maxCacheAge: 300 }
+		{ }
 	);
 	
-	console.log(currentEvent);
 	if (!currentEvent) throw error(404, new Error(`Event ${event_key} not found`));
 	if (!currentEvent.team_keys || currentEvent.team_keys.length === 0) throw error(500, new Error(`Event ${event_key} list of teams is 0`));
 	

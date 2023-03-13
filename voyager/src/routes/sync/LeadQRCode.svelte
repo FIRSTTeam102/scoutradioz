@@ -1,28 +1,52 @@
-<script lang='ts'>
+<script lang="ts">
+	import { encodeMatchScouting } from '$lib/compression';
+	import db, { type MatchScoutingLocal } from '$lib/localDB';
+	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
+	import { event_key, org_key } from '$lib/stores';
 	import Paper from '@smui/paper';
+	import Select, { Option } from '@smui/select';
+	import { liveQuery } from 'dexie';
 	import QRCode from 'qrcode';
 	import { onMount } from 'svelte';
-	import x from 'zlib';
-	
+
 	let canvas: HTMLCanvasElement;
 	
-	onMount(() => {
-		QRCode.toCanvas(canvas, 'laofdjadsklvcja dslkfja ldksfjasdlfkjha sdlkjfha dslkfjha sldkjfha lsdkjfha lksdjfh alsdkjfh alsdkjhf asdlkjfhalskdjhfalksdjhfaldksjfh alksdjhflkajh ajdflkajs dfklaj dsklfja dktslfjlakdshflakdjhflkjahdsflkjahdflkjahdsfljah dsflkjahds flkjahdlfkjhadslkfjhadflkjhadlfbjhadlfkjhadblskfjhabdlskjfhalbdjhfalbdjshflbadjshflbkadsjhflbajkdhfbljashdfjbahsdjkfhadsjhfjkasdhfjkdhsjkfhadkjfha jdskhf kjahds jfk hkdjshf kjah laofdjadsklvcja dslkfja ldksfjasdlfkjha sdlkjfha dslkfjha sldkjfha lsdkjfha lksdjfh alsdkjfh alsdkjhf asdlkjfhalskdjhfalksdjhfaldksjfh alksdjhflkajh ajdflkajs dfklaj dsklfja dktslfjlakdshflakdjhflkjahdsflkjahdflkjahdsfljah dsflkjahds flkjahdlfkjhadslkfjhadflkjhadlfbjhadlfkjhadblskfjhabdlskjfhalbdjhfalbdjshflbadjshflbkadsjhflbajkdhfbljashdfjbahsdjkfhadsjhfjkasdhfjkdhsjkfhadkjfha jdskhf kjahds jfk hkdjshf kjah laofdjadsklvcja dslkfja ldksfjasdlfkjha sdlkjfha dslkfjha sldkjfha lsdkjfha lksdjfh alsdkjfh alsdkjhf asdlkjfhalskdjhfalksdjhfaldksjfh alksdjhflkajh ajdflkajs dfklaj dsklfja dktslfjlakdshflakdjhflkjahdsflkjahdflkjahdsfljah dsflkjahds flkjahdlfkjhadslkfjhadflkjhadlfbjhadlfkjhadblskfjhabdlskjfhalbdjhfalbdjshflbadjshflbkadsjhflbajkdhfbljashdfjbahsdjkfhadsjhfjkasdhfjkdhsjkfhadkjfha jdskhf kjahds jfk hkdjshf kjah laofdjadsklvcja dslkfja ldksfjasdlfkjha sdlkjfha dslkfjha sldkjfha lsdkjfha lksdjfh alsdkjfh alsdkjhf asdlkjfhalskdjhfalksdjhfaldksjfh alksdjhflkajh ajdflkajs dfklaj dsklfja dktslfjlakdshflakdjhflkjahdsflkjahdflkjahdsfljah dsflkjahds flkjahdlfkjhadslkfjhadflkjhadlfbjhadlfkjhadblskfjhabdlskjfhalbdjhfalbdjshflbadjshflbkadsjhflbajkdhfbljashdfjbahsdjkfhadsjhfjkasdhfjkdhsjkfhadkjfha jdskhf kjahds jfk hkdjshf kjah image.pngimage.png', {
-			errorCorrectionLevel: 'low'
-		}, function (err) {
-			if (err) console.error(err);
-			// else console.log('success');
-		})
+	let snackbar: SimpleSnackbar;
+	
+	onMount(async () => {
+		// console.log(lzma);
+		db.matchscouting
+			.where({
+				event_key: $event_key,
+				org_key: $org_key
+			})
+			.limit(60)
+			.sortBy('time')
+			.then(async (data) => {
+				console.log('Compressing data')
+				let byteArray = await encodeMatchScouting(data);
+				console.log('Creating canvas')
+				QRCode.toCanvas(
+					canvas,
+					[{data: byteArray, mode: 'byte'}],
+					{
+						errorCorrectionLevel: 'medium'
+					},
+					function (err) {
+						if (err) snackbar.error(JSON.stringify(err));
+					}
+				);
+			});
 	});
 </script>
 
-<Paper>
-	This is the Scouting Lead Sync page!
-</Paper>
+<section class="pad">
+	<canvas bind:this={canvas} />
+</section>
 
-<canvas bind:this={canvas}/>
+<SimpleSnackbar bind:this={snackbar} />
 
-<style lang='scss'>
+<style lang="scss">
 	canvas {
 		// i'll do something more fancy later
 		margin: auto;
