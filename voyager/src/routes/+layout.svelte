@@ -95,6 +95,12 @@
 				<LGraphic class="material-icons" aria-hidden="true">sync</LGraphic>
 				<LText>Sync</LText>
 			</LItem>
+			
+			<LSeparator />
+			<LItem href="/debug">
+				<LGraphic class="material-icons" aria-hidden="true">bug_report</LGraphic>
+				<LText>Debug</LText>
+			</LItem>
 		</List>
 	</DContent>
 </Drawer>
