@@ -6,7 +6,8 @@ import { json } from '@sveltejs/kit';
 export const GET: RequestHandler = async ({ params }) => {
 
 	const users: LightUser[] = await utilities.find('users', {
-		org_key: params.org_key
+		org_key: params.org_key,
+		visible: true,
 	}, {
 		projection: {
 			_id: 1,

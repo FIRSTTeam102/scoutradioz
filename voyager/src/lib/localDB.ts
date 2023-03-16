@@ -17,6 +17,7 @@ export interface LightUser {
 
 export interface LightMatchAllianceInfo {
 	team_keys: TeamKey[];
+	score: number;
 }
 
 export interface LightMatch {
@@ -48,6 +49,16 @@ export type MatchScoutingLocal = Omit<MatchScouting, '_id'|'assigned_scorer'|'ac
 	actual_scorer?: ScouterRecordLocal;
 }
 
+export interface TeamLocal {
+	city: string|null;
+	country: string|null;
+	key: TeamKey;
+	name: string;
+	nickname: string;
+	state_prov: string|null;
+	team_number: number;
+}
+
 /**
  * Svelte can't transmit ObjectIds from server to client, so they have to be transformed into strings.
  */
@@ -60,23 +71,23 @@ export class LocalDB extends Dexie {
 	lightusers!: Table<LightUser>;
 	lightmatches!: Table<LightMatch>;
 	// Schemas straight from the DB
-	events!: Table<WithStringDbId<Event>>;
-	layout!: Table<WithStringDbId<Layout>>;
+	events!: Table<str<Event>>;
+	layout!: Table<str<Layout>>;
 	matchscouting!: Table<MatchScoutingLocal>;
-	pitscouting!: Table<WithStringDbId<PitScouting>>;
-	teams!: Table<WithStringDbId<Team>>;
-	orgs!: Table<WithStringDbId<Org>>;
+	pitscouting!: Table<str<PitScouting>>;
+	teams!: Table<TeamLocal>;
+	orgs!: Table<str<Org>>;
 	
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(9).stores({
+		this.version(12).stores({
 			lightusers: '&_id, org_key, name, role_key, event_info.present, event_info.assigned',
-			lightmatches: '&key, time',
+			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score',
 			
 			events: '&_id, &key, year',
 			layout: '&_id, [org_key+year+form_type]',
-			matchscouting: '&_id, &match_team_key, [org_key+event_key], team_key, year, time',
-			pitscouting: '&_id, [org_key+event_key], [org_key+event_key+team_key], primary.id, secondary.id, tertiary.id',
+			matchscouting: '&match_team_key, [org_key+event_key], team_key, year, time',
+			pitscouting: '&[org_key+event_key+team_key], [org_key+event_key], primary.id, secondary.id, tertiary.id',
 			teams: '&_id, &key, team_number',
 			orgs: '&_id, &org_key',
 		});

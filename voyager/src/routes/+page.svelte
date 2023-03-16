@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Team } from 'scoutradioz-types';
-	import { fetchJSON } from '$lib/fetcher';
+	import { fetchJSON } from '$lib/utils';
 	import AwaitLoader from '$lib/AwaitLoader.svelte';
 	import Paper, { Title, Subtitle } from '@smui/paper';
 	

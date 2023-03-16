@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ url, params }) => {
 	let completed = url.searchParams.get('completed');
 	
 	let filter: FilterQueryTyped<Match> = {
-		event_key: params.event_key
+		event_key: params.event_key,
 	};
 	
 	if (earliestTimestamp) {
@@ -37,7 +37,21 @@ export const GET: RequestHandler = async ({ url, params }) => {
 		}
 	}
 	
-	const matches = await utilities.find('matches', filter, {sort: {time: 1}});
+	const matches = await utilities.find('matches', filter, {
+		sort: {time: 1},
+		projection: {
+			key: 1,
+			event_key: 1,
+			comp_level: 1,
+			set_number: 1,
+			match_number: 1,
+			'alliances.red.team_keys': 1,
+			'alliances.red.score': 1,
+			'alliances.blue.team_keys': 1,
+			'alliances.blue.score': 1,
+			time: 1,
+		}
+	});
 	
 	return json(matches);
 };
