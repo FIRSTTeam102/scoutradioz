@@ -70,6 +70,7 @@ export class LocalDB extends Dexie {
 	// Lightweight schemas that contain only the info necessary to transmit via QR code
 	lightusers!: Table<LightUser>;
 	lightmatches!: Table<LightMatch>;
+	user!: Table<LightUser>;
 	// Schemas straight from the DB
 	events!: Table<str<Event>>;
 	layout!: Table<str<Layout>>;
@@ -80,9 +81,10 @@ export class LocalDB extends Dexie {
 	
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(12).stores({
+		this.version(13).stores({
 			lightusers: '&_id, org_key, name, role_key, event_info.present, event_info.assigned',
 			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score',
+			user: '&_id',
 			
 			events: '&_id, &key, year',
 			layout: '&_id, [org_key+year+form_type]',
