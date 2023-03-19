@@ -76,9 +76,11 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	if (!team) throw new e.UserError(req.msg('scouting.invalidTeam', {team: teamKey}));
 
+	let title = `#${scoringdata[0]?.match_number} - ${teamKey.substring(3)} ${alliance} | ${req.msg('scouting.match')}`;
+
 	//render page
 	res.render('./scouting/match', {
-		title: req.msg('scouting.match'),
+		title,
 		layout: layout,
 		key: match_team_key,
 		alliance: alliance,
