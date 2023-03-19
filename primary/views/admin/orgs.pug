@@ -29,7 +29,7 @@ block content
 					div(class="w3-col s6 m3 w3-padding-small")
 						input(type="text" class="theme-input" name="nickname" value=org.nickname)
 					div(class="w3-col s6 m2 w3-padding-small")
-						input(type="text" class="theme-input" name="team_key" value=(org.team_keys ? org.team_keys.join(', ') : org.team_key) placeholder="Team key OR keys (comma separated)")
+						input(type="text" class="theme-input" name="team_key" value=org.team_keys.join(', ') placeholder="Team key OR keys (comma separated)")
 					div(class=`w3-col s6 m3 w3-padding-small`)
 						input(type="text" class="theme-input" name="default_password" placeholder="Reset default password?")
 					div(class="w3-col m2 w3-padding-small")

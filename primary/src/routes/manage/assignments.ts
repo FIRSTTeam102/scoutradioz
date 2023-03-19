@@ -969,7 +969,7 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	// Pull 'active team key' from DB
 	let thisOrg = await utilities.findOne('orgs', {'org_key': org_key});
 	// Get a list of all the active team keys in this org. Usually only 1 long, sometimes multiple, should never be 0 long but accounting for it just in case.
-	let activeTeamKeys = (thisOrg.team_key ? [thisOrg.team_key] : thisOrg.team_keys) || [];
+	let activeTeamKeys = (thisOrg.team_keys) || [];
 	
 	//
 	// Get the current set of already-assigned pairs; make a map of {"id": {"prim", "seco", "tert"}}

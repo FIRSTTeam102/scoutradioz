@@ -35,10 +35,8 @@ declare namespace Express {
 		org: {
 			org_key: string;
 			nickname: string;
-			team_number?: number;
-			team_numbers?: number[];
-			team_key?: string;
-			team_keys?: string[];
+			team_numbers: number[];
+			team_keys: string[];
 			default_password: string;
 			config: {
 				members: {

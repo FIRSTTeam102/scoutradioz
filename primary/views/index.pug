@@ -86,8 +86,7 @@ block content
 				each org, i in orgs
 					div.w3-padding 
 						- let orglabel = org.nickname;
-						- if (org.team_numbers) { orglabel = org.team_numbers.join(' & ') + ' - ' + org.nickname }
-						- else if (org.team_number) orglabel = org.team_number + ' - ' + org.nickname;
+						- if (org.team_numbers.length > 0) { orglabel = org.team_numbers.join(' & ') + ' - ' + org.nickname }
 						h4= orglabel
 						if org.event_label
 							p.theme-text-secondary @ #{org.event_label}

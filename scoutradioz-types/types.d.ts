@@ -267,10 +267,8 @@ export declare interface MatchScouting extends DbDocument {
 export declare interface Org extends DbDocument {
 	org_key: OrgKey;
 	nickname: string;
-	team_number?: integer;
-	team_numbers?: integer[];
-	team_key?: TeamKey;
-	team_keys?: TeamKey[];
+	team_numbers: integer[];
+	team_keys: TeamKey[];
 	default_password: string;
 	config: {
 		members: {

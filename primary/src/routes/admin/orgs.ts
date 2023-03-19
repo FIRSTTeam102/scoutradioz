@@ -233,11 +233,31 @@ router.post('/create', wrap(async (req, res) => {
 	// Hash the new default password
 	const newPassword = await bcrypt.hash(default_password, 10);
 	
+	let fixedTeamKeys = [];
+	let teamNumbers = [];
+	//If a team key is specified
+	if (teamKeyOrKeys) {
+		// 2023-03-19 JL: Always set team_keys and team_numbers even if only one was provided
+		let teamKeys = teamKeyOrKeys.split(',');
+		for (let key of teamKeys) {
+			key = key.trim();
+			if (!key.startsWith('frc')) throw new e.UserError('Team key is invalid.');
+				
+			let team = await utilities.findOne('teams', {key: key});
+			if (!team) throw new e.UserError(`Team ${key} could not be found`);
+				
+			teamNumbers.push(team.team_number);
+			fixedTeamKeys.push(key);
+		}
+	}
+	
 	// New object to insert into db.orgs
 	const newOrg: Org = {
 		org_key: org_key,
 		nickname: nickname,
 		default_password: newPassword,
+		team_keys: fixedTeamKeys,
+		team_numbers: teamNumbers,
 		config: {
 			members: {
 				subteams: defaultSubteams,
@@ -247,38 +267,6 @@ router.post('/create', wrap(async (req, res) => {
 		},
 		event_key: null,
 	};
-	
-	//If a team key is specified
-	if (teamKeyOrKeys) {
-		// If it's a comma separated list, then set team_keys instead of team_key
-		if (teamKeyOrKeys.includes(',')) {
-			let teamKeys = teamKeyOrKeys.split(',');
-			let fixedTeamKeys = [];
-			let teamNumbers = [];
-			for (let key of teamKeys) {
-				key = key.trim();
-				if (!key.startsWith('frc')) throw new e.UserError('Team key is invalid.');
-				
-				let team = await utilities.findOne('teams', {key: key});
-				if (!team) throw new e.UserError(`Team ${key} could not be found`);
-				
-				teamNumbers.push(team.team_number);
-				fixedTeamKeys.push(key);
-			}
-			newOrg.team_keys = fixedTeamKeys;
-			newOrg.team_numbers = teamNumbers;
-		}
-		else {
-			let teamKey = teamKeyOrKeys.trim();
-			if (!teamKey.startsWith('frc')) return res.send({status: 400, message: 'Team key is invalid.'});
-			
-			let team = await utilities.findOne('teams', {key: teamKey});
-			if (!team) return res.send({status: 400, message: `Team ${teamKey} could not be found`});
-			
-			newOrg.team_key = teamKey;
-			newOrg.team_number = team.team_number;
-		}
-	}
 	
 	// New default users to create
 	// default_user is the one that everyone logs in to when they select an org

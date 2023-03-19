@@ -36,8 +36,9 @@ router.get('/driveteam', wrap(async (req, res) => {
 	if (typeof req.query.team_key === 'string' && !req.query.all) {
 		teamKey = req.query.team_key;
 	}
-	else if (thisUser.org.team_key && !req.query.all) {
-		teamKey = thisUser.org.team_key;
+	// 2023-03-19 JL: While we support multiple team_keys in the same scouting collective, I'm just gonna make the scouting dashboard display the first team by default for now
+	else if (thisUser.org.team_keys[0] && !req.query.all) {
+		teamKey = thisUser.org.team_keys[0];
 	}
 	else {
 		teamKey = 'all';
