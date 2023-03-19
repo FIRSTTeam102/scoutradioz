@@ -50,12 +50,15 @@ $(function () {
 	let ticking = false;
 	$(window).on('scroll', () => {
 		if (!ticking) {
-			requestAnimationFrame(() => {
-				handleScroll();
-				ticking = false;
-			});
+			// 2023-03-19 JL: Added a delay to scroll calculations to save on performance
+			setTimeout(() => {
+				requestAnimationFrame(() => {
+					handleScroll();
+					ticking = false;
+				});
+			}, 50);
+			ticking = true;
 		}
-		ticking = true;
 	});
 	
 			
