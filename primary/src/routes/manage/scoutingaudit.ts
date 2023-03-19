@@ -135,10 +135,11 @@ router.get('/', wrap(async (req, res) =>  {
 					auditElement.actual_scorer = thisScoreData.actual_scorer?.name; // 2022-11-11 JL: ScouterRecord.name
 				}		
 			}
+			else if (thisScoreData.data) {
+				logger.warn(`actual_scorer undefined while data is defined!! match_team_key=${thisScoreData.match_team_key} org_key=${org_key}`);
+				auditElementChar = '???';
+			}
 			else{
-				if (!thisScoreData.actual_scorer) {
-					logger.warn(`actual_scorer undefined while data is defined!! match_team_key=${thisScoreData.match_team_key} org_key=${org_key}`);
-				}
 				auditElementChar = 'N';
 			}
 			
