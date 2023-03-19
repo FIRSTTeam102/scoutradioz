@@ -83,7 +83,7 @@ router.get('/rankings', wrap(async (req, res) => {
 
 	res.render('./reports/rankings', {
 		title: res.msg('reports.currentRankings.titleShort'),
-		rankings: rankings
+		rankings,
 	});
 }));
 
@@ -106,8 +106,8 @@ router.get('/finishedmatches', wrap(async (req, res) => {
 	//logger.debug('matches=' + JSON.stringify(matches));
 	res.render('./reports/finishedmatches', {
 		title: res.msg('reports.completedMatches'),
-		matches: matches,
-		rankingPoints: rankingPoints
+		matches,
+		rankingPoints,
 	});
 }));
 
@@ -133,9 +133,9 @@ router.get('/upcoming', wrap(async (req, res) => {
 	//	+ renamed team to teamKey
 	res.render('./reports/upcoming', {
 		title: res.msg('reports.upcomingMatches'),
-		matches: matches,
-		teamRanks: teamRanks,
-		teamKey: teamKey
+		matches,
+		teamRanks,
+		teamKey,
 	});
 }));
 
@@ -346,19 +346,19 @@ router.get('/teamintel', wrap(async (req, res) => {
 	
 	res.render('./reports/teamintel', {
 		title: res.msg('reports.teamIntel.title', {team: teamKey.substring(3)}),
-		team: team,
-		ranking: ranking,
+		team,
+		ranking,
 		data: pitData,
 		data1: pitData1,
-		layout: layout,
-		scorelayout: scorelayout,
+		layout,
+		scorelayout,
 		aggdata: aggTable,
-		currentAggRanges: currentAggRanges,
-		matches: matches,
-		matchDataHelper: matchDataHelper,
-		images: images,
-		rankingPoints: rankingPoints,
-		expandSection: expandSection
+		currentAggRanges,
+		matches,
+		matchDataHelper,
+		images,
+		rankingPoints,
+		expandSection,
 	});
 }));
 
@@ -548,12 +548,12 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 
 	res.render('./reports/teamintelhistory', {
 		title: res.msg('reports.teamIntel.titleHistory', {team: teamKey.substring(3)}),
-		team: team,
-		scorelayout: scorelayout,
+		team,
+		scorelayout,
 		aggdata: aggTable,
-		matches: matches,
+		matches,
 		year: eventYear,
-		rankingPoints: rankingPoints,
+		rankingPoints,
 		events: eventInfos,
 	});
 }));
@@ -576,7 +576,8 @@ router.get('/matchintel', wrap(async (req, res) => {
 	//logger.debug('match=' + JSON.stringify(match));
 	res.render('./reports/matchintel', {
 		title: res.msg('reports.matchIntel.title', {match: matchKey.substring(matchKey.indexOf('qm')+2)}),
-		match: match
+		match,
+		matchDataHelper,
 	});
 }));
 
@@ -633,11 +634,11 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 	//logger.debug('teammatch=' + JSON.stringify(teammatch));
 	res.render('./reports/teammatchintel', {
 		title: res.msg('reports.teamMatchIntel.title', {matchType, match: matchNum, team: teamNum}),
-		layout: layout,
-		data: data,
-		teammatch: teammatch,
+		layout,
+		data,
+		teammatch,
 		teamKey: matchTeamKey.split('_')[2],
-		matchDataHelper: matchDataHelper
+		matchDataHelper,
 	});
 }));
 
@@ -661,17 +662,17 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 	let avgTable = allianceStatsData.avgTable;
 	let maxTable = allianceStatsData.maxTable;
 	// var avgNorms = allianceStatsData.avgNorms;
-	let maxNorms = allianceStatsData.maxNorms;
+	let maxnorms = allianceStatsData.maxNorms;
 
 	res.render('./reports/alliancestats', {
 		title: res.msg('reports.allianceStats'),
-		teams: teams,
-		teamList: teamList,
-		currentAggRanges: currentAggRanges,
+		teams,
+		teamList,
+		currentAggRanges,
 		avgdata: avgTable,
 		maxdata: maxTable,
 		// avgnorms: avgNorms, 2022-03-18 JL: avgNorms not used on alliancestats page; Modifying the way it calculates the norms for the spider chart on drive team dashboard
-		maxnorms: maxNorms
+		maxnorms,
 	});
 }));
 
@@ -722,10 +723,10 @@ router.get('/teamdata', wrap(async (req, res) =>  {
 	res.render('./reports/teamdata', {
 		title: res.msg('reports.matchDataForShort', {team: teamKey.substring(3)}),
 		layout: scoreLayout,
-		currentAggRanges: currentAggRanges,
-		matches: matches,
-		team: team,
-		matchDataHelper: matchDataHelper
+		currentAggRanges,
+		matches,
+		team,
+		matchDataHelper,
 	});
 }));
 
@@ -768,11 +769,11 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	
 	res.render('./reports/matchdata', {
 		title: res.msg('reports.matchDataShort'),
-		scoreLayout: scoreLayout,
-		currentAggRanges: currentAggRanges,
-		matches: matches,
-		match: match,
-		matchDataHelper: matchDataHelper
+		scoreLayout,
+		currentAggRanges,
+		matches,
+		match,
+		matchDataHelper,
 	});
 }));
 
@@ -921,8 +922,8 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	res.render('./reports/matchmetrics', {
 		title: res.msg('reports.upcomingMatchMetrics'),
 		aggdata: aggTable,
-		currentAggRanges: currentAggRanges,
-		match: match
+		currentAggRanges,
+		match,
 	});
 }));
 
@@ -1057,7 +1058,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	
 	res.render('./reports/metricsranked', {
 		title: res.msg('reports.rankedTitle'),
-		currentAggRanges: currentAggRanges,
+		currentAggRanges,
 		aggdata: aggTable
 	});
 }));
@@ -1149,7 +1150,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	
 	res.render('./reports/metrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
-		currentAggRanges: currentAggRanges,
+		currentAggRanges,
 		aggdata: aggTable
 	});
 }));
@@ -1246,8 +1247,8 @@ router.get('/metricintel', wrap(async (req, res) => {
 	
 	res.render('./reports/metricintel', {
 		title: res.msg('reports.intel', {type: metricKey}),
-		aggdata: aggdata,
-		currentAggRanges: currentAggRanges,
+		aggdata,
+		currentAggRanges,
 		key: metricKey
 	});
 }));
@@ -1380,9 +1381,9 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	res.render('./reports/allteammetrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
 		aggdata: aggArray,
-		currentAggRanges: currentAggRanges,
+		currentAggRanges,
 		layout: scorelayout,
-		matchDataHelper: matchDataHelper
+		matchDataHelper,
 	});
 }));
 
