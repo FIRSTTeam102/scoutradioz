@@ -73,25 +73,25 @@ block content
 					include templates/formSpacer
 	br 
 	button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit")!=msg('scouting.submit')
-	//- if user && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
-	//- 	hr 
-	//- 	p!=msg('scouting.orgManagerActions')
-	//- 	div(class="w3-btn theme-submit theme-red" id="btnClearData")!=msg('scouting.clearData')
-	//- 	script.
-	//- 		$('#btnClearData').on('click', async () => {
-	//- 			let result = await PasswordPrompt.show(!{msgJs('scouting.clearDataConfirm')});
-	//- 			if (result.cancelled == false) {
-	//- 				$.post('/scouting/match/delete-data', {password: result.password, match_team_key: '#{key}'})
-	//- 					.done(result => {
-	//- 						if (result.success) {
-	//- 							NotificationCard.good(result.message);
-	//- 						}
-	//- 						else {
-	//- 							NotificationCard.error(result.message);
-	//- 						}
-	//- 					});
-	//- 			}
-	//- 		});
+	if user && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
+		hr 
+		p!=msg('scouting.orgManagerActions')
+		div(class="w3-btn theme-submit theme-red" id="btnClearData")!=msg('scouting.clearData')
+		script.
+			$('#btnClearData').on('click', async () => {
+				let result = await PasswordPrompt.show(!{msgJs('scouting.clearDataConfirm')});
+				if (result.cancelled == false) {
+					$.post('/scouting/match/delete-data', {password: result.password, match_team_key: '#{key}'})
+						.done(result => {
+							if (result.success) {
+								NotificationCard.good(result.message);
+							}
+							else {
+								NotificationCard.error(result.message);
+							}
+						});
+				}
+			});
 	br 
 	br 
 	each element in layout
