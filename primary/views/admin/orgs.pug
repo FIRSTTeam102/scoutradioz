@@ -21,7 +21,7 @@ block content
 		h2 Manage organizations
 		each org in orgs
 			hr 
-			form(id=`updateOrg_${org.org_key}` method="post" action=isGlobalAdminPage ? "/admin/orgs" : "/manage/config")
+			form(id=`updateOrg_${org.org_key}` method="post" action="/admin/orgs")
 				div(class="w3-row")
 					div(class="w3-col s6 m1 w3-padding-small")
 						input(disabled type="text" class="theme-input w3-disabled" value=org.org_key)
