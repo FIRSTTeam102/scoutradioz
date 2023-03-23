@@ -13,9 +13,11 @@ passport.serializeUser(function(user, done) {
 });
 
 // Reads the session cookie to determine the user from a user ID
-passport.deserializeUser(async function(id: string, done) {
+passport.deserializeUser(async function(id: string|number, done) {
 	
 	logger.trace('deserializeUser: ' + id);
+	
+	if (typeof id === 'string') id = parseInt(id); // 2023-03-23 JL: number ids
 	
 	// JL note: Can't declare the type of this one because of the slight type differences between our extended express.User object (namespace-extensions.d.ts) and our regular User object in the DB
 	let user = await utilities.findOne<any>('users', { '_id': id }, {}, {allowCache: true});

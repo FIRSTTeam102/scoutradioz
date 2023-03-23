@@ -149,8 +149,10 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		});
 	}
 	
+	let userIDNum = parseInt(userID);
+	
 	//If no user is selected, send an alert message
-	if(typeof userID !== 'string'){
+	if(isNaN(userIDNum)){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
@@ -181,7 +183,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	
 	//Find user info that matches selected id
 	// 2023-1-8 JL note: Explicitly declaring it as 'any' because of the req.login not liking Express.User casting to Scoutradioz User
-	let user = await utilities.findOne<any>('users', {_id: new ObjectId(userID)});
+	let user = await utilities.findOne<any>('users', {_id: userIDNum});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
@@ -313,8 +315,10 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 		});
 	}
 	
+	let userIDNum = parseInt(userID);
+	
 	//If no user is selected, send an alert message
-	if(!userID){
+	if(isNaN(userIDNum)){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
@@ -343,7 +347,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	
 	//Find user info that matches selected id
 	// 2022-05-17 JL: Allowing this variable to be "any" because scoutradioz-types.User is not assignable to express.User (in req.logIn)
-	let user = await utilities.findOne<any>('users', {_id: userID});
+	let user = await utilities.findOne<any>('users', {_id: userIDNum});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user || !user.password){

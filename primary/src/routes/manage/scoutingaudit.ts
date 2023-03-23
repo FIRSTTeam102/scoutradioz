@@ -72,15 +72,15 @@ router.get('/', wrap(async (req, res) =>  {
 	
 	// Gets whether a user is a youth, for adult covering students
 	const scouterIsYouthMap: Dict<boolean> = {};
-	async function isYouth(scouterId: ObjectId) {
-		let scouterIdString = String(scouterId);
-		if (scouterIsYouthMap.hasOwnProperty(scouterIdString)) return scouterIsYouthMap[scouterIdString];
+	async function isYouth(scouterId: number) {
+		// let scouterIdString = String(scouterId);
+		if (scouterIsYouthMap.hasOwnProperty(scouterId)) return scouterIsYouthMap[scouterId];
 		const thisScouter = await utilities.findOne('users', {_id: scouterId}, {}, {allowCache: true});
 		assert(thisScouter, new e.InternalDatabaseError(`Could not find scouter with id ${scouterId}`));
 		for (let thisClass of req._user.org.config.members.classes) {
 			if (thisClass.class_key === thisScouter.org_info.class_key) {
-				scouterIsYouthMap[scouterIdString] = thisClass.youth;
-				return scouterIsYouthMap[scouterIdString];
+				scouterIsYouthMap[scouterId] = thisClass.youth;
+				return scouterIsYouthMap[scouterId];
 			}
 		}
 	}
@@ -113,7 +113,7 @@ router.get('/', wrap(async (req, res) =>  {
 			if (thisScoreData.data && thisScoreData.actual_scorer){
 				
 				
-				if (thisScoreData.assigned_scorer?.id.equals(thisScoreData.actual_scorer.id))
+				if (thisScoreData.assigned_scorer?.id === thisScoreData.actual_scorer.id)
 					auditElementChar = 'Y';
 				// 2018-03-22, M.O'C: Adding parent option
 				// 2022-11-02, M.O'C: Eliminating parent option

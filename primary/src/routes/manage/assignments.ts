@@ -183,14 +183,16 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
 	
-	const availableArray: ObjectId[] = []; // User IDs
+	const availableArray: number[] = []; // User IDs
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
 		const userId = user.split('|')[0];
 		const userName = user.split('|')[1]; // unused
 		logger.trace(`user: ${userId} | ${userName}`);
 		assert(userId && userName, 'Could not find both userId and userName');
-		availableArray.push(ObjectId.createFromHexString(userId));
+		const userIdNum = parseInt(userId);
+		assert(!isNaN(userIdNum), `User ID is NaN!! ${userId}`);
+		availableArray.push(userIdNum);
 	}
 	
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
@@ -413,7 +415,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	// 2022-11-10 JL: changed scoutArray to be a list of _ids and names
 	let scoutArray: ScouterRecord[] = [];  // the current set of scouts (gets regenerated every N matches)
 	let scoutAvailableMap: Dict<ScouterRecord> = {};  // pool of available scouts
-	let scoutAssignedList: string[] = []; // list of IDs of assigned scouters
+	let scoutAssignedList: number[] = []; // list of IDs of assigned scouters
 	
 	let redBlueToggle = 0;  // flips between 0 and 1, signals whether to allocate red alliance or blue alliance first
 	
@@ -504,7 +506,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 				let thisScout = teamScoutMap[property];
 				
 				// Save this scouter as being assigned
-				let thisScoutId = String(thisScout.id);
+				let thisScoutId = (thisScout.id);
 				if (!scoutAssignedList.includes(thisScoutId)) 
 					scoutAssignedList.push(thisScoutId);
 
@@ -523,7 +525,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	// lastly, mark assigned scouters as assigned
-	let scoutAssignedObjectIdList = scoutAssignedList.map(id => new ObjectId(id));
+	// let scoutAssignedObjectIdList = scoutAssignedList.map(id => new ObjectId(id));
 	
 	let writeResult = await utilities.bulkWrite('users', [
 		
@@ -536,7 +538,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// }, 
 		{
 			updateMany: {
-				filter: {_id: {$in: scoutAssignedObjectIdList}},
+				filter: {_id: {$in: scoutAssignedList}},
 				update: {$set: {'event_info.assigned': true}}
 			}
 		}
@@ -568,22 +570,22 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 	
 	// The javascript Object was JSON.stringify() on the client end; we need to re-hydrate it with JSON.parse()
 	let selectedMembers: {
-		member1: string,
-		member2?: string,
-		member3?: string
+		member1: number,
+		member2?: number,
+		member3?: number
 	} = JSON.parse(data);
 	
 	assert(selectedMembers.member1, 'Select at least one member.');
 	
 	logger.trace(`Selected members: ${data}`);
 	
-	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
+	let member1 = await utilities.findOne('users', {_id: selectedMembers.member1, org_key}); // JL: Temporary until i fix the most recent version of utilities
 	let member2;
 	if (selectedMembers.member2)
-		member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key});
+		member2 = await utilities.findOne('users', {_id: selectedMembers.member2, org_key});
 	let member3;
 	if (selectedMembers.member3)
-		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key});
+		member3 = await utilities.findOne('users', {_id: selectedMembers.member3, org_key});
 	
 	let idList = [member1._id]; // for bulkWrite operation
 	
@@ -978,7 +980,7 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	
 	// Iterate through scoutingpairs; create {1st: 2nd: 3rd:} and add to 'dict' keying off 1st <1, or 1/2 2/1, or 1/2/3 2/3/1 3/1/2>
 	let primaryAndBackupMap: Dict<PitScoutingSet> = {};
-	let scoutingAssignedArray: ObjectId[] = [];
+	let scoutingAssignedArray: number[] = [];
 	
 	for (let i in scoutingpairs) {
 		const thisPair = scoutingpairs[i];

@@ -38,7 +38,8 @@ declare global {
 	 * @example var teamKeyMap: Dict<Team> = {}; 
 	 * teamKeyMap['team0'] = teams[0];
 	 */
+	// 2023-03-23 JL: added number to the allowed index types, for convenience
 	interface Dict<T> {
-		[key: string]: T;
+		[key: string|number]: T;
 	}
 }

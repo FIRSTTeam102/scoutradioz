@@ -22,7 +22,7 @@ declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
 }
 
-// 2022-12-10 JL: Removed 'extends Document' and renamed to 'DocumentWithID' to:
+// 2022-12-10 JL: Removed 'extends Document' and renamed to 'DbDocument' to:
 // 	1. Allow our schemas to be modified via Omit (the fact that Document has [key: string]: any messes things up)
 // 	2. prevent confusion with the MongoDocument type exported from scoutradioz-utilities
 export declare interface DbDocument {
@@ -31,6 +31,13 @@ export declare interface DbDocument {
 	 */
 	_id?: ObjectId;
 }
+/** Document with an auto-incrementing number, for use in  */
+export declare interface DbDocumentWithNumberId {
+	/**
+	 * Numerical ID. (JL note: Utilities driver does the auto-incrementing)
+	 */
+	_id?: number;
+}
 
 /**
  * Optionally explicitly declare that a given object retrieved from the database has `_id` set.
@@ -38,9 +45,7 @@ export declare interface DbDocument {
  * 
  * 	let users: WithDbId<User>[] = await utilities.find('users', {});
  */
-export declare type WithDbId<T> = T & {
-	_id: ObjectId
-}
+export declare type WithDbId<T extends DbDocument|DbDocumentWithNumberId> = T & Required<Pick<T, '_id'>>
 
 /**
  * Contains the min, max, average, and variance for a given numerical metric from an org's match scouting form.
@@ -234,7 +239,7 @@ export declare interface ScouterRecord {
 	/**
 	 * {@link User}'s _id
 	 */
-	id: ObjectId;
+	id: number;
 	name: string;
 }
 
@@ -510,11 +515,11 @@ export declare interface Upload extends DbDocument {
 }
 
 /**
- * A user of a given org.
+ * A user of a given org. Uses a number for its ID instead of an ObjectID, to save space when transmitting QR codes.
  * @collection users
  * @interface User
  */
-export declare interface User extends DbDocument {
+export declare interface User extends DbDocumentWithNumberId{
 	org_key: OrgKey;
 	name: string;
 	role_key: RoleKey;
@@ -583,5 +588,3 @@ export declare type CollectionSchema<colName extends CollectionName> =
  * Gets the correct schema for the given collection name, with a guaranteed `_id` ObjectId.
  */
 export declare type CollectionSchemaWithId<colName extends CollectionName> = WithDbId<CollectionSchema<colName>>;
-
-declare let x: CollectionSchema<'layout'>;

@@ -147,7 +147,7 @@ router.post('/updateteamvalue', wrap(async (req, res) => {
 	
 	if (!team_key || !valueToAdd) throw new e.UserError('Provide a team_key and a value.');
 	
-	let currentTeamValue: OrgTeamValue = await utilities.findOne('orgteamvalues', {org_key: org_key, team_key: team_key, event_key: event_key});
+	let currentTeamValue = await utilities.findOne('orgteamvalues', {org_key: org_key, team_key: team_key, event_key: event_key});
 	
 	let newValue;
 	
