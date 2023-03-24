@@ -12,8 +12,10 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"update": "yarn upgrade --pattern 'scoutradioz*'",
 		"preview": "vite preview",
-		"prepare": "npm run smui-theme",
+		"prepare": "yarn sass-extras && yarn smui-theme",
+		"sass-extras": "sass src/theme/extras.scss static/extras.css --load-path=node_modules",
 		"smui-theme": "smui-theme compile static/smui.css -i src/theme",
 		"test": "playwright test",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -70,7 +72,7 @@
 	"dependencies": {
 		"dexie": "^3.2.3",
 		"dotenv": "^16.0.3",
-		"html5-qrcode": "^2.3.4",
+		"html5-qrcode": "2.3.7",
 		"log4js": "^6.7.1",
 		"mongodb": "4.13.0",
 		"qrcode": "^1.5.1",

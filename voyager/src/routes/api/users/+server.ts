@@ -2,12 +2,16 @@ import utilities from '$lib/server/utilities';
 // import type { User } from 'scoutradioz-types';
 import type { LightUser } from '$lib/localDB';
 import type { RequestHandler } from './$types';
+import { getStore, org_key } from '$lib/stores';
+import { json } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async ({ url }) => {
-	const org_key = url.searchParams.get('org_key');
-	const filter = org_key ? { org_key } : {};
+export const GET: RequestHandler = async ({ url, params }) => {
 
-	const users: LightUser[] = await utilities.find('users', filter, {
+	console.log(org_key, getStore(org_key));
+	
+	const users: LightUser[] = await utilities.find('users', {
+		org_key: getStore(org_key),
+	}, {
 		projection: {
 			_id: 1,
 			org_key: 1,
@@ -17,9 +21,5 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 	}, { allowCache: true });
 
-	return new Response(JSON.stringify(users), {
-		headers: {
-			'content-type': 'application/json'
-		}
-	});
+	return json(users);
 };

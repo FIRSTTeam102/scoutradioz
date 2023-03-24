@@ -37,7 +37,7 @@
 	
 	// We don
 	let lastDispatchTime = 0;
-	function onQrCodeData(decodedText: string) {
+	function onQrCodeData(decodedText: string, data: unknown) {
 		let now = Date.now();
 		if (now - lastDispatchTime > qrCodeDataDelay) {
 			dispatch('data', {
@@ -61,8 +61,8 @@
 				
 				if (scanning)
 					await stopCamera();
-				reader.setAttribute('width', `${windowWidth}px`);
-				reader.setAttribute('height', `${windowHeight}px`);
+				reader.setAttribute('width', `${windowWidth * 2}px`);
+				reader.setAttribute('height', `${windowHeight * 2}px`);
 				
 				startCamera();
 				resizeTicking = false;
@@ -73,21 +73,27 @@
 	const config: Html5QrcodeCameraScanConfig = {
 		fps: 20, // Optional, frame per seconds for qr code scanning
 		// qrbox: { width: 250, height: 250 }, // Optional, if you want bounded box UI
-		disableFlip: true,
+		disableFlip: false,
+		resolutionMultiple: 2,
 	}
 	
 	async function startCamera() {
 		if (html5QrCode && !scanning && enabled) {
 			console.log('Starting camera');
-			await html5QrCode.start(
-				{facingMode: 'environment'},
-				config,
-				onQrCodeData,
-				(errorMessage) => {
-					
-				}
-			)
-			scanning = true;
+			try {
+				await html5QrCode.start(
+					{facingMode: 'environment'},
+					config,
+					onQrCodeData,
+					(errorMessage) => {
+						// console.error(errorMessage)
+					}
+				);
+				scanning = true;
+			}
+			catch (err) {
+				console.error(err);
+			}
 		}
 	}
 	
@@ -102,13 +108,13 @@
 	onMount(() => {
 		document.addEventListener('visibilitychange', onVisibilityChanged);
 		
-		reader.setAttribute('width', '1000px');
-		reader.setAttribute('height', '1000px');
-		
+		reader.setAttribute('width', `${windowWidth * 2}px`);
+		reader.setAttribute('height', `${windowHeight * 2}px`);
+
 		html5QrCode = new Html5Qrcode('reader', {
 			formatsToSupport: [Formats.QR_CODE],
-			verbose: true,
-			// useBarCodeDetectorIfSupported: true,
+			verbose: false,
+			useBarCodeDetectorIfSupported: false,
 		});
 		
 		console.log('eee', html5QrCode);
@@ -124,10 +130,21 @@
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} on:resize={onResize}/>
 
-<div id="reader" bind:this={reader} />
+<div id="parent">
+	<!-- 2x width and height so we can scan at a higher resolution on mobile cameras -->
+	<!-- <div id="reader" bind:this={reader} style:width={windowWidth * 2 + 'px'} style:height={windowHeight * 2 + 'px'} />	 -->
+	<div id="reader" bind:this={reader} style:width={windowWidth + 'px'} style:height={windowHeight + 'px'} />	
+</div>
 
 <style lang="scss">
 	#reader {
 		max-width: 100%;
+		max-height: 100%;
+		// transform: scale(0.5) translate(-50%, -50%);
+		// position: absolute!important;
+	}
+	#parent {
+		position: relative;
+		width: 100%;
 	}
 </style>

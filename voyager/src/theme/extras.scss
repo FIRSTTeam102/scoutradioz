@@ -1,0 +1,53 @@
+// This file is for styles unrelated to Svelte Material UI
+@use "@material/typography/mdc-typography";
+// See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-snackbar
+@use '@material/snackbar/mixins';
+// See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-theme
+@use '@material/theme/color-palette';
+@use '@material/theme/theme-color';
+
+:root {
+	--font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;
+	--mdc-typography-font-family: var(--font-family);
+}
+
+body, html {
+	font-family: var(--font-family);
+}
+
+.smaller {
+	font-size: 0.875em;
+}
+
+section.pad {
+	padding: 16px 8px;
+}
+@media(max-width: 600px) {
+	section.pad {
+		padding: 8px 4px;
+	}
+}
+
+.mdc-snackbar.error {
+	@include mixins.fill-color(color-palette.$red-500);
+	@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$red-500));
+}
+
+// To specify a gap size, just use an inline style attribute
+.columns {
+	display: grid;
+	grid-template-columns: auto;
+	&.center {
+		place-items: center;
+	}
+}
+
+// To specify a gap size, just use an inline style attribute
+.rows {
+	display: grid;
+	grid-auto-flow: column;
+	
+	&.center {
+		place-items: center;
+	}
+}

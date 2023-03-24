@@ -6,3 +6,8 @@ declare module 'dexie' {
     subscribe(run: Subscriber<T>): Unsubscriber | Subscription;
   }
 }
+
+declare global {
+	type Dict<T> = {[key: string]: T}
+	type AnyDict = Dict<any>;
+}

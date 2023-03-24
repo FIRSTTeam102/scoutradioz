@@ -6,11 +6,13 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params }) => {
 	if (!['pit', 'match'].includes(params.type)) throw error(404, new Error('Invalid form type'));
+	
+	const form_type = (params.type + 'scouting') as 'pitscouting'|'matchscouting';
 
 	const layout: LayoutField[] = await utilities.find('layout', {
 		year: getStore(event_year),
 		org_key: getStore(org_key),
-		form_type: params.type + 'scouting',
+		form_type,
 		type: { $ne: 'derived' } // not needed for ui, might change later
 	}, {
 		sort: { order: 1 },

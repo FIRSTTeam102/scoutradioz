@@ -31,7 +31,7 @@
 						<Item class={asg.alliance} selected={asg.assigned_scorer === $user}>
 							<Text>
 								<PrimaryText>Team {asg.team_key.replace('frc', '')}: {asg.team_name}</PrimaryText>
-								<SecondaryText>Assigned to: {asg.assigned_scorer}</SecondaryText>
+								<SecondaryText>Assigned to: {asg.assigned_scorer?.name}</SecondaryText>
 							</Text>
 							<Meta>
 								<Button href={`/scouting/match/form?key=${asg.match_team_key}`}>

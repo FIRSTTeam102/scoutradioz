@@ -1,6 +1,4 @@
-// import adapter from '@sveltejs/adapter-auto';
 import adapter from '@yarbsemaj/adapter-lambda';
-// import adapter from '@sveltejs/adapter-node';
 import preprocess from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -13,18 +11,9 @@ const config = {
 
 	kit: {
 		adapter: adapter(),
-		paths: {
-			// assets: 'https://scoutradioz-voyager.s3.amazonaws.com'
-		},
 		serviceWorker: {
-			register: true
+			register: false
 		}
-	},
-	
-	package: {
-		// files: {
-		// 	assets: 'https://scoutradioz-voyager.s3.amazonaws.com',
-		// },
 	},
 };
 

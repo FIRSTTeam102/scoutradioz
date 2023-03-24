@@ -13,3 +13,20 @@ export function handleError({
 		stack: error.stack?.replace(/ {4}/g, '\t')
 	};
 }
+
+// JL: Without this, fetch calls won't be able to access error messages
+if (!('toJSON' in Error.prototype))
+	Object.defineProperty(Error.prototype, 'toJSON', {
+		value: function () {
+			let alt = {};
+
+			Object.getOwnPropertyNames(this).forEach(function (key) {
+				// @ts-ignore
+				alt[key] = this[key];
+			}, this);
+
+			return alt;
+		},
+		configurable: true,
+		writable: true
+	});

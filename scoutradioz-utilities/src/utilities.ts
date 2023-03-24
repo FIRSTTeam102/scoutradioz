@@ -18,17 +18,17 @@ const schemasWithNumberIds: CollectionName[] = ['users'];
 /**
  * Valid primitives for use in mongodb queries
  */
-type ValidQueryPrimitive = string|number|undefined|null|boolean|ObjectId;
+export type ValidQueryPrimitive = string|number|undefined|null|boolean|ObjectId;
 /**
  * Valid type for the `_id` field in a mongodb query
  */
 // 2023-03-23 JL: Made ValidID pick from the schema's declared type of its _id field
-type ValidID<T extends {_id?: ObjectId|number}, ThisIDType = Required<Pick<T, '_id'>>['_id']> = ThisIDType|string|FilterOps<ThisIDType>;
+export type ValidID<T extends {_id?: ObjectId|number}, ThisIDType = Required<Pick<T, '_id'>>['_id']> = ThisIDType|string|FilterOps<ThisIDType>;
 
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
-interface FilterOps<TValue> {
+export interface FilterOps<TValue> {
     $eq?: TValue;
     $gt?: TValue;
     $gte?: TValue;
@@ -66,11 +66,11 @@ interface FilterOps<TValue> {
     $rand?: Record<string, never>;
 }
 
-interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
+export interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
 	[key: string]: any;
 }
 
-interface FindOptionsWithProjection extends FindOptions {
+export interface FindOptionsWithProjection extends FindOptions {
 	projection: MongoDocument;
 }
 

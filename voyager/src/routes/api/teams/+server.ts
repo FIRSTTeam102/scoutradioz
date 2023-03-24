@@ -1,18 +1,21 @@
 import utilities from '$lib/server/utilities';
-import type { Team } from 'scoutradioz-types';
+import type { Team, TeamSimple } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
+import { json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ url }) => {
-	const org_key = url.searchParams.get('org_key');
-	const filter = org_key ? { org_key } : {};
 	
-	const teams: Team[] = await utilities.aggregate('teams', [
-		{$sample: {size: 20}}
-	]);
-
-	return new Response(JSON.stringify(teams), {
-		headers: {
-			'content-type': 'application/json'
+	const teams = await utilities.find('teams', {}, {
+		projection: {
+			city: 1,
+			country: 1,
+			key: 1,
+			name: 1,
+			nickname: 1,
+			state_prov: 1,
+			team_number: 1,
 		}
 	});
+	
+	return json(teams);
 };

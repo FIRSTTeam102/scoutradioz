@@ -1,62 +1,117 @@
+<!--
+	@component 
+	Tab bar that slickly slides between tabs. Each tab label must be unique, and each tab attaches a component that is imported.
+	 
+	Example usage:
+	
+		<script lang="ts">
+			import Scanner from '../Scanner.svelte';
+			import LeadQRCode from '../LeadQRCode.svelte';
+			import LeadSyncMothership from '../LeadSyncMothership.svelte';
+			import SlidingTabs from '$lib/SlidingTabs.svelte';
+			
+		</script>
+		
+		<SlidingTabs tabs={[
+			{label: 'Scan', component: Scanner},
+			{label: 'Show QR', component: LeadQRCode},
+			{label: 'Server', component: LeadSyncMothership},
+		]}
+		/>
+ -->
+
+
 <script lang="ts">
 	import Tab, { Label } from '@smui/tab';
 	import TabBar from '@smui/tab-bar';
+	import { onMount } from 'svelte';
+	import type { ComponentType } from 'svelte';
+	import {  } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 
 	export let tabs: SlidingTab[];
 
 	interface SlidingTab {
 		label: string;
-		component: any;
+		component: ComponentType;
 	}
 
 	let tabLabels = tabs.map((tab) => tab.label);
-	let activeTab = tabs[0].label;
-
-	let windowWidth: number;
+	let activeTab: string;
+	
+	onMount(() => {
+		// Default to first tab; otherwise, retrieve the tab from location.hash
+		let hash = parseInt(location.hash.substring(1));
+		if (hash && hash < tabs.length) {
+			activeTab = tabs[hash].label;
+		}
+		else { 
+			activeTab = tabs[0].label;
+		}
+	})
+	
 	let sliding = false;
 
 	let prevTabIndex = 0;
 
-	// positive or negative 1
-	let direction = -1;
+	let movingRight = true;
 
-	function handleTabChange(e: any) {
-		if (e.detail.index > prevTabIndex) {
-			direction = 1;
-		} else {
-			direction = -1;
-		}
+	function handleTabChange(e: {detail: {index: number}}) {
+		console.log('tabChange');
+		location.hash = String(e.detail.index);
+		movingRight = e.detail.index > prevTabIndex;
 		prevTabIndex = e.detail.index;
 	}
+	
+	const animationDuration = 300;
+	
+	function flyInTransition(node: Element) {
+		let direction = movingRight ? -1 : 1;
+		return fly(node, {
+			y: direction * 50,
+			duration: animationDuration
+		});
+	}
+	
+	function flyOutTransition(node: Element) {
+		let direction = movingRight ? 1 : -1;
+		return fly(node, {
+			y: direction * 50,
+			duration: animationDuration
+		});
+	}
+	
+	function tabLabelToHash(label: string) {
+		return label.toLowerCase().replace(/[ ]/g, '_');
+	}
 </script>
-
-<svelte:window bind:innerWidth={windowWidth} />
 
 <TabBar tabs={tabLabels} let:tab bind:active={activeTab} on:SMUITabBar:activated={handleTabChange}>
 	<Tab {tab}>
 		<Label>{tab}</Label>
 	</Tab>
 </TabBar>
-<div class="container">
+<div class="container" class:sliding>
 	{#each tabs as tab}
 		{#if activeTab === tab.label}
 			<div
-				transition:fly|local={{ x: direction * windowWidth, duration: 300 }}
-				on:introstart={() => (sliding = true)}
+				in:flyInTransition|local
+				out:flyOutTransition|local
+				on:introstart={() => {sliding = true}}
 				on:introend={() => (sliding = false)}
 				on:outrostart={() => (sliding = true)}
 				on:outroend={() => (sliding = false)}
+				class='child'
 				class:sliding
 			>
-				<svelte:component this={tab.component}/>
+				<svelte:component this={tab.component} />
 			</div>
 		{/if}
 	{/each}
 </div>
 
 <style lang="scss">
-	.sliding {
+	.child.sliding {
 		position: absolute;
 		width: 100%;
 		top: 0px;
@@ -70,5 +125,8 @@
 		min-height: 100%;
 		flex-grow: 10;
 		overflow-x: hidden;
+	}
+	.container.sliding {
+		overflow-y: hidden;
 	}
 </style>

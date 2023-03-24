@@ -12,9 +12,10 @@ export class HttpError extends Error {
 
 export async function fetchJSON<T = any>(url: string, options?: RequestInit): Promise<T> {
 	let response = await fetch(url, options);
+	
 	let json = await response.json();
 	if (response.ok)
 		return json;
 	else
-		throw new HttpError(response.status, response.statusText, json);
+		throw new HttpError(response.status, json['message'] || response.statusText);
 }
