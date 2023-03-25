@@ -179,11 +179,8 @@ router.get('/teamintel', wrap(async (req, res) => {
 		{ 'org_key': orgKey, 'event_key' : eventKey, 'team_key' : teamKey }
 	);
 	let pitData = null;
-	let pitData1 = null;
 	if (pitFind)
 		pitData = pitFind.data;
-	// if (pitFind.data1)
-	// 	pitData1 = pitFind.data1;
 	
 	// Pit data layout
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
@@ -336,7 +333,6 @@ router.get('/teamintel', wrap(async (req, res) => {
 	}
 	//logger.debug('aggTable=' + JSON.stringify(aggTable));
 	//logger.debug('pitData=' + JSON.stringify(pitData));
-	//logger.debug('pitData1=' + JSON.stringify(pitData1));
 
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
@@ -349,7 +345,6 @@ router.get('/teamintel', wrap(async (req, res) => {
 		team,
 		ranking,
 		data: pitData,
-		data1: pitData1,
 		layout,
 		scorelayout,
 		aggdata: aggTable,
@@ -544,7 +539,6 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 	//logger.debug('aggTable=' + JSON.stringify(aggTable));
 
 	//logger.debug('pitData=' + JSON.stringify(pitData));
-	//logger.debug('pitData1=' + JSON.stringify(pitData1));
 
 	res.render('./reports/teamintelhistory', {
 		title: res.msg('reports.teamIntel.titleHistory', {team: teamKey.substring(3)}),
