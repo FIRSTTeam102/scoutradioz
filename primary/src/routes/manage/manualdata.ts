@@ -4,6 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import e, { assert } from 'scoutradioz-http-errors';
+import { matchData as matchDataHelper } from 'scoutradioz-helpers';
 import type { Org, Event, Match, RankingPoints, Ranking } from 'scoutradioz-types';
 
 const router = express.Router();
@@ -306,6 +307,8 @@ router.post('/matchresults', wrap(async (req, res) => {
 	
 	let event_key = req.event.key;
 	const year = req.event.year;
+	let event_year = req.event.year;
+	let org_key = req._user.org_key;
 	
 	//Get list of matches from the database.
 	const matches: Match[] = await utilities.find('matches', {event_key}, {sort: {time: 1}});
@@ -592,6 +595,10 @@ router.post('/matchresults', wrap(async (req, res) => {
 	// Insert into DB
 	await utilities.insert('rankings', sortedRankArray);
 
+	// 2023-03-18, M.O'C: added
+	// call out to aggrange recalculator
+	await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
+	
 	//Redirect to updatematches page with success alert.
 	res.redirect('/manage/manualdata/matchresults?alert=Updated match data successfully.');
 }));

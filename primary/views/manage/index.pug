@@ -172,7 +172,7 @@ block content
 		async function fillSetEvent(value){
 			//- 2022-03-26 JL: Clicking on the header will now show a prompt & submit the form instead of just populating the key input
 			var eventName = $(`[event-name-for=${value}]`).text();
-			var result = await Confirm.show(!{msgJs("manage.event.confirmSetEvent", {eventName, orgName: org.nickname})});
+			var result = await Confirm.show(!{msgJs("manage.event.confirmSetEvent", {orgName: org.nickname})}.replace('{eventName}', eventName)); // JL: Jank, combining pug mixins with JS like this, but the .replace() seems to work
 			if (result.cancelled === false) {
 				$("#setEvent").val(value);
 				//- $("#setEvent").trigger('input');

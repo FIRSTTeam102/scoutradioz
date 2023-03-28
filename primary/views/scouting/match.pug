@@ -27,7 +27,7 @@ block content
 			transition: filter 0.2s, opacity 0.2s;
 		}
 		*/
-	script(src=`${fileRoot}/js/script-matchscouting.js?v=8`)
+	script(src=`${fileRoot}/js/script-matchscouting.js?v=${functionVersion}`)
 	- var titleParts = key.split('_').map(key => key.replace(/\D/g, '')); // 2022mrcmp_qm77_frc102 to ['2022', '77', '102']
 	- var btnColor = alliance ? ((alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
 	p
@@ -99,6 +99,7 @@ block content
 			when "checkbox"
 				include templates/scriptCheckbox
 	include templates/scriptSliders
+	div.sticky-bar-padder
 	div.sticky-bar.w3-card(id="stickyBar")
 		div(id="stickyBarLeft" class="sticky-bar-left no-select") 
 			if isIOS /* &#9664 and 9654 show up as emoji on ios */
@@ -115,4 +116,4 @@ block content
 	script.
 		window.headerList = JSON.parse('!{JSON.stringify(headerList)}');
 		window.isIOS = #{!!isIOS};
-		if (!window.stickyBarEnabled) $('.sticky-bar.header').hide();
+		if (!window.stickyBarEnabled) $('#stickyBar').hide();

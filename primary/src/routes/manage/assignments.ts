@@ -4,7 +4,7 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities, { MongoDocument } from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e, { assert } from 'scoutradioz-http-errors';
+import e, { assert, lightAssert } from 'scoutradioz-http-errors';
 import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, UserAgent, WithDbId} from 'scoutradioz-types';
 import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
 
@@ -137,6 +137,8 @@ router.get('/matches', wrap(async (req, res) => {
 		{'event_info.present': true, org_key: org_key, visible: true}, 
 		{sort: {'name': 1}}
 	);
+	
+	available.forEach(user => lightAssert(subteamsMap[user.org_info.subteam_key], `A user was found with a subteam_key "${user.org_info.subteam_key}", which does not exist in your org configuration. Please fix this by going to the Manage members page and ensuring all users have a valid subteam and class.`));
 	
 	// sort by subteam the same way as above
 	available.sort((a, b) => {

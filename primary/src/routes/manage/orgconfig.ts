@@ -36,23 +36,35 @@ router.get('/', wrap(async (req, res) => {
 router.post('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[post]');
 	
-	const orgKey = req.body.org_key;
+	const org_key = req.body.org_key;
 	const nickname = req.body.nickname;
 	
-	assert(orgKey === req._user.org.org_key, new e.UnauthorizedError(`Unauthorized to edit org ${orgKey}`));
+	assert(org_key === req._user.org.org_key, new e.UnauthorizedError(`Unauthorized to edit org ${org_key}`));
 	
-	logger.info(`Updating org ${orgKey}, nickname=${nickname}`);
+	logger.info(`Updating org ${org_key}, nickname=${nickname}`);
 	
-	let subteams, classes;
+	let subteams, classes, uniqueClassKeys, uniqueSubteamKeys;
 	try {
 		let ret = getSubteamsAndClasses(req.body);
 		subteams = ret.subteams;
 		classes = ret.classes;
+		uniqueClassKeys = ret.uniqueClassKeys;
+		uniqueSubteamKeys = ret.uniqueSubteamKeys;
 	}
 	catch (err) {
 		return res.redirect(`/manage/config?alert=${err}&type=error`);
 	}
 	logger.debug(`subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
+	
+	// Check for users which don't have a class key or subteam key in the list
+	let usersWithInvalidKeys = await utilities.find('users', {
+		org_key,
+		visible: true,
+		$or: [
+			{'org_info.class_key': {$not: {$in: uniqueClassKeys}}},
+			{'org_info.subteam_key': {$not: {$in: uniqueSubteamKeys}}}
+		]
+	});
 	
 	//Create update query
 	let updateQuery: MongoDocument = {
@@ -66,12 +78,17 @@ router.post('/', wrap(async (req, res) => {
 	logger.debug(`updateQuery=${JSON.stringify(updateQuery)}`);
 	
 	const writeResult = await utilities.update('orgs', 
-		{org_key: orgKey}, updateQuery
+		{org_key}, updateQuery
 	);
 	
 	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
 	
-	res.redirect('/manage/config?alert=Updated successfully.&type=good');
+	if (usersWithInvalidKeys.length === 0) {
+		res.redirect('/manage/config?alert=Updated successfully.&type=good');
+	}
+	else {
+		res.redirect('/manage/members?alert=Org config has updated, but one or more users will need to be updated due to subteam / class keys changing.\n- *Go through the list of users and make sure everyone has a subteam and class.\n- Click \'Update\' for each user that has been updated.*&type=error');
+	}
 }));
 
 router.post('/setdefaultpassword', wrap(async (req, res) => {

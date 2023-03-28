@@ -37,10 +37,10 @@ router.get('/', wrap(async (req, res) =>  {
 	
 	logger.debug('enter');
 	
-	let eventKey = req.event.key;
+	let event_key = req.event.key;
 	let org_key = req._user.org_key;
 
-	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 }, {sort: {'time': 1}});
+	let matches: Match[] = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 }, {sort: {'time': 1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	let earliestTimestamp = 9999999999;
@@ -49,10 +49,18 @@ router.get('/', wrap(async (req, res) =>  {
 		earliestTimestamp = earliestMatch.time;
 	}
 	
-	logger.debug('Scoring audit: earliestTimestamp=' + earliestTimestamp);
+	logger.debug(`Scoring audit: earliestTimestamp=${earliestTimestamp}, earliest match=${matches[0]?.key}`);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'assigned_scorer.name': 1, 'time': 1, 'alliance': 1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', 
+		{
+			org_key, 
+			event_key, 
+			'time': { $lt: earliestTimestamp }
+		}, 
+		{ 
+			sort: {'assigned_scorer.name': 1, 'time': 1, 'alliance': 1, 'team_key': 1} 
+		});
 	
 	if(!scoreData)
 		return res.redirect('/?alert=mongo error at dashboard/matches');
@@ -127,10 +135,11 @@ router.get('/', wrap(async (req, res) =>  {
 					auditElement.actual_scorer = thisScoreData.actual_scorer?.name; // 2022-11-11 JL: ScouterRecord.name
 				}		
 			}
+			else if (thisScoreData.data) {
+				logger.warn(`actual_scorer undefined while data is defined!! match_team_key=${thisScoreData.match_team_key} org_key=${org_key}`);
+				auditElementChar = '???';
+			}
 			else{
-				if (!thisScoreData.actual_scorer) {
-					logger.warn(`actual_scorer undefined while data is defined!! match_team_key=${thisScoreData.match_team_key} org_key=${org_key}`);
-				}
 				auditElementChar = 'N';
 			}
 			
@@ -581,7 +590,7 @@ router.get('/spr', wrap(async (req, res) => {
 	if (matrix.length > 0)
 		logger.debug(`...math.det(matrix)=${mathjs.det(matrix)}`);
 	else
-		logger.debug(`...math.det(matrix)=matrix_is_zero_size`);
+		logger.debug('...math.det(matrix)=matrix_is_zero_size');
 	logger.debug(`vector=${JSON.stringify(vector)}`);
 
 	// solve!
