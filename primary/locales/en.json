@@ -422,14 +422,14 @@
 			"assignMatchTeams": "Assign matches to selected scouters",
 			"availablePotentialScouters": {
 				"main": "Available potential scouters",
-				"tooltip": "The scouters and members that appear in this list are only those who are [marked as present](/manage/members/present).",
-				"noneFound": "No members were found. You must [mark some as present](/manage/members/present)."
+				"tooltip": "The scouters and members that appear in this list are only those who are [marked as present]({url}).",
+				"noneFound": "No members were found. You must [mark some as present]({url})."
 			},
 			"blockSize": {
 				"main": "Allocate in blocks of...",
-				"1": "If you have only 6 assignees then they’ll be doing every match with no breaks.",
-				"2": "If you have 12 assignees total, they’ll be doing N matches on, then N matches off, loop. Or if you have more than 12 assignees, they might occasionally get 2xN matches off. A suggested “N” is 5.",
-				"3": "If you have 7 to 11 assignees, they will occasionally do 2xN matches on before getting N matches off. A suggested “N” is 3."
+				"tooltip_line1": "If you have only 6 assignees then they’ll be doing every match with no breaks.",
+				"tooltip_line2": "If you have 12 assignees total, they’ll be doing N matches on, then N matches off, loop. Or if you have more than 12 assignees, they might occasionally get 2xN matches off. A suggested “N” is 5.",
+				"tooltip_line3": "If you have 7 to 11 assignees, they will occasionally do 2xN matches on before getting N matches off. A suggested “N” is 3."
 			},
 			"checkUncheckSubteamMembers": "Check/uncheck all members of a given subteam",
 			"clearAllPit": "Clear all pit scouting data and assignments",

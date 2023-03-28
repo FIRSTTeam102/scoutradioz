@@ -10,9 +10,10 @@ block content
 					input(type="checkbox" class="w3-check subteamToggle" id=`toggleSubteam_${subteam.subteam_key}` data-pit-scout=(subteam.pit_scout) checked=(subteam.pit_scout) data-subteam-key=subteam.subteam_key)
 					label(for=`toggleSubteam_${subteam.subteam_key}`) &nbsp;#{subteam.label}
 		hr
+		- const markPresentUrl = '/manage/members/present?rdr=/manage/assignments/matches';
 		h4!=msg('manage.assignments.availablePotentialScouters.main')
 			span(class="sprite sp-20 sp-info sp-inline w3-tooltip")
-				span(class="w3-tooltiptext w3-medium contains-link")!=msgMarked('manage.assignments.availablePotentialScouters.tooltip')
+				span(class="w3-tooltiptext w3-medium contains-link")!=msgMarked('manage.assignments.availablePotentialScouters.tooltip', {url: markPresentUrl})
 		form(action="/manage/assignments/matches/generate" method="post")
 			div(class="responsive-grid rg-4 w3-left-align")
 				each member in available
@@ -22,7 +23,7 @@ block content
 							span(class="unimportant")  (#{member.org_info.subteam_key})
 						br
 			if available.length === 0
-				h6(class="i contains-link")!=msgMarked('manage.assignments.availablePotentialScouters.noneFound')
+				h6(class="i contains-link")!=msgMarked('manage.assignments.availablePotentialScouters.noneFound', {url: markPresentUrl})
 			//- Only display the assign button if there are some available scouters
 			else
 				- var defaultBlockSize = 5;
@@ -38,9 +39,9 @@ block content
 				span(class="sprite sp-18 sp-help sp-inline w3-tooltip")
 					span(class="w3-tooltiptext w3-left-align")
 						ul
-							li!=msg('manage.assignments.blockSize.1')
-							li!=msg('manage.assignments.blockSize.2')
-							li!=msg('manage.assignments.blockSize.3')
+							li!=msg('manage.assignments.blockSize.tooltip_line1')
+							li!=msg('manage.assignments.blockSize.tooltip_line2')
+							li!=msg('manage.assignments.blockSize.tooltip_line3')
 
 				p
 				button(type="submit" class="w3-btn theme-submit")!=msg('manage.assignments.assignMatchTeams')
