@@ -1,150 +1,240 @@
 <script lang="ts">
-	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
-	import { Html5Qrcode, Html5QrcodeSupportedFormats as Formats } from 'html5-qrcode';
-	import type { Html5QrcodeCameraScanConfig } from 'html5-qrcode/html5-qrcode';
-
-	let html5QrCode: Html5Qrcode;
-	let scanning = false;
-	let reader: HTMLDivElement;
-	let windowWidth: number, windowHeight: number;
-	let resizeTicking = false;
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+	import SimpleSnackbar from './SimpleSnackbar.svelte';
 	
-	/**
-	 * Allow the scanner to be enabled or disabled.
-	 */
+	////////////////////////
+	// Fix iOS AudioContext
+	////////////////////////
+	let audioContext: AudioContext;
+	(function () {
+		// @ts-ignore
+		let AudioContextConstructor = AudioContext || webkitAudioContext;
+		if (AudioContextConstructor) {
+			audioContext = new AudioContextConstructor();
+		}
+		const fixAudioContext = function () {
+			if (audioContext) {
+				// Create empty buffer
+				const buffer = audioContext.createBuffer(1, 1, 22050);
+				const source = audioContext.createBufferSource() as AudioBufferSourceNode & {
+					play?: typeof AudioBufferSourceNode.prototype.start;
+					noteOn?: typeof AudioBufferSourceNode.prototype.start;
+				};
+				source.buffer = buffer;
+				// Connect to output (speakers)
+				source.connect(audioContext.destination);
+				// Play sound
+				if (source.start) {
+					source.start(0);
+				} else if (source.play) {
+					source.play(0);
+				} else if (source.noteOn) {
+					source.noteOn(0);
+				}
+			}
+			// Remove events
+			document.removeEventListener('touchstart', fixAudioContext);
+			document.removeEventListener('touchend', fixAudioContext);
+		};
+		// iOS 6-8
+		document.addEventListener('touchstart', fixAudioContext);
+		// iOS 9
+		document.addEventListener('touchend', fixAudioContext);
+	})();
+
+	////////////////
+	// Worker
+	////////////////
+	let worker: Worker | null = null;
+	
+	async function initWorker() {
+		worker = new Worker('/lib/wasmQrWorker.js');
+		worker.onmessage = (ev) => {
+			beep();
+			onQrCodeData(ev.data.data, ev.data.ms);
+		};
+	}
+
+	////////////////
+	// Constants
+	////////////////
+	const SCAN_FREQUENCY = 2; // scans per second
+	const SCAN_INTERVAL_MS = 1000 / SCAN_FREQUENCY; // ms between scans
+	const MIN_FOCUS_BOX_WIDTH = 200;
+	const MIN_FOCUS_BOX_HEIGHT = 200;
+	
+	////////////////
+	// Elements
+	////////////////
+	let canvas: HTMLCanvasElement;
+	let snackbar: SimpleSnackbar;
+	
+	let ctx: CanvasRenderingContext2D | null;
+	////////////////
+	// Video
+	////////////////
+	const video = document.createElement('video');
+	
+	/** Allow the scanner to be enabled or disabled. */
 	export let enabled: boolean = true;
 	
-	/**
-	 * Delay between multiple dispatches of the "data" event, to avoid spamming the parent component (ms)
-	 */
-	export let qrCodeDataDelay = 2000;
+	$: if (enabled) startScan();
+	else stopScan();
 	
-	$: 
-	if (enabled) startCamera();
-	else stopCamera();
+	function onVisibilityChanged() {
+		if (document.hidden)
+			stopScan();
+		else
+			startScan();
+	}
 	
 	// Dispatcher lets us send a custom 'data' event where the qr code has been read
 	const dispatch = createEventDispatcher();
-
-	// When the document visibilityState is changed, i.e. when the tab is switched or phone is turned off, we want to turn off the camera
-	function onVisibilityChanged() {
-		if (document.hidden) {
-			stopCamera();
-		} else {
-			startCamera();
-		}
-	}
 	
-	// We don
-	let lastDispatchTime = 0;
-	function onQrCodeData(decodedText: string, data: unknown) {
-		let now = Date.now();
-		if (now - lastDispatchTime > qrCodeDataDelay) {
-			dispatch('data', {
-				text: decodedText
+	function onQrCodeData(decodedText: string, millis: number) {
+		console.log('ONQRCODEDATA');
+		dispatch('data', {
+			text: decodedText,
+			ms: millis,
+		});
+	}
+
+	let lastMessageTime = 0;
+	function tick(time: number) {
+		if (!video || !ctx || !worker) return console.log('no video or ctx or worker');
+		if (video.readyState === video.HAVE_ENOUGH_DATA) {
+			
+			let canvasWidth = video.videoWidth;
+			let canvasHeight = video.videoHeight;
+			canvas.width = canvasWidth;
+			canvas.height = canvasHeight;
+			
+			let smallerCanvasDimension = Math.min(canvasWidth, canvasHeight);
+			let focusBoxWidth = Math.max(smallerCanvasDimension * 0.8, MIN_FOCUS_BOX_WIDTH);
+			let focusBoxHeight = Math.max(smallerCanvasDimension * 0.8, MIN_FOCUS_BOX_HEIGHT);
+
+			const sx = (canvasWidth - focusBoxWidth) / 2;
+			const sy = (canvasHeight - focusBoxHeight) / 2;
+
+			ctx.drawImage(video, 0, 0);
+			
+			ctx.fillStyle = 'black';
+			ctx.globalAlpha = 0.6;
+			ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+			ctx.drawImage(
+				video,
+				sx,
+				sy,
+				focusBoxWidth,
+				focusBoxHeight,
+				sx,
+				sy,
+				focusBoxWidth,
+				focusBoxHeight
+			);
+
+			if (time - lastMessageTime > SCAN_INTERVAL_MS) {
+				lastMessageTime = time;
+				let imageData = ctx.getImageData(sx, sy, focusBoxWidth, focusBoxHeight);
+				
+				worker.postMessage({
+					data: imageData.data,
+					width: imageData.width,
+					height: imageData.height
+				});
+			}
+		}
+		requestAnimationFrame(tick);
+	}
+
+	let scanning = false, initScanning = false;
+	async function startScan() {
+		if (scanning) return console.log('Already scanning; ignoring startVideo()');
+		initScanning = true;
+		console.log(video); // temporary for debugging
+		await initWorker();
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({
+				video: { 
+					facingMode: 'environment',
+					width: {
+						min: 640,
+						max: 1280,
+					},
+				} 
 			});
-			lastDispatchTime = now;
-		}
-		else {
-			console.log('Waiting before dispatching event');
-		}
-	}
-	
-	const resizeDelay = 500;
-	
-	// Handle resize of the window
-	function onResize() {
-		// Don't immediately resize the viewport; wait a few ticks and then stop/start the camera
-		if (!resizeTicking) {
-			resizeTicking = true;
-			setTimeout(async () => {
 				
-				if (scanning)
-					await stopCamera();
-				reader.setAttribute('width', `${windowWidth * 2}px`);
-				reader.setAttribute('height', `${windowHeight * 2}px`);
-				
-				startCamera();
-				resizeTicking = false;
-			}, resizeDelay);
+			video!.srcObject = stream;
+			video!.setAttribute('playsinline', 'true');
+			video!.play();
+			requestAnimationFrame(tick);
+			scanning = true;
 		}
-	}
-	
-	const config: Html5QrcodeCameraScanConfig = {
-		fps: 20, // Optional, frame per seconds for qr code scanning
-		// qrbox: { width: 250, height: 250 }, // Optional, if you want bounded box UI
-		disableFlip: false,
-		resolutionMultiple: 2,
-	}
-	
-	async function startCamera() {
-		if (html5QrCode && !scanning && enabled) {
-			console.log('Starting camera');
-			try {
-				await html5QrCode.start(
-					{facingMode: 'environment'},
-					config,
-					onQrCodeData,
-					(errorMessage) => {
-						// console.error(errorMessage)
-					}
-				);
-				scanning = true;
-			}
-			catch (err) {
-				console.error(err);
-			}
+		catch (err) {
+			console.log(err);
+			snackbar.error(`Could not open camera: ${err instanceof Error ? err.message : err}`)
+			stopScan();
 		}
-	}
-	
-	async function stopCamera() {
-		if (html5QrCode && scanning) {
-			console.log('Stopping camera');
-			await html5QrCode.stop();
-			scanning = false;
-		}
+		initScanning = false;
 	}
 
+	function stopScan() {
+		if (!scanning) return console.log('Not scanning; ignoring stopVideo()');
+		worker!.terminate(); // stop the worker
+		
+		video!.pause();
+		let srcObject = video!.srcObject as MediaStream;
+		if (!srcObject) return;
+		srcObject.getVideoTracks().forEach((track) => track.stop());
+		video!.srcObject = null;
+		scanning = false;
+	}
+
+	/** Play a sound */
+	const beep = (freq = 650, duration = 50, vol = 15) => {
+		try {
+			const context = audioContext;
+			const oscillator = context.createOscillator();
+			const gain = context.createGain();
+			oscillator.connect(gain);
+			oscillator.frequency.value = freq;
+			oscillator.type = 'triangle';
+			gain.connect(context.destination);
+			gain.gain.value = vol * 0.01;
+			oscillator.start(context.currentTime);
+			oscillator.stop(context.currentTime + duration * 0.001);
+		} catch (e) {
+			console.warn('Sorry, Web Audio API is not supported by your browser');
+			console.warn(e);
+		}
+	};
+
+	////////////////
+	// Component lifecycle
+	////////////////
 	onMount(() => {
 		document.addEventListener('visibilitychange', onVisibilityChanged);
 		
-		reader.setAttribute('width', `${windowWidth * 2}px`);
-		reader.setAttribute('height', `${windowHeight * 2}px`);
-
-		html5QrCode = new Html5Qrcode('reader', {
-			formatsToSupport: [Formats.QR_CODE],
-			verbose: false,
-			useBarCodeDetectorIfSupported: false,
-		});
+		ctx = canvas.getContext('2d');
 		
-		console.log('eee', html5QrCode);
 		if (!document.hidden)
-			startCamera();
+			startScan();
 	});
 
 	onDestroy(() => {
 		document.removeEventListener('visibilitychange', onVisibilityChanged);
-		stopCamera();
+		stopScan();
 	});
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} on:resize={onResize}/>
-
-<div id="parent">
-	<!-- 2x width and height so we can scan at a higher resolution on mobile cameras -->
-	<!-- <div id="reader" bind:this={reader} style:width={windowWidth * 2 + 'px'} style:height={windowHeight * 2 + 'px'} />	 -->
-	<div id="reader" bind:this={reader} style:width={windowWidth + 'px'} style:height={windowHeight + 'px'} />	
+<div>
+	<canvas id="canvas" bind:this={canvas} />
 </div>
+<SimpleSnackbar bind:this={snackbar} />
 
-<style lang="scss">
-	#reader {
-		max-width: 100%;
-		max-height: 100%;
-		// transform: scale(0.5) translate(-50%, -50%);
-		// position: absolute!important;
-	}
-	#parent {
-		position: relative;
+<style>
+	
+	#canvas {
 		width: 100%;
 	}
 </style>

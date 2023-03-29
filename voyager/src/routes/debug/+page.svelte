@@ -10,17 +10,13 @@
 <h1>Debug stuff</h1>
 
 <button on:click={async () => {
-	await db.lightusers.clear();
-	await db.lightmatches.clear();
-	await db.events.clear();
-	await db.layout.clear();
-	await db.events.clear();
-	await db.matchscouting.clear();
-	await db.pitscouting.clear();
-	await db.teams.clear();
-	await db.orgs.clear();
+	await db.delete();
 	
 	snackbar.open('Cleared database.');
+	
+	setTimeout(() => {
+		location.href = location.href; // reload page
+	}, 1000);
 }}>Wipe local database</button>
 
 <button on:click={async () => {
@@ -32,5 +28,12 @@
 		snackbar.error('Something went wrong')
 	}
 }}>Flush server database cache</button>
+
+<button on:click={async () => {
+	let reason = await snackbar.open('Test', -1, 'Test');
+	console.log(reason)
+}}>
+	Snackbar test
+</button>
 
 <SimpleSnackbar bind:this={snackbar}/>

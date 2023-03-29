@@ -33,23 +33,23 @@
 
 		return number;
 	});
-
+	
+	$: console.log('nummatchestograb', numMatchesToGrab)
+	
 	$: 
 		if (qrCodeType === 'matchscouting') {
 			db.matchscouting
-				.where({
-					event_key: $event_key,
-					org_key: $org_key
-				})
+				.orderBy('match_number')
+				.filter(match => match.event_key === $event_key && match.org_key === $org_key)
 				.limit(numMatchesToGrab * 6)
-				.sortBy('time')
+				.toArray()
 				.then(async (data) => {
 					if (data.length > 0) {
 						console.log('Compressing data');
 						let base64Data = await encodeMatchScouting(data);
 						generateQR(base64Data);
-						let decoded = await decode(base64Data);
 						console.log('Orig', data);
+						let decoded = await decode(base64Data);
 						console.log(decoded);
 					}
 				});
@@ -133,10 +133,10 @@
 		<!-- JL note: not using an if block because numMatchesToGrab becomes undefined when the select is unmounted -->
 		<div class:hidden={qrCodeType !== 'matchscouting'}>
 			<Select variant="filled" bind:value={numMatchesToGrab} label="Matches">
-				<!-- <Option value="" /> -->
-				{#each Array($numMatchesAtEvent) as _, index}
+				<!-- JL note: the " || 50" is to guarantee that there are some options in the select to avoid numMatchesToGrab becoming undefined -->
+				{#each Array($numMatchesAtEvent || 50) as _, index}
 					<!-- Blocks of 5 OR total # of matches -->
-					{#if (index === $numMatchesAtEvent - 1 || (index + 1) % 5 === 0) && index > 0}
+					{#if (index === ($numMatchesAtEvent || 50) - 1 || (index + 1) % 5 === 0) && index > 0}
 						<Option value={index + 1}>{index + 1}</Option>
 					{/if}
 				{/each}

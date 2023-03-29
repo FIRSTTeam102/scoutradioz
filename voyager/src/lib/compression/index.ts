@@ -6,7 +6,7 @@ import db from '$lib/localDB';
 
 interface CompressedItem {
 	/** Type of data */
-	_: 'sched'|'meta';
+	_: string;
 }
 
 interface CompressedMatchScouting extends CompressedItem {
@@ -46,7 +46,7 @@ function scouterRecordToString(sr: ScouterRecordLocal) {
 	return sr.id;
 }
 
-async function stringToScouterRecord(str: string): ScouterRecordLocal {
+async function stringToScouterRecord(str: string): Promise<ScouterRecordLocal> {
 	let scouter = await db.lightusers.where('_id').equals(str).first();
 	if (scouter) return {
 		id: str,
@@ -66,6 +66,9 @@ async function stringToScouterRecord(str: string): ScouterRecordLocal {
 async function stringToTeam(str: string) {
 	let key = 'frc' + str;
 	let team = await db.teams.where('key').equals(key).first();
+	if (!team) {
+		throw new Error(`Team not found: ${key}`);
+	}
 	return {
 		team_key: key,
 		team_name: team.nickname
@@ -87,6 +90,7 @@ export function decode(str: string): Promise<{
 		getLZMA(); // Import the LZMA object if it has not been imported yet
 		
 		let byteArray = b64decode(str);
+		// @ts-ignore
 		let lzmaData = byteArray.map(itm => itm - 128);
 		
 		lzma.decompress(lzmaData, async (result, err) => {
@@ -403,7 +407,7 @@ export async function decodeMatchScouting(data: CompressedItem) {
 		let thisAssignedStrs = assignedStrings[i]; // list of assigned scouter indexes
 		let thisActualStrs = actualScorerStrings[i]; // list of actual scouter indexes
 		
-		let teams: ReturnType<typeof stringToTeam>[] = [];
+		let teams: Awaited<ReturnType<typeof stringToTeam>>[] = [];
 		for (let j = 0; j < 12; j += 2) {
 			let thisTeamIdx = parseInt(thisTeamStrs.substring(j, j + 2));
 			let thisTeamStr = teamNumbers[thisTeamIdx];
