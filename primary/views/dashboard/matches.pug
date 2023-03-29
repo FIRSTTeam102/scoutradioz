@@ -11,7 +11,8 @@ block content
 	else
 		h3(class="theme-text w3-margin-bottom")!=msg('scouting.match')
 		if !futureMatchResultsConsistent
-			button(onclick="document.location.href='/manage/currentevent/matches'" class="w3-btn theme-red") <b>WARNING: A match result may have been missed!</b><br/>Please check FIRST matches data and update missing matches.
+			a(href="/manage/currentevent/matches") 
+				div(class="w3-btn theme-red") <b>WARNING: A match result may have been missed!</b><br/>Please check FIRST matches data and update missing matches.
 		div(class="w3-col w3-container")
 			- var col = 0
 			while col < 3

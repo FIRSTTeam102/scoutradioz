@@ -42,7 +42,8 @@ block content
 		p.i!=msg('allianceselection.intro')
 		p.i!=msgMarked('allianceselection.preferred')
 		if !matchcountConsistent
-			button(onclick="document.location.href='/manage/currentevent/matches'" class="w3-btn theme-red") <b>WARNING: Rankings appear NOT to be up to date!</b><br/>Update FIRST data before using for selection
+			a(href="/manage/currentevent/matches") 
+				div(class="w3-btn theme-red") <b>WARNING: Rankings appear NOT to be up to date!</b><br/>Update FIRST data before using for selection
 		div(class="w3-row w3-padding-small")
 			div(class="w3-left")
 				div(id="undo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
