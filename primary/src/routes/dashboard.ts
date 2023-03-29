@@ -431,6 +431,17 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		if(!rankings[0])
 			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
 		
+		// 2023-03-27, M.O'C: Scan the rankings to make sure all the data has come in
+		let firstCount = rankings[0].matches_played;
+		let matchcountConsistent = true;
+		for(let i = 1; i < rankings.length; i++){
+			let thisCount = rankings[i].matches_played;
+			if (thisCount != firstCount) {
+				matchcountConsistent = false;
+				break;
+			}
+		}
+
 		// num_alliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
 		let alliances = [];
 		for(let i = 0; i < num_alliances; i++){
@@ -611,6 +622,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			currentAggRanges: currentAggRanges,
 			layout: scoreLayout,
 			sortedTeams: sortedTeams,
+			matchcountConsistent: matchcountConsistent,
 			matchDataHelper: matchDataHelper
 		});
 	}
@@ -735,6 +747,18 @@ router.get('/matches', wrap(async (req, res) => {
 
 	logger.debug('scoreData.length=' + scoreData.length);
 
+	// M.O'C, 2023-03-29: Are there "future" resolved matches?
+	let futureMatchResultsConsistent = true;
+	// Get matches at or beyond the 'earliest' time
+	let futureMatches: Match[] = await utilities.find('matches', { event_key: eventKey, 'time': { $gte: earliestTimestamp }},{sort: {'time': 1}});
+	for (let futureIdx = 0; futureIdx < futureMatches.length; futureIdx++) {
+		logger.trace(`future IDX: ${futureIdx} - time: ${futureMatches[futureIdx].time} - red score: ${futureMatches[futureIdx].alliances.red.score}`);
+		if (futureMatches[futureIdx].alliances.red.score != -1) {
+			futureMatchResultsConsistent = false;
+			break;
+		}
+	}
+
 	for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key])
@@ -770,7 +794,8 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.debug('scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
 		title: res.msg('scouting.match'),
-		matches: scoreData
+		matches: scoreData,
+		futureMatchResultsConsistent: futureMatchResultsConsistent
 	});
 }));
 
