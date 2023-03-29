@@ -7,6 +7,7 @@ import Permissions from '../../helpers/permissions';
 import e, { assert, lightAssert } from 'scoutradioz-http-errors';
 import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, UserAgent, WithDbId} from 'scoutradioz-types';
 import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
+import { isFunctionOrConstructorTypeNode } from 'typescript';
 
 const router = express.Router();
 const logger = getLogger('assignments');
@@ -31,6 +32,16 @@ router.get('/', wrap(async (req, res) => {
 	const org_key = thisUser.org_key;
 	const event_key = req.event.key;
 	
+	// 2023-03-29, M.O'C: Checking list of teams
+	//Get list of currentteams
+	let teamsArray = req.teams;
+	logger.debug(`teamsArray.length = ${teamsArray?.length}`);
+	let areTeamsListedInDB = true;
+	if (!teamsArray || teamsArray.length < 1) {
+		areTeamsListedInDB = false;
+		logger.warn(`Pit scouting but no teams found in DB`);
+	}
+
 	//Log message so we can see on the server side when we enter this
 	logger.info('ENTER org_key=' + org_key);
 	logger.debug('Requesting all members from db');
@@ -106,7 +117,8 @@ router.get('/', wrap(async (req, res) => {
 				assigned: assigned,
 				available: available,
 				matchScoutingCount: matchScoutingCount,
-				pitScoutingCount: pitScoutingCount
+				pitScoutingCount: pitScoutingCount,
+				areTeamsListedInDB: areTeamsListedInDB
 			});
 		});
 }));
