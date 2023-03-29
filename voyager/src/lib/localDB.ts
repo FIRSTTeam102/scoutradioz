@@ -81,21 +81,47 @@ export class LocalDB extends Dexie {
 	
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(13).stores({
+		this.version(20).stores({
 			lightusers: '&_id, org_key, name, role_key, event_info.present, event_info.assigned',
-			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score',
+			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
 			user: '&_id',
 			
 			events: '&_id, &key, year',
 			layout: '&_id, [org_key+year+form_type]',
-			matchscouting: '&match_team_key, [org_key+event_key], team_key, year, time',
+			matchscouting: '&match_team_key, [org_key+event_key], team_key, year, time, match_number',
 			pitscouting: '&[org_key+event_key+team_key], [org_key+event_key], primary.id, secondary.id, tertiary.id',
-			teams: '&_id, &key, team_number',
-			orgs: '&_id, &org_key',
+			teams: '&key, team_number',
+			orgs: '&org_key',
 		});
 	}
 }
 
 const db = new LocalDB();
+
+
+// WIP code to detect when there's an upgrade error "Not yet support for changing primary key"
+if ('addEventListener' in globalThis) addEventListener ('unhandledrejection', async (e) => {
+	if (e.reason && e.reason.name === 'AbortError') {
+		try {
+			let user = await db.user.get(1);			
+		}
+		catch (err) {
+			if (err instanceof Error) {
+				if (err.name === 'DatabaseClosedError' && err.message.includes('Not yet support for changing primary key')) {
+					console.log('Database upgrade error detected. Attempting to fix...');
+					const result = confirm('The app appears to have been updated, and the database was unable to automatically upgrade itself. To upgrade the database, we need to delete all your offline data. Can we continue with deleting your offline data?');
+					if (result === true) {
+						console.log('Retrieved permission to delete local database. Deleting...');
+						await db.delete();
+						alert('The database has been deleted. The page will reload after you click OK. If this message appears after you reload the page, please contact the developers.');
+						setTimeout(() => {
+							window.location.reload();
+						}, 500);
+					}
+				}
+			}
+		}
+	}
+});
 
 export default db;
