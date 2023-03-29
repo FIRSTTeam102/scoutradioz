@@ -32,6 +32,7 @@ async function main() {
 
 	const projectFolderLocation = join(__dirname, '../', projectFolder);
 
+	// eslint-disable-next-line global-require
 	const packageJson = require(join(projectFolderLocation, 'package.json')); // Voyager
 	const functionNameSvelte = packageJson.config.functionNameSvelte;
 	const functionNameRouter = packageJson.config.functionNameRouter;
@@ -108,6 +109,13 @@ async function updateCloudFrontData(
 	}).promise();
 	
 	console.log(invalidateResult);
+	
+	
+	console.log('Waiting for cache invalidation to complete...');
+	await cloudFront.waitFor('invalidationCompleted', {
+		DistributionId: distributionId,
+		Id: invalidateResult.Invalidation.Id
+	}).promise();
 }
 
 async function updateCode(
@@ -153,11 +161,12 @@ function makeZip(folders: string[]): Promise<Buffer> {
 				} ms`
 			);
 
-			var sizeBytes = archive.pointer();
+			let sizeBytes = archive.pointer();
 
 			if (sizeBytes > 1000000) {
 				console.log('Size: ' + sizeBytes / 1000000 + ' MB');
-			} else {
+			}
+			else {
 				console.log('Size: ' + sizeBytes / 1000 + ' KB');
 			}
 
@@ -230,8 +239,8 @@ function emptyBucket(bucketName: string) {
 		child.on('close', (status, signal) => {
 			if (status === 0) resolve(undefined);
 			else reject(signal);
-		})
-	})
+		});
+	});
 }
 
 async function uploadDir(s3Path: string, bucketName: string) {
@@ -258,6 +267,6 @@ async function uploadDir(s3Path: string, bucketName: string) {
 		child.on('close', (status, signal) => {
 			if (status === 0) resolve(undefined);
 			else reject(signal);
-		})
-	})
+		});
+	});
 }
