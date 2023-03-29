@@ -7,7 +7,6 @@ import Permissions from '../../helpers/permissions';
 import e, { assert, lightAssert } from 'scoutradioz-http-errors';
 import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, UserAgent, WithDbId} from 'scoutradioz-types';
 import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
-import { isFunctionOrConstructorTypeNode } from 'typescript';
 
 const router = express.Router();
 const logger = getLogger('assignments');
