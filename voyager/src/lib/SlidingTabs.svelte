@@ -1,70 +1,75 @@
 <!--
 	@component 
-	Tab bar that slickly slides between tabs. Each tab label must be unique, and each tab attaches a component that is imported.
+	Tab bar that slickly slides between tabs. Each tab id must be unique, and each tab attaches a component that is imported.
 	 
 	Example usage:
 	
 		<script lang="ts">
 			import Scanner from '../Scanner.svelte';
-			import LeadQRCode from '../LeadQRCode.svelte';
 			import LeadSyncMothership from '../LeadSyncMothership.svelte';
 			import SlidingTabs from '$lib/SlidingTabs.svelte';
+			import LeadQrCode from '../LeadQRCode.svelte';
+			
+			const tabs = [
+				{label: 'Scan', id: 'scanner'},
+				{label: 'Show QR', id: 'qr'},
+				{label: 'Server', id: 'server'},
+			];
 			
 		</script>
 		
-		<SlidingTabs tabs={[
-			{label: 'Scan', component: Scanner},
-			{label: 'Show QR', component: LeadQRCode},
-			{label: 'Server', component: LeadSyncMothership},
-		]}
-		/>
+		<SlidingTabs {tabs}>
+			<Scanner slot='1'/>
+			<LeadQrCode slot='2'/>
+			<LeadSyncMothership slot='3'/>
+		</SlidingTabs>
  -->
-
-
 <script lang="ts">
-	import Tab, { Label } from '@smui/tab';
+	import Tab, { Icon, Label } from '@smui/tab';
 	import TabBar from '@smui/tab-bar';
 	import { onMount } from 'svelte';
-	import type { ComponentType } from 'svelte';
-	import {  } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
+	import { goto } from '$app/navigation';
 
 	export let tabs: SlidingTab[];
 
 	interface SlidingTab {
+		id: string;
 		label: string;
-		component: ComponentType;
+		icon?: string;
 	}
-
-	let tabLabels = tabs.map((tab) => tab.label);
-	let activeTab: string;
 	
+	let activeTab: SlidingTab;
+
 	onMount(() => {
 		// Default to first tab; otherwise, retrieve the tab from location.hash
+		// todo later: maybe save it in localstorage?
 		let hash = parseInt(location.hash.substring(1));
 		if (hash && hash < tabs.length) {
-			activeTab = tabs[hash].label;
+			activeTab = tabs[hash];
+		} else {
+			activeTab = tabs[0];
 		}
-		else { 
-			activeTab = tabs[0].label;
-		}
-	})
-	
+	});
+
 	let sliding = false;
 
 	let prevTabIndex = 0;
 
 	let movingRight = true;
 
-	function handleTabChange(e: {detail: {index: number}}) {
+	function handleTabChange(e: { detail: { index: number } }) {
 		console.log('tabChange');
-		location.hash = String(e.detail.index);
+		// location.hash = String(e.detail.index);
+		goto('#' + e.detail.index, {
+			replaceState: true, // Don't want the tab navigation to create a new history entry
+		});
 		movingRight = e.detail.index > prevTabIndex;
 		prevTabIndex = e.detail.index;
 	}
-	
+
 	const animationDuration = 300;
-	
+
 	function flyInTransition(node: Element) {
 		let direction = movingRight ? -1 : 1;
 		return fly(node, {
@@ -72,7 +77,7 @@
 			duration: animationDuration
 		});
 	}
-	
+
 	function flyOutTransition(node: Element) {
 		let direction = movingRight ? 1 : -1;
 		return fly(node, {
@@ -80,34 +85,88 @@
 			duration: animationDuration
 		});
 	}
-	
+
 	function tabLabelToHash(label: string) {
 		return label.toLowerCase().replace(/[ ]/g, '_');
 	}
+
+	function slideOn() {
+		sliding = true;
+	}
+	function slideOff() {
+		sliding = false;
+	}
+	
+	const maxTabs = 6;
 </script>
 
-<TabBar tabs={tabLabels} let:tab bind:active={activeTab} on:SMUITabBar:activated={handleTabChange}>
+<TabBar {tabs} let:tab bind:active={activeTab} on:SMUITabBar:activated={handleTabChange}>
 	<Tab {tab}>
-		<Label>{tab}</Label>
+		{#if tab.icon}
+			<Icon class='material-icons'>{tab.icon}</Icon>
+		{/if}
+		<Label>{tab.label}</Label>
 	</Tab>
 </TabBar>
 <div class="container" class:sliding>
-	{#each tabs as tab}
+	<!-- {#each tabs as tab}
 		{#if activeTab === tab.label}
 			<div
 				in:flyInTransition|local
 				out:flyOutTransition|local
 				on:introstart={() => {sliding = true}}
-				on:introend={() => (sliding = false)}
-				on:outrostart={() => (sliding = true)}
-				on:outroend={() => (sliding = false)}
+				on:introend={slideOff}
+				on:outrostart={slideOff}
+				on:outroend={slideOff}
 				class='child'
 				class:sliding
 			>
 				<svelte:component this={tab.component} />
 			</div>
 		{/if}
-	{/each}
+	{/each} -->
+	{#if $$slots['1'] && activeTab == tabs[0]}
+		<div
+			in:flyInTransition|local
+			out:flyOutTransition|local
+			on:introstart={slideOn}
+			on:introend={slideOff}
+			on:outrostart={slideOff}
+			on:outroend={slideOff}
+			class="child"
+			class:sliding
+		>
+			<slot name="1" />
+		</div>
+	{/if}
+	{#if $$slots['2'] && activeTab == tabs[1]}
+		<div
+			in:flyInTransition|local
+			out:flyOutTransition|local
+			on:introstart={slideOn}
+			on:introend={slideOff}
+			on:outrostart={slideOff}
+			on:outroend={slideOff}
+			class="child"
+			class:sliding
+		>
+			<slot name="2" />
+		</div>
+	{/if}
+	{#if $$slots['3'] && activeTab == tabs[2]}
+		<div
+			in:flyInTransition|local
+			out:flyOutTransition|local
+			on:introstart={slideOn}
+			on:introend={slideOff}
+			on:outrostart={slideOff}
+			on:outroend={slideOff}
+			class="child"
+			class:sliding
+		>
+			<slot name="3" />
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">

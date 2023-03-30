@@ -19,7 +19,7 @@
 	import BottomNavBar from '$lib/nav/BottomNavBar.svelte';
 	import type { NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	
-	import { user, org_key } from '$lib/stores';
+	import { userName, org_key } from '$lib/stores';
 	import { afterNavigate } from '$app/navigation';
 
 	afterNavigate(() => (menuOpen = false));
@@ -52,7 +52,7 @@
 	fixed={true}
 >
 	<DHeader>
-		<DTitle>Welcome, {$user}</DTitle>
+		<DTitle>Welcome, {$userName}</DTitle>
 		<DSubtitle>{$org_key}</DSubtitle>
 	</DHeader>
 	<DContent>

@@ -15,6 +15,7 @@
 	let snackbar: SimpleSnackbar;
 
 	let numMatchesToGrab: number;
+	let whichUsersToInclude: 'assigned'|'everyone' = 'assigned';
 	
 	let qrCodeType: 'matchscouting'|'metadata' = 'matchscouting';
 
@@ -34,8 +35,6 @@
 		return number;
 	});
 	
-	$: console.log('nummatchestograb', numMatchesToGrab)
-	
 	$: 
 		if (qrCodeType === 'matchscouting') {
 			db.matchscouting
@@ -48,9 +47,9 @@
 						console.log('Compressing data');
 						let base64Data = await encodeMatchScouting(data);
 						generateQR(base64Data);
-						console.log('Orig', data);
-						let decoded = await decode(base64Data);
-						console.log(decoded);
+						// console.log('Orig', data);
+						// let decoded = await decode(base64Data);
+						// console.log(decoded);
 					}
 				});
 		}
@@ -59,8 +58,10 @@
 				assert(typeof $org_key === 'string' && typeof $event_key === 'string');
 				
 				const users = await db.lightusers.where('org_key').equals($org_key)
-					.filter(user => user.event_info.assigned || user.event_info.present)
-					.limit(20)
+					.filter(user => {
+						if (whichUsersToInclude === 'everyone') return true;
+						return (user.event_info.assigned === true || user.event_info.present === true);
+					})
 					.toArray();
 				
 				const event = await db.events.where('key').equals($event_key).first();
@@ -79,9 +80,9 @@
 				
 				let base64Data = await encodeMetadata(org, users, teams);
 				generateQR(base64Data);
-				let decoded = await decode(base64Data);
-				console.log(org, users, teams);
-				console.log(decoded);
+				// let decoded = await decode(base64Data);
+				// console.log(org, users, teams);
+				// console.log(decoded);
 			}))();
 		}
 		
@@ -101,6 +102,8 @@
 			},
 			function (err) {
 				if (err) {
+					console.log(err);
+					console.log('Attempting to generate QR code with a lower error correction level');
 					// Try with a lower error correction level
 					QRCode.toCanvas(
 						canvas,
@@ -142,6 +145,13 @@
 				{/each}
 
 				<svelte:fragment slot="helperText">Number of matches to display</svelte:fragment>
+			</Select>
+		</div>
+		<div class:hidden={qrCodeType !== 'metadata'}>
+			<Select variant="filled" bind:value={whichUsersToInclude}>
+				<Option value="everyone">Everyone</Option>
+				<Option value="assigned">Only assigned & present</Option>
+				<svelte:fragment slot="helperText">Whom to include in the QR code</svelte:fragment>
 			</Select>
 		</div>
 	</div>

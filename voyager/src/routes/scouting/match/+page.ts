@@ -5,7 +5,7 @@ import db from '$lib/localDB';
 
 export const load: PageLoad = async ({ fetch }) => {
 	// const all: (MatchScouting & { team_name: string })[] = await (await fetch('/api/assignments/match?onlyAssigned')).json();
-	
+	console.log('Page loading');
 	let all = await db.matchscouting
 		.where({
 			event_key: getStore(event_key),

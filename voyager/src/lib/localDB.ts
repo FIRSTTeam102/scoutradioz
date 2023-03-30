@@ -82,7 +82,7 @@ export class LocalDB extends Dexie {
 	constructor() {
 		super('scoutradioz-offline');
 		this.version(20).stores({
-			lightusers: '&_id, org_key, name, role_key, event_info.present, event_info.assigned',
+			lightusers: '&_id, org_key, name, role_key',
 			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
 			user: '&_id',
 			

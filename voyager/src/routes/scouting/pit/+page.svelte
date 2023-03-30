@@ -9,7 +9,9 @@
 		ActionIcons as CActionIcons
 	} from '@smui/card';
 	import Button, { Label as BLabel, Icon as BIcon } from '@smui/button';
-	import { user } from '$lib/stores';
+	import { userId } from '$lib/stores';
+	import SlidingTabs from '$lib/SlidingTabs.svelte';
+	import PitAssignmentList from './PitAssignmentList.svelte';
 
 	export let data: PageData;
 
@@ -19,17 +21,31 @@
 		{ id: 'all', icon: 'groups', label: 'All' }
 	];
 	let activeTab = tabs[0];
-	let activeData = data.all;
-	$: activeData = data.all.filter((asg) =>
+	let activeData = data.assignments;
+	
+	$: activeData = data.assignments.filter((asg) =>
 		activeTab.id === 'mine'
-			? asg.primary === $user
+			? asg.primary?.id === $userId
 			: activeTab.id === 'partner'
-			? asg.secondary === $user || asg.tertiary === $user
+			? asg.secondary?.id === $userId || asg.tertiary?.id === $userId
 			: true
 	);
+	
+	const myAssignments = data.assignments.filter((asg) => asg.primary?.id === $userId);
+	const partnersAssignments = data.assignments.filter(
+		(asg) => asg.secondary?.id === $userId || asg.tertiary?.id === $userId
+	);
+	const allAssignments = data.assignments;
 </script>
 
-<h1>Pit scouting</h1>
+
+<SlidingTabs tabs={tabs}>
+	<PitAssignmentList slot='1' assignments={myAssignments} />
+	<PitAssignmentList slot='2' assignments={partnersAssignments} />
+	<PitAssignmentList slot='3' assignments={allAssignments} />
+</SlidingTabs>
+
+<!-- <h1>Pit scouting</h1>
 
 <TabBar {tabs} let:tab bind:active={activeTab}>
 	<Tab {tab}>
@@ -43,7 +59,7 @@
 		<Card>
 			<CContent>
 				<h3>Team {asg.team_key.replace('frc', '')}</h3>
-				Assigned to: {[asg.primary, asg.secondary, asg.tertiary].filter(Boolean).join(', ')}
+				Assigned to: {[asg.primary?.name, asg.secondary?.name, asg.tertiary?.name].filter(Boolean).join(', ') || 'None'}
 			</CContent>
 			<CActions fullBleed>
 				<Button href={`/scouting/pit/form?key=${asg.team_key}`}>
@@ -61,4 +77,4 @@
 	.cards {
 		@include cards.container;
 	}
-</style>
+</style> -->

@@ -4,7 +4,7 @@
 	import Card, { Content as CContent } from '@smui/card';
 	import List, { Item, Text, PrimaryText, SecondaryText, Meta } from '@smui/list';
 	import Button, { Label as BLabel, Icon as BIcon } from '@smui/button';
-	import { user } from '$lib/stores';
+	import { userName } from '$lib/stores';
 
 	export let data: PageData;
 
@@ -28,7 +28,7 @@
 				</div>
 				<List twoLine nonInteractive>
 					{#each group as asg}
-						<Item class={asg.alliance} selected={asg.assigned_scorer === $user}>
+						<Item class={asg.alliance} selected={asg.assigned_scorer === $userName}>
 							<Text>
 								<PrimaryText>Team {asg.team_key.replace('frc', '')}: {asg.team_name}</PrimaryText>
 								<SecondaryText>Assigned to: {asg.assigned_scorer?.name}</SecondaryText>
