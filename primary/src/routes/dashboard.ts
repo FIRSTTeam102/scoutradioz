@@ -677,11 +677,14 @@ router.get('/pits', wrap(async (req, res) => {
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
+	// 2023-03-30, M.O'C: Adding guardrail around 'teams were updated (some removed) after pit scouting was assigned'
+	let allTeamsInDB = true;
 	// Add data to 'teams' data
 	for (let teamIdx = 0; teamIdx < teamAssignments.length; teamIdx++) {
 		// logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
 		if (!teamKeyMap[teamAssignments[teamIdx].team_key]) {
-			throw new e.InternalServerError(res.msg('errors.teamMissing', {team: teamAssignments[teamIdx].team_key}));
+			allTeamsInDB = false;
+			break;
 		}
 		// 2022-05-18 JL: Passing teamKeyMap to view instead of adding nickname to the teamAssignments object
 		//	we can still use this loop to guarantee that the pug won't encounter an error
@@ -703,7 +706,8 @@ router.get('/pits', wrap(async (req, res) => {
 		title: res.msg('scouting.pit'),
 		teamAssignments: teamAssignments,
 		teamKeyMap: teamKeyMap,
-		images: images
+		images: images,
+		allTeamsInDB: allTeamsInDB
 	});	
 }));
 
