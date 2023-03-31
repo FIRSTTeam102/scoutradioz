@@ -419,6 +419,15 @@
 			"setCurrentEventKey": "Set current event key",
 			"successClear": "Cleared current event successfully.",
 			"successSetEvent": "Set current event to *{eventName}* successfuly."
+		},
+		"members": {
+			"main": "Organization members",
+			"clickUpdateReminder": "Make sure to click or tap _Update_ when you modify each member.",
+			"teamAdminPasswordReminder": "If you create a Team Admin user, please make sure they log in and create a secure password for themselves. Otherwise, a student could log in as them.",
+			"passwordAuditLink": "Check here to see if they have set a password.",
+			"noMembersOfType": "No members of this type.",
+			"permissionLevel": "Permission level",
+			"yearsOnTeam": "Years on team"
 		}
 	},
 	"tryAgainLater": "Please try again later.",
@@ -426,5 +435,10 @@
 	"no": "No",
 	"name": "Name",
 	"date": "Date",
-	"key": "Key"
+	"key": "Key",
+	"actions": "Actions",
+	"add": "Add",
+	"class": "Class",
+	"subteam": "Subteam",
+	"update": "Update"
 }
