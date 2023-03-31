@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import SimpleSnackbar from './SimpleSnackbar.svelte';
+	import { getAvailableWindowSize } from './utils';
 	
 	////////////////////////
 	// Fix iOS AudioContext
@@ -68,6 +69,7 @@
 	////////////////
 	let canvas: HTMLCanvasElement;
 	let snackbar: SimpleSnackbar;
+	let parent: HTMLElement;
 	
 	let ctx: CanvasRenderingContext2D | null;
 	////////////////
@@ -146,27 +148,55 @@
 		}
 		requestAnimationFrame(tick);
 	}
+	
+	function stopVideoStream() {
+		video!.pause();
+		let srcObject = video!.srcObject as MediaStream;
+		if (!srcObject) return;
+		srcObject.getVideoTracks().forEach((track) => track.stop());
+		video!.srcObject = null;
+	}
+	
+	async function setVideoStream() {
+		console.log('Setting video stream');
+		
+		// Get the desired aspect ratio of the video stream to perfectly fill the remaining space on the screen
+		let { width, height } = getAvailableWindowSize(parent);
+		let aspectRatio = width / height;
+		
+		let aspectRatioSetting: ConstrainDouble = {
+			ideal: aspectRatio,
+		};
+		if (aspectRatio > 1) aspectRatioSetting.min = aspectRatio; // Wide screens: Prefer a wider aspect ratio
+		else aspectRatioSetting.max = aspectRatio; // Phones: Prefer a narrower aspect ratio, extending slightly below the nav bar to provide the illusion of a fullscreen scanner
+		
+		console.log(aspectRatioSetting);
+		
+		const stream = await navigator.mediaDevices.getUserMedia({
+			video: { 
+				facingMode: 'environment',
+				// deviceId: '3dada17451a1d1c171c0c2d48d3e6b571819d3c55f533f5271d1e886633983b5', // JL: For testing only (this is my OBS virtual camera)
+				width: {
+					min: 640,
+					max: 800,
+				},
+				aspectRatio: aspectRatioSetting,
+			} 
+		});
+			
+		video!.srcObject = stream;
+		video!.setAttribute('playsinline', 'true');
+		video!.play();
+	}
 
 	let scanning = false, initScanning = false;
 	async function startScan() {
-		if (scanning) return console.log('Already scanning; ignoring startVideo()');
+		if (scanning || initScanning) return console.log('Already scanning; ignoring startVideo()');
 		initScanning = true;
 		console.log(video); // temporary for debugging
 		await initWorker();
 		try {
-			const stream = await navigator.mediaDevices.getUserMedia({
-				video: { 
-					facingMode: 'environment',
-					width: {
-						min: 640,
-						max: 1280,
-					},
-				} 
-			});
-				
-			video!.srcObject = stream;
-			video!.setAttribute('playsinline', 'true');
-			video!.play();
+			setVideoStream();
 			requestAnimationFrame(tick);
 			scanning = true;
 		}
@@ -181,17 +211,12 @@
 	function stopScan() {
 		if (!scanning) return console.log('Not scanning; ignoring stopVideo()');
 		worker!.terminate(); // stop the worker
-		
-		video!.pause();
-		let srcObject = video!.srcObject as MediaStream;
-		if (!srcObject) return;
-		srcObject.getVideoTracks().forEach((track) => track.stop());
-		video!.srcObject = null;
+		stopVideoStream();
 		scanning = false;
 	}
 
 	/** Play a sound */
-	const beep = (freq = 650, duration = 50, vol = 15) => {
+	const beep = (freq = 650, duration = 50, vol = 10) => {
 		try {
 			const context = audioContext;
 			const oscillator = context.createOscillator();
@@ -208,6 +233,17 @@
 			console.warn(e);
 		}
 	};
+	
+	let ticking = false;
+	function onResize() {
+		if (ticking) return;
+		ticking = true;
+		setTimeout(async () => {
+			stopVideoStream();
+			await setVideoStream();
+			ticking = false;
+		}, 500);
+	}
 
 	////////////////
 	// Component lifecycle
@@ -227,13 +263,19 @@
 	});
 </script>
 
-<div>
+<div bind:this={parent}>
 	<canvas id="canvas" bind:this={canvas} />
 </div>
 <SimpleSnackbar bind:this={snackbar} />
 
+<svelte:window on:resize={onResize} />
+
+<svelte:body style='overflow: hidden;' />
+
 <style>
-	
+	body {
+		overflow: hidden;
+	}
 	#canvas {
 		width: 100%;
 	}
