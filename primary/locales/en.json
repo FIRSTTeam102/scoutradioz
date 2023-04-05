@@ -66,11 +66,12 @@
 				"teamStats": "Team statistics",
 				"yearStats": "Complete statistics for {year}",
 				"export": {
-					"main": "Export to CSV",
-					"match": "Match scouting data: [[{event}]]",
-					"pit": "Pit scouting data: [[{event}]]",
-					"matchAll": "Match scouting data: [[All of {year}]]",
-					"pitAll": "Pit scouting data: [[All of {year}]]"
+					"main": "Export data",
+					"match": "[CSV] Match scouting data: [[{event}]]",
+					"pit": "[CSV] Pit scouting data: [[{event}]]",
+					"matchAll": "[CSV] Match scouting data: [[All of {year}]]",
+					"pitAll": "[CSV] Pit scouting data: [[All of {year}]]",
+					"photos": "[Zip] Robot photos: [[All of {year}]]"
 				}
 			},
 			"scouting": "Scouting",

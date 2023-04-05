@@ -6,7 +6,8 @@ import Permissions from '../helpers/permissions';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e, { assert } from 'scoutradioz-http-errors';
 import type { MongoDocument } from 'scoutradioz-utilities';
-import type { AggRange, Event, Layout, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, Team } from 'scoutradioz-types';
+import type { AggRange, Event, Layout, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, Team, Upload } from 'scoutradioz-types';
+import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 
 const router = express.Router();
 const logger = getLogger('reports');
@@ -1556,6 +1557,56 @@ router.get('/exportdata', wrap(async (req, res) => {
 		res.setHeader('Content-Disposition', 'attachment; filename="' + dataType + '_' + orgKey + '_' + eventKey + '_' + Date.now() + '.csv"');
 	}
 	return res.send(fullCSVoutput);
+}));
+
+router.get('/exportimages', wrap(async (req, res) => {
+	
+	const org_key = req._user.org_key;
+	const thisYear = req.event.year;
+	
+	let uploads: Upload[] = await utilities.find('uploads', 
+		{org_key: org_key, removed: false, year: req.event.year},
+		{},
+	);
+	
+	uploads.sort((a, b) => {
+		let aNum = parseInt(a.team_key.substring(3));
+		let bNum = parseInt(b.team_key.substring(3));
+		if (aNum == bNum) {
+			let aIdx = a.index;
+			let bIdx = b.index;
+			if (aIdx == bIdx) {
+				let aTime = a.uploader.upload_time;
+				let bTime = b.uploader.upload_time;
+				return aTime - bTime;
+			}
+			else {
+				return aIdx - bIdx;
+			}
+		}
+		else {
+			return aNum - bNum;
+		}
+	});
+	
+	// 2022-03-08 JL: Previous logic didn't work, it always left out at least one document
+	let uploadsByTeamKey: Dict<(ImageLinks)[]> = {};
+	for (let upload of uploads) {
+		if (upload.hasOwnProperty('team_key')) {
+			let key = upload.team_key;
+			if (!uploadsByTeamKey[key]) uploadsByTeamKey[key] = [];
+			// Clone of the upload but with links added
+			let links = uploadHelper.getLinks(upload);
+			uploadsByTeamKey[key].push(links);
+		}
+	}
+	
+	res.render('./reports/exportimages', {
+		title: `Export images from ${thisYear}`,
+		uploadsByTeamKey,
+		thisYear,
+	});
+	
 }));
 
 //// Choosing & setting scoring selections

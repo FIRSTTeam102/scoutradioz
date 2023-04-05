@@ -151,7 +151,12 @@ class NavHelpers {
 								label: req.msg('layout.nav.reports.export.pitAll', {year: req.event.year}),
 								href: '/reports/exportdata?type=pitscouting&span=all',
 								sprite: 'download',
-							}
+							},
+							{
+								label: req.msg('layout.nav.reports.export.photos', {year: req.event.year}),
+								href: '/reports/exportimages',
+								sprite: 'download',
+							},
 						]
 					}
 				];
