@@ -47,7 +47,7 @@ router.get('/', wrap(async (req, res) => {
 	}
 	
 	res.render('./manage/members/index', { 
-		title: 'Organization Members',
+		title: req.msg('manage.members.main'),
 		membersByRole: membersByRole,
 		config: config,
 		roles: roles

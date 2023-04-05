@@ -6,9 +6,9 @@
 	//
 extends ../../layout
 block content
-	h3 Organization Members
+	h3=title
 	h6
-		i Make sure to click or tap "Update" when you modify each member.
+		i!=msgMarked('manage.members.clickUpdateReminder')
 	//- div(class="w3-section") TODO JL: Increment/decrement # years on team
 		h4 Batch actions
 		div(class="gear-btn theme-submit w3-btn" id="incrementYears")
@@ -20,17 +20,17 @@ block content
 				h4=role
 				br.w3-hide-small
 				if members.length == 0
-					i No members of this type.
+					i!=msg('manage.members.noMembersOfType')
 				else 
 					//- Only show "table" headers if there are members to show
 					div(class="w3-row w3-hide-small" id="title-row")
-						div(class="w3-col m3 w3-padding-small actions") Actions
+						div(class="w3-col m3 w3-padding-small actions")!=msg('actions')
 						div(class="w3-rest")
-							div(class="w3-col m4 w3-padding-small") Name
-							div(class="w3-col m3 w3-padding-small") Subteam
-							div(class="w3-col m2 w3-padding-small") Class
-							div(class="w3-col m2 w3-padding-small") Role
-							div(class="w3-col m1 w3-padding-small") Years on team
+							div(class="w3-col m4 w3-padding-small")!=msg('name')
+							div(class="w3-col m3 w3-padding-small")!=msg('subteam')
+							div(class="w3-col m2 w3-padding-small")!=msg('class')
+							div(class="w3-col m2 w3-padding-small")!=msg('manage.members.permissionLevel')
+							div(class="w3-col m1 w3-padding-small")!=msg('manage.members.yearsOnTeam')
 			each member in members
 				div(class="w3-row")
 					div(class="w3-col s12 m0")
@@ -47,7 +47,7 @@ block content
 						input(type="hidden" name="memberId" value=member._id)
 						//update button
 						div(class="w3-col s7 mauto w3-padding-small" data-update-button)
-							button(class="w3-btn theme-submit w3-block" type="submit") Update
+							button(class="w3-btn theme-submit w3-block" type="submit")!=msg('update')
 						div(class="w3-mobile w3-rest")
 							//name
 							div(class="w3-col m4 w3-padding-small")
@@ -84,7 +84,7 @@ block content
 			form#addMember(action="/manage/members/addmember" method="post")
 				//submit
 				div(class="w3-col m2 w3-padding-small")
-					button(type="submit" class="w3-btn theme-submit w3-block") Add
+					button(type="submit" class="w3-btn theme-submit w3-block")!=msg('add')
 				//name
 				div(class="w3-col m3 w3-padding-small")
 					input(type="text" class="w3-input theme-input w3-block w3-no-border theme-inline-padding" name="name" placeholder="Name")
@@ -109,9 +109,9 @@ block content
 				div(class="w3-col s6 m1 w3-padding-small")
 					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="Yrs. on team")
 		h6
-			i If you create a Team Admin user, please make sure they log in and create a secure password for themselves. Otherwise, a student could log in as them.
+			i!=msg('manage.members.teamAdminPasswordReminder')
 			i 
-				a(href='/manage/members/passwords' class="link") Check here to see if they have set a password.
+				a(href='/manage/members/passwords' class="link")!=msg('manage.members.passwordAuditLink')
 		input(type="hidden" name="selfUserId" value=user._id)
 	script.
 		$('#incrementYears').on('click', () => {
