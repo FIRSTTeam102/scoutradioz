@@ -8,7 +8,7 @@ block content
 	h2=title
 	if !areTeamsListedInDB
 		a(href="/manage") 
-			div(class="w3-btn theme-red") <b>WARNING: No teams found in DB!</b><br/>Please update list of teams (or) edit team list.
+			div(class="w3-btn theme-red") <b>WARNING: No teams found in DB!</b><br/>Click here, then update list of teams (or) edit team list.
 	table(class="w3-table")
 		each subteam in subteams
 			th(class="w3-center" style=`width: ${99.999 * 1/subteams.length}%;`)=subteam.label
