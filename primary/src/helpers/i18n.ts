@@ -171,7 +171,7 @@ export class I18n {
 		return sanitizeHtml(dirty, {
 			// we probably only want to allow inline elements, everything else should be done in views
 			// CD 2022-05-24: allowing <p> because it might pop up
-			allowedTags: allowTags ? ['a', 'br', 'p', 'span', 'b', 'strong', 'i', 'em', 'tt', 'code'] : [],
+			allowedTags: allowTags ? ['a', 'br', 'p', 'span', 'b', 'strong', 'i', 'em', 'tt', 'code', 'ol', 'ul', 'li'] : [],
 			allowedSchemes: ['http', 'https'],
 			allowedAttributes: {
 				...sanitizeHtml.defaults.allowedAttributes,
@@ -256,7 +256,10 @@ export class I18n {
 	// Returns a message with parsed markdown
 	@qqxOutput()
 	msgMarked(name: string, parameters: I18nParameters) {
-		return this.sanitizeHtml(marked.parseInline(this._parameterize(this._rawMsg(name, this.locale), parameters)));
+		let text = this._parameterize(this._rawMsg(name, this.locale), parameters);
+		// CD 2023-04-13: we don't want an everything wrapped by a p if it's just one line
+		// text.replace(/^<p>(.*)<\/p>\n?$/s, '$1')
+		return this.sanitizeHtml(text.trim().split('\n').length === 1 ? marked.parseInline(text) : marked.parse(text));
 	}
 
 	// @todo: Implement pluralization function?

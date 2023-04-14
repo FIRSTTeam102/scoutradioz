@@ -85,11 +85,7 @@
 					"main": "Olheiros",
 					"event": "Olheiros: [[{event}]]",
 					"audit": "Auditoria de scouting",
-					"swapmembers": "Entrada/Saída de scouters da partida",
-					"swappitassignments": "Troque de equipe entre pares de análise do pit",
-					"present": "Definir quem já está presente no evento atual",
-					"pitassignments": "Análise das atribuições do pit",
-					"matchassignments": "Análise das atribuições da partida"
+					"present": "Definir quem já está presente no evento atual"
 				}
 			},
 			"admin": "Administrador",
@@ -410,6 +406,13 @@
 			"getCurrentTeams": "Atualizar lista de equipes",
 			"matches": "Partidas",
 			"recalcDerived": "Recalcular métricas derivadas",
+			"setCurrentEvent": "Definir evento atual"
+		},
+		"assignments": {
+			"pit": "Análise das atribuições do pit",
+			"match": "Análise das atribuições da partida",
+			"swapMatchAssignments": "Entrada/Saída de scouters da partida",
+			"swapPitAssignments": "Troque de equipe entre pares de análise do pit",
 			"setCurrentEvent": "Definir evento atual",
 			"confirmClear": "Você tem certeza que quer limpar o evento atual de {orgName}?",
 			"confirmSetEvent": "Definir *{eventName}* como o evento atual para *{orgName}*?",
@@ -422,6 +425,7 @@
 	"tryAgainLater": "Por favor, tente novamente mais tarde.",
 	"yes": "Sim",
 	"no": "Não",
+	"matches": "Partidas",
 	"name": "Nome",
 	"date": "Data"
 }

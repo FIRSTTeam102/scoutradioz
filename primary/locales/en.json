@@ -86,10 +86,6 @@
 					"main": "Scouters",
 					"event": "Scouters: [[{event}]]",
 					"audit": "Scouting audit",
-					"pitassignments": "Pit scouting assignments",
-					"matchassignments": "Match scouting assignments",
-					"swapmembers": "Swap in/out match scouts",
-					"swappitassignments": "Swap teams between pit scout pairs",
 					"present": "Set who is present at current event"
 				}
 			},
@@ -342,7 +338,6 @@
 			"wltDesc": "Win-Loss-Tie",
 			"dq": "DQ",
 			"dqDesc": "Disqualifications",
-			"matches": "Matches",
 			"rp": "RP",
 			"rpDesc": "Ranking Points"
 		},
@@ -431,12 +426,14 @@
 			"yearsOnTeam": "Years on team"
 		}
 	},
-	"tryAgainLater": "Please try again later.",
-	"yes": "Yes",
-	"no": "No",
-	"name": "Name",
 	"date": "Date",
 	"key": "Key",
+	"matches": "Matches",
+	"name": "Name",
+	"no": "No",
+	"yes": "Yes",
+	"yesProceed": "Yes, proceed",
+	"tryAgainLater": "Please try again later.",
 	"actions": "Actions",
 	"add": "Add",
 	"class": "Class",

@@ -1,4 +1,4 @@
-﻿{
+{
 	"index": {
 		"fulltitle": "Scoutradioz: Escultismo FRC como servicio",
 		"welcome": "Bienvenido a Scoutradioz",
@@ -85,11 +85,7 @@
 					"main": "Exploradores",
 					"event": "Exploradores: [[{event}]]",
 					"audit": "Auditoría de exploración",
-					"swapmembers": "Intercambiar cuentas de partido de entrada/salida",
-					"swappitassignments": "Intercambiar asignaciones de exploración de pits",
-					"present": "colocar quien esta presente al evento corriente",
-					"matchassignments": "asignaciones para exploracion de partidos",
-					"pitassignments": "asignaciones para expolracion del pit"
+					"present": "colocar quien esta presente al evento corriente"
 				}
 			},
 			"admin": "Administrador",
@@ -333,7 +329,6 @@
 			"wltDesc": "Ganancia-Pérdida-Empate",
 			"dq": "dq",
 			"dqDesc": "Descalificaciones",
-			"matches": "coincidencias",
 			"rp": "RP",
 			"rpDesc": "Puntos de clasificación"
 		},
@@ -399,9 +394,16 @@
 			"matches": "partidas (datos de FIRST)",
 			"recalcDerived": "Recalcular métricas derivadas",
 			"setCurrentEvent": "Establecer evento actual"
+		},
+		"assignments": {
+			"pit": "asignaciones para expolracion del pit",
+			"match": "asignaciones para exploracion de partidos",
+			"swapMatchAssignments": "Intercambiar cuentas de partido de entrada/salida",
+			"swapPitAssignments": "Intercambiar asignaciones de exploración de pits"
 		}
 	},
 	"tryAgainLater": "Inténtalo de nuevo más tarde.",
 	"yes": "Sí",
-	"no": "No"
+	"no": "No",
+	"matches": "coincidencias"
 }

@@ -21,34 +21,35 @@ block content
 								button(class='w3-btn w3-block w3-dark-gray' chosenstate='false' id=member._id onclick=`toggle("${member._id}")`)= member.name
 	form#setmemberpair(name="setmemberpair" method="post" action="/manage/assignments/setscoutingpair")
 		input#setmemberpairdata(type="hidden", name="data")
-	button(class="w3-btn w3-block theme-submit" onclick="submitPair()") Submit selected members as a new scouting group
+	button(class="w3-btn w3-block theme-submit" onclick="submitPair()")!=msg('manage.assignments.submitNewGroup')
 
 	hr 
 	if assigned.length > 0
-		h4 Scouting pairs
+		h4!=msg('manage.assignments.scoutingGroups')
 	ul(class="w3-ul w3-left-align")
 		each pair in assigned
 			li(class="w3-no-border")
 				- var thisButtonLabel = pair.member1.name;
 				- if (pair.member2) thisButtonLabel += ', ' + pair.member2.name;
 				- if (pair.member3) thisButtonLabel += ', ' + pair.member3.name;
-				button(onclick=`deletePair("${pair._id}")` class="w3-btn theme-red") Delete pair
+				button(onclick=`deletePair("${pair._id}")` class="w3-btn theme-red")!=msg('manage.assignments.deleteGroup')
 				|	#{thisButtonLabel}
-	button(onclick="clearScoutingPairs()" class="w3-btn theme-red") Clear all scouting pairs
+	button(onclick="clearScoutingPairs()" class="w3-btn theme-red")!=msg('manage.assignments.clearGroups')
 	form(method="post" action="/manage/assignments/deletescoutingpair" id="deletememberpair")
 		input(id="deletememberpairinput" name="data" type="hidden")
 	hr 
 	
 	form(action='/manage/assignments/generateteamallocations' method='post')
-		button(class="w3-btn theme-submit" type="submit") Assign teams to pit scouting pairs
+		button(class="w3-btn theme-submit" type="submit")!=msg('manage.assignments.assignPitTeams')
 	br
 	br 
-	div( onclick=`promptPass('*WARNING:* Erases all pit scouting assignments and data for the current event.', '/manage/assignments/clearpitallocations', ${pitScoutingCount});`)
-		button(class="w3-btn theme-red strong" type="submit") Clear all pit scouting data
+	div( onclick=`clearPitData()`)
+		button(class="w3-btn theme-red strong" type="submit")!=msg('manage.assignments.clearAllPit')
+	- const permanentDeleteWarning = msg('manage.assignments.permanentDeleteWarning', {number: pitScoutingCount, eventName, type: 'pit'});
 	script.
 	
 		function clearScoutingPairs() {
-			Confirm.show('Clear all scouting pairs? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)')
+			Confirm.show(`!{msg('manage.assignments.clearGroupsWarning')}`)
 				.then(response => {
 					if (!response.cancelled) {
 						$.post('/manage/assignments/clearscoutingpairs', {})
@@ -66,18 +67,21 @@ block content
 				})
 		}
 		
-		function promptPass(message, url, numberDeleting){
+		function clearPitData(){
+			
+			const numberDeleting = !{pitScoutingCount};
+			const url = '/manage/assignments/clearpitallocations';
 			
 			// Prompt user for their password
-			PasswordPrompt.show(message + "\n\nTo continue, enter your password.")
+			PasswordPrompt.show(`!{msg('manage.assignments.erasePitAssignmentsAndData')}`)
 				.then(result => {
 					if (result.cancelled === false) {
 						
 						if (numberDeleting && numberDeleting > 0) {
 							setTimeout(() => {
 								//- make ABSOLUTE SURE THEY WANNA PROCEED if they're actually gonna delete data
-								Confirm.show(`By proceeding, you will be *permanently deleting* the data from *${numberDeleting}* scouting assignments from _#{eventName}_. Are you sure you want to continue?`, {
-									yesText: 'Yes, proceed',
+								Confirm.show(`!{permanentDeleteWarning}`, {
+									yesText: '!{msg('yesProceed')}',
 									noText: 'Cancel',
 									yesTimeout: 2000
 								})

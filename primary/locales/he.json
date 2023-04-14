@@ -85,8 +85,6 @@
 					"main": "צופים",
 					"event": "צופים: [[{event}]]",
 					"audit": "ביקורת צופית",
-					"swapmembers": "החלף נקודות התאמה לכניסה/יציאה",
-					"swappitassignments": "החלפת משימות צופי בורות",
 					"present": "הגדר מתנה"
 				}
 			},
@@ -338,7 +336,6 @@
 			"wltDesc": "ניצחון-הפסד-תיקו",
 			"dq": "DQ",
 			"dqDesc": "פסילות",
-			"matches": "התאמות",
 			"rp": "RP",
 			"rpDesc": "דירוג נקודות"
 		},
@@ -408,9 +405,14 @@
 			"matches": "התאמות",
 			"recalcDerived": "חישוב מחדש של מדדים נגזרים",
 			"setCurrentEvent": "הגדר את האירוע הנוכחי"
+		},
+		"assignments": {
+			"swapMatchAssignments": "החלף נקודות התאמה לכניסה/יציאה",
+			"swapPitAssignments": "החלפת משימות צופי בורות"
 		}
 	},
 	"tryAgainLater": "בבקשה נסה שוב מאוחר יותר.",
 	"yes": "כן",
-	"no": "לא"
+	"no": "לא",
+	"matches": "התאמות"
 }
