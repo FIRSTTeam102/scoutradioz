@@ -13,5 +13,4 @@ yarn.lock
 *.tsbuildinfo
 .svelte-kit
 # below: temporary
-offline/static
-.serverless
+voyager/static/*.css

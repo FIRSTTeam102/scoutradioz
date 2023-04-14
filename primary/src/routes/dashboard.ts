@@ -431,6 +431,17 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		if(!rankings[0])
 			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
 		
+		// 2023-03-27, M.O'C: Scan the rankings to make sure all the data has come in
+		let firstCount = rankings[0].matches_played;
+		let matchcountConsistent = true;
+		for(let i = 1; i < rankings.length; i++){
+			let thisCount = rankings[i].matches_played;
+			if (thisCount != firstCount) {
+				matchcountConsistent = false;
+				break;
+			}
+		}
+
 		// num_alliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
 		let alliances = [];
 		for(let i = 0; i < num_alliances; i++){
@@ -611,6 +622,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			currentAggRanges: currentAggRanges,
 			layout: scoreLayout,
 			sortedTeams: sortedTeams,
+			matchcountConsistent: matchcountConsistent,
 			matchDataHelper: matchDataHelper
 		});
 	}
@@ -665,11 +677,14 @@ router.get('/pits', wrap(async (req, res) => {
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
+	// 2023-03-30, M.O'C: Adding guardrail around 'teams were updated (some removed) after pit scouting was assigned'
+	let allTeamsInDB = true;
 	// Add data to 'teams' data
 	for (let teamIdx = 0; teamIdx < teamAssignments.length; teamIdx++) {
 		// logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
 		if (!teamKeyMap[teamAssignments[teamIdx].team_key]) {
-			throw new e.InternalServerError(res.msg('errors.teamMissing', {team: teamAssignments[teamIdx].team_key}));
+			allTeamsInDB = false;
+			break;
 		}
 		// 2022-05-18 JL: Passing teamKeyMap to view instead of adding nickname to the teamAssignments object
 		//	we can still use this loop to guarantee that the pug won't encounter an error
@@ -691,7 +706,8 @@ router.get('/pits', wrap(async (req, res) => {
 		title: res.msg('scouting.pit'),
 		teamAssignments: teamAssignments,
 		teamKeyMap: teamKeyMap,
-		images: images
+		images: images,
+		allTeamsInDB: allTeamsInDB
 	});	
 }));
 
@@ -735,6 +751,18 @@ router.get('/matches', wrap(async (req, res) => {
 
 	logger.debug('scoreData.length=' + scoreData.length);
 
+	// M.O'C, 2023-03-29: Are there "future" resolved matches?
+	let futureMatchResultsConsistent = true;
+	// Get matches at or beyond the 'earliest' time
+	let futureMatches: Match[] = await utilities.find('matches', { event_key: eventKey, 'time': { $gte: earliestTimestamp }},{sort: {'time': 1}});
+	for (let futureIdx = 0; futureIdx < futureMatches.length; futureIdx++) {
+		logger.trace(`future IDX: ${futureIdx} - time: ${futureMatches[futureIdx].time} - red score: ${futureMatches[futureIdx].alliances.red.score}`);
+		if (futureMatches[futureIdx].alliances.red.score != -1) {
+			futureMatchResultsConsistent = false;
+			break;
+		}
+	}
+
 	for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
 		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key])
@@ -770,7 +798,8 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.debug('scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
 		title: res.msg('scouting.match'),
-		matches: scoreData
+		matches: scoreData,
+		futureMatchResultsConsistent: futureMatchResultsConsistent
 	});
 }));
 

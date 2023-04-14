@@ -47,7 +47,7 @@ router.get('/', wrap(async (req, res) => {
 	}
 	
 	res.render('./manage/members/index', { 
-		title: 'Organization Members',
+		title: req.msg('manage.members.main'),
 		membersByRole: membersByRole,
 		config: config,
 		roles: roles
@@ -441,7 +441,7 @@ router.post('/updatepresent', wrap(async (req, res) => {
 	//2019-11-20 JL: updated to only work with members of the right organization.
 	const orgKey = req._user.org_key;
 	
-	await utilities.update('users', {org_key: orgKey, visible: true}, { $set: { 'event_info.present' : 'false' } }, {});
+	await utilities.update('users', {org_key: orgKey, visible: true}, { $set: { 'event_info.present' : false } }, {});
 	
 	//Get a list of all present member IDs.
 	let allPresentMembers = [];

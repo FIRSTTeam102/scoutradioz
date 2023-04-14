@@ -66,11 +66,12 @@
 				"teamStats": "Team statistics",
 				"yearStats": "Complete statistics for {year}",
 				"export": {
-					"main": "Export to CSV",
-					"match": "Match scouting data: [[{event}]]",
-					"pit": "Pit scouting data: [[{event}]]",
-					"matchAll": "Match scouting data: [[All of {year}]]",
-					"pitAll": "Pit scouting data: [[All of {year}]]"
+					"main": "Export data",
+					"match": "[CSV] Match scouting data: [[{event}]]",
+					"pit": "[CSV] Pit scouting data: [[{event}]]",
+					"matchAll": "[CSV] Match scouting data: [[All of {year}]]",
+					"pitAll": "[CSV] Pit scouting data: [[All of {year}]]",
+					"photos": "[Zip] Robot photos: [[All of {year}]]"
 				}
 			},
 			"scouting": "Scouting",
@@ -414,33 +415,6 @@
 			"setCurrentEventKey": "Set current event key",
 			"successClear": "Cleared current event successfully.",
 			"successSetEvent": "Set current event to *{eventName}* successfuly."
-		},
-		"assignments": {
-			"pit": "Pit scouting assignments",
-			"match": "Match scouting assignments",
-			"assignPitTeams": "Assign teams to pit scouting groups",
-			"assignMatchTeams": "Assign matches to selected scouters",
-			"availablePotentialScouters": {
-				"main": "Available potential scouters",
-				"tooltip": "The scouters and members that appear in this list are only those who are [marked as present]({url}).",
-				"noneFound": "No members were found. You must [mark some as present]({url})."
-			},
-			"blockSize": {
-				"main": "Allocate in blocks of...",
-				"tooltipAssignees": "* If you have only 6 assignees then they'll be doing every match with no breaks.\n* If you have 12 assignees total, they'll be doing N matches on, then N matches off, loop. Or if you have more than 12 assignees, they might occasionally get 2xN matches off. A suggested \"N\" is 5.\n* If you have 7 to 11 assignees, they will occasionally do 2xN matches on before getting N matches off. A suggested \"N\" is 3."
-			},
-			"checkUncheckSubteamMembers": "Check/uncheck all members of a given subteam",
-			"clearAllPit": "Clear all pit scouting data and assignments",
-			"clearAllMatch": "Clear all match scouting data and assignments",
-			"clearGroups": "Clear all scouting groups",
-			"clearGroupsWarning": "Clear all scouting groups? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)",
-			"deleteGroup": "Delete group",
-			"erasePitAssignmentsAndData": "*WARNING:* Erases all pit scouting assignments and data for the current event.\n\nTo continue, enter your password.",
-			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
-			"scoutingGroups": "Scouting groups",
-			"submitNewGroup": "Submit selected members as a new scouting group",
-			"swapMatchAssignments": "Swap in/out match scouts",
-			"swapPitAssignments": "Swap teams between pit scout groups"
 		}
 	},
 	"date": "Date",
@@ -448,7 +422,12 @@
 	"matches": "Matches",
 	"name": "Name",
 	"no": "No",
-	"tryAgainLater": "Please try again later.",
 	"yes": "Yes",
-	"yesProceed": "Yes, proceed"
+	"yesProceed": "Yes, proceed",
+	"tryAgainLater": "Please try again later.",
+	"actions": "Actions",
+	"add": "Add",
+	"class": "Class",
+	"subteam": "Subteam",
+	"update": "Update"
 }

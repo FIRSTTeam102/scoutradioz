@@ -214,31 +214,6 @@ router.get('/uploads', wrap(async (req, res) => {
 		}
 	}
 	
-	/*
-	//Sort into groups of teams
-	var uploadsByTeam = [];
-	var thisTeamKey, thisTeamUploads = [];
-	for (var upload of uploads) {
-		var thisTeamLinks = uploadHelper.getLinks(upload);
-		upload.links = thisTeamLinks;
-		if (upload.hasOwnProperty('team_key')) {
-			//If thisUpload matches thisTeam, add to thisTeamUploads
-			if (thisTeamKey == upload.team_key) {
-				thisTeamUploads.push(upload);
-			}
-			//If not a match, then push thisTeamUploads, reset it and set thisTeamKey
-			else {
-				uploadsByTeam.push(thisTeamUploads);
-				thisTeamUploads = [];
-				thisTeamUploads.push(upload);
-				thisTeamKey = upload.team_key;
-			}
-		}
-	}
-	//get rid of first empty array (due to the way my loop was structured)
-	uploadsByTeam.splice(0, 1);
-	*/
-	
 	res.render('./manage/audit/uploads', {
 		title: 'Uploads Audit',
 		uploadsByTeam: uploadsByTeamKey,

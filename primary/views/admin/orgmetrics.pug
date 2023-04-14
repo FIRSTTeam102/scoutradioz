@@ -33,6 +33,7 @@ block content
 			th # Deleted uploads
 			th # Org team values
 			th Event
+			th Start date
 			th # Match scouting @ event
 			th # Pit scouting @ event
 		each org in orgMetrics
@@ -49,6 +50,7 @@ block content
 				td=org.deletedImageUploads
 				td=org.orgTeamValues
 				td!=org.event ? `${org.event.name} <span class="unimportant">${org.event.key}</span>` : ''
+				td!=org.event ? `<span style="white-space: nowrap;">${org.event.start_date}</span>` : ''
 				td=org.matchscoutingAtEvent 
 				td=org.pitscoutingAtEvent 
 	+tableSorter()
