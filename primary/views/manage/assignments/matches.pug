@@ -37,11 +37,7 @@ block content
 							option(value=val class="w3-bar-item") #{val}
 				//- label &nbsp;matches
 				span(class="sprite sp-18 sp-help sp-inline w3-tooltip")
-					span(class="w3-tooltiptext w3-left-align")
-						ul
-							li!=msg('manage.assignments.blockSize.tooltip_line1')
-							li!=msg('manage.assignments.blockSize.tooltip_line2')
-							li!=msg('manage.assignments.blockSize.tooltip_line3')
+					span(class="w3-tooltiptext w3-left-align")!=msgMarked('manage.assignments.blockSize.tooltipAssignees')
 
 				p
 				button(type="submit" class="w3-btn theme-submit")!=msg('manage.assignments.assignMatchTeams')
