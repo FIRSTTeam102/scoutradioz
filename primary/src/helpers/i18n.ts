@@ -259,7 +259,7 @@ export class I18n {
 		let text = this._parameterize(this._rawMsg(name, this.locale), parameters);
 		// CD 2023-04-13: we don't want an everything wrapped by a p if it's just one line
 		// text.replace(/^<p>(.*)<\/p>\n?$/s, '$1')
-		return this.sanitizeHtml(text.trim().split('\n').length === 1 ? marked.parseInline(text) : marked.parse(text));
+		return this.sanitizeHtml(text.trim().includes('\n') ? marked.parse(text) : marked.parseInline(text));
 	}
 
 	// @todo: Implement pluralization function?
