@@ -435,11 +435,14 @@
 			"clearAllPit": "Clear all pit scouting data and assignments",
 			"clearAllMatch": "Clear all match scouting data and assignments",
 			"clearGroups": "Clear all scouting groups",
+			"clearGroupsWarning": "Clear all scouting groups? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)",
 			"deleteGroup": "Delete group",
+			"erasePitAssignmentsAndData": "*WARNING:* Erases all pit scouting assignments and data for the current event.\n\nTo continue, enter your password.",
+			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
 			"scoutingGroups": "Scouting groups",
 			"submitNewGroup": "Submit selected members as a new scouting group",
 			"swapMatchAssignments": "Swap in/out match scouts",
-			"swapPitAssignments": "Swap teams between pit scout pairs"
+			"swapPitAssignments": "Swap teams between pit scout groups"
 		}
 	},
 	"date": "Date",
@@ -448,5 +451,6 @@
 	"name": "Name",
 	"no": "No",
 	"tryAgainLater": "Please try again later.",
-	"yes": "Yes"
+	"yes": "Yes",
+	"yesProceed": "Yes, proceed"
 }

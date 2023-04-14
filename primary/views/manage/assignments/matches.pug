@@ -85,48 +85,4 @@ block content
 			})
 		}
 		
-		function promptPass(message, url, numberDeleting){
-			
-			// Prompt user for their password
-			PasswordPrompt.show(message + "\n\nTo continue, enter your password.")
-				.then(result => {
-					if (result.cancelled === false) {
-						
-						if (numberDeleting && numberDeleting > 0) {
-							setTimeout(() => {
-								//- make ABSOLUTE SURE THEY WANNA PROCEED if they're actually gonna delete data
-								Confirm.show(`By proceeding, you will be *permanently deleting* the data from *${numberDeleting}* scouting assignments from _#{eventName}_. Are you sure you want to continue?`, {
-									yesText: 'Yes, proceed',
-									noText: 'Cancel',
-									yesTimeout: 2000
-								})
-									.then(result2 => {
-										if (result2.cancelled === false) {
-											doPostWithPassword(url, result.password);
-										}
-									})
-							}, 350);
-						}
-						else {
-							// Send request immediately if the user didn't cancel & there's nothing to delete
-							doPostWithPassword(url, result.password)
-						}
-					}
-				});
-		}
-		
-		function doPostWithPassword(url, password) {
-			$.post(url, {
-				password: password
-			}, 
-			function( data, status ){
-				if(data && data.message) {
-					// error
-					if (data.status && data.status >= 400)
-						NotificationCard.error(data.message);
-					// success/message
-					else
-						NotificationCard.show(data.message);
-				}
-			});
-		}
+		//- todo: delete button for match assignments and data
