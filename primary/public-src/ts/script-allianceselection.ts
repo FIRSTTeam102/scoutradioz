@@ -1,16 +1,7 @@
 // See views/dashboard/allianceselection.pug for an explanation of these objects
 declare class State {
-	alliances?: {
-		// 2022-03-21 JL: I realize now that I never populated slots 2 and 3 of the allianceX arrays. But the alliance selection works now, so /shrug
-		alliance1: [HTMLElement, undefined, undefined];
-		alliance2: [HTMLElement, undefined, undefined];
-		alliance3: [HTMLElement, undefined, undefined];
-		alliance4: [HTMLElement, undefined, undefined];
-		alliance5: [HTMLElement, undefined, undefined];
-		alliance6: [HTMLElement, undefined, undefined];
-		alliance7: [HTMLElement, undefined, undefined];
-		alliance8: [HTMLElement, undefined, undefined];
-	};
+	// unused
+	alliances?: TeamKey[][];
 	rankings: Array<TeamKey>; 
 	currentSelectedTeam: TeamKey;
 	moveHistory: Array<Move>;
@@ -19,7 +10,7 @@ declare class State {
 }
 
 // Moves added in the move history
-declare class Move{
+declare class Move {
 	allianceSpot: integer;
 	newAllianceCaptain?: TeamKey;
 	previousSpot: integer;
@@ -41,7 +32,10 @@ declare let startingCaptain: TeamKey;
 declare let i18n: Record<string, string>; // select i18n messages are passed through pug
 declare let numAlliances: number;
 
-window.onbeforeunload = function(){return i18n['wontSave'];};
+window.onbeforeunload = (e) => {
+	e.preventDefault();
+	return i18n['wontSave'];
+};
 
 const ROW_BASE_COLOR = '#b0b0c057';
 const ROW_HIGHLIGHT_COLOR = 'rgba(220,220,240)';
@@ -51,7 +45,7 @@ console.log(`numAlliances=${numAlliances}`);
 
 $(function(){
 	//gray out first team
-	grayOutRow( state.rankings[1] );
+	grayOutRow(state.rankings[1]);
 
 	//prettify table
 	//prettifyTable();
@@ -64,7 +58,7 @@ $(function(){
 		.attr('spot-available', 'true');
 
 	let startTime = Date.now();
-	previousStates.push( {
+	previousStates.push({
 		state: cloneState(),
 		html: $('#allianceSelection').clone()
 	});
@@ -74,13 +68,14 @@ $(function(){
 		doUndo();
 	});
 
-	$('#num_alliances').on('change', doNumAllianceChange);
+	$('#numAlliances').on('change', (e) => doNumChange(e.target, 'numAlliances'));
+	$('#numRounds').on('change', (e) => doNumChange(e.target, 'numRounds'));
 });
 
-function doNumAllianceChange(){
-	let newAllianceNum = $('#num_alliances').val();
-	console.log(`newAllianceNum=${newAllianceNum}`);
-	location.search = `?numAlliances=${newAllianceNum}`;
+function doNumChange(el: Element, param: string) {
+	let search = new URLSearchParams(location.search);
+	search.set(param, String($(el).val()));
+	location.search = search.toString();
 }
 
 function doUndo(){
@@ -89,7 +84,7 @@ function doUndo(){
 	//un-highlight currentSelectedTeam row
 	unHighlightRow(state.currentSelectedTeam);
 
-	if( state.moveHistory.length > 0){
+	if(state.moveHistory.length > 0){
 
 		requestAnimationFrame(function(){
 
@@ -140,16 +135,16 @@ function doAllianceTeamClick(this: HTMLElement){
 	let currentSelectedTeam = state.currentSelectedTeam;
 
 	//isAvailable: if this is a team that can be picked
-	if( isAvailable ){
+	if (isAvailable) {
 		//if there is a team already selected, remove highlight
-		if( currentSelectedTeam ){
+		if (currentSelectedTeam) {
 			$(`#${currentSelectedTeam}`).removeClass('team-highlighted');
 
 			//un-highlight currentSelectedTeam row
 			unHighlightRow(state.currentSelectedTeam);
 		}
 		//if we're clicking same team twice, remove currentselectedteam
-		if( state.currentSelectedTeam == teamKey ){
+		if (state.currentSelectedTeam == teamKey) {
 			//un-highlight currentSelectedTeam row
 			unHighlightRow(state.currentSelectedTeam);
 
@@ -168,9 +163,9 @@ function doAllianceTeamClick(this: HTMLElement){
 		}
 	}
 	//spotIsAvailable: if this is a slot that can be filled
-	else if( spotIsAvailable ){
+	else if (spotIsAvailable) {
 		//if a team is selected, DO EVERYTHING
-		if( currentSelectedTeam ){
+		if (currentSelectedTeam) {
 
 			//console.log(currentSelectedTeam);
 			$(`#${currentSelectedTeam}`).removeClass('team-highlighted');
@@ -197,14 +192,14 @@ function doAllianceTeamClick(this: HTMLElement){
 			state.moveHistory.push(thisMove);
 
 			//if team is not a captain, hide team from below list
-			if( currentSpot > numAlliances ){
+			if (currentSpot > numAlliances) {
 				$(`#${currentSelectedTeam}`).parent().hide();
 
 				//remove team from rankings
 				state.rankings.splice(currentSpot, 1);
 			}
 			//if team is a captain, move alliances up
-			else{
+			else {
 				//get alliance num
 				let currentAllianceStr = $(`#${currentSelectedTeam}`).attr('alliance');
 				if (!currentAllianceStr) throw new Error(i18n['noAllianceAttribute'].replace('{team}', currentSelectedTeam));
@@ -220,16 +215,16 @@ function doAllianceTeamClick(this: HTMLElement){
 					if (typeof nextTeamInThisSpot !== 'string') throw new TypeError(i18n['noTeamStateRankings'].replace('{i}', ''+i+1));
 
 					//set this spot's contents to next team
-					thisSpot.html( nextTeamInThisSpot.substring(3) );
+					thisSpot.html(nextTeamInThisSpot.substring(3));
 					//id has to be set after the fact
 
 					//if this team is not a captain, just hide em
-					if( !$(`#${nextTeamInThisSpot}`).attr('alliance') ){
+					if (!$(`#${nextTeamInThisSpot}`).attr('alliance')) {
 
 						$(`#${nextTeamInThisSpot}`).parent().hide();
 					}
 
-					//console.log( state.rankings[i] );
+					//console.log(state.rankings[i]);
 				}
 				//remove team from rankings
 				state.rankings.splice(currentSpot, 1);
@@ -241,9 +236,9 @@ function doAllianceTeamClick(this: HTMLElement){
 					let thisTeam = allAllianceTeams[i];
 
 					//if this element contains a valid team
-					if( thisTeam.id && thisTeam.id.substring(0,3) == 'frc' ){
+					if (thisTeam.id && thisTeam.id.substring(0,3) == 'frc') {
 						//then set id equal to the text it contains
-						$(thisTeam).attr( 'id', 'frc' + $(thisTeam).text() );
+						$(thisTeam).attr('id', 'frc' + $(thisTeam).text());
 					}
 				}
 			}
@@ -258,51 +253,40 @@ function doAllianceTeamClick(this: HTMLElement){
 				.addClass('team-taken')			//make dark
 				.attr('spot-available', 'false');	//make spot no longer able to be populated
 
-			//if first round, move selection thingimajiggy down until 8
-			if( state.currentRound == 0 ){
+			// even rounds, move down towards last alliance; odd rounds, move up towards first
+			let goingDown = state.currentRound % 2 == 0;
 
-				if( state.currentAlliance < numAlliances ){
-
-					//switch over to the next alliance to kerfuffle
-					state.currentAlliance++;
-					//set team 2 of next alliance as available
-					$(`#all${state.currentAlliance}team2`).addClass('team-available')	//highlight
-						.attr('spot-available', 'true');									//make spot able to be populated
-				}
-				//if the alliance we just did is alliance 8
-				else{
-					//begin to move down the chain now
-					state.currentRound = 1;
-
-					//set team 3 (THREE) of next alliance as available
-					$(`#all${state.currentAlliance}team3`).addClass('team-available')
+			// continuing this round
+			if (goingDown ? state.currentAlliance < numAlliances : state.currentAlliance > 1) {
+				// switch over to the next alliance
+				state.currentAlliance += goingDown ? 1 : -1;
+				// set next team of next alliance as available
+				$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-available') // highlight
+					.attr('spot-available', 'true'); // make spot able to be populated
+			}
+			// next round
+			else {
+				state.currentRound++;
+				
+				$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-available')
 						.attr('spot-available', 'true');
-				}
-				//set first team in alliance to be unavailable
+			}
+
+			if (state.currentRound == 0) {
+				// set first team in alliance to be unavailable
 				let team1 = state.rankings[state.currentAlliance];
-
-				console.log('Gonna disable '+team1);
-				$(`#${team1}`).attr('available', 'false')		//make team no longer able to be highlighted
-					.addClass('team-taken');				//make dark
-				grayOutRow(team1); 							//gray out the row in the data
-				thisMove.newAllianceCaptain = team1;		//keep track of the new alliance captain in the state move history
+				console.log('Gonna disable', team1);
+				$(`#${team1}`).attr('available', 'false') // make team no longer able to be highlighted
+					.addClass('team-taken');
+				grayOutRow(team1); // gray out the row in the data
+				thisMove.newAllianceCaptain = team1; // keep track of the new alliance captain in the state move history
 			}
-			else{
-				//only set next alliance available if we have at least one left
-				if( state.currentAlliance > 1 ){
 
-					state.currentAlliance--;
-					//set team 3 (THREE) of next alliance as available
-					$(`#all${state.currentAlliance}team3`).addClass('team-available')
-						.attr('spot-available', 'true');
-				}
-			}
-			//Push into move history after we've identified who the new alliance captain is
+			// push into move history after we've identified who the new alliance captain is
 			clonedState.moveHistory.push(thisMove);
 			console.log(clonedState.moveHistory);
-			console.log(state.moveHistory);
 			
-			previousStates.push( {
+			previousStates.push({
 				state: clonedState,
 				html: clonedHTML
 			});
@@ -475,15 +459,15 @@ function prettifyTable(){
 
 		for(let i = 0; i < rows.length; i++){
 
-			if( $(rows[i]).attr('selectable') != 'false'){
+			if ($(rows[i]).attr('selectable') != 'false'){
 				//style every other row
-				if( i % 2 == 0 ){
+				if (i % 2 == 0) {
 					$(rows[i]).css({
 						'background-color': 'rgba(255, 255, 255, 0.25)',
 						'color': '#fff'
 					});
 				}
-				else{
+				else {
 					$(rows[i]).css({
 						'background-color': 'rgba(200, 200, 200, 0.25)',
 						'color': '#fff'
@@ -495,10 +479,10 @@ function prettifyTable(){
 }
 
 $('#showHideData').click(function(e){
-	if(this.checked){
+	if (this.checked) {
 		$('#data').show();
 	}
-	else{
+	else {
 		$('#data').hide();
 	}
 });
