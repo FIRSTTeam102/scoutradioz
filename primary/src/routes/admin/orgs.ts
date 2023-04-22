@@ -50,23 +50,23 @@ router.post('/', wrap(async (req, res) => {
 	
 	logger.info(`${thisFuncName} Updating org ${orgKey}, nickname=${nickname}`);
 	
-	let subteams, classes;
-	try {
-		let ret = getSubteamsAndClasses(req.body);
-		subteams = ret.subteams;
-		classes = ret.classes;
-	}
-	catch (err) {
-		return res.redirect(`/admin/orgs?alert=${err}&type=error`);
-	}
-	logger.debug(`${thisFuncName} subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
+	// let subteams, classes;
+	// try {
+	// 	let ret = getSubteamsAndClasses(req.body);
+	// 	subteams = ret.subteams;
+	// 	classes = ret.classes;
+	// }
+	// catch (err) {
+	// 	return res.redirect(`/admin/orgs?alert=${err}&type=error`);
+	// }
+	// logger.debug(`${thisFuncName} subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
 	
 	//Create update query
 	let updateQuery: MongoDocument = {
 		$set: {
 			nickname: nickname,
-			'config.members.subteams': subteams,
-			'config.members.classes': classes,
+			// 'config.members.subteams': subteams,
+			// 'config.members.classes': classes,
 		},
 		$unset: {},
 	};
@@ -474,7 +474,7 @@ router.get('/metrics', wrap(async (req, res) => {
 			pipeline: [
 				{$match: {$expr: {$and: [
 					{$eq: ['$org_key', '$$org_key']},
-					{$ne: ['$data', undefined]}
+					{$gt: ['$data', undefined]} // Super duper ultra hacky hack - found by https://stackoverflow.com/questions/25497150/mongodb-aggregate-by-field-exists
 				]}}},
 				{$count: 'count'}
 			],
@@ -488,7 +488,7 @@ router.get('/metrics', wrap(async (req, res) => {
 			pipeline: [
 				{$match: {$expr: {$and: [
 					{$eq: ['$org_key', '$$org_key']},
-					{$ne: ['$data', undefined]}
+					{$gt: ['$data', undefined]} // See above
 				]}}},
 				{$count: 'count'}
 			],
