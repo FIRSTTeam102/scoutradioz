@@ -66,7 +66,7 @@
 				"teamStats": "Estatísticas da equipe",
 				"yearStats": "Estatísticas completas para {year}",
 				"export": {
-					"main": "Exportar para CSV",
+					"main": "Exportar dados",
 					"match": "Dados da análise da partida: [[{event}]]",
 					"pit": "Dados de análise do pit: [[{event}]]",
 					"matchAll": "Dados de análise da partida: [[Tudo de {year}]]",
@@ -427,5 +427,9 @@
 	"no": "Não",
 	"matches": "Partidas",
 	"name": "Nome",
-	"date": "Data"
+	"date": "Data",
+	"add": "Adicionar",
+	"actions": "Ações",
+	"update": "Atualizar",
+	"key": "Chave"
 }
