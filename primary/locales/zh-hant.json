@@ -404,10 +404,6 @@
 			"matches": "火柴",
 			"recalcDerived": "重新計算衍生指標",
 			"setCurrentEvent": "設置當前事件"
-		},
-		"assignments": {
-			"swapMatchAssignments": "換入/換出比賽賬戶",
-			"swapPitAssignments": "交換礦坑偵察任務"
 		}
 	},
 	"tryAgainLater": "請稍後再試。",

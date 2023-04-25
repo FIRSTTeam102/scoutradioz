@@ -337,7 +337,6 @@
 			"wltDesc": "Ganhou-Perdeu-Empatou",
 			"dq": "DQ",
 			"dqDesc": "Desqualificações",
-			"matches": "Partidas",
 			"rp": "Ranking Points",
 			"rpDesc": "Pontos de Classificação"
 		},
@@ -409,17 +408,7 @@
 			"setCurrentEvent": "Definir evento atual"
 		},
 		"assignments": {
-			"pit": "Análise das atribuições do pit",
-			"match": "Análise das atribuições da partida",
-			"swapMatchAssignments": "Entrada/Saída de scouters da partida",
-			"swapPitAssignments": "Troque de equipe entre pares de análise do pit",
-			"setCurrentEvent": "Definir evento atual",
-			"confirmClear": "Você tem certeza que quer limpar o evento atual de {orgName}?",
-			"confirmSetEvent": "Definir *{eventName}* como o evento atual para *{orgName}*?",
-			"currentEvent": "Evento atual - {event}",
-			"noEvent": "Nenhum evento foi definido",
-			"successClear": "Evento atual limpo com sucesso.",
-			"successSetEvent": "Evento atual definido para {eventName} com sucesso."
+			"swapPitAssignments": "Troque de equipe entre pares de análise do pit"
 		}
 	},
 	"tryAgainLater": "Por favor, tente novamente mais tarde.",

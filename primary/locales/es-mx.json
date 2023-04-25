@@ -396,9 +396,6 @@
 			"setCurrentEvent": "Establecer evento actual"
 		},
 		"assignments": {
-			"pit": "asignaciones para expolracion del pit",
-			"match": "asignaciones para exploracion de partidos",
-			"swapMatchAssignments": "Intercambiar cuentas de partido de entrada/salida",
 			"swapPitAssignments": "Intercambiar asignaciones de exploración de pits"
 		}
 	},
