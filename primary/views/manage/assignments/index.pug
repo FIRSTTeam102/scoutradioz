@@ -42,14 +42,13 @@ block content
 	form(action='/manage/assignments/generateteamallocations' method='post')
 		button(class="w3-btn theme-submit" type="submit")!=msg('manage.assignments.assignPitTeams')
 	br
-	br 
+	br
 	div( onclick=`clearPitData()`)
 		button(class="w3-btn theme-red strong" type="submit")!=msg('manage.assignments.clearAllPit')
-	- const permanentDeleteWarning = msg('manage.assignments.permanentDeleteWarning', {number: pitScoutingCount, eventName, type: 'pit'});
 	script.
 	
 		function clearScoutingPairs() {
-			Confirm.show(`!{msg('manage.assignments.clearGroupsWarning')}`)
+			Confirm.show(!{msgJs('manage.assignments.clearGroupsWarning')})
 				.then(response => {
 					if (!response.cancelled) {
 						$.post('/manage/assignments/clearscoutingpairs', {})
@@ -73,15 +72,15 @@ block content
 			const url = '/manage/assignments/clearpitallocations';
 			
 			// Prompt user for their password
-			PasswordPrompt.show(`!{msg('manage.assignments.erasePitAssignmentsAndData')}`)
+			PasswordPrompt.show(!{msgJs('manage.assignments.erasePitAssignmentsAndData')})
 				.then(result => {
 					if (result.cancelled === false) {
 						
 						if (numberDeleting && numberDeleting > 0) {
 							setTimeout(() => {
 								//- make ABSOLUTE SURE THEY WANNA PROCEED if they're actually gonna delete data
-								Confirm.show(`!{permanentDeleteWarning}`, {
-									yesText: '!{msg('yesProceed')}',
+								Confirm.show(!{msgJs('manage.assignments.permanentDeleteWarning', {number: pitScoutingCount, eventName, type: 'pit'})}, {
+									yesText: !{msgJs('yesProceed')},
 									noText: 'Cancel',
 									yesTimeout: 2000
 								})
