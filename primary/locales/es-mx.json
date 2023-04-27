@@ -32,7 +32,7 @@
 	},
 	"hello": {
 		"world": "¡Hola mundo!",
-		"name": "¡Hola, {nombre}!"
+		"name": "¡Hola, {name}!"
 	},
 	"selectOrg": "Selecciona una organización.",
 	"error": {
@@ -71,7 +71,7 @@
 					"matchAll": "[CSV] Datos de exploración de partidos: [[Todo {year}]]",
 					"pitAll": "[CSV] Datos de exploración de pit: [[Todo {year}]]"
 				},
-				"teamList": "{numero}: {nombre}"
+				"teamList": "{number}: {name}"
 			},
 			"scouting": "exploracion",
 			"manage": {

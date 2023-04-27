@@ -406,12 +406,12 @@
 			"matches": "Partidas",
 			"recalcDerived": "Recalcular métricas derivadas",
 			"setCurrentEvent": "Definir evento atual",
-			"confirmClear": "Você tem certeza que quer limpar o evento atual de {orgName}?",
+			"confirmClear": "Você tem certeza que quer limpar o evento atual de *{orgName}*?",
 			"confirmSetEvent": "Definir *{eventName}* como o evento atual para *{orgName}*?",
 			"currentEvent": "Evento atual - {event}",
 			"noEvent": "Nenhum evento foi definido",
 			"successClear": "Evento atual limpo com sucesso.",
-			"successSetEvent": "Evento atual definido para {eventName} com sucesso."
+			"successSetEvent": "Evento atual definido para *{eventName}* com sucesso."
 		},
 		"assignments": {
 			"pit": "Análise das atribuições do pit",
