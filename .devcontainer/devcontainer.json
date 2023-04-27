@@ -20,8 +20,11 @@
 	// "forwardPorts": [3000, 27017],
 	"portsAttributes": {
 		"3000": {
-			"label": "App",
+			"label": "primary",
 			"onAutoForward": "notify"
+		},
+		"3001": {
+			"label": "upload"
 		},
 		"5173": {
 			"label": "vite dev",

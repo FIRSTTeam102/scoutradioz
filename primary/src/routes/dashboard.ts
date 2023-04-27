@@ -415,11 +415,14 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	let thisUser = req._user;
 	let org_key = thisUser.org_key;
 
-	let numAlliancesStr = req.query.numAlliances || '8';
-	let num_alliances: number;
-	num_alliances = 8;
-	if (typeof numAlliancesStr === 'string') num_alliances = parseInt(numAlliancesStr);
-	logger.debug(`num_alliances: ${num_alliances}`);
+	let numAlliances = typeof req.query.numAlliances === 'string'
+		? parseInt(req.query.numAlliances) : 8;
+	let numRounds = typeof req.query.numRounds === 'string'
+		? parseInt(req.query.numRounds) : 3;
+	logger.debug(`numAlliances: ${numAlliances}, numRounds: ${numRounds}`);
+
+	// if (numAlliances < 2) throw new e.UserError('invalid numAlliances');
+	// if (numRounds < 2 || 4 < numRounds) throw new e.UserError('invalid numRounds');
 
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// 2019-11-11 JL: Put everything inside a try/catch block with error conditionals throwing
@@ -442,14 +445,11 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			}
 		}
 
-		// num_alliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
-		let alliances = [];
-		for(let i = 0; i < num_alliances; i++){
-			alliances[i] = {
-				team1: rankings[i].team_key,
-				team2: undefined,
-				team3: undefined
-			};
+		// numAlliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
+		let alliances: TeamKey[][] = [];
+		for (let i = 0; i < numAlliances; i++) {
+			alliances[i] = new Array().fill(numRounds);
+			alliances[i][0] = rankings[i].team_key; // preload first team 
 		}
 		logger.debug(`alliances=${JSON.stringify(alliances)}`);
 			
@@ -584,8 +584,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		});
 		
 		let sortedTeams: Array<{rank: number, team_key: TeamKey}> = [];
-		for(let i = num_alliances; i < rankings.length; i++){
-			sortedTeams[i - num_alliances] = {
+		for(let i = numAlliances; i < rankings.length; i++){
+			sortedTeams[i - numAlliances] = {
 				rank: rankings[i].rank,
 				team_key: rankings[i].team_key
 			};
@@ -616,8 +616,9 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		res.render('./dashboard/allianceselection', {
 			title: res.msg('allianceselection.title'),
 			rankings: rankings,
-			alliances: alliances,
-			num_alliances: num_alliances,
+			alliances,
+			numAlliances,
+			numRounds,
 			aggdata: aggArray,
 			currentAggRanges: currentAggRanges,
 			layout: scoreLayout,

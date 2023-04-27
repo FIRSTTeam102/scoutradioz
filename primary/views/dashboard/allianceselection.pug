@@ -46,7 +46,9 @@ block content
 				div(class="w3-btn theme-red") <b>WARNING: Rankings appear NOT to be up to date!</b><br/>Click here, update FIRST data before using for selection
 		div(class="w3-row w3-padding-small")
 			div(class="w3-left")
-				div(id="undo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
+				div(id="btnUndo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
+			div(class="w3-right")
+				div(id="btnOptions" class="w3-btn theme-input")!=msg('allianceselection.options', undefined, '\xa0')
 		section(class="w3-row")
 			div(id="allianceSelection")
 				each alliance, i in alliances
@@ -58,17 +60,14 @@ block content
 								p(class="w3-large") #{allianceNum}
 							div(class="w3-col s10 m12")
 								div(class="w3-col s4 w3-padding-small")
-									div(id=alliance.team1 alliance=allianceNum available="true" class="alliance-team w3-border w3-border-white")
-									
-										span=alliance.team1.substring(3)
-								div(class="w3-col s4 w3-padding-small")
-									div(id=`all${allianceNum}team2` alliance=allianceNum class="alliance-team w3-border w3-border-white")
-									
-										span=(alliance.team2) ? alliance.team2.substring(3) : "[2]"
-								div(class="w3-col s4 w3-padding-small")
-									div(id=`all${allianceNum}team3` alliance=allianceNum class="alliance-team w3-border w3-border-white")
-									
-										span=(alliance.team3) ? alliance.team3.substring(3) : "[3]"
+									div(id=alliance[0] alliance=allianceNum available="true" class="alliance-team w3-border w3-border-white")
+										span=alliance[0].substring(3)
+								- var teamIndex = 1 // starts at 2
+								while ++teamIndex <= numRounds
+									- team = alliance[teamIndex]
+									div(class="w3-col s4 w3-padding-small")
+										div(id=`all${allianceNum}team${teamIndex}` alliance=allianceNum class="alliance-team w3-border w3-border-white")
+											span=(team) ? team.substring(3) : `[${teamIndex}]`
 				hr(class="w3-col")
 				div(class="w3-col")
 					each team, i in sortedTeams
@@ -82,28 +81,33 @@ block content
 			label(for="showHideData")!=msg('allianceselection.showData')
 		div#data()
 			include allianceselection-info
-	label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numalliances')
-	select(class="theme-input" style="min-width: 100;" name="num_alliances" id="num_alliances")
-		- var n = 0;
-		while n < 8
-			- ++n
-			if n == num_alliances
-				option(selected value=n)=n
-			else 
-				option(value=n)=n
 
-	script var numAlliances = num_alliances;
+	hr
+	div(id="options")
+		div(class="w3-margin-top w3-show-inline-block w3-mobile")
+			label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numAlliances')
+			select(class="theme-input" style="min-width: 100;" name="numAlliances" id="numAlliances")
+				- var n = 1; // starts at 2
+				while ++n <= 8
+					option(selected=(n == numAlliances) value=n)=n
+		span(class="w3-hide-small") &nbsp;
+		div(class="w3-margin-top w3-show-inline-block w3-mobile")
+			label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numRounds')
+			select(class="theme-input" style="min-width: 100;" name="numRounds" id="numRounds")
+				- var n = 1; // starts at 2
+				while ++n <= 4
+					option(selected=(n == numRounds) value=n)=n
+
 	script.
 		//create selection state
 		window.state = {};
-		numAlliances = parseInt(#{num_alliances})
+		numAlliances = parseInt(#{numAlliances});
 		console.log(`numAlliances=${numAlliances}`);
+		numRounds = parseInt(#{numRounds});
 		//CURRENTLY UNUSED
-		state.alliances = {
-			alliance1: ["#{alliances[0].team1}", undefined, undefined],
-		};
+		//state.alliances = [["#{alliances[0][0]}""]];
 		//Starting alliance 1 captain, before any user input
-		window.startingCaptain = "#{alliances[0].team1}";
+		window.startingCaptain = "#{alliances[0][0]}";
 		
 		state.rankings = [null];
 		//currently selected team
