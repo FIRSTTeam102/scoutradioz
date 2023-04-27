@@ -252,6 +252,7 @@
 		"noLastMove": "Last move undefined",
 		"noAllianceAttribute": "Couldn't find alliance attribute for #{team}",
 		"noTeamStateRankings": "Could not find team from state rankings idx {i}",
+		"options": "Options &#9660;",
 		"priority": "Priority",
 		"priorityAbbr": "V",
 		"team": "Team",

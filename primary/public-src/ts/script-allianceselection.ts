@@ -64,8 +64,14 @@ $(function(){
 	});
 	console.log(`Cloned in ${Date.now() - startTime} ms`);
 
-	$('#undo').click(function(){
+	// Undo button
+	$('#btnUndo').on('click', function(){
 		doUndo();
+	});
+	
+	// Options button
+	$('#btnOptions').on('click', function () {
+		document.getElementById('options')?.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 	});
 
 	$('#numAlliances').on('change', (e) => doNumChange(e.target, 'numAlliances'));
@@ -269,7 +275,7 @@ function doAllianceTeamClick(this: HTMLElement){
 				state.currentRound++;
 				
 				$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-available')
-						.attr('spot-available', 'true');
+					.attr('spot-available', 'true');
 			}
 
 			if (state.currentRound == 0) {

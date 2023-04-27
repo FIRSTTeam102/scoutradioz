@@ -46,7 +46,9 @@ block content
 				div(class="w3-btn theme-red") <b>WARNING: Rankings appear NOT to be up to date!</b><br/>Click here, update FIRST data before using for selection
 		div(class="w3-row w3-padding-small")
 			div(class="w3-left")
-				div(id="undo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
+				div(id="btnUndo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
+			div(class="w3-right")
+				div(id="btnOptions" class="w3-btn theme-input")!=msg('allianceselection.options', undefined, '\xa0')
 		section(class="w3-row")
 			div(id="allianceSelection")
 				each alliance, i in alliances
@@ -81,18 +83,20 @@ block content
 			include allianceselection-info
 
 	hr
-	div
-		label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numAlliances')
-		select(class="theme-input" style="min-width: 100;" name="numAlliances" id="numAlliances")
-			- var n = 1; // starts at 2
-			while ++n <= 8
-				option(selected=(n == numAlliances) value=n)=n
-	div
-		label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numRounds')
-		select(class="theme-input" style="min-width: 100;" name="numRounds" id="numRounds")
-			- var n = 1; // starts at 2
-			while ++n <= 4
-				option(selected=(n == numRounds) value=n)=n
+	div(id="options")
+		div(class="w3-margin-top w3-show-inline-block w3-mobile")
+			label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numAlliances')
+			select(class="theme-input" style="min-width: 100;" name="numAlliances" id="numAlliances")
+				- var n = 1; // starts at 2
+				while ++n <= 8
+					option(selected=(n == numAlliances) value=n)=n
+		span(class="w3-hide-small") &nbsp;
+		div(class="w3-margin-top w3-show-inline-block w3-mobile")
+			label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numRounds')
+			select(class="theme-input" style="min-width: 100;" name="numRounds" id="numRounds")
+				- var n = 1; // starts at 2
+				while ++n <= 4
+					option(selected=(n == numRounds) value=n)=n
 
 	script.
 		//create selection state
