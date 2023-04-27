@@ -1,16 +1,23 @@
-lambda-invoke-response.json
-package.yaml
-databases.json
-node_modules
 zips
 primary/public/uploads/responsive
+lambda-invoke-response.json
 *.code-workspace
 *.lockb
+
+# packages
+package.yaml
+node_modules
+yarn.lock
+
+# config
+databases.json
+
+# builds
 primary/public/css
 primary/public/js
 build
-yarn.lock
 *.tsbuildinfo
 .svelte-kit
+
 # below: temporary
 voyager/static/*.css
