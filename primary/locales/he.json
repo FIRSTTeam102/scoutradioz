@@ -405,6 +405,10 @@
 			"matches": "התאמות",
 			"recalcDerived": "חישוב מחדש של מדדים נגזרים",
 			"setCurrentEvent": "הגדר את האירוע הנוכחי"
+		},
+		"assignments": {
+			"swapMatchAssignments": "החלף נקודות התאמה לכניסה/יציאה",
+			"swapPitAssignments": "החלפת משימות צופי בורות"
 		}
 	},
 	"tryAgainLater": "בבקשה נסה שוב מאוחר יותר.",

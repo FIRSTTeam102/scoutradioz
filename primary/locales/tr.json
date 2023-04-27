@@ -404,6 +404,10 @@
 			"getCurrentTeams": "Ekip listesini güncelle",
 			"recalcDerived": "Türetilmiş metrikleri yeniden hesapla",
 			"setCurrentEvent": "Geçerli etkinliği ayarla"
+		},
+		"assignments": {
+			"swapMatchAssignments": "Giriş/çıkış maç hesaplarını değiştir",
+			"swapPitAssignments": "Çukur keşif görevlerini değiştir"
 		}
 	},
 	"tryAgainLater": "Lütfen daha sonra tekrar deneyiniz.",

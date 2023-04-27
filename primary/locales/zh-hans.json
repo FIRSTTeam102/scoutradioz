@@ -405,6 +405,10 @@
 			"matches": "火柴",
 			"recalcDerived": "重新计算衍生指标",
 			"setCurrentEvent": "设置当前事件"
+		},
+		"assignments": {
+			"swapMatchAssignments": "换入/换出比赛账户",
+			"swapPitAssignments": "交换矿坑侦察任务"
 		}
 	},
 	"tryAgainLater": "请稍后再试。",

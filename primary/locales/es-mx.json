@@ -65,11 +65,11 @@
 				"teamStats": "Estadísticas del equipo",
 				"yearStats": "Estadísticas completas para {year}",
 				"export": {
-					"main": "Exportar a CSV",
-					"match": "Datos de búsqueda de coincidencias: [[{event}]]",
-					"pit": "Datos de exploración de pits: [[{event}]]",
-					"matchAll": "Datos de exploración de partidos: [[Todo {year}]]",
-					"pitAll": "Datos de exploración de pit: [[Todo {year}]]"
+					"main": "[CSV] Exportar datos",
+					"match": "[CSV] Datos de búsqueda de coincidencias: [[{event}]]",
+					"pit": "[CSV] Datos de exploración de pits: [[{event}]]",
+					"matchAll": "[CSV] Datos de exploración de partidos: [[Todo {year}]]",
+					"pitAll": "[CSV] Datos de exploración de pit: [[Todo {year}]]"
 				},
 				"teamList": "{numero}: {nombre}"
 			},
@@ -396,6 +396,9 @@
 			"setCurrentEvent": "Establecer evento actual"
 		},
 		"assignments": {
+			"pit": "asignaciones para expolracion del pit",
+			"match": "asignaciones para exploracion de partidos",
+			"swapMatchAssignments": "Intercambiar cuentas de partido de entrada/salida",
 			"swapPitAssignments": "Intercambiar asignaciones de exploración de pits"
 		}
 	},
