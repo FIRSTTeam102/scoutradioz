@@ -119,19 +119,19 @@ async function updateCloudFrontData(
 }
 
 async function updateCode(
-	zipBuffer: Buffer,
-	functionName: string
+	ZipFile: Buffer,
+	FunctionName: string
 ): Promise<aws.Lambda.FunctionConfiguration> {
 	const updateParams: aws.Lambda.UpdateFunctionCodeRequest = {
-		FunctionName: functionName,
-		ZipFile: zipBuffer,
+		FunctionName,
+		ZipFile,
 	};
 
 	console.log('Uploading function code...');
 
 	const updateResult = await lambda.updateFunctionCode(updateParams).promise();
 
-	await waitUntilNotPending(lambda, functionName, 1000, 5);
+	await waitUntilNotPending(lambda, FunctionName, 1000, 5);
 
 	console.log(
 		`Uploaded function code:\n\t FunctionName=${updateResult.FunctionName}\n\t Role=${updateResult.Role}\n\t CodeSha256=${updateResult.CodeSha256}`
@@ -140,13 +140,33 @@ async function updateCode(
 	const versionParams: aws.Lambda.PublishVersionRequest = {
 		CodeSha256: updateResult.CodeSha256,
 		Description: new Date().toLocaleString(),
-		FunctionName: functionName,
+		FunctionName,
 	};
 
 	const versionResult = await lambda.publishVersion(versionParams).promise();
+	const newVersion = versionResult.Version;
 
 	console.log(`Published new version! Version=${versionResult.Version}`);
+	
+	const alias = 'PROD'; // todo later: qa/test/prod
+	
+	const aliasParams: aws.Lambda.GetAliasRequest = {
+		FunctionName,
+		Name: alias,
+	};
+	
+	const aliasResult = await lambda.getAlias(aliasParams).promise();
+	const oldVersion = aliasResult.FunctionVersion;
+	console.log(`Alias ${alias}: Old version: ${oldVersion}; Updating to ${versionResult.Version}`);
 
+	const updateAliasParams: aws.Lambda.UpdateAliasRequest = {
+		FunctionName,
+		FunctionVersion: newVersion,
+		Name: alias,
+	};
+	const updateAliasResult = await lambda.updateAlias(updateAliasParams).promise();
+	console.log(`Alias ${alias} updated to version ${newVersion}, result=${JSON.stringify(updateAliasResult)}}`);
+	
 	return versionResult;
 }
 
@@ -191,14 +211,14 @@ function makeZip(folders: string[]): Promise<Buffer> {
 }
 
 // Credit: https://github.com/claudiajs/claudia/issues/226#issuecomment-984717841
-async function waitUntilNotPending(lambda, functionName, timeout, retries) {
+async function waitUntilNotPending(lambda, FunctionName, timeout, retries) {
 	'use strict';
 	await new Promise((resolve) => setTimeout(resolve, timeout));
 
 	return retry(
 		() => {
 			return lambda
-				.getFunctionConfiguration({ FunctionName: functionName })
+				.getFunctionConfiguration({ FunctionName })
 				.promise()
 				.then((result) => {
 					if (result.state === 'Failed') {

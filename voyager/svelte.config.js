@@ -1,4 +1,4 @@
-import adapter from '@yarbsemaj/adapter-lambda';
+import adapter from '@firstteam102/yarbsemaj-sveltekit-adapter-lambda';
 import preprocess from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -12,7 +12,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		serviceWorker: {
-			register: false
+			register: true
 		}
 	},
 };

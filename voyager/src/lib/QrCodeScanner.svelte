@@ -159,34 +159,105 @@
 	
 	async function setVideoStream() {
 		console.log('Setting video stream');
+		if (!video) throw new Error('No video element');
 		
 		// Get the desired aspect ratio of the video stream to perfectly fill the remaining space on the screen
 		let { width, height } = getAvailableWindowSize(parent);
 		let aspectRatio = width / height;
 		
-		let aspectRatioSetting: ConstrainDouble = {
-			ideal: aspectRatio,
-		};
-		if (aspectRatio > 1) aspectRatioSetting.min = aspectRatio; // Wide screens: Prefer a wider aspect ratio
-		else aspectRatioSetting.max = aspectRatio; // Phones: Prefer a narrower aspect ratio, extending slightly below the nav bar to provide the illusion of a fullscreen scanner
+		let videoConstraints: MediaTrackConstraints = {
+			facingMode: 'environment',
+			// deviceId: '3dada17451a1d1c171c0c2d48d3e6b571819d3c55f533f5271d1e886633983b5', // JL: For testing only (this is my OBS virtual camera)
+			aspectRatio: {
+				ideal: aspectRatio,
+			}
+		}
 		
-		console.log(aspectRatioSetting);
+		const idealVideoWidth = 720; // The resolution can vary slightly; higher resolutions are more expensive to process but if the resolution is too low, we MIGHT not be able to scan the highest-density codes
+		let idealVideoHeight = Math.round(idealVideoWidth / aspectRatio);
+		// Wide screens: Prefer a wider aspect ratio
+		if (aspectRatio > 1) {
+			videoConstraints.width = {
+				ideal: idealVideoWidth,
+				min: idealVideoWidth,
+			};
+			videoConstraints.height = {
+				ideal: idealVideoHeight,
+			};
+		}
+		// Phones: Prefer a narrower aspect ratio, extending slightly below the nav bar to provide the illusion of a fullscreen scanner
+		else {
+			videoConstraints.width = {
+				ideal: idealVideoWidth,
+			};
+			videoConstraints.height = {
+				ideal: idealVideoHeight,
+				min: idealVideoHeight,
+			};
+		}
 		
-		const stream = await navigator.mediaDevices.getUserMedia({
-			video: { 
-				facingMode: 'environment',
-				// deviceId: '3dada17451a1d1c171c0c2d48d3e6b571819d3c55f533f5271d1e886633983b5', // JL: For testing only (this is my OBS virtual camera)
-				width: {
-					min: 640,
-					max: 800,
-				},
-				aspectRatio: aspectRatioSetting,
-			} 
-		});
+		let stream: MediaStream;
+		
+		console.log(videoConstraints);
+		
+		try {
+			stream = await navigator.mediaDevices.getUserMedia({
+				video: videoConstraints,
+			});
+		}
+		// If there's an OverConstrained error, try removing min/max constraints
+		catch (err) {
+			console.error(err);
+			console.log('Attempting to re-constrain video without min/max attributes and only with ideals');
+			console.log(videoConstraints);
+		
+			delete videoConstraints.width.min;
+			delete videoConstraints.width.max;
+			delete videoConstraints.height.min;
+			delete videoConstraints.height.max;
+			
+			stream = await navigator.mediaDevices.getUserMedia({
+				video: videoConstraints,
+			});
+		}
 			
 		video!.srcObject = stream;
 		video!.setAttribute('playsinline', 'true');
-		video!.play();
+		
+		// On some devices, like my own, the requested height and width are flipped. In this case, we need to swap the width and height of the video constraints.
+		// 	We should be able to request the exact height/width in this case, instead of dealing with ideal/min/max values
+		video!.onloadedmetadata = async () => {
+			console.log('Video metadata loaded', video!.videoWidth, video!.videoHeight);
+			
+			// Detect whether the height and width values have been swapped by calculating the distance between video.videoWidth and videoConstraints.width.ideal and between video.videoHeight and videoConstraints.height.ideal
+			let widthDistance = Math.abs(video!.videoWidth - idealVideoWidth);
+			let heightDistance = Math.abs(video!.videoHeight - idealVideoHeight);
+			let distance = widthDistance + heightDistance;
+			let widthDistanceSwapped = Math.abs(video!.videoWidth - idealVideoHeight);
+			let heightDistanceSwapped = Math.abs(video!.videoHeight - idealVideoWidth);
+			let distanceSwapped = widthDistanceSwapped + heightDistanceSwapped;
+			
+			// This means that the height and width values have been swapped, because if they were not, the distance between the ideal values and the actual values would be the same or very small
+			if (distanceSwapped < distance) {
+				console.log('Video height and width have been swapped. Re-constraining video stream with swapped values.');
+				
+				let newVideoConstraints: MediaTrackConstraints = {
+					// Since the width and height will be flipped again, just request new width = old width and new height = old height,
+					//  then the browser will automatically flip to what we actually want
+					width: video!.videoWidth, 
+					height: video!.videoHeight,
+				};
+				
+				const track = stream.getVideoTracks()[0];
+				if (!track) throw new Error('No video track!!');
+				
+				await track.applyConstraints(newVideoConstraints);
+				
+				snackbar.open('Your device flipped video stream width and height. Please let the devs know if you see this message just so we know. This message will be removed in the future.');
+			}
+			
+			video!.play();
+		}
 	}
 
 	let scanning = false, initScanning = false;
