@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /user
+Disallow: /scouting
+Disallow: /dashboard
+
+User-agent: ia_archiver
+Disallow: /
+
+Sitemap: https://scoutradioz.com/sitemap.xml
