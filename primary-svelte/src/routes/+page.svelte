@@ -1,2 +1,182 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<style>
+	.gear-btn{margin: 0;}
+	.theme-link .sprite{position: relative; top: 1px;} /* Sprites on the links are just ever so slightly too high */
+	.w3-radio{top: -3px;}
+	.theme-link{white-space: normal;}
+</style>
+
+<script lang='ts'>
+	import { onMount } from "svelte";
+	import JQ from 'jquery';
+	import type { PageServerData } from "./$types";
+	import { msg, msgMarked } from "$lib/i18n-placeholder";
+	
+	onMount(() => {
+		
+		JQ(function() {
+				if (location.hash === '#learn-more') {
+					//- JQ('input[name=customer]')
+					//- 	.val('learnMore')
+					//- 	.trigger('change');
+					JQ('#chbLearnMore')
+						.trigger('click');
+				}
+			})			
+			JQ('input[name=customer]').on('change', function (e) {
+				requestAnimationFrame(() => {
+					let val = JQ(e.target).val();
+					let blurbViewData = JQ('#blurbViewData');
+					let blurbLearnMore = JQ('#blurbLearnMore');
+					let loginButtons = JQ('.org-login');
+					let viewButtons = JQ('.org-view');
+					let selectorg = JQ('#selectorg');
+					
+					switch(val) {
+						case 'loginScout':
+							blurbViewData.hide();
+							blurbLearnMore.hide();
+							selectorg.show();
+							loginButtons.show();
+							viewButtons.hide();
+							break;
+						case 'viewData':
+							blurbViewData.show();
+							blurbLearnMore.hide();
+							selectorg.show();
+							loginButtons.hide();
+							viewButtons.show();
+							break;
+						case 'learnMore':
+							blurbViewData.hide();
+							blurbLearnMore.show();
+							selectorg.hide();
+							break;
+						default: console.error(`unknown ${val}`);
+					}
+					// Cookies.set('homepageButton', val);
+				});
+			});
+	});
+	
+	export let data: PageServerData;
+	
+	// Spread props from data
+	const { selectedButton, orgs, isOrgSelectScreen, redirectURL } = data;
+	
+	const orgsWithLabel = orgs.map(org => {
+		let label = org.nickname;
+		if (org.team_numbers) label = `${org.team_numbers.join(' & ')} - ${org.nickname}`;
+		else if (org.team_number) label = `${org.team_number} - ${org.nickname}`;
+		return {
+			...org,
+			label
+		}
+	})
+	
+</script>
+
+<template lang="pug">
+	//- If there's no selected-button cookie, default to selected button
+	- if (!['viewData', 'loginScout', 'learnMore'].includes(selectedButton)) selectedButton = 'viewData';
+	//- Inline style tags for showing and hiding elements based on the selectedButton cookie
+	- var learnMoreInvisible = (selectedButton !== 'learnMore') ? '' : 'display: none';
+	- var learnMoreVisible = (selectedButton === 'learnMore') ? '' : 'display: none';
+	- var viewDataVisible = (selectedButton === 'viewData') ? '' : 'display: none';
+	- var scoutVisible = (selectedButton === 'loginScout') ? '' : 'display: none';
+	div(class="w3-auto")
+		h2 {msg('index.welcome')}
+		hr 
+		h3 {msg('index.choice')}
+		div.w3-row
+			div.centered-half
+				ul(class="w3-ul w3-medium w3-left-align")
+					label(for="chbViewData")
+						li(class="w3-no-border")
+							div.w3-left.w3-margin-right
+								input(type="radio" class="w3-radio" name="customer" id="chbViewData" value="viewData" checked=(selectedButton === 'viewData'))
+							div.w3-rest
+								span {msg('index.viewer.choice')}
+					label(for="chbLoginScout")
+						li(class="w3-no-border w3-display-container")
+							div.w3-left.w3-margin-right
+								input(type="radio" class="w3-radio" name="customer" id="chbLoginScout" value="loginScout" checked=(selectedButton === 'loginScout'))
+							div.w3-rest
+								span {msg('index.scouter.choice')}
+					label(for="chbLearnMore")
+						li(class="w3-no-border")
+							div.w3-left.w3-margin-right
+								input(type="radio" class="w3-radio" name="customer" id="chbLearnMore" value="learnMore" checked=(selectedButton === 'learnMore'))
+							div.w3-rest
+								span {msg('index.info.choice')}
+		hr 
+		div(id="blurbViewData" class="w3-medium" style=viewDataVisible)
+			div
+				h5.strong
+					span(class="sprite sp-20 sp-radio sp-inline")
+					span {msg('index.viewer.intro')}
+				p {msg('index.viewer.action')}
+			hr 
+		div(id="blurbLearnMore" class="w3-left-align w3-medium" style=learnMoreVisible)
+			div.w3-padding-small
+				p 
+					span(class="sprite sp-16 sp-radio sp-inline")
+					span {msgMarked('index.info.intro')}
+				p {msg('index.info.features.intro')}
+				ul
+					li.w3-margin {msgMarked('index.info.features.modular')}
+					li.w3-margin {msgMarked('index.info.features.automatic')}
+					li.w3-margin {msgMarked('index.info.features.advanced')}
+					li.w3-margin {msgMarked('index.info.features.management')}
+					li.w3-margin {msgMarked('index.info.features.free')}
+				div.w3-center.w3-margin-top
+					a(class="theme-link w3-btn gear-btn" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki" target="_blank")
+						span(class="sprite sp-22 sp-black sp-github sp-inline")
+						span {msg('index.info.github')}
+				div.w3-center.w3-margin-top(id="discordLink")
+					a(class="theme-link w3-btn gear-btn" href="https://discord.gg/Mr3kyqkSrQ" target="_blank")
+						span(class="sprite sp-22 sp-black sp-discord sp-inline")
+						span {msg('index.info.discord')}
+				div.w3-center.w3-margin-top
+					a(class="theme-link w3-btn gear-btn" href="https://forms.gle/vRqkS5w4HpKNdLYp9" target="_blank")
+						span(class="sprite sp-22 sp-black sp-org sp-inline")
+						span {msg('index.info.partner')}
+				br 
+				div.w3-center.w3-margin-top
+					a(class="theme-link w3-btn gear-btn" href="https://www.firstinspires.org/robotics/frc" target="_blank")
+						span(class="sprite sp-22 sp-black sp-first sp-inline")
+						span {msgMarked('index.info.first')}
+			hr 
+		div(id="selectorg" style=learnMoreInvisible)
+			h3 {msg('selectOrg')}
+			div(class="w3-container w3-auto w3-padding")
+				+each('orgsWithLabel as org, i')
+					div.w3-padding 
+						h4 {org.label}
+						+if('org.event_label')
+							p.theme-text-secondary @ {org.event_label}
+						//- JL: Making the "view" buttons links to the "share" feature so that web crawlers can be somewhat aware of our site structure (/frc102/home instead of /selectorg?redirectURL=home)
+						div(class="org-view" style=viewDataVisible)
+							- if (!redirectURL) redirectURL = '/home';
+							a(class="theme-link w3-btn gear-btn" href=`/{org.org_key}{redirectURL}`) {msg('index.view')}
+						div(class="org-login" style=scoutVisible)
+							a(class="theme-link w3-btn gear-btn" href='/selectorg-login?org_key={org.org_key}&rdr={redirectURL}') {msg('index.login')}
+							//- if redirectURL
+							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) {msg('index.login')}
+							//- else 
+							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}/home`) {msg('index.login')}
+					//- div(class="w3-col")
+						div(class="w3-quarter w3-hide-small") &nbsp;
+						div(class="w3-half w3-padding")
+							- var orglabel = org.nickname;
+							if (org.team_number)
+								- orglabel = org.team_number + ' - ' + org.nickname;
+							if redirectURL
+								a(class="theme-link w3-btn w3-block" href=`/${org.org_key}${redirectURL}`)=orglabel
+							else 
+								a(class="theme-link w3-btn w3-block" href=`/${org.org_key}/home`)=orglabel
+							if (org.event_label)
+								- var eventLabel = '@ ' + org.event_label;
+								p(class="theme-text-secondary")=eventLabel
+						div(class="w3-quarter w3-hide-small") &nbsp;
+		script.
+</template>
