@@ -72,7 +72,7 @@ export type FilterQueryTyped<T> = {
     $and?: FilterQueryTyped<T>[];
     $expr?: FilterQueryTyped<T>;
 } & {
-    [key in keyof T]?: QueryItem<T[key]> | T[key];
+    [key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]> | T[key];
 } & {
     [key: `${string}.${string}`]: QueryItem | ValidQueryPrimitive;
 };
