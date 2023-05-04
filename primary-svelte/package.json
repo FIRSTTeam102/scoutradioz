@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
+		"update": "yarn upgrade --pattern 'scoutradioz*'",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -36,6 +37,7 @@
 		"dotenv": "^16.0.3",
 		"jquery": "^3.6.4",
 		"log4js": "^6.7.1",
+		"lucia-auth": "^1.5.0",
 		"mongodb": "4.13.0",
 		"scoutradioz-utilities": "file:../scoutradioz-utilities"
 	},

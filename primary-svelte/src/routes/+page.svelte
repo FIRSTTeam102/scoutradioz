@@ -159,7 +159,8 @@
 							- if (!redirectURL) redirectURL = '/home';
 							a(class="theme-link w3-btn gear-btn" href=`/{org.org_key}{redirectURL}`) {msg('index.view')}
 						div(class="org-login" style=scoutVisible)
-							a(class="theme-link w3-btn gear-btn" href='/selectorg-login?org_key={org.org_key}&rdr={redirectURL}') {msg('index.login')}
+							a(class="theme-link w3-btn gear-btn" href='/selectorg-login?org_key={org.org_key}&rdr={redirectURL}') 
+								span {msg('index.login')}
 							//- if redirectURL
 							//- 	a(class="theme-link w3-btn gear-btn" href=`/${org.org_key}${redirectURL}`) {msg('index.login')}
 							//- else 

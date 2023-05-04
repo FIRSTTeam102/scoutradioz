@@ -450,6 +450,17 @@ export declare interface Session extends DbDocument {
 }
 
 /**
+ * Session for Lucia package, used within SvelteKit
+ * @collection sveltesessions
+ * @interface LuciaSession
+ */
+export declare interface LuciaSession extends DbDocument {
+	active_expires: number;
+	idle_expires: number;
+	user_id: ObjectId;
+}
+
+/**
  * Contains a team's 40x40 avatar for a given event year -- From FIRST API.
  * @collection teamavatars
  * @interface TeamAvatar
@@ -530,7 +541,15 @@ export declare interface User extends DbDocument {
 		assigned: boolean;
 	};
 	visible: boolean;
-	push_subscription?: PushSubscription
+	push_subscription: PushSubscription|null;
+}
+
+export declare interface LuciaUserKey {
+	id: string;
+	user_id: ObjectId;
+	primary_key: boolean;
+	hashed_password: string | null;
+	expires: number | null;
 }
 
 export declare type RoleKey = 'scouter' | 'viewer' | 'team_admin' | 'global_admin';
@@ -555,7 +574,7 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'sveltesessions'|'svelteuserkeys'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
@@ -575,6 +594,8 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'roles' ? Role :
 	colName extends 'scoutingpairs' ? ScoutingPair :
 	colName extends 'sessions' ? Session :
+	colName extends 'sveltesessions' ? LuciaSession :
+	colName extends 'svelteuserkeys' ? LuciaUserKey :
 	colName extends 'teams' ? Team :
 	colName extends 'uploads' ? Upload :
 	colName extends 'users' ? User : 

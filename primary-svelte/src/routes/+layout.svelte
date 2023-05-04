@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
+	import { page } from '$app/stores';
 	import type { LayoutServerData, PageServerData } from './$types';
 
 	function msg(text: string) {
@@ -8,6 +9,12 @@
 	}
 
 	function selectLanguage() { }
+	
+	const headerlogos = {
+		2020: ['infinite-recharge/Horizontal-reverse.png', 'Infinite Recharge'],
+		2022: ['rapid-react/horizontal-color.svg', 'Rapid React'],
+		2023: ['charged-up/horizontal-color.svg', 'Charged Up'],
+	}
 
 	const backgrounds = {
 		2020: 'city-light.png',
@@ -68,6 +75,25 @@
 			</div>
 		</div>
 	</div>
-
-	<slot />
+	
+	<div id="content-container">
+		<div id="headerlogo" class="w3-center">
+			{#if headerlogos[themeYear]}
+				<img src={`/images/${headerlogos[themeYear][0]}`} alt={headerlogos[themeYear][1]} class="w3-image w3-center">
+			{/if}
+			{#if !$page.data.isOrgSelectScreen}
+				<h3>{data.eventName}</h3>
+				<!-- todo eventIsOrgCurrent -->
+			{/if}
+		</div>
+		<main class="w3-padding w3-mobile w3-center" id="content">
+			<slot />
+		</main>
+	</div>
 </div>
+
+<style lang='less'>
+	#headerlogo img {
+		max-height: 160px;
+	}
+</style>

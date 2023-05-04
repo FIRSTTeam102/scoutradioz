@@ -1,9 +1,16 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+
+import type { User } from 'scoutradioz-types';
+
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			user: unknown;
+			auth: import('lucia-auth').AuthRequest;
+		}
 		// interface PageData {}
 		// interface Platform {}
 	}
@@ -47,6 +54,13 @@ declare global {
 	 */
 	interface Dict<T> {
 		[key: string]: T;
+	}
+	
+	namespace Lucia {
+		type Auth = import('$lib/lucia').Auth;
+		type UserAttributes = {
+			[key in Exclude<keyof User, '_id'>]: User[key]
+		};
 	}
 }
 
