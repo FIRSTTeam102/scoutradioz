@@ -1,1 +1,20 @@
-{}
+{
+	"index": {
+		"welcome": "Ласкаво Просимо до Scoutradioz",
+		"choice": "Чи ви хочете:",
+		"viewer": {
+			"choice": "Бачити дані",
+			"intro": "З Scoutradioz, команди можуть отримати св"
+		},
+		"scouter": {
+			"choice": "Заходити щоб розвідати"
+		},
+		"info": {
+			"choice": "Вчити про Scoutradioz і як може ваша команда використовувати"
+		},
+		"login": "Вхід"
+	},
+	"hello": {
+		"name": "Привіт, {name}!"
+	}
+}
