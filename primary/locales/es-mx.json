@@ -399,7 +399,8 @@
 			"matches": "partidas (datos de FIRST)",
 			"recalcDerived": "Recalcular métricas derivadas",
 			"setCurrentEvent": "Establecer evento actual",
-			"confirmClear": "¿Está seguro que quiere borrar el evento corriente para *{orgName}*?"
+			"confirmClear": "¿Está seguro que quiere borrar el evento corriente para *{orgName}*?",
+			"confirmSetEvent": "¿Elige {eventName} como el evento corriente para {orgName}?"
 		},
 		"assignments": {
 			"pit": "asignaciones para expolracion del pit",
