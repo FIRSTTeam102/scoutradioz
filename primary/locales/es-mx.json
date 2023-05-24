@@ -400,7 +400,9 @@
 			"recalcDerived": "Recalcular métricas derivadas",
 			"setCurrentEvent": "Establecer evento actual",
 			"confirmClear": "¿Está seguro que quiere borrar el evento corriente para *{orgName}*?",
-			"confirmSetEvent": "¿Elige *{eventName}* como el evento corriente para *{orgName}*?"
+			"confirmSetEvent": "¿Elige *{eventName}* como el evento corriente para *{orgName}*?",
+			"currentEvent": "Evento corriente - {event}",
+			"invalidEventKey": "Llave de evento inválido: '{eventKey}'. Haz clic a un evento en la lista para eligirla automaticamente."
 		},
 		"assignments": {
 			"pit": "asignaciones para expolracion del pit",
