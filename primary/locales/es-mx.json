@@ -366,8 +366,8 @@
 		"upcomingMatchMetrics": "Métricas para el próximo partido",
 		"intel": "Intel: {type}",
 		"exportData": {
-			"noType": "No hay (o no son válidos) los tipos de dato eligidos para exportar",
-			"noData": "No hay datos encontrados para tipo '{type}'"
+			"noType": "No hay (o no son válidos) los tipos de dato eligidos para exportar.",
+			"noData": "No hay datos encontrados para tipo '{type}'."
 		}
 	},
 	"errors": {
@@ -399,7 +399,7 @@
 			"matches": "partidas (datos de FIRST)",
 			"recalcDerived": "Recalcular métricas derivadas",
 			"setCurrentEvent": "Establecer evento actual",
-			"confirmClear": "¿Está seguro que quiere borrar el evento corriente para {orgName}?"
+			"confirmClear": "¿Está seguro que quiere borrar el evento corriente para *{orgName}*?"
 		},
 		"assignments": {
 			"pit": "asignaciones para expolracion del pit",
