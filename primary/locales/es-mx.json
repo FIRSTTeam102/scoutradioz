@@ -69,7 +69,8 @@
 					"match": "[CSV] Datos de búsqueda de coincidencias: [[{event}]]",
 					"pit": "[CSV] Datos de exploración de pits: [[{event}]]",
 					"matchAll": "[CSV] Datos de exploración de partidos: [[Todo {year}]]",
-					"pitAll": "[CSV] Datos de exploración de pit: [[Todo {year}]]"
+					"pitAll": "[CSV] Datos de exploración de pit: [[Todo {year}]]",
+					"photos": "[Zip] Fotos de robots: [[Todos de {year}]]"
 				},
 				"teamList": "{number}: {name}"
 			},
