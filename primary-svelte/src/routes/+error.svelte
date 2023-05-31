@@ -10,6 +10,10 @@
 	}
 </script>
 
+<svelte:head>
+	<base href="/"/>
+</svelte:head>
+
 <template lang="pug">
 	div(id="errorContents")
 		//- h2.i {msg('error.title', {message: $page.error.message})}

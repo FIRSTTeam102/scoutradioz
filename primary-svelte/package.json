@@ -38,7 +38,9 @@
 		"jquery": "^3.6.4",
 		"log4js": "^6.7.1",
 		"lucia-auth": "^1.5.0",
+		"marked": "^5.0.4",
 		"mongodb": "4.13.0",
+		"sanitize-html": "^2.10.0",
 		"scoutradioz-utilities": "file:../scoutradioz-utilities"
 	},
 	"type": "module"

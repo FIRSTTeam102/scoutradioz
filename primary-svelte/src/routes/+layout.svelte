@@ -4,10 +4,8 @@
 	import { page } from '$app/stores';
 	import type { LayoutServerData, PageServerData } from './$types';
 
-	function msg(text: string) {
-		return text;
-	}
-
+	import { msg } from "$lib/i18n";
+	
 	function selectLanguage() { }
 	
 	const headerlogos = {
@@ -57,7 +55,7 @@
 			</a>
 			<div>
 				<span style="display:inline-block;height:100%;vertical-align:middle;" />
-				<a href="/home">
+				<a href=".">
 					<img
 						src="/images/brand-logos/scoutradioz-{darkLogo ? 'black' : 'white'}-sm.png"
 						class="header-logo"
@@ -81,10 +79,10 @@
 			{#if headerlogos[themeYear]}
 				<img src={`/images/${headerlogos[themeYear][0]}`} alt={headerlogos[themeYear][1]} class="w3-image w3-center">
 			{/if}
-			{#if !$page.data.isOrgSelectScreen}
+			<!-- {#if !$page.data.isOrgSelectScreen}
 				<h3>{data.eventName}</h3>
-				<!-- todo eventIsOrgCurrent -->
-			{/if}
+				
+			{/if} -->
 		</div>
 		<main class="w3-padding w3-mobile w3-center" id="content">
 			<slot />

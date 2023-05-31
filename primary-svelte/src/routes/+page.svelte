@@ -1,3 +1,12 @@
+<!-- 
+	find and replace:
+		!=msg\((.*)\)
+		 {msg($1)}
+		 
+		if (.*)$
+		+if('$1')
+ -->
+
 <style>
 	.gear-btn{margin: 0;}
 	.theme-link .sprite{position: relative; top: 1px;} /* Sprites on the links are just ever so slightly too high */
