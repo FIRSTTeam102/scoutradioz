@@ -32,7 +32,7 @@
 	},
 	"hello": {
 		"world": "¡Hola mundo!",
-		"name": "¡Hola, {nombre}!"
+		"name": "¡Hola, {name}!"
 	},
 	"selectOrg": "Selecciona una organización.",
 	"error": {
@@ -65,13 +65,14 @@
 				"teamStats": "Estadísticas del equipo",
 				"yearStats": "Estadísticas completas para {year}",
 				"export": {
-					"main": "Exportar a CSV",
-					"match": "Datos de búsqueda de coincidencias: [[{event}]]",
-					"pit": "Datos de exploración de pits: [[{event}]]",
-					"matchAll": "Datos de exploración de partidos: [[Todo {year}]]",
-					"pitAll": "Datos de exploración de pit: [[Todo {year}]]"
+					"main": "[CSV] Exportar datos",
+					"match": "[CSV] Datos de búsqueda de coincidencias: [[{event}]]",
+					"pit": "[CSV] Datos de exploración de pits: [[{event}]]",
+					"matchAll": "[CSV] Datos de exploración de partidos: [[Todo {year}]]",
+					"pitAll": "[CSV] Datos de exploración de pit: [[Todo {year}]]",
+					"photos": "[Zip] Fotos de robots: [[Todos de {year}]]"
 				},
-				"teamList": "{numero}: {nombre}"
+				"teamList": "{number}: {name}"
 			},
 			"scouting": "exploracion",
 			"manage": {
@@ -363,7 +364,11 @@
 		"noMatchScoutData2": "No hay datos de búsqueda de partidos disponibles para el equipo {team} para este partido.",
 		"viewIntelPage": "Ver la página de inteligencia de este equipo",
 		"upcomingMatchMetrics": "Métricas para el próximo partido",
-		"intel": "Intel: {type}"
+		"intel": "Intel: {type}",
+		"exportData": {
+			"noType": "No hay (o no son válidos) los tipos de dato eligidos para exportar.",
+			"noData": "No hay datos encontrados para tipo '{type}'."
+		}
 	},
 	"errors": {
 		"teamMissing": "No se pudieron encontrar los detalles del equipo {team}. ¿Ha cambiado la lista de equipos desde que creaste las asignaciones de exploración?",
@@ -393,7 +398,11 @@
 			"getCurrentTeams": "Actualizar lista de equipos",
 			"matches": "partidas (datos de FIRST)",
 			"recalcDerived": "Recalcular métricas derivadas",
-			"setCurrentEvent": "Establecer evento actual"
+			"setCurrentEvent": "Establecer evento actual",
+			"confirmClear": "¿Está seguro que quiere borrar el evento corriente para *{orgName}*?",
+			"confirmSetEvent": "¿Elige *{eventName}* como el evento corriente para *{orgName}*?",
+			"currentEvent": "Evento corriente - {event}",
+			"invalidEventKey": "Llave de evento inválido: '{eventKey}'. Haz clic a un evento en la lista para eligirla automaticamente."
 		},
 		"assignments": {
 			"pit": "asignaciones para expolracion del pit",

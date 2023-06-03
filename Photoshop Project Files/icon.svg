@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg width="512" height="512" viewBox="0 0 512 512" version="1.1" id="svg5" inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)" sodipodi:docname="icon.svg" inkscape:export-filename="E:\OneDrive\Projects\Programming\ScoringApp-Serverless\Photoshop Project Files\icon-1024.png" inkscape:export-xdpi="192" inkscape:export-ydpi="192" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview id="namedview7" pagecolor="#ffffff" bordercolor="#111111" borderopacity="1" inkscape:pageshadow="0" inkscape:pageopacity="0" inkscape:pagecheckerboard="1" inkscape:document-units="px" showgrid="false" inkscape:snap-object-midpoints="true" inkscape:snap-center="true" inkscape:snap-text-baseline="true" inkscape:snap-page="true" showguides="true" inkscape:guide-bbox="true" inkscape:zoom="1.4142136" inkscape:cx="238.64854" inkscape:cy="299.45972" inkscape:window-width="2560" inkscape:window-height="1361" inkscape:window-x="1591" inkscape:window-y="-9" inkscape:window-maximized="1" inkscape:current-layer="layer2" fit-margin-bottom="2" fit-margin-top="4.341" fit-margin-left="3.77683" fit-margin-right="2" width="506.22318px" height="505.659px">
+    <sodipodi:guide position="416.74913,266.39369" orientation="1,0" id="guide1019" />
+    <sodipodi:guide position="267.78235,95.250857" orientation="0,-1" id="guide1021" />
+    <sodipodi:guide position="281.50364,346.70201" orientation="1,0" id="guide6665" />
+    <sodipodi:guide position="271.11797,182.76482" orientation="0,-1" id="guide6667" />
+    <sodipodi:guide position="171.21765,236.80482" orientation="0,-1" id="guide6707" />
+    <sodipodi:guide position="335.57099,245.40998" orientation="1,0" id="guide6709" />
+  </sodipodi:namedview>
+  <defs id="defs2">
+    <pattern id="EMFhbasepattern" patternUnits="userSpaceOnUse" width="6" height="6" x="0" y="0" />
+  </defs>
+  <g inkscape:groupmode="layer" id="layer2" inkscape:label="Layer 2" style="display:inline;opacity:1" transform="translate(-2.0000169,-0.82703064)">
+    <circle style="fill:#424242;fill-opacity:1;fill-rule:evenodd;-inkscape-stroke:none" id="path1558" cx="418.74915" cy="-417.57617" r="93.250862" transform="scale(1,-1)" />
+    <circle style="fill:white;fill-opacity:1;fill-rule:evenodd;stroke-width:1.13636;-inkscape-stroke:none" id="path1908" cx="418.74915" cy="417.57617" r="58.648338" />
+  </g>
+  <g inkscape:groupmode="layer" id="layer3" inkscape:label="Layer 3" transform="translate(-2.0000169,-0.82703064)">
+    <path style="fill:#ff7200;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m 418.74914,5.1690936 c -227.55555,-0.5131729 -413.4766884,184.8515264 -412.971265,412.3880764 22.286369,0.019 0.019,0.019 0.019,0.019 h 99.538545 0.46146 c 0,-173.59908 139.35318,-313.07016 312.95226,-313.07016 z" id="path6858" sodipodi:nodetypes="ccccccc" />
+    <path style="fill:#ff7200;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m 418.75,171.69141 c -135.24635,0 -245.7656,110.6718 -245.7656,245.88476 h 99.8924 c 0,-81.17296 64.6942,-145.88476 145.8732,-145.88476 v -100" id="path9006" sodipodi:nodetypes="ccccc" />
+  </g>
+</svg>

@@ -66,11 +66,12 @@
 				"teamStats": "Statistiques de l'équipe",
 				"yearStats": "Statistiques complètes pour {year}",
 				"export": {
-					"main": "Exporter vers CSV",
-					"match": "Données de repérage des matchs: [[{event}]]",
-					"pit": "Données de repérage de puits: [[{event}]]",
-					"matchAll": "Données de repérage des matchs: [[All of {year}]]",
-					"pitAll": "Données de repérage de puits: [[All of {year}]]"
+					"main": "[CSV] Exporter des données",
+					"match": "[CSV] Données de repérage des matchs: [[{event}]]",
+					"pit": "[CSV] Données de repérage de puits: [[{event}]]",
+					"matchAll": "[CSV] Données de repérage des matchs: [[Tout de {year}]]",
+					"pitAll": "[CSV] Données de repérage de puits: [[Tout de {year}]]",
+					"photos": "[Zip] Photos de robots: [[Tout de {year}]]"
 				}
 			},
 			"scouting": "Repérage",

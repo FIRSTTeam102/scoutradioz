@@ -87,7 +87,7 @@ export type FilterQueryTyped<T> = {
 	$and?: FilterQueryTyped<T>[];
 	$expr?: FilterQueryTyped<T>;
 } & {
-	[key in keyof T]?: QueryItem<T[key]>|T[key];
+	[key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]>|T[key];
 } & {
 	// JL: TypeScript lets us do limited string validation by using template literals. Can't yet use regexes,
 	// 	but this serves our purpose. Essentially, any string with a . in it is allowed past the schema filter,
