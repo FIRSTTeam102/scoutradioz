@@ -19,7 +19,7 @@
 		if( !JQ("#teamSelect").val() ){
 			if( !!JQ("#teamNo").val()) {
 				//if teamSelect is filled, proceed to intel url
-				var key = "frc".concat(JQ("#teamNo").val() as string);
+				let key = "frc".concat(JQ("#teamNo").val() as string);
 				goto("./reports/teamintel?team_key="+key)
 			
 			}else if( !JQ("#stats").prop("disabled"))
@@ -28,7 +28,7 @@
 		}
 		else {
 			//if text input is filled, proceed to intel url
-			var key = "frc".concat(JQ("#teamSelect").val() as string);
+			let key = "frc".concat(JQ("#teamSelect").val() as string);
 			goto("./reports/teamintel?team_key="+key)
 		}
 	}

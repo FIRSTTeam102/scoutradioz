@@ -1,7 +1,7 @@
 import lucia, { LuciaError, type Adapter, type SessionSchema, type UserSchema, type KeySchema, type AdapterFunction } from "lucia-auth";
 import { sveltekit } from "lucia-auth/middleware";
 import { dev } from "$app/environment";
-import utilities from "./utilities";
+import utilities, { type str } from "./utilities";
 import type { LuciaSession as LuciaSessionDb, User, LuciaUserKey } from 'scoutradioz-types'
 import { ObjectId } from "mongodb";
 import { getLogger } from "log4js";
@@ -10,12 +10,16 @@ const logger = getLogger('lucia');
 
 const customAdapter = (): AdapterFunction<Adapter> => {
 	return (luciaError) => {
+		console.log('Custom adapter func')
 		
-		async function _getSession(sessionID: ObjectId|string) {
+		async function _getSession(sessionID: string) {
 			const session = await utilities.findOne('sveltesessions', {
 				_id: sessionID
+			}, {}, {
+				castID: false,
 			});
 			// if (!session) throw new luciaError('AUTH_INVALID_SESSION_ID', 'Could not find session in database');
+			console.log('_session', session);
 			if (!session) return null;
 			return transformSessionToLucia(session);
 		}
@@ -40,15 +44,21 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 		}
 		
 		function transformUserToLucia(user: User) {
+			// logger.info('transformUserToLucia', user)
+			
+			const userId = String(user._id);
 			delete user._id;
+			
 			const luciaUser: UserSchema = {
-				id: String(user._id),
+				id: userId,
 				...user
 			}
 			return luciaUser;
 		}
 		
 		function transformKeyToLucia(key: LuciaUserKey) {
+			logger.info('transformKeyToLucia', key)
+			
 			const dbKey: KeySchema = {
 				id: key.id,
 				hashed_password: key.hashed_password,
@@ -72,6 +82,11 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				if (!session) return null;
 				const user = await _getUser(session.user_id);
 				if (!user) return null;
+				
+				console.log({
+					session,
+					user,
+				})
 				
 				return {
 					session,
@@ -137,7 +152,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				if (!existingUser) throw new luciaError('AUTH_INVALID_USER_ID');
 				
 				const dbSession: LuciaSessionDb = {
-					_id: new ObjectId(session.id),
+					_id: session.id,
 					active_expires: Number(session.active_expires),
 					idle_expires: Number(session.idle_expires),
 					user_id: new ObjectId(session.user_id),
@@ -148,8 +163,8 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				logger.info('deleteSession', sessionId);
 				
 				await utilities.remove('sveltesessions', {
-					_id: new ObjectId(sessionId)
-				});
+					_id: sessionId,
+				}, {castID: false});
 			},
 			deleteSessionsByUserId: async (userId) => {
 				logger.info('deleteSessionsByUserId', userId);
@@ -201,6 +216,8 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				await utilities.insert('svelteuserkeys', dbKey);
 			},
 			getKeysByUserId: async (userId) => {
+				logger.info('getKeysByUserId', userId)
+				
 				const keys = await utilities.find('svelteuserkeys', {
 					user_id: new ObjectId(userId)
 				});
@@ -218,11 +235,15 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				});
 			},
 			deleteKeysByUserId: async (userId) => {
+				logger.info('deleteKeysByUserId', userId);
+				
 				await utilities.remove('svelteuserkeys', {
 					user_id: new ObjectId(userId)
 				});
 			},
 			deleteNonPrimaryKey: async (userId) => {
+				logger.info('deleteNonPrimaryKey', userId);
+				
 				await utilities.remove('svelteuserkeys', {
 					user_id: new ObjectId(userId),
 					primary_key: false
@@ -236,7 +257,21 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 export const auth = lucia({
 	adapter: customAdapter(),
 	env: dev ? "DEV" : "PROD",
-	middleware: sveltekit()
+	middleware: sveltekit(),
+	experimental: {
+		debugMode: true,
+	},
+	/** Move `id` back to `_id` */
+	transformDatabaseUser: (luciaUser) => {
+		const userId = luciaUser.id; // JL note: Svelte can't serialize ObjectID so we have to keep it as a string
+		const user = {
+			_id: userId,
+			...luciaUser
+		} as str<User> & { id?: string };
+		
+		delete user.id;
+		return user;
+	}
 });
 
 export type Auth = typeof auth;

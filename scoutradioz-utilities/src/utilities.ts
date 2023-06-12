@@ -430,7 +430,7 @@ export class Utilities {
 		collection: colName, 
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
 		options?: Opts, 
-		cacheOptions?: UtilitiesCacheOptions
+		extraOptions?: UtilitiesExtraOptions
 	): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchemaWithId<colName>[]> {
 		logger.addContext('funcName', 'find');
 		
@@ -442,22 +442,22 @@ export class Utilities {
 		let opts = options || {};
 		if (typeof opts != 'object') throw new TypeError('Options must be of type object');
 		//Cache options
-		if (!cacheOptions) cacheOptions = {};
-		if (typeof cacheOptions != 'object') throw new TypeError('cacheOptions must be of type object');
-		if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != 'boolean') throw new TypeError('cacheOptions.allowCache must be of type boolean');
-		if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
-		if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
-		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
-		let castQuery = this.castID(query);
+		if (!extraOptions) extraOptions = {};
+		if (typeof extraOptions != 'object') throw new TypeError('extraOptions must be of type object');
+		if (extraOptions.allowCache != undefined && typeof extraOptions.allowCache != 'boolean') throw new TypeError('extraOptions.allowCache must be of type boolean');
+		if (extraOptions.maxCacheAge != undefined && typeof extraOptions.maxCacheAge != 'number') throw new TypeError('extraOptions.maxCacheAge must be of type number');
+		if (!extraOptions.allowCache) extraOptions.allowCache = false;
+		if (!extraOptions.maxCacheAge) extraOptions.maxCacheAge = this.options.cache.maxAge;
+		let castQuery = (extraOptions.castID !== false) ? this.castID(query) : query;
 		
-		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(castQuery)}, ${JSON.stringify(opts)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
-		let timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
+		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(castQuery)}, ${JSON.stringify(opts)}, maxCacheAge: ${extraOptions.maxCacheAge}`);
+		let timeLogName = `find: ${collection} cache=${extraOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
 		let returnData: any[]; // JL note: Schema type is declared in types.d.ts and guaranteed by the database structure rather than TS
 		
 		//If cache is enabled
-		if (cacheOptions.allowCache === true && this.options.cache.enable === true) {
+		if (extraOptions.allowCache === true && this.options.cache.enable === true) {
 			
 			if (this.options.debug) logger.trace('Caching enabled');
 			let hashedQuery = await this.hashQuery('find', collection, castQuery, opts);
@@ -482,7 +482,7 @@ export class Utilities {
 				let db = await this.getDB();
 				cachedRequest = await db.collection(collection).find(castQuery, opts).toArray();
 				//Cache response (Including maxAge before automatic deletion)
-				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
+				this.cache.set(hashedQuery, cachedRequest, extraOptions.maxCacheAge);
 				
 				if (this.options.debug) logger.trace(`${hashedQuery}: ${JSON.stringify(cachedRequest).substring(0, 1000)}...`);
 				this.consoleTimeEnd(timeLogName);
@@ -516,14 +516,14 @@ export class Utilities {
 	 * @param collection Collection to findOne in.
 	 * @param query Filter for query.
 	 * @param opts Query options, such as sort.
-	 * @param cacheOptions Caching options.
+	 * @param extraOptions Caching options.
 	 * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
 	 */
 	async findOne<colName extends CollectionName, Opts extends FindOptions = FindOptions> (
 		collection: colName, 
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
 		options?: Opts, 
-		cacheOptions?: UtilitiesCacheOptions
+		extraOptions?: UtilitiesExtraOptions
 	): Promise<CollectionSchemaWithId<colName>> {
 		logger.addContext('funcName', 'findOne');
 		
@@ -536,22 +536,22 @@ export class Utilities {
 		let opts = options || {};
 		if (typeof opts != 'object') throw new TypeError('utilities.findOne: Options must be of type object');
 		//Cache options
-		if (!cacheOptions) cacheOptions = {};
-		if (typeof cacheOptions != 'object') throw new TypeError('utilities.findOne: cacheOptions must be of type object');
-		if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != 'boolean') throw new TypeError('cacheOptions.allowCache must be of type boolean');
-		if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
-		if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
-		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
-		query = this.castID(query);
+		if (!extraOptions) extraOptions = {};
+		if (typeof extraOptions != 'object') throw new TypeError('utilities.findOne: extraOptions must be of type object');
+		if (extraOptions.allowCache != undefined && typeof extraOptions.allowCache != 'boolean') throw new TypeError('extraOptions.allowCache must be of type boolean');
+		if (extraOptions.maxCacheAge != undefined && typeof extraOptions.maxCacheAge != 'number') throw new TypeError('extraOptions.maxCacheAge must be of type number');
+		if (!extraOptions.allowCache) extraOptions.allowCache = false;
+		if (!extraOptions.maxCacheAge) extraOptions.maxCacheAge = this.options.cache.maxAge;
+		if (extraOptions.castID !== false) query = this.castID(query);
 		
 		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(opts)}`);
-		let timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
+		let timeLogName = `findOne: ${collection} cache=${extraOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		
 		let returnData: any;
 		
 		//If cache is enabled
-		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
+		if (extraOptions.allowCache == true && this.options.cache.enable == true) {
 			
 			if (this.options.debug) logger.trace('Caching enabled');
 			let hashedQuery = await this.hashQuery('findOne', collection, query, opts);
@@ -576,7 +576,7 @@ export class Utilities {
 				let db = await this.getDB();
 				cachedRequest = await db.collection(collection).findOne(query, opts);
 				//Cache response (Including maxAge before automatic deletion)
-				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
+				this.cache.set(hashedQuery, cachedRequest, extraOptions.maxCacheAge);
 				
 				if (this.options.debug) logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 				this.consoleTimeEnd(timeLogName);
@@ -611,10 +611,11 @@ export class Utilities {
 		collection: colName, 
 		query: FilterQueryTyped<CollectionSchema<colName>>, 
 		update: UpdateFilterTyped<CollectionSchema<colName>>,
-		options?: UpdateOptions
+		options?: UpdateOptions,
+		extraOptions?: UtilitiesExtraOptions,
 	): Promise<UpdateResult | MongoDocument>;
 	// JL: Can't remove the separate declaration/implementation function headers cuz TS has this weird bug where it thinks UpdateFilter<MongoDocument> and UpdateFilter<CollectionSchema<colName>> are incompatible though they're the same
-	async update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument> {
+	async update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions, extraOptions?: UtilitiesExtraOptions): Promise<UpdateResult | MongoDocument> {
 		logger.addContext('funcName', 'update');
 		
 		//Collection filter
@@ -627,7 +628,7 @@ export class Utilities {
 		//Query options filter
 		if (!options) options = {};
 		if (typeof options != 'object') throw new TypeError('Utilities.update: Options must be of type object');
-		query = this.castID(query);
+		if (extraOptions?.castID !== false) query = this.castID(query);
 		
 		if (this.options.debug) logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
 		let timeLogName = `update: ${collection}`;
@@ -656,13 +657,13 @@ export class Utilities {
 	 * Asynchronous "aggregate" function to a collection specified in first parameter.
 	 * @param collection Collection to find in.
 	 * @param pipeline Array containing all the aggregation framework commands for the execution.
-	 * @param cacheOptions Caching options.
+	 * @param extraOptions Caching options.
 	 * @returns Aggregated data.
 	 */
 	async aggregate<colName extends CollectionName>(
 		collection: colName, 
 		pipeline: MongoDocument[], 
-		cacheOptions?: UtilitiesCacheOptions
+		extraOptions?: UtilitiesExtraOptions
 	): Promise<any[]> {
 		logger.addContext('funcName', 'aggregate');
 		
@@ -672,20 +673,20 @@ export class Utilities {
 		//If query does not exist or is not an object, throw an error. 
 		if(typeof(pipeline) != 'object') throw new TypeError('Utilities.aggregate: pipieline must be of type object');
 		//Cache options
-		if (!cacheOptions) cacheOptions = {};
-		if (typeof cacheOptions != 'object') throw new TypeError('Utilities.aggregate: cacheOptions must be of type object');
-		if (cacheOptions.allowCache != undefined && typeof cacheOptions.allowCache != 'boolean') throw new TypeError('cacheOptions.allowCache must be of type boolean');
-		if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
-		if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
-		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
+		if (!extraOptions) extraOptions = {};
+		if (typeof extraOptions != 'object') throw new TypeError('Utilities.aggregate: extraOptions must be of type object');
+		if (extraOptions.allowCache != undefined && typeof extraOptions.allowCache != 'boolean') throw new TypeError('extraOptions.allowCache must be of type boolean');
+		if (extraOptions.maxCacheAge != undefined && typeof extraOptions.maxCacheAge != 'number') throw new TypeError('extraOptions.maxCacheAge must be of type number');
+		if (!extraOptions.allowCache) extraOptions.allowCache = false;
+		if (!extraOptions.maxCacheAge) extraOptions.maxCacheAge = this.options.cache.maxAge;
 		
-		let timeLogName = `agg: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
+		let timeLogName = `agg: ${collection} cache=${extraOptions.allowCache && this.options.cache.enable}`;
 		this.consoleTime(timeLogName);
 		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(pipeline)}`);
 		
 		let returnData: MongoDocument[], data; 
 		//If cache is enabled
-		if (cacheOptions.allowCache == true && this.options.cache.enable == true) {
+		if (extraOptions.allowCache == true && this.options.cache.enable == true) {
 			
 			if (this.options.debug) logger.trace('Caching enabled');
 			let hashedQuery = await this.hashQuery('aggregate', collection, pipeline, {});
@@ -710,7 +711,7 @@ export class Utilities {
 				let db = await this.getDB();
 				cachedRequest = await db.collection(collection).aggregate(pipeline).toArray();
 				//Cache response (Including maxAge before automatic deletion)
-				this.cache.set(hashedQuery, cachedRequest, cacheOptions.maxCacheAge);
+				this.cache.set(hashedQuery, cachedRequest, extraOptions.maxCacheAge);
 				
 				if (this.options.debug) logger.trace(JSON.stringify(cachedRequest).substring(0, 1000));
 				this.consoleTimeEnd(timeLogName);
@@ -779,7 +780,8 @@ export class Utilities {
 	async distinct<colName extends CollectionName, Field extends (keyof CollectionSchema<colName> | `${string}.${string}`)>(
 		collection: colName, 
 		field: Field, 
-		query: FilterQueryTyped<CollectionSchema<colName>>
+		query: FilterQueryTyped<CollectionSchema<colName>>,
+		extraOptions?: UtilitiesExtraOptions,
 	): Promise<CollectionSchemaWithId<colName>[Field][]>{
 		logger.addContext('funcName', 'distinct');
 		
@@ -791,7 +793,7 @@ export class Utilities {
 		if(!query) query = {};
 		//If query exists and is not an object, throw an error. 
 		if(typeof(query) != 'object') throw new TypeError('Utilities.distinct: query must be of type object'); 
-		query = this.castID(query);
+		if (extraOptions?.castID !== false) query = this.castID(query);
 		
 		let timeLogName = `distinct: ${collection}`;
 		this.consoleTime(timeLogName);
@@ -866,7 +868,8 @@ export class Utilities {
 	 */
 	async remove<colName extends CollectionName>(
 		collection: colName, 
-		query?: FilterQueryTyped<CollectionSchema<colName>>
+		query?: FilterQueryTyped<CollectionSchema<colName>>,
+		extraOptions?: UtilitiesExtraOptions,
 	): Promise<DeleteResult> {
 		logger.addContext('funcName', 'remove');
 		
@@ -877,7 +880,7 @@ export class Utilities {
 		if(!query) query = {};
 		//If query exists and is not an object, throw an error. 
 		if(typeof query != 'object') throw new TypeError('utilities.remove: query must be of type object');
-		query = this.castID(query);
+		if (extraOptions?.castID !== false) query = this.castID(query);
 		
 		if (this.options.debug) logger.trace(`${collection}, param: ${JSON.stringify(query)}`);
 		
@@ -1153,7 +1156,7 @@ declare interface FIRSTKey extends MongoDocument {
  * @param {boolean} [allowCache=false]
  * @param {number} [maxCacheAge=30]
  */
-export declare class UtilitiesCacheOptions {
+export declare class UtilitiesExtraOptions {
 	/**
 	 * Whether this request can be cached. If true, then identical requests will be returned from the cache.
 	 * @default false
@@ -1164,6 +1167,11 @@ export declare class UtilitiesCacheOptions {
 	 * @default 30
 	 */
 	maxCacheAge?: number;
+	/**
+	 * Whether to cast _id fields automatically to ObjectID.
+	 * @default true
+	 */
+	castID?: boolean;
 }
 
 

@@ -454,7 +454,9 @@ export declare interface Session extends DbDocument {
  * @collection sveltesessions
  * @interface LuciaSession
  */
-export declare interface LuciaSession extends DbDocument {
+export declare interface LuciaSession {
+	/** JL note: Lucia gives a much longer string for session_id, so we can't use ObjectId */
+	_id: string;
 	active_expires: number;
 	idle_expires: number;
 	user_id: ObjectId;
@@ -529,7 +531,7 @@ export declare interface User extends DbDocument {
 	org_key: OrgKey;
 	name: string;
 	role_key: RoleKey;
-	password: string;
+	password: 'default'|'disabled'|string;
 	org_info: {
 		subteam_key: string;
 		class_key: string;
@@ -541,6 +543,7 @@ export declare interface User extends DbDocument {
 		assigned: boolean;
 	};
 	visible: boolean;
+	removed: boolean; // New
 	push_subscription: PushSubscription|null;
 }
 

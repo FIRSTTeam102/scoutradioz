@@ -1,0 +1,40 @@
+==========================
+======= API REQUEST ======
+
+import { json, error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import utilities from '$lib/server/utilities';
+
+export const POST: RequestHandler = async ({ params, request }) => {
+	return json({
+		
+	});
+};
+
+==========================
+======== PAGE LOAD =======
+
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+
+export const load = (async ({ params }) => {
+	return {
+		
+	};
+}) satisfies PageServerLoad;
+
+==========================
+====== FORM ACTIONS ======
+
+import type { Actions } from './$types';
+import { error, fail, redirect } from '@sveltejs/kit';
+
+export const actions = {
+	default: async ({ request, params, locals }) => {
+		return {
+			
+		};
+	}
+} satisfies Actions;
+
+==========================

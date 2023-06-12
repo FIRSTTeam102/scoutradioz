@@ -40,8 +40,11 @@ if( env.COLORIZE_LOGS == 'true'){
 }
 log4js.configure(log4jsConfig);
 
+const logLevel = env.LOG_LEVEL || 'debug';
+log4js.getLogger().level = logLevel;
+
 const logger = getLogger('hooks.server.ts');
-logger.level = env.LOG_LEVEL || 'debug';
+logger.info(`Log level: ${logLevel}`);
 
 // const authorization = (async ({ event, resolve }) => {
 // 	// Protect any routes under /authenticated

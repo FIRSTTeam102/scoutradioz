@@ -181,16 +181,16 @@ export declare class Utilities {
      * @param cacheOption Caching options.
      * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
      */
-    find<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchemaWithId<colName>[]>;
+    find<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, extraOptions?: UtilitiesExtraOptions): Promise<Opts extends FindOptionsWithProjection ? any : CollectionSchemaWithId<colName>[]>;
     /**
      * Asynchronous "findOne" function to a collection specified in first parameter.
      * @param collection Collection to findOne in.
      * @param query Filter for query.
      * @param opts Query options, such as sort.
-     * @param cacheOptions Caching options.
+     * @param extraOptions Caching options.
      * @returns If the query options includes `projection`, then the type returned is `any`. Otherwise, the type annotation is automatically detected based on the specified collection.
      */
-    findOne<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, cacheOptions?: UtilitiesCacheOptions): Promise<CollectionSchemaWithId<colName>>;
+    findOne<colName extends CollectionName, Opts extends FindOptions = FindOptions>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, options?: Opts, extraOptions?: UtilitiesExtraOptions): Promise<CollectionSchemaWithId<colName>>;
     /**
      * Asynchronous "update" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -199,15 +199,15 @@ export declare class Utilities {
      * @param options Query options, such as sort.
      * @returns {WriteResult} writeResult
      */
-    update<colName extends CollectionName>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, update: UpdateFilterTyped<CollectionSchema<colName>>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument>;
+    update<colName extends CollectionName>(collection: colName, query: FilterQueryTyped<CollectionSchema<colName>>, update: UpdateFilterTyped<CollectionSchema<colName>>, options?: UpdateOptions, extraOptions?: UtilitiesExtraOptions): Promise<UpdateResult | MongoDocument>;
     /**
      * Asynchronous "aggregate" function to a collection specified in first parameter.
      * @param collection Collection to find in.
      * @param pipeline Array containing all the aggregation framework commands for the execution.
-     * @param cacheOptions Caching options.
+     * @param extraOptions Caching options.
      * @returns Aggregated data.
      */
-    aggregate<colName extends CollectionName>(collection: colName, pipeline: MongoDocument[], cacheOptions?: UtilitiesCacheOptions): Promise<any[]>;
+    aggregate<colName extends CollectionName>(collection: colName, pipeline: MongoDocument[], extraOptions?: UtilitiesExtraOptions): Promise<any[]>;
     dumpCache(): void;
     /**
      * @param type Type of function
@@ -223,7 +223,7 @@ export declare class Utilities {
      * @param query The query for filtering the set of documents to which we apply the distinct filter.
      * @returns Distinct values for the specified field
      */
-    distinct<colName extends CollectionName, Field extends (keyof CollectionSchema<colName> | `${string}.${string}`)>(collection: colName, field: Field, query: FilterQueryTyped<CollectionSchema<colName>>): Promise<CollectionSchemaWithId<colName>[Field][]>;
+    distinct<colName extends CollectionName, Field extends (keyof CollectionSchema<colName> | `${string}.${string}`)>(collection: colName, field: Field, query: FilterQueryTyped<CollectionSchema<colName>>, extraOptions?: UtilitiesExtraOptions): Promise<CollectionSchemaWithId<colName>[Field][]>;
     /**
      * Asynchronous "bulkWrite" function to a collection specified in first parameter.
      * @param collection Collection to find in.
@@ -238,7 +238,7 @@ export declare class Utilities {
      * @param query Filter for element/s to remove.
      * @return {Promise<DeleteResult>} writeResult
      */
-    remove<colName extends CollectionName>(collection: colName, query?: FilterQueryTyped<CollectionSchema<colName>>): Promise<DeleteResult>;
+    remove<colName extends CollectionName>(collection: colName, query?: FilterQueryTyped<CollectionSchema<colName>>, extraOptions?: UtilitiesExtraOptions): Promise<DeleteResult>;
     /**
      * Asynchronous "insert" function to a collection specified in first parameter.
      * @param collection Collection to insert into.
@@ -319,7 +319,7 @@ declare interface FIRSTKey extends MongoDocument {
  * @param {boolean} [allowCache=false]
  * @param {number} [maxCacheAge=30]
  */
-export declare class UtilitiesCacheOptions {
+export declare class UtilitiesExtraOptions {
     /**
      * Whether this request can be cached. If true, then identical requests will be returned from the cache.
      * @default false
@@ -330,6 +330,11 @@ export declare class UtilitiesCacheOptions {
      * @default 30
      */
     maxCacheAge?: number;
+    /**
+     * Whether to cast _id fields automatically to ObjectID.
+     * @default true
+     */
+    castID?: boolean;
 }
 /**
  * Config JSON for utilities.js. Provide a connection URL for each possible value of process.env.TIER.

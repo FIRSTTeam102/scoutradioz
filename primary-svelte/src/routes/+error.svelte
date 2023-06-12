@@ -4,7 +4,7 @@
 	
 	//- this seems like the prettiest way to write it
 	//- html-like syntax can be used in the json to create the link ({github}text{/github})
-	var github = {
+	const github = {
 		'github': '<span class="sprite sp-18 sp-inline sp-github">&nbsp;</span><a class="link" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/issues" target="_blank">',
 		'/github': '</a>'
 	}
