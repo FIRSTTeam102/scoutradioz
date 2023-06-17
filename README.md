@@ -9,7 +9,7 @@ Initially created in [2018](https://github.com/firstteam102/scoringapp-2018/), S
 - Event management tools such as auditing match assignments, swapping scouters in and out, and managing a list of members
 - And of course, it's completely free!
 
-**[Please visit the wiki](https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki) for documentation on how to use the app.**
+**[Please visit the wiki](https://github.com/FIRSTTeam102/scoutradioz/wiki) for documentation on how to use the app.**
 
 ## App structure
 We use 

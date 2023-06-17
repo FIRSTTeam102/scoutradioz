@@ -1,5 +1,5 @@
 ## How to set up for development
-1. Clone repository `https://github.com/FIRSTTeam102/ScoringApp-Serverless.git`.
+1. Clone repository `https://github.com/FIRSTTeam102/scoutradioz.git`.
 2. Make sure you have Amazon's AWS CLI installed (https://aws.amazon.com/cli/)
 3. Run `aws configure`.
     - Enter access key ID
