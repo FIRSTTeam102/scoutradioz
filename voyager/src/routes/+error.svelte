@@ -17,7 +17,7 @@
 	<ol>
 		<li>Take a screenshot of this error message,</li>
 		<li>Copy the full URL of this page by clicking on "Share" at the top of the page,</li>
-		<li>Post the screenshot in either our Discord server or our <a href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/issues" target="_blank" rel="noreferrer">GitHub page</a>, including relevant information, such as the link you clicked to get to this error.</li>
+		<li>Post the screenshot in either our Discord server or our <a href="https://github.com/FIRSTTeam102/scoutradioz/issues" target="_blank" rel="noreferrer">GitHub page</a>, including relevant information, such as the link you clicked to get to this error.</li>
 	</ol>
 
 	{#if $page.error?.stack}

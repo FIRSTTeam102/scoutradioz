@@ -11,14 +11,14 @@
 	"types": "types/index.d.ts",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/firstteam102/ScoringApp-Serverless.git"
+		"url": "git+https://github.com/firstteam102/scoutradioz.git"
 	},
 	"author": "JL102",
 	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/firstteam102/ScoringApp-Serverless/issues"
+		"url": "https://github.com/firstteam102/scoutradioz/issues"
 	},
-	"homepage": "https://github.com/firstteam102/ScoringApp-Serverless#readme",
+	"homepage": "https://github.com/firstteam102/scoutradioz#readme",
 	"dependencies": {
 		"@log4js-node/log4js-api": "^1.0.2",
 		"scoutradioz-types": "file:../scoutradioz-types",
