@@ -38,3 +38,31 @@ export const actions = {
 } satisfies Actions;
 
 ==========================
+=PAGE LOAD W/ LAYOUT DATA=
+
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import utilities from 'scoutradioz-utilities';
+
+export const load = (async ({ params, parent }) => {
+	
+	const ldata = await parent();
+	
+	return {
+		
+	};
+}) satisfies PageServerLoad;
+
+
+==========================
+====== PUG TEMPLATE ======
+
+<script lang='ts'>
+	import { msg } from "$lib/i18n";
+	import type { PageServerData } from "./$types";
+	export let data: PageServerData;
+</script>
+
+<template lang="pug">
+	
+</template>

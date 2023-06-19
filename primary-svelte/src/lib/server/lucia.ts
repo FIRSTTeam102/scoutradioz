@@ -19,7 +19,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				castID: false,
 			});
 			// if (!session) throw new luciaError('AUTH_INVALID_SESSION_ID', 'Could not find session in database');
-			console.log('_session', session);
+			// console.log('_session', session);
 			if (!session) return null;
 			return transformSessionToLucia(session);
 		}
@@ -57,7 +57,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 		}
 		
 		function transformKeyToLucia(key: LuciaUserKey) {
-			logger.info('transformKeyToLucia', key)
+			// logger.info('transformKeyToLucia', key)
 			
 			const dbKey: KeySchema = {
 				id: key.id,
@@ -71,22 +71,17 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 		
 		const adapter: Adapter = {
 			getUser: async (userId) => {
-				logger.info('getUser', userId);
+				// logger.info('getUser', userId);
 				
 				return _getUser(userId);
 			},
 			getSessionAndUserBySessionId: async (sessionId) => {
-				logger.info('getSessionAndUserBySessionId', sessionId);
+				// logger.info('getSessionAndUserBySessionId', sessionId);
 				
 				const session = await _getSession(sessionId);
 				if (!session) return null;
 				const user = await _getUser(session.user_id);
 				if (!user) return null;
-				
-				console.log({
-					session,
-					user,
-				})
 				
 				return {
 					session,
@@ -94,12 +89,12 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				};
 			},
 			getSession: async (sessionId) => {
-				logger.info('getSession', sessionId);
+				// logger.info('getSession', sessionId);
 				
 				return await _getSession(sessionId);
 			},
 			getSessionsByUserId: async (userId) => {
-				logger.info('getSessionsByUserId', userId);
+				// logger.info('getSessionsByUserId', userId);
 				
 				const sessions = await utilities.find('sveltesessions', {
 					user_id: new ObjectId(userId)
@@ -108,7 +103,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				return sessions.map(transformSessionToLucia);
 			},
 			setUser: async (userId, userAttributes, key) => {
-				logger.info('setUser', userId, userAttributes, key);
+				// logger.info('setUser', userId, userAttributes, key);
 				
 				if (key) {
 					const existingKey = await utilities.find('svelteuserkeys', {
@@ -137,14 +132,14 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				return transformUserToLucia(user);
 			},
 			deleteUser: async (userId) => {
-				logger.info('deleteUser', userId);
+				// logger.info('deleteUser', userId);
 				
 				await utilities.remove('users', {
 					_id: new ObjectId(userId)
 				});
 			},
 			setSession: async (session) => {
-				logger.info('setSession', session);
+				// logger.info('setSession', session);
 				
 				const existingUser = await utilities.findOne('users', {
 					_id: session.user_id
@@ -160,21 +155,21 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				await utilities.insert('sveltesessions', dbSession);
 			},
 			deleteSession: async (sessionId) => {
-				logger.info('deleteSession', sessionId);
+				// logger.info('deleteSession', sessionId);
 				
 				await utilities.remove('sveltesessions', {
 					_id: sessionId,
 				}, {castID: false});
 			},
 			deleteSessionsByUserId: async (userId) => {
-				logger.info('deleteSessionsByUserId', userId);
+				// logger.info('deleteSessionsByUserId', userId);
 				
 				await utilities.remove('sveltesessions', {
 					user_id: new ObjectId(userId)
 				});
 			},
 			updateUserAttributes: async (userId, userAttributes) => {
-				logger.info('updateUserAttributes', userId, userAttributes);
+				// logger.info('updateUserAttributes', userId, userAttributes);
 				
 				await utilities.update('users', {
 					_id: new ObjectId(userId)
@@ -183,7 +178,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				});
 			},
 			getKey: async (keyId) => {
-				logger.info('getKey', keyId);
+				// logger.info('getKey', keyId);
 				
 				const key = await utilities.findOne('svelteuserkeys', {
 					id: keyId
@@ -198,7 +193,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				}
 			},
 			setKey: async (key) => {
-				logger.info('setKey', key);
+				// logger.info('setKey', key);
 				
 				const existingKey = await utilities.findOne('svelteuserkeys', {
 					id: key.id,
@@ -216,7 +211,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				await utilities.insert('svelteuserkeys', dbKey);
 			},
 			getKeysByUserId: async (userId) => {
-				logger.info('getKeysByUserId', userId)
+				// logger.info('getKeysByUserId', userId)
 				
 				const keys = await utilities.find('svelteuserkeys', {
 					user_id: new ObjectId(userId)
@@ -224,7 +219,7 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				return keys.map(transformKeyToLucia);
 			},
 			updateKeyPassword: async (keyId, hashedPassword) => {
-				logger.info('updateKeyPassword', keyId, hashedPassword);
+				// logger.info('updateKeyPassword', keyId, hashedPassword);
 				
 				await utilities.update('svelteuserkeys', {
 					id: keyId
@@ -235,14 +230,14 @@ const customAdapter = (): AdapterFunction<Adapter> => {
 				});
 			},
 			deleteKeysByUserId: async (userId) => {
-				logger.info('deleteKeysByUserId', userId);
+				// logger.info('deleteKeysByUserId', userId);
 				
 				await utilities.remove('svelteuserkeys', {
 					user_id: new ObjectId(userId)
 				});
 			},
 			deleteNonPrimaryKey: async (userId) => {
-				logger.info('deleteNonPrimaryKey', userId);
+				// logger.info('deleteNonPrimaryKey', userId);
 				
 				await utilities.remove('svelteuserkeys', {
 					user_id: new ObjectId(userId),
@@ -262,7 +257,7 @@ export const auth = lucia({
 		debugMode: true,
 	},
 	/** Move `id` back to `_id` */
-	transformDatabaseUser: (luciaUser) => {
+	transformDatabaseUser: (luciaUser): str<User> => {
 		const userId = luciaUser.id; // JL note: Svelte can't serialize ObjectID so we have to keep it as a string
 		const user = {
 			_id: userId,

@@ -8,21 +8,18 @@
 
 	import { enhance, applyAction } from '$app/forms';
 	export let data: PageData;
-    export let form: ActionData;
+	export let form: ActionData;
 
 	let formElem: HTMLFormElement;
-	let selectUserHiddenButton: HTMLButtonElement;
-	
-	/** For keeping track of which state the page is in right now */
-	let state: 'org_password'|'select_user'|'new_user_password'|'enter_user_password' = 'org_password';
-	
+
 	let orgPassword: string;
-	
+	let selectedUserId: string;
+
 	// JL: should this be inside onMount?
 	if (!data.org) {
 		throw new Error('Org not found!!');
 	}
-	
+
 	// async function getUserList() {
 	// 	if (state !== 'org_password') return console.error('getUserList() abort because state is not org_password');
 	// 	try {
@@ -42,17 +39,22 @@
 	// 	}
 	// }
 	
-	onMount(() => {
-		// If org_password is returned from +page.server.ts, then re-populate orgPassword once (without Svelte binding form.org_password)
-		if (form?.org_password) {
-			orgPassword = form.org_password;
-		}
-	})
+	// $: console.log(form);
+
+	if (form?.org_password) {
+		orgPassword = form.org_password;
+	}
+	if (form?.selected_user_id) {
+		selectedUserId = form.selected_user_id;
+	}
 	
+	$: console.log(`Selected user: ${selectedUserId}`);
+	$: console.log(formElem)
+
 	// async function selectUser() {
 	// 	// if (state !== 'select_user') return console.error('selectUser() abort because state is not select_user');
 	// 	// console.log(`Fetching details for user ${selectedUserId}`);
-		
+
 	// 	if (!form?.userList) {
 	// 		return console.error('selectUser: userlist has not been defined');
 	// 	}
@@ -60,9 +62,8 @@
 	// 	formElem.action = 'user/login?/selectUser';
 	// 	formElem.submit();
 	// }
-	
+
 	// $: console.log(`Form has returned`, form);
-	
 </script>
 
 <h3 class="theme-text">{msg('user.loginOrg', { org: data.org.nickname })}</h3>
@@ -74,29 +75,93 @@
 				<label for="org_password">{msg('user.orgpassword')}</label>
 			</div>
 			<div class="w3-half">
-				<input type="password" id="org_password" name="org_password" class="w3-input theme-input w3-no-border theme-inline-padding" bind:value={orgPassword}>
+				<input
+					type="password"
+					id="org_password"
+					name="org_password"
+					class="w3-input theme-input w3-no-border theme-inline-padding"
+					bind:value={orgPassword}
+				/>
 			</div>
 		</div>
 		<div class="w3-padding-16">
-			<button formaction="user/login?/listUsers" class="gear-btn theme-submit w3-btn">{msg('user.next')}</button>
+			<button formaction="user/login?/listUsers" class="gear-btn theme-submit w3-btn"
+				>{msg('user.next')}</button
+			>
 		</div>
 	</div>
-	<div class:hidden={!form?.org_password_accepted} class="w3-container w3-padding-16">
+	<div class:hidden={!form?.org_password_accepted}>
 		{#if form?.userList}
 			<div class="w3-container w3-padding-16">
-				<div class="w3-quarter w3-label theme-inline-padding"><label for="user_select">{msg('user.name')}</label></div>
+				<div class="w3-quarter w3-label theme-inline-padding">
+					<label for="user_select">{msg('user.name')}</label>
+				</div>
 				<div class="w3-half">
-					<select name="user_select" id="user_select" class="w3-select theme-input w3-no-border" 
-						on:change={() => {selectUserHiddenButton.click()}}>
-						<option/>
+					<select
+						name="user_select"
+						id="user_select"
+						class="w3-select theme-input w3-no-border"
+						bind:value={selectedUserId}
+					>
+						<option />
 						{#each form.userList as user}
 							<option value={user._id} class="w3-bar-item">{user.name}</option>
 						{/each}
 					</select>
-					<button class="hidden" formaction="user/login?/selectUser" bind:this={selectUserHiddenButton}></button>
 				</div>
 			</div>
 		{/if}
+		{#if form?.create_password}
+			<div class="w3-container w3-padding-16">
+				<div class="w3-quarter w3-label theme-inline-padding">
+					<label for="newPassword1">{msg('user.newpassword')}</label>
+				</div>
+				<div class="w3-half">
+					<input
+						type="password"
+						name="newPassword1"
+						id="newPassword1"
+						class="w3-input theme-input w3-no-border theme-inline-padding"
+					/>
+				</div>
+			</div>
+			<div class="w3-container w3-padding-16">
+				<div class="w3-quarter w3-label theme-inline-padding">
+					<label for="newPassword2">{msg('user.newpassword')}</label>
+				</div>
+				<div class="w3-half">
+					<input
+						type="password"
+						name="newPassword2"
+						id="newPassword2"
+						class="w3-input theme-input w3-no-border theme-inline-padding"
+					/>
+				</div>
+			</div>
+		{/if}
+		{#if form?.password_needed}
+			<div class="w3-container w3-padding-16">
+				<div class="w3-quarter w3-label theme-inline-padding">
+					<label for="personalPassword">{msg('user.personalPassword')}</label>
+				</div>
+				<div class="w3-half">
+					<input
+						type="password"
+						name="personalPassword"
+						id="personalPassword"
+						class="w3-input theme-input w3-no-border theme-inline-padding"
+					/>
+				</div>
+			</div>
+		{/if}
+		<div class="w3-padding-16">
+			<input
+				type="submit"
+				class="gear-btn theme-submit w3-btn"
+				value={msg('user.login')}
+				formaction="user/login?/selectUser"
+			/>
+		</div>
 	</div>
 	<!-- {:else if state === 'select_user'} -->
 	<!-- {/if} -->

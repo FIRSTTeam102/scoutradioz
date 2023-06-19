@@ -1,13 +1,16 @@
 import { error } from '@sveltejs/kit';
-import type { Event, Team } from 'scoutradioz-types';
+import type { Event, Team, User } from 'scoutradioz-types';
 import type { LayoutServerLoad } from './$types';
-import utilities from '$lib/server/utilities';
+import utilities, { type str } from '$lib/server/utilities';
 import { msg } from '$lib/i18n';
+import { setContext } from 'svelte';
+import { writable } from 'svelte/store';
 
 /**
  * Load data when an org is selected.
  */
 export const load = (async ({ params, cookies, locals }) => {
+	let st = performance.now();
 	
 	const org = await utilities.findOne('orgs', {org_key: params.org_key});
 	
@@ -52,23 +55,24 @@ export const load = (async ({ params, cookies, locals }) => {
 		// delete event_key cookie, just in case it's corrupt and there's no event in the db with that key
 		cookies.delete('event_key');
 	}
-		
-	// Temporary till i get auth shworking
-	// const user = await utilities.findOne('users', {
-	// 	org_key: org.org_key,
-	// 	name: 'default_user'
-	// });
 	
 	// Get user from session
 	let { user } = await locals.auth.validateUser();
 	
-	console.log('luciaUser', user);
+	// console.log('luciaUser', user);
 	
 	// If there's nobody logged in, replace with default_user
-	if (!user) user = await utilities.findOne('users', {
-		org_key: org.org_key,
-		name: 'default_user'
-	});
+	if (!user) {
+		// cast ObjectId to string
+		let userWithObjectId = await utilities.findOne('users', {
+			org_key: org.org_key,
+			name: 'default_user'
+		}) as User|str<User>; // Declare that the type can flipflop between User and str<User>
+		userWithObjectId._id = String(userWithObjectId._id);
+		user = userWithObjectId as str<User>;
+	}
+	
+	console.log('Layout just ran!', performance.now() - st);
 	
 	return {
 		org,

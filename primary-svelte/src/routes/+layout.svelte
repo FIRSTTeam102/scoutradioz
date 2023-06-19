@@ -3,8 +3,13 @@
 
 	import { page } from '$app/stores';
 	import type { LayoutServerData, PageServerData } from './$types';
-
+	import JQ from 'jquery';
+	
 	import { msg } from "$lib/i18n";
+	
+	// JL: Expose $ to window scope for browser-based testing
+	// @ts-ignore
+	globalThis.$ = JQ;
 	
 	function selectLanguage() { }
 	

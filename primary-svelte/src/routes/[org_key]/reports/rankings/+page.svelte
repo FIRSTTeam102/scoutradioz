@@ -1,0 +1,48 @@
+<script lang='ts'>
+	import NoDataFound from "$lib/NoDataFound.svelte";
+	import { msg } from "$lib/i18n";
+	import type { PageServerData } from "./$types";
+	export let data: PageServerData;
+</script>
+
+<template lang="pug">
+	+if('data.rankings.length === 0')
+		<NoDataFound title={msg('reports.noRankingsYet')} />
+		+else
+			h2(class="theme-text") {msg('reports.currentRankings.title')}
+				h6.i {msg('reports.teamClick')}
+			div(class="w3-auto")
+				table(class="w3-table")
+					tr
+						th(class="w3-center theme-spacer") {msg('reports.rank')}
+						th(class="w3-center theme-spacer") {msg('reports.team')}
+						th(class="w3-center theme-spacer w3-tooltip") {msg('reports.currentRankings.wlt')}
+							span(class="w3-tooltiptext") {msg('reports.currentRankings.wltDesc')}
+						th(class="w3-center theme-spacer w3-tooltip") {msg('reports.currentRankings.dq')}
+							span(class="w3-tooltiptext") {msg('reports.currentRankings.dqDesc')}
+						th(class="w3-center theme-spacer") {msg('matches')}
+						th(class="w3-center theme-spacer w3-tooltip") {msg('reports.currentRankings.rp')}
+							span(class="w3-tooltiptext") {msg('reports.currentRankings.rpDesc')}
+					+each('data.rankings as team')
+						tr
+							td(class="theme-text w3-center")
+								b {team.rank}
+							td(class="theme-text-secondary w3-center")
+								a(href=`/reports/teamintel?team_key\={team.team_key}`) {team.team_key.substring(3)}
+							td(class="theme-text-secondary w3-center") {team.record.wins+'-'+team.record.losses+'-'+team.record.ties}
+							td(class="theme-text-secondary w3-center") {team.dq}
+							td(class="theme-text-secondary w3-center") {team.matches_played}
+							td(class="theme-text-secondary w3-center") {team.extra_stats[0]}
+</template>
+
+<style>
+	#content{
+		/*Reduce page's padding*/
+		padding: 4px 8px!important;
+	}
+	.w3-tooltip .w3-tooltiptext{
+		width: 160px;
+		padding: 8px 16px;
+		margin-left: -80px;
+	}
+</style>
