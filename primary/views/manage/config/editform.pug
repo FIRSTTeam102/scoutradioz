@@ -8,11 +8,13 @@ block content
 	p 
 		br 
 		i Modify, copy, paste from elsewhere, etc. the JSON defining your form
+		br
+		i Recommendation: Use a text editor like <a href="https://vscode.dev" class="link" target="_blank">Visual Studio Code</a> to edit the JSON, then paste it here
 	div(class="w3-container w3-section w3-auto")
 		textarea(class="w3-input w3-border" id="jsonfield" name="jsonfield" rows="40" cols="80")=layout
-		div(class="gear-btn theme-link w3-btn w3-section" onclick="test()")
+		div(class="gear-btn theme-link w3-btn w3-section" id="testBtn")
 			span Test form [HIT BACK BUTTON TO RETURN]
-		div(class="gear-btn theme-link w3-btn w3-section" onclick="submit()")
+		div(class="gear-btn theme-link w3-btn w3-section" id="submitBtn")
 			span Validate and submit
 		textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
 	
@@ -25,4 +27,5 @@ block content
 		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`)
 		input(name="year" id="year" type="hidden" value=`${year}`)
 	
-	script(src=`${fileRoot}/js/script-editform.js`)
+	//- 2023-10-06 JL: Changed script to module so I can import types ESM-style
+	script(src=`${fileRoot}/js/script-editform.js` type="module")
