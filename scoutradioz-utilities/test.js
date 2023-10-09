@@ -1,4 +1,5 @@
 const log4js = require('log4js');
+/** @type {import('./src/utilities').default} */
 const utilities = require('./build/utilities');
 
 //log4js config
@@ -26,7 +27,7 @@ logger.level = 'trace';
 
 utilities.config({
 	app: {url: 'mongodb://127.0.0.1:27017/app'},
-	dev: {url: 'mongodb://localhost:27017/dev'}
+	dev: {url: 'mongodb://127.0.0.1:27017/dev'}
 }, {cache: {enable: true}, debug: true});
 
 //Test utilities.getURL
@@ -68,8 +69,7 @@ async function testMultipleDbs(){
 	process.env.TIER = 'dev';
 	utilities.refreshTier();
 	
-	var writeResult = await utilities.insert('test', {'foo': 'bar'});
-	logger.info(`writeResult=${JSON.stringify(writeResult)}`);
+	await utilities.insert('test', {'foo': 'bar'});
 	
 	var obj = await utilities.findOne('test', {'foo': 'bar'});
 	logger.info(`In dev: ${JSON.stringify(obj)}`);
@@ -82,8 +82,14 @@ async function testMultipleDbs(){
 	process.env.TIER = 'dev';
 	utilities.refreshTier();
 	
-	var delResult = await utilities.remove('test', {'foo': 'bar'});
-	logger.info(`delResult: ${JSON.stringify(delResult)}`);
+	await utilities.remove('test', {'foo': 'bar'});
+	
+	await utilities.insert('users', {
+		name: 'test_user',
+		org_key: 'none',
+	});
+	
+	await utilities.insert('users', [{name: 'test_user 2'}, {name: 'test_user 3'}, {name: 'test_user 4'}, {name: 'test_user 5'}]);
 	
 	process.env.TIER = 'app';
 	utilities.refreshTier();

@@ -520,7 +520,8 @@ class UseFunctions {
 			message: err.message,
 			status: err.status,
 			statusMessage: statusMessage,
-			stack: stack
+			stack: stack,
+			disableStackTrace: err.disableStackTrace
 		};
 		
 		// render the error page

@@ -309,6 +309,9 @@ router.get('/recalcderived', wrap(async (req, res) => {
 		}
 	}
 	
+	// 2023-03-19 JL: Recalculate agg ranges when recalculating derived
+	matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
+	
 	if (writeQueries.length === 0) return res.send('No match data to calculate!'); // 2023-02-21 JL: avoid empty bulkWrite call
 	
 	// 2022-03-04 JL: fixed bug & put the update stuff into a bulkWrite

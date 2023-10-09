@@ -728,7 +728,7 @@ router.get('/matches', wrap(async (req, res) => {
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2022-03-17 JL: Reversed alliance sorting order to show red first
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 60, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 90, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
 
 	if(!scoreData)
 		return logger.error('mongo error at dashboard/matches');

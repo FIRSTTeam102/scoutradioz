@@ -34,8 +34,8 @@ block content
 								div(class="w3-col s3 w3-right-align w3-padding-16")
 									div(style="height: 10px;")
 										if assignment.assigned_scorer
-											//- Serve bold when it's the logged in user
-											if user && user._id.equals(assignment.assigned_scorer.id)
+											//- Serve bold when it's the logged in user (2023-03-23 JL: switched from ObjectID.prototype.equals() to ==)
+											if user && user._id == assignment.assigned_scorer.id
 												span.b= assignment.assigned_scorer.name
 											else
 												span= assignment.assigned_scorer.name

@@ -110,7 +110,6 @@ block content
 		}
 		
 		var selectedDict = {};
-		var selectedArray = [];
 		var selected = 0;
 		
 		function toggle(id)
@@ -172,16 +171,17 @@ block content
 			if (selected < 1)
 				return;
 			
-			console.log(selectedArray);
-			var selectedArray = [];
-			for (var key in selectedDict)
-			{
-				console.log(selectedDict[key]);
-				selectedArray.push(selectedDict[key]);
-			}
-			console.log(selectedArray.toString());
+			//- 2023-03-23 JL: selectedArray was not used; code deleted
+			//- 2023-03-23 JL: Switching to numerical IDs
+			
+			let selectedDictNumerical = {
+				member1: parseInt(selectedDict.member1)
+			};
+			if (selectedDict.member2) selectedDictNumerical.member2 = parseInt(selectedDict.member2);
+			if (selectedDict.member3) selectedDictNumerical.member3 = parseInt(selectedDict.member3);
+			
 			//document.getElementById("selectedString").innerHTML = selectedArray.toString();
-			document.getElementById("setmemberpairdata").value = JSON.stringify(selectedDict);
+			document.getElementById("setmemberpairdata").value = JSON.stringify(selectedDictNumerical);
 			
 			document.getElementById("setmemberpair").submit();
 		}

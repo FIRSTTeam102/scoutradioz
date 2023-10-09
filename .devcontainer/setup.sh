@@ -22,4 +22,4 @@ if [ ! -f $dbsfile ]; then
 fi
 
 # Install node modules
-npm install && cd primary && npm install
+yarn run setup

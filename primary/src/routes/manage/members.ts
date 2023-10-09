@@ -445,9 +445,12 @@ router.post('/updatepresent', wrap(async (req, res) => {
 	
 	//Get a list of all present member IDs.
 	let allPresentMembers = [];
-	//eslint-disable-next-line
-	for(var i in req.body) {
-		allPresentMembers.push(utilities.id(i));
+	for(let i in req.body) {
+		let thisID = parseInt(i);
+		if (isNaN(thisID)) {
+			return res.redirect(`./present?alert=Invalid ID provided: ${thisID}&type=bad`);
+		}
+		allPresentMembers.push(thisID);
 	}
 	
 	logger.debug(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);

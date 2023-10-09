@@ -21,18 +21,15 @@ block content
 						- var boolVal = msg('yes');
 						- if (data[element.id] == 0) boolVal = msg('no');
 						h4(class="theme-text") #{element.label} <strong>#{boolVal}</strong>
-					when "counter"
-					when "badcounter"
-					when "derived"
-					when "multiselect"
-					when "textblock"
-						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{data[element.id]}</strong>
 					when "h2"
 						h2=element.label
 					when "h3"
 						h3=element.label
 					when "spacer"
 						br
+					//- 2023-03-19 JL: Switched hardcoded counter/badcounter/derived/etc. to "default" to allow for new numerical types to be displayed
+					default
+						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{data[element.id]}</strong>
 		else
 			+noDataFound(msg('reports.noMatchScoutData', {team: teamKey.substring(3), match: teammatch.match_number}))
 	else
