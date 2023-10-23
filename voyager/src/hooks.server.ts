@@ -1,10 +1,12 @@
+import type { RequestEvent } from '@sveltejs/kit';
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({
 	error,
 	event
 }: {
 	error: Error;
-	event: import('@sveltejs/kit').RequestEvent;
+	event: RequestEvent;
 }): App.Error {
 	const is404 = event.route.id === null;
 	return {
@@ -17,10 +19,11 @@ export function handleError({
 // JL: Without this, fetch calls won't be able to access error messages
 if (!('toJSON' in Error.prototype))
 	Object.defineProperty(Error.prototype, 'toJSON', {
-		value: function () {
+		value: function() {
 			let alt = {};
 
-			Object.getOwnPropertyNames(this).forEach(function (key) {
+			Object.getOwnPropertyNames(this).forEach(function(key) {
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-ignore
 				alt[key] = this[key];
 			}, this);
