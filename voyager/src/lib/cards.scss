@@ -6,11 +6,11 @@
 	gap: 0.5em;
 	justify-items: center;
 
-	:global {
-		.mdc-card {
+	:global(.mdc-card) {
+		// .mdc-card {
 			min-width: $card-width;
 			width: 100%;
 			min-height: $card-height;
-		}
+		// }
 	}
 }

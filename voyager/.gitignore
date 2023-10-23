@@ -3,8 +3,15 @@ node_modules
 /build
 /.svelte-kit
 /package
+.env
+.env.*
+!.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-static/*.css
-static/*.css.map
-.serverless
+
+# sst
+.sst
+.build
+
+# opennext
+.open-next
