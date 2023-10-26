@@ -10,7 +10,20 @@ export default {
   },
   stacks(app) {
     app.stack(function Site({ stack }) {
-      const site = new SvelteKitSite(stack, "site");
+
+      let domainName =
+        stack.stage === 'prod' ? 'voyager.scoutradioz.com'
+          : `${stack.stage}.voyager.scoutradioz.com`;
+
+      const site = new SvelteKitSite(stack, "site", {
+        customDomain: {
+          domainName,
+          hostedZone: 'scoutradioz.com',
+        },
+        environment: {
+          TIER: stack.stage,
+        }
+      });
       stack.addOutputs({
         url: site.url,
       });
