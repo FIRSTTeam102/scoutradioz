@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Org, User, Event, Layout, Match, TeamKey, MatchScouting, Team, PitScouting, ScouterRecord } from 'scoutradioz-types';
+import type { logLevel } from './logger';
 
 /**
  * Minimal version of the User interface, for transferring via QR code.
@@ -43,26 +44,33 @@ export interface ScouterRecordLocal {
 	name: string;
 }
 
-export type MatchScoutingLocal = Omit<MatchScouting, '_id'|'assigned_scorer'|'actual_scorer'> & {
+export type MatchScoutingLocal = Omit<MatchScouting, '_id' | 'assigned_scorer' | 'actual_scorer'> & {
 	team_name?: string;
 	assigned_scorer?: ScouterRecordLocal;
 	actual_scorer?: ScouterRecordLocal;
 }
 
 export interface TeamLocal {
-	city: string|null;
-	country: string|null;
+	city: string | null;
+	country: string | null;
 	key: TeamKey;
 	name: string;
 	nickname: string;
-	state_prov: string|null;
+	state_prov: string | null;
 	team_number: number;
+}
+
+export interface Log {
+	id?: number;
+	group: string;
+	level: logLevel;
+	message: string;
 }
 
 /**
  * Svelte can't transmit ObjectIds from server to client, so they have to be transformed into strings.
  */
-export type WithStringDbId<T> = Omit<T, '_id'> & {_id: string};
+export type WithStringDbId<T> = Omit<T, '_id'> & { _id: string };
 /** Shorthand for {@link WithStringDbId<T>} */
 export type str<T> = WithStringDbId<T>;
 
@@ -78,20 +86,24 @@ export class LocalDB extends Dexie {
 	pitscouting!: Table<str<PitScouting>>;
 	teams!: Table<TeamLocal>;
 	orgs!: Table<str<Org>>;
-	
+
+	logs!: Table<Log>;
+
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(20).stores({
+		this.version(21).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
 			user: '&_id',
-			
+
 			events: '&_id, &key, year',
 			layout: '&_id, [org_key+year+form_type]',
 			matchscouting: '&match_team_key, [org_key+event_key], team_key, year, time, match_number',
 			pitscouting: '&[org_key+event_key+team_key], [org_key+event_key], primary.id, secondary.id, tertiary.id',
 			teams: '&key, team_number',
 			orgs: '&org_key',
+
+			logs: '++id, group, level',
 		});
 	}
 }
@@ -100,10 +112,10 @@ const db = new LocalDB();
 
 
 // WIP code to detect when there's an upgrade error "Not yet support for changing primary key"
-if ('addEventListener' in globalThis) addEventListener ('unhandledrejection', async (e) => {
+if ('addEventListener' in globalThis) addEventListener('unhandledrejection', async (e) => {
 	if (e.reason && e.reason.name === 'AbortError') {
 		try {
-			let user = await db.user.get(1);			
+			let user = await db.user.get(1);
 		}
 		catch (err) {
 			if (err instanceof Error) {

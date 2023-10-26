@@ -4,7 +4,7 @@ import dbJSON from '$lib/../databases.json';
 import { env } from '$env/dynamic/private';
 import dotenv from 'dotenv';
 
-console.log(`Environment variables: tier=${env.TIER}`);
+console.log(`Environment variables: TIER=${env.TIER}`);
 
 // hacky temporary fix 
 if (env.TIER) {
@@ -36,7 +36,6 @@ utilities.config(dbJSON, {
 	mongoClientOptions: mongoClientOptions
 });
 
-// @ts-ignore - change this later
-utilities.refreshTier(); 
+utilities.refreshTier();
 
 export default utilities;
