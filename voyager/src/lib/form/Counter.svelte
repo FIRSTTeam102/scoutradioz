@@ -29,13 +29,11 @@
 		justify-content: space-between;
 	}
 
-	:global {
-		.good {
-			@include mdc-fab.accessible(color-palette.$blue-300);
-		}
-		.bad {
-			@include mdc-fab.accessible(color-palette.$red-900);
-			@include mdc-fab.shape-radius(25%);
-		}
+	:global(.good) {
+		@include mdc-fab.accessible(color-palette.$blue-300);
+	}
+	:global(.bad) {
+		@include mdc-fab.accessible(color-palette.$red-900);
+		@include mdc-fab.shape-radius(25%);
 	}
 </style>
