@@ -10,6 +10,7 @@ extends:
 plugins:
   - 'scoutradioz-eslint'
   - '@typescript-eslint'
+parser: '@typescript-eslint/parser'
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
