@@ -1,19 +1,15 @@
 import utilities from '$lib/server/utilities';
-import { org_key, event_key, getStore } from '$lib/stores';
 import type { PitScouting } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
+import { error, json } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ params }) => {
 	const all: PitScouting[] = await utilities.find('pitscouting', {
-		org_key: getStore(org_key),
-		event_key: getStore(event_key)
+		org_key: params.org_key,
+		event_key: params.event_key,
 	}, {
 		sort: { team_key: 1 }
 	}, { allowCache: true });
 
-	return new Response(JSON.stringify(all), {
-		headers: {
-			'content-type': 'application/json'
-		}
-	});
+	return json(all);
 };
