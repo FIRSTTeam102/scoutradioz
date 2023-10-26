@@ -3,6 +3,30 @@ import { dev } from '$app/environment';
 
 export type logLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
+export function logLevelNumberToString(level: number): logLevel {
+  switch (level) {
+    case 0: return 'trace';
+    case 1: return 'debug';
+    case 2: return 'info';
+    case 3: return 'warn';
+    case 4: return 'error';
+    case 5: return 'fatal';
+    default: return 'info';
+  }
+}
+
+export function logLevelStringToNumber(level: logLevel): number {
+  switch (level) {
+    case 'trace': return 0;
+    case 'debug': return 1;
+    case 'info': return 2;
+    case 'warn': return 3;
+    case 'error': return 4;
+    case 'fatal': return 5;
+    default: return 2;
+  }
+}
+
 class Logger {
   group: string;
   constructor(group: string) {
@@ -11,7 +35,7 @@ class Logger {
   logToDexie(level: logLevel, message: unknown) {
     db.logs.add({
       group: this.group,
-      level,
+      level: logLevelStringToNumber(level),
       message: JSON.stringify(message),
     })
   }

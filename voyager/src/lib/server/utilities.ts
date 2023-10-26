@@ -1,5 +1,4 @@
 import utilities from 'scoutradioz-utilities';
-import fs from 'fs';
 import dbJSON from '$lib/../databases.json';
 import { env } from '$env/dynamic/private';
 import dotenv from 'dotenv';

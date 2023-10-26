@@ -63,7 +63,7 @@ export interface TeamLocal {
 export interface Log {
 	id?: number;
 	group: string;
-	level: logLevel;
+	level: number;
 	message: string;
 }
 
@@ -137,3 +137,6 @@ if ('addEventListener' in globalThis) addEventListener('unhandledrejection', asy
 });
 
 export default db;
+
+//@ts-ignore
+if (typeof window !== 'undefined') window.db = db; // for debugging
