@@ -9,6 +9,7 @@
     "sass-extras": "sass src/theme/extras.scss static/extras.css --load-path=node_modules",
     "smui-theme": "smui-theme compile static/smui.css -i src/theme",
     "postinstall": "yarn sass-extras && yarn smui-theme",
+    "update": "yarn upgrade --pattern 'scoutradioz*'",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --plugin-search-dir . --check . && eslint .",
