@@ -1,5 +1,6 @@
-import db from './localDB';
-import { dev } from '$app/environment';
+import db, { type Log } from './localDB';
+// import { dev } from '$app/environment';
+const dev = false;
 
 export type logLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
@@ -27,47 +28,69 @@ export function logLevelStringToNumber(level: logLevel): number {
   }
 }
 
+// Single buffer & callback for all log streams
+let buffer: Log[] = [];
+let idleCallbackID: number | undefined;
+
 class Logger {
   group: string;
   constructor(group: string) {
     this.group = group;
   }
-  logToDexie(level: logLevel, message: unknown) {
-    db.logs.add({
+
+  async logToDexie(level: logLevel, message: unknown) {
+    let str;
+    if (typeof message === 'string') str = message;
+    else str = JSON.stringify(message);
+
+    buffer.push({
       group: this.group,
       level: logLevelStringToNumber(level),
-      message: JSON.stringify(message),
+      message: str,
     })
+
+    if (!idleCallbackID) {
+      let stCallback = performance.now(); // temporary
+      idleCallbackID = requestIdleCallback(async () => {
+        let stBulkAdd = performance.now(); // temporary
+        await db.logs.bulkAdd(buffer);
+        if (dev) console.log(`logged ${buffer.length} messages in ${performance.now() - stBulkAdd}ms; ${stBulkAdd - stCallback} ms after callback was requested`); // temporary
+        buffer = [];
+        idleCallbackID = undefined;
+      }, {
+        timeout: 1000,
+      });
+    }
   }
 
-  trace(message: unknown) {
+  async trace(message: unknown) {
     if (dev) console.debug(message);
-    this.logToDexie('trace', message);
+    await this.logToDexie('trace', message);
   }
 
-  debug(message: unknown) {
+  async debug(message: unknown) {
     if (dev) console.debug(message);
-    this.logToDexie('debug', message);
+    await this.logToDexie('debug', message);
   }
 
-  info(message: unknown) {
+  async info(message: unknown) {
     if (dev) console.log(message);
-    this.logToDexie('info', message);
+    await this.logToDexie('info', message);
   }
 
-  warn(message: unknown) {
+  async warn(message: unknown) {
     if (dev) console.warn(message);
-    this.logToDexie('warn', message);
+    await this.logToDexie('warn', message);
   }
 
-  error(message: unknown) {
+  async error(message: unknown) {
     if (dev) console.error(message);
-    this.logToDexie('error', message);
+    await this.logToDexie('error', message);
   }
 
-  fatal(message: unknown) {
+  async fatal(message: unknown) {
     if (dev) console.error(message);
-    this.logToDexie('fatal', message);
+    await this.logToDexie('fatal', message);
   }
 }
 
@@ -81,3 +104,5 @@ export function getLogger(group?: string) {
     return loggers[group];
   }
 }
+
+console.log(getLogger); // temporary, for debugging
