@@ -12,7 +12,7 @@ block content
 		h3(class="theme-text w3-margin-bottom")!=msg('scouting.match')
 		if !futureMatchResultsConsistent
 			a(href="/manage/currentevent/matches") 
-				div(class="w3-btn theme-red no-margin-children")
+				div(class="w3-btn theme-red")
 					b!=msg('dashboard.matchResultMissedWarning')
 					br
 					if user.role && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
