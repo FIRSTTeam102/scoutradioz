@@ -83,7 +83,7 @@ function init() {
 	childPrimary = spawn('npx', [
 		'nodemon',
 		'--ext',
-		'ts',
+		'ts,json',
 		'./src/www.ts',
 	], {shell: true, cwd: pathToPrimary});
 	
