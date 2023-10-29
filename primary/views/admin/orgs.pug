@@ -36,7 +36,7 @@ block content
 						button(type="submit" class="w3-btn theme-submit") Update Org
 					div(class="w3-col m1 w3-padding-small")
 						div(class="w3-btn theme-red" onclick=`deleteOrg('${org.org_key}')`)
-							span(class="sprite sp-24 sp-inline no-margin sp-delete")
+							span(class="sprite sp-24 sp-inline sp-delete")
 			br 
 			label(class="w3-label gear-btn") Log in to #{org.nickname}:
 			a(href=`/selectorg-login?org_key=${org.org_key}`)
