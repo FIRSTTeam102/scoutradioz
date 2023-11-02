@@ -1,6 +1,5 @@
 import db, { type Log } from './localDB';
-// import { dev } from '$app/environment';
-const dev = false;
+import { dev } from '$app/environment';
 
 export type logLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
@@ -38,10 +37,11 @@ class Logger {
     this.group = group;
   }
 
-  async logToDexie(level: logLevel, message: unknown) {
-    let str;
-    if (typeof message === 'string') str = message;
-    else str = JSON.stringify(message);
+  async logToDexie(level: logLevel, messages: unknown[]) {
+    let str = messages.map(message => {
+		if (typeof message === 'string') return message;
+		else return JSON.stringify(message);
+	}).join(' ');
 
     buffer.push({
       group: this.group,
@@ -63,34 +63,34 @@ class Logger {
     }
   }
 
-  async trace(message: unknown) {
-    if (dev) console.debug(message);
-    await this.logToDexie('trace', message);
+  async trace(...messages: unknown[]) {
+    if (dev) console.debug(`[${this.group}]`, ...messages);
+    await this.logToDexie('trace', messages);
   }
-
-  async debug(message: unknown) {
-    if (dev) console.debug(message);
-    await this.logToDexie('debug', message);
+  
+  async debug(...messages: unknown[]) {
+	if (dev) console.debug(`[${this.group}]`, ...messages);
+	await this.logToDexie('debug', messages);
   }
-
-  async info(message: unknown) {
-    if (dev) console.log(message);
-    await this.logToDexie('info', message);
+  
+  async info(...messages: unknown[]) {
+	if (dev) console.log(`[${this.group}]`, ...messages);
+	await this.logToDexie('info', messages);
   }
-
-  async warn(message: unknown) {
-    if (dev) console.warn(message);
-    await this.logToDexie('warn', message);
+  
+  async warn(...messages: unknown[]) {
+	if (dev) console.warn(`[${this.group}]`, ...messages);
+	await this.logToDexie('warn', messages);
   }
-
-  async error(message: unknown) {
-    if (dev) console.error(message);
-    await this.logToDexie('error', message);
+  
+  async error(...messages: unknown[]) {
+	if (dev) console.error(`[${this.group}]`, ...messages);
+	await this.logToDexie('error', messages);
   }
-
-  async fatal(message: unknown) {
-    if (dev) console.error(message);
-    await this.logToDexie('fatal', message);
+  
+  async fatal(...messages: unknown[]) {
+	if (dev) console.error(`[${this.group}]`, ...messages);
+	await this.logToDexie('fatal', messages);
   }
 }
 
@@ -104,5 +104,3 @@ export function getLogger(group?: string) {
     return loggers[group];
   }
 }
-
-console.log(getLogger); // temporary, for debugging
