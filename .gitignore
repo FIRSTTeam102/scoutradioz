@@ -21,3 +21,4 @@ build
 
 # below: temporary
 voyager/static/*.css
+voyager/.sst
