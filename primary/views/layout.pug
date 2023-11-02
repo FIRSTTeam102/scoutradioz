@@ -143,7 +143,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 						span(style="display:inline-block;height:100%;vertical-align:middle;")
 						a(href="/home")
 							- const darkLogo = [2020].includes(themeYear)
-							img(src=`${fileRoot}/images/brand-logos/scoutradioz-${darkLogo ? 'black' : 'white'}-sm.png` class="header-logo" alt="Scoutradioz")
+							img(src=`${fileRoot}/images/brand-logos/scoutradioz-${darkLogo ? 'black' : 'white'}-sm.png?v=1` class="header-logo" alt="Scoutradioz")
 					- if (['dev', 'test', 'qa'].includes(process.env.TIER))
 						div(class="tierlabel")= process.env.TIER
 				//-div(class="w3-right w3-show-inline-block")
