@@ -2,6 +2,9 @@
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import SimpleSnackbar from './SimpleSnackbar.svelte';
 	import { getAvailableWindowSize } from './utils';
+	import { getLogger } from './logger';
+	
+	const logger = getLogger('QrCodeScanner');
 	
 	////////////////////////
 	// Fix iOS AudioContext
@@ -77,6 +80,8 @@
 	////////////////
 	const video = document.createElement('video');
 	
+	let debugInfo = '';
+	
 	/** Allow the scanner to be enabled or disabled. */
 	export let enabled: boolean = true;
 	
@@ -94,7 +99,7 @@
 	const dispatch = createEventDispatcher();
 	
 	function onQrCodeData(decodedText: string, millis: number) {
-		console.log('ONQRCODEDATA');
+		logger.trace('ONQRCODEDATA');
 		dispatch('data', {
 			text: decodedText,
 			ms: millis,
@@ -102,8 +107,9 @@
 	}
 
 	let lastMessageTime = 0;
+	let flippedDimensions = false;
 	function tick(time: number) {
-		if (!video || !ctx || !worker) return console.log('no video or ctx or worker');
+		if (!video || !ctx || !worker) return logger.error('no video or ctx or worker');
 		if (video.readyState === video.HAVE_ENOUGH_DATA) {
 			
 			let canvasWidth = video.videoWidth;
@@ -144,6 +150,35 @@
 					width: imageData.width,
 					height: imageData.height
 				});
+				
+				const track = (video.srcObject as MediaStream).getTracks()[0];
+				if (!track) return;
+				let constraints = track.getConstraints();
+				let { width, height } = getAvailableWindowSize(parent);
+				// Add debug info
+				debugInfo =  `Video stream: ${video.videoWidth}x${video.videoHeight} <br/>
+				Available: ${width}x${height} <br/>
+				Canvas size: ${canvasWidth}x${canvasHeight} <br/>
+				Flipped dimensions: ${flippedDimensions} <br/>
+				
+				---------------- <br/>
+				Constraints: <br/>
+				`
+				for (let key in constraints) {
+					// @ts-ignore
+					debugInfo += `${key}: ${JSON.stringify(constraints[key])} <br/>`;
+				}
+				debugInfo += `
+				---------------- <br/>
+				Supported constraints: <br/>
+				`
+				if (typeof track.getCapabilities === "function") {
+					let capabilities = track.getCapabilities();
+					for (let key in capabilities) {
+					// @ts-ignore
+					debugInfo += `${key}: ${JSON.stringify(capabilities[key])} <br/>`;
+					}
+				}
 			}
 		}
 		requestAnimationFrame(tick);
@@ -158,7 +193,7 @@
 	}
 	
 	async function setVideoStream() {
-		console.log('Setting video stream');
+		logger.trace('Setting video stream');
 		if (!video) throw new Error('No video element');
 		
 		// Get the desired aspect ratio of the video stream to perfectly fill the remaining space on the screen
@@ -173,32 +208,61 @@
 			}
 		}
 		
-		const idealVideoWidth = 720; // The resolution can vary slightly; higher resolutions are more expensive to process but if the resolution is too low, we MIGHT not be able to scan the highest-density codes
-		let idealVideoHeight = Math.round(idealVideoWidth / aspectRatio);
-		// Wide screens: Prefer a wider aspect ratio
+		const idealVideoShortSide = 480; // The resolution can vary slightly; higher resolutions are more expensive to process but if the resolution is too low, we MIGHT not be able to scan the highest-density codes
+		const idealVideoLongSide = Math.round(idealVideoShortSide / aspectRatio);
+		let idealVideoWidth: number, idealVideoHeight: number;
+		
+		// Wide screens: prefer wider aspect ratio
 		if (aspectRatio > 1) {
+			idealVideoWidth = idealVideoLongSide;
+			idealVideoHeight = idealVideoShortSide;
 			videoConstraints.width = {
-				ideal: idealVideoWidth,
-				min: idealVideoWidth,
-			};
+				ideal: idealVideoLongSide,
+				min: idealVideoShortSide, // minimum: square
+			}
 			videoConstraints.height = {
-				ideal: idealVideoHeight,
-			};
+				ideal: idealVideoShortSide,
+			}
 		}
 		// Phones: Prefer a narrower aspect ratio, extending slightly below the nav bar to provide the illusion of a fullscreen scanner
 		else {
+			idealVideoWidth = idealVideoShortSide;
+			idealVideoHeight = idealVideoLongSide;
 			videoConstraints.width = {
-				ideal: idealVideoWidth,
-			};
+				ideal: idealVideoShortSide,
+			}
 			videoConstraints.height = {
-				ideal: idealVideoHeight,
-				min: idealVideoHeight,
-			};
+				ideal: idealVideoLongSide,
+				min: idealVideoShortSide, // minimum: square
+			}
 		}
+		
+		// const idealVideoWidth = 480; // The resolution can vary slightly; higher resolutions are more expensive to process but if the resolution is too low, we MIGHT not be able to scan the highest-density codes
+		// let idealVideoHeight = Math.round(idealVideoWidth / aspectRatio);
+		// // Wide screens: Prefer a wider aspect ratio
+		// if (aspectRatio > 1) {
+		// 	videoConstraints.width = {
+		// 		ideal: idealVideoWidth,
+		// 		min: idealVideoWidth,
+		// 	};
+		// 	videoConstraints.height = {
+		// 		ideal: idealVideoHeight,
+		// 	};
+		// }
+		// // Phones: Prefer a narrower aspect ratio, extending slightly below the nav bar to provide the illusion of a fullscreen scanner
+		// else {
+		// 	videoConstraints.width = {
+		// 		ideal: idealVideoWidth,
+		// 	};
+		// 	videoConstraints.height = {
+		// 		ideal: idealVideoHeight,
+		// 		min: idealVideoHeight,
+		// 	};
+		// }
 		
 		let stream: MediaStream;
 		
-		console.log(videoConstraints);
+		logger.debug(videoConstraints);
 		
 		try {
 			stream = await navigator.mediaDevices.getUserMedia({
@@ -207,9 +271,10 @@
 		}
 		// If there's an OverConstrained error, try removing min/max constraints
 		catch (err) {
-			console.error(err);
-			console.log('Attempting to re-constrain video without min/max attributes and only with ideals');
-			console.log(videoConstraints);
+			snackbar.open('Video stream was over-constrained; attempting to re run without video stream min/max');
+			logger.error(err);
+			logger.info('Attempting to re-constrain video without min/max attributes and only with ideals');
+			logger.debug(videoConstraints);
 		
 			delete videoConstraints.width.min;
 			delete videoConstraints.width.max;
@@ -227,7 +292,7 @@
 		// On some devices, like my own, the requested height and width are flipped. In this case, we need to swap the width and height of the video constraints.
 		// 	We should be able to request the exact height/width in this case, instead of dealing with ideal/min/max values
 		video!.onloadedmetadata = async () => {
-			console.log('Video metadata loaded', video!.videoWidth, video!.videoHeight);
+			logger.debug('Video metadata loaded', video!.videoWidth, video!.videoHeight);
 			
 			// Detect whether the height and width values have been swapped by calculating the distance between video.videoWidth and videoConstraints.width.ideal and between video.videoHeight and videoConstraints.height.ideal
 			let widthDistance = Math.abs(video!.videoWidth - idealVideoWidth);
@@ -239,7 +304,7 @@
 			
 			// This means that the height and width values have been swapped, because if they were not, the distance between the ideal values and the actual values would be the same or very small
 			if (distanceSwapped < distance) {
-				console.log('Video height and width have been swapped. Re-constraining video stream with swapped values.');
+				logger.info('Video height and width have been swapped. Re-constraining video stream with swapped values.');
 				
 				let newVideoConstraints: MediaTrackConstraints = {
 					// Since the width and height will be flipped again, just request new width = old width and new height = old height,
@@ -254,6 +319,10 @@
 				await track.applyConstraints(newVideoConstraints);
 				
 				snackbar.open('Your device flipped video stream width and height. Please let the devs know if you see this message just so we know. This message will be removed in the future.');
+				flippedDimensions = true;
+			}
+			else {
+				flippedDimensions = false;
 			}
 			
 			video!.play();
@@ -262,9 +331,9 @@
 
 	let scanning = false, initScanning = false;
 	async function startScan() {
-		if (scanning || initScanning) return console.log('Already scanning; ignoring startVideo()');
+		if (scanning || initScanning) return logger.debug('Already scanning; ignoring startVideo()');
 		initScanning = true;
-		console.log(video); // temporary for debugging
+		console.log('video', video); // temporary for debugging
 		await initWorker();
 		try {
 			setVideoStream();
@@ -272,7 +341,7 @@
 			scanning = true;
 		}
 		catch (err) {
-			console.log(err);
+			logger.error(err);
 			snackbar.error(`Could not open camera: ${err instanceof Error ? err.message : err}`)
 			stopScan();
 		}
@@ -280,7 +349,7 @@
 	}
 
 	function stopScan() {
-		if (!scanning) return console.log('Not scanning; ignoring stopVideo()');
+		if (!scanning) return logger.trace('Not scanning; ignoring stopVideo()');
 		worker!.terminate(); // stop the worker
 		stopVideoStream();
 		scanning = false;
@@ -335,6 +404,7 @@
 </script>
 
 <div bind:this={parent}>
+	<!-- <div class="debug-info">{@html debugInfo}</div> -->
 	<canvas id="canvas" bind:this={canvas} />
 </div>
 <SimpleSnackbar bind:this={snackbar} />
@@ -349,5 +419,14 @@
 	}
 	#canvas {
 		width: 100%;
+	}
+	.debug-info {
+		position: fixed;
+		font-size: 0.7em;
+		top: 40px;
+		left: 8px;
+		text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+		color: white;
+		font-weight: bold;
 	}
 </style>
