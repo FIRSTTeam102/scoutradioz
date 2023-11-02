@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "sst bind vite dev",
+    "dev": "sst bind \"vite dev --host\"",
     "build": "vite build",
     "preview": "vite preview",
     "sass-extras": "sass src/theme/extras.scss static/extras.css --load-path=node_modules",
