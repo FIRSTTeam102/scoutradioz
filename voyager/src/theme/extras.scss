@@ -67,6 +67,13 @@ h6 {
   @include typography.typography('headline6');
   margin: 0
 }
+
+s1 {
+	@include typography.typography('subtitle1');
+}
+s2 {
+	@include typography.typography('subtitle2');
+}
  
 caption {
   @include typography.typography('caption');
@@ -94,6 +101,9 @@ section.pad {
 	section.pad {
 		padding: 8px 4px;
 	}
+}
+section.comfortable {
+	padding: 24px 16px;
 }
 
 .mdc-snackbar.error {
