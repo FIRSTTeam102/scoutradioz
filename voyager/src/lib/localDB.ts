@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
-import type { Org, User, Event, Layout, Match, TeamKey, MatchScouting, Team, PitScouting, ScouterRecord } from 'scoutradioz-types';
-import type { logLevel } from './logger';
+import type { Org, User, Event, Layout, Match, TeamKey, MatchScouting, Team, PitScouting, ScouterRecord, AnyDict } from 'scoutradioz-types';
+import type { FilterQuery } from 'scoutradioz-utilities';
 
 /**
  * Minimal version of the User interface, for transferring via QR code.
@@ -67,6 +67,26 @@ export interface Log {
 	message: string;
 }
 
+export interface SyncStatus {
+	id?: number;
+	/** Table, for example orgs or matchscouting */
+	table: string;
+	/** Whether the sync was full, i.e. the ENTIRE database without any filter */ 
+	full: boolean;
+	/** The time the sync occurred */
+	time: Date;
+	/** 
+	 * Some sort of filter for the query to the database. Leaving it open-ended
+	 * for different tables. For example, matchscouting could use "frc102_2019paca"/
+	 * "frc41_2024njski" to indicate different orgs+events downloaded
+	 * and events could use "2022"/"2023" to indicate different years downloaded.
+	 * The reason this is a string instead of an object is because IndexedDB doesn't
+	 * support indexing by objects. The syntax of the string must be consistent across
+	 * pages that use it, for any given table. Syntaxes can be different between tables.
+	 */
+	filter: string;
+}
+
 /**
  * Svelte can't transmit ObjectIds from server to client, so they have to be transformed into strings.
  */
@@ -88,10 +108,11 @@ export class LocalDB extends Dexie {
 	orgs!: Table<str<Org>>;
 
 	logs!: Table<Log>;
+	syncstatus!: Table<SyncStatus>;
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(21).stores({
+		this.version(23).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
 			user: '&_id',
@@ -104,6 +125,7 @@ export class LocalDB extends Dexie {
 			orgs: '&org_key',
 
 			logs: '++id, group, level',
+			syncstatus: '&[table+filter], date'
 		});
 	}
 }
