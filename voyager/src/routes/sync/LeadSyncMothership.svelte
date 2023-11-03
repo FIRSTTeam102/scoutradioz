@@ -207,11 +207,11 @@
 	<div class="card-list">
 		<Card>
 			<Content>
-				<h1 class="mdc-typography--headline5">Org info</h1>
-				<p class="mdc-typography--body1">
+				<h5>Org info</h5>
+				<p>
 					{$users} users
 				</p>
-				<p class="mdc-typography--body1">
+				<p>
 					{$orgs} orgs in db
 				</p>
 			</Content>
@@ -226,11 +226,11 @@
 		</Card>
 		<Card>
 			<Content>
-				<h1 class="mdc-typography--headline5">Match scouting</h1>
-				<p class="mdc-typography--body1">
+				<h5>Match scouting</h5>
+				<p>
 					{$matchScoutingNoData} entries without data, {$matchScoutingWithData} entries with data
 				</p>
-				<p class="mdc-typography--body1">
+				<p>
 					{$qualifyingMatches} qualifying matches, {$teams} total teams in database
 				</p>
 			</Content>
@@ -253,8 +253,8 @@
 		</Card>
 		<Card>
 			<Content>
-				<h1 class="mdc-typography--headline5">Pit scouting</h1>
-				<p class="mdc-typography--body1">
+				<h5>Pit scouting</h5>
+				<p>
 					{$pitScoutingNoData} entries without data, {$pitScoutingWithData} entries with data
 				</p>
 			</Content>

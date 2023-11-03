@@ -53,22 +53,20 @@
 
 	{#if $orgs}
 		{#each $orgs as org}
-		<Card>
-			<Content>
-				<h1 class="mdc-typography--headline5">{org.nickname}</h1>
-				<p class="mdc-typography--body1">
+			<Card>
+				<Content>
+					<h5>{org.nickname}</h5>
 					Team # {org.team_number} is at {org.event_key}
-				</p>
-			</Content>
-			<CActions>
-				<Group variant="outlined">
-					<Button variant="outlined" href={`/login?org_key=${org.org_key}`}>
-						<Icon class="material-icons">key</Icon>
-						<BLabel>Login</BLabel>
-					</Button>
-				</Group>
-			</CActions>
-		</Card>
+				</Content>
+				<CActions>
+					<Group variant="outlined">
+						<Button variant="outlined" href={`/login?org_key=${org.org_key}`}>
+							<Icon class="material-icons">key</Icon>
+							<BLabel>Login</BLabel>
+						</Button>
+					</Group>
+				</CActions>
+			</Card>
 		{/each}
 	{/if}
 </div>

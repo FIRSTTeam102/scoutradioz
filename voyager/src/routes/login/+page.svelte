@@ -64,7 +64,7 @@
 		{#each $users as user}
 		<Card>
 			<Content>
-				<h1 class="mdc-typography--headline5">{user.name}</h1>
+				<h5>{user.name}</h5>
 			</Content>
 			<CActions>
 				<Group variant="outlined">
