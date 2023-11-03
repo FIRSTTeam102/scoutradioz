@@ -51,9 +51,9 @@ interface CompressedMetadata extends CompressedItem {
 	users: string;
 }
 
-let lzma: ReturnType<typeof LZMA>;
+export let lzma: ReturnType<typeof LZMA>;
 
-function getLZMA() {
+export function getLZMA() {
 	if (!lzma) {
 		console.log('creating LZMA object');
 		lzma = LZMA('/lib/lzma_worker-min.js');
