@@ -14,13 +14,34 @@
 	import { event_key, org_key, getStore } from '$lib/stores';
 	import { fetchJSON } from '$lib/utils';
 	import assert from '$lib/assert';
-	import type { MatchScouting, PitScouting, User, Event, Org } from 'scoutradioz-types';
+	import type { MatchScouting, PitScouting, User, Event, Org, Layout } from 'scoutradioz-types';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 
 	const logger = getLogger('LeadSyncMothership');
 
 	let snackbar: SimpleSnackbar;
 	let errorMessage: string;
+
+	// Retrieve the # of matchscouting and pitscouting layout elements in the DB
+	$: matchscoutingFormElements = liveQuery(async () => {
+		assert($event_key);
+
+		return await db.layout
+			.where({
+				form_type: 'matchscouting'
+			})
+			.count();
+	});
+
+	$: pitscoutingFormElements = liveQuery(async () => {
+		assert($event_key);
+
+		return await db.layout
+			.where({
+				form_type: 'pitscouting'
+			})
+			.count();
+	});
 
 	// Retrieve the # of match scouting entries with and without data
 	$: matchScoutingNoData = liveQuery(async () => {
@@ -85,6 +106,26 @@
 	$: users = liveQuery(async () => {
 		return await db.lightusers.where({ org_key: $org_key }).count();
 	});
+
+	async function downloadFormData() {
+		try {
+			// Fetch list of match scouting form elements for the associated year
+			const matchFormData = await fetchJSON<WithStringDbId<Layout>[]>(
+				`/api/orgs/${$org_key}/${$event_key?.substring(0,4)}/layout/match`
+			);
+			assert($event_key, 'event_key not defined');
+			await db.layout.bulkPut(matchFormData);
+
+			// Fetch list of match scouting form elements for the associated year
+			const pitFormData = await fetchJSON<WithStringDbId<Layout>[]>(
+				`/api/orgs/${$org_key}/${$event_key?.substring(0,4)}/layout/pit`
+			);
+			assert($event_key, 'event_key not defined');
+			await db.layout.bulkPut(pitFormData);
+		} catch (err) {
+			handleError(err);
+		}
+	}
 
 	async function downloadMatchScouting() {
 		try {
@@ -274,6 +315,20 @@
 						<BLabel>Upload data</BLabel>
 					</Button>
 				</Group>
+			</CActions>
+		</Card>
+		<Card>
+			<Content>
+				<h5>Form data</h5>
+				<p>
+					{$matchscoutingFormElements} match form entries, {$pitscoutingFormElements} pit form entries
+				</p>
+			</Content>
+			<CActions>
+				<Button variant="outlined" on:click={downloadFormData}>
+					<Icon class="material-icons">download</Icon>
+					<BLabel>Download form data</BLabel>
+				</Button>
 			</CActions>
 		</Card>
 	</div>
