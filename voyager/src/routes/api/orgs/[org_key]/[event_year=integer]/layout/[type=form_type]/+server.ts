@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ params }) => {
 		type: { $ne: 'derived' } // not needed for ui, might change later
 	}, {
 		sort: { order: 1 },
-		projection: { _id: 0, form_type: 0, org_key: 0 }
+		projection: {  }
 	}, { allowCache: true });
 
 	return json(layout);

@@ -28,6 +28,8 @@
 
 		return await db.layout
 			.where({
+				org_key: $org_key,
+				year: Number($event_key?.substring(0,4)),
 				form_type: 'matchscouting'
 			})
 			.count();
@@ -38,6 +40,8 @@
 
 		return await db.layout
 			.where({
+				org_key: $org_key,
+				year: Number($event_key?.substring(0,4)),
 				form_type: 'pitscouting'
 			})
 			.count();
