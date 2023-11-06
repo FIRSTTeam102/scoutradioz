@@ -61,13 +61,17 @@
 	</DHeader>
 	<DContent>
 		<List>
-			<LItem href="/">
+			<LItem href="/home">
 				<LGraphic class="material-icons" aria-hidden="true">home</LGraphic>
 				<LText>Home</LText>
 			</LItem>
 			<LItem href="/schedule">
 				<LGraphic class="material-icons" aria-hidden="true">calendar_month</LGraphic>
 				<LText>Schedule</LText>
+			</LItem>
+			<LItem href="/">
+				<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
+				<LText>Switch org & user</LText>
 			</LItem>
 
 			<LSeparator />
@@ -126,7 +130,7 @@
 					menuOpen = !menuOpen;
 				}}>menu</IconButton
 			>
-			<a href="/" class="header-logo">
+			<a href="/home" class="header-logo">
 				<img src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`} alt="Scoutradioz logo" />
 			</a>
 		</Section>

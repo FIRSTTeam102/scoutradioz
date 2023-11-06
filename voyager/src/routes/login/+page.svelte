@@ -75,6 +75,7 @@
 		if (!$org) {
 			logger.warn('No org selected; redirecting to /');
 			goto('/');
+			return;
 		}
 		let userSyncStatus = await db.syncstatus
 			.where({
@@ -120,8 +121,7 @@
 		<Button variant="unelevated" disabled={!$user} on:click={async () => {
 			// Log in user
 			await updateUser($user);
-			// Temporary, just go to sync page since it is something
-			goto(`/sync/lead`)
+			goto(`/home`)
 		}}>
 			<BLabel>Done</BLabel>
 		</Button>
