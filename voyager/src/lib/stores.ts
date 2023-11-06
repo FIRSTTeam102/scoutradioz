@@ -42,5 +42,6 @@ userObservable.subscribe(async (user) => {
 		
 		const org = await db.orgs.where('org_key').equals(user.org_key).first();
 		if (org?.event_key) event_key.set(org.event_key);
+		if (org?.event_key) event_year.set(Number(org.event_key?.substring(0,4)))
 	}
 });

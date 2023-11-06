@@ -42,7 +42,7 @@
             db.user.clear();
 
 			let result = await db.user.put(user);
-			console.log(result);
+			console.log(`Result of db.user.put(user) = ${result}`);
         }
 		catch (err) {
 			console.log(err);
