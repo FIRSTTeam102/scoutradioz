@@ -87,14 +87,14 @@
 
 			<LSeparator />
 			<LSubheader tag="h6">Lead</LSubheader>
-			<LItem href="/assignments">
+			<!-- <LItem href="/assignments">
 				<LGraphic class="material-icons" aria-hidden="true">assignment_ind</LGraphic>
 				<LText>Manage assignments</LText>
 			</LItem>
 			<LItem href="/user/login/lead">
 				<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
 				<LText>Log in</LText>
-			</LItem>
+			</LItem> -->
 			<LItem href="/sync/lead">
 				<LGraphic class="material-icons" aria-hidden="true">sync</LGraphic>
 				<LText>Sync</LText>

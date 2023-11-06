@@ -46,3 +46,33 @@ export function getAvailableWindowSize(parentElem: HTMLElement) {
 		height: availableHeight,
 	}
 }
+
+/**
+ * Simple calculator to generate a numeric hash from a given string
+ * @param string the string to be hashed
+ * @returns a numeric value representing the string hash
+ */
+export function simpleStringToHash(string: string) {
+    let hash = 0;
+    if (string.length == 0) return hash;
+
+    for (let i = 0; i < string.length; i++) {
+        let char = string.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+     
+    return hash;
+}
+
+/**
+ * Updates a simple hash with an additional value
+ * @param hash the current value of the hash
+ * @param nextValue the next number to be included in the hash 
+ * @returns an updated hash value
+ */
+export function updateSimpleHash(hash: number, nextValue: number) {
+    let h2 = ((hash << 5) - hash) + nextValue;
+    h2 = h2 & h2;
+    return h2;
+}
