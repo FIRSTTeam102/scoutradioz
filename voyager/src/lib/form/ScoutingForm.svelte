@@ -23,8 +23,8 @@
 	{#each layout as field}
 		{#if field.type === 'checkbox'}
 			<Checkbox bind:checked={formData[field.id]} {field} />
-		{:else if field.type === 'counter' || field.type === 'badcounter'}
-			<Counter bind:value={formData[field.id]} {field} isBad={field.type === 'badcounter'} />
+		{:else if field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative'}
+			<Counter bind:value={formData[field.id]} {field} isBad={field.type === 'badcounter'} allowNegative={field.type === 'counterallownegative'}/>
 		{:else if field.type === 'slider' || field.type === 'timeslider'}
 			<Slider bind:value={formData[field.id]} {field} isTime={field.type === 'timeslider'} />
 		{:else if field.type === 'multiselect'}
