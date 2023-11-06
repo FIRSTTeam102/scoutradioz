@@ -37,15 +37,20 @@
 		id: string;
 		label: string;
 		icon?: string;
+		disabled?: boolean;
 	}
-	
+
 	let activeTab: SlidingTab;
 
+	export let initialActiveIndex = 0;
+
 	onMount(() => {
-		// Default to first tab; otherwise, retrieve the tab from location.hash
+		// Default to first tab; otherwise, retrieve the tab from location.hash or use the initialActiveIndex if provided
 		// todo later: maybe save it in localstorage?
 		let hash = parseInt(location.hash.substring(1));
-		if (hash && hash < tabs.length) {
+		if (initialActiveIndex) {
+			activeTab = tabs[initialActiveIndex];
+		} else if (hash && hash < tabs.length) {
 			activeTab = tabs[hash];
 		} else {
 			activeTab = tabs[0];
@@ -59,10 +64,10 @@
 	let movingRight = true;
 
 	function handleTabChange(e: { detail: { index: number } }) {
-		console.log('tabChange');
+		console.log('tabChange', e.detail.index);
 		// location.hash = String(e.detail.index);
 		goto('#' + e.detail.index, {
-			replaceState: true, // Don't want the tab navigation to create a new history entry
+			replaceState: true // Don't want the tab navigation to create a new history entry
 		});
 		movingRight = e.detail.index > prevTabIndex;
 		prevTabIndex = e.detail.index;
@@ -96,14 +101,12 @@
 	function slideOff() {
 		sliding = false;
 	}
-	
-	const maxTabs = 6;
 </script>
 
 <TabBar {tabs} let:tab bind:active={activeTab} on:SMUITabBar:activated={handleTabChange}>
-	<Tab {tab}>
+	<Tab {tab} disabled={tab.disabled}>
 		{#if tab.icon}
-			<Icon class='material-icons'>{tab.icon}</Icon>
+			<Icon class="material-icons">{tab.icon}</Icon>
 		{/if}
 		<Label>{tab.label}</Label>
 	</Tab>
