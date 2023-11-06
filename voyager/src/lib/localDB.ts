@@ -71,8 +71,6 @@ export interface SyncStatus {
 	id?: number;
 	/** Table, for example orgs or matchscouting */
 	table: string;
-	/** Whether the sync was full, i.e. the ENTIRE database without any filter */ 
-	full: boolean;
 	/** The time the sync occurred */
 	time: Date;
 	/** 

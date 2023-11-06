@@ -70,9 +70,11 @@ h6 {
 
 s1 {
 	@include typography.typography('subtitle1');
+	display: block;
 }
 s2 {
 	@include typography.typography('subtitle2');
+	display: block;
 }
  
 caption {
@@ -97,13 +99,27 @@ caption {
 section.pad {
 	padding: 16px 8px;
 }
+
+section.comfortable {
+	padding: 24px 16px;
+	max-width: 1200px;
+	margin: auto;
+}
+
 @media(max-width: 600px) {
 	section.pad {
 		padding: 8px 4px;
 	}
+	section.comfortable {
+		padding: 8px 4px;
+	}
 }
-section.comfortable {
-	padding: 24px 16px;
+
+@media(max-width: 400px) {
+	section.pad, section.comfortable {
+		padding-left: 0;
+		padding-right: 0;
+	}
 }
 
 .mdc-snackbar.error {
@@ -112,6 +128,10 @@ section.comfortable {
 	& .mdc-snackbar__action {
 		color: color-palette.$grey-900;
 	}
+}
+
+.grid {
+	display: grid;
 }
 
 // To specify a gap size, just use an inline style attribute

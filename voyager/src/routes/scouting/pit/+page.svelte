@@ -20,29 +20,31 @@
 		{ id: 'partner', icon: 'group', label: "Partner's" },
 		{ id: 'all', icon: 'groups', label: 'All' }
 	];
-	let activeTab = tabs[0];
-	let activeData = data.assignments;
-	
-	$: activeData = data.assignments.filter((asg) =>
-		activeTab.id === 'mine'
-			? asg.primary?.id === $userId
-			: activeTab.id === 'partner'
-			? asg.secondary?.id === $userId || asg.tertiary?.id === $userId
-			: true
-	);
-	
+
 	const myAssignments = data.assignments.filter((asg) => asg.primary?.id === $userId);
 	const partnersAssignments = data.assignments.filter(
 		(asg) => asg.secondary?.id === $userId || asg.tertiary?.id === $userId
 	);
 	const allAssignments = data.assignments;
+	console.log(data);
+
+	let initialActiveIndex = myAssignments.length ? 0 : partnersAssignments.length ? 1 : 2;
+
+	// let activeData = data.assignments;
+	//
+	// $: activeData = data.assignments.filter((asg) =>
+	// 	activeTab.id === 'mine'
+	// 		? asg.primary?.id === $userId
+	// 		: activeTab.id === 'partner'
+	// 		? asg.secondary?.id === $userId || asg.tertiary?.id === $userId
+	// 		: true
+	// );
 </script>
 
-
-<SlidingTabs tabs={tabs}>
-	<PitAssignmentList slot='1' assignments={myAssignments} />
-	<PitAssignmentList slot='2' assignments={partnersAssignments} />
-	<PitAssignmentList slot='3' assignments={allAssignments} />
+<SlidingTabs {tabs} {initialActiveIndex}>
+	<PitAssignmentList slot="1" assignments={myAssignments} />
+	<PitAssignmentList slot="2" assignments={partnersAssignments} />
+	<PitAssignmentList slot="3" assignments={allAssignments} />
 </SlidingTabs>
 
 <!-- <h1>Pit scouting</h1>

@@ -1,11 +1,11 @@
 import type { PageLoad } from './$types';
 import type { MatchScouting } from 'scoutradioz-types';
-import { event_key, getStore, org_key } from '$lib/stores';
+import { event_key, getStore, org_key, whenStoresLoaded } from '$lib/stores';
 import db from '$lib/localDB';
 
 export const load: PageLoad = async ({ fetch }) => {
 	// const all: (MatchScouting & { team_name: string })[] = await (await fetch('/api/assignments/match?onlyAssigned')).json();
-	console.log('Page loading');
+	await whenStoresLoaded();
 	let all = await db.matchscouting
 		.where({
 			event_key: getStore(event_key),
