@@ -66,6 +66,27 @@ export function simpleStringToHash(string: string) {
 }
 
 /**
+ * Generate a checksum for a given string. The same string will give
+ * the same checksum, but any change to the string will give a different
+ * checksum. For our purposes, we only need a few characters to have
+ * a reasonably negligible chance of a clash.
+ */
+export async function getStringChecksum(string: string) {
+	const CHECKSUM_LENGTH = 10; // 10 hex characters has a 1 in a trillion chance of a clash
+	const encoder = new TextEncoder();
+	const byteArray = encoder.encode(string);
+	const arrayBuffer = await crypto.subtle.digest('SHA-1', byteArray);
+	return arrayBufferHashToString(arrayBuffer).substring(0, CHECKSUM_LENGTH); 
+}
+
+function arrayBufferHashToString(arrayBuffer: ArrayBuffer) {
+  const uint8View = new Uint8Array(arrayBuffer);
+  return Array.from(uint8View)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/**
  * Updates a simple hash with an additional value
  * @param hash the current value of the hash
  * @param nextValue the next number to be included in the hash 
