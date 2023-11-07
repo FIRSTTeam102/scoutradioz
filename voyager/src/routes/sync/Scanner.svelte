@@ -29,20 +29,23 @@
 			
 			switch(decodedData.type) {
 				case 'sched':
-					let matchscouting = decodedData.data as MatchScoutingLocal[];
-					console.log(matchscouting);
-					let result = await db.matchscouting.bulkPut(matchscouting);
-					console.log(result);
-					break;
-				case 'meta':
-					let org = decodedData.data.org as str<Org>;
-					let users = decodedData.data.users as LightUser[];
-					let teams = decodedData.data.teams as TeamLocal[];
-					console.log('org', org, 'users', users, 'teams', teams);
-					await db.orgs.put(org);
-					await db.lightusers.bulkPut(users);
-					await db.teams.bulkPut(teams);
-					break;
+				{
+						let matchscouting = decodedData.data as MatchScoutingLocal[];
+						console.log(matchscouting);
+						let result = await db.matchscouting.bulkPut(matchscouting);
+						console.log(result);
+						break;
+					}
+				case 'meta': {
+						let org = decodedData.data.org as str<Org>;
+						let users = decodedData.data.users as LightUser[];
+						let teams = decodedData.data.teams as TeamLocal[];
+						console.log('org', org, 'users', users, 'teams', teams);
+						await db.orgs.put(org);
+						await db.lightusers.bulkPut(users);
+						await db.teams.bulkPut(teams);
+						break;
+					}
 			}
 		}
 		catch (err) {

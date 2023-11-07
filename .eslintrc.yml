@@ -54,6 +54,7 @@ rules:
     - error
   prefer-const: off
   no-unused-vars: off # Must be turned off because typescript-eslint/no-unused-vars supecedes this
+  '@typescript-eslint/no-explicit-any': off
   '@typescript-eslint/no-unused-vars': 
     - warn
     - args: none

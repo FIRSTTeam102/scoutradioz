@@ -15,9 +15,9 @@
 	let snackbar: SimpleSnackbar;
 
 	let numMatchesToGrab: number;
-	let whichUsersToInclude: 'assigned'|'everyone' = 'assigned';
-	
-	let qrCodeType: 'matchscouting'|'metadata' = 'matchscouting';
+	let whichUsersToInclude: 'assigned' | 'everyone' = 'assigned';
+
+	let qrCodeType: 'matchscouting' | 'metadata' = 'matchscouting';
 
 	// Todo: instead of depending on lightmatches, create a picker based on the empty matchscouting entries, with a start # and end #
 	let numMatchesAtEvent: Observable<number>;
@@ -34,65 +34,65 @@
 
 		return number;
 	});
-	
-	$: 
-		if (qrCodeType === 'matchscouting') {
-			db.matchscouting
-				.orderBy('match_number')
-				.filter(match => match.event_key === $event_key && match.org_key === $org_key)
-				.limit(numMatchesToGrab * 6)
-				.toArray()
-				.then(async (data) => {
-					if (data.length > 0) {
-						console.log('Compressing data');
-						let base64Data = await encodeMatchScouting(data);
-						generateQR(base64Data);
-						// console.log('Orig', data);
-						// let decoded = await decode(base64Data);
-						// console.log(decoded);
-					}
-				});
-		}
-		else if (qrCodeType === 'metadata') {
-			((async () => {
-				assert(typeof $org_key === 'string' && typeof $event_key === 'string');
-				
-				const users = await db.lightusers.where('org_key').equals($org_key)
-					.filter(user => {
-						if (whichUsersToInclude === 'everyone') return true;
-						return (user.event_info.assigned === true || user.event_info.present === true);
-					})
-					.toArray();
-				
-				const event = await db.events.where('key').equals($event_key).first();
-				if (!event) {
-					snackbar.error('Could not find event details!');
-					return clearCanvas();
+
+	$: if (qrCodeType === 'matchscouting') {
+		db.matchscouting
+			.orderBy('match_number')
+			.filter((match) => match.event_key === $event_key && match.org_key === $org_key)
+			.limit(numMatchesToGrab * 6)
+			.toArray()
+			.then(async (data) => {
+				if (data.length > 0) {
+					console.log('Compressing data');
+					let base64Data = await encodeMatchScouting(data);
+					console.log(base64Data);
+					generateQR(base64Data);
+					// console.log('Orig', data);
+					// let decoded = await decode(base64Data);
+					// console.log(decoded);
 				}
-				const teams = await db.teams.where('key').anyOf(event.team_keys).toArray();
-				if (!teams) {
-					snackbar.error('Could not find list of teams at the event!');
-					return clearCanvas();
-				};
-				
-				const org = await db.orgs.where('org_key').equals($org_key).first();
-				assert(org, 'Could not find org in db');
-				
-				let base64Data = await encodeMetadata(org, users, teams);
-				generateQR(base64Data);
-				// let decoded = await decode(base64Data);
-				// console.log(org, users, teams);
-				// console.log(decoded);
-			}))();
-		}
-		
+			});
+	} else if (qrCodeType === 'metadata') {
+		(async () => {
+			assert(typeof $org_key === 'string' && typeof $event_key === 'string');
+
+			const users = await db.lightusers
+				.where('org_key')
+				.equals($org_key)
+				.filter((user) => {
+					if (whichUsersToInclude === 'everyone') return true;
+					return user.event_info.assigned === true || user.event_info.present === true;
+				})
+				.toArray();
+
+			const event = await db.events.where('key').equals($event_key).first();
+			if (!event) {
+				snackbar.error('Could not find event details!');
+				return clearCanvas();
+			}
+			const teams = await db.teams.where('key').anyOf(event.team_keys).toArray();
+			if (!teams) {
+				snackbar.error('Could not find list of teams at the event!');
+				return clearCanvas();
+			}
+
+			const org = await db.orgs.where('org_key').equals($org_key).first();
+			assert(org, 'Could not find org in db');
+
+			let base64Data = await encodeMetadata(org, users, teams);
+			generateQR(base64Data);
+			// let decoded = await decode(base64Data);
+			// console.log(org, users, teams);
+			// console.log(decoded);
+		})();
+	}
+
 	function clearCanvas() {
-		
 		console.trace();
 		let ctx = canvas.getContext('2d');
 		ctx?.clearRect(0, 0, canvas.width, canvas.height);
 	}
-	
+
 	function generateQR(data: string) {
 		QRCode.toCanvas(
 			canvas,
@@ -118,7 +118,7 @@
 								clearCanvas();
 							}
 						}
-					)
+					);
 				}
 			}
 		);
@@ -129,7 +129,7 @@
 	<div class="rows" style="gap: 1em;">
 		<div>
 			<Select variant="filled" bind:value={qrCodeType}>
-				<Option value='matchscouting'>Match scouting</Option>
+				<Option value="matchscouting">Match scouting</Option>
 				<Option value="metadata">Users & team nicknames</Option>
 			</Select>
 		</div>
@@ -166,7 +166,7 @@
 		margin: auto;
 		display: block;
 	}
-	
+
 	.hidden {
 		display: none;
 	}
