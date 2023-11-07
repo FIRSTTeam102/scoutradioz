@@ -139,7 +139,7 @@
 				<!-- JL note: the " || 50" is to guarantee that there are some options in the select to avoid numMatchesToGrab becoming undefined -->
 				{#each Array($numMatchesAtEvent || 50) as _, index}
 					<!-- Blocks of 5 OR total # of matches -->
-					{#if (index === ($numMatchesAtEvent || 50) - 1 || (index + 1) % 5 === 0) && index > 0}
+					{#if (index === ($numMatchesAtEvent || 50) - 1 || (index + 1) % 3 === 0) && index > 0}
 						<Option value={index + 1}>{index + 1}</Option>
 					{/if}
 				{/each}

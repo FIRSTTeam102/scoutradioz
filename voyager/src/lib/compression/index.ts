@@ -4,6 +4,25 @@ import type { EventKey, MatchScouting, OrgKey, ScouterRecord, User, Org } from '
 import LZMA from './lzma';
 import db from '$lib/localDB';
 
+interface PaginatedChecksums {
+	users: number,
+	teams: number
+}
+
+interface PaginatedMetadata {
+	label: string,
+	type: string,
+	page_size: number,
+	current_page: number,
+	total_pages: number,
+	checksums: PaginatedChecksums
+}
+
+interface PaginatedItem {
+	_: PaginatedMetadata,
+	data: string
+}
+
 interface CompressedItem {
 	/** Type of data */
 	_: string;
