@@ -65,32 +65,32 @@
 			margin: 0;
 		}
 	}
-	// TODO: Newer versions of Svelte don't like the :global { .class1 {} .class2 {} } syntax; and this current modification, :global(.cards) { ... } isn't working as expected
 	:global(.cards) {
-		$red: color-palette.$red-900;
-		$blue: color-palette.$blue-900;
+			$red: color-palette.$red-900;
+			$blue: color-palette.$blue-900;
 
-		.mdc-deprecated-list-item--selected {
-			@include theme.property(--mdc-theme-primary, on-primary);
-			border-radius: mdc-shape.$small-component-radius;
-		}
+			:global(.mdc-deprecated-list-item--selected) {
+				@include theme.property(--mdc-theme-primary, on-primary);
+				border-radius: mdc-shape.$small-component-radius;
+			}
 
-		.red {
-			&.mdc-deprecated-list-item--selected {
-				background: transparentize($red, 0.9);
+			:global(.red) {
+				:global(&.mdc-deprecated-list-item--selected) {
+					background: transparentize($red, 0.9);
+				}
+				:global(.mdc-button) {
+					@include mdc-button.filled-accessible($red);
+				}
 			}
-			.mdc-button {
-				@include mdc-button.filled-accessible($red);
+			:global(.blue) {
+				:global(&.mdc-deprecated-list-item--selected) {
+					--mdc-theme-primary: $blue;
+					background: transparentize($blue, 0.9);
+				}
+				:global(.mdc-button) {
+					@include mdc-button.filled-accessible($blue);
+				}
 			}
-		}
-		.blue {
-			&.mdc-deprecated-list-item--selected {
-				--mdc-theme-primary: $blue;
-				background: transparentize($blue, 0.9);
-			}
-			.mdc-button {
-				@include mdc-button.filled-accessible($blue);
-			}
-		}
+
 	}
 </style>
