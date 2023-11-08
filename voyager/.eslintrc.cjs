@@ -2,7 +2,8 @@ module.exports = {
 	root: false,
 	extends: [
 		'plugin:svelte/recommended',
-		'prettier'
+		'prettier',
+		'../.eslintrc.yml'
 	],
 	parserOptions: {
 		sourceType: 'module',
