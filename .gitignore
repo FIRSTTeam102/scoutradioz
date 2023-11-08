@@ -20,5 +20,5 @@ build
 .svelte-kit
 
 # below: temporary
-voyager/static/*.css
+voyager/static/*.css*
 voyager/.sst
