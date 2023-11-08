@@ -7,9 +7,9 @@ import { sortWithTeamKeyByNumber } from '$lib/utils';
 export const load: PageLoad = async ({ fetch }) => {
 	await whenStoresLoaded();
 	const where = {
-			event_key: getStore(event_key),
-			org_key: getStore(org_key)
-		}
+		event_key: getStore(event_key),
+		org_key: getStore(org_key)
+	};
 	console.log('where', where);
 
 	const assignments = await db.pitscouting

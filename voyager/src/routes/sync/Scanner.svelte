@@ -3,7 +3,7 @@
 	import QrCodeScanner from '$lib/QrCodeScanner.svelte';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { decode, decodeMatchScouting, decodeOneMatchScoutingResult } from '$lib/compression';
-	import type { LightUser, MatchScoutingLocal, str, TeamLocal } from '$lib/localDB';
+	import type { LightMatch, LightUser, MatchScoutingLocal, str, TeamLocal } from '$lib/localDB';
 	import db from '$lib/localDB';
 	import type { Org } from 'scoutradioz-types';
 	import { getLogger } from '$lib/logger';
@@ -39,6 +39,50 @@
 					console.log(matchscouting);
 					let result = await db.matchscouting.bulkPut(matchscouting);
 					console.log(result);
+					// Try and rebuild all the LightMatches from these matchscouting data
+					let matchMap: Dict<LightMatch> = {};
+					for (let asg of matchscouting) {
+						const { match_team_key } = asg;
+						const event_key = match_team_key.split('_')[0]; // e.g. 2019paca
+						const match_identifier = match_team_key.split('_')[1]; // e.g. qm11
+						const team_key = match_team_key.split('_')[2]; // e.g. frc102
+						const match_key = `${event_key}_${match_identifier}`; // e.g. 2019paca_qm11
+						const comp_level = match_identifier.substring(0, 2); // e.g. qm
+						const set_number = 1; // TODO: pull this from the match_team_key in case scouting qf/sf/f
+						const match_number = parseInt(match_identifier.substring(2));
+						const time = asg.time; // TODO: check if this matches the match's time
+						if (isNaN(match_number)) {
+							throw new Error(`Failed to decode match info for match_team_key ${match_team_key}: match_number is NaN!!!`);
+						}
+						if (!matchMap[match_key]) {
+							matchMap[match_key] = {
+								key: match_key,
+								event_key,
+								comp_level,
+								set_number,
+								match_number,
+								alliances: {
+									red: {
+										team_keys: [],
+										score: -1, // TODO: include score in the qr code
+									},
+									blue: {
+										team_keys: [],
+										score: -1,
+									}
+								},
+								time
+							}
+						}
+						// Add this team key to the match's alliance
+						matchMap[match_key].alliances[asg.alliance].team_keys.push(team_key);
+					}
+					const rebuiltMatches = Object.values(matchMap);
+					if (!rebuiltMatches.every(match => match.alliances.blue.team_keys.length === 3 && match.alliances.red.team_keys.length === 3)) {
+						logger.error('Not all matches\' team keys were found! Match list that was recovered:', rebuiltMatches);
+						throw new Error('Not all matches\' team keys were found! Check the logs for details.')
+					}
+					await db.lightmatches.bulkPut(rebuiltMatches);
 					break;
 				}
 				case 'meta': {

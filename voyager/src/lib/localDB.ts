@@ -121,6 +121,7 @@ export class LocalDB extends Dexie {
 
 			events: '&_id, &key, year',
 			layout: '&_id, [org_key+year+form_type]',
+			// JL TODO: matchscouting can't have its primary key be match_team_key because it breaks multi-org stuff
 			matchscouting: '&match_team_key, [org_key+event_key], team_key, year, time, match_number',
 			pitscouting: '&[org_key+event_key+team_key], [org_key+event_key], primary.id, secondary.id, tertiary.id',
 			teams: '&key, team_number',

@@ -4,7 +4,9 @@
 	import Card, { Content as CContent } from '@smui/card';
 	import List, { Item, Text, PrimaryText, SecondaryText, Meta } from '@smui/list';
 	import Button, { Label as BLabel, Icon as BIcon } from '@smui/button';
-	import { userName } from '$lib/stores';
+	import { event_key, userName } from '$lib/stores';
+	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	export let data: PageData;
 
@@ -14,9 +16,33 @@
 		minute: 'numeric',
 		hour12: true
 	});
+	
+	// let matchNumber: number = parseInt(localStorage.getItem(`match_number_${$event_key}`) || '1');
+	
+	onMount(() => {
+		// matchNumber = parseInt(localStorage.getItem(`match_number_${$event_key}`) || '1');
+	});
 </script>
 
 <h1>Match scouting</h1>
+<!-- JL: yes this is hacky as HECK but i only have a few minutes to throw this together -->
+<p>
+	Current match number: {data.firstMatchNumber}
+	<Button on:click={() => {
+		let newMatchNumber = Math.max(data.firstMatchNumber - 1, 1);
+		localStorage.setItem(`match_number_${$event_key}`, String(newMatchNumber));
+		invalidateAll();
+	}}>
+		<BLabel>Decrease</BLabel>
+	</Button>
+	<Button on:click={() => {
+		let newMatchNumber = data.firstMatchNumber + 1;
+		localStorage.setItem(`match_number_${$event_key}`, String(newMatchNumber));
+		invalidateAll();
+	}}>
+		<BLabel>Increase</BLabel>
+	</Button>
+</p>
 
 <div class="cards">
 	{#each data.grouped as group}
