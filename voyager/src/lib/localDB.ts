@@ -48,6 +48,10 @@ export type MatchScoutingLocal = Omit<MatchScouting, '_id' | 'assigned_scorer' |
 	team_name?: string;
 	assigned_scorer?: ScouterRecordLocal;
 	actual_scorer?: ScouterRecordLocal;
+	/**
+	 * Whether this entry has been marked as synced (whether uploaded by this device or marked as synced after showing qr code)
+	 */
+	synced?: boolean;
 }
 
 export interface TeamLocal {

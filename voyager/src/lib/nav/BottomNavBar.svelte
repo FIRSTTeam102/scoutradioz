@@ -16,7 +16,7 @@
 	};
 </script>
 
-<BottomAppBar bind:this={bottomAppBar} variant="fixed" id="bottom-nav-bar">
+<BottomAppBar bind:this={bottomAppBar} {...$$props} id="bottom-nav-bar">
 	<Section style="justify-content:space-around;">
 		{#each items as item}
 			<BottomNavigationButton {...item} style={`width: ${99.999 / items.length}%;`}/>

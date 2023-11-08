@@ -28,7 +28,14 @@
 				</div>
 				<List twoLine nonInteractive>
 					{#each group as asg}
-						<Item class={asg.alliance} selected={asg.assigned_scorer === $userName}>
+						<Item
+							class={(asg.data && asg.synced
+								? 'complete-and-synced '
+								: asg.data && !asg.synced
+								? 'complete-locally '
+								: 'incomplete ') + asg.alliance}
+							selected={asg.assigned_scorer === $userName}
+						>
 							<Text>
 								<PrimaryText>Team {asg.team_key.replace('frc', '')}: {asg.team_name}</PrimaryText>
 								<SecondaryText>Assigned to: {asg.assigned_scorer?.name}</SecondaryText>
@@ -66,31 +73,55 @@
 		}
 	}
 	:global(.cards) {
-			$red: color-palette.$red-900;
-			$blue: color-palette.$blue-900;
+		$red: color-palette.$red-900;
+		$blue: color-palette.$blue-900;
+		$grey: color-palette.$grey-700;
 
-			:global(.mdc-deprecated-list-item--selected) {
-				@include theme.property(--mdc-theme-primary, on-primary);
-				border-radius: mdc-shape.$small-component-radius;
-			}
+		:global(.mdc-deprecated-list-item--selected) {
+			@include theme.property(--mdc-theme-primary, on-primary);
+			border-radius: mdc-shape.$small-component-radius;
+		}
 
-			:global(.red) {
-				:global(&.mdc-deprecated-list-item--selected) {
-					background: transparentize($red, 0.9);
-				}
-				:global(.mdc-button) {
-					@include mdc-button.filled-accessible($red);
-				}
+		:global(.red.incomplete) {
+			:global(&.mdc-deprecated-list-item--selected) {
+				background: transparentize($red, 0.9);
 			}
-			:global(.blue) {
-				:global(&.mdc-deprecated-list-item--selected) {
-					--mdc-theme-primary: $blue;
-					background: transparentize($blue, 0.9);
-				}
-				:global(.mdc-button) {
-					@include mdc-button.filled-accessible($blue);
-				}
+			:global(.mdc-button) {
+				@include mdc-button.filled-accessible($red);
 			}
-
+		}
+		:global(.blue.incomplete) {
+			:global(&.mdc-deprecated-list-item--selected) {
+				--mdc-theme-primary: $blue;
+				background: transparentize($blue, 0.9);
+			}
+			:global(.mdc-button) {
+				@include mdc-button.filled-accessible($blue);
+			}
+		}
+		// JL note: not perfect, definitely wanna redo the styling, but it gets the idea across and it's really late
+		:global(.red.complete-locally) {
+			:global(.mdc-button) {
+				@include mdc-button.ink-color($red);
+				@include mdc-button.outline-color($red);
+				@include mdc-button.filled-accessible(mix($red, $grey, 20%));
+				border-style: dashed;
+				border-width: 2px;
+			}
+		}
+		:global(.blue.complete-locally) {
+			:global(.mdc-button) {
+				@include mdc-button.ink-color($blue);
+				@include mdc-button.outline-color($blue);
+				@include mdc-button.filled-accessible(mix($blue, $grey, 20%));
+				border-style: dashed;
+				border-width: 2px;
+			}
+		}
+		:global(.complete-and-synced) {
+			:global(.mdc-button) {
+				@include mdc-button.filled-accessible($grey);
+			}
+		}
 	}
 </style>
