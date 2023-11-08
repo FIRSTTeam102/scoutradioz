@@ -180,15 +180,10 @@
 		left: 0px;
 		right: 0px;
 		bottom: 0px;
-		overflow: hidden;
 	}
 	.container {
 		position: relative;
 		min-height: 100%;
 		flex-grow: 10;
-		overflow-x: hidden;
-	}
-	.container.sliding {
-		overflow-y: hidden;
 	}
 </style>
