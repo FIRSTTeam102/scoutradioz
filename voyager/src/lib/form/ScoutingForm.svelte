@@ -21,15 +21,15 @@
 
 <div class="form">
 	{#each layout as field}
-		{#if field.type === 'checkbox'}
+		{#if field.id && (field.type === 'checkbox')}
 			<Checkbox bind:checked={formData[field.id]} {field} />
-		{:else if field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative'}
+		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
 			<Counter bind:value={formData[field.id]} {field} isBad={field.type === 'badcounter'} allowNegative={field.type === 'counterallownegative'}/>
-		{:else if field.type === 'slider' || field.type === 'timeslider'}
+		{:else if field.id && (field.type === 'slider' || field.type === 'timeslider')}
 			<Slider bind:value={formData[field.id]} {field} isTime={field.type === 'timeslider'} />
-		{:else if field.type === 'multiselect'}
+		{:else if field.id && (field.type === 'multiselect')}
 			<Multiselect bind:value={formData[field.id]} {field} />
-		{:else if field.type === 'textblock'}
+		{:else if field.id && (field.type === 'textblock')}
 			<Textblock bind:value={formData[field.id]} {field} />
 		{:else if field.type === 'h2'}
 			<h2 id={field.id}>{field.label}</h2>
@@ -50,10 +50,11 @@
 		gap: 0.75em;
 		justify-content: center;
 		margin: 1em 0;
-	}
-	h2,
-	h3 {
-		margin: 0;
+		h2,
+		h3 {
+			margin: 0;
+			text-align: center;
+		}
 	}
 	hr {
 		width: 100%;

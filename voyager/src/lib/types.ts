@@ -1,4 +1,3 @@
 import type { Layout } from 'scoutradioz-types';
-export declare interface LayoutField extends Layout {
-	id: string;
-}
+import type { str } from '$lib/localDB';
+export declare type LayoutField = str<Layout>;

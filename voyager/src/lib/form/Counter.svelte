@@ -4,7 +4,7 @@
 
 	export let value: any = 0; // any because of weird casting to generic data
 	export let field: LayoutField;
-	export let allowNegative: false;
+	export let allowNegative: boolean = false;
 	export let isBad = false;
 	const changeByValue = (change: number) => (value = (allowNegative ? value + change : Math.max(0, value + change)));
 </script>
