@@ -74,7 +74,7 @@ async function stringToScouterRecord(str: string): Promise<ScouterRecordLocal> {
 	else return {
 		id: str,
 		name: '(Unknown)'
-	}
+	};
 	// let split = str.split(':');
 	// return {
 	// 	id: split[0],
@@ -120,11 +120,15 @@ export function decode(str: string): Promise<{
 				
 				switch(json._) {
 					case 'meta':
-						resolve(await decodeMetadata(json))
+						resolve(await decodeMetadata(json));
 						break;
 						
 					case 'sched':
 						resolve(await decodeMatchScouting(json));
+						break;
+					
+					case '1matchdata':
+						resolve(await decodeOneMatchScoutingResult(json));
 						break;
 					
 					default: reject(`Unknown qr code type: ${json._}`);
@@ -133,7 +137,7 @@ export function decode(str: string): Promise<{
 			catch (err) {
 				reject(err);
 			}
-		}, (percent) => {})
+		}, (percent) => {});
 	});
 }
 
@@ -178,10 +182,10 @@ export function encodeMetadata(org: str<Org>, users: LightUser[], teams: TeamLoc
 				let byteArray = result.map(num => num + 128);
 				let base64 = b64encode(byteArray);
 				console.log(str.length, byteArray.length, base64.length);
-				resolve(base64)
+				resolve(base64);
 			}
-		})
-	})
+		});
+	});
 }
 
 /**
@@ -260,7 +264,7 @@ export function decodeMetadata(data: CompressedItem) {
 			users,
 			teams,
 		}
-	}
+	};
 }
 
 /**
@@ -325,7 +329,7 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 				grouped[match.match_key].push(match);
 				return grouped;
 			}, {})
-		)
+		);
 		
 		let matchTeamKeyList: string[] = [];
 		let assignedScorerList: string[] = [];
@@ -344,15 +348,15 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 				let thisActualScorer = item.actual_scorer ? scouterRecordToString(item.actual_scorer) : undefined;
 				
 				let thisTeamIdx = String(teams.indexOf(thisTeam)).padStart(2, '0');
-				let thisAssignedIdx = thisAssigned ? scouters.indexOf(thisAssigned).toString().padStart(2, '0') : '|' // put a pipe if there's no scouter in the map
-				let thisActualScorerIdx = thisActualScorer ? scouters.indexOf(thisActualScorer).toString().padStart(2, '0') : '|'
+				let thisAssignedIdx = thisAssigned ? scouters.indexOf(thisAssigned).toString().padStart(2, '0') : '|'; // put a pipe if there's no scouter in the map
+				let thisActualScorerIdx = thisActualScorer ? scouters.indexOf(thisActualScorer).toString().padStart(2, '0') : '|';
 				
 				assert(thisAssignedIdx !== '-1' && thisActualScorerIdx !== '-1' && thisTeamIdx !== '-1', 'Something went wrong with the indexing');
 				
 				thisTeamList.push(thisTeamIdx);
 				thisAssignedList.push(thisAssignedIdx);
 				thisActualScorerList.push(thisActualScorerIdx);
-			})
+			});
 			matchTeamKeyList.push(thisTeamList.join(''));
 			assignedScorerList.push(thisAssignedList.join(''));
 			actualScorerList.push(thisActualScorerList.join(''));
@@ -388,6 +392,49 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 			}
 		}, (percent) => {});
 	});
+}
+
+// JL: this is temporary just to get it to work
+export async function encodeOneMatchScoutingResult(entry: MatchScoutingLocal): Promise<string> {
+	return new Promise((resolve, reject) => {
+		let str = JSON.stringify({
+			_: '1matchdata',
+			as: entry.actual_scorer,
+			data: entry.data,
+			mtc: entry.match_team_key
+		});
+		
+		getLZMA();
+		lzma.compress(str, 9, (result, err) => {
+			if (err) return reject(err);
+			if (result) {
+	
+				let byteArray = result.map(num => num + 128);
+				let base64 = b64encode(byteArray);
+				console.log(str.length, byteArray.length, base64.length);
+				resolve(base64);
+			}
+		});
+	});
+}
+
+// JL: again, slapdash, todo: make better
+export async function decodeOneMatchScoutingResult(data: CompressedItem) {
+	let json = data as {
+		_: '1matchdata',
+		as: ScouterRecordLocal, // actual_scorer
+		data: MatchScoutingLocal['data'],
+		mtc: string, // match team key
+	};
+	return {
+		type: '1matchdata',
+		label: `Match scouting result: ${json.mtc} scored by ${json.as?.name}`,
+		data: {
+			actual_scorer: json.as,
+			data: json.data,
+			match_team_key: json.mtc,
+		}
+	};	
 }
 
 /**
@@ -492,7 +539,7 @@ export async function decodeMatchScouting(data: CompressedItem) {
 		}
 	}
 	
-	assert(decodedMatchScouting[decodedMatchScouting.length - 1].match_number === json.matchEnd, 'Last match_number does not match what was reported in the json! Were the matches not contiguous?') // validation
+	assert(decodedMatchScouting[decodedMatchScouting.length - 1].match_number === json.matchEnd, 'Last match_number does not match what was reported in the json! Were the matches not contiguous?'); // validation
 	
 	return {
 		type: 'sched',
@@ -502,9 +549,9 @@ export async function decodeMatchScouting(data: CompressedItem) {
 }
 
 function b64encode(x: number[]) { 
-	return btoa(x.map(function(v){return String.fromCharCode(v)}).join(''))
-};
+	return btoa(x.map(function(v){return String.fromCharCode(v);}).join(''));
+}
 function b64decode(x: string) {
 	// @ts-ignore
-	return atob(x).split('').map(function(v) {return v.codePointAt(0)});
-};
+	return atob(x).split('').map(function(v) {return v.codePointAt(0);});
+}

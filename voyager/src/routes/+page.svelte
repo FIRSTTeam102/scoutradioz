@@ -16,7 +16,7 @@
 	import { org, org_password } from './login-stores';
 	import { goto } from '$app/navigation';
 
-	const logger = getLogger('loginRoot');
+	const logger = getLogger('login (root)');
 
 	// Retrieve the orgs from the database
 	$: orgs = liveQuery(async () => {
@@ -44,7 +44,7 @@
 				filter: '',
 				time: new Date()
 			});
-			logger.debug('Successfully saved orgs and saved syncstatus to database')
+			logger.debug('Successfully saved orgs and saved syncstatus to database');
 		} catch (err) {
 			logger.error(err);
 		}
@@ -63,12 +63,21 @@
 		if (!orgSyncStatus || orgSyncStatus.time.valueOf() < Date.now() - ORG_SYNC_TOO_OLD) {
 			if (!navigator.onLine) {
 				// TODO: show a message to the user or wait for navigator.online event to download orgs
-				return logger.warn('Orgs are too old or have not been downloaded; cannot download new ones because we are offline')
+				return logger.warn(
+					'Orgs are too old or have not been downloaded; cannot download new ones because we are offline'
+				);
 			}
 			logger.info('Orgs are too old or have not been downloaded; downloading new ones');
 			downloadOrgs();
 		}
 	});
+
+	const getOrgOptionLabel = (org: Org) => {
+		if (!org) return '';
+		if (org.team_numbers) return org.team_numbers.join(' & ') + ' - ' + org.nickname;
+		if (org.team_number) return org.team_number + ' - ' + org.nickname;
+		return org.nickname;
+	};
 </script>
 
 <section class="comfortable grid columns">
@@ -87,12 +96,7 @@
 				style="width: 100%"
 				options={$orgs}
 				disabled={!$orgs}
-				getOptionLabel={(org) => {
-					if (!org) return '';
-					if (org.team_numbers) return org.team_numbers.join(' & ') + ' - ' + org.nickname;
-					if (org.team_number) return org.team_number + ' - ' + org.nickname;
-					return org.nickname;
-				}}
+				getOptionLabel={getOrgOptionLabel}
 				bind:value={$org}
 				label="Organization"
 			/>
@@ -109,7 +113,11 @@
 				<HelperText slot="helper">Password set by your organization in order to log in</HelperText>
 			</Textfield>
 		</div>
-		<Button variant="unelevated"  disabled={!$org || !$org_password} on:click={() => goto(`/login?org_key=${$org?.org_key}`)}>
+		<Button
+			variant="unelevated"
+			disabled={!$org || !$org_password}
+			on:click={() => goto(`/login?org_key=${$org?.org_key}`)}
+		>
 			<BLabel>Proceed</BLabel>
 		</Button>
 	</div>

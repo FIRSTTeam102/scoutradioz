@@ -20,16 +20,24 @@
 </script>
 
 <div class="form">
+	{#if layout.length === 0}
+		<h3>Form layout not found</h3>
+	{/if}
 	{#each layout as field}
-		{#if field.id && (field.type === 'checkbox')}
+		{#if field.id && field.type === 'checkbox'}
 			<Checkbox bind:checked={formData[field.id]} {field} />
 		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
-			<Counter bind:value={formData[field.id]} {field} isBad={field.type === 'badcounter'} allowNegative={field.type === 'counterallownegative'}/>
+			<Counter
+				bind:value={formData[field.id]}
+				{field}
+				isBad={field.type === 'badcounter'}
+				allowNegative={field.type === 'counterallownegative'}
+			/>
 		{:else if field.id && (field.type === 'slider' || field.type === 'timeslider')}
 			<Slider bind:value={formData[field.id]} {field} isTime={field.type === 'timeslider'} />
-		{:else if field.id && (field.type === 'multiselect')}
+		{:else if field.id && field.type === 'multiselect'}
 			<Multiselect bind:value={formData[field.id]} {field} />
-		{:else if field.id && (field.type === 'textblock')}
+		{:else if field.id && field.type === 'textblock'}
 			<Textblock bind:value={formData[field.id]} {field} />
 		{:else if field.type === 'h2'}
 			<h2 id={field.id}>{field.label}</h2>

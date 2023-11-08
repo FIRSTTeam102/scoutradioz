@@ -17,7 +17,7 @@
 	import type { MatchScouting, PitScouting, User, Event, Org, Layout } from 'scoutradioz-types';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 
-	const logger = getLogger('LeadSyncMothership');
+	const logger = getLogger('sync/LeadSyncMothership');
 
 	let snackbar: SimpleSnackbar;
 	let errorMessage: string;

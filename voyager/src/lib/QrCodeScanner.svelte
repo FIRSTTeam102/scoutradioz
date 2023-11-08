@@ -4,7 +4,7 @@
 	import { getAvailableWindowSize } from './utils';
 	import { getLogger } from './logger';
 	
-	const logger = getLogger('QrCodeScanner');
+	const logger = getLogger('lib/QrCodeScanner');
 	
 	////////////////////////
 	// Fix iOS AudioContext

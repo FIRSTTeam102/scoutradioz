@@ -20,10 +20,12 @@
 	let formData: Required<typeof data.matchScoutingEntry.data> = data.matchScoutingEntry.data || {};
 	
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
+	// TODO: Check with initial values to see if there were any changes, before setting synced=false
 	$: {
 		logger.debug('Updating formData in the database');
 		db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-			data: formData
+			data: formData,
+			synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
 		});
 	}
 	
@@ -52,7 +54,8 @@
 						actual_scorer: {
 							id: $userId,
 							name: $userName
-						}
+						},
+						synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
 					})
 				}
 				else {

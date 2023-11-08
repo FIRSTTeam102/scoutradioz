@@ -41,7 +41,8 @@ export const GET: RequestHandler = async ({ url, params }) => {
 	let all = matchscouting.map((match) => {
 		return {
 			...match,
-			team_name: teamNames[match.team_key]
+			team_name: teamNames[match.team_key],
+			synced: !!match.data, // 2023-11-8 JL: turn on synced boolean if there's data for this match on the server
 		};
 	});
 

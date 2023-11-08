@@ -29,7 +29,7 @@
 			.sortBy('name');
 	});
 
-	const logger = getLogger('loginUser');
+	const logger = getLogger('login (user)');
 
 	async function downloadUsers() {
 		try {
@@ -57,7 +57,8 @@
 		}
 	}
 
-	async function updateUser(user: LightUser) {
+	async function updateUser(user: LightUser|null) {
+		if (!user) return logger.error('updateUser called with user not defined');
 		try {
 			logger.debug('Clearing user');
 			db.user.clear();
@@ -95,6 +96,11 @@
 			downloadUsers();
 		}
 	});
+	
+	const getUserOptionLabel = (user: LightUser) => {
+		if (!user) return '';
+		return user.name;
+	}
 </script>
 
 <section class="comfortable grid columns">
@@ -110,10 +116,7 @@
 				style="width: 100%"
 				options={$users}
 				disabled={!$users}
-				getOptionLabel={(user) => {
-					if (!user) return '';
-					return user.name;
-				}}
+				getOptionLabel={getUserOptionLabel}
 				bind:value={$user}
 				label={`Members of ${$org?.nickname}`}
 			/>
