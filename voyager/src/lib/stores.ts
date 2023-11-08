@@ -8,14 +8,14 @@ export { getStore };
 
 // todo: real user
 export const userName: Writable<string | undefined> = writable(undefined);
-userName.set('Scott Radius');
+// userName.set('Scott Radius');
 export const userId: Writable<string | undefined> = writable(undefined);
 
 export const org_key: Writable<string | undefined> = writable(undefined);
-org_key.set('frc102');
+// org_key.set('frc102');
 
 export const event_key: Writable<string | undefined> = writable(undefined);
-event_key.set('2022njski');
+// event_key.set('2022njski');
 export const event_year: Writable<number | undefined> = writable(undefined);
 event_key.subscribe((v) => event_year.set(parseInt(v || '')));
 
