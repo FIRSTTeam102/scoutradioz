@@ -155,16 +155,23 @@
 			</Select>
 		</div>
 	</div>
-	<canvas bind:this={canvas} />
+	<div class="canvas-parent">
+		<canvas bind:this={canvas} />
+	</div>
 </section>
 
 <SimpleSnackbar bind:this={snackbar} />
 
 <style lang="scss">
+	.canvas-parent {
+		max-width: 100vw;
+		margin: auto;
+	}
 	canvas {
 		// i'll do something more fancy later
-		margin: auto;
-		display: block;
+		max-width: 100%;
+		aspect-ratio: 1;
+		height: unset!important; // override height set by QRCode
 	}
 
 	.hidden {
