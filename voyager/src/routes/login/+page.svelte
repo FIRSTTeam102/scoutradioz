@@ -15,8 +15,9 @@
 	import { org, org_password, user } from '../login-stores';
 
 	import type { PageData } from './$types';
-	import { onMount } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import type { RefreshContext, SnackbarContext } from '$lib/types';
 
 	export let data: PageData;
 
@@ -30,8 +31,10 @@
 	});
 
 	const logger = getLogger('login (user)');
+	const snackbar = getContext('snackbar') as SnackbarContext;
+	const refreshButton = getContext('refreshButton') as RefreshContext;
 
-	async function downloadUsers() {
+	async function downloadUsers(showSnackbarWhenDone?: boolean) {
 		try {
 			if (!$org) throw new Error('No org selected');
 			const users = await fetchJSON<WithStringDbId<User>[]>(`/api/orgs/${data.org_key}/users`);
@@ -52,6 +55,9 @@
 				time: new Date()
 			});
 			logger.debug('Successfully saved users and saved syncstatus to database');
+			if (showSnackbarWhenDone) {
+				snackbar.open('Updated list of users from the remote database.');
+			}
 		} catch (err) {
 			logger.error(err);
 		}
@@ -78,6 +84,15 @@
 			goto('/');
 			return;
 		}
+		
+		refreshButton.set({
+			supported: true,
+			onClick: () => {
+				downloadUsers(true);
+			},
+			tooltip: 'Refresh list of users'
+		})
+		
 		let userSyncStatus = await db.syncstatus
 			.where({
 				table: 'lightusers',
@@ -96,6 +111,12 @@
 			downloadUsers();
 		}
 	});
+	
+	onDestroy(() => {
+		refreshButton.set({
+			supported: false,
+		});
+	})
 	
 	const getUserOptionLabel = (user: LightUser) => {
 		if (!user) return '';
@@ -130,39 +151,6 @@
 		</Button>
 	</div>
 </section>
-<!-- <div class="grid columns" style="gap:1em"> -->
-<!-- 	<CActions> -->
-<!-- 		<Group variant="outlined"> -->
-<!-- 			<Button variant="outlined" on:click={downloadUsers}> -->
-<!-- 				<Icon class="material-icons">download</Icon> -->
-<!-- 				<BLabel>Download users</BLabel> -->
-<!-- 			</Button> -->
-<!-- 		</Group> -->
-<!-- 	</CActions> -->
-<!---->
-<!-- 	{#if $users} -->
-<!-- 		{#each $users as user} -->
-<!-- 			<Card> -->
-<!-- 				<Content> -->
-<!-- 					<h5>{user.name}</h5> -->
-<!-- 				</Content> -->
-<!-- 				<CActions> -->
-<!-- 					<Group variant="outlined"> -->
-<!-- 						<Button -->
-<!-- 							variant="outlined" -->
-<!-- 							on:click={() => { -->
-<!-- 								updateUser(user); -->
-<!-- 							}} -->
-<!-- 						> -->
-<!-- 							<Icon class="material-icons">key</Icon> -->
-<!-- 							<BLabel>Login</BLabel> -->
-<!-- 						</Button> -->
-<!-- 					</Group> -->
-<!-- 				</CActions> -->
-<!-- 			</Card> -->
-<!-- 		{/each} -->
-<!-- 	{/if} -->
-<!-- </div> -->
 
 <style lang="scss">
 	.login-box {

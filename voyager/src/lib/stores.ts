@@ -20,6 +20,15 @@ export const event_year: Writable<number | undefined> = writable(undefined);
 export const event_name: Writable<string | undefined> = writable(undefined);
 event_key.subscribe((v) => event_year.set(parseInt(v || '')));
 
+export const deviceOnline: Writable<boolean> = writable(navigator.onLine);
+addEventListener('online', e => {
+	console.log('Online event', e);
+	deviceOnline.set(true);
+});
+addEventListener('offline', e => {
+	console.log('Offline event', e);
+	deviceOnline.set(false);
+});
 
 const userObservable = liveQuery(async () => {
 	return await db.user.toCollection().first();

@@ -1,5 +1,5 @@
 <script lang="ts">
-	// import BottomAppBar, { Section, AutoAdjust } from '@smui-extra/bottom-app-bar';
+	import { classMap } from '@smui/common/internal';
 	import TopAppBar, { Row, Section, AutoAdjust } from '@smui/top-app-bar';
 	import Drawer, {
 		AppContent,
@@ -16,62 +16,80 @@
 		Separator as LSeparator,
 		Subheader as LSubheader
 	} from '@smui/list';
+	import Tooltip, { Wrapper } from '@smui/tooltip';
 
-	import BottomNavBar from '$lib/nav/BottomNavBar.svelte';
-	import type { NavBarItem } from '$lib/nav/BottomNavBar.svelte';
-
-	import { userName, org_key } from '$lib/stores';
+	import { userName, org_key, deviceOnline } from '$lib/stores';
 	import { afterNavigate } from '$app/navigation';
 	import IconButton from '@smui/icon-button';
 	import { assets } from '$app/paths';
 	import { share } from '$lib/share';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { setContext } from 'svelte';
-	import type { SnackbarContext } from '$lib/types';
+	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
+	import { writable } from 'svelte/store';
 
 	afterNavigate(() => (menuOpen = false));
 
 	let topAppBar: TopAppBar;
 	let menuOpen = false;
-	
+
 	let snackbar: SimpleSnackbar;
 
-	let snackbarContext: SnackbarContext  = {
+	let snackbarContext: SnackbarContext = {
 		open: (...args) => {
-			if (!snackbar) throw new Error('Snackbar not defined')
+			if (!snackbar) throw new Error('Snackbar not defined');
 			return snackbar.open(...args);
 		},
 		error: (...args) => {
-			if (!snackbar) throw new Error('Snackbar not defined')
+			if (!snackbar) throw new Error('Snackbar not defined');
 			return snackbar.error(...args);
 		},
 		close: (...args) => {
-			if (!snackbar) throw new Error('Snackbar not defined')
+			if (!snackbar) throw new Error('Snackbar not defined');
 			return snackbar.close(...args);
+		}
+	};
+
+	setContext('snackbar', snackbarContext);
+
+	// Define a store with a supported flag and contextual data refresh function
+	const refreshContext: RefreshContext = writable({
+		supported: false,
+		onClick: () => {},
+		tooltip: '',
+	});
+
+	setContext('refreshButton', refreshContext);
+	
+	let refreshButtonSpinning = false;
+	let timeRefreshButtonWasPressed = 0; // For smooth stopping
+	const ANIMATION_TIME = 1000;
+	
+	const refreshButtonAnimationContext: RefreshButtonAnimationContext = {
+		play: () => {
+			refreshButtonSpinning = true;
+			timeRefreshButtonWasPressed = Date.now();
 		},
+		stop: () => {
+			// Only set refreshButtonSpinning = false after some multiple of [animation_time] seconds after it started playing
+			let timeRemainingInAnimation = ANIMATION_TIME - ((Date.now() - timeRefreshButtonWasPressed) % ANIMATION_TIME)
+			setTimeout(() => {
+				refreshButtonSpinning = false;
+			}, timeRemainingInAnimation);
+		}
 	}
 	
-	setContext('snackbar', snackbarContext)
+	console.log(refreshButtonAnimationContext);
 
-	// JL note: I think maybe these items can change contextually depending on
-	// 	what the user is doing?
-	let navItems: NavBarItem[] = [
-		{
-			label: 'Menu',
-			onClick: () => (menuOpen = true),
-			icon: 'menu'
-		},
-		{
-			label: 'Match scouting',
-			icon: 'stadium',
-			href: '/scouting/match'
-		},
-		{
-			label: 'Pit scouting',
-			icon: 'handyman',
-			href: '/scouting/pit'
-		}
-	];
+	// function clearCache() {
+	// 	if ('serviceWorker' in navigator) {
+	// 		if ('controller' in navigator.serviceWorker && !!navigator.serviceWorker.controller) {
+	// 			navigator.serviceWorker.controller.postMessage('clearCache');
+	// 		}
+	// 		else snackbarContext.error('Could not find navigator.serviceWorker.controller!');
+	// 	}
+	// 	else snackbarContext.error('Could not find navigator.serviceWorker!');
+	// }
 </script>
 
 <!-- modal is better but it won't close, so dismissible with position:fixed works -->
@@ -130,6 +148,10 @@
 				<LGraphic class="material-icons" aria-hidden="true">bug_report</LGraphic>
 				<LText>Debug</LText>
 			</LItem>
+			<!-- <LItem on:click={clearCache}>
+				<LGraphic class="material-icons" aria-hidden="true">update</LGraphic>
+				<LText>App update</LText>
+			</LItem> -->
 		</List>
 	</DContent>
 </Drawer>
@@ -156,11 +178,29 @@
 			</a>
 		</Section>
 		<Section align="end" toolbar>
-			<IconButton class="material-icons" aria-label="Sync" href="/sync">sync</IconButton>
+			{#if $refreshContext.supported}
+				<Wrapper>
+					<IconButton
+						class={classMap({ 'material-icons': true, 'refreshButton': true, 'spinning': refreshButtonSpinning, })}
+						aria-label="Sync"
+						on:click={async () => {
+							if (!$refreshContext.onClick) return;
+							refreshButtonAnimationContext.play();
+							await $refreshContext.onClick();
+							refreshButtonAnimationContext.stop();
+						}}
+						disabled={!$deviceOnline || refreshButtonSpinning}>sync</IconButton
+					>
+					{#if $refreshContext.tooltip}
+						<Tooltip>{$refreshContext.tooltip}</Tooltip>
+					{/if}
+				</Wrapper>
+			{/if}
 			<!-- <IconButton class="material-icons" aria-label="Change language">language</IconButton> -->
-			<IconButton class="material-icons" aria-label="Share" on:click={() => share()}
-				>share</IconButton
-			>
+			<Wrapper>
+				<IconButton class="material-icons" aria-label="Share" on:click={() => share()}>share</IconButton >
+				<Tooltip>Share</Tooltip>
+			</Wrapper>
 		</Section>
 	</Row>
 </TopAppBar>
@@ -202,5 +242,26 @@
 	}
 	#page {
 		padding: 0 0.5em;
+	}
+	:global(.refreshButton) {
+		transition: transform 0.5s linear;
+	}
+	:global(.refreshButton:disabled) {
+		opacity: 0.7;
+	}
+	:global(.refreshButton.spinning) {
+		animation-name: spinny;
+		animation-duration: 1s;
+		animation-timing-function: linear;
+		animation-iteration-count: infinite;
+	}
+	@keyframes spinny {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			// JL note: can be 180deg because the icon is symmetrical
+			transform: rotate(-180deg);
+		}
 	}
 </style>

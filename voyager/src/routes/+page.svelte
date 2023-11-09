@@ -10,13 +10,17 @@
 
 	import type { Org } from 'scoutradioz-types';
 	import { fetchJSON } from '$lib/utils';
-	import { onMount } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 	import { getLogger } from '$lib/logger';
 
 	import { org, org_password } from './login-stores';
 	import { goto } from '$app/navigation';
+	import type { RefreshContext, SnackbarContext } from '$lib/types';
 
 	const logger = getLogger('login (root)');
+
+	const refreshButton = getContext('refreshButton') as RefreshContext;
+	const snackbar = getContext('snackbar') as SnackbarContext;
 
 	// Retrieve the orgs from the database
 	$: orgs = liveQuery(async () => {
@@ -30,7 +34,7 @@
 		});
 	});
 
-	async function downloadOrgs() {
+	async function downloadOrgs(showSnackbarWhenDone?: boolean) {
 		try {
 			const orgs = await fetchJSON<WithStringDbId<Org>[]>(`/api/orgs`);
 			logger.debug(`Fetched ${orgs.length} orgs`);
@@ -45,14 +49,26 @@
 				time: new Date()
 			});
 			logger.debug('Successfully saved orgs and saved syncstatus to database');
+			if (showSnackbarWhenDone) {
+				snackbar.open('Updated list of organizations from the remote database.');
+			}
 		} catch (err) {
 			logger.error(err);
+			snackbar.error('Failed to fetch orgs from the database. Did you go offline?');
 		}
 	}
 
 	const ORG_SYNC_TOO_OLD = 1000 * 3600 * 24 * 7; // 1 week
 
 	onMount(async () => {
+		refreshButton.set({
+			supported: true,
+			tooltip: 'Refresh list of orgs',
+			onClick: async () => {
+				await downloadOrgs(true);
+			}
+		});
+
 		let orgSyncStatus = await db.syncstatus
 			.where({
 				table: 'orgs',
@@ -71,6 +87,12 @@
 			downloadOrgs();
 		}
 	});
+
+	onDestroy(() => {
+		refreshButton.set({
+			supported: false,
+		})
+	})
 
 	const getOrgOptionLabel = (org: Org) => {
 		if (!org) return '';
