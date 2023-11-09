@@ -79,7 +79,7 @@
 			const org = await db.orgs.where('org_key').equals($org_key).first();
 			assert(org, 'Could not find org in db');
 
-			let base64Data = await encodeMetadata(org, users, teams);
+			let base64Data = await encodeMetadata(org, users, teams, event);
 			generateQR(base64Data);
 			// let decoded = await decode(base64Data);
 			// console.log(org, users, teams);

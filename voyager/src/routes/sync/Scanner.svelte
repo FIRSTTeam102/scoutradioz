@@ -3,6 +3,7 @@
 	import QrCodeScanner from '$lib/QrCodeScanner.svelte';
 	import { decode, decodeMatchScouting, decodeOneMatchScoutingResult } from '$lib/compression';
 	import type { LightMatch, LightUser, MatchScoutingLocal, str, TeamLocal } from '$lib/localDB';
+	import type { Event } from 'scoutradioz-types';
 	import db from '$lib/localDB';
 	import type { Org } from 'scoutradioz-types';
 	import { getLogger } from '$lib/logger';
@@ -53,7 +54,9 @@
 						const match_number = parseInt(match_identifier.substring(2));
 						const time = asg.time; // TODO: check if this matches the match's time
 						if (isNaN(match_number)) {
-							throw new Error(`Failed to decode match info for match_team_key ${match_team_key}: match_number is NaN!!!`);
+							throw new Error(
+								`Failed to decode match info for match_team_key ${match_team_key}: match_number is NaN!!!`
+							);
 						}
 						if (!matchMap[match_key]) {
 							matchMap[match_key] = {
@@ -65,23 +68,32 @@
 								alliances: {
 									red: {
 										team_keys: [],
-										score: -1, // TODO: include score in the qr code
+										score: -1 // TODO: include score in the qr code
 									},
 									blue: {
 										team_keys: [],
-										score: -1,
+										score: -1
 									}
 								},
 								time
-							}
+							};
 						}
 						// Add this team key to the match's alliance
 						matchMap[match_key].alliances[asg.alliance].team_keys.push(team_key);
 					}
 					const rebuiltMatches = Object.values(matchMap);
-					if (!rebuiltMatches.every(match => match.alliances.blue.team_keys.length === 3 && match.alliances.red.team_keys.length === 3)) {
-						logger.error('Not all matches\' team keys were found! Match list that was recovered:', rebuiltMatches);
-						throw new Error('Not all matches\' team keys were found! Check the logs for details.')
+					if (
+						!rebuiltMatches.every(
+							(match) =>
+								match.alliances.blue.team_keys.length === 3 &&
+								match.alliances.red.team_keys.length === 3
+						)
+					) {
+						logger.error(
+							"Not all matches' team keys were found! Match list that was recovered:",
+							rebuiltMatches
+						);
+						throw new Error("Not all matches' team keys were found! Check the logs for details.");
 					}
 					await db.lightmatches.bulkPut(rebuiltMatches);
 					break;
@@ -90,17 +102,23 @@
 					let org = decodedData.data.org as str<Org>;
 					let users = decodedData.data.users as LightUser[];
 					let teams = decodedData.data.teams as TeamLocal[];
+					let event = decodedData.data.event as str<Event>;
 					console.log('org', org, 'users', users, 'teams', teams);
 					await db.orgs.put(org);
 					await db.lightusers.bulkPut(users);
 					await db.teams.bulkPut(teams);
+					await db.events.put(event);
 					break;
 				}
 				case '1matchdata': {
-					let {match_team_key, data, actual_scorer} = decodedData.data as Awaited<ReturnType<typeof decodeOneMatchScoutingResult>>['data'];
+					let { match_team_key, data, actual_scorer } = decodedData.data as Awaited<
+						ReturnType<typeof decodeOneMatchScoutingResult>
+					>['data'];
 					console.log('1matchdata', match_team_key, data, actual_scorer);
-					if (await db.matchscouting.where({match_team_key}).count() === 0) {
-						throw new Error(`Match scouting assignment not found for match_team_key ${match_team_key}!`);
+					if ((await db.matchscouting.where({ match_team_key }).count()) === 0) {
+						throw new Error(
+							`Match scouting assignment not found for match_team_key ${match_team_key}!`
+						);
 					}
 					await db.matchscouting.update(match_team_key, {
 						data,

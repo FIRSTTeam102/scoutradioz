@@ -1,6 +1,6 @@
 import assert from '$lib/assert';
 import type { str, LightUser, TeamLocal, MatchScoutingLocal, ScouterRecordLocal, WithStringDbId } from '$lib/localDB';
-import type { EventKey, MatchScouting, OrgKey, ScouterRecord, User, Org } from 'scoutradioz-types';
+import type { EventKey, MatchScouting, OrgKey, ScouterRecord, User, Org, Event } from 'scoutradioz-types';
 import LZMA from './lzma';
 import db from '$lib/localDB';
 
@@ -49,6 +49,7 @@ interface CompressedMetadata extends CompressedItem {
 	org: string;
 	teams: string;
 	users: string;
+	event: string;
 }
 
 export let lzma: ReturnType<typeof LZMA>;
@@ -146,13 +147,14 @@ export function decode(str: string): Promise<{
  * 	- Org keys, nicknames, team nicknames, and usernames can't have semicolons
  * 	- Team's full name is ignored, so the decoder will assign nickname and name to be the same 
  */
-export function encodeMetadata(org: str<Org>, users: LightUser[], teams: TeamLocal[]): Promise<string> {
+export function encodeMetadata(org: str<Org>, users: LightUser[], teams: TeamLocal[], event: str<Event>): Promise<string> {
 	return new Promise((resolve, reject) => {
 		let ret: CompressedMetadata = {
 			_: 'meta',
 			org: '',
 			teams: '',
 			users: '',
+			event: '',
 		};
 		
 		// Encode the most critical info of the org (maybe later we can add config too)
@@ -172,6 +174,9 @@ export function encodeMetadata(org: str<Org>, users: LightUser[], teams: TeamLoc
 		ret.users = users
 			.map(user => `${user._id}:${user.name}:${user.role_key}`) // after lzma compression, adding the role_key to the end of each scouter only adds a handful of bytes
 			.join(';');
+		
+		// Critical event info
+		ret.event = `${event.key};${event.name};${event.start_date}:${event.end_date};${event.country};${event.state_prov};${event.event_type}`;
 		
 		console.log(ret);
 			
@@ -228,14 +233,15 @@ export function decodeMetadata(data: CompressedItem) {
 	
 	let users: LightUser[] = [];
 	let teams: TeamLocal[] = [];
+	let team_keys: string[] = [];
 	
 	for (let user of userStrings) {
-		let split = user.split(':');
+		let [_id, name, role_key] = user.split(':');
 		users.push({
-			_id: split[0],
+			_id,
 			org_key: org.org_key,
-			name: split[1],
-			role_key: split[2],
+			name,
+			role_key,
 			event_info: {
 				present: true,
 				assigned: true,
@@ -245,24 +251,50 @@ export function decodeMetadata(data: CompressedItem) {
 	
 	for (let team of teamStrings) {
 		let split = team.split(':');
+		let [team_number, name] = team.split(':');
 		teams.push({
 			city: null,
 			country: null,
-			key: 'frc' + split[0],
-			name: split[1],
-			nickname: split[1],
+			key: 'frc' + team_number,
+			name,
+			nickname: name,
 			state_prov: null,
-			team_number: parseInt(split[0])
+			team_number: parseInt(team_number)
 		});
+		team_keys.push('frc' + split[0]);
+	}
+	
+	// Event
+	let event: Event;
+	{
+		let [key, name, start_date, end_date, country, state_prov, event_type] = json.event.split(';');
+		let year = parseInt(key.substring(0, 4));
+		let event_code = key.substring(4);
+		event = {
+			city: null,
+			country,
+			district: null,
+			end_date,
+			event_code,
+			event_type: parseInt(event_type),
+			key,
+			name,
+			start_date,
+			state_prov,
+			year,
+			team_keys,
+			timezone: null,
+		};
 	}
 	
 	return {
 		type: 'meta',
-		label: 'Users & team nicknames',
+		label: 'Metadata (Users, event info, & team numbers/nicknames)',
 		data: {
 			org,
 			users,
 			teams,
+			event,
 		}
 	};
 }
