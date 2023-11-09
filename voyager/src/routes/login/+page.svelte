@@ -124,7 +124,7 @@
 		<Button variant="unelevated" disabled={!$user} on:click={async () => {
 			// Log in user
 			await updateUser($user);
-			goto(`/home`)
+			goto(`/sync/lead#2`)
 		}}>
 			<BLabel>Done</BLabel>
 		</Button>
