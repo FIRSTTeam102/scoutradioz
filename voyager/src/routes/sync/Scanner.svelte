@@ -1,17 +1,18 @@
 <script lang="ts">
 	import Paper from '@smui/paper';
 	import QrCodeScanner from '$lib/QrCodeScanner.svelte';
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { decode, decodeMatchScouting, decodeOneMatchScoutingResult } from '$lib/compression';
 	import type { LightMatch, LightUser, MatchScoutingLocal, str, TeamLocal } from '$lib/localDB';
 	import db from '$lib/localDB';
 	import type { Org } from 'scoutradioz-types';
 	import { getLogger } from '$lib/logger';
+	import { getContext } from 'svelte';
+	import type { SnackbarContext } from '$lib/types';
 
 	let qrcodeEnabled = true;
 
-	let snackbar: SimpleSnackbar;
 	const logger = getLogger('sync/Scanner');
+	const snackbar = getContext('snackbar') as SnackbarContext;
 
 	async function onQrCodeData(e: CustomEvent<{ text: string; ms: number }>) {
 		try {
@@ -118,5 +119,3 @@
 </script>
 
 <QrCodeScanner on:data={onQrCodeData} enabled={qrcodeEnabled} />
-
-<SimpleSnackbar bind:this={snackbar} />

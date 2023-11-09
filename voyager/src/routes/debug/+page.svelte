@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { encodeMatchScouting, decodeMatchScouting } from '$lib/compression';
 	import db, { type Log } from '$lib/localDB';
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { event_key, org_key } from '$lib/stores';
 
 	import { type logLevel, logLevelStringToNumber, logLevelNumberToString } from '$lib/logger';
@@ -9,8 +8,10 @@
 	import DataTable, { Head, Body, Row, Cell } from '@smui/data-table';
 	import IconButton from '@smui/icon-button';
 	import { liveQuery, type IndexableTypeArray, type Observable } from 'dexie';
+	import { getContext } from 'svelte';
+	import type { SnackbarContext } from '$lib/types';
 
-	let snackbar: SimpleSnackbar;
+	let snackbar = getContext('snackbar') as SnackbarContext;
 
 	let groups: Observable<IndexableTypeArray>;
 	$: groups = liveQuery(() => db.logs.orderBy('group').uniqueKeys());
@@ -103,8 +104,6 @@
 
 <IconButton class="material-icons" on:click={copyToClipboard}>content_copy</IconButton>
 
-<SimpleSnackbar bind:this={snackbar} />
-
 <p>Note: Table is limited to 100 messages. Click the clipboard button to copy all logs (with the current filter) to the clipboard.</p>
 
 <DataTable table$aria-label="User list" style="width: 100%;">
@@ -130,5 +129,3 @@
 	</Body>
 	<!-- TODO: Progress bar when data is loading from DB -->
 </DataTable>
-
-<SimpleSnackbar bind:this={snackbar} />

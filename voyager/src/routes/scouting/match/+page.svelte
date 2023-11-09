@@ -17,11 +17,6 @@
 		hour12: true
 	});
 	
-	// let matchNumber: number = parseInt(localStorage.getItem(`match_number_${$event_key}`) || '1');
-	
-	onMount(() => {
-		// matchNumber = parseInt(localStorage.getItem(`match_number_${$event_key}`) || '1');
-	});
 </script>
 
 <h1>Match scouting</h1>

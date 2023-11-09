@@ -15,11 +15,12 @@
 	import { fetchJSON } from '$lib/utils';
 	import assert from '$lib/assert';
 	import type { MatchScouting, PitScouting, User, Event, Org, Layout } from 'scoutradioz-types';
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
+	import { getContext } from 'svelte';
+	import type { SnackbarContext } from '$lib/types';
 
 	const logger = getLogger('sync/LeadSyncMothership');
 
-	let snackbar: SimpleSnackbar;
+	let snackbar = getContext('snackbar') as SnackbarContext;
 	let errorMessage: string;
 
 	// Retrieve the # of matchscouting and pitscouting layout elements in the DB
@@ -139,17 +140,6 @@
 			);
 			assert($event_key, 'event_key not defined');
 
-			// Delete existing match scouting entries (We'll have to code something less dangerous at some point, cuz this'll override non-synced data)
-			// let numDeleted = await db.matchscouting
-			// 	.where({
-			// 		event_key: $event_key,
-			// 		org_key: $org_key
-			// 	})
-			// 	.delete();
-			// console.log(`${numDeleted} deleted from db`);
-
-			// // Insert the assignments into Dexie
-			// await db.matchscouting.bulkAdd(matchScouting);
 			await db.matchscouting.bulkPut(matchScouting);
 		} catch (err) {
 			handleError(err);
@@ -336,8 +326,6 @@
 			</CActions>
 		</Card>
 	</div>
-
-	<SimpleSnackbar bind:this={snackbar} />
 </section>
 
 <style lang="scss">

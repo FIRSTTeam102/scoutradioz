@@ -2,17 +2,17 @@
 	import assert from '$lib/assert';
 	import { encodeMatchScouting, encodeMetadata, decode } from '$lib/compression';
 	import db, { type MatchScoutingLocal } from '$lib/localDB';
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { event_key, org_key } from '$lib/stores';
+	import type { SnackbarContext } from '$lib/types';
 	import Paper from '@smui/paper';
 	import Select, { Option } from '@smui/select';
 	import { liveQuery, type Observable } from 'dexie';
 	import QRCode from 'qrcode';
-	import { onMount } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 
 	let canvas: HTMLCanvasElement;
 
-	let snackbar: SimpleSnackbar;
+	let snackbar = getContext('snackbar') as SnackbarContext;
 
 	let numMatchesToGrab: number;
 	let whichUsersToInclude: 'assigned' | 'everyone' = 'assigned';
@@ -159,8 +159,6 @@
 		<canvas bind:this={canvas} />
 	</div>
 </section>
-
-<SimpleSnackbar bind:this={snackbar} />
 
 <style lang="scss">
 	.canvas-parent {

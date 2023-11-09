@@ -25,12 +25,33 @@
 	import IconButton from '@smui/icon-button';
 	import { assets } from '$app/paths';
 	import { share } from '$lib/share';
+	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
+	import { setContext } from 'svelte';
+	import type { SnackbarContext } from '$lib/types';
 
 	afterNavigate(() => (menuOpen = false));
 
 	let topAppBar: TopAppBar;
-	// let bottomAppBar: BottomAppBar;
 	let menuOpen = false;
+	
+	let snackbar: SimpleSnackbar;
+
+	let snackbarContext: SnackbarContext  = {
+		open: (...args) => {
+			if (!snackbar) throw new Error('Snackbar not defined')
+			return snackbar.open(...args);
+		},
+		error: (...args) => {
+			if (!snackbar) throw new Error('Snackbar not defined')
+			return snackbar.error(...args);
+		},
+		close: (...args) => {
+			if (!snackbar) throw new Error('Snackbar not defined')
+			return snackbar.close(...args);
+		},
+	}
+	
+	setContext('snackbar', snackbarContext)
 
 	// JL note: I think maybe these items can change contextually depending on
 	// 	what the user is doing?
@@ -149,6 +170,8 @@
 		<slot />
 	</div>
 </AutoAdjust>
+
+<SimpleSnackbar bind:this={snackbar} />
 
 <!-- <BottomNavBar bind:bottomAppBar items={navItems}/> -->
 
