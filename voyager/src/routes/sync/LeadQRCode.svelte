@@ -19,6 +19,8 @@
 
 	let qrCodeType: 'matchscouting' | 'metadata' = 'matchscouting';
 
+	const NUM_MATCHES_GROUP = 3;
+
 	// Todo: instead of depending on lightmatches, create a picker based on the empty matchscouting entries, with a start # and end #
 	let numMatchesAtEvent: Observable<number>;
 	$: numMatchesAtEvent = liveQuery(async () => {
@@ -30,19 +32,32 @@
 			.count();
 
 		// By default, set numMatchesToGrab = 10 or total # of matches, whichever is smaller
-		numMatchesToGrab = Math.min(number, 10);
+		numMatchesToGrab = Math.min(number, NUM_MATCHES_GROUP * 2);
 
 		return number;
 	});
 
-	$: if (qrCodeType === 'matchscouting') {
+	function getHackyCurrentMatchNumber() {
+		return parseInt(localStorage.getItem(`match_number_${$event_key}`) || '1');
+	}
+
+	let matchscouting: MatchScoutingLocal[] | undefined = undefined;
+
+	$: if (qrCodeType === 'matchscouting' && numMatchesToGrab > 0) {
+		console.log(getHackyCurrentMatchNumber());
 		db.matchscouting
 			.orderBy('match_number')
-			.filter((match) => match.event_key === $event_key && match.org_key === $org_key)
+			.filter(
+				(match) =>
+					match.event_key === $event_key &&
+					match.org_key === $org_key &&
+					match.match_number >= getHackyCurrentMatchNumber()
+			)
 			.limit(numMatchesToGrab * 6)
 			.toArray()
 			.then(async (data) => {
 				if (data.length > 0) {
+					matchscouting = data;
 					console.log('Compressing data');
 					let base64Data = await encodeMatchScouting(data);
 					console.log(base64Data);
@@ -50,6 +65,11 @@
 					// console.log('Orig', data);
 					// let decoded = await decode(base64Data);
 					// console.log(decoded);
+				} else {
+					matchscouting = undefined;
+					snackbar.error(
+						'Couldn\'t find matches. Try going back to the matches screen & decreasing the "current match number" or downloading from the "Server" tab.'
+					);
 				}
 			});
 	} else if (qrCodeType === 'metadata') {
@@ -123,6 +143,8 @@
 			}
 		);
 	}
+
+	const numMatchesGetKey = (num: number) => String(num);
 </script>
 
 <section class="pad columns center" style="gap: 1em;">
@@ -135,11 +157,11 @@
 		</div>
 		<!-- JL note: not using an if block because numMatchesToGrab becomes undefined when the select is unmounted -->
 		<div class:hidden={qrCodeType !== 'matchscouting'}>
-			<Select variant="filled" bind:value={numMatchesToGrab} label="Matches">
+			<Select variant="filled" bind:value={numMatchesToGrab} label="Matches" key={numMatchesGetKey}>
 				<!-- JL note: the " || 50" is to guarantee that there are some options in the select to avoid numMatchesToGrab becoming undefined -->
 				{#each Array($numMatchesAtEvent || 50) as _, index}
 					<!-- Blocks of 5 OR total # of matches -->
-					{#if (index === ($numMatchesAtEvent || 50) - 1 || (index + 1) % 3 === 0) && index > 0}
+					{#if (index === ($numMatchesAtEvent || 50) - 1 || (index + 1) % NUM_MATCHES_GROUP === 0) && index > 0}
 						<Option value={index + 1}>{index + 1}</Option>
 					{/if}
 				{/each}
@@ -156,12 +178,22 @@
 		</div>
 	</div>
 	<div class="canvas-parent">
+		{#if qrCodeType === 'matchscouting' && matchscouting}
+			<h3 style='margin-bottom: 8px;'>
+				Matches # {matchscouting[0].match_number} - {matchscouting[matchscouting.length - 1]
+					.match_number}
+			</h3>
+			<p>
+				To change the current match number, go to the match scouting screen and increment/decrement the # there.
+			</p>
+		{/if}
 		<canvas bind:this={canvas} />
 	</div>
 </section>
 
 <style lang="scss">
 	.canvas-parent {
+		text-align: center;
 		max-width: 100vw;
 		margin: auto;
 	}
@@ -169,7 +201,7 @@
 		// i'll do something more fancy later
 		max-width: 100%;
 		aspect-ratio: 1;
-		height: unset!important; // override height set by QRCode
+		height: unset !important; // override height set by QRCode
 	}
 
 	.hidden {
