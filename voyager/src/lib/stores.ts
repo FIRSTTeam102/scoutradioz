@@ -17,6 +17,7 @@ export const org_key: Writable<string | undefined> = writable(undefined);
 export const event_key: Writable<string | undefined> = writable(undefined);
 // event_key.set('2022njski');
 export const event_year: Writable<number | undefined> = writable(undefined);
+export const event_name: Writable<string | undefined> = writable(undefined);
 event_key.subscribe((v) => event_year.set(parseInt(v || '')));
 
 
@@ -42,7 +43,7 @@ export function whenStoresLoaded() {
 	return new Promise((resolve) => {
 		if (dataRetrieved) resolve(undefined);
 		else resolves.push(resolve);
-	})
+	});
 }
 
 userObservable.subscribe(async (user) => {
@@ -51,9 +52,17 @@ userObservable.subscribe(async (user) => {
 		userId.set(user._id);
 		org_key.set(user.org_key);
 
+		// if org exists
 		const org = await db.orgs.where('org_key').equals(user.org_key).first();
-		if (org?.event_key) event_key.set(org.event_key);
-		if (org?.event_key) event_year.set(Number(org.event_key?.substring(0, 4)))
+		if (org?.event_key) {
+			event_year.set(Number(org.event_key?.substring(0, 4)));
+			event_key.set(org.event_key);
+			// if event exists
+			const event = await db.events.where('key').equals(org.event_key).first();
+			if (event?.name) {
+				event_name.set(event.name);
+			}
+		}
 	}
 
 	dataRetrieved = true;
