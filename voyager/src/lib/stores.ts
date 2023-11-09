@@ -20,15 +20,18 @@ export const event_year: Writable<number | undefined> = writable(undefined);
 export const event_name: Writable<string | undefined> = writable(undefined);
 event_key.subscribe((v) => event_year.set(parseInt(v || '')));
 
-export const deviceOnline: Writable<boolean> = writable(navigator.onLine);
-addEventListener('online', e => {
-	console.log('Online event', e);
-	deviceOnline.set(true);
-});
-addEventListener('offline', e => {
-	console.log('Offline event', e);
-	deviceOnline.set(false);
-});
+export const deviceOnline: Writable<boolean> = writable(('navigator' in globalThis && 'onLine' in navigator) ? navigator.onLine : false);
+if ('addEventListener' in globalThis) {
+	addEventListener('online', e => {
+		console.log('Online event', e);
+		deviceOnline.set(true);
+	});
+	addEventListener('offline', e => {
+		console.log('Offline event', e);
+		deviceOnline.set(false);
+	});
+}
+else console.warn('Was unable to add an event listener for deviceOnline. If you see this warning while building/deploying sveltekit or in the nodejs console, everything should be ok, but if you see this in the browser console then the app will not be able to be reactive to the device going online/offline.');
 
 const userObservable = liveQuery(async () => {
 	return await db.user.toCollection().first();
