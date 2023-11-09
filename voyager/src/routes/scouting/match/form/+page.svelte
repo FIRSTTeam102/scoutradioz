@@ -31,7 +31,6 @@
 	
 	let bottomBarActions: NavBarItem[] = [
 		{
-			label: 'Discard',
 			onClick: () => {
 				// TODO: use nice dialog instead of confirm()
 				if (confirm('Really reset the data from this match? (The changes will only be local; this action will not delete data on the server if it exists)')) {
@@ -42,10 +41,10 @@
 					goto('/scouting/match');
 				}
 			},
+			label: 'Discard',
 			icon: 'delete'
 		},
 		{
-			label: 'Save & return to list',
 			onClick: async () => {
 				// Save actual_scouter to db
 				if ($userId && $userName) {
@@ -79,13 +78,14 @@
 				}
 				goto('/scouting/match');
 			},
-			icon: 'arrow_back',
+			label: 'Done (Back to list)',
+			icon: 'done',
 		},
 		{
-			label: 'Save & go to next assignment',
 			onClick: () => {
 				alert('Not implemented')
 			},
+			label: 'Next assignment',
 			icon: 'arrow_forward',
 		}
 	]
