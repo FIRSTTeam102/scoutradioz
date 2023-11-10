@@ -52,6 +52,7 @@
 	////////////////
 	// Constants
 	////////////////
+	const MIN_SCAN_INTERVAL = 100; // 100 ms is a pretty reasonable scan time
 	const MAX_SCAN_INTERVAL = 4500; // if we don't receive a message back from the qr worker in a while
 	const MIN_FOCUS_BOX_WIDTH = 200;
 	const MIN_FOCUS_BOX_HEIGHT = 200;
@@ -71,7 +72,7 @@
 				onQrCodeData(ev.data.data, ev.data.ms);
 			}
 			waitingForWorker = false;
-			debugInfo = `QR scan time: ${ev.data.ms} ms`;
+			if (lastMessageSentTime) debugInfo = `QR scan time: ${ev.data.ms} ms, from message sent to now: ${performance.now() - lastMessageSentTime}`;
 		};
 	}
 
@@ -86,6 +87,7 @@
 	// Video
 	////////////////
 	const video = document.createElement('video');
+	let availableWidth: number, availableHeight: number;
 
 	/** Allow the scanner to be enabled or disabled. */
 	export let enabled: boolean = true;
@@ -106,11 +108,19 @@
 
 	let lastMessageSentTime = 0;
 	let flippedDimensions = false;
-	function tick(time: number) {
+	function tick() {
+		const time = performance.now();
 		if (!video || !ctx || !worker) return logger.error('no video or ctx or worker');
 		if (video.readyState === video.HAVE_ENOUGH_DATA) {
-			let canvasWidth = video.videoWidth;
-			let canvasHeight = video.videoHeight;
+			let { videoWidth, videoHeight } = video;
+			
+			let canvasWidth = videoWidth;
+			let canvasHeight = videoHeight;
+			// JL TODO: I want to improve the "crispness" of the preview box, but to do so I think I need to increase the res of the canvas
+			// 	to native res. But then, using getImageData() from the same canvas will lead to Koder taking much longer to process because
+			// 	of the higher resolution.
+			// let canvasWidth = availableWidth;
+			// let canvasHeight = availableHeight;
 			canvas.width = canvasWidth;
 			canvas.height = canvasHeight;
 
@@ -123,9 +133,20 @@
 
 			ctx.drawImage(video, 0, 0);
 
+			// Fill canvas with semi opaque black
 			ctx.fillStyle = 'black';
 			ctx.globalAlpha = 0.6;
+			ctx.strokeStyle = '#bbb';
+			ctx.lineWidth = 5;
 			ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+			ctx.globalAlpha = 1;
+			if ('roundRect' in ctx) ctx.roundRect(sx, sy, focusBoxWidth, focusBoxHeight, 16);
+			else {
+				// @ts-ignore - stupid TypeScript assumes ctx.roundRect always exists, so this else will never fall through, but it doesn't in old browser versions
+				ctx.rect(sx, sy, focusBoxWidth, focusBoxHeight);
+			}
+			// ctx.stroke();
+			ctx.clip();
 			ctx.drawImage(
 				video,
 				sx,
@@ -137,8 +158,10 @@
 				focusBoxWidth,
 				focusBoxHeight
 			);
+			ctx.stroke();
+			// debugInfo = `Draw time: ${performance.now() - time}\n`;
 			
-			let doScan = !waitingForWorker;
+			let doScan = !waitingForWorker && (time - lastMessageSentTime > MIN_SCAN_INTERVAL);
 			if (waitingForWorker && lastMessageSentTime && time - lastMessageSentTime > MAX_SCAN_INTERVAL) {
 				snackbar.open(`WARNING: QR code WebWorker has not responded in over ${MAX_SCAN_INTERVAL} ms. Attempting again...`, 4000);
 				logger.warn(`WARNING: QR code WebWorker has not responded in over ${MAX_SCAN_INTERVAL} ms. Attempting again...`);
@@ -146,7 +169,8 @@
 			}
 
 			if (doScan) {
-				lastMessageSentTime = time;
+				// debugInfo += `Time since last message sent: ${time - lastMessageSentTime}`;
+				lastMessageSentTime = performance.now();
 				waitingForWorker = true;
 				let imageData = ctx.getImageData(sx, sy, focusBoxWidth, focusBoxHeight);
 
@@ -205,19 +229,20 @@
 		if (!video) throw new Error('No video element');
 
 		// Get the desired aspect ratio of the video stream to perfectly fill the remaining space on the screen
-		let { width, height } = getAvailableWindowSize(parent);
-		let aspectRatio = width / height;
-		console.log(width, height, aspectRatio);
+		let size = getAvailableWindowSize(parent);
+		availableWidth = size.width;
+		availableHeight = size.height;
+		let aspectRatio = availableWidth / availableHeight;
+		console.log(availableWidth, availableHeight, aspectRatio);
 
 		let videoConstraints: MediaTrackConstraints = {
 			facingMode: 'environment',
-			// deviceId: '3dada17451a1d1c171c0c2d48d3e6b571819d3c55f533f5271d1e886633983b5', // JL: For testing only (this is my OBS virtual camera)
 			aspectRatio: {
 				ideal: aspectRatio
 			}
 		};
 
-		const idealVideoShortSide = 480; // The resolution can vary slightly; higher resolutions are more expensive to process but if the resolution is too low, we MIGHT not be able to scan the highest-density codes
+		const idealVideoShortSide = 640; // The resolution can vary slightly; higher resolutions are more expensive to process but if the resolution is too low, we MIGHT not be able to scan the highest-density codes
 		let idealVideoWidth: number, idealVideoHeight: number;
 
 		// Wide screens: prefer wider aspect ratio
@@ -402,6 +427,7 @@
 </script>
 
 <div bind:this={parent} class='parent'>
+	<!-- <input type="number" bind:value={MIN_SCAN_INTERVAL} /> -->
 	<div class="debug-info">{@html debugInfo}</div>
 	<canvas id="canvas" bind:this={canvas} />
 </div>
@@ -410,17 +436,18 @@
 
 <svelte:body style="overflow: hidden;" />
 
-<style>
+<style lang='scss'>
 	body {
 		overflow: hidden;
 	}
 	#canvas {
 		width: 100%;
+		position: absolute; // to prevent scrollbar from appearing
 	}
 	.debug-info {
 		position: absolute;
 		font-size: 0.7em;
-		top: 8px;
+		top: 24px;
 		left: 8px;
 		text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
 		color: white;
