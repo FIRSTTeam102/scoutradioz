@@ -103,7 +103,7 @@
 					let users = decodedData.data.users as LightUser[];
 					let teams = decodedData.data.teams as TeamLocal[];
 					let event = decodedData.data.event as str<Event>;
-					console.log('org', org, 'users', users, 'teams', teams);
+					console.log('org', org, 'users', users, 'teams', teams, 'event', event);
 					await db.orgs.put(org);
 					await db.lightusers.bulkPut(users);
 					await db.teams.bulkPut(teams);
