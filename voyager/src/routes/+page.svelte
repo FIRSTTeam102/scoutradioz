@@ -15,11 +15,12 @@
 
 	import { org, org_password } from './login-stores';
 	import { goto } from '$app/navigation';
-	import type { RefreshContext, SnackbarContext } from '$lib/types';
+	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 
 	const logger = getLogger('login (root)');
 
 	const refreshButton = getContext('refreshButton') as RefreshContext;
+	const refreshButtonAnimation = getContext('refreshButtonAnimation') as RefreshButtonAnimationContext;
 	const snackbar = getContext('snackbar') as SnackbarContext;
 
 	// Retrieve the orgs from the database
@@ -84,7 +85,7 @@
 				);
 			}
 			logger.info('Orgs are too old or have not been downloaded; downloading new ones');
-			downloadOrgs();
+			refreshButtonAnimation.autoplay(downloadOrgs);
 		}
 	});
 

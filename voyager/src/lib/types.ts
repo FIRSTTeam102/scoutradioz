@@ -40,9 +40,14 @@ export type RefreshContext = Writable<{
 }>
 
 /**
- * Control whether the refresh button plays a little spinny animation.		
+ * Control whether the refresh button plays a little spinny animation.
  */
 export type RefreshButtonAnimationContext = {
 	play: () => void,
 	stop: () => void,
+	/**
+	 * Make the refresh button spin while the callback is being executed and then automatically stop.
+	 * @param cb Function to run, preferably an async function.
+	 */
+	autoplay: (cb: () => Promise<void>|void) => Promise<void>,
 }

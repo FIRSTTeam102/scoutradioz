@@ -17,7 +17,7 @@
 	import type { PageData } from './$types';
 	import { getContext, onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { RefreshContext, SnackbarContext } from '$lib/types';
+	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 
 	export let data: PageData;
 
@@ -33,7 +33,8 @@
 	const logger = getLogger('login (user)');
 	const snackbar = getContext('snackbar') as SnackbarContext;
 	const refreshButton = getContext('refreshButton') as RefreshContext;
-
+	const refreshButtonAnimation = getContext('refreshButtonAnimation') as RefreshButtonAnimationContext;
+	
 	async function downloadUsers(showSnackbarWhenDone?: boolean) {
 		try {
 			if (!$org) throw new Error('No org selected');
@@ -108,7 +109,7 @@
 				);
 			}
 			logger.info('Users are too old or have not been downloaded; downloading new ones');
-			downloadUsers();
+			refreshButtonAnimation.autoplay(downloadUsers);
 		}
 	});
 	

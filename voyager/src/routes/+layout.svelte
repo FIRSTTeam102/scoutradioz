@@ -76,10 +76,15 @@
 			setTimeout(() => {
 				refreshButtonSpinning = false;
 			}, timeRemainingInAnimation);
+		},
+		async autoplay(cb) {
+			this.play();
+			await cb();
+			this.stop();
 		}
 	}
 	
-	console.log(refreshButtonAnimationContext);
+	setContext('refreshButtonAnimation', refreshButtonAnimationContext);
 
 	// function clearCache() {
 	// 	if ('serviceWorker' in navigator) {
@@ -241,7 +246,7 @@
 		padding-left: 8px;
 	}
 	#page {
-		padding: 0 0.5em;
+		// padding: 0 0.5em;
 	}
 	:global(.refreshButton:disabled) {
 		opacity: 0.7;
