@@ -24,6 +24,14 @@ export default {
 				},
 				environment: {
 					TIER: stack.stage,
+				},
+				assets: {
+					fileOptions: [
+						{
+							files: '**\/*.wasm',
+							contentType: 'application/wasm',
+						}
+					]
 				}
 			});
 			stack.addOutputs({
