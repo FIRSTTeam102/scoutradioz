@@ -44,7 +44,7 @@ export function getAvailableWindowSize(parentElem: HTMLElement) {
 	return {
 		width: availableWidth,
 		height: availableHeight,
-	}
+	};
 }
 
 /**
@@ -53,16 +53,16 @@ export function getAvailableWindowSize(parentElem: HTMLElement) {
  * @returns a numeric value representing the string hash
  */
 export function simpleStringToHash(string: string) {
-    let hash = 0;
-    if (string.length == 0) return hash;
+	let hash = 0;
+	if (string.length == 0) return hash;
 
-    for (let i = 0; i < string.length; i++) {
-        let char = string.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
+	for (let i = 0; i < string.length; i++) {
+		let char = string.charCodeAt(i);
+		hash = ((hash << 5) - hash) + char;
+		hash = hash & hash;
+	}
      
-    return hash;
+	return hash;
 }
 
 /**
@@ -80,10 +80,10 @@ export async function getStringChecksum(string: string) {
 }
 
 function arrayBufferHashToString(arrayBuffer: ArrayBuffer) {
-  const uint8View = new Uint8Array(arrayBuffer);
-  return Array.from(uint8View)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+	const uint8View = new Uint8Array(arrayBuffer);
+	return Array.from(uint8View)
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
 }
 
 /**
@@ -93,7 +93,7 @@ function arrayBufferHashToString(arrayBuffer: ArrayBuffer) {
  * @returns an updated hash value
  */
 export function updateSimpleHash(hash: number, nextValue: number) {
-    let h2 = ((hash << 5) - hash) + nextValue;
-    h2 = h2 & h2;
-    return h2;
+	let h2 = ((hash << 5) - hash) + nextValue;
+	h2 = h2 & h2;
+	return h2;
 }
