@@ -243,9 +243,6 @@
 	#page {
 		padding: 0 0.5em;
 	}
-	:global(.refreshButton) {
-		transition: transform 0.5s linear;
-	}
 	:global(.refreshButton:disabled) {
 		opacity: 0.7;
 	}
