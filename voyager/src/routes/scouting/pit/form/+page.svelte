@@ -2,9 +2,8 @@
 	import type { PageData } from './$types';
 	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
-	import BottomAppBar, { AutoAdjust } from '@smui-extra/bottom-app-bar';
+	import type BottomAppBar from '@smui-extra/bottom-app-bar';
 	import { deviceOnline, event_key, org_key, userId, userName } from '$lib/stores';
-	import { onMount } from 'svelte';
 	import db from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import { goto } from '$app/navigation';
@@ -13,7 +12,7 @@
 
 	export let data: PageData;
 	
-	const logger = getLogger('scouting/pit/form')
+	const logger = getLogger('scouting/pit/form');
 	
 	let bottomAppBar: BottomAppBar;
 
@@ -55,14 +54,14 @@
 			onClick: async () => {
 				// save actual_scouter to db
 				if ($userId && $userName) {
-					logger.info(`Saving actual_scouter for pit scouting key ${data.pitScoutingEntry.team_key}`)
+					logger.info(`Saving actual_scouter for pit scouting key ${data.pitScoutingEntry.team_key}`);
 					await db.pitscouting.update(data.pitScoutingEntry, {
 						actual_scouter: {
 							id: $userId,
 							name: $userName
 						},
 						synced: false,
-					})
+					});
 				}
 				else {
 					logger.error('userId and userName not set!! Can\'t set actual_scouter!');
@@ -88,7 +87,7 @@
 						});
 					}
 				}
-				else logger.info('Device offline; not attempting a cloud sync')
+				else logger.info('Device offline; not attempting a cloud sync');
 				goto('/scouting/pit');
 			},
 			label: 'Done (Back to list)',
@@ -96,17 +95,14 @@
 		},
 		{
 			onClick: () => {
-				alert('Not implemented')
+				alert('Not implemented');
 			},
 			label: 'Next assignment',
 			icon: 'arrow_forward',
 		}
-	]
+	];
 </script>
 
-<AutoAdjust {bottomAppBar}>
-	<ScoutingForm layout={data.layout} bind:formData teamNumber={data.teamNumber} />
-</AutoAdjust>
+<ScoutingForm layout={data.layout} bind:formData teamNumber={data.teamNumber} />
 
-<BottomNavBar bind:bottomAppBar items={bottomBarActions} />
-<!-- todo: submit data -->
+<BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />
