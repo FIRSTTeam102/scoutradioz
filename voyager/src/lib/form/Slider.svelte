@@ -7,6 +7,8 @@
 	export let field: LayoutField;
 	let options = field.options as FormSliderOptions;
 	export let value: any = options.min; // any because of weird casting to generic data
+	export let isDefaultValue: boolean;
+	$: isDefaultValue = (value === options.min);
 
 	const reversed = options.step < 0;
 </script>

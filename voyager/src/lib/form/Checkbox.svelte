@@ -5,6 +5,8 @@
 
 	export let checked: any = false; // any because of weird casting to generic data
 	export let field: LayoutField;
+	export let isDefaultValue: boolean;
+	$: isDefaultValue = (checked === false);
 </script>
 
 <FormField>

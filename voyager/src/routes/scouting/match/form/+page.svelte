@@ -18,6 +18,7 @@
 
 	// Initialize formData if necessary
 	let formData: Required<typeof data.matchScoutingEntry.data> = data.matchScoutingEntry.data || {};
+	let allDefaultValues: boolean;
 
 	$: scouterRecord = $userId
 		? {
@@ -27,11 +28,11 @@
 		: undefined;
 
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
-	// TODO: Check with initial values to see if there were any changes, before setting synced=false
+	// 	If all of the forms are at their default values, then set data undefined
 	$: {
-		logger.trace('Updating formData in the database');
+		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
 		db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-			data: formData,
+			data: allDefaultValues ? undefined : formData,
 			synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
 			actual_scorer: scouterRecord
 		});
@@ -58,22 +59,23 @@
 		},
 		{
 			onClick: async () => {
-				// Save actual_scouter to db
-				if ($userId && $userName) {
-					logger.info(
-						`Saving actual_scorer for match acouting key ${data.matchScoutingEntry.match_team_key}`
-					);
-					await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-						actual_scorer: {
-							id: $userId,
-							name: $userName
-						},
-						synced: false // since the entry is being updated locally, we must force synced=false until it definitely is synced
-					});
+				if (!$userId || !$userName) {
+					throw logger.error('Not logged in! This should have been handled in +page.ts');
 				}
-				else {
-					logger.error('userId and userName not set!! Can\'t set actual_scouter!');
-				}
+				logger.info(
+					`Saving actual_scorer for match acouting key ${data.matchScoutingEntry.match_team_key}`
+				);
+				// Intentional design decision: Write data to the local db when they hit the check/done button even if
+				// 	the data are at defaults, because in cases where a robot no-shows, some orgs might not have
+				// 	checkboxes like no-show / died during match, so some orgs might accept empty forms
+				await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
+					actual_scorer: {
+						id: $userId,
+						name: $userName
+					},
+					data: formData,
+					synced: false // since the entry is being updated locally, we must force synced=false until it definitely is synced
+				});
 
 				if ($deviceOnline) {
 					logger.debug('navigator.onLine = true; going to attempt a cloud sync myself');
@@ -115,6 +117,11 @@
 </script>
 
 <h1>{data.matchScoutingEntry.team_key}, {data.matchScoutingEntry.alliance}</h1>
-<ScoutingForm layout={data.layout} bind:formData teamNumber={data.teamNumber} />
+<ScoutingForm
+	bind:allDefaultValues
+	layout={data.layout}
+	bind:formData
+	teamNumber={data.teamNumber}
+/>
 
 <BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />

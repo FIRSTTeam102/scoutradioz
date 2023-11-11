@@ -6,6 +6,8 @@
 	export let field: LayoutField;
 	export let allowNegative: boolean = false;
 	export let isBad = false;
+	export let isDefaultValue: boolean;
+	$: isDefaultValue = (value === 0);
 	const changeByValue = (change: number) => (value = (allowNegative ? value + change : Math.max(0, value + change)));
 </script>
 

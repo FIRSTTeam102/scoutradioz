@@ -1,11 +1,15 @@
 import type { PageLoad } from './$types';
 import type { LayoutField } from '$lib/types';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { event_key, event_year, getStore, org_key, whenStoresLoaded } from '$lib/stores';
 import db from '$lib/localDB';
 
 export const load: PageLoad = async ({ url, fetch }) => {
 	await whenStoresLoaded();
+	// check if logged in
+	if (!getStore(event_key) || !getStore(org_key)) {
+		throw redirect(307, '/');
+	}
 
 	const team_key = url.searchParams.get('key');
 	const teamNumber = Number(team_key?.replace('frc', ''));

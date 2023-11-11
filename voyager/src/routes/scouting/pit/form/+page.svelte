@@ -11,26 +11,31 @@
 	import type { BulkWriteResult } from 'mongodb';
 
 	export let data: PageData;
-	
+
 	const logger = getLogger('scouting/pit/form');
-	
+
 	let bottomAppBar: BottomAppBar;
 
 	let formData: Required<typeof data.pitScoutingEntry.data> = data.pitScoutingEntry.data || {};
-		
-	$: scouterRecord = $userId ? {
-		id: $userId,
-		name: $userName
-	} : undefined;
+	let allDefaultValues: boolean;
 
+	$: scouterRecord = $userId
+		? {
+			id: $userId,
+			name: $userName
+		}
+		: undefined;
+
+	// When formData changes (any time a form is edited), update the entry in the database
+	// 	If all of the forms are at their default values, then set data undefined
 	$: {
-		logger.trace('Updating formData in the database');
+		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
 		// JL note: Dexie lets you pass an object in, but I think it only checks the multi-entry primary key
 		// 	TS doesn't like it if I just pass the multi-entry primary key in like in a .where() call
 		db.pitscouting.update(data.pitScoutingEntry, {
-			data: formData,
+			data: allDefaultValues ? undefined : formData,
 			synced: false,
-			actual_scouter: scouterRecord,
+			actual_scouter: scouterRecord
 		});
 	}
 
@@ -38,11 +43,16 @@
 		{
 			onClick: () => {
 				// TODO: use nice dialog instead of confirm()
-				if (confirm('Really reset the data from this assignment? (The changes will only be local; this action will not delete data on the server if it exists)')) {
+				if (
+					confirm(
+						'Really reset the data from this assignment? (The changes will only be local; this action will not delete data on the server if it exists)'
+					)
+				) {
 					logger.info(`Discarding form data from team ${data.pitScoutingEntry.team_key}`);
 					db.pitscouting.update(data.pitScoutingEntry, {
 						data: undefined,
-						synced: false,
+						actual_scouter: undefined,
+						synced: false
 					});
 					goto('/scouting/pit');
 				}
@@ -52,33 +62,35 @@
 		},
 		{
 			onClick: async () => {
-				// save actual_scouter to db
-				if ($userId && $userName) {
-					logger.info(`Saving actual_scouter for pit scouting key ${data.pitScoutingEntry.team_key}`);
-					await db.pitscouting.update(data.pitScoutingEntry, {
-						actual_scouter: {
-							id: $userId,
-							name: $userName
-						},
-						synced: false,
-					});
+				if (!$userId || !$userName) {
+					throw logger.error('Not logged in! This should have been handled in +page.ts');
 				}
-				else {
-					logger.error('userId and userName not set!! Can\'t set actual_scouter!');
-				}
-				
+				logger.info(`Saving actual_scouter for pit scouting key ${data.pitScoutingEntry.team_key}`);
+				// Intentional design decision: Keep data undefined (as controlled ni the $: block above)
+				// 	even when hitting check/done for pit scouting, because we should never expect a form to be
+				// 	completely empty when pit scouting
+				await db.pitscouting.update(data.pitScoutingEntry, {
+					actual_scouter: {
+						id: $userId,
+						name: $userName
+					},
+					synced: false
+				});
+
 				if ($deviceOnline) {
 					logger.debug('device online; going to attempt a cloud sync!');
 					// retrieve the full entry once more
-					let entry = await db.pitscouting.where({
-						org_key: $org_key,
-						event_key: $event_key,
-						team_key: data.key,
-					}).first();
-					let bulkWriteResult = await fetchJSON(`/api/orgs/${$org_key}/${$event_key}/submit/pit`, {
+					let entry = await db.pitscouting
+						.where({
+							org_key: $org_key,
+							event_key: $event_key,
+							team_key: data.key
+						})
+						.first();
+					let bulkWriteResult = (await fetchJSON(`/api/orgs/${$org_key}/${$event_key}/submit/pit`, {
 						body: JSON.stringify([entry]),
 						method: 'POST'
-					}) as BulkWriteResult;
+					})) as BulkWriteResult;
 					logger.info('bulkWriteResult: ', bulkWriteResult);
 					// if submitted successfully, mark this local pit scouting entry as synced
 					if (bulkWriteResult.ok) {
@@ -91,18 +103,23 @@
 				goto('/scouting/pit');
 			},
 			label: 'Done (Back to list)',
-			icon: 'done',
+			icon: 'done'
 		},
 		{
 			onClick: () => {
 				alert('Not implemented');
 			},
 			label: 'Next assignment',
-			icon: 'arrow_forward',
+			icon: 'arrow_forward'
 		}
 	];
 </script>
 
-<ScoutingForm layout={data.layout} bind:formData teamNumber={data.teamNumber} />
+<ScoutingForm
+	bind:allDefaultValues
+	layout={data.layout}
+	bind:formData
+	teamNumber={data.teamNumber}
+/>
 
 <BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />

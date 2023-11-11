@@ -17,6 +17,10 @@
 	export let formData: {
 		[key: string]: unknown;
 	} = {};
+	export let allDefaultValues: boolean;
+	$: allDefaultValues = Object.values(defaultValuesMap).every((val) => val === true);
+
+	let defaultValuesMap: { [key: string]: boolean } = {};
 </script>
 
 <div class="form">
@@ -25,20 +29,38 @@
 	{/if}
 	{#each layout as field}
 		{#if field.id && field.type === 'checkbox'}
-			<Checkbox bind:checked={formData[field.id]} {field} />
+			<Checkbox
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:checked={formData[field.id]}
+				{field}
+			/>
 		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
 			<Counter
+				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
 				isBad={field.type === 'badcounter'}
 				allowNegative={field.type === 'counterallownegative'}
 			/>
 		{:else if field.id && (field.type === 'slider' || field.type === 'timeslider')}
-			<Slider bind:value={formData[field.id]} {field} isTime={field.type === 'timeslider'} />
+			<Slider
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:value={formData[field.id]}
+				{field}
+				isTime={field.type === 'timeslider'}
+			/>
 		{:else if field.id && field.type === 'multiselect'}
-			<Multiselect bind:value={formData[field.id]} {field} />
+			<Multiselect
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:value={formData[field.id]}
+				{field}
+			/>
 		{:else if field.id && field.type === 'textblock'}
-			<Textblock bind:value={formData[field.id]} {field} />
+			<Textblock
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:value={formData[field.id]}
+				{field}
+			/>
 		{:else if field.type === 'h2'}
 			<h2 id={field.id}>{field.label}</h2>
 		{:else if field.type === 'h3'}
