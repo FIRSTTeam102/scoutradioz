@@ -182,7 +182,7 @@ export function encodeMetadata(org: str<Org>, users: LightUser[], teams: TeamLoc
 		// Critical event info
 		ret.event = `${event.key};${event.name};${event.start_date}:${event.end_date};${event.country};${event.state_prov};${event.event_type}`;
 		
-		console.log(ret);
+		getLZMA();
 			
 		let str = JSON.stringify(ret);
 		lzma.compress(str, 9, (result, err) => {
