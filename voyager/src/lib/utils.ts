@@ -32,6 +32,15 @@ export function sortWithTeamKeyByNumber(a: hasTeamKey, b: hasTeamKey) {
 export function getAvailableWindowSize(parentElem: HTMLElement) {
 	let parentRect = parentElem.getBoundingClientRect();
 	
+	// Get element's y position without accounting for transforms,
+	// 	because the sliding tabs fly transition applies a y transform
+	let offsetTop = 0;
+	let el: HTMLElement|null|undefined = parentElem;
+	do {
+		offsetTop += el.offsetTop;
+		el = el?.parentElement
+	} while (el);
+	
 	let bottomNavBar = document.getElementById('bottom-nav-bar');
 	let bottomNavBarHeight = bottomNavBar ? bottomNavBar.getBoundingClientRect().height : 0;
 	
@@ -39,7 +48,8 @@ export function getAvailableWindowSize(parentElem: HTMLElement) {
 	let windowHeight = window.innerHeight;
 	
 	let availableWidth = windowWidth; // Maybe include the possibility of parentElem having margins later
-	let availableHeight = windowHeight - parentRect.top - bottomNavBarHeight;
+	let availableHeight = windowHeight - offsetTop - bottomNavBarHeight;
+	// let availableHeight = windowHeight - parentRect.top - bottomNavBarHeight;
 	
 	return {
 		width: availableWidth,

@@ -91,8 +91,9 @@
 
 	/** Allow the scanner to be enabled or disabled. */
 	export let enabled: boolean = true;
+	let componentMounted = false;
 
-	$: if (enabled) startScan();
+	$: if (enabled && componentMounted) startScan();
 	else stopScan();
 
 	// Dispatcher lets us send a custom 'data' event where the qr code has been read
@@ -233,7 +234,6 @@
 		availableWidth = size.width;
 		availableHeight = size.height;
 		let aspectRatio = availableWidth / availableHeight;
-		console.log(availableWidth, availableHeight, aspectRatio);
 
 		let videoConstraints: MediaTrackConstraints = {
 			facingMode: 'environment',
@@ -312,7 +312,7 @@
 			let heightDistanceSwapped = Math.abs(video!.videoHeight - idealVideoWidth);
 			let distanceSwapped = widthDistanceSwapped + heightDistanceSwapped;
 			
-			console.log(`idealWidth=${idealVideoWidth} idealHeight=${idealVideoHeight} videoWidth=${video!.videoWidth} videoHeight=${video!.videoHeight} distance=${distance} distanceSwapped=${distanceSwapped}`)
+			logger.debug(`idealWidth=${idealVideoWidth} idealHeight=${idealVideoHeight} videoWidth=${video!.videoWidth} videoHeight=${video!.videoHeight} distance=${distance} distanceSwapped=${distanceSwapped}`)
 
 			// This means that the height and width values have been swapped, because if they were not, the distance between the ideal values and the actual values would be the same or very small
 			if (distanceSwapped < distance) {
@@ -348,9 +348,8 @@
 	let scanning = false,
 		initScanning = false;
 	async function startScan() {
-		if (scanning || initScanning) return logger.debug('Already scanning; ignoring startVideo()');
+		if (scanning || initScanning) return logger.debug('Already scanning; ignoring startScan()');
 		initScanning = true;
-		console.log('video', video); // temporary for debugging
 		await initWorker();
 		try {
 			setVideoStream();
@@ -417,7 +416,7 @@
 			willReadFrequently: true
 		});
 
-		if (!document.hidden) startScan();
+		componentMounted = true;
 	});
 
 	onDestroy(() => {
@@ -428,7 +427,7 @@
 
 <div bind:this={parent} class='parent'>
 	<!-- <input type="number" bind:value={MIN_SCAN_INTERVAL} /> -->
-	<div class="debug-info">{@html debugInfo}</div>
+	<!-- <div class="debug-info">{@html debugInfo}</div> -->
 	<canvas id="canvas" bind:this={canvas} />
 </div>
 
@@ -452,6 +451,7 @@
 		text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
 		color: white;
 		font-weight: bold;
+		z-index: 2;
 	}
 	.parent {
 		position: relative;
