@@ -269,7 +269,6 @@
 
 		let stream: MediaStream;
 
-
 		logger.debug(videoConstraints);
 
 		try {
@@ -333,9 +332,10 @@
 
 				await track.applyConstraints(newVideoConstraints);
 
-				snackbar.open(
-					'Your device flipped video stream width and height. Please let the devs know if you see this message just so we know. This message will be removed in the future.'
-				);
+				// JL TODO: actually proactively flip dimensions if it's been set to true before, maybe with a store or smth
+				// snackbar.open(
+				// 	'Your device flipped video stream width and height. Please let the devs know if you see this message just so we know. This message will be removed in the future.'
+				// );
 				flippedDimensions = true;
 			} else {
 				flippedDimensions = false;
