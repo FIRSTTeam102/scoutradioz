@@ -43,15 +43,17 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	let bulkWriteOp: AnyBulkWriteOperation<MatchScouting>[] = [];
 
 	for (let localMatch of data) {
-		if (localMatch.actual_scorer) {
+		// TODO: verify that the user has access to push data for this org
+		const { event_key, org_key, actual_scorer, data, match_team_key } = localMatch;
+		if (actual_scorer) {
 			bulkWriteOp.push({
 				updateOne: {
-					filter: { match_team_key: localMatch.match_team_key },
+					filter: { match_team_key, event_key, org_key },
 					update: {
 						$set: {
 							actual_scorer: {
-								id: new ObjectId(localMatch.actual_scorer.id),
-								name: localMatch.actual_scorer.name
+								id: new ObjectId(actual_scorer.id),
+								name: actual_scorer.name
 							}
 						}
 					}
@@ -60,13 +62,9 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		}
 		bulkWriteOp.push({
 			updateOne: {
-				filter: {
-					match_team_key: localMatch.match_team_key
-				},
+				filter: { match_team_key, event_key, org_key },
 				update: {
-					$set: {
-						data: localMatch.data
-					}
+					$set: { data }
 				}
 			}
 		});

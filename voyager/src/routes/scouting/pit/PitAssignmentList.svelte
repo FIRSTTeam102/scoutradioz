@@ -6,10 +6,10 @@
 		ActionIcons as CActionIcons
 	} from '@smui/card';
 	import Button, { Label as BLabel, Icon as BIcon } from '@smui/button';
-	import type { PitScouting } from 'scoutradioz-types';
 	import { onMount } from 'svelte';
+	import type { PitScoutingLocal } from '$lib/localDB';
 
-	export let assignments: PitScouting[];
+	export let assignments: PitScoutingLocal[];
 </script>
 
 <div class="cards">
@@ -24,7 +24,15 @@
 				</CContent>
 				<CActions fullBleed>
 					<Button href={`/scouting/pit/form?key=${asg.team_key}`}>
-						<BLabel>Scout</BLabel>
+						<BLabel>
+							Scout
+							<!-- TODO: make better and more clear, e.g. with colors -->
+							{#if asg.data && asg.synced}
+								(Complete)
+							{:else if asg.data && !asg.synced}
+								(Complete but not synced)
+							{/if}
+						</BLabel>
 						<i class="material-icons" aria-hidden="true">arrow_forward</i>
 					</Button>
 				</CActions>
