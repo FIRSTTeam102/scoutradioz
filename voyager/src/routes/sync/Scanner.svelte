@@ -1,7 +1,12 @@
 <script lang="ts">
 	import Paper from '@smui/paper';
 	import QrCodeScanner from '$lib/QrCodeScanner.svelte';
-	import { decode, decodeMatchScouting, decodeOneMatchScoutingResult } from '$lib/compression';
+	import {
+		decode,
+		decodeMatchScouting,
+		decodeOneMatchScoutingResult,
+		decodeOnePitScoutingResult
+	} from '$lib/compression';
 	import type { LightMatch, LightUser, MatchScoutingLocal, str, TeamLocal } from '$lib/localDB';
 	import type { Event } from 'scoutradioz-types';
 	import db from '$lib/localDB';
@@ -103,7 +108,7 @@
 					let users = decodedData.data.users as LightUser[];
 					let teams = decodedData.data.teams as TeamLocal[];
 					let event = decodedData.data.event as str<Event>;
-					console.log('org', org, 'users', users, 'teams', teams, 'event', event);
+					logger.debug('org', org, 'users', users, 'teams', teams, 'event', event);
 					await db.orgs.put(org);
 					await db.lightusers.bulkPut(users);
 					await db.teams.bulkPut(teams);
@@ -114,7 +119,7 @@
 					let { match_team_key, data, actual_scorer } = decodedData.data as Awaited<
 						ReturnType<typeof decodeOneMatchScoutingResult>
 					>['data'];
-					console.log('1matchdata', match_team_key, data, actual_scorer);
+					logger.debug('1matchdata', match_team_key, data, actual_scorer);
 					if ((await db.matchscouting.where({ match_team_key }).count()) === 0) {
 						throw new Error(
 							`Match scouting assignment not found for match_team_key ${match_team_key}!`
@@ -123,6 +128,22 @@
 					await db.matchscouting.update(match_team_key, {
 						data,
 						actual_scorer
+					});
+				}
+				case '1pitdata': {
+					let { actual_scouter, data, org_key, event_key, team_key } = decodedData.data as Awaited<
+						ReturnType<typeof decodeOnePitScoutingResult>
+					>['data'];
+					logger.debug('Retrieved the following:', actual_scouter, data, org_key, event_key, team_key);
+					let existingAssignment = await db.pitscouting.where({org_key, event_key, team_key}).first();
+					if (!existingAssignment) {
+						throw new Error(
+							`Pit scouting assignment not found for org_key ${org_key}, event_key ${event_key}, team_key ${team_key}!`
+						);
+					}
+					await db.pitscouting.update(existingAssignment, {
+						data,
+						actual_scouter,
 					});
 				}
 			}

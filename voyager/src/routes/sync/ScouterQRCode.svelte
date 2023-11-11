@@ -4,9 +4,12 @@
 		encodeMatchScouting,
 		encodeMetadata,
 		decode,
-		encodeOneMatchScoutingResult
+		encodeOneMatchScoutingResult,
+
+		encodeOnePitScoutingResult
+
 	} from '$lib/compression';
-	import db, { type MatchScoutingLocal } from '$lib/localDB';
+	import db, { type MatchScoutingLocal, type PitScoutingLocal } from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { event_key, org_key } from '$lib/stores';
@@ -18,29 +21,40 @@
 	import { liveQuery, type Observable } from 'dexie';
 	import QRCode from 'qrcode';
 	import { onMount } from 'svelte';
-
-	let canvas: HTMLCanvasElement;
-
-	let snackbar: SimpleSnackbar;
-
-	let onlyUnsyncedMatches = true;
-
-	let qrCodeType: 'matchscouting' | 'pitscouting' = 'matchscouting';
 	
 	const logger = getLogger('sync/ScouterQRCode');
 
+	let canvas: HTMLCanvasElement;
+	let snackbar: SimpleSnackbar;
+
+	let onlyUnsynced = true;
+	let qrCodeType: 'matchscouting' | 'pitscouting' = 'matchscouting';
+	let matchToShowQr: MatchScoutingLocal | null = null;
+	let pitToShowQr: PitScoutingLocal | null = null;
+
 	$: matchscouting = liveQuery(async () => {
-		logger.debug('updating now', onlyUnsyncedMatches);
+		logger.debug('updating matchscouting now', onlyUnsynced);
 		return db.matchscouting
 			.where({
 				org_key: $org_key,
 				event_key: $event_key
 			})
-			.and((match) => !!match.data && !(onlyUnsyncedMatches && match.synced))
+			.and((match) => !!match.data && !(onlyUnsynced && match.synced))
 			.toArray();
 	});
-	let matchToShowQr: MatchScoutingLocal | null = null;
-	$: selectedEntrySynced = (qrCodeType === 'matchscouting') ? matchToShowQr?.synced : false;
+	$: pitscouting = liveQuery(async () => {
+		logger.debug('updating pitscouting now');
+		return db.pitscouting
+			.where({
+				org_key: $org_key,
+				event_key: $event_key
+			})
+			.and((pit) => !!pit.data && !(onlyUnsynced && pit.synced))
+			.toArray();
+	});
+
+	$: selectedEntrySynced = (qrCodeType === 'matchscouting') ? !!matchToShowQr?.synced : 
+		(qrCodeType === 'pitscouting') ? !!pitToShowQr?.synced : false;
 
 	// This block is to update matchToShowQr when a match is marked/unmarked as synced,
 	// 	because it doesn't automatically happen since it's done outside of the Select
@@ -60,11 +74,28 @@
 			matchToShowQr = null; // otherwise, unselect a match
 		}
 	}
+	$: if (
+		pitToShowQr &&
+		!$pitscouting.includes(pitToShowQr)
+	) {
+		if ($pitscouting.length > 0) {
+			logger.debug('Updating pitToShowQr reference (setting to first in list)');
+			pitToShowQr = $pitscouting[0]; // if there's some left in the list, select the first one
+		} else {
+			logger.debug('Updating pitToShowQr reference (setting to null)');
+			pitToShowQr = null; // otherwise, unselect a match
+		}
+	}
 
 	$: if (qrCodeType === 'matchscouting' && matchToShowQr) {
 		encodeOneMatchScoutingResult(matchToShowQr).then((base64Data) => {
 			generateQR(base64Data);
 		});
+	}
+	$: if (qrCodeType === 'pitscouting' && pitToShowQr) {
+		encodeOnePitScoutingResult(pitToShowQr).then((base64data) => {
+			generateQR(base64data);
+		})
 	}
 
 	function clearCanvas() {
@@ -108,6 +139,10 @@
 		if (!match) return '';
 		return match.match_team_key;
 	};
+	let pitScoutingGetKey = (pit: PitScoutingLocal) => {
+		if (!pit) return '';
+		return pit.team_key;
+	}
 </script>
 
 <section class="pad columns center" style="gap: 1em;">
@@ -130,22 +165,35 @@
 						>
 					{/each}
 				{/if}
-				<svelte:fragment slot="helperText">Matches that have data</svelte:fragment>
+				<svelte:fragment slot="helperText">Match scouting with data</svelte:fragment>
 			</Select>
-			<div>
-				<FormField>
-					<Checkbox bind:checked={onlyUnsyncedMatches} />
-					<span slot="label">Only not-synced matches</span>
-				</FormField>
-			</div>
 		</div>
-		<div class:hidden={qrCodeType !== 'pitscouting'} />
+		<div class:hidden={qrCodeType !== 'pitscouting'} >
+			<Select variant="filled" bind:value={pitToShowQr} label="Team" key={pitScoutingGetKey}>
+				<Option value={null} />
+				{#if $pitscouting}
+					{#each $pitscouting as pit (pit.team_key)}
+						<Option value={pit}
+							>Team {pit.team_key}
+							(synced: {!!pit.synced})</Option
+						>
+					{/each}
+				{/if}
+				<svelte:fragment slot="helperText">Pit scouting with data</svelte:fragment>
+			</Select>
+		</div>
 	</div>
 	{#if qrCodeType === 'matchscouting' && matchToShowQr}
 		<h3>
 			Match {matchToShowQr.match_number} Team {matchToShowQr.team_key.substring(3)} ({matchToShowQr.alliance})
 		</h3>
 	{/if}
+			<div>
+				<FormField>
+					<Checkbox bind:checked={onlyUnsynced} />
+					<span slot="label">Only show assignments that haven't been synced?</span>
+				</FormField>
+			</div>
 	<div class="canvas-parent">
 		<canvas bind:this={canvas} />
 	</div>

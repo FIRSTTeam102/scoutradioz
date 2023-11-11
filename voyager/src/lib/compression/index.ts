@@ -1,5 +1,5 @@
 import assert from '$lib/assert';
-import type { str, LightUser, TeamLocal, MatchScoutingLocal, ScouterRecordLocal, WithStringDbId } from '$lib/localDB';
+import type { str, LightUser, TeamLocal, MatchScoutingLocal, ScouterRecordLocal, WithStringDbId, PitScoutingLocal } from '$lib/localDB';
 import type { EventKey, MatchScouting, OrgKey, ScouterRecord, User, Org, Event } from 'scoutradioz-types';
 import LZMA from './lzma';
 import db from '$lib/localDB';
@@ -426,49 +426,6 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 	});
 }
 
-// JL: this is temporary just to get it to work
-export async function encodeOneMatchScoutingResult(entry: MatchScoutingLocal): Promise<string> {
-	return new Promise((resolve, reject) => {
-		let str = JSON.stringify({
-			_: '1matchdata',
-			as: entry.actual_scorer,
-			data: entry.data,
-			mtc: entry.match_team_key
-		});
-		
-		getLZMA();
-		lzma.compress(str, 9, (result, err) => {
-			if (err) return reject(err);
-			if (result) {
-	
-				let byteArray = result.map(num => num + 128);
-				let base64 = b64encode(byteArray);
-				console.log(str.length, byteArray.length, base64.length);
-				resolve(base64);
-			}
-		});
-	});
-}
-
-// JL: again, slapdash, todo: make better
-export async function decodeOneMatchScoutingResult(data: CompressedItem) {
-	let json = data as {
-		_: '1matchdata',
-		as: ScouterRecordLocal, // actual_scorer
-		data: MatchScoutingLocal['data'],
-		mtc: string, // match team key
-	};
-	return {
-		type: '1matchdata',
-		label: `Match scouting result: ${json.mtc} scored by ${json.as?.name}`,
-		data: {
-			actual_scorer: json.as,
-			data: json.data,
-			match_team_key: json.mtc,
-		}
-	};	
-}
-
 /**
  * Limitations:
  * 	- assumes qualifying matches only
@@ -578,6 +535,96 @@ export async function decodeMatchScouting(data: CompressedItem) {
 		label: 'Match scouting schedule',
 		data: decodedMatchScouting
 	};
+}
+
+// JL: this is temporary just to get it to work
+export async function encodeOneMatchScoutingResult(entry: MatchScoutingLocal): Promise<string> {
+	return new Promise((resolve, reject) => {
+		let str = JSON.stringify({
+			_: '1matchdata',
+			as: entry.actual_scorer,
+			data: entry.data,
+			mtc: entry.match_team_key
+		});
+		
+		getLZMA();
+		lzma.compress(str, 9, (result, err) => {
+			if (err) return reject(err);
+			if (result) {
+	
+				let byteArray = result.map(num => num + 128);
+				let base64 = b64encode(byteArray);
+				console.log(str.length, byteArray.length, base64.length);
+				resolve(base64);
+			}
+		});
+	});
+}
+
+// JL: again, slapdash, todo: make better
+export async function decodeOneMatchScoutingResult(data: CompressedItem) {
+	let json = data as {
+		_: '1matchdata',
+		as: ScouterRecordLocal, // actual_scorer
+		data: MatchScoutingLocal['data'],
+		mtc: string, // match team key
+	};
+	return {
+		type: '1matchdata',
+		label: `Match scouting result: ${json.mtc} scored by ${json.as?.name}`,
+		data: {
+			actual_scorer: json.as,
+			data: json.data,
+			match_team_key: json.mtc,
+		}
+	};	
+}
+
+export async function encodeOnePitScoutingResult(entry: PitScoutingLocal): Promise<string> {
+	return new Promise((resolve, reject) => {
+		let str = JSON.stringify({
+			_: '1pitdata',
+			as: entry.actual_scouter,
+			data: entry.data,
+			org: entry.org_key,
+			event: entry.event_key,
+			key: entry.team_key,
+		});
+		
+		getLZMA();
+		lzma.compress(str, 9, (result, err) => {
+			if (err) return reject(err);
+			if (result) {
+	
+				let byteArray = result.map(num => num + 128);
+				let base64 = b64encode(byteArray);
+				console.log(str.length, byteArray.length, base64.length);
+				resolve(base64);
+			}
+		});
+	});
+}
+
+export async function decodeOnePitScoutingResult(data: CompressedItem) {
+	let json = data as {
+		_: '1pitdata',
+		as: ScouterRecordLocal, // actual_scorer
+		data: PitScoutingLocal['data'],
+		org: string,
+		event: string,
+		key: string,
+	};
+	return {
+		type: '1pitdata',
+		label: `Pit scouting result: ${json.key} scouted by ${json.as?.name}`,
+		data: {
+			actual_scouter: json.as,
+			data: json.data,
+			org_key: json.org,
+			event_key: json.event,
+			team_key: json.key,
+		}
+	};	
 }
 
 function b64encode(x: number[]) { 
