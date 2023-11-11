@@ -31,7 +31,9 @@
 	afterNavigate(() => (menuOpen = false));
 
 	let topAppBar: TopAppBar;
+	let headerBar: HTMLDivElement;
 	let menuOpen = false;
+	let headerBarHeight = NaN;
 
 	let snackbar: SimpleSnackbar;
 
@@ -82,20 +84,36 @@
 			await cb();
 			this.stop();
 		}
-	}
+	};
 	
 	setContext('refreshButtonAnimation', refreshButtonAnimationContext);
 
-	// function clearCache() {
-	// 	if ('serviceWorker' in navigator) {
-	// 		if ('controller' in navigator.serviceWorker && !!navigator.serviceWorker.controller) {
-	// 			navigator.serviceWorker.controller.postMessage('clearCache');
-	// 		}
-	// 		else snackbarContext.error('Could not find navigator.serviceWorker.controller!');
-	// 	}
-	// 	else snackbarContext.error('Could not find navigator.serviceWorker!');
-	// }
+	// 2023-11-11 JL: SMUI's AutoAdjust behavior led to the header bar not
+	//  fully appearing when the page is *just barely* taller than 1vh
+	let lastScrollTop = 0;
+	let headerBarHidden = false;
+
+	function onScroll() {
+		// we want to keep as little code as possible in here for performance reasons
+		// so anything that persists should be declared outside of it
+		
+		let scrollTop = window.scrollY;
+		
+		// only update if there was enough of a change
+		if (Math.abs(lastScrollTop - scrollTop) <= headerBarHeight) return;
+		
+		headerBarHidden = (scrollTop > lastScrollTop);
+		// // Scrolled down, hide
+		// if (scrollTop > lastScrollTop) headerBar.classList.add('hidden');
+		// // Scrolled up, show
+		// else headerBar.classList.remove('hidden');
+			
+		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
+		lastScrollTop = scrollTop;
+	}
 </script>
+
+<svelte:window on:scroll={onScroll} />
 
 <!-- modal is better but it won't close, so dismissible with position:fixed works -->
 <Drawer variant="modal" bind:open={menuOpen} fixed={true}>
@@ -168,7 +186,8 @@
 <!-- 	</AppContent> -->
 <!-- </AutoAdjust> -->
 
-<TopAppBar bind:this={topAppBar} variant={menuOpen ? 'fixed' : 'standard'} dense style="z-index: 5">
+<div class="header-bar" bind:this={headerBar} class:hidden={headerBarHidden} bind:clientHeight={headerBarHeight}>
+	<TopAppBar bind:this={topAppBar} variant='static' dense style="z-index: 5">
 	<Row>
 		<Section>
 			<IconButton
@@ -208,13 +227,13 @@
 			</Wrapper>
 		</Section>
 	</Row>
-</TopAppBar>
+</TopAppBar></div>
 
-<AutoAdjust {topAppBar}>
+<!-- <AutoAdjust {topAppBar}> -->
 	<div id="page">
 		<slot />
 	</div>
-</AutoAdjust>
+<!-- </AutoAdjust> -->
 
 <SimpleSnackbar bind:this={snackbar} />
 
@@ -222,6 +241,24 @@
 
 <style lang="scss">
 	/* Hide everything above this component. */
+	$header-height: 48px;
+	.header-bar {
+		position: fixed;
+		z-index: 5;
+		width: 100%;
+		top: 0px;
+		transition: top .15s ease-out;
+		&:global(.hidden) {
+			top: -$header-height;
+		}
+	}
+	:global(.mdc-top-app-bar) {
+		top: 0px;
+		// transition: top .15s ease-in-out, box-shadow 200ms linear!important; // todo anim vars
+	}
+	#page {
+		padding-top: $header-height;
+	}
 	:global(app),
 	:global(body),
 	:global(html) {
