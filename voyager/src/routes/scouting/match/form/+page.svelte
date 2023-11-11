@@ -10,6 +10,10 @@
 	import { fetchJSON } from '$lib/utils';
 	import type { BulkWriteResult } from 'mongodb';
 
+	import List, { Item, Text, PrimaryText, SecondaryText, Meta } from '@smui/list';
+	import Button, { Label as BLabel, Icon as BIcon } from '@smui/button';
+	import Card, { Content as CContent } from '@smui/card';
+
 	export let data: PageData;
 	
 	const logger = getLogger('scouting/match/form/+page.svelte');
@@ -89,9 +93,12 @@
 			icon: 'arrow_forward',
 		}
 	]
+	console.log('voyager\src\routes\scouting\match\form\+page.svelte:')
+	console.log(JSON.stringify(data.matchScoutingEntry));
 </script>
 
 <AutoAdjust {bottomAppBar} >
+	<h1>{data.matchScoutingEntry.team_key}, {data.matchScoutingEntry.alliance}</h1>
 	<ScoutingForm layout={data.layout} bind:formData teamNumber={data.teamNumber} />
 </AutoAdjust>
 
