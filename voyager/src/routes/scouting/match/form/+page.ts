@@ -19,6 +19,7 @@ export const load: PageLoad = async ({ url, fetch }) => {
 		})
 		.toArray();
 	
+	// TODO: multi org
 	const matchScoutingEntry = await db.matchscouting
 		.where('match_team_key').equals(key).first();
 	

@@ -3,8 +3,15 @@ import type { Org, User, Event, Layout, Match, TeamKey, MatchScouting, Team, Pit
 import type { FilterQuery } from 'scoutradioz-utilities';
 
 /**
+ * Svelte can't transmit ObjectIds from server to client, so they have to be transformed into strings.
+ */
+export type WithStringDbId<T> = Omit<T, '_id'> & { _id: string };
+/** Shorthand for {@link WithStringDbId<T>} */
+export type str<T> = WithStringDbId<T>;
+/**
  * Minimal version of the User interface, for transferring via QR code.
  */
+
 export interface LightUser {
 	_id: string;
 	org_key: string;
@@ -48,6 +55,14 @@ export type MatchScoutingLocal = Omit<MatchScouting, '_id' | 'assigned_scorer' |
 	team_name?: string;
 	assigned_scorer?: ScouterRecordLocal;
 	actual_scorer?: ScouterRecordLocal;
+	synced?: boolean;
+}
+
+export type PitScoutingLocal = Omit<PitScouting, '_id' | 'primary' | 'secondary' | 'tertiary' | 'actual_scouter'> & {
+	primary?: ScouterRecordLocal;
+	secondary?: ScouterRecordLocal;
+	tertiary?: ScouterRecordLocal;
+	actual_scouter?: ScouterRecordLocal;
 	/**
 	 * Whether this entry has been marked as synced (whether uploaded by this device or marked as synced after showing qr code)
 	 */
@@ -89,12 +104,6 @@ export interface SyncStatus {
 	filter: string;
 }
 
-/**
- * Svelte can't transmit ObjectIds from server to client, so they have to be transformed into strings.
- */
-export type WithStringDbId<T> = Omit<T, '_id'> & { _id: string };
-/** Shorthand for {@link WithStringDbId<T>} */
-export type str<T> = WithStringDbId<T>;
 
 export class LocalDB extends Dexie {
 	// Lightweight schemas that contain only the info necessary to transmit via QR code
@@ -105,7 +114,7 @@ export class LocalDB extends Dexie {
 	events!: Table<str<Event>>;
 	layout!: Table<str<Layout>>;
 	matchscouting!: Table<MatchScoutingLocal>;
-	pitscouting!: Table<str<PitScouting>>;
+	pitscouting!: Table<PitScoutingLocal>;
 	teams!: Table<TeamLocal>;
 	orgs!: Table<str<Org>>;
 
@@ -114,7 +123,7 @@ export class LocalDB extends Dexie {
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(26).stores({
+		this.version(30).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
 			user: '&_id',

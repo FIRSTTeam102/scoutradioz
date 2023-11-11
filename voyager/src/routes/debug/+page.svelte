@@ -22,9 +22,10 @@
 	$: items = liveQuery(() => {
 		let collection = (selectedLogGroup !== 'all')
 			? db.logs.where({ group: selectedLogGroup })
-			: db.logs.toCollection();
+			: db.logs.orderBy('id');
 		return collection
 			.and((log) => log.level >= selectedLevelNum)
+			.reverse()
 			.limit(100)
 			.toArray();
 	});

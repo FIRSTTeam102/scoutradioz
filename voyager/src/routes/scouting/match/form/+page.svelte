@@ -6,7 +6,7 @@
 	import { getLogger } from '$lib/logger';
 	import db from '$lib/localDB';
 	import { goto } from '$app/navigation';
-	import { event_key, org_key, userId, userName } from '$lib/stores';
+	import { deviceOnline, event_key, org_key, userId, userName } from '$lib/stores';
 	import { fetchJSON } from '$lib/utils';
 	import type { BulkWriteResult } from 'mongodb';
 
@@ -16,20 +16,26 @@
 
 	export let data: PageData;
 	
-	const logger = getLogger('scouting/match/form/+page.svelte');
+	const logger = getLogger('scouting/match/form');
 	
 	let bottomAppBar: BottomAppBar;
 	
 	// Initialize formData if necessary
 	let formData: Required<typeof data.matchScoutingEntry.data> = data.matchScoutingEntry.data || {};
 	
+	$: scouterRecord = $userId ? {
+		id: $userId,
+		name: $userName
+	} : undefined;
+	
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
 	// TODO: Check with initial values to see if there were any changes, before setting synced=false
 	$: {
-		logger.debug('Updating formData in the database');
+		logger.trace('Updating formData in the database');
 		db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
 			data: formData,
 			synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
+			actual_scorer: scouterRecord,
 		});
 	}
 	
@@ -65,7 +71,7 @@
 					logger.error('userId and userName not set!! Can\'t set actual_scouter!');
 				}
 
-				if (navigator.onLine) {
+				if ($deviceOnline) {
 					logger.debug('navigator.onLine = true; going to attempt a cloud sync myself')
 					let entry = await db.matchscouting.where('match_team_key').equals(data.matchScoutingEntry.match_team_key).first();
 					let bulkWriteResult = await fetchJSON(`/api/orgs/${$org_key}/${$event_key}/submit/match`, {
@@ -75,11 +81,12 @@
 					logger.info('bulkWriteResult: ', bulkWriteResult);
 					// If submitted successfully, mark this local match scouting entry as synced
 					if (bulkWriteResult.ok ) {
-						// await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-						// 	synced: true
-						// });
+						await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
+							synced: true
+						});
 					}
 				}
+				else logger.info('Device offline; not attempting a cloud sync')
 				goto('/scouting/match');
 			},
 			label: 'Done (Back to list)',
@@ -103,5 +110,3 @@
 </AutoAdjust>
 
 <BottomNavBar bind:bottomAppBar items={bottomBarActions} />
-
-<!-- todo: submit data -->
