@@ -6,7 +6,8 @@
 		type LightMatch,
 		type MatchScoutingLocal,
 		type str,
-		type WithStringDbId
+		type WithStringDbId,
+		type PitScoutingLocal
 	} from '$lib/localDB';
 	import { liveQuery } from 'dexie';
 	import { getLogger } from '$lib/logger';
@@ -15,12 +16,17 @@
 	import { fetchJSON } from '$lib/utils';
 	import assert from '$lib/assert';
 	import type { MatchScouting, PitScouting, User, Event, Org, Layout } from 'scoutradioz-types';
-	import { getContext } from 'svelte';
-	import type { SnackbarContext } from '$lib/types';
+	import { getContext, onDestroy, onMount } from 'svelte';
+	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 
 	const logger = getLogger('sync/LeadSyncMothership');
 
-	let snackbar = getContext('snackbar') as SnackbarContext;
+	const snackbar = getContext('snackbar') as SnackbarContext;
+	const refreshButton = getContext('refreshButton') as RefreshContext;
+	const refreshButtonAnimation = getContext(
+		'refreshButtonAnimation'
+	) as RefreshButtonAnimationContext;
+
 	let errorMessage: string;
 
 	// Retrieve the # of matchscouting and pitscouting layout elements in the DB
@@ -30,7 +36,7 @@
 		return await db.layout
 			.where({
 				org_key: $org_key,
-				year: Number($event_key?.substring(0,4)),
+				year: Number($event_key?.substring(0, 4)),
 				form_type: 'matchscouting'
 			})
 			.count();
@@ -42,7 +48,7 @@
 		return await db.layout
 			.where({
 				org_key: $org_key,
-				year: Number($event_key?.substring(0,4)),
+				year: Number($event_key?.substring(0, 4)),
 				form_type: 'pitscouting'
 			})
 			.count();
@@ -114,18 +120,18 @@
 
 	async function downloadFormData() {
 		try {
+			assert($event_key, 'event_key not defined');
+
 			// Fetch list of match scouting form elements for the associated year
 			const matchFormData = await fetchJSON<WithStringDbId<Layout>[]>(
-				`/api/orgs/${$org_key}/${$event_key?.substring(0,4)}/layout/match`
+				`/api/orgs/${$org_key}/${$event_key?.substring(0, 4)}/layout/match`
 			);
-			assert($event_key, 'event_key not defined');
 			await db.layout.bulkPut(matchFormData);
 
 			// Fetch list of match scouting form elements for the associated year
 			const pitFormData = await fetchJSON<WithStringDbId<Layout>[]>(
-				`/api/orgs/${$org_key}/${$event_key?.substring(0,4)}/layout/pit`
+				`/api/orgs/${$org_key}/${$event_key?.substring(0, 4)}/layout/pit`
 			);
-			assert($event_key, 'event_key not defined');
 			await db.layout.bulkPut(pitFormData);
 		} catch (err) {
 			handleError(err);
@@ -134,11 +140,14 @@
 
 	async function downloadMatchScouting() {
 		try {
+			assert($event_key, 'event_key not defined');
+
 			// Fetch list of match scouting assignments for this event
 			const matchScouting = await fetchJSON<MatchScoutingLocal[]>(
 				`/api/orgs/${$org_key}/${$event_key}/assignments/match`
 			);
-			assert($event_key, 'event_key not defined');
+			// since it's coming from the sever, it's by definiton synced
+			matchScouting.forEach((match) => (match.synced = true));
 
 			await db.matchscouting.bulkPut(matchScouting);
 		} catch (err) {
@@ -182,9 +191,12 @@
 	async function downloadPitScouting() {
 		try {
 			// Fetch list of match scouting assignments for this event
-			const pitScouting = await fetchJSON<WithStringDbId<PitScouting>[]>(
+			// JL note: once PitScouting is sent over the airwaves, it becomes local because the ObjectIds get converted to string
+			const pitScouting = await fetchJSON<WithStringDbId<PitScoutingLocal>[]>(
 				`/api/orgs/${$org_key}/${$event_key}/assignments/pit`
 			);
+			// Since it's comign from the server, it's by definition synced
+			pitScouting.forEach((pit) => (pit.synced = true));
 
 			// Delete existing match scouting entries (We'll have to code something less dangerous at some point, cuz this'll override non-synced data)
 			let numDeleted = await db.pitscouting
@@ -197,6 +209,94 @@
 
 			// Insert the assignments into Dexie
 			await db.pitscouting.bulkAdd(pitScouting);
+		} catch (err) {
+			handleError(err);
+		}
+	}
+
+	let dangerouslyUploadAll = false;
+
+	// TODO: only sync ones with data, and/or only sync ones marked as not synced?
+	async function uploadPitScouting() {
+		try {
+			assert($org_key && $event_key, 'org_key and event_key not defined');
+
+			const pitCol = db.pitscouting.where({ org_key: $org_key, event_key: $event_key });
+			let pitscouting: PitScoutingLocal[];
+			if (dangerouslyUploadAll) {
+				if (!confirm('Really upload all data, not synced data? (If a scouter uploaded something on their own device and it didn\'t get sent to yours via QR, it will be overwritten!!')) return;
+				pitscouting = await pitCol.toArray();
+			}
+			else {
+				pitscouting = await pitCol.and(pit => pit.synced === false).toArray();
+			}
+
+			if (pitscouting.length === 0) throw new Error('No pitscouting found that was not already synced');
+
+			let bulkWriteResult = await fetchJSON(`/api/orgs/${$org_key}/${$event_key}/submit/pit`, {
+				body: JSON.stringify(pitscouting),
+				method: 'POST'
+			});
+			logger.info('bulkWriteResult: ', bulkWriteResult);
+			if (bulkWriteResult.ok) {
+				// Mark synced on all of the pit scouting entries
+				await db.pitscouting
+					.where({
+						org_key: $org_key,
+						event_key: $event_key
+					})
+					.modify((pit) => (pit.synced = true));
+				snackbar.open(`Uploaded data from ${pitscouting.length} assignments successfully.`);
+			} else {
+				throw new Error(
+					`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`
+				);
+			}
+		} catch (err) {
+			handleError(err);
+		}
+	}
+
+	async function uploadMatchScouting() {
+		try {
+			assert($org_key && $event_key, 'org_key and event_key not defined');
+
+			const matchCol = db.matchscouting
+				.where({
+					org_key: $org_key,
+					event_key: $event_key
+				});
+			
+			let matchscouting: MatchScoutingLocal[];
+			if (dangerouslyUploadAll) {
+				if (!confirm('Really upload all data, not synced data? (If a scouter uploaded something on their own device and it didn\'t get sent to yours via QR, it will be overwritten!!')) return;
+				matchscouting = await matchCol.toArray();
+			}
+			else {
+				matchscouting = await matchCol.and(match => match.synced === false).toArray();
+			}
+
+			if (matchscouting.length === 0) throw new Error('No matchscouting found that was not already synced');
+
+			let bulkWriteResult = await fetchJSON(`/api/orgs/${$org_key}/${$event_key}/submit/match`, {
+				body: JSON.stringify(matchscouting),
+				method: 'POST'
+			});
+			logger.info('bulkWriteResult: ', bulkWriteResult);
+			if (bulkWriteResult.ok) {
+				// Mark synced on all of the match scouting entries
+				await db.matchscouting
+					.where({
+						org_key: $org_key,
+						event_key: $event_key
+					})
+					.modify((match) => (match.synced = true));
+				snackbar.open(`Uploaded data from ${matchscouting.length} assignments successfully.`);
+			} else {
+				throw new Error(
+					`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`
+				);
+			}
 		} catch (err) {
 			handleError(err);
 		}
@@ -234,6 +334,21 @@
 		snackbar.error(errorMessage);
 		// if (errorSnackbar) errorSnackbar.forceOpen();
 	}
+
+	onMount(() => {
+		refreshButton.set({
+			supported: true,
+			onClick: async () => {
+				snackbar.open(
+					"Sorry, the button on this page right now is only to show the animation when something is loading. Clicking it won't do anything rn."
+				);
+			}
+		});
+	});
+
+	onDestroy(() => {
+		refreshButton.set({ supported: false });
+	});
 </script>
 
 <section class="pad">
@@ -271,15 +386,26 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button variant="outlined" on:click={downloadMatchScouting}>
+					<Button
+						variant="outlined"
+						on:click={() => refreshButtonAnimation.autoplay(downloadMatchScouting)}
+					>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
-					<Button variant="outlined" on:click={downloadMatches}>
+					<Button
+						variant="outlined"
+						on:click={() => refreshButtonAnimation.autoplay(downloadMatches)}
+					>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download matches</BLabel>
 					</Button>
-					<Button variant="outlined" on:click={() => {}}>
+					<Button
+						variant="outlined"
+						on:click={() => {
+							refreshButtonAnimation.autoplay(uploadMatchScouting);
+						}}
+					>
 						<Icon class="material-icons">upload</Icon>
 						<BLabel>Upload data</BLabel>
 					</Button>
@@ -295,14 +421,17 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button variant="outlined" on:click={downloadPitScouting}>
+					<Button
+						variant="outlined"
+						on:click={() => refreshButtonAnimation.autoplay(downloadPitScouting)}
+					>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
 					<Button
 						variant="outlined"
 						on:click={() => {
-							handleError(new Error('foo bar'));
+							refreshButtonAnimation.autoplay(uploadPitScouting);
 						}}
 					>
 						<Icon class="material-icons">upload</Icon>
@@ -326,6 +455,11 @@
 			</CActions>
 		</Card>
 	</div>
+
+	<label for="dangerouslyUpload">
+		<input id="dangerouslyUpload" type="checkbox" bind:checked={dangerouslyUploadAll} />
+		Dangerously upload ALL data, instead of just not-synced data?
+	</label>
 </section>
 
 <style lang="scss">
