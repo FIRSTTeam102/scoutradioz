@@ -127,8 +127,10 @@
 					}
 					await db.matchscouting.update(match_team_key, {
 						data,
-						actual_scorer
+						actual_scorer,
+						synced: false, // since we've updated the entry locally, it's now no longer synced
 					});
+					break;
 				}
 				case '1pitdata': {
 					let { actual_scouter, data, org_key, event_key, team_key } = decodedData.data as Awaited<
@@ -144,7 +146,9 @@
 					await db.pitscouting.update(existingAssignment, {
 						data,
 						actual_scouter,
+						synced: false, // since we've updated the entry locally, it's now no longer synced
 					});
+					break;
 				}
 			}
 		} catch (err) {

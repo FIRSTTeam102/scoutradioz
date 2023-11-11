@@ -5,15 +5,13 @@
 		encodeMetadata,
 		decode,
 		encodeOneMatchScoutingResult,
-
 		encodeOnePitScoutingResult
-
 	} from '$lib/compression';
 	import db, { type MatchScoutingLocal, type PitScoutingLocal } from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { event_key, org_key } from '$lib/stores';
-	import Button, { Label as BLabel } from '@smui/button';
+	import Button, { Label as BLabel, Group as BGroup } from '@smui/button';
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
 	import Paper from '@smui/paper';
@@ -21,7 +19,7 @@
 	import { liveQuery, type Observable } from 'dexie';
 	import QRCode from 'qrcode';
 	import { onMount } from 'svelte';
-	
+
 	const logger = getLogger('sync/ScouterQRCode');
 
 	let canvas: HTMLCanvasElement;
@@ -53,8 +51,12 @@
 			.toArray();
 	});
 
-	$: selectedEntrySynced = (qrCodeType === 'matchscouting') ? !!matchToShowQr?.synced : 
-		(qrCodeType === 'pitscouting') ? !!pitToShowQr?.synced : false;
+	$: selectedEntrySynced =
+		qrCodeType === 'matchscouting'
+			? !!matchToShowQr?.synced
+			: qrCodeType === 'pitscouting'
+			? !!pitToShowQr?.synced
+			: false;
 
 	// This block is to update matchToShowQr when a match is marked/unmarked as synced,
 	// 	because it doesn't automatically happen since it's done outside of the Select
@@ -74,10 +76,7 @@
 			matchToShowQr = null; // otherwise, unselect a match
 		}
 	}
-	$: if (
-		pitToShowQr &&
-		!$pitscouting.includes(pitToShowQr)
-	) {
+	$: if (pitToShowQr && !$pitscouting.includes(pitToShowQr)) {
 		if ($pitscouting.length > 0) {
 			logger.debug('Updating pitToShowQr reference (setting to first in list)');
 			pitToShowQr = $pitscouting[0]; // if there's some left in the list, select the first one
@@ -95,7 +94,7 @@
 	$: if (qrCodeType === 'pitscouting' && pitToShowQr) {
 		encodeOnePitScoutingResult(pitToShowQr).then((base64data) => {
 			generateQR(base64data);
-		})
+		});
 	}
 
 	function clearCanvas() {
@@ -142,7 +141,7 @@
 	let pitScoutingGetKey = (pit: PitScoutingLocal) => {
 		if (!pit) return '';
 		return pit.team_key;
-	}
+	};
 </script>
 
 <section class="pad columns center" style="gap: 1em;">
@@ -168,7 +167,7 @@
 				<svelte:fragment slot="helperText">Match scouting with data</svelte:fragment>
 			</Select>
 		</div>
-		<div class:hidden={qrCodeType !== 'pitscouting'} >
+		<div class:hidden={qrCodeType !== 'pitscouting'}>
 			<Select variant="filled" bind:value={pitToShowQr} label="Team" key={pitScoutingGetKey}>
 				<Option value={null} />
 				{#if $pitscouting}
@@ -188,45 +187,79 @@
 			Match {matchToShowQr.match_number} Team {matchToShowQr.team_key.substring(3)} ({matchToShowQr.alliance})
 		</h3>
 	{/if}
-			<div>
-				<FormField>
-					<Checkbox bind:checked={onlyUnsynced} />
-					<span slot="label">Only show assignments that haven't been synced?</span>
-				</FormField>
-			</div>
+	<div>
+		<FormField>
+			<Checkbox bind:checked={onlyUnsynced} />
+			<span slot="label">Only show assignments that haven't been synced?</span>
+		</FormField>
+	</div>
 	<div class="canvas-parent">
 		<canvas bind:this={canvas} />
 	</div>
-	<div class:hidden={qrCodeType !== 'matchscouting' || !matchToShowQr}>
-		<Button
-			variant="unelevated"
-			disabled={selectedEntrySynced}
-			on:click={async () => {
-				if (!matchToShowQr) return;
-				selectedEntrySynced = true;
-				await db.matchscouting.update(matchToShowQr.match_team_key, {
-					synced: true
-				});
-				logger.debug('Done with db update');
-			}}
-		>
-			<BLabel>Mark as synced/received</BLabel>
-		</Button>
-		<Button
-			variant="unelevated"
-			disabled={!selectedEntrySynced}
-			on:click={async () => {
-				if (!matchToShowQr) return;
-				selectedEntrySynced = false; // JL note: i think this has to be before db.matchscouting.update, otherwise the $: code that updates selectedEntrySynced higher up will be overridden if matchToShowQr changes
-				await db.matchscouting.update(matchToShowQr.match_team_key, {
-					synced: false
-				});
-				logger.debug('Done with db update');
-			}}
-		>
-			<BLabel>Mark as not synced</BLabel>
-		</Button>
-	</div>
+	<BGroup variant="raised">
+		<div class:hidden={!(qrCodeType === 'pitscouting' && pitToShowQr)}>
+			<Button
+				variant="unelevated"
+				disabled={selectedEntrySynced}
+				on:click={async () => {
+					if (!pitToShowQr) return;
+					selectedEntrySynced = true;
+					await db.pitscouting.update(pitToShowQr, {
+						synced: true
+					});
+					logger.debug('Done with db update');
+				}}
+			>
+				<BLabel>Mark as synced/received</BLabel>
+			</Button>
+			<Button
+				variant="unelevated"
+				disabled={!selectedEntrySynced}
+				on:click={async () => {
+					if (!pitToShowQr) return;
+					selectedEntrySynced = false; // JL note: i think this has to be before db.matchscouting.update, otherwise the $: code that updates selectedEntrySynced higher up will be overridden if matchToShowQr changes
+					await db.pitscouting.update(pitToShowQr, {
+						synced: false
+					});
+					logger.debug('Done with db update');
+				}}
+			>
+				<BLabel>Mark as not synced</BLabel>
+			</Button>
+		</div>
+	</BGroup>
+	<BGroup variant="raised">
+		<div class:hidden={!(qrCodeType === 'matchscouting' && matchToShowQr)}>
+			<Button
+				variant="unelevated"
+				disabled={selectedEntrySynced}
+				on:click={async () => {
+					if (!matchToShowQr) return;
+					selectedEntrySynced = true;
+					await db.matchscouting.update(matchToShowQr.match_team_key, {
+						synced: true
+					});
+					logger.debug('Done with db update');
+				}}
+			>
+				<BLabel>Mark as synced/received</BLabel>
+			</Button>
+			<Button
+				variant="unelevated"
+				disabled={!selectedEntrySynced}
+				on:click={async () => {
+					if (!matchToShowQr) return;
+					selectedEntrySynced = false; // JL note: i think this has to be before db.matchscouting.update, otherwise the $: code that updates selectedEntrySynced higher up will be overridden if matchToShowQr changes
+					await db.matchscouting.update(matchToShowQr.match_team_key, {
+						synced: false
+					});
+					logger.debug('Done with db update');
+				}}
+			>
+				<BLabel>Mark as not synced</BLabel>
+			</Button>
+		</div>
+	</BGroup>
 </section>
 
 <SimpleSnackbar bind:this={snackbar} />

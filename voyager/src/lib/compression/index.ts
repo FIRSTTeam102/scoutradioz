@@ -132,6 +132,10 @@ export function decode(str: string): Promise<{
 						resolve(await decodeOneMatchScoutingResult(json));
 						break;
 					
+					case '1pitdata':
+						resolve(await decodeOnePitScoutingResult(json));
+						break;
+
 					default: reject(`Unknown qr code type: ${json._}`);
 				}
 			}
