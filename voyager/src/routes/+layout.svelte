@@ -58,15 +58,15 @@
 	const refreshContext: RefreshContext = writable({
 		supported: false,
 		onClick: () => {},
-		tooltip: '',
+		tooltip: ''
 	});
 
 	setContext('refreshButton', refreshContext);
-	
+
 	let refreshButtonSpinning = false;
 	let timeRefreshButtonWasPressed = 0; // For smooth stopping
 	const ANIMATION_TIME = 1000;
-	
+
 	const refreshButtonAnimationContext: RefreshButtonAnimationContext = {
 		play: () => {
 			refreshButtonSpinning = true;
@@ -74,7 +74,8 @@
 		},
 		stop: () => {
 			// Only set refreshButtonSpinning = false after some multiple of [animation_time] seconds after it started playing
-			let timeRemainingInAnimation = ANIMATION_TIME - ((Date.now() - timeRefreshButtonWasPressed) % ANIMATION_TIME)
+			let timeRemainingInAnimation =
+				ANIMATION_TIME - ((Date.now() - timeRefreshButtonWasPressed) % ANIMATION_TIME);
 			setTimeout(() => {
 				refreshButtonSpinning = false;
 			}, timeRemainingInAnimation);
@@ -85,7 +86,7 @@
 			this.stop();
 		}
 	};
-	
+
 	setContext('refreshButtonAnimation', refreshButtonAnimationContext);
 
 	// 2023-11-11 JL: SMUI's AutoAdjust behavior led to the header bar not
@@ -93,24 +94,24 @@
 	let lastScrollTop = 0;
 	let headerBarHidden = false;
 
-	function onScroll() {
+	const onScroll = () => {
 		// we want to keep as little code as possible in here for performance reasons
 		// so anything that persists should be declared outside of it
-		
+
 		let scrollTop = window.scrollY;
-		
+
 		// only update if there was enough of a change
 		if (Math.abs(lastScrollTop - scrollTop) <= headerBarHeight) return;
-		
-		headerBarHidden = (scrollTop > lastScrollTop);
+
+		headerBarHidden = scrollTop > lastScrollTop;
 		// // Scrolled down, hide
 		// if (scrollTop > lastScrollTop) headerBar.classList.add('hidden');
 		// // Scrolled up, show
 		// else headerBar.classList.remove('hidden');
-			
+
 		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
 		lastScrollTop = scrollTop;
-	}
+	};
 </script>
 
 <svelte:window on:scroll={onScroll} />
@@ -171,69 +172,79 @@
 				<LGraphic class="material-icons" aria-hidden="true">bug_report</LGraphic>
 				<LText>Debug</LText>
 			</LItem>
-			<!-- <LItem on:click={clearCache}>
-				<LGraphic class="material-icons" aria-hidden="true">update</LGraphic>
-				<LText>App update</LText>
-			</LItem> -->
 		</List>
 	</DContent>
 </Drawer>
 
 <Scrim />
-<!-- <AutoAdjust {bottomAppBar} style='display: flex; min-height: 100vh; box-sizing: border-box;'> -->
-<!-- 	<AppContent style='flex-grow: 1;' class='mdc-typography'> -->
-<!-- 		<slot /> -->
-<!-- 	</AppContent> -->
-<!-- </AutoAdjust> -->
 
-<div class="header-bar" bind:this={headerBar} class:hidden={headerBarHidden} bind:clientHeight={headerBarHeight}>
-	<TopAppBar bind:this={topAppBar} variant='static' dense style="z-index: 5">
-	<Row>
-		<Section>
-			<IconButton
-				class="material-icons"
-				aria-label="Open menu"
-				on:click={() => {
-					menuOpen = !menuOpen;
-				}}>menu</IconButton
-			>
-			<a href="/home" class="header-logo">
-				<img src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`} alt="Scoutradioz logo" />
-			</a>
-		</Section>
-		<Section align="end" toolbar>
-			{#if $refreshContext.supported}
-				<Wrapper>
-					<IconButton
-						class={classMap({ 'material-icons': true, 'refreshButton': true, 'spinning': refreshButtonSpinning, })}
-						aria-label="Sync"
-						on:click={async () => {
-							if (!$refreshContext.onClick) return;
-							refreshButtonAnimationContext.play();
-							await $refreshContext.onClick();
-							refreshButtonAnimationContext.stop();
-						}}
-						disabled={!$deviceOnline || refreshButtonSpinning}>sync</IconButton
-					>
-					{#if $refreshContext.tooltip}
-						<Tooltip>{$refreshContext.tooltip}</Tooltip>
-					{/if}
-				</Wrapper>
-			{/if}
-			<!-- <IconButton class="material-icons" aria-label="Change language">language</IconButton> -->
-			<Wrapper>
-				<IconButton class="material-icons" aria-label="Share" on:click={() => share()}>share</IconButton >
-				<Tooltip>Share</Tooltip>
-			</Wrapper>
-		</Section>
-	</Row>
-</TopAppBar></div>
+<div
+	class="header-bar"
+	bind:this={headerBar}
+	class:hidden={headerBarHidden}
+	bind:clientHeight={headerBarHeight}
+>
+	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
+		<Row>
+			<Section>
+				<IconButton
+					class="material-icons"
+					aria-label="Open menu"
+					on:click={() => {
+						menuOpen = !menuOpen;
+					}}>menu</IconButton
+				>
+				<a href="/home" class="header-logo">
+					<img
+						src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`}
+						alt="Scoutradioz logo"
+					/>
+				</a>
+			</Section>
+			<Section align="end" toolbar>
+				{#if $refreshContext.supported}
+					<Wrapper>
+						<IconButton
+							class={classMap({
+								'material-icons': true,
+								refreshButton: true,
+								spinning: refreshButtonSpinning
+							})}
+							aria-label="Sync"
+							on:click={async () => {
+								if (!$refreshContext.onClick) return;
+								refreshButtonAnimationContext.play();
+								await $refreshContext.onClick();
+								refreshButtonAnimationContext.stop();
+							}}
+							disabled={!$deviceOnline || refreshButtonSpinning}
+						>
+							{#if $deviceOnline}
+								sync
+							{:else}
+								sync_disabled
+							{/if}
+						</IconButton>
+						{#if $refreshContext.tooltip}
+							<Tooltip>{$refreshContext.tooltip}</Tooltip>
+						{/if}
+					</Wrapper>
+				{/if}
+				<!-- <IconButton class="material-icons" aria-label="Change language">language</IconButton> -->
+				<!-- <Wrapper> -->
+				<!-- 	<IconButton class="material-icons" aria-label="Share" on:click={() => share()} -->
+				<!-- 		>qr_code_scanner</IconButton -->
+				<!-- 	> -->
+				<!-- 	<Tooltip>Share</Tooltip> -->
+				<!-- </Wrapper> -->
+			</Section>
+		</Row>
+	</TopAppBar>
+</div>
 
-<!-- <AutoAdjust {topAppBar}> -->
-	<div id="page">
-		<slot />
-	</div>
-<!-- </AutoAdjust> -->
+<div id="page">
+	<slot />
+</div>
 
 <SimpleSnackbar bind:this={snackbar} />
 
@@ -247,7 +258,7 @@
 		z-index: 5;
 		width: 100%;
 		top: 0px;
-		transition: top .15s ease-out;
+		transition: top 0.15s ease-out;
 		&:global(.hidden) {
 			top: -$header-height;
 		}

@@ -10,7 +10,7 @@ export class HttpError extends Error {
 
 export async function fetchJSON<T = any>(url: string, options?: RequestInit): Promise<T> {
 	let response = await fetch(url, options);
-	
+
 	let json = await response.json();
 	if (response.ok)
 		return json;
@@ -31,26 +31,26 @@ export function sortWithTeamKeyByNumber(a: hasTeamKey, b: hasTeamKey) {
 /** Retrieves the desired width and height of an element which wishes to take up the entire space of the screen EXCLUDING what is above it and the bottom nav bar. */
 export function getAvailableWindowSize(parentElem: HTMLElement) {
 	let parentRect = parentElem.getBoundingClientRect();
-	
+
 	// Get element's y position without accounting for transforms,
 	// 	because the sliding tabs fly transition applies a y transform
 	let offsetTop = 0;
-	let el: HTMLElement|null|undefined = parentElem;
+	let el: HTMLElement | null | undefined = parentElem;
 	do {
 		offsetTop += el.offsetTop;
 		el = el?.parentElement
 	} while (el);
-	
+
 	let bottomNavBar = document.getElementById('bottom-nav-bar');
 	let bottomNavBarHeight = bottomNavBar ? bottomNavBar.getBoundingClientRect().height : 0;
-	
+
 	let windowWidth = window.innerWidth;
 	let windowHeight = window.innerHeight;
-	
+
 	let availableWidth = windowWidth; // Maybe include the possibility of parentElem having margins later
 	let availableHeight = windowHeight - offsetTop - bottomNavBarHeight;
 	// let availableHeight = windowHeight - parentRect.top - bottomNavBarHeight;
-	
+
 	return {
 		width: availableWidth,
 		height: availableHeight,
@@ -71,7 +71,7 @@ export function simpleStringToHash(string: string) {
 		hash = ((hash << 5) - hash) + char;
 		hash = hash & hash;
 	}
-     
+
 	return hash;
 }
 
@@ -86,7 +86,7 @@ export async function getStringChecksum(string: string) {
 	const encoder = new TextEncoder();
 	const byteArray = encoder.encode(string);
 	const arrayBuffer = await crypto.subtle.digest('SHA-1', byteArray);
-	return arrayBufferHashToString(arrayBuffer).substring(0, CHECKSUM_LENGTH); 
+	return arrayBufferHashToString(arrayBuffer).substring(0, CHECKSUM_LENGTH);
 }
 
 function arrayBufferHashToString(arrayBuffer: ArrayBuffer) {
