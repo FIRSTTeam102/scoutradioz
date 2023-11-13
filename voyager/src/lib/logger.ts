@@ -31,6 +31,13 @@ export function logLevelStringToNumber(level: logLevel): number {
 let buffer: Log[] = [];
 let idleCallbackID: number | undefined;
 
+// Safari doesn't support requestIdleCallback. In this case, just use a regular ole timeout.
+if (!('requestIdleCallback' in globalThis)) {
+	globalThis.requestIdleCallback = function (cb, options) {
+		return setTimeout(cb, options?.timeout);
+	}
+}
+
 class Logger {
 	group: string;
 	constructor(group: string) {
