@@ -3,8 +3,44 @@
 	import { getAvailableWindowSize } from './utils';
 	import { getLogger } from './logger';
 	import type { SnackbarContext } from './types';
+	import UAParser from 'ua-parser-js';
 
 	const logger = getLogger('lib/QrCodeScanner');
+
+	let useragent;
+	let shouldFlipDimensionsInPortrait = false;
+	let shouldRequestBiggerResolutionAndCrop = false;
+	if ('navigator' in globalThis && 'userAgent' in navigator) {
+		const parser = new UAParser(navigator.userAgent);
+		useragent = parser.getResult();
+		// Known devices that flip horizontal/vertical dimensions:
+		// 	- iOS: all browsers, including firefox, only in portrait mode
+		//  - Android: All browsers except firefox, only in portrait mode
+		// 	- Desktop with webcam: None that I could find
+		const isFirefox = useragent.browser.name?.toLowerCase().startsWith('firefox');
+
+		if (useragent.device.type === 'mobile') {
+			if (isFirefox) {
+				let isIOS = !!(
+					useragent.os.name?.toLowerCase().startsWith('ios') ||
+					useragent.device.vendor?.toLowerCase().startsWith('apple')
+				);
+				shouldFlipDimensionsInPortrait = isIOS;
+				shouldRequestBiggerResolutionAndCrop = !isIOS;
+				logger.debug(
+					`Browser was detected as Firefox. shouldFlipDimensions=${shouldFlipDimensionsInPortrait} shouldRequestBiggerResolutionAndCrop=${shouldRequestBiggerResolutionAndCrop}`
+				);
+			} else shouldFlipDimensionsInPortrait = true;
+		} else {
+			// Firefox on desktop seems to also not like adjusting the resolution to fit what's requested
+			if (isFirefox) {
+				shouldFlipDimensionsInPortrait = true;
+			}
+		}
+	} else {
+		logger.warn('Could not retreive useragent!');
+	}
+	logger.info('shouldFlipDimensions: ', shouldFlipDimensionsInPortrait);
 
 	////////////////////////
 	// Fix iOS AudioContext
@@ -72,7 +108,7 @@
 				onQrCodeData(ev.data.data, ev.data.ms);
 			}
 			waitingForWorker = false;
-			if (lastMessageSentTime) debugInfo = `QR scan time: ${ev.data.ms} ms, from message sent to now: ${performance.now() - lastMessageSentTime}`;
+			// if (lastMessageSentTime) debugInfo = `QR scan time: ${ev.data.ms} ms, from message sent to now: ${performance.now() - lastMessageSentTime}`;
 		};
 	}
 
@@ -114,7 +150,7 @@
 		if (!video || !ctx || !worker) return logger.error('no video or ctx or worker');
 		if (video.readyState === video.HAVE_ENOUGH_DATA) {
 			let { videoWidth, videoHeight } = video;
-			
+
 			let canvasWidth = videoWidth;
 			let canvasHeight = videoHeight;
 			// JL TODO: I want to improve the "crispness" of the preview box, but to do so I think I need to increase the res of the canvas
@@ -161,11 +197,20 @@
 			);
 			ctx.stroke();
 			// debugInfo = `Draw time: ${performance.now() - time}\n`;
-			
-			let doScan = !waitingForWorker && (time - lastMessageSentTime > MIN_SCAN_INTERVAL);
-			if (waitingForWorker && lastMessageSentTime && time - lastMessageSentTime > MAX_SCAN_INTERVAL) {
-				snackbar.open(`WARNING: QR code WebWorker has not responded in over ${MAX_SCAN_INTERVAL} ms. Attempting again...`, 4000);
-				logger.warn(`WARNING: QR code WebWorker has not responded in over ${MAX_SCAN_INTERVAL} ms. Attempting again...`);
+
+			let doScan = !waitingForWorker && time - lastMessageSentTime > MIN_SCAN_INTERVAL;
+			if (
+				waitingForWorker &&
+				lastMessageSentTime &&
+				time - lastMessageSentTime > MAX_SCAN_INTERVAL
+			) {
+				snackbar.open(
+					`WARNING: QR code WebWorker has not responded in over ${MAX_SCAN_INTERVAL} ms. Attempting again...`,
+					4000
+				);
+				logger.warn(
+					`WARNING: QR code WebWorker has not responded in over ${MAX_SCAN_INTERVAL} ms. Attempting again...`
+				);
 				doScan = true;
 			}
 
@@ -179,39 +224,8 @@
 					data: imageData.data,
 					width: imageData.width,
 					height: imageData.height,
-					alwaysRespond: true,
+					alwaysRespond: true
 				});
-
-				/*
-					const track = (video.srcObject as MediaStream).getTracks()[0];
-					if (!track) return;
-					let constraints = track.getConstraints();
-					let { width, height } = getAvailableWindowSize(parent);
-					// Add debug info
-					debugInfo =  `Video stream: ${video.videoWidth}x${video.videoHeight} <br/>
-					Available: ${width}x${height} <br/>
-					Canvas size: ${canvasWidth}x${canvasHeight} <br/>
-					Flipped dimensions: ${flippedDimensions} <br/>
-
-					---------------- <br/>
-					Constraints: <br/>
-					`
-					for (let key in constraints) {
-						// @ts-ignore
-						debugInfo += `${key}: ${JSON.stringify(constraints[key])} <br/>`;
-					}
-					debugInfo += `
-					---------------- <br/>
-					Supported constraints: <br/>
-					`
-					if (typeof track.getCapabilities === "function") {
-						let capabilities = track.getCapabilities();
-						for (let key in capabilities) {
-						// @ts-ignore
-						debugInfo += `${key}: ${JSON.stringify(capabilities[key])} <br/>`;
-						}
-					}
-				*/
 			}
 		}
 		requestAnimationFrame(tick);
@@ -236,36 +250,43 @@
 		let aspectRatio = availableWidth / availableHeight;
 
 		let videoConstraints: MediaTrackConstraints = {
-			facingMode: 'environment',
-			aspectRatio: {
-				ideal: aspectRatio
-			}
+			facingMode: 'environment'
 		};
 
 		const idealVideoShortSide = 640; // The resolution can vary slightly; higher resolutions are more expensive to process but if the resolution is too low, we MIGHT not be able to scan the highest-density codes
 		let idealVideoWidth: number, idealVideoHeight: number;
 
 		// Wide screens: prefer wider aspect ratio
+		// TODO: (maybe) check device orientation, i.e. screen.orientation or window.orientation (latter deprecated)
+		// if shouldFlipDimensionsInPortrait is true, then we are expecting
 		if (aspectRatio > 1) {
 			idealVideoWidth = Math.round(idealVideoShortSide * aspectRatio); // multiply by aspect ratio to get long side
 			idealVideoHeight = idealVideoShortSide;
-			logger.debug(`aspectRatio > 1, width=${idealVideoWidth} height=${idealVideoHeight}`)
+			logger.debug(`aspectRatio > 1, width=${idealVideoWidth} height=${idealVideoHeight}`);
+		}
+		// Phones in portrait mode that we expect to flip their vertical/horizontal resolution
+		else if (shouldFlipDimensionsInPortrait) {
+			idealVideoWidth = Math.round(idealVideoShortSide / aspectRatio);
+			idealVideoHeight = idealVideoShortSide;
+			logger.debug(
+				`Phone in portrait mode where we expect to flip dimensions, width=${idealVideoWidth} height=${idealVideoHeight}`
+			);
 		}
 		// Phones: Prefer a narrower aspect ratio, extending slightly below the nav bar to provide the illusion of a fullscreen scanner
 		else {
 			idealVideoWidth = idealVideoShortSide;
 			idealVideoHeight = Math.round(idealVideoShortSide / aspectRatio); // divide by aspect ratio to get long side
-			logger.debug(`aspectRatio <= 1, width=${idealVideoWidth} height=${idealVideoHeight}`)
+			logger.debug(`aspectRatio <= 1, width=${idealVideoWidth} height=${idealVideoHeight}`);
 		}
-		
+
 		videoConstraints.width = {
 			ideal: idealVideoWidth,
-			min: idealVideoShortSide * .8,
+			min: idealVideoShortSide * 0.8
 		};
 		videoConstraints.height = {
 			ideal: idealVideoHeight,
-			min: idealVideoShortSide * .8,
-		}
+			min: idealVideoShortSide * 0.8
+		};
 
 		let stream: MediaStream;
 
@@ -276,24 +297,27 @@
 				video: videoConstraints
 			});
 		} catch (err) {
-			// If there's an OverConstrained error, try removing min/max constraints
-			snackbar.open(
-				'Video stream was over-constrained; attempting to re run without video stream min/max'
-			);
 			logger.error(err);
-			logger.info(
-				'Attempting to re-constrain video without min/max attributes and only with ideals'
-			);
-			logger.debug(videoConstraints);
+			if (err instanceof Error && err.name === 'OverconstrainedError') {
+				// If there's an OverConstrained error, try removing min/max constraints
+				snackbar.open(
+					'Video stream was over-constrained; attempting to re run without video stream min/max'
+				);
+				logger.info(
+					'Attempting to re-constrain video without min/max attributes and only with ideals'
+				);
+				logger.debug(videoConstraints);
 
-			delete videoConstraints.width.min;
-			delete videoConstraints.width.max;
-			delete videoConstraints.height.min;
-			delete videoConstraints.height.max;
+				delete videoConstraints.width.min;
+				delete videoConstraints.height.min;
 
-			stream = await navigator.mediaDevices.getUserMedia({
-				video: videoConstraints
-			});
+				stream = await navigator.mediaDevices.getUserMedia({
+					video: videoConstraints
+				});
+			} else {
+				snackbar.error('We were unable to start the camera. Is another app already using it, or does your device not have a camera?');
+				throw err;
+			}
 		}
 
 		video!.srcObject = stream;
@@ -303,44 +327,6 @@
 		// 	We should be able to request the exact height/width in this case, instead of dealing with ideal/min/max values
 		video!.onloadedmetadata = async () => {
 			logger.debug('Video metadata loaded', video!.videoWidth, video!.videoHeight);
-
-			// Detect whether the height and width values have been swapped by calculating the distance between video.videoWidth and videoConstraints.width.ideal and between video.videoHeight and videoConstraints.height.ideal
-			let widthDistance = Math.abs(video!.videoWidth - idealVideoWidth);
-			let heightDistance = Math.abs(video!.videoHeight - idealVideoHeight);
-			let distance = widthDistance + heightDistance;
-			let widthDistanceSwapped = Math.abs(video!.videoWidth - idealVideoHeight);
-			let heightDistanceSwapped = Math.abs(video!.videoHeight - idealVideoWidth);
-			let distanceSwapped = widthDistanceSwapped + heightDistanceSwapped;
-			
-			logger.debug(`idealWidth=${idealVideoWidth} idealHeight=${idealVideoHeight} videoWidth=${video!.videoWidth} videoHeight=${video!.videoHeight} distance=${distance} distanceSwapped=${distanceSwapped}`)
-
-			// This means that the height and width values have been swapped, because if they were not, the distance between the ideal values and the actual values would be the same or very small
-			if (distanceSwapped < distance) {
-				logger.info(
-					'Video height and width have been swapped. Re-constraining video stream with swapped values.'
-				);
-
-				let newVideoConstraints: MediaTrackConstraints = {
-					// Since the width and height will be flipped again, just request new width = old width and new height = old height,
-					//  then the browser will automatically flip to what we actually want
-					width: video!.videoWidth,
-					height: video!.videoHeight
-				};
-
-				const track = stream.getVideoTracks()[0];
-				if (!track) throw new Error('No video track!!');
-
-				await track.applyConstraints(newVideoConstraints);
-
-				// JL TODO: actually proactively flip dimensions if it's been set to true before, maybe with a store or smth
-				// snackbar.open(
-				// 	'Your device flipped video stream width and height. Please let the devs know if you see this message just so we know. This message will be removed in the future.'
-				// );
-				flippedDimensions = true;
-			} else {
-				flippedDimensions = false;
-			}
-
 			video!.play();
 		};
 	}
@@ -425,23 +411,39 @@
 	});
 </script>
 
-<div bind:this={parent} class='parent'>
+<div bind:this={parent} class="parent">
 	<!-- <input type="number" bind:value={MIN_SCAN_INTERVAL} /> -->
 	<!-- <div class="debug-info">{@html debugInfo}</div> -->
 	<canvas id="canvas" bind:this={canvas} />
+	{#if scanning}
+	<div id="wrongResolutionMsg">
+		If you can see this, it means we predicted the resolution of the video stream wrong. Please send
+		a screenshot to the Scoutradioz discord server with your OS version, device model, and browser.
+	</div>
+	{/if}
 </div>
 
 <svelte:window on:resize={onResize} />
 
 <svelte:body style="overflow: hidden;" />
 
-<style lang='scss'>
+<style lang="scss">
 	body {
 		overflow: hidden;
 	}
 	#canvas {
 		width: 100%;
 		position: absolute; // to prevent scrollbar from appearing
+		z-index: 1;
+	}
+	#wrongResolutionMsg {
+		position: fixed;
+		bottom: 12px;
+		left: 8px;
+		font-size: 0.7em;
+		text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+		color: white;
+		font-weight: bold;
 	}
 	.debug-info {
 		position: absolute;
