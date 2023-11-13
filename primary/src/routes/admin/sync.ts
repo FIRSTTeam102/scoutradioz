@@ -34,6 +34,14 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	// Properties of the full event list to add to the simple event list
 	let keysToAdd = ['timezone'];
 	
+	// For re-adding team keys that are already in db
+	let eventsInDb = await utilities.find('events', {year});
+	// Build a quick map of events per key
+	let eventsInDbMap: Dict<Event> = {};
+	eventsInDb.forEach(event => eventsInDbMap[event.key] = event);
+	let numWithTeamKeysReAdded = 0;
+	logger.debug(`Built event map from db, # in db = ${eventsInDb.length} and # from TBA = ${events.length}`);
+	
 	for (let i in events) {
 		let thisEvent = events[i];
 		let thisEventFull;
@@ -54,6 +62,13 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 		for (let key of keysToAdd) {
 			thisEvent[key] = thisEventFull[key];
 		}
+		// Add team_keys from eventsInDbMap
+		let thisEventFromDb = eventsInDbMap[thisEvent.key];
+		if (thisEventFromDb && thisEventFromDb.team_keys && thisEventFromDb.team_keys.length > 0) {
+			logger.trace(`Enriching event ${thisEvent.key} with team_keys from db!`);
+			thisEvent.team_keys = thisEventFromDb.team_keys;
+			numWithTeamKeysReAdded++;
+		}
 	}
 	
 	logger.info(`Enriched ${events.length} events with the following keys: ${keysToAdd.join(', ')}`);
@@ -65,7 +80,7 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	
 	logger.info(`${removeResult.deletedCount} removed, ${insertResult ? insertResult.insertedCount : 0} inserted`);
 	
-	res.send({message: `Found ${events.length} events.`, length: events.length});
+	res.send({message: `Found ${events.length} events. ${numWithTeamKeysReAdded} events already had its team list in the database.`, length: events.length});
 }));
 
 // Function to refresh the teams of specific events of the given year, with a start and end number, with events being pulled from the DB
