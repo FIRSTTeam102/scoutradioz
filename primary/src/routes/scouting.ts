@@ -41,6 +41,12 @@ router.get('/match*', wrap(async (req, res) => {
 		return;
 	}
 	
+	let matchKey = match_team_key.split('_').slice(0, 2).join('_');
+	
+	// Retrieve match information & verify it exists
+	let match = await utilities.findOne('matches', {key: matchKey}, {}, {allowCache: true});
+	if (!match) throw new e.NotFoundError(res.msg('errors.noMatchFound', {matchKey})); 
+	
 	//check if there is already data for this match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	let scoringdata: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
@@ -70,25 +76,37 @@ router.get('/match*', wrap(async (req, res) => {
 		{allowCache: true}
 	);
 	
-	
 	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
-	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	
+	let team: Team;
+	
+	// Check if team has a letter at the end, e.g. frc102B
+	let letterTeamMatch = /(frc\d+)[a-zA-Z]$/g.exec(teamKey);
+	// if so, just find the info for the team without the letter on the end (found w/ a capturing group1)
+	if (letterTeamMatch) {
+		team = await utilities.findOne('teams', {key: letterTeamMatch[1]}, {}, {allowCache: true});
+	}
+	else {
+		team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	}
 	
 	if (!team) throw new e.UserError(req.msg('scouting.invalidTeam', {team: teamKey}));
 
 	let allianceLocale = (alliance.toLowerCase().startsWith('b')) ? req.msg('alliance.blueShort') : req.msg('alliance.redShort');
-	let title = `#${scoringdata[0]?.match_number} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
-
+	let title = `#${match.match_number} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
+	let heading = res.msg('scouting.matchHeading', {match: match.match_number, team: teamKey.substring(3)});
+	
 	//render page
 	res.render('./scouting/match', {
 		title: title,
 		layout: layout,
 		key: match_team_key,
 		alliance: alliance,
-		answers: answers,
-		teamKey: teamKey,
-		images: images,
-		team: team,
+		heading,
+		answers,
+		teamKey,
+		images,
+		team,
 	});
 }));
 

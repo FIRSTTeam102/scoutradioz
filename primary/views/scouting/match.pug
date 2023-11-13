@@ -28,7 +28,6 @@ block content
 		}
 		*/
 	script(src=`${fileRoot}/js/script-matchscouting.js?v=${functionVersion}`)
-	- var titleParts = key.split('_').map(key => key.replace(/\D/g, '')); // 2022mrcmp_qm77_frc102 to ['2022', '77', '102']
 	- var btnColor = alliance ? ((alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
 	p
 	if images && images.main
@@ -37,7 +36,7 @@ block content
 	br
 	h3
 		div(class=`${btnColor} w3-btn`)
-			span!=msg('scouting.matchHeading', {match: titleParts[1], team: titleParts[2]})
+			span!=heading
 	h5!=msgMarked('scouting.subheading', {team: team.nickname, city: team.city, state: team.state_prov})
 	p
 	form#matchform(name="matchform" class="w3-centered")
