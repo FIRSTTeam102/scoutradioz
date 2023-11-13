@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "sst bind \"vite dev --host\"",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "sst bind vite preview",
     "sass-extras": "sass src/theme/extras.scss static/extras.css --load-path=node_modules",
     "smui-theme": "smui-theme compile static/smui.css -i src/theme",
     "postinstall": "yarn sass-extras && yarn smui-theme",

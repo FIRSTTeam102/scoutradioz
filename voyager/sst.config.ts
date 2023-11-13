@@ -1,8 +1,6 @@
 import type { SSTConfig } from 'sst';
 import { SvelteKitSite } from 'sst/constructs';
 
-const allowedDeployStages = ['test', 'qa', 'prd'];
-
 export default {
 	config(_input) {
 		return {
