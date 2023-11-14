@@ -27,6 +27,8 @@
 	import { setContext } from 'svelte';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 	import { writable } from 'svelte/store';
+	
+	import '../app.css';
 
 	afterNavigate(() => (menuOpen = false));
 
