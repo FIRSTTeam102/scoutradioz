@@ -129,26 +129,3 @@ section.comfortable {
 		color: color-palette.$grey-900;
 	}
 }
-
-.grid {
-	display: grid;
-}
-
-// To specify a gap size, just use an inline style attribute
-.columns {
-	display: grid;
-	grid-template-columns: auto;
-	&.center {
-		place-items: center;
-	}
-}
-
-// To specify a gap size, just use an inline style attribute
-.rows {
-	display: grid;
-	grid-auto-flow: column;
-	
-	&.center {
-		place-items: center;
-	}
-}
