@@ -41,7 +41,7 @@ export declare class LightError extends HttpError {
  * @param condition Condition to test
  * @param message If message is a string, then an {@link InternalServerError} is thrown with the message; if it is an HttpError, then this function will throw with that provided error.
  * @example
- * 	import e, {assert} from '@firstteam102/http-errors';
+ * 	import e, {assert} from 'scoutradioz-http-errors';
  * 	assert(false, 'This is an error message'); // throws new InternalServerError('This is an error message')
  * 	assert(true); // Does not throw
  * 	assert(false); // throws new InternalServerError('Internal Server Error')

@@ -32,14 +32,17 @@ _(The latter was introduced after upload.scoutradioz.com was created, but both r
 Scoutradioz is subscribed to [The Blue Alliance's Firehose](https://www.thebluealliance.com/apidocs/webhooks#firehose), which provides the site with up-to-date information on every supported match and event. This Lambda function handles data provided by the Firehose, and sends push notifications to scouters who are assigned to an upcoming match & have notifications enabled.
 
 ### Helper packages
-#### [scoutradioz-utilities](https://www.npmjs.com/package/@firstteam102/scoutradioz-utilities)
-An NPM package that contains our database manager / caching wrapper.
 
-#### [scoutradioz-helpers](https://www.npmjs.com/package/@firstteam102/scoutradioz-helpers)
-An NPM package that contains helper functions needed across multiple packages, such as parsing match data, calculating metrics, and listing team images.
+**NOTE:** Originally, the helper packages were published on NPM with the prefix `@firstteam102` - https://www.npmjs.com/org/firstteam102 - but to simplify the process of updating the code, they are no longer being published to NPM and instead are being linked internally. For example, in `primary`'s `package.json`, `"@firstteam102/scoutradioz-utilities": "1.0.2"` has been changed to `"scoutradioz-utilities": "../scoutradioz-utilities/"`. Most of the `@firstteam102` packages on NPM have been deprecated.
 
-#### [scoutradioz-http-errors](https://www.npmjs.com/package/@firstteam102/http-errors)
-A small NPM package that exposes a small handful of HTTP errors for use inside Express routes. We created this one instead of alternatives because it has no dependencies and only contains what we need.
+#### scoutradioz-utilities
+A package that contains our database manager / caching wrapper.
+
+#### scoutradioz-helpers
+A package that contains helper functions needed across multiple packages, such as parsing match data, calculating metrics, and listing team images.
+
+#### scoutradioz-http-errors
+A small package that exposes a small handful of HTTP errors for use inside Express routes. We created this one instead of alternatives because it has no dependencies and only contains what we need.
 
 #### scoutradioz-eslint
 ESLint plugin, to assist development, which enforces a title being provided any time a page is rendered.
