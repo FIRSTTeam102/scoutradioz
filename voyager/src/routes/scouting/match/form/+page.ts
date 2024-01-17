@@ -11,10 +11,9 @@ export const load: PageLoad = async ({ url, fetch }) => {
 	}
 
 	const key = url.searchParams.get('key');
-	// todo: make more robust, probably into helper function, then consider making one route to show the form for both pit & match
-	const teamNumber = Number(key?.split('_')[2]?.replace('frc', ''));
-	
 	if (!key) throw error(400, new Error('Match-team key not specified'));
+
+	const team_key = key.split('_')[2];
 
 	const layout = db.layout
 		.where({
@@ -29,6 +28,11 @@ export const load: PageLoad = async ({ url, fetch }) => {
 		.where('match_team_key').equals(key).first();
 	
 	if (!matchScoutingEntry) throw error(404, new Error(`Match scouting assignment not found for key ${key}!`));
+	
+	const team = await db.teams
+		.where('key').equals(team_key).first();
+	
+	if (!team) throw error(404, new Error(`Team info not found for key ${team_key}!`));
 
-	return { layout, key, teamNumber, matchScoutingEntry };
+	return { layout, key, team, matchScoutingEntry };
 };

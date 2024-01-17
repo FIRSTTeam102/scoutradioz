@@ -9,6 +9,7 @@
 	import { deviceOnline, event_key, org_key, userId, userName } from '$lib/stores';
 	import { fetchJSON } from '$lib/utils';
 	import type { BulkWriteResult } from 'mongodb';
+	import Card from '@smui/card';
 
 	export let data: PageData;
 
@@ -22,9 +23,9 @@
 
 	$: scouterRecord = $userId
 		? {
-			id: $userId,
-			name: $userName
-		}
+				id: $userId,
+				name: $userName
+		  }
 		: undefined;
 
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
@@ -97,8 +98,7 @@
 							synced: true
 						});
 					}
-				}
-				else logger.info('Device offline; not attempting a cloud sync');
+				} else logger.info('Device offline; not attempting a cloud sync');
 				goto('/scouting/match');
 			},
 			label: 'Done (Back to list)',
@@ -116,12 +116,28 @@
 	console.log(JSON.stringify(data.matchScoutingEntry));
 </script>
 
-<h1>{data.matchScoutingEntry.team_key}, {data.matchScoutingEntry.alliance}</h1>
+<div class="grid mt-4">
+	<Card padded class="place-self-center bg-red-600">
+		<h2>
+			Match #{data.matchScoutingEntry.match_number}, Team #{data.matchScoutingEntry.team_key.substring(
+				3
+			)}
+		</h2>
+		<s1>
+			{data.team.nickname}
+			{#if data.team.city && data.team.state_prov}
+				<span class="unimportant">from {data.team.city}, {data.team.state_prov}</span>
+			{:else if data.team.city && data.team.country}
+				<span class="unimportant">from {data.team.city}, {data.team.country}</span>
+			{/if}
+		</s1>
+	</Card>
+</div>
 <ScoutingForm
 	bind:allDefaultValues
 	layout={data.layout}
 	bind:formData
-	teamNumber={data.teamNumber}
+	teamNumber={data.team.team_number}
 />
 
 <BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />
