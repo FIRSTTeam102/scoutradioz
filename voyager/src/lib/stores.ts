@@ -1,9 +1,12 @@
-import { writable } from 'svelte/store';
+import { writable, get as getStore, readable, derived } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 
-import { get as getStore } from 'svelte/store';
 import { liveQuery } from 'dexie';
 import db from './localDB';
+import { getLogger } from '$lib/logger';
+
+const logger = getLogger('lib/stores');
+
 export { getStore };
 
 // todo: real user
@@ -35,48 +38,40 @@ else console.warn('Was unable to add an event listener for deviceOnline. If you 
 
 const userObservable = liveQuery(async () => {
 	return await db.user.toCollection().first();
-	// const userDB = await db.user.toCollection().first();
-	// console.log('userdb', userDB)
-	// if (userDB) {
-	// 	userName.set(userDB.name);
-	// 	userID.set(userDB._id);
-	// 	org_key.set(userDB.org_key);
-
-	// 	const org = await db.orgs.where('org_key').equals(userDB.org_key).first();
-	// 	if (org?.event_key) event_key.set(org.event_key);
-	// }
 });
 
-// Temporary hackiness to make sure that the stores are loaded before the page is rendered
-// TODO: a more Svelte-ish way to do this
-let dataRetrieved = false;
-let resolves: ((...args: unknown[]) => void)[] = [];
-export function whenStoresLoaded() {
-	return new Promise((resolve) => {
-		if (dataRetrieved) resolve(undefined);
-		else resolves.push(resolve);
-	});
-}
+/**
+ * Resolves once the user, org, event_key, etc. stores are loaded from Dexie.
+ * If they have already been loaded, the Promise will instantly resolve.
+ * 
+ * 	export const load: PageLoad = async ({ url, fetch }) => {
+ * 		await storesLoaded;
+ * 	}
+ */
+export const storesLoaded = new Promise((resolve, reject) => {
+	userObservable.subscribe(async (user) => {
+		try {
+			if (user) {
+				userName.set(user.name);
+				userId.set(user._id);
+				org_key.set(user.org_key);
 
-userObservable.subscribe(async (user) => {
-	if (user) {
-		userName.set(user.name);
-		userId.set(user._id);
-		org_key.set(user.org_key);
-
-		// if org exists
-		const org = await db.orgs.where('org_key').equals(user.org_key).first();
-		if (org?.event_key) {
-			event_year.set(Number(org.event_key?.substring(0, 4)));
-			event_key.set(org.event_key);
-			// if event exists
-			const event = await db.events.where('key').equals(org.event_key).first();
-			if (event?.name) {
-				event_name.set(event.name);
+				// if org exists
+				const org = await db.orgs.where('org_key').equals(user.org_key).first();
+				if (org?.event_key) {
+					event_year.set(Number(org.event_key?.substring(0, 4)));
+					event_key.set(org.event_key);
+					// if event exists
+					const event = await db.events.where('key').equals(org.event_key).first();
+					if (event?.name) {
+						event_name.set(event.name);
+					}
+				}
 			}
 		}
-	}
-
-	dataRetrieved = true;
-	resolves.forEach((resolve) => resolve(undefined));
+		catch (err) {
+			reject(err);
+		}
+		resolve(undefined);
+	});
 });

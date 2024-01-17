@@ -1,5 +1,5 @@
+// This file is for styles utilizing Material's Sass mixins but unrelated to Svelte Material UI
 @use '@material/typography/mdc-typography';
-// This file is for styles unrelated to Svelte Material UI
 // See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-snackbar
 @use '@material/snackbar/mixins';
 // See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-theme
@@ -8,6 +8,10 @@
 
 // Import the mixins.
 @use '@material/typography/mixins' as typography;
+
+// JL: This line imports Tailwind's utility classes. VS Code's SCSS extension doesn't recognize it since it's
+// 	a PostCSS rule, but since PostCSS runs after SCSS is compiled, it still loads Tailwind's classes fine.
+@tailwind utilities;
 
 :root {
 	font-size: 15px; // JL: 16px makes the interface a little too big imo on an iphone 5/SE
@@ -127,28 +131,5 @@ section.comfortable {
 	@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$red-500));
 	& .mdc-snackbar__action {
 		color: color-palette.$grey-900;
-	}
-}
-
-.grid {
-	display: grid;
-}
-
-// To specify a gap size, just use an inline style attribute
-.columns {
-	display: grid;
-	grid-template-columns: auto;
-	&.center {
-		place-items: center;
-	}
-}
-
-// To specify a gap size, just use an inline style attribute
-.rows {
-	display: grid;
-	grid-auto-flow: column;
-	
-	&.center {
-		place-items: center;
 	}
 }

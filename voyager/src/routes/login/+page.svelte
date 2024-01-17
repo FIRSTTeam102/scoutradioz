@@ -125,13 +125,13 @@
 	}
 </script>
 
-<section class="comfortable grid columns">
+<section class="comfortable">
 	<h1>Choose account for {$org?.nickname}</h1>
 	<!-- TODO: event nickname -->
 	<s1>{$org?.nickname} is currently at {$org?.event_key}</s1>
 	<br>
-	<div class="grid login-box">
-		<div>
+	<div class="md:flex flex-row sm:space-y-2 md:space-x-2">
+		<div class="basis-1/2 grow">
 			<Autocomplete
 				textfield$variant="filled"
 				textfield$style="width: 100%"
@@ -143,19 +143,14 @@
 				label={`Members of ${$org?.nickname}`}
 			/>
 		</div>
-		<Button variant="unelevated" disabled={!$user} on:click={async () => {
-			// Log in user
-			await updateUser($user);
-			goto(`/sync/lead#2`)
-		}}>
-			<BLabel>Done</BLabel>
-		</Button>
+		<div class="basis-1/2 grow">
+			<Button variant="unelevated" style="width: 100%" disabled={!$user} on:click={async () => {
+				// Log in user
+				await updateUser($user);
+				goto(`/sync/lead#2`)
+			}}>
+				<BLabel>Done</BLabel>
+			</Button>
+		</div>
 	</div>
 </section>
-
-<style lang="scss">
-	.login-box {
-		grid: auto / repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-		gap: 1em;
-	}
-</style>

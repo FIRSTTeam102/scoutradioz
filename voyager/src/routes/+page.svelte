@@ -111,20 +111,19 @@
 	<s2><i>Haven't linked an account yet?</i></s2>
 	<br />
 	<!-- TODO: custom search function to support org key search too -->
-	<div class="grid login-box">
-		<div>
-			<Autocomplete
-				textfield$variant="filled"
-				textfield$style="width: 100%"
-				style="width: 100%"
-				options={$orgs}
-				disabled={!$orgs}
-				getOptionLabel={getOrgOptionLabel}
-				bind:value={$org}
-				label="Organization"
-			/>
-		</div>
-		<div>
+	<div class="md:flex flex-row space-y-2 md:space-y-0 md:space-x-2">
+		<Autocomplete
+			class="basis-5/12"
+			textfield$variant="filled"
+			textfield$style="width: 100%"
+			style="width: 100%"
+			options={$orgs}
+			disabled={!$orgs}
+			getOptionLabel={getOrgOptionLabel}
+			bind:value={$org}
+			label="Organization"
+		/>
+		<div class="basis-5/12">
 			<Textfield
 				label="Organization Password"
 				variant="filled"
@@ -136,54 +135,16 @@
 				<HelperText slot="helper">Password set by your organization in order to log in</HelperText>
 			</Textfield>
 		</div>
-		<Button
-			variant="unelevated"
-			disabled={!$org || !$org_password}
-			on:click={() => goto(`/login?org_key=${$org?.org_key}`)}
-		>
-			<BLabel>Proceed</BLabel>
-		</Button>
+		<div class="basis-1/6 justify-self-center self-center">
+			<Button
+				class=""
+				style='width: 100%; justify-self: center'
+				variant="unelevated"
+				disabled={!$org || !$org_password}
+				on:click={() => goto(`/login?org_key=${$org?.org_key}`)}
+			>
+				<BLabel>Proceed</BLabel>
+			</Button>
+		</div>
 	</div>
-	<!-- <div class="grid columns" style="gap:1em"> -->
-	<!-- 	<CActions> -->
-	<!-- 		<Group variant="outlined"> -->
-	<!-- 			<Button variant="outlined" on:click={downloadOrgs}> -->
-	<!-- 				<Icon class="material-icons">download</Icon> -->
-	<!-- 				<BLabel>Download orgs</BLabel> -->
-	<!-- 			</Button> -->
-	<!-- 		</Group> -->
-	<!-- 	</CActions> -->
-	<!---->
-	<!-- 	{#if $orgs} -->
-	<!-- 		{#each $orgs as org} -->
-	<!-- 			<Card> -->
-	<!-- 				<Content> -->
-	<!-- 					<h5>{org.nickname}</h5> -->
-	<!-- 					Team # {org.team_number} is at {org.event_key} -->
-	<!-- 				</Content> -->
-	<!-- 				<CActions> -->
-	<!-- 					<Group variant="outlined"> -->
-	<!-- 						<Button variant="outlined" href={`/login?org_key=${org.org_key}`}> -->
-	<!-- 							<Icon class="material-icons">key</Icon> -->
-	<!-- 							<BLabel>Login</BLabel> -->
-	<!-- 						</Button> -->
-	<!-- 					</Group> -->
-	<!-- 				</CActions> -->
-	<!-- 			</Card> -->
-	<!-- 		{/each} -->
-	<!-- 	{/if} -->
-	<!-- </div> -->
 </section>
-
-<style lang="scss">
-	// .paper-container {
-	// 	margin: 24px;
-	// 	& :global(.smui-paper) {
-	// 		margin-bottom: 24px;
-	// 	}
-	// }
-	.login-box {
-		grid: auto / repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-		gap: 1em;
-	}
-</style>
