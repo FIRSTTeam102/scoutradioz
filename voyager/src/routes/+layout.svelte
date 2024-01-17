@@ -183,7 +183,7 @@
 <div
 	class="header-bar"
 	bind:this={headerBar}
-	class:hidden={headerBarHidden}
+	class:slidAway={headerBarHidden}
 	bind:clientHeight={headerBarHeight}
 >
 	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
@@ -261,7 +261,7 @@
 		width: 100%;
 		top: 0px;
 		transition: top 0.15s ease-out;
-		&:global(.hidden) {
+		&:global(.slidAway) {
 			top: -$header-height;
 		}
 	}
