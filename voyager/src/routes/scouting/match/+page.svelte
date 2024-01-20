@@ -7,6 +7,7 @@
 	import { event_key, userName } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { msg } from '$lib/i18n/index';
 
 	export let data: PageData;
 
@@ -19,7 +20,7 @@
 	
 </script>
 
-<h1>Match scouting</h1>
+<h1>{msg('scouting.match')}</h1>
 <!-- JL: yes this is hacky as HECK but i only have a few minutes to throw this together -->
 <p>
 	Current match number: {data.firstMatchNumber}
@@ -50,9 +51,9 @@
 				<List twoLine nonInteractive>
 					{#each group as asg}
 						<Item
-							class={(asg.data && asg.synced
+							class={(asg.completed && asg.synced
 								? 'complete-and-synced '
-								: asg.data && !asg.synced
+								: asg.completed && !asg.synced
 								? 'complete-locally '
 								: 'incomplete ') + asg.alliance}
 							selected={asg.assigned_scorer === $userName}
