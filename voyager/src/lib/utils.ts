@@ -1,3 +1,7 @@
+import type { Writable } from "svelte/store";
+import { storesLoaded, getStore } from "./stores";
+import { redirect } from "@sveltejs/kit";
+
 export class HttpError extends Error {
 	status: number;
 	body: any;
@@ -106,4 +110,16 @@ export function updateSimpleHash(hash: number, nextValue: number) {
 	let h2 = ((hash << 5) - hash) + nextValue;
 	h2 = h2 & h2;
 	return h2;
+}
+
+/**
+ * Does two things: (1) awaits {@link storesLoaded} and (2) redirects the user if any of the provided stores are not present.
+ */
+export async function requireStores(...stores: Writable<unknown>[]) {
+	await storesLoaded;
+	for (let store of stores) {
+		if (!getStore(store)) {
+			throw redirect(307, '/');
+		}
+	}
 }

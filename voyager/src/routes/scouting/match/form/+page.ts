@@ -1,14 +1,12 @@
 import type { PageLoad } from './$types';
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { LayoutField } from '$lib/types';
-import { event_key, getStore, org_key, } from '$lib/stores';
+import { event_key, getStore, org_key, storesLoaded, } from '$lib/stores';
+import { requireStores } from '$lib/utils';
 import db from '$lib/localDB';
 
 export const load: PageLoad = async ({ url, fetch }) => {
-	// check if logged in
-	if (!getStore(event_key) || !getStore(org_key)) {
-		throw redirect(307, '/');
-	}
+	await requireStores(event_key, org_key);
 
 	const key = url.searchParams.get('key');
 	if (!key) throw error(400, new Error('Match-team key not specified'));

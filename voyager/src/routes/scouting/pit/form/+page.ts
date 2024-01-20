@@ -1,14 +1,12 @@
 import type { PageLoad } from './$types';
 import type { LayoutField } from '$lib/types';
-import { error, redirect } from '@sveltejs/kit';
-import { event_key, event_year, getStore, org_key, } from '$lib/stores';
+import { error } from '@sveltejs/kit';
+import { event_key, event_year, getStore, org_key, storesLoaded, } from '$lib/stores';
+import { requireStores } from '$lib/utils';
 import db from '$lib/localDB';
 
 export const load: PageLoad = async ({ url, fetch }) => {
-	// check if logged in
-	if (!getStore(event_key) || !getStore(org_key)) {
-		throw redirect(307, '/');
-	}
+	await requireStores(event_key, org_key);
 
 	const team_key = url.searchParams.get('key');
 	const teamNumber = Number(team_key?.replace('frc', ''));

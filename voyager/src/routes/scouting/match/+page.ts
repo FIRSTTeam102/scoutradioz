@@ -1,14 +1,10 @@
 import type { PageLoad } from './$types';
-import { event_key, getStore, org_key, } from '$lib/stores';
+import { event_key, getStore, org_key, storesLoaded, } from '$lib/stores';
 import db from '$lib/localDB';
-import { redirect } from '@sveltejs/kit';
+import { requireStores } from '$lib/utils';
 
 export const load: PageLoad = async ({ fetch }) => {
-	// const all: (MatchScouting & { team_name: string })[] = await (await fetch('/api/assignments/match?onlyAssigned')).json();
-	// check if logged in
-	if (!getStore(event_key) || !getStore(org_key)) {
-		throw redirect(307, '/');
-	}
+	await requireStores(event_key, org_key);
 	
 	// JL: super hacky temporary thing to mark current match number
 	let firstMatchNumber: number = parseInt(localStorage.getItem(`match_number_${getStore(event_key)}`) || '1');
