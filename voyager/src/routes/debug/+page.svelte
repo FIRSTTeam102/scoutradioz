@@ -3,7 +3,7 @@
 	import db, { type Log } from '$lib/localDB';
 	import { event_key, org_key } from '$lib/stores';
 
-	import { type logLevel, logLevelStringToNumber, logLevelNumberToString } from '$lib/logger';
+	import { type logLevel, logLevelStringToNumber, logLevelNumberToString, setGlobalLogLevel, getGlobalLogLevel } from '$lib/logger';
 	import Select, { Option } from '@smui/select';
 	import DataTable, { Head, Body, Row, Cell } from '@smui/data-table';
 	import IconButton from '@smui/icon-button';
@@ -44,9 +44,14 @@
 		await navigator.clipboard.writeText(text);
 		snackbar.open(`Copied ${logs.length} log message(s) to clipboard`, 4000);
 	}
-
+	
 	let selectedLogGroup = 'all';
 	let selectedLogLevel: logLevel = 'debug';
+	
+	// Allow the changing of the recorded log level
+	let recordedLogLevel: logLevel = getGlobalLogLevel();
+	
+	$: setGlobalLogLevel(recordedLogLevel);
 </script>
 
 <h1>Debug stuff</h1>
@@ -83,6 +88,18 @@
 	Snackbar test
 </button>
 
+<h1>Logging behavior</h1>
+<Select variant="filled" label="Log level to record" bind:value={recordedLogLevel}>
+	<Option value="trace">Trace</Option>
+	<Option value="debug">Debug</Option>
+	<Option value="info">Info</Option>
+	<Option value="warn">Warn</Option>
+	<Option value="error">Error</Option>
+	<Option value="fatal">Fatal</Option>
+</Select>
+<div>Logs at or above this level will be recorded; logs below this level will be ignored.</div>
+
+
 <h1>Logs</h1>
 
 <Select variant="filled" label="Log group" bind:value={selectedLogGroup}>
@@ -94,7 +111,7 @@
 	{/if}
 </Select>
 
-<Select variant="filled" label="Level" bind:value={selectedLogLevel}>
+<Select variant="filled" label="Display levels:" bind:value={selectedLogLevel}>
 	<Option value="trace">Trace</Option>
 	<Option value="debug">Debug</Option>
 	<Option value="info">Info</Option>
@@ -104,6 +121,11 @@
 </Select>
 
 <IconButton class="material-icons" on:click={copyToClipboard}>content_copy</IconButton>
+<IconButton class="material-icons" on:click={async () => {
+	if (confirm('Delete all logs stored on the device?')) {
+		await db.logs.clear();
+	}
+}}>delete</IconButton>
 
 <p>Note: Table is limited to 100 messages. Click the clipboard button to copy all logs (with the current filter) to the clipboard.</p>
 
