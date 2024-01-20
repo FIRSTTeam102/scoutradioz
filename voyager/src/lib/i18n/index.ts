@@ -41,11 +41,11 @@ export class I18n {
 		Object.assign(this.config, options);
 
 		// Get list of locales that are available to be imported
+		// TODO maybe: Refactor to store locales in Dexie to reduce network activity?
 		const locales = import.meta.glob('./locales/*.json') as Record<
 			string,
 			() => Promise<LocaleTree>
 		>;
-		console.log('LIST OF LOCALES:', locales);
 		this.availableLocales = locales;
 
 		this.locale = this.config.defaultLocale;
@@ -58,13 +58,20 @@ export class I18n {
 	 * Should be run inside +layout.ts
 	 */
 	async middleware() {
-		let possibleLocales = [...navigator.languages];
-		let localeCookie = Cookies.get(this.config.cookie);
-		if (localeCookie) possibleLocales.push(localeCookie);
-
+		let possibleLocales = [
+			// 1st priority: query parameter (if set)
+			('location' in globalThis) && new URLSearchParams(location.search).get(this.config.queryParameter),
+			// 2nd priority: cookie (if set)
+			Cookies && Cookies.get(this.config.cookie),
+			// then, navigator.languages (browser default[s])
+			...navigator.languages
+		];
+		
 		this.fallbackChain = []; // Reset for each page load
 		for (let _locale of possibleLocales) {
 			try {
+				if (!_locale) continue; // for undefined/false/null inside possibleLocales
+
 				let locale = new Intl.Locale(_locale).baseName?.toLocaleLowerCase();
 				if (
 					!locale || // invalid locale
@@ -87,6 +94,9 @@ export class I18n {
 				logger.error('Failed to parse locale: ', _locale, 'with error:', e);
 			}
 		}
+		this.locale = this.fallbackChain[0] || this.config.defaultLocale;
+		
+		logger.debug('Locale chain:', this.fallbackChain);
 		this.notifyReady();
 	}
 
@@ -98,7 +108,9 @@ export class I18n {
 
 	/** Get info about all loaded locales */
 	getLocales() {
-		return Object.keys(this.locales).map((locale) => {
+		return Object.keys(this.availableLocales).map((localePath) => {
+			// e.g. ./locales/en.json -> en
+			let locale = localePath.replace('./locales/', '').replace('.json', '')
 			return {
 				lang: locale,
 				name: this.getLocaleName(locale),
@@ -325,7 +337,7 @@ interface I18nParameters {
 
 // Singleton instance and exported methods
 export const i18n = new I18n({});
-console.log('i18n', i18n);
+console.log(i18n)
 
 export const msg = i18n.msg.bind(i18n);
 export const msgUrl = i18n.msgUrl.bind(i18n);

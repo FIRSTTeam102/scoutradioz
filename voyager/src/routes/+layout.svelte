@@ -23,11 +23,14 @@
 	import IconButton from '@smui/icon-button';
 	import { assets } from '$app/paths';
 	import { share } from '$lib/share';
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { setContext } from 'svelte';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 	import { writable } from 'svelte/store';
 	
+	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
+	import LanguagePicker from '$lib/LanguagePicker.svelte';
+	import { msg } from '$lib/i18n';
+
 	import '../theme/extras.scss';
 
 	afterNavigate(() => (menuOpen = false));
@@ -38,6 +41,7 @@
 	let headerBarHeight = NaN;
 
 	let snackbar: SimpleSnackbar;
+	let languagePicker: LanguagePicker;
 
 	let snackbarContext: SnackbarContext = {
 		open: (...args) => {
@@ -128,7 +132,7 @@
 		<List>
 			<LItem href="/home">
 				<LGraphic class="material-icons" aria-hidden="true">home</LGraphic>
-				<LText>Home</LText>
+				<LText>{msg('home.title')}</LText>
 			</LItem>
 			<LItem href="/schedule">
 				<LGraphic class="material-icons" aria-hidden="true">calendar_month</LGraphic>
@@ -136,18 +140,25 @@
 			</LItem>
 			<LItem href="/">
 				<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
-				<LText>Switch org & user</LText>
+				<LText>{msg('layout.nav.user.switchorg')}</LText>
+			</LItem>
+			<LItem on:click={() => {
+				menuOpen = false;
+				languagePicker.open();
+			}}>
+				<LGraphic class="material-icons" aria-hidden="true">language</LGraphic>
+				<LText>{msg('language')}</LText>
 			</LItem>
 
 			<LSeparator />
 			<LSubheader tag="h6">Scouter</LSubheader>
 			<LItem href="/scouting/pit">
 				<LGraphic class="material-icons" aria-hidden="true">handyman</LGraphic>
-				<LText>Pit scouting</LText>
+				<LText>{msg('scouting.pit')}</LText>
 			</LItem>
 			<LItem href="/scouting/match">
 				<LGraphic class="material-icons" aria-hidden="true">stadium</LGraphic>
-				<LText>Match scouting</LText>
+				<LText>{msg('scouting.match')}</LText>
 			</LItem>
 			<LItem href="/sync/scouter">
 				<LGraphic class="material-icons" aria-hidden="true">sync</LGraphic>
@@ -232,7 +243,6 @@
 						{/if}
 					</Wrapper>
 				{/if}
-				<!-- <IconButton class="material-icons" aria-label="Change language">language</IconButton> -->
 				<!-- <Wrapper> -->
 				<!-- 	<IconButton class="material-icons" aria-label="Share" on:click={() => share()} -->
 				<!-- 		>qr_code_scanner</IconButton -->
@@ -249,6 +259,7 @@
 </div>
 
 <SimpleSnackbar bind:this={snackbar} />
+<LanguagePicker bind:this={languagePicker} />
 
 <!-- <BottomNavBar bind:bottomAppBar items={navItems}/> -->
 
@@ -261,9 +272,9 @@
 		width: 100%;
 		top: 0px;
 		transition: top 0.15s ease-out;
-		&:global(.slidAway) {
-			top: -$header-height;
-		}
+		// &:global(.slidAway) {
+		// 	top: -$header-height;
+		// }
 	}
 	:global(.mdc-top-app-bar) {
 		top: 0px;

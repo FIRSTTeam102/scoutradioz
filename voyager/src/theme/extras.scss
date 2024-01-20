@@ -80,6 +80,11 @@ s2 {
 	@include typography.typography('subtitle2');
 	display: block;
 }
+
+inline-icon.material-icons {
+	font-size: revert;
+	vertical-align: middle;
+}
  
 caption {
   @include typography.typography('caption');

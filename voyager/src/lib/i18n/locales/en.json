@@ -136,6 +136,7 @@
 		"blankpassword": "Leave blank if you do not have your own password yet.",
 		"selectorg": "Please select an organization to log in to.",
 		"logoutbeforelogin": "Please log out before you can sign in to another user.",
+		"orgpasswordhelptext": "Password set by your organization in order to log in.",
 		"orgpasswordrequired": "Please enter your organization's password. To go back, open the navigation on the top left.",
 		"orgpasswordincorrect": "Incorrect password for organization {org}.",
 		"resubmitlogin": "Sorry, please re-submit your organization login information.",
@@ -421,6 +422,9 @@
 			"successSetEvent": "Set current event to *{eventName}* successfuly."
 		}
 	},
+	"cancel": "Cancel",
+	"language": "Language",
+	"organization": "Organization",
 	"tryAgainLater": "Please try again later.",
 	"yes": "Yes",
 	"no": "No",

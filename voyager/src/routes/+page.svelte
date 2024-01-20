@@ -5,6 +5,7 @@
 	import Textfield from '@smui/textfield';
 	import HelperText from '@smui/textfield/helper-text';
 
+	import { msg } from '$lib/i18n';
 	import db, { type WithStringDbId } from '$lib/localDB';
 	import { liveQuery } from 'dexie';
 
@@ -20,7 +21,9 @@
 	const logger = getLogger('login (root)');
 
 	const refreshButton = getContext('refreshButton') as RefreshContext;
-	const refreshButtonAnimation = getContext('refreshButtonAnimation') as RefreshButtonAnimationContext;
+	const refreshButtonAnimation = getContext(
+		'refreshButtonAnimation'
+	) as RefreshButtonAnimationContext;
 	const snackbar = getContext('snackbar') as SnackbarContext;
 
 	// Retrieve the orgs from the database
@@ -91,9 +94,9 @@
 
 	onDestroy(() => {
 		refreshButton.set({
-			supported: false,
-		})
-	})
+			supported: false
+		});
+	});
 
 	const getOrgOptionLabel = (org: Org) => {
 		if (!org) return '';
@@ -121,24 +124,24 @@
 			disabled={!$orgs}
 			getOptionLabel={getOrgOptionLabel}
 			bind:value={$org}
-			label="Organization"
+			label={msg('Organization')}
 		/>
 		<div class="basis-5/12">
 			<Textfield
-				label="Organization Password"
+				label={msg('user.orgpassword')}
 				variant="filled"
 				style="width: 100%"
 				type="password"
 				disabled={!$org}
 				bind:value={$org_password}
 			>
-				<HelperText slot="helper">Password set by your organization in order to log in</HelperText>
+				<HelperText slot="helper">{msg('user.orgpasswordhelptext')}</HelperText>
 			</Textfield>
 		</div>
 		<div class="basis-1/6 justify-self-center self-center">
 			<Button
 				class=""
-				style='width: 100%; justify-self: center'
+				style="width: 100%; justify-self: center"
 				variant="unelevated"
 				disabled={!$org || !$org_password}
 				on:click={() => goto(`/login?org_key=${$org?.org_key}`)}
