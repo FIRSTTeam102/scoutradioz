@@ -4,11 +4,11 @@
 	import db, { type MatchScoutingLocal } from '$lib/localDB';
 	import { event_key, org_key } from '$lib/stores';
 	import type { SnackbarContext } from '$lib/types';
-	import Paper from '@smui/paper';
 	import Select, { Option } from '@smui/select';
 	import { liveQuery, type Observable } from 'dexie';
 	import QRCode from 'qrcode';
-	import { getContext, onMount } from 'svelte';
+	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
+	import { getContext } from 'svelte';
 
 	let canvas: HTMLCanvasElement;
 
@@ -20,6 +20,8 @@
 	let qrCodeType: 'matchscouting' | 'metadata' = 'matchscouting';
 
 	const NUM_MATCHES_GROUP = 3;
+
+	let base64Data: string = '';
 
 	// Todo: instead of depending on lightmatches, create a picker based on the empty matchscouting entries, with a start # and end #
 	let numMatchesAtEvent: Observable<number>;
@@ -59,12 +61,7 @@
 				if (data.length > 0) {
 					matchscouting = data;
 					console.log('Compressing data');
-					let base64Data = await encodeMatchScouting(data);
-					console.log(base64Data);
-					generateQR(base64Data);
-					// console.log('Orig', data);
-					// let decoded = await decode(base64Data);
-					// console.log(decoded);
+					base64Data = await encodeMatchScouting(data);
 				} else {
 					matchscouting = undefined;
 					snackbar.error(
@@ -88,67 +85,28 @@
 			const event = await db.events.where('key').equals($event_key).first();
 			if (!event) {
 				snackbar.error('Could not find event details!');
-				return clearCanvas();
+				base64Data = '';
+				return;
 			}
 			const teams = await db.teams.where('key').anyOf(event.team_keys).toArray();
 			if (!teams) {
 				snackbar.error('Could not find list of teams at the event!');
-				return clearCanvas();
+				base64Data = '';
+				return;
 			}
 
 			const org = await db.orgs.where('org_key').equals($org_key).first();
 			assert(org, 'Could not find org in db');
 
-			let base64Data = await encodeMetadata(org, users, teams, event);
-			generateQR(base64Data);
-			// let decoded = await decode(base64Data);
-			// console.log(org, users, teams);
-			// console.log(decoded);
+			base64Data = await encodeMetadata(org, users, teams, event);
 		})();
-	}
-
-	function clearCanvas() {
-		console.trace();
-		let ctx = canvas.getContext('2d');
-		ctx?.clearRect(0, 0, canvas.width, canvas.height);
-	}
-
-	function generateQR(data: string) {
-		QRCode.toCanvas(
-			canvas,
-			data,
-			{
-				errorCorrectionLevel: 'medium'
-			},
-			function (err) {
-				if (err) {
-					console.log(err);
-					console.log('Attempting to generate QR code with a lower error correction level');
-					// Try with a lower error correction level
-					QRCode.toCanvas(
-						canvas,
-						data,
-						{
-							errorCorrectionLevel: 'low'
-						},
-						function (err) {
-							// Give up
-							if (err) {
-								snackbar.error(JSON.stringify(err));
-								clearCanvas();
-							}
-						}
-					);
-				}
-			}
-		);
 	}
 
 	const numMatchesGetKey = (num: number) => String(num);
 </script>
 
-<section class="pad columns center" style="gap: 1em;">
-	<div class="rows" style="gap: 1em;">
+<section class="pad grid grid-cols-1 place-items-center gap-4">
+	<div class="grid grid-cols-2 gap-4">
 		<div>
 			<Select variant="filled" bind:value={qrCodeType}>
 				<Option value="matchscouting">Match scouting</Option>
@@ -177,34 +135,17 @@
 			</Select>
 		</div>
 	</div>
-	<div class="canvas-parent">
-		{#if qrCodeType === 'matchscouting' && matchscouting}
-			<h3 style='margin-bottom: 8px;'>
+	{#if qrCodeType === 'matchscouting' && matchscouting}
+		<div class="text-center">
+			<h3>
 				Matches # {matchscouting[0].match_number} - {matchscouting[matchscouting.length - 1]
 					.match_number}
 			</h3>
 			<p>
-				To change the current match number, go to the match scouting screen and increment/decrement the # there.
+				To change the current match number, go to the match scouting screen and increment/decrement
+				the # there.
 			</p>
-		{/if}
-		<canvas bind:this={canvas} />
-	</div>
+		</div>
+	{/if}
+	<QrCodeDisplay data={base64Data} />
 </section>
-
-<style lang="scss">
-	.canvas-parent {
-		text-align: center;
-		max-width: 100vw;
-		margin: auto;
-	}
-	canvas {
-		// i'll do something more fancy later
-		max-width: 100%;
-		aspect-ratio: 1;
-		height: unset !important; // override height set by QRCode
-	}
-
-	.hidden {
-		display: none;
-	}
-</style>

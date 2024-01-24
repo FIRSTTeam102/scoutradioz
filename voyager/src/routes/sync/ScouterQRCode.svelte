@@ -1,34 +1,23 @@
 <script lang="ts">
-	import assert from '$lib/assert';
-	import {
-		encodeMatchScouting,
-		encodeMetadata,
-		decode,
-		encodeOneMatchScoutingResult,
-		encodeOnePitScoutingResult
-	} from '$lib/compression';
+	import { encodeOneMatchScoutingResult, encodeOnePitScoutingResult } from '$lib/compression';
 	import db, { type MatchScoutingLocal, type PitScoutingLocal } from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { event_key, org_key } from '$lib/stores';
 	import Button, { Label as BLabel, Group as BGroup } from '@smui/button';
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
-	import Paper from '@smui/paper';
 	import Select, { Option } from '@smui/select';
 	import { liveQuery, type Observable } from 'dexie';
-	import QRCode from 'qrcode';
-	import { onMount } from 'svelte';
+	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 
 	const logger = getLogger('sync/ScouterQRCode');
-
-	let canvas: HTMLCanvasElement;
-	let snackbar: SimpleSnackbar;
 
 	let onlyUnsynced = true;
 	let qrCodeType: 'matchscouting' | 'pitscouting' = 'matchscouting';
 	let matchToShowQr: MatchScoutingLocal | null = null;
 	let pitToShowQr: PitScoutingLocal | null = null;
+
+	let base64Data: string = '';
 
 	$: matchscouting = liveQuery(async () => {
 		logger.debug('updating matchscouting now', onlyUnsynced);
@@ -86,52 +75,21 @@
 		}
 	}
 
-	$: if (qrCodeType === 'matchscouting' && matchToShowQr) {
-		encodeOneMatchScoutingResult(matchToShowQr).then((base64Data) => {
-			generateQR(base64Data);
-		});
+	$: if (qrCodeType === 'matchscouting') {
+		if (matchToShowQr)
+			encodeOneMatchScoutingResult(matchToShowQr).then((data) => {
+				base64Data = data;
+			});
+		// Clear canvas
+		else base64Data = '';
 	}
 	$: if (qrCodeType === 'pitscouting' && pitToShowQr) {
-		encodeOnePitScoutingResult(pitToShowQr).then((base64data) => {
-			generateQR(base64data);
-		});
-	}
-
-	function clearCanvas() {
-		console.trace();
-		let ctx = canvas.getContext('2d');
-		ctx?.clearRect(0, 0, canvas.width, canvas.height);
-	}
-
-	function generateQR(data: string) {
-		QRCode.toCanvas(
-			canvas,
-			data,
-			{
-				errorCorrectionLevel: 'medium'
-			},
-			function (err) {
-				if (err) {
-					logger.debug(err);
-					logger.debug('Attempting to generate QR code with a lower error correction level');
-					// Try with a lower error correction level
-					QRCode.toCanvas(
-						canvas,
-						data,
-						{
-							errorCorrectionLevel: 'low'
-						},
-						function (err) {
-							// Give up
-							if (err) {
-								snackbar.error(JSON.stringify(err));
-								clearCanvas();
-							}
-						}
-					);
-				}
-			}
-		);
+		if (pitToShowQr)
+			encodeOnePitScoutingResult(pitToShowQr).then((data) => {
+				base64Data = data;
+			});
+		// Clear canvas
+		else base64Data = '';
 	}
 
 	let matchscoutingGetKey = (match: MatchScoutingLocal) => {
@@ -144,8 +102,8 @@
 	};
 </script>
 
-<section class="pad columns center" style="gap: 1em;">
-	<div class="rows" style="gap: 1em;">
+<section class="pad grid grid-cols-1 place-items-center" style="gap: 1em;">
+	<div class="grid grid-cols-2" style="gap: 1em;">
 		<div>
 			<Select variant="filled" bind:value={qrCodeType}>
 				<Option value="matchscouting">Match scouting</Option>
@@ -193,9 +151,7 @@
 			<span slot="label">Only show assignments that haven't been synced?</span>
 		</FormField>
 	</div>
-	<div class="canvas-parent">
-		<canvas bind:this={canvas} />
-	</div>
+	<QrCodeDisplay data={base64Data} />
 	<BGroup variant="raised">
 		<div class:hidden={!(qrCodeType === 'pitscouting' && pitToShowQr)}>
 			<Button
@@ -262,8 +218,6 @@
 	</BGroup>
 </section>
 
-<SimpleSnackbar bind:this={snackbar} />
-
 <style lang="scss">
 	.canvas-parent {
 		max-width: 100vw;
@@ -274,9 +228,5 @@
 		max-width: 100%;
 		aspect-ratio: 1;
 		height: unset !important; // override height set by QRCode
-	}
-
-	.hidden {
-		display: none;
 	}
 </style>
