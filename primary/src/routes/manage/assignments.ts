@@ -38,7 +38,7 @@ router.get('/', wrap(async (req, res) => {
 	let areTeamsListedInDB = true;
 	if (!teamsArray || teamsArray.length < 1) {
 		areTeamsListedInDB = false;
-		logger.warn(`Pit scouting but no teams found in DB`);
+		logger.warn('Pit scouting but no teams found in DB');
 	}
 
 	//Log message so we can see on the server side when we enter this
@@ -381,10 +381,43 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		]}, 
 		{ sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, 'name': 1} }
 	) as WithDbId<User>[]; // JL: temporary
-	
+	logger.trace(`matchScouts=${JSON.stringify(matchScouts)}`);
+
+	// 2024-01-22, M.O'C: Read in the number of matches already scouted per scout
+	const numPerUserList = await utilities.aggregate('matchscouting',
+		[
+			{ '$match': { 'org_key': org_key, 'event_key': event_key, 'data': { '$ne': null } } },
+			{ '$group': { '_id': '$actual_scorer.id', 'numScouted': { '$sum': 1 } } }
+		]	
+	) as { _id: string, numScouted: number }[];
+	// convert to a map
+	const numPerUser = Object.fromEntries(numPerUserList.map(x => [x._id, x.numScouted]));
+	// add the number of matches scouted to the user data
+	const matchScoutsPlusScoutedCount = matchScouts.map(scout => {
+		let stringId = String(scout._id);
+		return {
+			...scout,
+			numMatchesScouted: (numPerUser[stringId] == null ? 0 : numPerUser[stringId])
+		};
+	});
+	// re-sort the array by numMatchesScouted: -1, then by seniority: 1, then by subteam_key: 1, etc.
+	matchScoutsPlusScoutedCount.sort(function(a, b) {
+		if (a.numMatchesScouted == b.numMatchesScouted) {
+			if (a.org_info.seniority == b.org_info.seniority) {
+				if (a.org_info.subteam_key == b.org_info.subteam_key) {
+					return a.name > b.name ? 1 : 1;
+				}
+				return a.org_info.subteam_key > b.org_info.subteam_key ? 1 : -1;
+			}
+			return a.org_info.seniority > b.org_info.seniority ? 1 : -1;
+		}
+		return a.numMatchesScouted > b.numMatchesScouted ? 1 : -1;
+	});
+	logger.trace(`matchScoutsPlusScoutedCount=${JSON.stringify(matchScoutsPlusScoutedCount)}`);
+
 	logger.trace('*** Assigned + available, by seniority:');
-	for (let i in matchScouts)
-		logger.trace('member['+i+'] = ' + matchScouts[i].name);
+	for (let i in matchScoutsPlusScoutedCount)
+		logger.trace('member['+i+'] = ' + matchScoutsPlusScoutedCount[i].name);
 	
 	//
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
@@ -408,7 +441,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	);
 	
 	// Special case for no scouters assigned: Stop the re-assigning process and render the match scouting dashboard
-	if (matchScouts.length === 0) {
+	if (matchScoutsPlusScoutedCount.length === 0) {
 		logger.info('No available match scouts were selected; Leaving the match scouting assignments blank');
 		return res.redirect('/dashboard/matches?alert=No scouters were selected, so the assignments were left blank.');
 	}
@@ -439,7 +472,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			// Pull off the next 6 scouts
 			scoutArray = [];
 			for (let i = 0; i < 6; i++) {
-				let thisScout = matchScouts[scoutPointer];
+				let thisScout = matchScoutsPlusScoutedCount[scoutPointer];
 				if (!thisScout) {
 					logger.trace('Not enough scouts!');
 					break;
@@ -449,7 +482,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 					name: thisScout.name,
 				});
 				scoutPointer++;
-				if (scoutPointer >= matchScouts.length)
+				if (scoutPointer >= matchScoutsPlusScoutedCount.length)
 					scoutPointer = 0;
 			}
 			logger.trace(`Updated current scouts: ${JSON.stringify(scoutArray)}`);
