@@ -460,7 +460,25 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	let scoutAssignedList: string[] = []; // list of IDs of assigned scouters
 	
 	let redBlueToggle = 0;  // flips between 0 and 1, signals whether to allocate red alliance or blue alliance first
-	
+
+	// 2024-01-23, M.O'C: Read in the number of matches already assigned per *team*
+	// to be used if the SR team has fewer than 6 availale scouts
+	const numPerTeamList = await utilities.aggregate('matchscouting',
+		[
+			{ '$match': { 'org_key': org_key, 'event_key': event_key, 'assigned_scorer': {$ne: null} } },
+			{ '$group': { '_id': '$team_key', 'numScouted': { '$sum': 1 } } }
+		]	
+	) as { _id: string, numScouted: number }[];
+	// convert to a map
+	const numPerTeam = Object.fromEntries(numPerTeamList.map(x => [x._id, x.numScouted]));
+	logger.trace(`numPerTeam=${JSON.stringify(numPerTeam)}`);
+
+	// 2024-01-23, M.O'C: Scouts per match is 6 *unless* fewer than 6 have been passed in
+	let scoutsPerMatch = 6;
+	if (matchScoutsPlusScoutedCount.length < 6) {
+		scoutsPerMatch = matchScoutsPlusScoutedCount.length;
+	}
+
 	for (let matchesIdx in comingMatches) {
 		const thisMatch = comingMatches[matchesIdx];
 		const thisMatchKey = thisMatch.key;
@@ -469,9 +487,9 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		
 		// Work in sets of up to <block size> matches (could be less, if "break" or end is hit)
 		if (matchBlockCounter >= matchBlockSize) {
-			// Pull off the next 6 scouts
+			// Pull off the next N scouts (usually 6)
 			scoutArray = [];
-			for (let i = 0; i < 6; i++) {
+			for (let i = 0; i < scoutsPerMatch; i++) {
 				let thisScout = matchScoutsPlusScoutedCount[scoutPointer];
 				if (!thisScout) {
 					logger.trace('Not enough scouts!');
@@ -528,35 +546,53 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// 	and switched to just shuffling the team array
 		
 		// Shuffle the team array
-		teamArray.sort(() => Math.random() - 0.5);
-		// cycle through teams and assign to the scouters, after teamArray has been shuffled
-		for (let i = 0; i < 6; i++) {
-			let thisTeamKey = teamArray[i];
-			// Assigned yet? If not...
-			if (!teamScoutMap[thisTeamKey]) {
-				// Grab the next available scout
-				teamScoutMap[thisTeamKey] = scoutArray[i];
+		// 2024-01-24, M.O'C: **IF** there are <6 scouts, THEN sort by matches assigned
+		// (so as to end up with an even distribution of assignments across matches)
+		if (scoutsPerMatch >= 6)
+			teamArray.sort(() => Math.random() - 0.5);
+		else {
+			for (let i = 0; i < 6; i++) {
+				if (!numPerTeam[teamArray[i]])
+					numPerTeam[teamArray[i]] = 0;
+				logger.debug(`numPerTeam[${teamArray[i]}]=${numPerTeam[teamArray[i]]}`);
 			}
+			teamArray.sort(function(a, b) {
+				if (numPerTeam[a] == numPerTeam[b]) {
+					return Number(a.substring(3)) > Number(a.substring(3)) ? 1 : -1;
+				}
+				return numPerTeam[a] > numPerTeam[b] ? 1 : -1;
+			});
+			logger.trace(`teamArray=${JSON.stringify(teamArray)}`);
+		}
+		// cycle through teams and assign to the scouters, after teamArray has been shuffled
+		for (let i = 0; i < scoutsPerMatch; i++) {
+			let thisTeamKey = teamArray[i];
+			// Grab the next available scout
+			teamScoutMap[thisTeamKey] = scoutArray[i];
+			numPerTeam[thisTeamKey] = numPerTeam[thisTeamKey] + 1;
 		}
 
 		// show all the team-scout assignments
 		let assignmentPromisesArray = [];
-		for (let property in teamScoutMap) {
-			if (teamScoutMap.hasOwnProperty(property)) {
+		for (let teamKey in teamScoutMap) {
+			if (teamScoutMap.hasOwnProperty(teamKey)) {
 				// Write the assignment to the DB!
-				let thisMatchTeamKey = thisMatchKey + '_' + property;
-				let thisScout = teamScoutMap[property];
+				let thisMatchTeamKey = thisMatchKey + '_' + teamKey;
+				let thisScout = teamScoutMap[teamKey];
 				
-				// Save this scouter as being assigned
-				let thisScoutId = String(thisScout.id);
-				if (!scoutAssignedList.includes(thisScoutId)) 
-					scoutAssignedList.push(thisScoutId);
+				// 2024-01-23, M.O'C: If there are fewer than 6 available scouts, some entries might be null
+				if (thisScout != null) {
+					// Save this scouter as being assigned
+					let thisScoutId = String(thisScout.id);
+					if (!scoutAssignedList.includes(thisScoutId)) 
+						scoutAssignedList.push(thisScoutId);
 
-				let thisPromise = utilities.update('matchscouting', 
-					{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
-					{ $set: { assigned_scorer : thisScout }} 
-				);
-				assignmentPromisesArray.push(thisPromise);
+					let thisPromise = utilities.update('matchscouting', 
+						{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
+						{ $set: { assigned_scorer : thisScout }} 
+					);
+					assignmentPromisesArray.push(thisPromise);
+				}
 			}
 		}									
 		// wait for all the updates to finish
