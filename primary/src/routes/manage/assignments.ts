@@ -195,13 +195,21 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
 	
 	const availableArray: ObjectId[] = []; // User IDs
+	let stoppingForBreaks = true;
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
 		const userId = user.split('|')[0];
-		const userName = user.split('|')[1]; // unused
-		logger.trace(`user: ${userId} | ${userName}`);
-		assert(userId && userName, 'Could not find both userId and userName');
-		availableArray.push(ObjectId.createFromHexString(userId));
+		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
+		if (userId != 'skipBreaks') { 
+			const userName = user.split('|')[1]; // unused
+			logger.trace(`user: ${userId} | ${userName}`);
+			assert(userId && userName, 'Could not find both userId and userName');
+			availableArray.push(ObjectId.createFromHexString(userId));
+		}
+		else {
+			logger.debug('Assignments will continue past breaks!');
+			stoppingForBreaks = false;
+		}
 	}
 	
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
@@ -519,10 +527,12 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		
 		let matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
-		if (matchGap > matchGapBreakThreshold) {
-			logger.trace('matchGap=' + matchGap + '... found a break');
-			break;
-		}
+		// 2024-01-24, M.O'C: Might optionally not be stopping for breaks
+		if (stoppingForBreaks)
+			if (matchGap > matchGapBreakThreshold) {
+				logger.trace('matchGap=' + matchGap + '... found a break');
+				break;
+			}
 		
 		let teamArray: TeamKey[] = [];
 		if (redBlueToggle == 0)
@@ -554,7 +564,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			for (let i = 0; i < 6; i++) {
 				if (!numPerTeam[teamArray[i]])
 					numPerTeam[teamArray[i]] = 0;
-				logger.debug(`numPerTeam[${teamArray[i]}]=${numPerTeam[teamArray[i]]}`);
+				logger.trace(`numPerTeam[${teamArray[i]}]=${numPerTeam[teamArray[i]]}`);
 			}
 			teamArray.sort(function(a, b) {
 				if (numPerTeam[a] == numPerTeam[b]) {

@@ -457,6 +457,7 @@
 			"erasePitAssignmentsAndData": "*WARNING:* Erases all pit scouting assignments and data for the current event.\n\nTo continue, enter your password.",
 			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
 			"scoutingGroups": "Scouting groups",
+			"skipBreaks": "Check this box to generate assignments ignoring breaks in the schedule",
 			"submitNewGroup": "Submit selected members as a new scouting group",
 			"swapMatchAssignments": "Swap in/out match scouts",
 			"swapPitAssignments": "Swap teams between pit scout groups"
