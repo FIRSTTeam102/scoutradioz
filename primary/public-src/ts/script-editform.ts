@@ -35,16 +35,9 @@ async function validate() {
 	}
 
 	// make sure 'order' and 'id' are unique; also clear out extraneous stuff
-	let idDict: StringDict = {};
-	let idCount = 0;
+	// 20234-01-26 JL: Changed idDict to a Set
+	let ids = new Set<string>();
 	for (let i = 0; i < jsonData.length; i++) {
-		// since jsonData gets loaded back to the user, remove backend keys
-		delete jsonData[i]['_id'];
-		delete jsonData[i]['form_type'];
-		delete jsonData[i]['org_key'];
-		delete jsonData[i]['year'];
-		delete jsonData[i]['order'];
-
 		let thisType = jsonData[i]['type'];
 		if (thisType == null) {
 			console.log('Missing type:', jsonData[i]);
@@ -54,37 +47,32 @@ async function validate() {
 
 		if (thisType != 'spacer') {
 			let thisId = jsonData[i]['id'];
-			if (thisId == null) {
+			// 2024-01-26 JL: changed `== null` comparison to truthiness check, because I think empty strings should not be a valid id ('' is falsy)
+			if (!thisId) {
 				console.log('Missing id:', jsonData[i]);
 				NotificationCard.error('Missing at least one \'id\' attribute! Please correct.');
 				return null;
 			}
-			idCount++;
-			if (idDict[thisId]) {
-				console.warn('Duplicate ID?', thisId);
+			if (ids.has(thisId)) {
+				console.warn('Duplicate ID!', thisId);
+				NotificationCard.error(`Found duplicate 'id' value: '${thisId}'`);
+				return null;
 			}
-			idDict[thisId] = thisId;
+			ids.add(thisId);
 		}
-	}
-
-	if (Object.keys(idDict).length != idCount) {
-		console.log('Keys:', Object.keys(idDict));
-		console.log(`Count: ${idCount}`);
-		NotificationCard.error('At least one duplicate \'id\' value! Please correct.');
-		return null;
 	}
 	let jsonString = JSON.stringify(jsonData);
 	console.log('jsonData=' + jsonString);
 
 	// make sure required fields exist - otherNotes, contributedPoints [for matchScouting only]
 	if (formType == 'matchscouting') {
-		let otherNotes = idDict['otherNotes'];
-		let contributedPoints = idDict['contributedPoints'];
+		let otherNotes = ids.has('otherNotes');
+		let contributedPoints = ids.has('contributedPoints');
 		if (!otherNotes || !contributedPoints) {
 			let message = '*WARNING!* You have not defined the following required fields: ';
 			if (!otherNotes) message += '\n - otherNotes';
 			if (!contributedPoints) message += '\n - contributedPoints';
-			let { cancelled } = await Confirm.show(message, { yesText: 'OK' });
+			let { cancelled } = await Confirm.show(message, { yesText: 'Proceed anyways', noText: 'Cancel' });
 			if (cancelled) return null;
 		}
 	}
@@ -107,7 +95,7 @@ async function validate() {
 					return intermediateVariables.includes(operand);
 				}
 				else {
-					return !!idDict[operand];
+					return ids.has(operand);
 				}
 			}
 			// just validate that the other operand is a number
@@ -187,10 +175,10 @@ async function validate() {
 
 	// check if any existing data fields are not included
 	// TODO enable for Pit Scouting (will need changes in orgconfig.ts as well)
-	let missingDataKeys = previousKeys.filter((key) => !idDict[key]);
+	let missingDataKeys = previousKeys.filter((key) => !ids.has(key));
 	if (missingDataKeys.length > 0) {
 		let message = `*WARNING!* The following keys (ids) exist in your past match scouting data, but are not included in this layout: \n${missingDataKeys.map(key => `\n - ${key}`)}`;
-		let { cancelled } = await Confirm.show(message, { yesText: 'OK', noText: 'Cancel' });
+		let { cancelled } = await Confirm.show(message, { yesText: 'Proceed anyways', noText: 'Cancel' });
 		if (cancelled) return null;
 	}
 	return jsonString;
