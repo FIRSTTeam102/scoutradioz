@@ -20,10 +20,15 @@
 @long-animation-time: 1.4s;
 @animate: all @animation-time ease-in-out;
 
-@header: @trim;
+@header: @black;
 @footer: @black;
 @placeholder-color: #bbb;
 @prompt-color: #f0f5ff;
+
+// Change the header color based on the tier
+@header-tier-qa: #1CA74F; // flle
+@header-tier-test: #168ECA; // frc
+@header-tier-dev: #652F90; // flld
 
 @headerbar-height: 45px;
 

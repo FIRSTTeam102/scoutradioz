@@ -1021,7 +1021,7 @@ export class Utilities {
 			logger.fatal('utilities.getTBAKey: Could not find tba-api-headers in database');
 			
 			logger.removeContext('funcName');
-			throw 'Could not find api-headers in database';
+			throw new Error('Could not find api-headers in database');
 		}
 	}
 	

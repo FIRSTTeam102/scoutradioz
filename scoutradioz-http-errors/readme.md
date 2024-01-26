@@ -5,7 +5,7 @@ https://scoutradioz.com
 
 Usage: 
 ```js
-const e = require('@firstteam102/http-errors');
+const e = require('scoutradioz-http-errors');
 
 router.get('/throwanerror', function(req, res) {
 	
