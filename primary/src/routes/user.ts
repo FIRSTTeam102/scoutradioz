@@ -181,7 +181,8 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	
 	//Find user info that matches selected id
 	// 2023-1-8 JL note: Explicitly declaring it as 'any' because of the req.login not liking Express.User casting to Scoutradioz User
-	let user = await utilities.findOne<any>('users', {_id: new ObjectId(userID)});
+	// 2024-01-24 JL: added visible: true to the filter criteria because they should only be using this page to log in as a visible user
+	let user = await utilities.findOne<any>('users', {_id: new ObjectId(userID), 'visible': true});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
