@@ -17,7 +17,7 @@
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [3000, 27017],
+	"forwardPorts": [3000, 27017],
 	"portsAttributes": {
 		"3000": {
 			"label": "primary",
@@ -37,7 +37,7 @@
 	},
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postAttachCommand": "bash .devcontainer/setup.sh",
+	"postCreateCommand": "bash .devcontainer/setup.sh",
 
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "node"

@@ -1,0 +1,5 @@
+# Set core.autocrlf to true for the rest of the repository
+* text=auto eol=auto
+
+# Set core.autocrlf to false for the .devcontainer folder
+.devcontainer/* -text eol=lf
