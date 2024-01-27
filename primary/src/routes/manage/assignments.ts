@@ -38,7 +38,7 @@ router.get('/', wrap(async (req, res) => {
 	let areTeamsListedInDB = true;
 	if (!teamsArray || teamsArray.length < 1) {
 		areTeamsListedInDB = false;
-		logger.warn(`Pit scouting but no teams found in DB`);
+		logger.warn('Pit scouting but no teams found in DB');
 	}
 
 	//Log message so we can see on the server side when we enter this
@@ -195,13 +195,21 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
 	
 	const availableArray: ObjectId[] = []; // User IDs
+	let stoppingForBreaks = true;
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
 		const userId = user.split('|')[0];
-		const userName = user.split('|')[1]; // unused
-		logger.trace(`user: ${userId} | ${userName}`);
-		assert(userId && userName, 'Could not find both userId and userName');
-		availableArray.push(ObjectId.createFromHexString(userId));
+		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
+		if (userId != 'skipBreaks') { 
+			const userName = user.split('|')[1]; // unused
+			logger.trace(`user: ${userId} | ${userName}`);
+			assert(userId && userName, 'Could not find both userId and userName');
+			availableArray.push(ObjectId.createFromHexString(userId));
+		}
+		else {
+			logger.debug('Assignments will continue past breaks!');
+			stoppingForBreaks = false;
+		}
 	}
 	
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
@@ -381,10 +389,43 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		]}, 
 		{ sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, 'name': 1} }
 	) as WithDbId<User>[]; // JL: temporary
-	
+	logger.trace(`matchScouts=${JSON.stringify(matchScouts)}`);
+
+	// 2024-01-22, M.O'C: Read in the number of matches already scouted per scout
+	const numPerUserList = await utilities.aggregate('matchscouting',
+		[
+			{ '$match': { 'org_key': org_key, 'event_key': event_key, 'data': { '$ne': null } } },
+			{ '$group': { '_id': '$actual_scorer.id', 'numScouted': { '$sum': 1 } } }
+		]	
+	) as { _id: string, numScouted: number }[];
+	// convert to a map
+	const numPerUser = Object.fromEntries(numPerUserList.map(x => [x._id, x.numScouted]));
+	// add the number of matches scouted to the user data
+	const matchScoutsPlusScoutedCount = matchScouts.map(scout => {
+		let stringId = String(scout._id);
+		return {
+			...scout,
+			numMatchesScouted: (numPerUser[stringId] == null ? 0 : numPerUser[stringId])
+		};
+	});
+	// re-sort the array by numMatchesScouted: -1, then by seniority: 1, then by subteam_key: 1, etc.
+	matchScoutsPlusScoutedCount.sort(function(a, b) {
+		if (a.numMatchesScouted == b.numMatchesScouted) {
+			if (a.org_info.seniority == b.org_info.seniority) {
+				if (a.org_info.subteam_key == b.org_info.subteam_key) {
+					return a.name > b.name ? 1 : 1;
+				}
+				return a.org_info.subteam_key > b.org_info.subteam_key ? 1 : -1;
+			}
+			return a.org_info.seniority > b.org_info.seniority ? 1 : -1;
+		}
+		return a.numMatchesScouted > b.numMatchesScouted ? 1 : -1;
+	});
+	logger.trace(`matchScoutsPlusScoutedCount=${JSON.stringify(matchScoutsPlusScoutedCount)}`);
+
 	logger.trace('*** Assigned + available, by seniority:');
-	for (let i in matchScouts)
-		logger.trace('member['+i+'] = ' + matchScouts[i].name);
+	for (let i in matchScoutsPlusScoutedCount)
+		logger.trace('member['+i+'] = ' + matchScoutsPlusScoutedCount[i].name);
 	
 	//
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
@@ -408,7 +449,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	);
 	
 	// Special case for no scouters assigned: Stop the re-assigning process and render the match scouting dashboard
-	if (matchScouts.length === 0) {
+	if (matchScoutsPlusScoutedCount.length === 0) {
 		logger.info('No available match scouts were selected; Leaving the match scouting assignments blank');
 		return res.redirect('/dashboard/matches?alert=No scouters were selected, so the assignments were left blank.');
 	}
@@ -427,7 +468,25 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	let scoutAssignedList: string[] = []; // list of IDs of assigned scouters
 	
 	let redBlueToggle = 0;  // flips between 0 and 1, signals whether to allocate red alliance or blue alliance first
-	
+
+	// 2024-01-23, M.O'C: Read in the number of matches already assigned per *team*
+	// to be used if the SR team has fewer than 6 availale scouts
+	const numPerTeamList = await utilities.aggregate('matchscouting',
+		[
+			{ '$match': { 'org_key': org_key, 'event_key': event_key, 'assigned_scorer': {$ne: null} } },
+			{ '$group': { '_id': '$team_key', 'numScouted': { '$sum': 1 } } }
+		]	
+	) as { _id: string, numScouted: number }[];
+	// convert to a map
+	const numPerTeam = Object.fromEntries(numPerTeamList.map(x => [x._id, x.numScouted]));
+	logger.trace(`numPerTeam=${JSON.stringify(numPerTeam)}`);
+
+	// 2024-01-23, M.O'C: Scouts per match is 6 *unless* fewer than 6 have been passed in
+	let scoutsPerMatch = 6;
+	if (matchScoutsPlusScoutedCount.length < 6) {
+		scoutsPerMatch = matchScoutsPlusScoutedCount.length;
+	}
+
 	for (let matchesIdx in comingMatches) {
 		const thisMatch = comingMatches[matchesIdx];
 		const thisMatchKey = thisMatch.key;
@@ -436,10 +495,10 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		
 		// Work in sets of up to <block size> matches (could be less, if "break" or end is hit)
 		if (matchBlockCounter >= matchBlockSize) {
-			// Pull off the next 6 scouts
+			// Pull off the next N scouts (usually 6)
 			scoutArray = [];
-			for (let i = 0; i < 6; i++) {
-				let thisScout = matchScouts[scoutPointer];
+			for (let i = 0; i < scoutsPerMatch; i++) {
+				let thisScout = matchScoutsPlusScoutedCount[scoutPointer];
 				if (!thisScout) {
 					logger.trace('Not enough scouts!');
 					break;
@@ -449,7 +508,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 					name: thisScout.name,
 				});
 				scoutPointer++;
-				if (scoutPointer >= matchScouts.length)
+				if (scoutPointer >= matchScoutsPlusScoutedCount.length)
 					scoutPointer = 0;
 			}
 			logger.trace(`Updated current scouts: ${JSON.stringify(scoutArray)}`);
@@ -468,10 +527,12 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		
 		let matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
-		if (matchGap > matchGapBreakThreshold) {
-			logger.trace('matchGap=' + matchGap + '... found a break');
-			break;
-		}
+		// 2024-01-24, M.O'C: Might optionally not be stopping for breaks
+		if (stoppingForBreaks)
+			if (matchGap > matchGapBreakThreshold) {
+				logger.trace('matchGap=' + matchGap + '... found a break');
+				break;
+			}
 		
 		let teamArray: TeamKey[] = [];
 		if (redBlueToggle == 0)
@@ -495,35 +556,53 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// 	and switched to just shuffling the team array
 		
 		// Shuffle the team array
-		teamArray.sort(() => Math.random() - 0.5);
-		// cycle through teams and assign to the scouters, after teamArray has been shuffled
-		for (let i = 0; i < 6; i++) {
-			let thisTeamKey = teamArray[i];
-			// Assigned yet? If not...
-			if (!teamScoutMap[thisTeamKey]) {
-				// Grab the next available scout
-				teamScoutMap[thisTeamKey] = scoutArray[i];
+		// 2024-01-24, M.O'C: **IF** there are <6 scouts, THEN sort by matches assigned
+		// (so as to end up with an even distribution of assignments across matches)
+		if (scoutsPerMatch >= 6)
+			teamArray.sort(() => Math.random() - 0.5);
+		else {
+			for (let i = 0; i < 6; i++) {
+				if (!numPerTeam[teamArray[i]])
+					numPerTeam[teamArray[i]] = 0;
+				logger.trace(`numPerTeam[${teamArray[i]}]=${numPerTeam[teamArray[i]]}`);
 			}
+			teamArray.sort(function(a, b) {
+				if (numPerTeam[a] == numPerTeam[b]) {
+					return Number(a.substring(3)) > Number(a.substring(3)) ? 1 : -1;
+				}
+				return numPerTeam[a] > numPerTeam[b] ? 1 : -1;
+			});
+			logger.trace(`teamArray=${JSON.stringify(teamArray)}`);
+		}
+		// cycle through teams and assign to the scouters, after teamArray has been shuffled
+		for (let i = 0; i < scoutsPerMatch; i++) {
+			let thisTeamKey = teamArray[i];
+			// Grab the next available scout
+			teamScoutMap[thisTeamKey] = scoutArray[i];
+			numPerTeam[thisTeamKey] = numPerTeam[thisTeamKey] + 1;
 		}
 
 		// show all the team-scout assignments
 		let assignmentPromisesArray = [];
-		for (let property in teamScoutMap) {
-			if (teamScoutMap.hasOwnProperty(property)) {
+		for (let teamKey in teamScoutMap) {
+			if (teamScoutMap.hasOwnProperty(teamKey)) {
 				// Write the assignment to the DB!
-				let thisMatchTeamKey = thisMatchKey + '_' + property;
-				let thisScout = teamScoutMap[property];
+				let thisMatchTeamKey = thisMatchKey + '_' + teamKey;
+				let thisScout = teamScoutMap[teamKey];
 				
-				// Save this scouter as being assigned
-				let thisScoutId = String(thisScout.id);
-				if (!scoutAssignedList.includes(thisScoutId)) 
-					scoutAssignedList.push(thisScoutId);
+				// 2024-01-23, M.O'C: If there are fewer than 6 available scouts, some entries might be null
+				if (thisScout != null) {
+					// Save this scouter as being assigned
+					let thisScoutId = String(thisScout.id);
+					if (!scoutAssignedList.includes(thisScoutId)) 
+						scoutAssignedList.push(thisScoutId);
 
-				let thisPromise = utilities.update('matchscouting', 
-					{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
-					{ $set: { assigned_scorer : thisScout }} 
-				);
-				assignmentPromisesArray.push(thisPromise);
+					let thisPromise = utilities.update('matchscouting', 
+						{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
+						{ $set: { assigned_scorer : thisScout }} 
+					);
+					assignmentPromisesArray.push(thisPromise);
+				}
 			}
 		}									
 		// wait for all the updates to finish

@@ -38,6 +38,9 @@ block content
 				//- label &nbsp;matches
 				span(class="sprite sp-18 sp-help sp-inline w3-tooltip")
 					span(class="w3-tooltiptext w3-left-align")!=msgMarked('manage.assignments.blockSize.tooltipAssignees')
+				br
+				input(type="checkbox" class="w3-check" name='skipBreaks' id='skipBreaks')
+				label  !{msg('manage.assignments.skipBreaks')}&nbsp;
 
 				p
 				button(type="submit" class="w3-btn theme-submit")!=msg('manage.assignments.assignMatchTeams')
