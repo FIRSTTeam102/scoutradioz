@@ -40,7 +40,6 @@
 		"eslint-plugin-svelte3": "^4.0.0"
 	},
 	"dependencies": {
-		"@types/node": "^18.13.0",
 		"archiver": "^5.3.0",
 		"aws-sdk": "^2.1066.0",
 		"colors": "^1.4.0",

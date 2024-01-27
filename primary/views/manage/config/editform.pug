@@ -8,127 +8,63 @@ block content
 	p 
 		br 
 		i Modify, copy, paste from elsewhere, etc. the JSON defining your form
+		br
+		i Recommendation: Use a text editor like <a href="https://vscode.dev" class="link" target="_blank">Visual Studio Code</a> to edit the JSON, then paste it here
 	div(class="w3-container w3-section w3-auto")
 		textarea(class="w3-input w3-border" id="jsonfield" name="jsonfield" rows="40" cols="80")=layout
-		div(class="gear-btn theme-link w3-btn w3-section" onclick="test()")
-			span Test form [HIT BACK BUTTON TO RETURN]
-		div(class="gear-btn theme-link w3-btn w3-section" onclick="submit()")
+		div(class="gear-btn theme-link w3-btn w3-section" id="testBtn")
+			span Test form (Opens in a dialog window)
+		div(class="gear-btn theme-link w3-btn w3-section" id="submitBtn")
 			span Validate and submit
-		textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
+	textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
 	
 	form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
 		input(name="jsonData" id="jsonData" type="hidden")
-		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
+		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`)
 		input(name="year" id="year" type="hidden" value=`${year}`)
 	form(id="testForm" style="visibility:hidden" action="/scouting/testform" method="post")
 		input(name="testData" id="testData" type="hidden")
-		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`) 
+		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`)
 		input(name="year" id="year" type="hidden" value=`${year}`)
-	
-	script.
-		function validate () {
-			// get the JSON from the form
-			let jsonText = document.getElementById("jsonfield").value;
-			let previousKeys = JSON.parse(document.getElementById("previousKeys").value);
-			//console.log("previousKeys.length=" + previousKeys.length);
-			let formType = document.getElementById("form_type").value;
-			console.log('formType=' + formType);
+	dialog(id="previewDialog")
+		div(id="dialogContent")
+			button(id="closePreviewBtn") X
+			iframe(id="previewFrame")
 
-			// parse to JSON (or fail out with an error)
-			let jsonData = {};
-			try {
-				jsonData = JSON.parse(jsonText);
-			} catch (error) {
-				NotificationCard.error('Invalid JSON! Please correct.');
-				return null;
-			}
+	//- 2023-10-06 JL: Changed script to module so I can import types ESM-style
+	script(src=`${fileRoot}/js/script-editform.js` type="module")
 
-			// make sure 'order' and 'id' are unique; also clear out extraneous stuff
-			let idDict = {};
-			let idCount = 0;
-			for (var i = 0; i < jsonData.length; i++) {
-				// since jsonData gets loaded back to the user, remove backend keys
-				delete jsonData[i]['_id'];
-				delete jsonData[i]['form_type'];
-				delete jsonData[i]['org_key'];
-				delete jsonData[i]['year'];
-				delete jsonData[i]['order'];
-
-				let thisType = jsonData[i]['type'];
-				if (thisType == null) { 
-					console.log('Missing type:', jsonData[i]);
-					NotificationCard.error("Missing at least one 'type' attribute! Please correct.");
-					return null;
-				}
-
-				if (thisType != 'spacer') {
-					let thisId = jsonData[i]['id'];
-					if (thisId == null) { 
-						console.log('Missing id:', jsonData[i]);
-						NotificationCard.error("Missing at least one 'id' attribute! Please correct.");
-						return null;
-					}
-					idCount++;
-					if (idDict[thisId]) {
-						console.warn('Duplicate ID?', thisId);
-					}
-					idDict[thisId] = thisId;
-				}
-			}
-
-			if (Object.keys(idDict).length != idCount)  { 
-				console.log('Keys:', Object.keys(idDict));
-				console.log(`Count: ${idCount}`);
-				NotificationCard.error("At least one duplicate 'id' value! Please correct.");
-				return null;
-			}
-			let jsonString = JSON.stringify(jsonData);
-			console.log('jsonData=' + jsonString);
-
-			// make sure required fields exist - otherNotes, contributedPoints [for matchScouting only]
-			if (formType == 'matchscouting') {
-				if (!idDict['otherNotes'])
-					NotificationCard.warn("WARNING! You have not defined 'otherNotes'");
-				if (!idDict['contributedPoints'])
-					NotificationCard.warn("WARNING! You have not defined 'contributedPoints'");
-			}
-
-			// check if any existing data fields are not included
-			// TODO enable for Pit Scouting (will need changes in orgconfig.ts as well)
-			if (formType == 'matchscouting') {
-				for (var j = 0; j < previousKeys.length; j++) {
-					console.log(j + " " + previousKeys[j]);
-					if (!idDict[previousKeys[j]]) {
-						NotificationCard.warn("WARNING! JSON is missing existing data key " + previousKeys[j]);
-						//return null;
-					}
-				} 
-			}
-
-			// verify keys are all 'allowed'
-			// TODO
-
-			return jsonString;
+	style.
+		#previewDialog {
+			width: calc(100% - 100px);
+			height: calc(100% - 100px);
+			padding: 0;
+			border: none;
+		}
+		#previewDialog::backdrop {
+			background-color: rgba(0,0,0,0.5);
 		}
 
-		function test() {
-			jsonString = validate();
-			if (jsonString == null)
-				return;
-
-			// submit the form
-			document.getElementById("testData").value = jsonString;
-			document.forms.testForm.submit();
+		#dialogContent {
+			position: relative;
+			width: 100%;
+			height: 100%;
 		}
 
-		function submit() {
-			jsonString = validate();
-			if (jsonString == null)
-				return;
-
-			// submit the form
-			document.getElementById("jsonData").value = jsonString;
-			document.forms.submitForm.submit();
+		#closePreviewBtn {
+			position: absolute;
+			top: 0;
+			right: 0;
+			width: 40px;
+			height: 40px;
+			display: grid;
+			place-items: center;
+			cursor: pointer;
 		}
 
-
+		#previewFrame {
+			width: 100%;
+			top: 40px;
+			position: relative;
+			height: calc(100% - 40px);
+		}

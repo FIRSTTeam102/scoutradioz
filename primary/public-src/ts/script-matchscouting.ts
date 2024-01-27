@@ -280,10 +280,13 @@ $(function(){
 		});
 	});
 		
-	window.onbeforeunload = function() {
-		return 'Leaving this page will lose match scouting data.';
-	};
-	
+	// 2024-01-26 JL: Made the editform preview appear in a dialog window; in this case, location.href === 'about:srcdoc'
+	// 	and we don't want onbeforeunload to fire in the sub window when changes don't matter
+	if (this.location.href !== 'about:srcdoc') {
+		window.onbeforeunload = function() {
+			return 'Leaving this page will lose match scouting data.';
+		};
+	}
 });
 
 // Again because JQuery typing is dumb
