@@ -15,8 +15,6 @@ export default function LZMA (lzma_path: string) {
 		///NOTE: Node.js needs something like "./" or "../" at the beginning.
 		lzma_worker = new Worker(lzma_path || "./lzma_worker-min.js");
 	
-	console.log('created worker', lzma_worker)
-	
 	lzma_worker.onmessage = function onmessage(e) {
 		if (e.data.action === action_progress) {
 			// @ts-ignore

@@ -56,7 +56,6 @@ export let lzma: ReturnType<typeof LZMA>;
 
 export function getLZMA() {
 	if (!lzma) {
-		console.log('creating LZMA object');
 		lzma = LZMA('/lib/lzma_worker-min.js');
 	}
 }
@@ -407,20 +406,9 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 		
 		let str = JSON.stringify(ret);
 		console.log('version2 str', str.length);
-		console.log(ret);
 		lzma.compress(str, 9, (result, err) => {
 			if (err) return reject(err);
 			if (result) {
-				// Convert to uint8array
-				// let uint8Array = (result.map(num => num + 128));
-				// console.log(uint8Array)
-				// let str1 = b64encode(uint8Array);
-				// console.log(str1.length, str1);
-				// let str2 = base64EncArr(uint8Array);
-				// console.log(str2.length, str2);
-				// resolve(uint8Array);
-				
-				
 				// lzma's result varies from -128 to 127
 				let byteArray = result.map(num => num + 128);
 				let base64 = b64encode(byteArray);
