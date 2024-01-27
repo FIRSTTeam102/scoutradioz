@@ -1,18 +1,16 @@
 import type { PageLoad } from './$types';
-import { event_key, getStore, org_key, storesLoaded, } from '$lib/stores';
 import db from '$lib/localDB';
-import { requireStores } from '$lib/utils';
 
-export const load: PageLoad = async ({ fetch }) => {
-	await requireStores(event_key, org_key);
+export const load: PageLoad = async ({ fetch, parent }) => {
+	const { event_key, org_key } = await parent();
 	
 	// JL: super hacky temporary thing to mark current match number
-	let firstMatchNumber: number = parseInt(localStorage.getItem(`match_number_${getStore(event_key)}`) || '1');
+	let firstMatchNumber: number = parseInt(localStorage.getItem(`match_number_${event_key}`) || '1');
 
 	let all = await db.matchscouting
 		.where({
-			event_key: getStore(event_key),
-			org_key: getStore(org_key),
+			event_key,
+			org_key,
 		})
 		.and(match => match.match_number >= firstMatchNumber)
 		.sortBy('match_number');

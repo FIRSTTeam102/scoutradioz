@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { userId } from '$lib/stores';
 	import SlidingTabs from '$lib/SlidingTabs.svelte';
 	import PitAssignmentList from './PitAssignmentList.svelte';
 
@@ -12,9 +11,9 @@
 		{ id: 'all', icon: 'groups', label: 'All' }
 	];
 
-	const myAssignments = data.assignments.filter((asg) => asg.primary?.id === $userId);
+	const myAssignments = data.assignments.filter((asg) => asg.primary?.id === data.user._id);
 	const partnersAssignments = data.assignments.filter(
-		(asg) => asg.secondary?.id === $userId || asg.tertiary?.id === $userId
+		(asg) => asg.secondary?.id === data.user._id || asg.tertiary?.id === data.user._id
 	);
 	const allAssignments = data.assignments;
 

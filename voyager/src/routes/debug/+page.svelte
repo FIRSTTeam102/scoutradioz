@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { encodeMatchScouting, decodeMatchScouting } from '$lib/compression';
 	import db, { type Log } from '$lib/localDB';
-	import { event_key, org_key } from '$lib/stores';
 
 	import { type logLevel, logLevelStringToNumber, logLevelNumberToString, setGlobalLogLevel, getGlobalLogLevel } from '$lib/logger';
 	import Select, { Option } from '@smui/select';

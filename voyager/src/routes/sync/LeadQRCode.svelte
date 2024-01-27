@@ -2,17 +2,20 @@
 	import assert from '$lib/assert';
 	import { encodeMatchScouting, encodeMetadata, decode } from '$lib/compression';
 	import db, { type MatchScoutingLocal } from '$lib/localDB';
-	import { event_key, org_key } from '$lib/stores';
 	import type { SnackbarContext } from '$lib/types';
 	import Select, { Option } from '@smui/select';
 	import { liveQuery, type Observable } from 'dexie';
 	import QRCode from 'qrcode';
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 	import { getContext } from 'svelte';
+	import type { LayoutData } from '../$types';
+	import { page } from '$app/stores';
 
 	let canvas: HTMLCanvasElement;
 
 	let snackbar = getContext('snackbar') as SnackbarContext;
+	
+	$: event_key = $page.data.event_key as string; $: org_key = $page.data.org_key as string;
 
 	let numMatchesToGrab: number;
 	let whichUsersToInclude: 'assigned' | 'everyone' = 'assigned';
@@ -28,7 +31,7 @@
 	$: numMatchesAtEvent = liveQuery(async () => {
 		let number = await db.lightmatches
 			.where({
-				event_key: $event_key,
+				event_key: event_key,
 				comp_level: 'qm'
 			})
 			.count();
@@ -40,7 +43,7 @@
 	});
 
 	function getHackyCurrentMatchNumber() {
-		return parseInt(localStorage.getItem(`match_number_${$event_key}`) || '1');
+		return parseInt(localStorage.getItem(`match_number_${event_key}`) || '1');
 	}
 
 	let matchscouting: MatchScoutingLocal[] | undefined = undefined;
@@ -51,8 +54,8 @@
 			.orderBy('match_number')
 			.filter(
 				(match) =>
-					match.event_key === $event_key &&
-					match.org_key === $org_key &&
+					match.event_key === event_key &&
+					match.org_key === org_key &&
 					match.match_number >= getHackyCurrentMatchNumber()
 			)
 			.limit(numMatchesToGrab * 6)
@@ -71,18 +74,18 @@
 			});
 	} else if (qrCodeType === 'metadata') {
 		(async () => {
-			assert(typeof $org_key === 'string' && typeof $event_key === 'string');
+			assert(typeof org_key === 'string' && typeof event_key === 'string');
 
 			const users = await db.lightusers
 				.where('org_key')
-				.equals($org_key)
+				.equals(org_key)
 				.filter((user) => {
 					if (whichUsersToInclude === 'everyone') return true;
 					return user.event_info.assigned === true || user.event_info.present === true;
 				})
 				.toArray();
 
-			const event = await db.events.where('key').equals($event_key).first();
+			const event = await db.events.where('key').equals(event_key).first();
 			if (!event) {
 				snackbar.error('Could not find event details!');
 				base64Data = '';
@@ -95,7 +98,7 @@
 				return;
 			}
 
-			const org = await db.orgs.where('org_key').equals($org_key).first();
+			const org = await db.orgs.where('org_key').equals(org_key).first();
 			assert(org, 'Could not find org in db');
 
 			base64Data = await encodeMetadata(org, users, teams, event);

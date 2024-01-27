@@ -2,16 +2,19 @@
 	import { encodeOneMatchScoutingResult, encodeOnePitScoutingResult } from '$lib/compression';
 	import db, { type MatchScoutingLocal, type PitScoutingLocal } from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
-	import { event_key, org_key } from '$lib/stores';
 	import Button, { Label as BLabel, Group as BGroup } from '@smui/button';
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
 	import Select, { Option } from '@smui/select';
 	import { liveQuery, type Observable } from 'dexie';
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
+	import { page } from '$app/stores';
 
 	const logger = getLogger('sync/ScouterQRCode');
 
+	$: org_key = $page.data.org_key as string;
+	$: event_key = $page.data.event_key as string;
+	
 	let onlyUnsynced = true;
 	let qrCodeType: 'matchscouting' | 'pitscouting' = 'matchscouting';
 	let matchToShowQr: MatchScoutingLocal | null = null;

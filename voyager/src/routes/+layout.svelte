@@ -18,7 +18,7 @@
 	} from '@smui/list';
 	import Tooltip, { Wrapper } from '@smui/tooltip';
 
-	import { userName, org_key, deviceOnline } from '$lib/stores';
+	import { deviceOnline } from '$lib/stores';
 	import { afterNavigate } from '$app/navigation';
 	import IconButton from '@smui/icon-button';
 	import { assets } from '$app/paths';
@@ -32,8 +32,11 @@
 	import { msg } from '$lib/i18n';
 
 	import '../theme/extras.scss';
+	import type { LayoutData } from './$types';
 
 	afterNavigate(() => (menuOpen = false));
+	
+	export let data: LayoutData;
 
 	let topAppBar: TopAppBar;
 	let headerBar: HTMLDivElement;
@@ -125,8 +128,12 @@
 <!-- modal is better but it won't close, so dismissible with position:fixed works -->
 <Drawer variant="modal" bind:open={menuOpen} fixed={true}>
 	<DHeader>
-		<DTitle>Welcome, {$userName}</DTitle>
-		<DSubtitle>{$org_key}</DSubtitle>
+		{#if data.user && data.org}
+			<DTitle>{msg('hello.name', {name: data.user.name})}</DTitle>
+			<DSubtitle>{data.org.nickname}</DSubtitle>
+		{:else}
+			<DTitle>{msg('index.welcome')}</DTitle>
+		{/if}
 	</DHeader>
 	<DContent>
 		<List>
@@ -141,6 +148,10 @@
 			<LItem href="/">
 				<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
 				<LText>{msg('layout.nav.user.switchorg')}</LText>
+			</LItem>
+			<LItem href="/preferences">
+				<LGraphic class="material-icons" aria-hidden="true">settings</LGraphic>
+				<LText>{msg('user.preferences.title')}</LText>
 			</LItem>
 			<LItem on:click={() => {
 				menuOpen = false;

@@ -3,7 +3,7 @@
 	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	import type BottomAppBar from '@smui-extra/bottom-app-bar';
-	import { deviceOnline, event_key, org_key, userId, userName } from '$lib/stores';
+	import { deviceOnline, } from '$lib/stores';
 	import db from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import { goto } from '$app/navigation';
@@ -19,12 +19,10 @@
 	let formData: Required<typeof data.pitScoutingEntry.data> = data.pitScoutingEntry.data || {};
 	let allDefaultValues: boolean;
 
-	$: scouterRecord = $userId
-		? {
-			id: $userId,
-			name: $userName
-		}
-		: undefined;
+	$: scouterRecord = {
+		id: data.user._id,
+		name: data.user.name,
+	}
 
 	// When formData changes (any time a form is edited), update the entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
@@ -62,17 +60,14 @@
 		},
 		{
 			onClick: async () => {
-				if (!$userId || !$userName) {
-					throw logger.error('Not logged in! This should have been handled in +page.ts');
-				}
 				logger.info(`Saving actual_scouter for pit scouting key ${data.pitScoutingEntry.team_key}`);
 				// Intentional design decision: Keep data undefined (as controlled ni the $: block above)
 				// 	even when hitting check/done for pit scouting, because we should never expect a form to be
 				// 	completely empty when pit scouting
 				await db.pitscouting.update(data.pitScoutingEntry, {
 					actual_scouter: {
-						id: $userId,
-						name: $userName
+						id: data.user._id,
+						name: data.user.name,
 					},
 					synced: false
 				});
@@ -82,12 +77,12 @@
 					// retrieve the full entry once more
 					let entry = await db.pitscouting
 						.where({
-							org_key: $org_key,
-							event_key: $event_key,
+							org_key: data.org_key,
+							event_key: data.event_key,
 							team_key: data.key
 						})
 						.first();
-					let bulkWriteResult = (await fetchJSON(`/api/orgs/${$org_key}/${$event_key}/submit/pit`, {
+					let bulkWriteResult = (await fetchJSON(`/api/orgs/${data.org_key}/${data.event_key}/submit/pit`, {
 						body: JSON.stringify([entry]),
 						method: 'POST'
 					})) as BulkWriteResult;

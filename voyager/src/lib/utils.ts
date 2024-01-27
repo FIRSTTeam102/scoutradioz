@@ -1,6 +1,3 @@
-import type { Writable } from "svelte/store";
-import { storesLoaded, getStore } from "./stores";
-import { redirect } from "@sveltejs/kit";
 
 export class HttpError extends Error {
 	status: number;
@@ -30,6 +27,15 @@ type hasTeamKey = AnyDict & {
  */
 export function sortWithTeamKeyByNumber(a: hasTeamKey, b: hasTeamKey) {
 	return parseInt(a.team_key.substring(3)) - parseInt(b.team_key.substring(3));
+}
+
+/**
+ * Since `comp_level` isn't saved in the matchscouting table, this function takes the match key and returns the comp_level,
+ * e.g. 'qm', 'qf', etc.
+ */
+export function matchKeyToCompLevel(key: string) {
+	let matchIdentifier = key.split('_')[1];
+	return matchIdentifier.substring(0, 2);
 }
 
 /** Retrieves the desired width and height of an element which wishes to take up the entire space of the screen EXCLUDING what is above it and the bottom nav bar. */
@@ -110,16 +116,4 @@ export function updateSimpleHash(hash: number, nextValue: number) {
 	let h2 = ((hash << 5) - hash) + nextValue;
 	h2 = h2 & h2;
 	return h2;
-}
-
-/**
- * Does two things: (1) awaits {@link storesLoaded} and (2) redirects the user if any of the provided stores are not present.
- */
-export async function requireStores(...stores: Writable<unknown>[]) {
-	await storesLoaded;
-	for (let store of stores) {
-		if (!getStore(store)) {
-			throw redirect(307, '/');
-		}
-	}
 }

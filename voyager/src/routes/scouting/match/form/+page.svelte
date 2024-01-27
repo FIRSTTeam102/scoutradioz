@@ -6,7 +6,7 @@
 	import { getLogger } from '$lib/logger';
 	import db from '$lib/localDB';
 	import { goto } from '$app/navigation';
-	import { deviceOnline, event_key, org_key, userId, userName } from '$lib/stores';
+	import { deviceOnline } from '$lib/stores';
 	import { fetchJSON } from '$lib/utils';
 	import type { BulkWriteResult } from 'mongodb';
 	import Card from '@smui/card';
@@ -18,15 +18,16 @@
 	let bottomAppBar: BottomAppBar;
 
 	// Initialize formData if necessary
-	let formData: Required<typeof data.matchScoutingEntry.data> = data.matchScoutingEntry.data || {};
+	let formData: Required<typeof data.matchScoutingEntry.data>;
+	// JL note: This is in a $: handler because navigating between match scouting form pages does not reload the page,
+	// 	nor does it re-run onMount().
+	$: formData = data.matchScoutingEntry.data || {};
 	let allDefaultValues: boolean;
 
-	$: scouterRecord = $userId
-		? {
-				id: $userId,
-				name: $userName
-		  }
-		: undefined;
+	$: scouterRecord = {
+		id: data.user_id,
+		name: data.user_name
+	};
 
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
@@ -60,7 +61,7 @@
 		},
 		{
 			onClick: async () => {
-				if (!$userId || !$userName) {
+				if (!data.user_id || !data.user_name) {
 					throw logger.error('Not logged in! This should have been handled in +page.ts');
 				}
 				logger.info(
@@ -71,8 +72,8 @@
 				// 	checkboxes like no-show / died during match, so some orgs might accept empty forms
 				await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
 					actual_scorer: {
-						id: $userId,
-						name: $userName
+						id: data.user_id,
+						name: data.user_name
 					},
 					data: formData,
 					synced: false // since the entry is being updated locally, we must force synced=false until it definitely is synced

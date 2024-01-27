@@ -1,9 +1,11 @@
 <script lang='ts'>
-	import { event_name } from "$lib/stores";
+	import type { PageData } from "./$types";
+
+	export let data: PageData;
 
 </script>
 <h1>Home</h1>
 <p>Welcome to Scoutradioz Voyager</p>
-{#if $event_name}
-	<p>You are currently at {$event_name}</p>
+{#if data.event}
+	<p>You are currently at {data.event.name}</p>
 {/if}

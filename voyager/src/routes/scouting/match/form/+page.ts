@@ -1,22 +1,21 @@
 import type { PageLoad } from './$types';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { LayoutField } from '$lib/types';
-import { event_key, getStore, org_key, storesLoaded, } from '$lib/stores';
-import { requireStores } from '$lib/utils';
 import db from '$lib/localDB';
 
-export const load: PageLoad = async ({ url, fetch }) => {
-	await requireStores(event_key, org_key);
+export const load: PageLoad = async ({ url, fetch, parent }) => {
+	const { event_key, org_key, user_id, event } = await parent();
+	if (!event) throw redirect(307, '/');
 
 	const key = url.searchParams.get('key');
 	if (!key) throw error(400, new Error('Match-team key not specified'));
 
 	const team_key = key.split('_')[2];
 
-	const layout = db.layout
+	const layout = await db.layout
 		.where({
-			org_key: getStore(org_key),
-			year: Number(getStore(event_key)?.substring(0,4)),
+			org_key,
+			year: event.year,
 			form_type: 'matchscouting'
 		})
 		.toArray();

@@ -16,7 +16,7 @@
 
 	import type { PageData } from './$types';
 	import { getContext, onDestroy, onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 
 	export let data: PageData;
@@ -72,6 +72,8 @@
 
 			let result = await db.user.put(user);
 			logger.debug(`Result of db.user.put(user) = ${result}`);
+			// After the user is set in the db, invalidate all page loads so that org/etc. info are all reloaded from Dexie
+			invalidateAll();
 		} catch (err) {
 			logger.error(err);
 		}

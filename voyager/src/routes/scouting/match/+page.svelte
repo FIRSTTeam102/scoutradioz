@@ -4,7 +4,6 @@
 	import Card, { Content as CContent } from '@smui/card';
 	import List, { Item, Text, PrimaryText, SecondaryText, Meta } from '@smui/list';
 	import Button, { Label as BLabel, Icon as BIcon } from '@smui/button';
-	import { event_key, userName } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { msg } from '$lib/i18n/index';
@@ -26,14 +25,14 @@
 	Current match number: {data.firstMatchNumber}
 	<Button on:click={() => {
 		let newMatchNumber = Math.max(data.firstMatchNumber - 1, 1);
-		localStorage.setItem(`match_number_${$event_key}`, String(newMatchNumber));
+		localStorage.setItem(`match_number_${data.event_key}`, String(newMatchNumber));
 		invalidateAll();
 	}}>
 		<BLabel>Decrease</BLabel>
 	</Button>
 	<Button on:click={() => {
 		let newMatchNumber = data.firstMatchNumber + 1;
-		localStorage.setItem(`match_number_${$event_key}`, String(newMatchNumber));
+		localStorage.setItem(`match_number_${data.event_key}`, String(newMatchNumber));
 		invalidateAll();
 	}}>
 		<BLabel>Increase</BLabel>
@@ -56,7 +55,7 @@
 								: asg.completed && !asg.synced
 								? 'complete-locally '
 								: 'incomplete ') + asg.alliance}
-							selected={asg.assigned_scorer === $userName}
+							selected={asg.assigned_scorer?.id === data.user_id}
 						>
 							<Text>
 								<PrimaryText>Team {asg.team_key.replace('frc', '')}: {asg.team_name}</PrimaryText>
