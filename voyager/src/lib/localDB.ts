@@ -55,6 +55,14 @@ export type MatchScoutingLocal = Omit<MatchScouting, '_id' | 'assigned_scorer' |
 	team_name?: string;
 	assigned_scorer?: ScouterRecordLocal;
 	actual_scorer?: ScouterRecordLocal;
+	/**
+	 * Whether this entry has been marked as completed. The `data` field gets autosaved as it's entered, but `completed`
+	 * only gets set when the Done button is clicked.
+	 */
+	completed?: boolean;
+	/**
+	 * Whether this entry has been marked as synced (whether uploaded by this device or marked as synced after showing qr code)
+	 */
 	synced?: boolean;
 }
 
@@ -63,6 +71,11 @@ export type PitScoutingLocal = Omit<PitScouting, '_id' | 'primary' | 'secondary'
 	secondary?: ScouterRecordLocal;
 	tertiary?: ScouterRecordLocal;
 	actual_scouter?: ScouterRecordLocal;
+	/**
+	 * Whether this entry has been marked as completed. The `data` field gets autosaved as it's entered, but `completed`
+	 * only gets set when the Done button is clicked.
+	 */
+	completed?: boolean;
 	/**
 	 * Whether this entry has been marked as synced (whether uploaded by this device or marked as synced after showing qr code)
 	 */
@@ -104,6 +117,12 @@ export interface SyncStatus {
 	filter: string;
 }
 
+export const defaultPreferences = {
+	enableAutoSync: true,
+}
+
+/** User preferences. Stored on-device, not synced. */
+export type Preferences = typeof defaultPreferences;
 
 export class LocalDB extends Dexie {
 	// Lightweight schemas that contain only the info necessary to transmit via QR code
@@ -120,10 +139,11 @@ export class LocalDB extends Dexie {
 
 	logs!: Table<Log>;
 	syncstatus!: Table<SyncStatus>;
+	preferences!: Table<Preferences>;
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(30).stores({
+		this.version(47).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches: '&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
 			user: '&_id',
@@ -140,7 +160,8 @@ export class LocalDB extends Dexie {
 			orgs: '&org_key',
 
 			logs: '++id, group, level',
-			syncstatus: '&[table+filter], date'
+			syncstatus: '&[table+filter], date',
+			preferences: '++id'
 		});
 	}
 }

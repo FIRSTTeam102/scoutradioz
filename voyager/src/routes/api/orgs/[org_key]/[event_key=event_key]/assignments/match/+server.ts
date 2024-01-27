@@ -42,7 +42,9 @@ export const GET: RequestHandler = async ({ url, params }) => {
 		return {
 			...match,
 			team_name: teamNames[match.team_key],
-			synced: !!match.data, // 2023-11-8 JL: turn on synced boolean if there's data for this match on the server
+			// JL: data that is completed and uploaded to the server should have synced=true and completed=true for dexie
+			synced: !!match.data,
+			completed: !!match.data,
 		};
 	});
 
