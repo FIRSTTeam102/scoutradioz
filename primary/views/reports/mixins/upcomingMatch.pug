@@ -32,6 +32,11 @@ mixin upcomingMatch(match, includeHr=false, selectedTeam=null)
 				percentChance = ((1 - match.predictive.chanceOfRed) * 100).toFixed(0);
 				winningTeam = 'blue';
 			}
+			// 2024-01-26, M.O'C: Re-implement match prediction ceiling to 99
+			// There's Always A Chance™ 
+			if (percentChance == '100') {
+				percentChance = '99';
+			} 
 		}
 
 	div(class="w3-row")
