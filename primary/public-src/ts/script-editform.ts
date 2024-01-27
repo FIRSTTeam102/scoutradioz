@@ -4,7 +4,6 @@ type LayoutEdit = import('scoutradioz-types').LayoutEdit;
 type StringDict = import('scoutradioz-types').StringDict;
 type DerivedLayout = import('scoutradioz-types').DerivedLayout;
 
-// consolesdflkjd
 async function validate() {
 	// get the JSON from the form
 	const jsonFieldElem = document.getElementById('jsonfield') as HTMLInputElement;
@@ -13,7 +12,6 @@ async function validate() {
 	const previousKeysElem = document.getElementById('previousKeys') as HTMLInputElement;
 	let previousKeys = JSON.parse(previousKeysElem.value);
 	lightAssert(Array.isArray(previousKeys), 'previousKeys is not an array');
-	//console.log("previousKeys.length=" + previousKeys.length);
 
 	const formTypeElem = document.getElementById('form_type') as HTMLInputElement;
 	let formType = formTypeElem.value;
@@ -175,11 +173,13 @@ async function validate() {
 
 	// check if any existing data fields are not included
 	// TODO enable for Pit Scouting (will need changes in orgconfig.ts as well)
-	let missingDataKeys = previousKeys.filter((key) => !ids.has(key));
-	if (missingDataKeys.length > 0) {
-		let message = `*WARNING!* The following keys (ids) exist in your past match scouting data, but are not included in this layout: \n${missingDataKeys.map(key => `\n - ${key}`)}`;
-		let { cancelled } = await Confirm.show(message, { yesText: 'Proceed anyways', noText: 'Cancel' });
-		if (cancelled) return null;
+	if (formType === 'matchscouting') {
+		let missingDataKeys = previousKeys.filter((key) => !ids.has(key));
+		if (missingDataKeys.length > 0) {
+			let message = `*WARNING!* The following keys (ids) exist in your past match scouting data, but are not included in this layout: \n${missingDataKeys.map(key => `\n - ${key}`)}`;
+			let { cancelled } = await Confirm.show(message, { yesText: 'Proceed anyways', noText: 'Cancel' });
+			if (cancelled) return null;
+		}
 	}
 	return jsonString;
 }
@@ -189,12 +189,25 @@ async function test() {
 	if (jsonString == null)
 		return;
 
-	// submit the form
-	const testDataElem = document.getElementById('testData') as HTMLInputElement;
-	testDataElem.value = jsonString;
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	document.forms.testForm.submit();
+	const iframe = document.getElementById('previewFrame') as HTMLIFrameElement;
+	const dialog = document.getElementById('previewDialog') as HTMLDialogElement;
+	
+	fetch('/scouting/testform', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			testData: jsonString,
+			form_type: (document.getElementById('form_type') as HTMLInputElement).value,
+			year: (document.getElementById('year') as HTMLInputElement).value,
+		})
+	})
+		.then(response => response.text())
+		.then(data => {
+			iframe.srcdoc = data;
+			dialog.showModal();
+		});
 }
 
 async function submit() {
@@ -210,8 +223,14 @@ async function submit() {
 	document.forms.submitForm.submit();
 }
 
+function closePreviewDialog() {
+	const dialog = document.getElementById('previewDialog') as HTMLDialogElement;
+	dialog.close();
+}
+
 $(() => {
 	$('#testBtn').on('click', test);
 	$('#submitBtn').on('click', submit);
 	$('#validateBtn').on('click', validate);
+	$('#closePreviewBtn').on('click', closePreviewDialog);
 });
