@@ -12,6 +12,7 @@ build
 yarn.lock
 *.tsbuildinfo
 .svelte-kit
+yarn-error.log
 # below: temporary
 offline/static
 .serverless
