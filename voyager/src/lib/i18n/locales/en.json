@@ -147,6 +147,10 @@
 		"passwordalreadyexists": "Password already exists. Please submit your current password.",
 		"newpasswordboth": "Please fill both password forms.",
 		"newpasswordsuccess": "Set password successfully.",
+		"preferences": {
+			"title": "Preferences",
+			"enableAutoSync": "Enable automatic sync when device is online"
+		},
 		"reportcolumns": {
 			"title": "Choose report columns",
 			"saved": "Saved column preferences successfully.",

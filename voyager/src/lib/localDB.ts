@@ -1,3 +1,4 @@
+import { browser } from '$app/environment';
 import Dexie, { type Table } from 'dexie';
 import type { Org, User, Event, Layout, Match, TeamKey, MatchScouting, Team, PitScouting, ScouterRecord, AnyDict } from 'scoutradioz-types';
 import type { FilterQuery } from 'scoutradioz-utilities';
@@ -122,7 +123,9 @@ export const defaultPreferences = {
 }
 
 /** User preferences. Stored on-device, not synced. */
-export type Preferences = typeof defaultPreferences;
+export type Preferences = typeof defaultPreferences & {
+	id?: number;
+};
 
 export class LocalDB extends Dexie {
 	// Lightweight schemas that contain only the info necessary to transmit via QR code
