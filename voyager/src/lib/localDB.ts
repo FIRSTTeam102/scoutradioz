@@ -200,4 +200,4 @@ if ('addEventListener' in globalThis) addEventListener('unhandledrejection', asy
 export default db;
 
 //@ts-ignore
-if (typeof window !== 'undefined') window.db = db; // for debugging
+if (browser) window.db = db; // For debugging

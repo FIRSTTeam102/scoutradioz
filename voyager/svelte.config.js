@@ -8,8 +8,14 @@ const config = {
 		adapter: adapter(),
 		serviceWorker: {
 			register: false,
-		}
+		},
 	},
+	onwarn: (warning, handler) => {
+		// JL note: importing any @material things inside a svelte file results in spam with these warnings.
+		if (warning.code === 'css-unused-selector' || warning.code === 'vite-plugin-svelte-preprocess-many-dependencies') return;
+		console.log(warning.code);
+		handler(warning);
+	}
 };
 
 export default config;

@@ -3,6 +3,7 @@ import type { LoadEvent } from '@sveltejs/kit';
 import { getLogger } from '../logger';
 import { fetchJSON } from '../utils';
 import Cookies from 'js-cookie';
+import { browser } from '$app/environment';
 
 const logger = getLogger('i18n');
 
@@ -337,7 +338,8 @@ interface I18nParameters {
 
 // Singleton instance and exported methods
 export const i18n = new I18n({});
-console.log(i18n)
+// @ts-ignore
+if (browser) window.i18n = i18n; // For debugging
 
 export const msg = i18n.msg.bind(i18n);
 export const msgUrl = i18n.msgUrl.bind(i18n);
