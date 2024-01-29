@@ -430,20 +430,20 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	//
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	//
-	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// Avoid crashing server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (timestampArray && timestampArray[0]) {
-		let earliestMatch = timestampArray[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = timestampArray[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
-
 
 	// Clear 'assigned_scorer' from all unresolved team@matches
 	await utilities.bulkWrite('matchscouting', 
 		[{updateMany: {
-			filter: { org_key, event_key, time: { $gte: earliestTimestamp } }, 
+			filter: { org_key, event_key, time: { $gte: latestTimestamp } }, 
 			update: { $unset: { 'assigned_scorer' : '' } }
 		}}]
 	);
@@ -455,10 +455,10 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	let comingMatches: Match[] = await utilities.find('matches', 
-		{event_key: event_key, time: {$gte: earliestTimestamp}},
+		{event_key: event_key, time: {$gte: latestTimestamp}},
 		{sort: {time: 1}}
 	);
-	let lastMatchTimestamp = earliestTimestamp;
+	let lastMatchTimestamp = latestTimestamp;
 	
 	let matchBlockCounter = matchBlockSize;  // initialize at the max size so in the first loop iteration, it'll set up the scout list
 	let scoutPointer = 0;  // start off with the 0th position
@@ -852,18 +852,19 @@ router.get('/swapmatchscouters', wrap(async (req, res) => {
 	logger.info('ENTER eventKey=' + eventKey + ',org_key=' + org_key);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matchDocs && matchDocs[0]) {
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 		
 	// Get the distinct list of scorers from the unresolved matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}) as ScouterRecord[];
+	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: latestTimestamp }}) as ScouterRecord[];
 	logger.debug('distinct assigned_scorers: ' + JSON.stringify(scorers));
 	
 	// 2022-02-07 JL: sorting le scorers' names
@@ -910,20 +911,20 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	assert(swapout && swapin, new e.InternalDatabaseError('Could not find both users in database!')); // Make sure users are found in the db
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
-	// matchCol.find({ event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matchDocs && matchDocs[0]) {
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 		
 	// Do the updateMany - change instances of swapout to swapin
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2023-02-07 JL: changing scouter name to ScouterRecord
-	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': new ObjectId(swapoutID), org_key, event_key, time: { $gte: earliestTimestamp } }, 
+	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': new ObjectId(swapoutID), org_key, event_key, time: { $gte: latestTimestamp } }, 
 		update:{ $set: { assigned_scorer: {
 			id: swapin._id,
 			name: swapin.name
