@@ -1,9 +1,15 @@
 <script lang="ts">
 	import db, { type Log } from '$lib/localDB';
 
-	import { type logLevel, logLevelStringToNumber, logLevelNumberToString, setGlobalLogLevel, getGlobalLogLevel } from '$lib/logger';
+	import {
+		type logLevel,
+		logLevelStringToNumber,
+		logLevelNumberToString,
+		setGlobalLogLevel,
+		getGlobalLogLevel
+	} from '$lib/logger';
 	import Select, { Option } from '@smui/select';
-	import DataTable, { Head, Body, Row, Cell } from '@smui/data-table';
+	import DataTable, { Head, Body, Row, Cell, Pagination, Label } from '@smui/data-table';
 	import IconButton from '@smui/icon-button';
 	import { liveQuery, type IndexableTypeArray, type Observable } from 'dexie';
 	import { getContext } from 'svelte';
@@ -18,20 +24,32 @@
 
 	let items: Observable<Log[]>;
 	$: items = liveQuery(() => {
-		let collection = (selectedLogGroup !== 'all')
-			? db.logs.where({ group: selectedLogGroup })
-			: db.logs.orderBy('id');
+		let collection =
+			selectedLogGroup !== 'all'
+				? db.logs.where({ group: selectedLogGroup })
+				: db.logs.orderBy('id');
 		return collection
 			.and((log) => log.level >= selectedLevelNum)
 			.reverse()
-			.limit(100)
 			.toArray();
 	});
+	let rowsPerPage = 10;
+	let currentPage = 0;
+
+	$: start = currentPage * rowsPerPage;
+	$: end = Math.min(start + rowsPerPage, $items?.length);
+	$: slice = $items?.slice(start, end);
+	$: lastPage = $items ? Math.max(Math.ceil($items.length / rowsPerPage) - 1, 0) : 0;
+
+	$: if (currentPage > lastPage) {
+		currentPage = lastPage;
+	}
 
 	async function copyToClipboard() {
-		let collection = (selectedLogGroup !== 'all')
-			? db.logs.where({ group: selectedLogGroup })
-			: db.logs.toCollection();
+		let collection =
+			selectedLogGroup !== 'all'
+				? db.logs.where({ group: selectedLogGroup })
+				: db.logs.toCollection();
 		let logs = await collection.and((log) => log.level >= selectedLevelNum).toArray();
 		let text = logs
 			.map(
@@ -42,13 +60,13 @@
 		await navigator.clipboard.writeText(text);
 		snackbar.open(`Copied ${logs.length} log message(s) to clipboard`, 4000);
 	}
-	
+
 	let selectedLogGroup = 'all';
 	let selectedLogLevel: logLevel = 'debug';
-	
+
 	// Allow the changing of the recorded log level
 	let recordedLogLevel: logLevel = getGlobalLogLevel();
-	
+
 	$: setGlobalLogLevel(recordedLogLevel);
 </script>
 
@@ -97,7 +115,6 @@
 </Select>
 <div>Logs at or above this level will be recorded; logs below this level will be ignored.</div>
 
-
 <h1>Logs</h1>
 
 <Select variant="filled" label="Log group" bind:value={selectedLogGroup}>
@@ -119,34 +136,76 @@
 </Select>
 
 <IconButton class="material-icons" on:click={copyToClipboard}>content_copy</IconButton>
-<IconButton class="material-icons" on:click={async () => {
-	if (confirm('Delete all logs stored on the device?')) {
-		await db.logs.clear();
-	}
-}}>delete</IconButton>
-
-<p>Note: Table is limited to 100 messages. Click the clipboard button to copy all logs (with the current filter) to the clipboard.</p>
+<IconButton
+	class="material-icons"
+	on:click={async () => {
+		if (confirm('Delete all logs stored on the device?')) {
+			await db.logs.clear();
+		}
+	}}>delete</IconButton
+>
 
 <DataTable table$aria-label="User list" style="width: 100%;">
 	<Head>
 		<Row>
-			<Cell numeric>ID</Cell>
-			<Cell>Group</Cell>
-			<Cell>Level</Cell>
-			<Cell style="width: 100%">Message</Cell>
+			<Cell colspan='1' numeric>ID</Cell>
+			<Cell colspan='1'>Group</Cell>
+			<Cell colspan='1'>Level</Cell>
+			<Cell colspan='4' style="width: 100%">Message</Cell>
 		</Row>
 	</Head>
 	<Body>
 		{#if $items}
-			{#each $items as item}
+			{#each slice as item}
 				<Row>
 					<Cell numeric>{item.id}</Cell>
 					<Cell>{item.group}</Cell>
 					<Cell>{logLevelNumberToString(item.level)}</Cell>
-					<Cell>{item.message}</Cell>
+					<Cell>{item.message?.replace(/,/g, ', ')}</Cell>
 				</Row>
 			{/each}
 		{/if}
 	</Body>
-	<!-- TODO: Progress bar when data is loading from DB -->
+	<Pagination slot="paginate">
+		<svelte:fragment slot="rowsPerPage">
+			<Label>Rows Per Page</Label>
+			<Select variant="outlined" bind:value={rowsPerPage} noLabel>
+				<Option value={10}>10</Option>
+				<Option value={25}>25</Option>
+				<Option value={100}>100</Option>
+			</Select>
+		</svelte:fragment>
+		<svelte:fragment slot="total">
+			{start + 1}-{end} of {$items?.length || 'unknown'}
+		</svelte:fragment>
+
+		<IconButton
+			class="material-icons"
+			action="first-page"
+			title="First page"
+			on:click={() => (currentPage = 0)}
+			disabled={currentPage === 0}>first_page</IconButton
+		>
+		<IconButton
+			class="material-icons"
+			action="prev-page"
+			title="Prev page"
+			on:click={() => currentPage--}
+			disabled={currentPage === 0}>chevron_left</IconButton
+		>
+		<IconButton
+			class="material-icons"
+			action="next-page"
+			title="Next page"
+			on:click={() => currentPage++}
+			disabled={currentPage === lastPage}>chevron_right</IconButton
+		>
+		<IconButton
+			class="material-icons"
+			action="last-page"
+			title="Last page"
+			on:click={() => (currentPage = lastPage)}
+			disabled={currentPage === lastPage}>last_page</IconButton
+		>
+	</Pagination>
 </DataTable>
