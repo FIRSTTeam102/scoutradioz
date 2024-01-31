@@ -7,10 +7,8 @@
 	justify-items: center;
 
 	:global(.mdc-card) {
-		// .mdc-card {
-			min-width: $card-width;
-			width: 100%;
-			min-height: $card-height;
-		// }
+		min-width: $card-width;
+		width: 100%;
+		min-height: $card-height;
 	}
 }

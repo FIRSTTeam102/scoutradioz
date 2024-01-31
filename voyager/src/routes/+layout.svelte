@@ -91,8 +91,15 @@
 		},
 		async autoplay(cb) {
 			this.play();
-			await cb();
-			this.stop();
+			try {
+				await cb();
+			}
+			catch (err) {
+				throw err; // Propagate the error
+			}
+			finally {
+				this.stop();
+			}
 		}
 	};
 

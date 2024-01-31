@@ -10,4 +10,5 @@ declare module 'dexie' {
 declare global {
 	type Dict<T> = {[key: string]: T}
 	type AnyDict = Dict<any>;
+	type AnyCallback = () => any;
 }

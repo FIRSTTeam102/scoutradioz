@@ -1,3 +1,5 @@
+import { getContext, onDestroy, onMount } from "svelte";
+import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext } from "./types";
 
 export class HttpError extends Error {
 	status: number;
@@ -116,4 +118,37 @@ export function updateSimpleHash(hash: number, nextValue: number) {
 	let h2 = ((hash << 5) - hash) + nextValue;
 	h2 = h2 & h2;
 	return h2;
+}
+
+/**
+ * JL: Made this cuz I hate copy-pasted boilerplate and I'm SHOCKED that this actually works.
+ * This method returns all of the "getContext"able items from +layout.svelte.
+ * It MUST be called during component initialization, i.e. in the main scope of a
+ * svelte file's script tag.
+ */
+export function getPageLayoutContexts() {
+	const snackbar = getContext('snackbar') as SnackbarContext;
+	const refreshButton = getContext('refreshButton') as RefreshContext;
+	const refreshButtonAnimation = getContext(
+		'refreshButtonAnimation'
+	) as RefreshButtonAnimationContext;
+	return { snackbar, refreshButton, refreshButtonAnimation };
+}
+
+/**
+ * JL: Made this cuz I hate copy-pasted boilerplate and I am EVEN MORE SHOCKED that this one also works.
+ * This method auto adds refresh button functionality on the given page and removes it on onDestroy.
+ * Provide the onClick handler for the refresh button.
+ */
+export function addRefreshButtonFunctionality(clickHandler?: () => any) {
+	const refreshButton = getContext('refreshButton') as RefreshContext;
+	onMount(() => {
+		refreshButton.set({
+			supported: true,
+			onClick: clickHandler
+		});
+	});
+	onDestroy(() => {
+		refreshButton.set({supported: false});
+	})
 }

@@ -7,28 +7,31 @@
 		type MatchScoutingLocal,
 		type str,
 		type WithStringDbId,
-		type PitScoutingLocal
+		type PitScoutingLocal,
 	} from '$lib/localDB';
+	import { MatchScoutingOperations, FormLayoutOperations } from '$lib/DBOperations';
 	import { liveQuery } from 'dexie';
 	import { getLogger } from '$lib/logger';
 
-	import { fetchJSON } from '$lib/utils';
+	import { addRefreshButtonFunctionality, fetchJSON, getPageLayoutContexts } from '$lib/utils';
 	import assert from '$lib/assert';
 	import type { MatchScouting, PitScouting, User, Event, Org, Layout } from 'scoutradioz-types';
 	import { getContext, onDestroy, onMount } from 'svelte';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 	import { page } from '$app/stores';
+	import { invalidateAll } from '$app/navigation';
 
 	const logger = getLogger('sync/LeadSyncMothership');
 
-	const snackbar = getContext('snackbar') as SnackbarContext;
-	const refreshButton = getContext('refreshButton') as RefreshContext;
-	const refreshButtonAnimation = getContext(
-		'refreshButtonAnimation'
-	) as RefreshButtonAnimationContext;
+	const { snackbar, refreshButton, refreshButtonAnimation } = getPageLayoutContexts();
+	addRefreshButtonFunctionality(() =>
+		snackbar.open(
+			"Sorry, the button on this page right now is only to show the animation when something is loading. Clicking it won't do anything rn."
+		)
+	);
 
 	let errorMessage: string;
-	
+
 	$: org_key = $page.data.org_key as string;
 	$: event_key = $page.data.event_key as string;
 
@@ -141,23 +144,6 @@
 		}
 	}
 
-	async function downloadMatchScouting() {
-		try {
-			assert(event_key, 'event_key not defined');
-
-			// Fetch list of match scouting assignments for this event
-			const matchScouting = await fetchJSON<MatchScoutingLocal[]>(
-				`/api/orgs/${org_key}/${event_key}/assignments/match`
-			);
-			// since it's coming from the sever, it's by definiton synced
-			matchScouting.forEach((match) => (match.synced = true));
-
-			await db.matchscouting.bulkPut(matchScouting);
-		} catch (err) {
-			handleError(err);
-		}
-	}
-
 	async function downloadMatches() {
 		try {
 			const matches = await fetchJSON<LightMatch[]>(`/api/${event_key}/matches`);
@@ -170,9 +156,6 @@
 
 			await db.lightmatches.bulkAdd(matches);
 
-			// const event = await fetchJSON<Event>{
-			// 	`/api/${event_key}`
-			// };
 			const event = await fetchJSON<str<Event>>(`/api/${event_key}`);
 			await db.events
 				.where({
@@ -227,14 +210,19 @@
 			const pitCol = db.pitscouting.where({ org_key: org_key, event_key: event_key });
 			let pitscouting: PitScoutingLocal[];
 			if (dangerouslyUploadAll) {
-				if (!confirm('Really upload all data, not synced data? (If a scouter uploaded something on their own device and it didn\'t get sent to yours via QR, it will be overwritten!!')) return;
+				if (
+					!confirm(
+						"Really upload all data, not synced data? (If a scouter uploaded something on their own device and it didn't get sent to yours via QR, it will be overwritten!!"
+					)
+				)
+					return;
 				pitscouting = await pitCol.toArray();
-			}
-			else {
-				pitscouting = await pitCol.and(pit => pit.synced === false).toArray();
+			} else {
+				pitscouting = await pitCol.and((pit) => pit.synced === false).toArray();
 			}
 
-			if (pitscouting.length === 0) throw new Error('No pitscouting found that was not already synced');
+			if (pitscouting.length === 0)
+				throw new Error('No pitscouting found that was not already synced');
 
 			let bulkWriteResult = await fetchJSON(`/api/orgs/${org_key}/${event_key}/submit/pit`, {
 				body: JSON.stringify(pitscouting),
@@ -264,22 +252,26 @@
 		try {
 			assert(org_key && event_key, 'org_key and event_key not defined');
 
-			const matchCol = db.matchscouting
-				.where({
-					org_key: org_key,
-					event_key: event_key
-				});
-			
+			const matchCol = db.matchscouting.where({
+				org_key: org_key,
+				event_key: event_key
+			});
+
 			let matchscouting: MatchScoutingLocal[];
 			if (dangerouslyUploadAll) {
-				if (!confirm('Really upload all data, not synced data? (If a scouter uploaded something on their own device and it didn\'t get sent to yours via QR, it will be overwritten!!')) return;
+				if (
+					!confirm(
+						"Really upload all data, not synced data? (If a scouter uploaded something on their own device and it didn't get sent to yours via QR, it will be overwritten!!"
+					)
+				)
+					return;
 				matchscouting = await matchCol.toArray();
-			}
-			else {
-				matchscouting = await matchCol.and(match => match.synced === false).toArray();
+			} else {
+				matchscouting = await matchCol.and((match) => match.synced === false).toArray();
 			}
 
-			if (matchscouting.length === 0) throw new Error('No matchscouting found that was not already synced');
+			if (matchscouting.length === 0)
+				throw new Error('No matchscouting found that was not already synced');
 
 			let bulkWriteResult = await fetchJSON(`/api/orgs/${org_key}/${event_key}/submit/match`, {
 				body: JSON.stringify(matchscouting),
@@ -323,6 +315,8 @@
 			// console.log(`${numDeleted} orgs deleted from db`);
 			// await db.orgs.add(org);
 			await db.orgs.put(org);
+			// since event_key can be updated after org is downloaded
+			await invalidateAll();
 		} catch (err) {
 			handleError(err);
 		}
@@ -335,23 +329,17 @@
 			errorMessage = 'An unknown error occurred.';
 		}
 		snackbar.error(errorMessage);
-		// if (errorSnackbar) errorSnackbar.forceOpen();
 	}
 
-	onMount(() => {
-		refreshButton.set({
-			supported: true,
-			onClick: async () => {
-				snackbar.open(
-					"Sorry, the button on this page right now is only to show the animation when something is loading. Clicking it won't do anything rn."
-				);
-			}
-		});
-	});
-
-	onDestroy(() => {
-		refreshButton.set({ supported: false });
-	});
+	async function wrap(func: () => void|Promise<void>) {
+		try {
+			console.log('autoplay begin');
+			await refreshButtonAnimation.autoplay(func);
+		} catch (err) {
+			console.log('caught!')
+			handleError(err);
+		}
+	}
 </script>
 
 <section class="pad">
@@ -372,7 +360,7 @@
 				<Group variant="outlined">
 					<Button variant="outlined" on:click={downloadUsers}>
 						<Icon class="material-icons">person</Icon>
-						<BLabel>Download users</BLabel>
+						<BLabel>Download users / org info</BLabel>
 					</Button>
 				</Group>
 			</CActions>
@@ -389,10 +377,7 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button
-						variant="outlined"
-						on:click={() => refreshButtonAnimation.autoplay(downloadMatchScouting)}
-					>
+					<Button variant="outlined" on:click={() => wrap(MatchScoutingOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
@@ -451,7 +436,7 @@
 				</p>
 			</Content>
 			<CActions>
-				<Button variant="outlined" on:click={downloadFormData}>
+				<Button variant="outlined" on:click={() => wrap(FormLayoutOperations.download)}>
 					<Icon class="material-icons">download</Icon>
 					<BLabel>Download form data</BLabel>
 				</Button>

@@ -69,12 +69,22 @@ if (!('requestIdleCallback' in globalThis)) {
 
 class Logger {
 	group: string;
+	private funcName?: string;
 	constructor(group: string) {
 		this.group = group;
+	}
+	
+	setFuncName(name: string) {
+		this.funcName = name;
+	}
+	
+	unsetFuncName() {
+		this.funcName = undefined;
 	}
 
 	async logToDexie(level: logLevel, messages: unknown[]) {
 		let str = messages.map(message => {
+			if (this.funcName) message = `[${this.funcName}] `;
 			if (typeof message === 'string') return message;
 			else return JSON.stringify(message);
 		}).join(' ');
@@ -98,37 +108,37 @@ class Logger {
 
 	async trace(...messages: unknown[]) {
 		if (globalLogLevel > 0) return;
-		if (dev) console.debug(`[${this.group}]`, ...messages);
+		if (dev) console.debug(`[${this.group} - ${this.funcName || ''}]`, ...messages);
 		await this.logToDexie('trace', messages);
 	}
   
 	async debug(...messages: unknown[]) {
 		if (globalLogLevel > 1) return;
-		if (dev) console.debug(`[${this.group}]`, ...messages);
+		if (dev) console.debug(`[${this.group} - ${this.funcName || ''}]`, ...messages);
 		await this.logToDexie('debug', messages);
 	}
   
 	async info(...messages: unknown[]) {
 		if (globalLogLevel > 2) return;
-		if (dev) console.log(`[${this.group}]`, ...messages);
+		if (dev) console.log(`[${this.group} - ${this.funcName || ''}]`, ...messages);
 		await this.logToDexie('info', messages);
 	}
   
 	async warn(...messages: unknown[]) {
 		if (globalLogLevel > 3) return;
-		if (dev) console.warn(`[${this.group}]`, ...messages);
+		if (dev) console.warn(`[${this.group} - ${this.funcName || ''}]`, ...messages);
 		await this.logToDexie('warn', messages);
 	}
   
 	async error(...messages: unknown[]) {
 		if (globalLogLevel > 4) return;
-		if (dev) console.error(`[${this.group}]`, ...messages);
+		if (dev) console.error(`[${this.group} - ${this.funcName || ''}]`, ...messages);
 		await this.logToDexie('error', messages);
 	}
   
 	async fatal(...messages: unknown[]) {
 		if (globalLogLevel > 5) return;
-		if (dev) console.error(`[${this.group}]`, ...messages);
+		if (dev) console.error(`[${this.group} - ${this.funcName || ''}]`, ...messages);
 		await this.logToDexie('fatal', messages);
 	}
 }
