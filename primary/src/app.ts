@@ -99,6 +99,8 @@ app.get('/*', (req, res, next) => {
 //Must be the very first app.use
 app.use(utilities.refreshTier);
 
+app.use(usefunctions.maintenanceMode);
+
 //Boilerplate setup
 app.set('views', path.join(__dirname, '..', 'views'));
 app.set('view engine', 'pug');
