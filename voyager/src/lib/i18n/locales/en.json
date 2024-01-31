@@ -186,7 +186,17 @@
 		"invalidTeamKey": "Team key is either not defined or invalid.",
 		"noDataSubmit": "No data was sent to {url}.",
 		"submitSuccess": "Submitted data successfully.",
-		"deleteSuccess": "Deleted data successfully. You will not be redirected away from the page, in case you wish to re-submit the data on screen."
+		"deleteSuccess": "Deleted data successfully. You will not be redirected away from the page, in case you wish to re-submit the data on screen.",
+		"backToList": "Back to list",
+		"nextAssignment": "Next: {typeShort}{number}, #{team}",
+		"noUpcomingAssignments": "No upcoming assignments",
+		"upcomingBreak": "Upcoming break",
+		"upcomingBreakDetails": "You have a break until {match}.",
+		"completedBy": "Completed by: {user}",
+		"dataSavedOffline": "Device is offline. Data saved locally.",
+		"dataUploadingToCloud": "Device is online. Uploading to cloud...",
+		"dataUploadedToCloud": "Data already uploaded to cloud",
+		"scannedByScoutingLead": "Scanned by scouting lead"
 	},
 	"notifications": {
 		"status": "Match notifications are {status} for this device.",
@@ -399,10 +409,16 @@
 		"specifyMetricKey": "Please specify one metric key."
 	},
 	"matchType": {
-		"qm": "Match",
+		"qm": "Qualifying",
 		"qf": "Quarterfinal",
 		"sf": "Semifinal",
 		"f": "Final"
+	},
+	"matchTypeShort": {
+		"qm": "QM",
+		"qf": "QF",
+		"sf": "SF",
+		"f": "F"
 	},
 	"manage": {
 		"event": {
@@ -427,6 +443,8 @@
 		}
 	},
 	"cancel": "Cancel",
+	"discard": "Discard",
+	"done": "Done",
 	"language": "Language",
 	"organization": "Organization",
 	"tryAgainLater": "Please try again later.",

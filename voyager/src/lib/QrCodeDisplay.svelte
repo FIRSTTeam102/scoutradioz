@@ -53,7 +53,7 @@
 </script>
 
 <div class="canvas-parent">
-	<canvas bind:this={canvas} />
+	<canvas bind:this={canvas} class:hidden={!data}/>
 </div>
 
 <style lang="scss">
