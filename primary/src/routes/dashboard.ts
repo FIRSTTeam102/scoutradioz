@@ -335,17 +335,18 @@ router.get('/', wrap(async (req, res) => {
 	}
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
 	let matchDocs: Match[] = await utilities.find('matches', {
 		event_key: eventKey, 
-		'alliances.red.score': -1
+		'alliances.red.score': {$ne: -1}
 	},{
-		sort: {'time': 1}
+		sort: {'time': -1}
 	});
 		
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matchDocs && matchDocs[0]){
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 
 	// 2018-04-05, M.O'C - Adding 'predicted time' to a map for later enriching of 'scoreData' results
@@ -362,7 +363,7 @@ router.get('/', wrap(async (req, res) => {
 		'org_key': org_key, 
 		'event_key': eventKey, 
 		'assigned_scorer.id': thisUserId, 
-		'time': { $gte: earliestTimestamp }
+		'time': { $gte: latestTimestamp }
 	}, { 
 		limit: 10, 
 		sort: {'time': 1} 
@@ -723,13 +724,14 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.info('ENTER org_key=' + org_key + ',eventKey=' + eventKey);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matches && matches[0]) {
-		let earliestMatch = matches[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matches[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 	
 	// 2018-04-05, M.O'C - Adding 'predicted time' to a map for later enriching of 'scoreData' results
@@ -740,12 +742,12 @@ router.get('/matches', wrap(async (req, res) => {
 			matchLookup[matches[matchIdx].key] = matches[matchIdx];
 		}
 
-	logger.debug('earliestTimestamp=' + earliestTimestamp);
+	logger.debug('latestTimestamp=' + latestTimestamp);
 
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2022-03-17 JL: Reversed alliance sorting order to show red first
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 90, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: latestTimestamp }}, { limit: 90, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
 
 	if(!scoreData)
 		return logger.error('mongo error at dashboard/matches');
@@ -755,7 +757,7 @@ router.get('/matches', wrap(async (req, res) => {
 	// M.O'C, 2023-03-29: Are there "future" resolved matches?
 	let futureMatchResultsConsistent = true;
 	// Get matches at or beyond the 'earliest' time
-	let futureMatches: Match[] = await utilities.find('matches', { event_key: eventKey, 'time': { $gte: earliestTimestamp }},{sort: {'time': 1}});
+	let futureMatches: Match[] = await utilities.find('matches', { event_key: eventKey, 'time': { $gte: latestTimestamp }},{sort: {'time': 1}});
 	for (let futureIdx = 0; futureIdx < futureMatches.length; futureIdx++) {
 		logger.trace(`future IDX: ${futureIdx} - time: ${futureMatches[futureIdx].time} - red score: ${futureMatches[futureIdx].alliances.red.score}`);
 		if (futureMatches[futureIdx].alliances.red.score != -1) {
