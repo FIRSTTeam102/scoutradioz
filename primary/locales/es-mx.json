@@ -1,4 +1,4 @@
-﻿{
+{
 	"index": {
 		"fulltitle": "Scoutradioz: Escultismo FRC como servicio",
 		"welcome": "Bienvenido a Scoutradioz",
@@ -32,7 +32,7 @@
 	},
 	"hello": {
 		"world": "¡Hola mundo!",
-		"name": "¡Hola, {nombre}!"
+		"name": "¡Hola, {name}!"
 	},
 	"selectOrg": "Selecciona una organización.",
 	"error": {
@@ -65,13 +65,14 @@
 				"teamStats": "Estadísticas del equipo",
 				"yearStats": "Estadísticas completas para {year}",
 				"export": {
-					"main": "Exportar a CSV",
-					"match": "Datos de búsqueda de coincidencias: [[{event}]]",
-					"pit": "Datos de exploración de pits: [[{event}]]",
-					"matchAll": "Datos de exploración de partidos: [[Todo {year}]]",
-					"pitAll": "Datos de exploración de pit: [[Todo {year}]]"
+					"main": "[CSV] Exportar datos",
+					"match": "[CSV] Datos de búsqueda de coincidencias: [[{event}]]",
+					"pit": "[CSV] Datos de exploración de pits: [[{event}]]",
+					"matchAll": "[CSV] Datos de exploración de partidos: [[Todo {year}]]",
+					"pitAll": "[CSV] Datos de exploración de pit: [[Todo {year}]]",
+					"photos": "[Zip] Fotos de robots: [[Todos de {year}]]"
 				},
-				"teamList": "{numero}: {nombre}"
+				"teamList": "{number}: {name}"
 			},
 			"scouting": "exploracion",
 			"manage": {
@@ -85,11 +86,7 @@
 					"main": "Exploradores",
 					"event": "Exploradores: [[{event}]]",
 					"audit": "Auditoría de exploración",
-					"swapmembers": "Intercambiar cuentas de partido de entrada/salida",
-					"swappitassignments": "Intercambiar asignaciones de exploración de pits",
-					"present": "colocar quien esta presente al evento corriente",
-					"matchassignments": "asignaciones para exploracion de partidos",
-					"pitassignments": "asignaciones para expolracion del pit"
+					"present": "colocar quien esta presente al evento corriente"
 				}
 			},
 			"admin": "Administrador",
@@ -333,7 +330,6 @@
 			"wltDesc": "Ganancia-Pérdida-Empate",
 			"dq": "dq",
 			"dqDesc": "Descalificaciones",
-			"matches": "coincidencias",
 			"rp": "RP",
 			"rpDesc": "Puntos de clasificación"
 		},
@@ -368,7 +364,11 @@
 		"noMatchScoutData2": "No hay datos de búsqueda de partidos disponibles para el equipo {team} para este partido.",
 		"viewIntelPage": "Ver la página de inteligencia de este equipo",
 		"upcomingMatchMetrics": "Métricas para el próximo partido",
-		"intel": "Intel: {type}"
+		"intel": "Intel: {type}",
+		"exportData": {
+			"noType": "No hay (o no son válidos) los tipos de dato eligidos para exportar.",
+			"noData": "No hay datos encontrados para tipo '{type}'."
+		}
 	},
 	"errors": {
 		"teamMissing": "No se pudieron encontrar los detalles del equipo {team}. ¿Ha cambiado la lista de equipos desde que creaste las asignaciones de exploración?",
@@ -398,10 +398,21 @@
 			"getCurrentTeams": "Actualizar lista de equipos",
 			"matches": "partidas (datos de FIRST)",
 			"recalcDerived": "Recalcular métricas derivadas",
-			"setCurrentEvent": "Establecer evento actual"
+			"setCurrentEvent": "Establecer evento actual",
+			"confirmClear": "¿Está seguro que quiere borrar el evento corriente para *{orgName}*?",
+			"confirmSetEvent": "¿Elige *{eventName}* como el evento corriente para *{orgName}*?",
+			"currentEvent": "Evento corriente - {event}",
+			"invalidEventKey": "Llave de evento inválido: '{eventKey}'. Haz clic a un evento en la lista para eligirla automaticamente."
+		},
+		"assignments": {
+			"pit": "asignaciones para expolracion del pit",
+			"match": "asignaciones para exploracion de partidos",
+			"swapMatchAssignments": "Intercambiar cuentas de partido de entrada/salida",
+			"swapPitAssignments": "Intercambiar asignaciones de exploración de pits"
 		}
 	},
 	"tryAgainLater": "Inténtalo de nuevo más tarde.",
 	"yes": "Sí",
-	"no": "No"
+	"no": "No",
+	"matches": "coincidencias"
 }

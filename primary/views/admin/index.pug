@@ -68,7 +68,7 @@ block content
 			var cancelled = false;
 			
 			
-			var card = new NotificationCard('Retrieving events...' + appender, {
+			var card = new NotificationCard('Retrieving events...', {
 				exitable: true, 
 				ttl: 0,
 				darken: true,
@@ -79,60 +79,41 @@ block content
 			card.show();
 			
 			$.post('/admin/sync/resynceventlist', {year: year})
-				.done(async data => {
+				.done(data => {
 					card.setText(data.message + appender); // show message
 					let numCompleted = 0;
 					let totalEvents = data.length;
-					
-					//- 2023-02-17 JL: Sync events in blocks of 10 instead of by letter, b/c there are too many that start with the letter m & sometimes leads to timeouts
-					const INTERVAL = 10;
-					for (let i = 0; i < totalEvents; i += INTERVAL) {
-						let start = i;
-						let end = Math.min(i + INTERVAL, totalEvents);
-						console.log(`Requesting ${start} to ${end}`);
-						
-						card.setText(`Getting teams for events... [${start+1}-${end} of ${totalEvents}] ${appender}`);
-						
-						if (cancelled) return;
-						
-						let url = `/admin/sync/resynceventteams?year=${year}&start=${start}&end=${end}`;
-						let result = await promisify(url);
-						
-						if (result.success) {
-							//- get number of events enriched
-							let number = result.updated;
-							if (number !== INTERVAL) console.warn(`Number completed this step and request interval does not match!! numCompletedThisStep=${number} interval=${INTERVAL}`);
-							numCompleted += number;
+					//- 2023-11-13 JL: Add a delay before syncing teams, so we can cancel if it's not desired
+					setTimeout(async () => {
+						//- 2023-02-17 JL: Sync events in blocks of 10 instead of by letter, b/c there are too many that start with the letter m & sometimes leads to timeouts
+						const INTERVAL = 10;
+						for (let i = 0; i < totalEvents; i += INTERVAL) {
+							let start = i;
+							let end = Math.min(i + INTERVAL, totalEvents);
+							console.log(`Requesting ${start} to ${end}`);
+							
+							card.setText(`Getting teams for events... [${start+1}-${end} of ${totalEvents}] ${appender}`);
+							
+							if (cancelled) return;
+							
+							let url = `/admin/sync/resynceventteams?year=${year}&start=${start}&end=${end}`;
+							let result = await promisify(url);
+							
+							if (result.success) {
+								//- get number of events enriched
+								let number = result.updated;
+								if (number !== INTERVAL) console.warn(`Number completed this step and request interval does not match!! numCompletedThisStep=${number} interval=${INTERVAL}`);
+								numCompleted += number;
+							}
+							else {
+								card.remove();
+								NotificationCard.error(`Sync not successful. Message: ${result.message}`, {ttl: 0, exitable: true});
+								return;
+							}
 						}
-						else {
-							card.remove();
-							NotificationCard.error(`Sync not successful. Message: ${result.message}`, {ttl: 0, exitable: true});
-							return;
-						}
-					}
-					card.remove();
-					NotificationCard.good(`Done syncing events: ${numCompleted} of ${totalEvents}`, {ttl: 0, exitable: true})
-					
-					/*
-					for (let letter of alphabet) {
-						if (cancelled) return;
-						
-						let url = `/admin/sync/resyncevents?year=${year}&start=${letter}&end=${letter}`;
-						let result = await promisify(url);
-						//- sanity check
-						if (!result.includes('SUCCESS')) {
-							card.remove();
-							NotificationCard.error(`Sync not successful. Message: ${result}`, {ttl: 0, exitable: true});
-							return;
-						}
-						//- get number of events enriched
-						let number = parseInt(result.replace(/SUCCESS.*updated /g, ''));
-						numCompleted += number;
-						card.setText(`Getting teams for events... [${numCompleted} of ${totalEvents}] ${appender}`);
-					}
-					card.remove();
-					NotificationCard.good(`Done syncing events: ${numCompleted} of ${totalEvents}`, {ttl: 0, exitable: true})
-					*/
+						card.remove();
+						NotificationCard.good(`Done syncing events: ${numCompleted} of ${totalEvents}`, {ttl: 0, exitable: true})
+					}, 4000);
 				}
 			);
 			function promisify(url) {

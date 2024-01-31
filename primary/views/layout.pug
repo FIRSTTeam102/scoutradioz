@@ -6,7 +6,7 @@
 			title		[String] Title of page; if doesn't exist, will be replaced by "Untitled Page"
 			alert		[String] (Optional) When page loads, create JS alert with message.
 	//
-- const themeYear = 2023 // backwards compatibility for various theme-specific elements, todo: sync this with the theme used in base.less
+- const themeYear = 2024 // backwards compatibility for various theme-specific elements, todo: sync this with the theme used in base.less
 - function resolveToValue(prop, params) { if (typeof prop == 'function') return property(params); return prop; } // For nav, but may be useful in other places
 - function resolveLabelTemplate(str, teamKey) { if (!str) return ''; if (teamKey) str = str.replace(/\{\{team_number\}\}/g, teamKey.substring(3)); return str; } // for scouting, currently only supports {{team_number}}
 - function displayReportMetric(num, displayType) { 
@@ -36,13 +36,15 @@ html(lang=locale dir=getLocaleDirection(locale))
 		link(rel="manifest" href=`${fileRoot}/manifest.json`)
 		link(rel="icon" type="image/png" href=`${fileRoot}/icon-64.png`)
 		//link(rel="icon" sizes="192x192" href=`favicon-192x.png`)
-		// Libraries bundled in this stylesheet: mmenu.css (Source code licensed CC-BY-NC-4.0), mburger.css (Source code licensed CC-BY-4.0), W3.css (https://www.w3schools.com/w3css/). Source code is available at https://github.com/FIRSTTeam102/ScoringApp-Serverless/tree/master/primary/public-src/less
+		// Libraries bundled in this stylesheet: mmenu.css (Source code licensed CC-BY-NC-4.0), mburger.css (Source code licensed CC-BY-4.0), W3.css (https://www.w3schools.com/w3css/). Source code is available at https://github.com/FIRSTTeam102/scoutradioz/tree/master/primary/public-src/less
 		link(rel="stylesheet" href=`${fileRoot}/css/style.css?v=${functionVersion}`)
 		-
 			const backgrounds = {
-				2020: 'city-light.png',
+				2020: '2020-city-light.png',
 				2022: '2022-grid.svg',
 				2023: '2023-halftone.svg',
+				//2024: '2024-film-texture.webp'
+				2024: '2024-crescendo-wallpaper-dark.jpg'
 			};
 		style.
 			#page{ --background-image: url('#{fileRoot}/images/backgrounds/#{backgrounds[themeYear]}');}
@@ -57,7 +59,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 		script(src=`${fileRoot}/lib/jscookie-2.2.1.min.js`)
 		script(src=`${fileRoot}/lib/mmenu/mmenu.js`)
 		//- script(src=`${fileRoot}/lib/chart.min.js`) 2022-03-18 JL: Taking chart.js out of the required scripts for all pages & putting it only where needed (as of today, only Drive Team)
-		script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
+		//- script(src="https://moment.github.io/luxon/global/luxon.min.js") //uncomment if you want to test luxon stuff
 		//Hacky way to force clients to download the new version of scripts/stylesheets: Add a "v" query at the end of the string
 		script(src=`${fileRoot}/js/bundle.js?v=${functionVersion}`)
 		if alert && alert != "undefined"
@@ -142,7 +144,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 						span(style="display:inline-block;height:100%;vertical-align:middle;")
 						a(href="/home")
 							- const darkLogo = [2020].includes(themeYear)
-							img(src=`${fileRoot}/images/brand-logos/scoutradioz-${darkLogo ? 'black' : 'white'}-sm.png` class="header-logo" alt="Scoutradioz")
+							img(src=`${fileRoot}/images/brand-logos/scoutradioz-${darkLogo ? 'black' : 'white'}-sm.png?v=1` class="header-logo" alt="Scoutradioz")
 					- if (['dev', 'test', 'qa'].includes(process.env.TIER))
 						div(class="tierlabel")= process.env.TIER
 				//-div(class="w3-right w3-show-inline-block")
@@ -171,6 +173,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 							2020: ['infinite-recharge/Horizontal-reverse.png', 'Infinite Recharge'],
 							2022: ['rapid-react/horizontal-color.svg', 'Rapid React'],
 							2023: ['charged-up/horizontal-color.svg', 'Charged Up'],
+							2024: ['crescendo/horizontal-color.svg', 'CRESCENDO'],
 						}
 					if (headerlogos[themeYear])
 						img(src=`${fileRoot}/images/${headerlogos[themeYear][0]}` alt=headerlogos[themeYear][1] class="w3-image w3-center" style="max-height: 160px;")

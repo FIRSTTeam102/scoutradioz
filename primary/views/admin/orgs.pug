@@ -5,19 +5,43 @@
 	//
 extends ../layout
 block content
-	include ../mixins/orgConfig
+	style.
+		.w3-col input,.w3-col button,.w3-col select{
+			width: 100%;
+		}
+		.up-caret {
+			opacity: 0;
+			padding: 13px 4px;
+		}
+		.w3-row:hover > .up-caret {
+			opacity: 1;
+		}
 	
 	div(class="w3-auto w3-content")
 		h2 Manage organizations
 		each org in orgs
-			div(class="w3-row")
-				hr 
-				+orgConfig(org, true)
-				br 
-				label(class="w3-label gear-btn") Log in to #{org.nickname}:
-				a(href=`/selectorg-login?org_key=${org.org_key}`)
-					div(class="w3-btn theme-submit" ) Normally
-				div(class="w3-btn theme-submit w3-margin-left" onclick=`loginToOrg('${org.org_key}')`) as Scoutradioz Admin
+			hr 
+			form(id=`updateOrg_${org.org_key}` method="post" action="/admin/orgs")
+				div(class="w3-row")
+					div(class="w3-col s6 m1 w3-padding-small")
+						input(disabled type="text" class="theme-input w3-disabled" value=org.org_key)
+						input(type="hidden" name="org_key" value=org.org_key)
+					div(class="w3-col s6 m3 w3-padding-small")
+						input(type="text" class="theme-input" name="nickname" value=org.nickname)
+					div(class="w3-col s6 m2 w3-padding-small")
+						input(type="text" class="theme-input" name="team_key" value=(org.team_keys ? org.team_keys.join(', ') : org.team_key) placeholder="Team key OR keys (comma separated)")
+					div(class=`w3-col s6 m3 w3-padding-small`)
+						input(type="text" class="theme-input" name="default_password" placeholder="Reset default password?")
+					div(class="w3-col m2 w3-padding-small")
+						button(type="submit" class="w3-btn theme-submit") Update Org
+					div(class="w3-col m1 w3-padding-small")
+						div(class="w3-btn theme-red" onclick=`deleteOrg('${org.org_key}')`)
+							span(class="sprite sp-24 sp-inline sp-delete")
+			br 
+			label(class="w3-label gear-btn") Log in to #{org.nickname}:
+			a(href=`/selectorg-login?org_key=${org.org_key}`)
+				div(class="w3-btn theme-submit" ) Normally
+			div(class="w3-btn theme-submit w3-margin-left" onclick=`loginToOrg('${org.org_key}')`) as Scoutradioz Admin
 		hr 
 		form(method="post" action="/admin/orgs/create" id="createOrgForm")
 			div(class="w3-row")
@@ -33,3 +57,5 @@ block content
 					input(type="text" class="theme-input" name="team_admin_name" placeholder="Team Admin name")
 				div(class="w3-col m2 w3-padding-small")
 					button(type="submit" class="w3-btn theme-submit" id="createOrg") Create Org
+	//- Load orgs script
+	script(src=`${fileRoot}/js/script-orgs.js`)

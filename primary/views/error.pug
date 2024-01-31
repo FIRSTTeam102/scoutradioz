@@ -9,7 +9,7 @@ block content
 		h2.i!=msg('error.title', {message: error.message})
 		h6 #{error.status} #{error.statusMessage}
 		//- 2022-04-04 JL: Don't show the wordy message on Not Found errors
-		if error.status != 404
+		if error.status != 404 && !error.disableStackTrace
 			div(class="w3-left-align w3-margin-left")
 				div.w3-large
 					p
@@ -22,7 +22,7 @@ block content
 						//- html-like syntax can be used in the json to create the link ({github}text{/github})
 						-
 							var github = {
-								'github': '<span class="sprite sp-18 sp-inline sp-github">&nbsp;</span><a class="link" href="https://github.com/FIRSTTeam102/ScoringApp-Serverless/issues" target="_blank">',
+								'github': '<span class="sprite sp-18 sp-inline sp-github">&nbsp;</span><a class="link" href="https://github.com/FIRSTTeam102/scoutradioz/issues" target="_blank">',
 								'/github': '</a>'
 							}
 						li!=msgMarked('error.report.send', github)

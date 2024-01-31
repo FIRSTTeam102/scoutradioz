@@ -1,17 +1,18 @@
 #!/bin/bash
 
 # Import database if it doesn't already exist
-if [[ -d "/workspaces/scoutradioz-dbdump" && $(mongosh --eval "db.getMongo().getDBNames().indexOf('app')" --quiet) -lt 0 ]]; then
-	mongorestore "/workspaces/scoutradioz-dbdump" --db app
+if [[ $(mongosh --eval "db.getMongo().getDBNames().indexOf('app')" --quiet) -lt 0 ]]; then
+	bash .devcontainer/import-database.sh
 else
 	echo "MongoDB 'app' database already exists, not restoring"
 fi
 
 # Copy sample databases.json file if it doesn't already exist
-dbsfile=primary/databases.json
-if [ ! -f $dbsfile ]; then
-	touch $dbsfile
-	printf "{
+dbsfiles=(primary/databases.json upload/databases.json voyager/src/databases.json)
+for dbsfile in "${dbsfiles[@]}"; do
+	if [ ! -f $dbsfile ]; then
+		touch $dbsfile
+		printf "{
 \t\"dev\": {
 \t\t\"url\": \"mongodb://localhost:27017/app\"
 \t},
@@ -20,6 +21,7 @@ if [ ! -f $dbsfile ]; then
 \t}
 }" >> $dbsfile
 fi
+done
 
 # Install node modules
-npm install && cd primary && npm install
+yarn setup

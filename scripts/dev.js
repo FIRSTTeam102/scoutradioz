@@ -36,7 +36,7 @@ function init() {
 	childMongod.on('close', function (status, signal) {
 		console.log(`${mongodName}: Process exited with status ${status || signal} (${interpretMongoStatusCode(status)})`);
 		// If the database failed to run, then abort the program
-		if (status !== 0 && status !== 12 && !gracefulShutdown && status !== -2 /* no mongod */) {
+		if (status !== 0 && status !== 12 && !gracefulShutdown && (status !== -2  && status !== -4058 /* no mongod */)) {
 			console.log('Database closed unexpectedly. Shutting down all scripts.');
 			lessWatcher?.close();
 			childPrimary?.kill('SIGINT');
@@ -83,7 +83,7 @@ function init() {
 	childPrimary = spawn('npx', [
 		'nodemon',
 		'--ext',
-		'ts',
+		'ts,json',
 		'./src/www.ts',
 	], {shell: true, cwd: pathToPrimary});
 	

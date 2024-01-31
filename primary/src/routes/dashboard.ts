@@ -335,17 +335,18 @@ router.get('/', wrap(async (req, res) => {
 	}
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
 	let matchDocs: Match[] = await utilities.find('matches', {
 		event_key: eventKey, 
-		'alliances.red.score': -1
+		'alliances.red.score': {$ne: -1}
 	},{
-		sort: {'time': 1}
+		sort: {'time': -1}
 	});
 		
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matchDocs && matchDocs[0]){
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 
 	// 2018-04-05, M.O'C - Adding 'predicted time' to a map for later enriching of 'scoreData' results
@@ -362,7 +363,7 @@ router.get('/', wrap(async (req, res) => {
 		'org_key': org_key, 
 		'event_key': eventKey, 
 		'assigned_scorer.id': thisUserId, 
-		'time': { $gte: earliestTimestamp }
+		'time': { $gte: latestTimestamp }
 	}, { 
 		limit: 10, 
 		sort: {'time': 1} 
@@ -415,11 +416,14 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	let thisUser = req._user;
 	let org_key = thisUser.org_key;
 
-	let numAlliancesStr = req.query.numAlliances || '8';
-	let num_alliances: number;
-	num_alliances = 8;
-	if (typeof numAlliancesStr === 'string') num_alliances = parseInt(numAlliancesStr);
-	logger.debug(`num_alliances: ${num_alliances}`);
+	let numAlliances = typeof req.query.numAlliances === 'string'
+		? parseInt(req.query.numAlliances) : 8;
+	let numRounds = typeof req.query.numRounds === 'string'
+		? parseInt(req.query.numRounds) : 3;
+	logger.debug(`numAlliances: ${numAlliances}, numRounds: ${numRounds}`);
+
+	// if (numAlliances < 2) throw new e.UserError('invalid numAlliances');
+	// if (numRounds < 2 || 4 < numRounds) throw new e.UserError('invalid numRounds');
 
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// 2019-11-11 JL: Put everything inside a try/catch block with error conditionals throwing
@@ -431,14 +435,22 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		if(!rankings[0])
 			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
 		
-		// num_alliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
-		let alliances = [];
-		for(let i = 0; i < num_alliances; i++){
-			alliances[i] = {
-				team1: rankings[i].team_key,
-				team2: undefined,
-				team3: undefined
-			};
+		// 2023-03-27, M.O'C: Scan the rankings to make sure all the data has come in
+		let firstCount = rankings[0].matches_played;
+		let matchcountConsistent = true;
+		for(let i = 1; i < rankings.length; i++){
+			let thisCount = rankings[i].matches_played;
+			if (thisCount != firstCount) {
+				matchcountConsistent = false;
+				break;
+			}
+		}
+
+		// numAlliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
+		let alliances: TeamKey[][] = [];
+		for (let i = 0; i < numAlliances; i++) {
+			alliances[i] = new Array().fill(numRounds);
+			alliances[i][0] = rankings[i].team_key; // preload first team 
 		}
 		logger.debug(`alliances=${JSON.stringify(alliances)}`);
 			
@@ -573,8 +585,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		});
 		
 		let sortedTeams: Array<{rank: number, team_key: TeamKey}> = [];
-		for(let i = num_alliances; i < rankings.length; i++){
-			sortedTeams[i - num_alliances] = {
+		for(let i = numAlliances; i < rankings.length; i++){
+			sortedTeams[i - numAlliances] = {
 				rank: rankings[i].rank,
 				team_key: rankings[i].team_key
 			};
@@ -605,12 +617,14 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		res.render('./dashboard/allianceselection', {
 			title: res.msg('allianceselection.title'),
 			rankings: rankings,
-			alliances: alliances,
-			num_alliances: num_alliances,
+			alliances,
+			numAlliances,
+			numRounds,
 			aggdata: aggArray,
 			currentAggRanges: currentAggRanges,
 			layout: scoreLayout,
 			sortedTeams: sortedTeams,
+			matchcountConsistent: matchcountConsistent,
 			matchDataHelper: matchDataHelper
 		});
 	}
@@ -665,11 +679,14 @@ router.get('/pits', wrap(async (req, res) => {
 		teamKeyMap[teamArray[teamIdx].key] = teamArray[teamIdx];
 	}
 
+	// 2023-03-30, M.O'C: Adding guardrail around 'teams were updated (some removed) after pit scouting was assigned'
+	let allTeamsInDB = true;
 	// Add data to 'teams' data
 	for (let teamIdx = 0; teamIdx < teamAssignments.length; teamIdx++) {
 		// logger.debug('teams[teamIdx]=' + JSON.stringify(teams[teamIdx]) + ', teamKeyMap[teams[teamIdx].team_key]=' + JSON.stringify(teamKeyMap[teams[teamIdx].team_key]));
 		if (!teamKeyMap[teamAssignments[teamIdx].team_key]) {
-			throw new e.InternalServerError(res.msg('errors.teamMissing', {team: teamAssignments[teamIdx].team_key}));
+			allTeamsInDB = false;
+			break;
 		}
 		// 2022-05-18 JL: Passing teamKeyMap to view instead of adding nickname to the teamAssignments object
 		//	we can still use this loop to guarantee that the pug won't encounter an error
@@ -691,7 +708,8 @@ router.get('/pits', wrap(async (req, res) => {
 		title: res.msg('scouting.pit'),
 		teamAssignments: teamAssignments,
 		teamKeyMap: teamKeyMap,
-		images: images
+		images: images,
+		allTeamsInDB: allTeamsInDB
 	});	
 }));
 
@@ -706,13 +724,14 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.info('ENTER org_key=' + org_key + ',eventKey=' + eventKey);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matches && matches[0]) {
-		let earliestMatch = matches[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matches[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 	
 	// 2018-04-05, M.O'C - Adding 'predicted time' to a map for later enriching of 'scoreData' results
@@ -723,17 +742,29 @@ router.get('/matches', wrap(async (req, res) => {
 			matchLookup[matches[matchIdx].key] = matches[matchIdx];
 		}
 
-	logger.debug('earliestTimestamp=' + earliestTimestamp);
+	logger.debug('latestTimestamp=' + latestTimestamp);
 
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2022-03-17 JL: Reversed alliance sorting order to show red first
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}, { limit: 60, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: latestTimestamp }}, { limit: 90, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
 
 	if(!scoreData)
 		return logger.error('mongo error at dashboard/matches');
 
 	logger.debug('scoreData.length=' + scoreData.length);
+
+	// M.O'C, 2023-03-29: Are there "future" resolved matches?
+	let futureMatchResultsConsistent = true;
+	// Get matches at or beyond the 'earliest' time
+	let futureMatches: Match[] = await utilities.find('matches', { event_key: eventKey, 'time': { $gte: latestTimestamp }},{sort: {'time': 1}});
+	for (let futureIdx = 0; futureIdx < futureMatches.length; futureIdx++) {
+		logger.trace(`future IDX: ${futureIdx} - time: ${futureMatches[futureIdx].time} - red score: ${futureMatches[futureIdx].alliances.red.score}`);
+		if (futureMatches[futureIdx].alliances.red.score != -1) {
+			futureMatchResultsConsistent = false;
+			break;
+		}
+	}
 
 	for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
@@ -770,7 +801,8 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.debug('scoreData.length=' + scoreData.length);
 	res.render('./dashboard/matches',{
 		title: res.msg('scouting.match'),
-		matches: scoreData
+		matches: scoreData,
+		futureMatchResultsConsistent: futureMatchResultsConsistent
 	});
 }));
 

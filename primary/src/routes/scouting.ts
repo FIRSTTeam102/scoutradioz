@@ -29,7 +29,7 @@ router.get('/match*', wrap(async (req, res) => {
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
 	let match_team_key = req.query.key;
-	let alliance = req.query.alliance;
+	let alliance = String(req.query.alliance);
 	let org_key = thisUser.org_key;
 	if (typeof match_team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidMatchKey')); // 2022-05-17 JL: Throw if they don't have a match key set in the url OR if they set two, making it an array
 	let teamKey = match_team_key.split('_')[2];
@@ -76,9 +76,12 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	if (!team) throw new e.UserError(req.msg('scouting.invalidTeam', {team: teamKey}));
 
+	let allianceLocale = (alliance.toLowerCase().startsWith('b')) ? req.msg('alliance.blueShort') : req.msg('alliance.redShort');
+	let title = `#${scoringdata[0]?.match_number} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
+
 	//render page
 	res.render('./scouting/match', {
-		title: req.msg('scouting.match'),
+		title: title,
 		layout: layout,
 		key: match_team_key,
 		alliance: alliance,

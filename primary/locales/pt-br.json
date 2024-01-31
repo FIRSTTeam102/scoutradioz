@@ -66,11 +66,11 @@
 				"teamStats": "Estatísticas da equipe",
 				"yearStats": "Estatísticas completas para {year}",
 				"export": {
-					"main": "Exportar para CSV",
-					"match": "Dados da análise da partida: [[{event}]]",
-					"pit": "Dados de análise do pit: [[{event}]]",
-					"matchAll": "Dados de análise da partida: [[Tudo de {year}]]",
-					"pitAll": "Dados de análise do pit: [[Tudo de {year}]]"
+					"main": "[CSV] Exportar dados",
+					"match": "[CSV] Dados da análise da partida: [[{event}]]",
+					"pit": "[CSV] Dados de análise do pit: [[{event}]]",
+					"matchAll": "[CSV] Dados de análise da partida: [[Tudo de {year}]]",
+					"pitAll": "[CSV] Dados de análise do pit: [[Tudo de {year}]]"
 				}
 			},
 			"scouting": "Análise",
@@ -85,11 +85,7 @@
 					"main": "Olheiros",
 					"event": "Olheiros: [[{event}]]",
 					"audit": "Auditoria de scouting",
-					"swapmembers": "Entrada/Saída de scouters da partida",
-					"swappitassignments": "Troque de equipe entre pares de análise do pit",
-					"present": "Definir quem já está presente no evento atual",
-					"pitassignments": "Análise das atribuições do pit",
-					"matchassignments": "Análise das atribuições da partida"
+					"present": "Definir quem já está presente no evento atual"
 				}
 			},
 			"admin": "Administrador",
@@ -259,7 +255,7 @@
 		"priorityAbbr": "V",
 		"team": "Equipe",
 		"rank": "Classificação FRC",
-		"numalliances": "Número de alianças:"
+		"numAlliances": "Número de alianças:"
 	},
 	"metrics": {
 		"raw": "Dados brutos",
@@ -341,7 +337,6 @@
 			"wltDesc": "Ganhou-Perdeu-Empatou",
 			"dq": "DQ",
 			"dqDesc": "Desqualificações",
-			"matches": "Partidas",
 			"rp": "Ranking Points",
 			"rpDesc": "Pontos de Classificação"
 		},
@@ -411,17 +406,28 @@
 			"matches": "Partidas",
 			"recalcDerived": "Recalcular métricas derivadas",
 			"setCurrentEvent": "Definir evento atual",
-			"confirmClear": "Você tem certeza que quer limpar o evento atual de {orgName}?",
+			"confirmClear": "Você tem certeza que quer limpar o evento atual de *{orgName}*?",
 			"confirmSetEvent": "Definir *{eventName}* como o evento atual para *{orgName}*?",
 			"currentEvent": "Evento atual - {event}",
 			"noEvent": "Nenhum evento foi definido",
 			"successClear": "Evento atual limpo com sucesso.",
-			"successSetEvent": "Evento atual definido para {eventName} com sucesso."
+			"successSetEvent": "Evento atual definido para *{eventName}* com sucesso."
+		},
+		"assignments": {
+			"pit": "Análise das atribuições do pit",
+			"match": "Análise das atribuições da partida",
+			"swapMatchAssignments": "Entrada/Saída de scouters da partida",
+			"swapPitAssignments": "Troque de equipe entre pares de análise do pit"
 		}
 	},
 	"tryAgainLater": "Por favor, tente novamente mais tarde.",
 	"yes": "Sim",
 	"no": "Não",
+	"matches": "Partidas",
 	"name": "Nome",
-	"date": "Data"
+	"date": "Data",
+	"add": "Adicionar",
+	"actions": "Ações",
+	"update": "Atualizar",
+	"key": "Chave"
 }

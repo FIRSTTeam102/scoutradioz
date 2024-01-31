@@ -8,14 +8,14 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/firstteam102/scoringapp-serverless.git"
+		"url": "git+https://github.com/firstteam102/scoutradioz.git"
 	},
 	"author": "firstteam102",
 	"license": "AGPL-3.0",
 	"bugs": {
-		"url": "https://github.com/firstteam102/scoringapp-serverless/issues"
+		"url": "https://github.com/firstteam102/scoutradioz/issues"
 	},
-	"homepage": "https://github.com/firstteam102/scoringapp-serverless#readme",
+	"homepage": "https://github.com/firstteam102/scoutradioz#readme",
 	"peerDependencies": {
 		"mongodb": ">=4.1.0"
 	}

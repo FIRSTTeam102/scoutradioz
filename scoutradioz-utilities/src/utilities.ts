@@ -89,13 +89,13 @@ export type FilterQueryTyped<T> = {
 	$and?: FilterQueryTyped<T>[];
 	$expr?: FilterQueryTyped<T>;
 } & {
-		[key in keyof T]?: QueryItem<T[key]> | T[key];
-	} & {
-		// JL: TypeScript lets us do limited string validation by using template literals. Can't yet use regexes,
-		// 	but this serves our purpose. Essentially, any string with a . in it is allowed past the schema filter,
-		// 	e.g. 'alliances.blue.team_keys': {$in: ['frc102']}
-		[key: `${string}.${string}`]: QueryItem | ValidQueryPrimitive;
-	};
+	[key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]>|T[key];
+} & {
+	// JL: TypeScript lets us do limited string validation by using template literals. Can't yet use regexes,
+	// 	but this serves our purpose. Essentially, any string with a . in it is allowed past the schema filter,
+	// 	e.g. 'alliances.blue.team_keys': {$in: ['frc102']}
+	[key: `${string}.${string}`]: QueryItem|ValidQueryPrimitive;
+};
 
 /**
  * Update filter for the specified schema, but which allows `'foo.bar'` notation
@@ -1029,7 +1029,7 @@ export class Utilities {
 			logger.fatal('utilities.getTBAKey: Could not find tba-api-headers in database');
 
 			logger.removeContext('funcName');
-			throw 'Could not find api-headers in database';
+			throw new Error('Could not find api-headers in database');
 		}
 	}
 

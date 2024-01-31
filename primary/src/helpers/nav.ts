@@ -101,7 +101,7 @@ class NavHelpers {
 									submenu: [
 										{label: '!reports.upcomingMatches', href: '/reports/upcoming?team_key=' + team.key},
 										{label: '!layout.nav.reports.teamStats', href: '/reports/teamintel?team_key=' + team.key},
-										{label: req.msg('layout.nav.reports.yearStats', {year: new Date().getFullYear()}), href: '/reports/teamintelhistory?team_key=' + team.key},
+										{label: req.msg('layout.nav.reports.yearStats', {year: req.event.year}), href: '/reports/teamintelhistory?team_key=' + team.key},
 									]
 								});
 							}
@@ -151,7 +151,12 @@ class NavHelpers {
 								label: req.msg('layout.nav.reports.export.pitAll', {year: req.event.year}),
 								href: '/reports/exportdata?type=pitscouting&span=all',
 								sprite: 'download',
-							}
+							},
+							{
+								label: req.msg('layout.nav.reports.export.photos', {year: req.event.year}),
+								href: '/reports/exportimages',
+								sprite: 'download',
+							},
 						]
 					}
 				];
@@ -220,19 +225,19 @@ class NavHelpers {
 							href: '/manage/scoutingaudit'
 						},
 						{
-							label: '!layout.nav.manage.scouters.pitassignments',
+							label: '!manage.assignments.pit',
 							href: '/manage/assignments'
 						},
 						{
-							label: '!layout.nav.manage.scouters.matchassignments',
+							label: '!manage.assignments.match',
 							href: '/manage/assignments/matches'
 						},
 						{
-							label: '!layout.nav.manage.scouters.swapmembers',
+							label: '!manage.assignments.swapMatchAssignments',
 							href: '/manage/assignments/swapmatchscouters'
 						},
 						{
-							label: '!layout.nav.manage.scouters.swappitassignments',
+							label: '!manage.assignments.swapPitAssignments',
 							href: '/manage/assignments/swappitassignments'
 						},
 						{
@@ -340,7 +345,7 @@ class NavHelpers {
 		{
 			label: '!layout.nav.help',
 			sprite: 'help',
-			href: 'https://github.com/FIRSTTeam102/ScoringApp-Serverless/wiki'
+			href: 'https://github.com/FIRSTTeam102/scoutradioz/wiki'
 		}
 	];
 	

@@ -66,11 +66,12 @@
 				"teamStats": "Statistiques de l'équipe",
 				"yearStats": "Statistiques complètes pour {year}",
 				"export": {
-					"main": "Exporter vers CSV",
-					"match": "Données de repérage des matchs: [[{event}]]",
-					"pit": "Données de repérage de puits: [[{event}]]",
-					"matchAll": "Données de repérage des matchs: [[All of {year}]]",
-					"pitAll": "Données de repérage de puits: [[All of {year}]]"
+					"main": "[CSV] Exporter des données",
+					"match": "[CSV] Données de repérage des matchs: [[{event}]]",
+					"pit": "[CSV] Données de repérage de puits: [[{event}]]",
+					"matchAll": "[CSV] Données de repérage des matchs: [[Tout de {year}]]",
+					"pitAll": "[CSV] Données de repérage de puits: [[Tout de {year}]]",
+					"photos": "[Zip] Photos de robots: [[Tout de {year}]]"
 				}
 			},
 			"scouting": "Repérage",
@@ -85,8 +86,6 @@
 					"main": "Repéreurs",
 					"event": "Repéreurs: [[{event}]]",
 					"audit": "Audit de repérage",
-					"swapmembers": "Échanger des repéreurs de match",
-					"swappitassignments": "Échanger les tâches de repérage de puits",
 					"present": "Mettre présent"
 				}
 			},
@@ -257,7 +256,7 @@
 		"priorityAbbr": "V",
 		"team": "Équipe",
 		"rank": "Classement FRC",
-		"numalliances": "Nombre d'alliances :"
+		"numAlliances": "Nombre d'alliances :"
 	},
 	"metrics": {
 		"raw": "Données brutes",
@@ -338,7 +337,6 @@
 			"wltDesc": "Victoire-Défaite-Nul",
 			"dq": "DQ",
 			"dqDesc": "Disqualifications",
-			"matches": "Matchs",
 			"rp": "PC",
 			"rpDesc": "Points de classement"
 		},
@@ -409,9 +407,14 @@
 			"matches": "Matchs",
 			"recalcDerived": "Recalculer les métriques dérivées",
 			"setCurrentEvent": "Définir l'événement en cours"
+		},
+		"assignments": {
+			"swapMatchAssignments": "Échanger des repéreurs de match",
+			"swapPitAssignments": "Échanger les tâches de repérage de puits"
 		}
 	},
 	"tryAgainLater": "Veuillez réessayer plus tard.",
 	"yes": "Oui",
-	"no": "Non"
+	"no": "Non",
+	"matches": "Matchs"
 }

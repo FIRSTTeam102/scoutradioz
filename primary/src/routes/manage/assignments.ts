@@ -4,7 +4,7 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities, { MongoDocument } from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e, { assert } from 'scoutradioz-http-errors';
+import e, { assert, lightAssert } from 'scoutradioz-http-errors';
 import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, UserAgent, WithDbId} from 'scoutradioz-types';
 import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
 
@@ -31,6 +31,16 @@ router.get('/', wrap(async (req, res) => {
 	const org_key = thisUser.org_key;
 	const event_key = req.event.key;
 	
+	// 2023-03-29, M.O'C: Checking list of teams
+	//Get list of currentteams
+	let teamsArray = req.teams;
+	logger.debug(`teamsArray.length = ${teamsArray?.length}`);
+	let areTeamsListedInDB = true;
+	if (!teamsArray || teamsArray.length < 1) {
+		areTeamsListedInDB = false;
+		logger.warn('Pit scouting but no teams found in DB');
+	}
+
 	//Log message so we can see on the server side when we enter this
 	logger.info('ENTER org_key=' + org_key);
 	logger.debug('Requesting all members from db');
@@ -101,12 +111,13 @@ router.get('/', wrap(async (req, res) => {
 			logger.trace('Rendering');
 		
 			res.render('./manage/assignments/index', {
-				title: 'Pit Scouting Assignments',
+				title: req.msg('manage.assignments.pit'),
 				subteams: pitScoutSubteams,
 				assigned: assigned,
 				available: available,
 				matchScoutingCount: matchScoutingCount,
-				pitScoutingCount: pitScoutingCount
+				pitScoutingCount: pitScoutingCount,
+				areTeamsListedInDB: areTeamsListedInDB
 			});
 		});
 }));
@@ -138,6 +149,8 @@ router.get('/matches', wrap(async (req, res) => {
 		{sort: {'name': 1}}
 	);
 	
+	available.forEach(user => lightAssert(subteamsMap[user.org_info.subteam_key], `A user was found with a subteam_key "${user.org_info.subteam_key}", which does not exist in your org configuration. Please fix this by going to the Manage members page and ensuring all users have a valid subteam and class.`));
+	
 	// sort by subteam the same way as above
 	available.sort((a, b) => {
 		return Number(subteamsMap[b.org_info.subteam_key].pit_scout) -
@@ -152,7 +165,7 @@ router.get('/matches', wrap(async (req, res) => {
 	logger.trace('Awaiting all db requests');
 	
 	res.render('./manage/assignments/matches', {
-		title: 'Match Scouting Assignments',
+		title: req.msg('manage.assignments.match'),
 		available: available,
 		subteams: subteams,
 		matchAssignmentsCount: matchAssignmentsCount
@@ -182,13 +195,21 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
 	
 	const availableArray: ObjectId[] = []; // User IDs
+	let stoppingForBreaks = true;
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
 		const userId = user.split('|')[0];
-		const userName = user.split('|')[1]; // unused
-		logger.trace(`user: ${userId} | ${userName}`);
-		assert(userId && userName, 'Could not find both userId and userName');
-		availableArray.push(ObjectId.createFromHexString(userId));
+		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
+		if (userId != 'skipBreaks') { 
+			const userName = user.split('|')[1]; // unused
+			logger.trace(`user: ${userId} | ${userName}`);
+			assert(userId && userName, 'Could not find both userId and userName');
+			availableArray.push(ObjectId.createFromHexString(userId));
+		}
+		else {
+			logger.debug('Assignments will continue past breaks!');
+			stoppingForBreaks = false;
+		}
 	}
 	
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
@@ -368,43 +389,76 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		]}, 
 		{ sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, 'name': 1} }
 	) as WithDbId<User>[]; // JL: temporary
-	
+	logger.trace(`matchScouts=${JSON.stringify(matchScouts)}`);
+
+	// 2024-01-22, M.O'C: Read in the number of matches already scouted per scout
+	const numPerUserList = await utilities.aggregate('matchscouting',
+		[
+			{ '$match': { 'org_key': org_key, 'event_key': event_key, 'data': { '$ne': null } } },
+			{ '$group': { '_id': '$actual_scorer.id', 'numScouted': { '$sum': 1 } } }
+		]	
+	) as { _id: string, numScouted: number }[];
+	// convert to a map
+	const numPerUser = Object.fromEntries(numPerUserList.map(x => [x._id, x.numScouted]));
+	// add the number of matches scouted to the user data
+	const matchScoutsPlusScoutedCount = matchScouts.map(scout => {
+		let stringId = String(scout._id);
+		return {
+			...scout,
+			numMatchesScouted: (numPerUser[stringId] == null ? 0 : numPerUser[stringId])
+		};
+	});
+	// re-sort the array by numMatchesScouted: -1, then by seniority: 1, then by subteam_key: 1, etc.
+	matchScoutsPlusScoutedCount.sort(function(a, b) {
+		if (a.numMatchesScouted == b.numMatchesScouted) {
+			if (a.org_info.seniority == b.org_info.seniority) {
+				if (a.org_info.subteam_key == b.org_info.subteam_key) {
+					return a.name > b.name ? 1 : 1;
+				}
+				return a.org_info.subteam_key > b.org_info.subteam_key ? 1 : -1;
+			}
+			return a.org_info.seniority > b.org_info.seniority ? 1 : -1;
+		}
+		return a.numMatchesScouted > b.numMatchesScouted ? 1 : -1;
+	});
+	logger.trace(`matchScoutsPlusScoutedCount=${JSON.stringify(matchScoutsPlusScoutedCount)}`);
+
 	logger.trace('*** Assigned + available, by seniority:');
-	for (let i in matchScouts)
-		logger.trace('member['+i+'] = ' + matchScouts[i].name);
+	for (let i in matchScoutsPlusScoutedCount)
+		logger.trace('member['+i+'] = ' + matchScoutsPlusScoutedCount[i].name);
 	
 	//
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	//
-	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// Avoid crashing server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (timestampArray && timestampArray[0]) {
-		let earliestMatch = timestampArray[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = timestampArray[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
-
 
 	// Clear 'assigned_scorer' from all unresolved team@matches
 	await utilities.bulkWrite('matchscouting', 
 		[{updateMany: {
-			filter: { org_key, event_key, time: { $gte: earliestTimestamp } }, 
+			filter: { org_key, event_key, time: { $gte: latestTimestamp } }, 
 			update: { $unset: { 'assigned_scorer' : '' } }
 		}}]
 	);
 	
 	// Special case for no scouters assigned: Stop the re-assigning process and render the match scouting dashboard
-	if (matchScouts.length === 0) {
+	if (matchScoutsPlusScoutedCount.length === 0) {
 		logger.info('No available match scouts were selected; Leaving the match scouting assignments blank');
 		return res.redirect('/dashboard/matches?alert=No scouters were selected, so the assignments were left blank.');
 	}
 	
 	let comingMatches: Match[] = await utilities.find('matches', 
-		{event_key: event_key, time: {$gte: earliestTimestamp}},
+		{event_key: event_key, time: {$gte: latestTimestamp}},
 		{sort: {time: 1}}
 	);
-	let lastMatchTimestamp = earliestTimestamp;
+	let lastMatchTimestamp = latestTimestamp;
 	
 	let matchBlockCounter = matchBlockSize;  // initialize at the max size so in the first loop iteration, it'll set up the scout list
 	let scoutPointer = 0;  // start off with the 0th position
@@ -414,7 +468,25 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	let scoutAssignedList: string[] = []; // list of IDs of assigned scouters
 	
 	let redBlueToggle = 0;  // flips between 0 and 1, signals whether to allocate red alliance or blue alliance first
-	
+
+	// 2024-01-23, M.O'C: Read in the number of matches already assigned per *team*
+	// to be used if the SR team has fewer than 6 availale scouts
+	const numPerTeamList = await utilities.aggregate('matchscouting',
+		[
+			{ '$match': { 'org_key': org_key, 'event_key': event_key, 'assigned_scorer': {$ne: null} } },
+			{ '$group': { '_id': '$team_key', 'numScouted': { '$sum': 1 } } }
+		]	
+	) as { _id: string, numScouted: number }[];
+	// convert to a map
+	const numPerTeam = Object.fromEntries(numPerTeamList.map(x => [x._id, x.numScouted]));
+	logger.trace(`numPerTeam=${JSON.stringify(numPerTeam)}`);
+
+	// 2024-01-23, M.O'C: Scouts per match is 6 *unless* fewer than 6 have been passed in
+	let scoutsPerMatch = 6;
+	if (matchScoutsPlusScoutedCount.length < 6) {
+		scoutsPerMatch = matchScoutsPlusScoutedCount.length;
+	}
+
 	for (let matchesIdx in comingMatches) {
 		const thisMatch = comingMatches[matchesIdx];
 		const thisMatchKey = thisMatch.key;
@@ -423,10 +495,10 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		
 		// Work in sets of up to <block size> matches (could be less, if "break" or end is hit)
 		if (matchBlockCounter >= matchBlockSize) {
-			// Pull off the next 6 scouts
+			// Pull off the next N scouts (usually 6)
 			scoutArray = [];
-			for (let i = 0; i < 6; i++) {
-				let thisScout = matchScouts[scoutPointer];
+			for (let i = 0; i < scoutsPerMatch; i++) {
+				let thisScout = matchScoutsPlusScoutedCount[scoutPointer];
 				if (!thisScout) {
 					logger.trace('Not enough scouts!');
 					break;
@@ -436,7 +508,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 					name: thisScout.name,
 				});
 				scoutPointer++;
-				if (scoutPointer >= matchScouts.length)
+				if (scoutPointer >= matchScoutsPlusScoutedCount.length)
 					scoutPointer = 0;
 			}
 			logger.trace(`Updated current scouts: ${JSON.stringify(scoutArray)}`);
@@ -455,10 +527,12 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		
 		let matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
-		if (matchGap > matchGapBreakThreshold) {
-			logger.trace('matchGap=' + matchGap + '... found a break');
-			break;
-		}
+		// 2024-01-24, M.O'C: Might optionally not be stopping for breaks
+		if (stoppingForBreaks)
+			if (matchGap > matchGapBreakThreshold) {
+				logger.trace('matchGap=' + matchGap + '... found a break');
+				break;
+			}
 		
 		let teamArray: TeamKey[] = [];
 		if (redBlueToggle == 0)
@@ -482,35 +556,53 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// 	and switched to just shuffling the team array
 		
 		// Shuffle the team array
-		teamArray.sort(() => Math.random() - 0.5);
-		// cycle through teams and assign to the scouters, after teamArray has been shuffled
-		for (let i = 0; i < 6; i++) {
-			let thisTeamKey = teamArray[i];
-			// Assigned yet? If not...
-			if (!teamScoutMap[thisTeamKey]) {
-				// Grab the next available scout
-				teamScoutMap[thisTeamKey] = scoutArray[i];
+		// 2024-01-24, M.O'C: **IF** there are <6 scouts, THEN sort by matches assigned
+		// (so as to end up with an even distribution of assignments across matches)
+		if (scoutsPerMatch >= 6)
+			teamArray.sort(() => Math.random() - 0.5);
+		else {
+			for (let i = 0; i < 6; i++) {
+				if (!numPerTeam[teamArray[i]])
+					numPerTeam[teamArray[i]] = 0;
+				logger.trace(`numPerTeam[${teamArray[i]}]=${numPerTeam[teamArray[i]]}`);
 			}
+			teamArray.sort(function(a, b) {
+				if (numPerTeam[a] == numPerTeam[b]) {
+					return Number(a.substring(3)) > Number(a.substring(3)) ? 1 : -1;
+				}
+				return numPerTeam[a] > numPerTeam[b] ? 1 : -1;
+			});
+			logger.trace(`teamArray=${JSON.stringify(teamArray)}`);
+		}
+		// cycle through teams and assign to the scouters, after teamArray has been shuffled
+		for (let i = 0; i < scoutsPerMatch; i++) {
+			let thisTeamKey = teamArray[i];
+			// Grab the next available scout
+			teamScoutMap[thisTeamKey] = scoutArray[i];
+			numPerTeam[thisTeamKey] = numPerTeam[thisTeamKey] + 1;
 		}
 
 		// show all the team-scout assignments
 		let assignmentPromisesArray = [];
-		for (let property in teamScoutMap) {
-			if (teamScoutMap.hasOwnProperty(property)) {
+		for (let teamKey in teamScoutMap) {
+			if (teamScoutMap.hasOwnProperty(teamKey)) {
 				// Write the assignment to the DB!
-				let thisMatchTeamKey = thisMatchKey + '_' + property;
-				let thisScout = teamScoutMap[property];
+				let thisMatchTeamKey = thisMatchKey + '_' + teamKey;
+				let thisScout = teamScoutMap[teamKey];
 				
-				// Save this scouter as being assigned
-				let thisScoutId = String(thisScout.id);
-				if (!scoutAssignedList.includes(thisScoutId)) 
-					scoutAssignedList.push(thisScoutId);
+				// 2024-01-23, M.O'C: If there are fewer than 6 available scouts, some entries might be null
+				if (thisScout != null) {
+					// Save this scouter as being assigned
+					let thisScoutId = String(thisScout.id);
+					if (!scoutAssignedList.includes(thisScoutId)) 
+						scoutAssignedList.push(thisScoutId);
 
-				let thisPromise = utilities.update('matchscouting', 
-					{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
-					{ $set: { assigned_scorer : thisScout }} 
-				);
-				assignmentPromisesArray.push(thisPromise);
+					let thisPromise = utilities.update('matchscouting', 
+						{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
+						{ $set: { assigned_scorer : thisScout }} 
+					);
+					assignmentPromisesArray.push(thisPromise);
+				}
 			}
 		}									
 		// wait for all the updates to finish
@@ -760,18 +852,19 @@ router.get('/swapmatchscouters', wrap(async (req, res) => {
 	logger.info('ENTER eventKey=' + eventKey + ',org_key=' + org_key);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matchDocs && matchDocs[0]) {
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 		
 	// Get the distinct list of scorers from the unresolved matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}) as ScouterRecord[];
+	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: latestTimestamp }}) as ScouterRecord[];
 	logger.debug('distinct assigned_scorers: ' + JSON.stringify(scorers));
 	
 	// 2022-02-07 JL: sorting le scorers' names
@@ -818,20 +911,20 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	assert(swapout && swapin, new e.InternalDatabaseError('Could not find both users in database!')); // Make sure users are found in the db
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
-	// matchCol.find({ event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	let latestTimestamp = 9999999999;
 	if (matchDocs && matchDocs[0]) {
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 		
 	// Do the updateMany - change instances of swapout to swapin
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2023-02-07 JL: changing scouter name to ScouterRecord
-	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': new ObjectId(swapoutID), org_key, event_key, time: { $gte: earliestTimestamp } }, 
+	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': new ObjectId(swapoutID), org_key, event_key, time: { $gte: latestTimestamp } }, 
 		update:{ $set: { assigned_scorer: {
 			id: swapin._id,
 			name: swapin.name

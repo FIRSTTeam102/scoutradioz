@@ -41,6 +41,8 @@ $(function () {
 	const stickyBarLeft  = $('#stickyBarLeft');
 	const stickyBarRight = $('#stickyBarRight');
 	
+	const matchform = $('#matchform');
+	
 	let currentHeaderID = '';
 	
 	handleScroll();
@@ -48,27 +50,88 @@ $(function () {
 	let ticking = false;
 	$(window).on('scroll', () => {
 		if (!ticking) {
-			requestAnimationFrame(() => {
-				handleScroll();
-				ticking = false;
-			});
+			// 2023-03-19 JL: Added a delay to scroll calculations to save on performance
+			setTimeout(() => {
+				requestAnimationFrame(() => {
+					handleScroll();
+					ticking = false;
+				});
+			}, 50);
+			ticking = true;
 		}
-		ticking = true;
 	});
-				
+	
+			
 	function handleScroll() {
 		if (!stickyBarEnabled) return;
 		
-		for (let header of headerElements) {
-			let isVisible = checkVisible(header);
-			if (isVisible) {
-				//- Only update the sticky bar when it needs to change
-				if (currentHeaderID !== header.id) {
-					setStickyBar(header.id, header.innerText);
-				}
+		const centerX = window.innerWidth / 2;
+		const centerY = window.innerHeight * 2/3;
+		
+		let centerDiv;
+		// sometimes gap between elements causes the elementfrompoint to be a parent element
+		for (let i = 0; i < 10; i++) {
+			centerDiv = document.elementFromPoint(centerX, centerY - i * 4);
+			if (centerDiv && matchform.has(centerDiv).length) {
 				break;
 			}
 		}
+		if (!centerDiv) {
+			console.error('Could not find a center div!');
+			return;
+		}
+		
+		// Find the "root" form element so we can iterate across siblings
+		let attemptsRemaining = 20; // to avoid infinite loop, just in case
+		while (centerDiv.parentElement && !matchform.is(centerDiv.parentElement) && attemptsRemaining > 0) {
+			centerDiv = centerDiv.parentElement;
+			attemptsRemaining--;
+		}
+		
+		// Loop backwards until we find a header element
+		let thisElement = centerDiv;
+		attemptsRemaining = 50; // if someone has a group of form elements that's 50 long, they've got problems.
+		let headerInMiddle: HTMLElement|null = null;
+		while (thisElement instanceof HTMLElement && !headerInMiddle && attemptsRemaining > 0) {
+			// test if this element is a header
+			if (headerElements.includes(thisElement)) {
+				headerInMiddle = thisElement; // we found our winner
+				break;
+			}
+			thisElement = thisElement.previousElementSibling as HTMLElement; // proceed
+			attemptsRemaining--;
+		}
+		
+		if (!headerInMiddle) {
+			console.log(attemptsRemaining);
+			console.error('Could not find a header in the middle!');
+			return;
+		}
+		
+		let header = headerInMiddle;
+		
+		// Special case: Scrolled all the way down in the page, just set the very last header to active
+		let diff = Math.abs(scrollY + innerHeight - document.body.offsetHeight);
+		if (diff < 10) {
+			console.log('Within 10 px of bottom of screen; setting last header to active');
+			header = headerElements[headerElements.length - 1];
+		}
+		
+		if (currentHeaderID !== header.id) {
+			setStickyBar(header.id, header.innerText);
+		}
+		
+		// Old code backup: Simply find the first visible header element
+		// for (let header of headerElements) {
+		// 	let isVisible = checkVisible(header);
+		// 	if (isVisible) {
+		// 		//- Only update the sticky bar when it needs to change
+		// 		if (currentHeaderID !== header.id) {
+		// 			setStickyBar(header.id, header.innerText);
+		// 		}
+		// 		break;
+		// 	}
+		// }
 	}
 	
 	/**
@@ -217,10 +280,13 @@ $(function(){
 		});
 	});
 		
-	window.onbeforeunload = function() {
-		return 'Leaving this page will lose match scouting data.';
-	};
-	
+	// 2024-01-26 JL: Made the editform preview appear in a dialog window; in this case, location.href === 'about:srcdoc'
+	// 	and we don't want onbeforeunload to fire in the sub window when changes don't matter
+	if (this.location.href !== 'about:srcdoc') {
+		window.onbeforeunload = function() {
+			return 'Leaving this page will lose match scouting data.';
+		};
+	}
 });
 
 // Again because JQuery typing is dumb

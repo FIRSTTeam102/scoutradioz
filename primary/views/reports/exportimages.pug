@@ -1,0 +1,61 @@
+extends ../layout
+block content
+	h2=title
+	script(src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js")
+	script(src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js")
+	script.
+		
+		const eventYear = `!{thisYear}`;
+		
+		//- Grab uploads client-side
+		const uploadsByTeamKey = JSON.parse(`!{JSON.stringify(uploadsByTeamKey)}`);
+		
+		async function downloadAsZip() {
+			
+			let cancelled = false;
+			
+			let card = new NotificationCard(`placeholder`, {
+				exitable: true,
+				onexit: () => {
+					card.remove();
+					NotificationCard.show('Download cancelled.');
+					cancelled = true;
+				},
+				ttl: 0,
+			});
+			
+			let teamKeys = Object.keys(uploadsByTeamKey);
+			const zip = new JSZip();
+			for (let i = 0; i < teamKeys.length; i++) {
+				let teamKey = teamKeys[i];
+				let teamNumber = teamKey.substring(3);
+				
+				//- Display progress
+				card.setText(`Downloading images from team #${teamNumber} (${i + 1} of ${teamKeys.length})...`);
+				if (i === 0) card.show(); // show card initially
+				
+				if (cancelled === true) {
+					console.log('Breaking loop and returning');
+					return;
+				}
+				
+				console.log('Retrieving uploads for team ' + teamKey);
+				let uploads = uploadsByTeamKey[teamKey];
+				if (uploads && uploads.length) {
+					for (let j = 0; j < uploads.length; j++) {
+						let links = uploads[j];
+						let response = await fetch(links.lg);
+						let blob = await response.blob();
+						zip.file(`${teamKey}_${j + 1}.jpg`, blob);
+						//- zip.file(`${teamKey}/${j + 1}.txt`, `Uploaded by: ${upload.uploader.name}\nDevice: ${upload.uploader.useragent.device} | ${upload.uploader.useragent.browser} | ${upload.uploader.useragent.os}\nUploaded on: ${new Date(upload.uploader.upload_time).toLocaleString()}`);
+					}
+				}
+			}
+			const blob = await zip.generateAsync({type:"blob"});
+			console.log(blob);
+			saveAs(blob, `photos_${eventYear}.zip`);
+			card.remove();
+			NotificationCard.good('Done.');
+		}
+		
+		downloadAsZip();

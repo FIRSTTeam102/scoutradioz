@@ -520,7 +520,8 @@ class UseFunctions {
 			message: err.message,
 			status: err.status,
 			statusMessage: statusMessage,
-			stack: stack
+			stack: stack,
+			disableStackTrace: err.disableStackTrace
 		};
 		
 		// render the error page
@@ -531,6 +532,18 @@ class UseFunctions {
 		});
 		
 		logger.removeContext('funcName');
+	}
+	
+	/**
+	 * Checks process.env.MAINTENANCE to see if the site should be in maintenance mode and if so, renders some plain text
+	 */
+	static maintenanceMode(req: express.Request, res: express.Response, next: express.NextFunction) {
+		if (process.env.MAINTENANCE === 'true') {
+			return res.status(503).send('The site is currently undergoing some maintenance. Check back in a few minutes.');
+		}
+		else {
+			return next();
+		}
 	}
 }
 

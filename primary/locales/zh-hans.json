@@ -85,8 +85,6 @@
 					"main": "童子军",
 					"event": "童子军：[[{event}]]",
 					"audit": "侦察审核",
-					"swapmembers": "换入/换出比赛账户",
-					"swappitassignments": "交换矿坑侦察任务",
 					"present": "设置礼物"
 				}
 			},
@@ -338,7 +336,6 @@
 			"wltDesc": "输赢平局",
 			"dq": "DQ",
 			"dqDesc": "取消资格",
-			"matches": "火柴",
 			"rp": "回波",
 			"rpDesc": "排名积分"
 		},
@@ -408,9 +405,14 @@
 			"matches": "火柴",
 			"recalcDerived": "重新计算衍生指标",
 			"setCurrentEvent": "设置当前事件"
+		},
+		"assignments": {
+			"swapMatchAssignments": "换入/换出比赛账户",
+			"swapPitAssignments": "交换矿坑侦察任务"
 		}
 	},
 	"tryAgainLater": "请稍后再试。",
 	"yes": "是的",
-	"no": "不"
+	"no": "不",
+	"matches": "火柴"
 }

@@ -34,7 +34,10 @@ block content
 			each match in matches
 				tr
 					td= match.comp_level
-					td= match.match_number
+					if match.comp_level == 'sf'
+						td= match.set_number
+					else
+						td= match.match_number
 					td= zoneTime(1000 * match.time).toLocaleString(DateTime.DATETIME_SHORT)
 					if match.actual_time
 						td= zoneTime(1000 * match.actual_time).toLocaleString(DateTime.DATETIME_SHORT)
