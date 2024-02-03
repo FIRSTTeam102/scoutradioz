@@ -1,12 +1,11 @@
-import express from 'express';
 import bcrypt from 'bcryptjs';
+import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../../helpers/express-async-handler';
-import utilities, { MongoDocument } from 'scoutradioz-utilities';
-import Permissions from '../../helpers/permissions';
 import e, { assert, lightAssert } from 'scoutradioz-http-errors';
-import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, UserAgent, WithDbId} from 'scoutradioz-types';
-import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
+import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, TeamKey, User, UserAgent, WithDbId } from 'scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../../helpers/express-async-handler';
+import Permissions from '../../helpers/permissions';
 
 const router = express.Router();
 const logger = getLogger('assignments');
@@ -613,8 +612,6 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	// lastly, mark assigned scouters as assigned
-	let scoutAssignedObjectIdList = scoutAssignedList.map(id => new ObjectId(id));
-	
 	let writeResult = await utilities.bulkWrite('users', [
 		
 		// JL: TODO LATER AFTER WE MAKE SURE THIS DOESN'T BREAK THINGS: Set scouters NOT assigend to match scouting to event_info.assigned = false
@@ -667,13 +664,13 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 	
 	logger.trace(`Selected members: ${data}`);
 	
-	let member1 = await utilities.findOne('users', {_id: Number(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
+	let member1 = await utilities.findOne('users', {_id: parseInt(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
 	let member2;
 	if (selectedMembers.member2)
-		member2 = await utilities.findOne('users', {_id: Number(selectedMembers.member2), org_key});
+		member2 = await utilities.findOne('users', {_id: parseInt(selectedMembers.member2), org_key});
 	let member3;
 	if (selectedMembers.member3)
-		member3 = await utilities.findOne('users', {_id: Number(selectedMembers.member3), org_key});
+		member3 = await utilities.findOne('users', {_id: parseInt(selectedMembers.member3), org_key});
 	
 	let idList = [member1._id]; // for bulkWrite operation
 	
@@ -898,8 +895,8 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
 	
 	// Extract 'from' & 'to' from req
-	let swapoutID = req.body.swapout;
-	let swapinID = req.body.swapin;
+	let swapoutID = parseInt(req.body.swapout);
+	let swapinID = parseInt(req.body.swapin);
 	
 	if (!swapoutID || !swapinID) return res.redirect('?alert=Please select both users to swap.&type=error');
 	
@@ -924,7 +921,7 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	// Do the updateMany - change instances of swapout to swapin
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2023-02-07 JL: changing scouter name to ScouterRecord
-	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': new ObjectId(swapoutID), org_key, event_key, time: { $gte: latestTimestamp } }, 
+	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, 
 		update:{ $set: { assigned_scorer: {
 			id: swapin._id,
 			name: swapin.name
@@ -957,11 +954,11 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 	let teams2: PitScouting[] = [];
 	if (scoutId) {
 		assert(typeof scoutId === 'string', 'Invalid scout ID provided');
-		let scoutObjectId = new ObjectId(scoutId);
+		let scoutIdNumber = parseInt(scoutId);
 		// find teams which have the specified scout in primary OR secondary OR tertiary
-		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ 'primary.id': scoutObjectId}, {'secondary.id': scoutId}, {'tertiary.id': scoutId}]}, { });
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ 'primary.id': scoutIdNumber}, {'secondary.id': scoutId}, {'tertiary.id': scoutId}]}, { });
 		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
-		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, 'primary.id': {$ne: scoutObjectId}, 'secondary.id': {$ne: scoutObjectId}, 'tertiary.id': {$ne: scoutObjectId} }, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, 'primary.id': {$ne: scoutIdNumber}, 'secondary.id': {$ne: scoutIdNumber}, 'tertiary.id': {$ne: scoutIdNumber} }, { });
 	}
 	else {
 		// just get two sets of all teams

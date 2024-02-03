@@ -11,7 +11,7 @@ declare namespace Express {
 	//	then we would need to either wrap every route in namespace SR {} or type smth like "SR.Match" for 
 	//	every typecast in our routes.
 	export interface User {
-		_id: any;
+		_id: number;
 		org_key: string;
 		name: string;
 		role_key: 'scouter' | 'viewer' | 'team_admin' | 'global_admin';
