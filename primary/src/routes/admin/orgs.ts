@@ -297,7 +297,9 @@ router.post('/create', wrap(async (req, res) => {
 			present: false,
 			assigned: false
 		},
+		oauth: {},
 		visible: false,
+		removed: false,
 	};
 	// New Team Admin user who can set up the org
 	const newTeamAdmin: User = {
@@ -315,7 +317,9 @@ router.post('/create', wrap(async (req, res) => {
 			present: false,
 			assigned: false,
 		},
+		oauth: {},
 		visible: true,
+		removed: false,
 	};
 	// scoutradioz_admin is used for /login-to-org
 	const newScoutradiozAdmin: User = {
@@ -333,7 +337,9 @@ router.post('/create', wrap(async (req, res) => {
 			present: false,
 			assigned: false
 		},
+		oauth: {},
 		visible: false,
+		removed: false,
 	};
 	
 	logger.info(`Creating org: key=${org_key} nick=${nickname} defaultPass=${default_password} teamkeyOrKeys=${teamKeyOrKeys}`);

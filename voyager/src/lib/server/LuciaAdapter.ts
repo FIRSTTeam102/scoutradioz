@@ -37,7 +37,7 @@ export default class LuciaAdapter implements Adapter {
 	 * Deletes all sessions linked to the user
 	 */
 	async deleteUserSessions(userId: string) {
-		let objectId = new ObjectId(userId);
+		let objectId = Number(userId);
 		let deleteResult = await utilities.bulkWrite('sveltesessions', [
 			{
 				deleteMany: {
@@ -66,7 +66,7 @@ export default class LuciaAdapter implements Adapter {
 			attributes: session.attributes,
 		} as LuciaSession;
 		console.log(session.userId, session.userId.length, 'transformsessiontodb')
-		if (session.userId) sessionDb.user_id = new ObjectId(session.userId);
+		if (session.userId) sessionDb.user_id = Number(session.userId);
 		return sessionDb;
 	}
 
@@ -80,11 +80,11 @@ export default class LuciaAdapter implements Adapter {
 	/**
 	 * Returns the session and user linked to the session
 	 */
-	async getSessionAndUser(sessionId: string): Promise<[session: DatabaseSession, user: DatabaseUser|null]> {
+	async getSessionAndUser(sessionId: string): Promise<[session: DatabaseSession|null, user: DatabaseUser|null]> {
 		const dbSession = await utilities.findOne('sveltesessions', {
 			_id: sessionId
 		});
-		if (!dbSession) throw new Error(`Could not find session in database with id ${sessionId}!`)
+		if (!dbSession) return [ null, null ];
 		const session = this.transformSessionFromDb(dbSession);
 		// oauth-token-only sessions don't have a user_id
 		if (!dbSession.user_id) return [ session, null ];
@@ -92,6 +92,8 @@ export default class LuciaAdapter implements Adapter {
 		const dbUser = await utilities.findOne('users', {
 			_id: dbSession.user_id,
 		});
+		if (!dbUser) return [ session, null ];
+
 		const user = this.transformUserFromDb(dbUser);
 		return [ session, user ];
 	}

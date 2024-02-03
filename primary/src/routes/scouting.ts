@@ -177,7 +177,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	else
 		thisScouterRecord = { 
 			name: 'Mr. Unknown', 
-			id: new ObjectId() 
+			id: -1, 
 		};
 	
 	let matchData = req.body;
