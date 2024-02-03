@@ -96,7 +96,7 @@ declare interface FormSliderOptions {
 export declare interface Layout extends DbDocument {
 	year: number;
 	order: number|string;
-	type: 'checkbox'|'counter'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
+	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
 	form_type: 'matchscouting'|'pitscouting';
 	org_key: OrgKey;
 	label?: string;
@@ -450,6 +450,17 @@ export declare interface Session extends DbDocument {
 }
 
 /**
+ * Session for Lucia package, used within SvelteKit
+ * @collection sveltesessions
+ * @interface LuciaSession
+ */
+export declare interface LuciaSession extends DbDocument {
+	expiresAt: Date;
+	user_id?: ObjectId;
+    attributes: any;
+}
+
+/**
  * Contains a team's 40x40 avatar for a given event year -- From FIRST API.
  * @collection teamavatars
  * @interface TeamAvatar
@@ -490,6 +501,19 @@ export declare interface Team extends DbDocument {
 }
 
 /**
+ * Simplified Team info -- from TBA API. Not stored explicitly in the database, but can be achieved through projection in a DB query.
+ */
+export declare interface TeamSimple extends DbDocument {
+	city: string|null;
+	country: string|null;
+	key: TeamKey;
+	name: string;
+	nickname: string;
+	state_prov: string|null;
+	team_number: number;
+}
+
+/**
  * Contains info for a user-uploaded image.
  * @collection uploads
  * @interface Upload
@@ -518,7 +542,7 @@ export declare interface User extends DbDocument {
 	org_key: OrgKey;
 	name: string;
 	role_key: RoleKey;
-	password: string;
+	password: 'default'|'disabled'|string;
 	org_info: {
 		subteam_key: string;
 		class_key: string;
@@ -529,7 +553,11 @@ export declare interface User extends DbDocument {
 		present: boolean;
 		assigned: boolean;
 	};
+	oauth: {
+		github_id?: number;
+	};
 	visible: boolean;
+	removed: boolean; // New
 	push_subscription?: PushSubscription
 }
 
@@ -555,7 +583,7 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
@@ -575,6 +603,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'roles' ? Role :
 	colName extends 'scoutingpairs' ? ScoutingPair :
 	colName extends 'sessions' ? Session :
+	colName extends 'sveltesessions' ? LuciaSession :
 	colName extends 'teams' ? Team :
 	colName extends 'uploads' ? Upload :
 	colName extends 'users' ? User : 

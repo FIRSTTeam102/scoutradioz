@@ -4,6 +4,8 @@
 
 	export let value: any = ''; // any because of weird casting to generic data
 	export let field: LayoutField;
+	export let isDefaultValue: boolean;
+	$: isDefaultValue = (value === '');
 </script>
 
 <Textfield

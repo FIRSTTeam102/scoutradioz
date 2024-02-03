@@ -17,20 +17,50 @@
 	export let formData: {
 		[key: string]: unknown;
 	} = {};
+	export let allDefaultValues: boolean;
+	$: allDefaultValues = Object.values(defaultValuesMap).every((val) => val === true);
+
+	let defaultValuesMap: { [key: string]: boolean } = {};
 </script>
 
 <div class="form">
+	{#if layout.length === 0}
+		<h3>Form layout not found</h3>
+	{/if}
 	{#each layout as field}
-		{#if field.type === 'checkbox'}
-			<Checkbox bind:checked={formData[field.id]} {field} />
-		{:else if field.type === 'counter' || field.type === 'badcounter'}
-			<Counter bind:value={formData[field.id]} {field} isBad={field.type === 'badcounter'} />
-		{:else if field.type === 'slider' || field.type === 'timeslider'}
-			<Slider bind:value={formData[field.id]} {field} isTime={field.type === 'timeslider'} />
-		{:else if field.type === 'multiselect'}
-			<Multiselect bind:value={formData[field.id]} {field} />
-		{:else if field.type === 'textblock'}
-			<Textblock bind:value={formData[field.id]} {field} />
+		{#if field.id && field.type === 'checkbox'}
+			<Checkbox
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:checked={formData[field.id]}
+				{field}
+			/>
+		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
+			<Counter
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:value={formData[field.id]}
+				{field}
+				isBad={field.type === 'badcounter'}
+				allowNegative={field.type === 'counterallownegative'}
+			/>
+		{:else if field.id && (field.type === 'slider' || field.type === 'timeslider')}
+			<Slider
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:value={formData[field.id]}
+				{field}
+				isTime={field.type === 'timeslider'}
+			/>
+		{:else if field.id && field.type === 'multiselect'}
+			<Multiselect
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:value={formData[field.id]}
+				{field}
+			/>
+		{:else if field.id && field.type === 'textblock'}
+			<Textblock
+				bind:isDefaultValue={defaultValuesMap[field.id]}
+				bind:value={formData[field.id]}
+				{field}
+			/>
 		{:else if field.type === 'h2'}
 			<h2 id={field.id}>{field.label}</h2>
 		{:else if field.type === 'h3'}
@@ -50,10 +80,11 @@
 		gap: 0.75em;
 		justify-content: center;
 		margin: 1em 0;
-	}
-	h2,
-	h3 {
-		margin: 0;
+		h2,
+		h3 {
+			margin: 0;
+			text-align: center;
+		}
 	}
 	hr {
 		width: 100%;

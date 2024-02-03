@@ -7,7 +7,10 @@ declare namespace App {
 		name: string;
 		stack?: string;
 	}
-	// interface Locals {}
+	interface Locals {
+		user: import('lucia').User | null;
+		session: import('lucia').Session | null;
+	}
 	// interface PageData {}
 	// interface Platform {}
 }

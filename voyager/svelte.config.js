@@ -1,31 +1,21 @@
-// import adapter from '@sveltejs/adapter-auto';
-import adapter from '@yarbsemaj/adapter-lambda';
-// import adapter from '@sveltejs/adapter-node';
-import preprocess from 'svelte-preprocess';
+import adapter from 'svelte-kit-sst';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://github.com/sveltejs/svelte-preprocess
-	// for more information about preprocessors
-	preprocess: preprocess({
-		postcss: true,
-	}),
-
+	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter(),
-		paths: {
-			// assets: 'https://scoutradioz-voyager.s3.amazonaws.com'
-		},
 		serviceWorker: {
-			register: true
-		}
+			register: false,
+		},
 	},
-	
-	package: {
-		// files: {
-		// 	assets: 'https://scoutradioz-voyager.s3.amazonaws.com',
-		// },
-	},
+	onwarn: (warning, handler) => {
+		// JL note: importing any @material things inside a svelte file results in spam with these warnings.
+		if (warning.code === 'css-unused-selector' || warning.code === 'vite-plugin-svelte-preprocess-many-dependencies') return;
+		console.log(warning.code);
+		handler(warning);
+	}
 };
 
 export default config;

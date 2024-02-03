@@ -3,11 +3,12 @@
 	import type { LayoutField } from '$lib/types';
 	import type { FormSliderOptions } from 'scoutradioz-types';
 
-	export let value: any = 0; // any because of weird casting to generic data
 	export let isTime = false;
 	export let field: LayoutField;
 	let options = field.options as FormSliderOptions;
-	value = options.min;
+	export let value: any = options.min; // any because of weird casting to generic data
+	export let isDefaultValue: boolean;
+	$: isDefaultValue = (value === options.min);
 
 	const reversed = options.step < 0;
 </script>

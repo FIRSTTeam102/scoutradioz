@@ -7,6 +7,8 @@
 	let options = field.options as string[];
 	if (field.form_type !== 'matchscouting') options.unshift('');
 	if (value === undefined) value = options[0];
+	export let isDefaultValue: boolean;
+	$: isDefaultValue = (value === options[0]);
 </script>
 
 <Select bind:value label={field.label}>

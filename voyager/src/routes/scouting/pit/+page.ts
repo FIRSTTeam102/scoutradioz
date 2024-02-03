@@ -1,8 +1,18 @@
 import type { PageLoad } from './$types';
-import type { PitScouting } from 'scoutradioz-types';
+import db from '$lib/localDB';
+import { sortWithTeamKeyByNumber } from '$lib/utils';
 
-export const load: PageLoad = async ({ fetch }) => {
-	const all: PitScouting[] = await (await fetch('/api/assignments/pit')).json();
+export const load: PageLoad = async ({ fetch, parent }) => {
+	const { event_key, org_key } = await parent();
 
-	return { all };
+	const assignments = await db.pitscouting
+		.where({
+			event_key,
+			org_key,
+		})
+		.toArray();
+	
+	assignments.sort(sortWithTeamKeyByNumber);
+	
+	return { assignments };
 };

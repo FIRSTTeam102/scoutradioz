@@ -1,3 +1,4 @@
+// This file is specifically for themeing Svelte Material UI
 @use 'sass:color';
 
 @use '@material/theme/color-palette';
@@ -16,7 +17,6 @@ body {
 	background-color: #000;
 	color: theme.$on-surface;
 	margin: 0;
-	font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;
 }
 
 a {
