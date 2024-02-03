@@ -26,8 +26,8 @@
 		logger.debug('updating matchscouting now', onlyUnsynced);
 		return db.matchscouting
 			.where({
-				org_key: $org_key,
-				event_key: $event_key
+				org_key: org_key,
+				event_key: event_key
 			})
 			.and((match) => !!match.data && !(onlyUnsynced && match.synced))
 			.toArray();
@@ -36,8 +36,8 @@
 		logger.debug('updating pitscouting now');
 		return db.pitscouting
 			.where({
-				org_key: $org_key,
-				event_key: $event_key
+				org_key: org_key,
+				event_key: event_key
 			})
 			.and((pit) => !!pit.data && !(onlyUnsynced && pit.synced))
 			.toArray();

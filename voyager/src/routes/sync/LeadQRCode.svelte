@@ -145,7 +145,7 @@
 					.match_number}
 			</h3>
 			<p>
-				To change the current match number, go to the match scouting screen and increment/decrement
+				To change the current match number, go to the <a href="/scouting/match">match scouting screen</a> and increment/decrement
 				the # there.
 			</p>
 		</div>
