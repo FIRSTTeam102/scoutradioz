@@ -21,7 +21,9 @@ export type ValidQueryPrimitive = string | number | undefined | null | boolean |
 /**
  * Valid type for the `_id` field in a mongodb query
  */
-export type ValidID = ObjectId | string | FilterOps<ObjectId>;
+export type ValidID<T extends {_id?: ObjectId|number}, ThisIDType = Required<Pick<T, '_id'>>['_id']> = ThisIDType|string|FilterOps<ThisIDType>;
+// 2023-03-23 JL: Made ValidID pick from the schema's declared type of its _id field
+
 
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
@@ -76,14 +78,14 @@ export interface FindOptionsWithProjection extends FindOptions {
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-	_id?: ValidID;
+	_id?: ValidID<MongoDocument>;
 	[key: string]: QueryItem | ValidQueryPrimitive;
 }
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
  */
-export type FilterQueryTyped<T> = {
-	_id?: ValidID;
+export type FilterQueryTyped<T extends MongoDocument> = {
+	_id?: ValidID<T>;
 	// Top level dollar operators
 	$or?: FilterQueryTyped<T>[];
 	$and?: FilterQueryTyped<T>[];
@@ -127,6 +129,7 @@ export class UtilitiesOptions {
 		 */
 		maxAge: number;
 	};
+	schemasWithNumberIds?: CollectionName[];
 	/**
 	 * Options for the MongoClient that we are wrapping.
 	 */
@@ -232,6 +235,7 @@ export class Utilities {
 		if (!options.cache.enable) options.cache.enable = false;
 		if (!options.cache.maxAge) options.cache.maxAge = 30;
 		if (!options.debug) options.debug = false;
+		if (!options.schemasWithNumberIds) options.schemasWithNumberIds = [];
 
 		if (options.cache.enable == true) logger.warn('utilities: Caching is enabled');
 
@@ -915,7 +919,7 @@ export class Utilities {
 		elements: CollectionSchema<colName>
 	): Promise<InsertOneResult>;
 
-	async insert(collection: string, elements: MongoDocument[] | MongoDocument): Promise<InsertManyResult | InsertOneResult | undefined> {
+	async insert(collection: CollectionName, elements: MongoDocument[] | MongoDocument): Promise<InsertManyResult | InsertOneResult | undefined> {
 		logger.addContext('funcName', 'insert');
 
 		//If the collection is not specified and is not a String, throw an error.
@@ -929,21 +933,68 @@ export class Utilities {
 		//Insert in collection
 		let writeResult;
 		let db = await this.getDB();
-		// if array, insertMany
-		if (elements instanceof Array) {
-			if (this.options.debug) logger.debug(`Array; doing insertMany, length=${elements.length}`);
-			if (elements.length == 0) {
-				logger.warn('Array is empty!! Doing nothing.');
+		const col = db.collection(collection);
+		
+		// 2023-03-23 JL: Add support for auto-incrementing numerical IDs
+		
+		const doInsert = async () => {
+			// if array, insertMany
+			if (Array.isArray(elements)) {
+				if (this.options.debug) logger.debug(`Array; doing insertMany, length=${elements.length}`);
+				if (elements.length == 0) {
+					logger.warn('Array is empty!! Doing nothing.');
+				}
+				else {
+					writeResult = await col.insertMany(elements);
+				}
 			}
+			// otherwise, insertOne
 			else {
-				writeResult = await db.collection(collection).insertMany(elements);
+				if (this.options.debug) logger.debug('Object; doing insertOne');
+				writeResult = await col.insertOne(elements);
+			}
+		};
+		
+		let success = false;
+		// Potential race condition if two instances of SR are attempting to insert documents to an auto-incrementing database at once.
+		// 	If this happens, a duplicate key error will be raised, and it'll retry. It needs to grab the most recent maximum-value of _id each time.
+		for (let retriesLeft = 10; retriesLeft >= 0; retriesLeft--) {
+			try {
+				// If the collection is using an auto-inc numeric ID...
+				if (this.options.schemasWithNumberIds?.includes(collection)) {
+					logger.debug(`Collection includes auto-incrementing number IDs: ${collection}`);
+					
+					// First, grab the highest value of _id in the collection
+					const maxID = await col.aggregate([{$group: {_id: 'maxIDValue', value: {$max: '$_id'}}}]).toArray();
+					
+					let firstUnusedID = 0; // Default if no elements exist in the collection
+					if (maxID[0] && typeof maxID[0].value === 'number') {
+						firstUnusedID = maxID[0].value + 1; // 1 higher than the highest value in the collection
+						logger.trace(`firstUnusedID=${firstUnusedID}`);
+					}
+					
+					// Multiple elements: Apply _id to each, and do the auto increment in the order of the elements themselves
+					if (Array.isArray(elements)) {
+						for (let i = 0; i < elements.length; i++) {
+							elements[i]._id = firstUnusedID + i;
+							if (typeof elements[i]._id !== 'number') throw new TypeError(`Couldn't successfully create a numeric ID! Element to insert: ${JSON.stringify(elements[i])}, maxID found in DB: ${JSON.stringify(maxID)}, firstUnusedID: ${firstUnusedID}, type=${typeof elements[i]._id}`);
+						}
+					}
+					// Single element: Apply _id to that one
+					else {
+						elements._id = firstUnusedID;
+						if (typeof elements._id !== 'number') throw new TypeError(`Couldn't successfully create a numeric ID! Element to insert: ${JSON.stringify(elements)}, maxID found in DB: ${JSON.stringify(maxID)}, firstUnusedID: ${firstUnusedID}`);
+					} 
+				}
+				await doInsert();
+				success = true;
+				break;
+			}
+			catch (err) {
+				logger.error(`Failed on insert: ${err} retriesLeft=${retriesLeft}`);
 			}
 		}
-		// otherwise, insertOne
-		else {
-			if (this.options.debug) logger.debug('Object; doing insertOne');
-			writeResult = await db.collection(collection).insertOne(elements);
-		}
+		if (!success) throw new Error('Could not insert documents into the database! Try again?');
 		this.flushCache();
 
 		if (this.options.debug) logger.trace(`writeResult: ${JSON.stringify(writeResult)}`);

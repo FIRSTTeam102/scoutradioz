@@ -25,7 +25,7 @@ export type str<T> = WithStringDbId<T>;
  */
 
 export interface LightUser {
-	_id: string;
+	_id: number;
 	org_key: string;
 	name: string;
 	role_key: string;
@@ -59,7 +59,7 @@ export interface MatchScoutingWithTeamName extends WithStringDbId<MatchScouting>
 
 /** {@link ScouterRecord} but with a string id */
 export interface ScouterRecordLocal {
-	id: string;
+	id: number;
 	name: string;
 }
 

@@ -111,7 +111,7 @@ router.post('/addmember', wrap(async (req, res) => {
 	}
 	logger.debug('seniority=' + seniority);
 	
-	let insertQuery = {
+	let insertQuery: User = {
 		org_key: org_key,
 		name: name,
 		role_key: role_key,
@@ -126,7 +126,9 @@ router.post('/addmember', wrap(async (req, res) => {
 			present: false,
 			assigned: false
 		},
+		oauth: {},
 		visible: true,
+		removed: false,
 	};
 	
 	let writeResult = await utilities.insert('users', insertQuery);
@@ -447,7 +449,7 @@ router.post('/updatepresent', wrap(async (req, res) => {
 	let allPresentMembers = [];
 	//eslint-disable-next-line
 	for(var i in req.body) {
-		allPresentMembers.push(utilities.id(i));
+		allPresentMembers.push(Number(i));
 	}
 	
 	logger.debug(`updatepresent: allPresentMembers: ${JSON.stringify(allPresentMembers)}`);

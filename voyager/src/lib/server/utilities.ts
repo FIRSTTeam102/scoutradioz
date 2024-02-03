@@ -34,7 +34,8 @@ utilities.config(dbJSON, {
 	// JL TODO: (note 2024-02-02): current stringifyObjectIds implementation is bork.
 	// 	Dates get turned into strings due to the JSON-parse-JSON-stringify method.
 	// stringifyObjectIDs: true,
-	mongoClientOptions: mongoClientOptions
+	mongoClientOptions: mongoClientOptions,
+	schemasWithNumberIds: ['users'],
 });
 
 utilities.refreshTier();
