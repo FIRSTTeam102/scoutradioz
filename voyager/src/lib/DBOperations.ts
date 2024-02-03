@@ -95,9 +95,26 @@ export class MatchScoutingOperations extends CollectionOperations {
 			`/api/orgs/${org_key}/${event_key}/assignments/match`
 		);
 
+		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
+		let keyToIndex: {[key: string]: number} = {};
+		if (matchScouting && matchScouting.length > 0)
+			for (let i = 0; i < matchScouting.length; i++) {
+				let thisObj = matchScouting[i];
+				keyToIndex[thisObj.match_team_key] = i;
+			}
+
+		const localMatchScouting = await db.matchscouting.where({org_key, event_key}).toArray();
+		for (let localMatch of localMatchScouting) {
+			if (localMatch.data) {
+				let this_match_team_key = localMatch.match_team_key;
+				if (keyToIndex[this_match_team_key]) {
+					matchScouting[ keyToIndex[this_match_team_key] ].data = localMatch.data;
+				}
+			}
+		}
+
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.matchscouting, db.syncstatus, async () => {
-			// TODO: Inside transaction, handle overwritten un-commited data!!!
 			await db.matchscouting.bulkPut(matchScouting);
 			await db.syncstatus.put({
 				table: 'orgs',
