@@ -27,13 +27,15 @@ utilities.refreshTier();
 	
 	let ops: AnyBulkWriteOperation<User>[] = [];
 	users.forEach((user, index) => {
+		let newId = index + 1;
 		let newUser = {
 			...user
 		};
-		oidToNumIdMap[String(user._id)] = index + 1; // save the old index for scouterrecords
+		oidToNumIdMap[String(user._id)] = newId; // save the old index for scouterrecords
 		// @ts-ignore
-		newUser._id = index;
+		newUser._id = newId;
 		
+		// _id is immutable on mongodb so we have to do delete-then-insert
 		ops.push({
 			deleteOne: {
 				filter: {
@@ -53,65 +55,59 @@ utilities.refreshTier();
 		process.exit(1);
 	}
 	
+	console.log('Updating users');
 	let writeResult = await utilities.bulkWrite('users', ops);
 	console.log(writeResult);
 	
 	let scoutingpairs = await utilities.find('scoutingpairs', {});
 	let ops2: AnyBulkWriteOperation<ScoutingPair>[] = [];
 	scoutingpairs.forEach((pair, index) => {
-		let newPair = {...pair};
 		
-		if (newPair.member1) {
-			// @ts-ignore
-			newPair.member1.id = oidToNumIdMap[String(newPair.member1.id)] || -1;
+		let setClause: {[key: string]: any} = {};
+		
+		if (pair.member1) {
+			setClause['member1.id'] = oidToNumIdMap[String(pair.member1.id)] || -1;
 		}
-		if (newPair.member2) {
-			// @ts-ignore
-			newPair.member2.id = oidToNumIdMap[String(newPair.member2.id)] || -1;
+		if (pair.member2) {
+			setClause['member2.id'] = oidToNumIdMap[String(pair.member2.id)] || -1;
 		}
-		if (newPair.member3) {
-			// @ts-ignore
-			newPair.member3.id = oidToNumIdMap[String(newPair.member3.id)] || -1;
+		if (pair.member3) {
+			setClause['member3.id'] = oidToNumIdMap[String(pair.member3.id)] || -1;
 		}
 		
 		ops2.push({
-			deleteOne: {
+			updateOne: {
 				filter: {
-					_id: pair._id
+					_id: pair._id,
+				},
+				update: {
+					$set: setClause,
 				}
-			},
-		});
-		ops2.push({
-			insertOne: {
-				document: newPair
-			},
+			}
 		});
 	});
 	
 	let matchscouting = await utilities.find('matchscouting', {});
 	let ops3: AnyBulkWriteOperation<MatchScouting>[] = [];
 	matchscouting.forEach(item => {
-		let newMS = {...item};
 		
-		if (newMS.actual_scorer) {
-			// @ts-ignore
-			newMS.actual_scorer.id = oidToNumIdMap[String(newMS.actual_scorer.id)] || -1;
+		let setClause: {[key: string]: any} = {};
+
+		if (item.actual_scorer) {
+			setClause['actual_scorer.id' ]= oidToNumIdMap[String(item.actual_scorer.id)] || -1;
 		}
-		if (newMS.assigned_scorer) {
-			// @ts-ignore
-			newMS.assigned_scorer.id = oidToNumIdMap[String(newMS.assigned_scorer.id)] || -1;
+		if (item.assigned_scorer) {
+			setClause['assigned_scorer.id' ]= oidToNumIdMap[String(item.assigned_scorer.id)] || -1;
 		}
 		
 		ops3.push({
-			deleteOne: {
+			updateOne: {
 				filter: {
-					_id: item._id
+					_id: item._id,
+				},
+				update: {
+					$set: setClause,
 				}
-			}
-		});
-		ops3.push({
-			insertOne: {
-				document: newMS
 			}
 		});
 	});
@@ -119,37 +115,36 @@ utilities.refreshTier();
 	let pitscouting = await utilities.find('pitscouting', {});
 	let ops4: AnyBulkWriteOperation<PitScouting>[] = [];
 	pitscouting.forEach(item => {
-		let newPS = {...item};
+
+		let setClause: {[key: string]: any} = {};
 		
-		if (newPS.primary) {
-			// @ts-ignore
-			newPS.primary.id = oidToNumIdMap[String(newPS.primary.id)] || -1;
+		if (item.primary) {
+			setClause['primary.id'] = oidToNumIdMap[String(item.primary.id)] || -1;
 		}
-		if (newPS.secondary) {
-			// @ts-ignore
-			newPS.secondary.id = oidToNumIdMap[String(newPS.secondary.id)] || -1;
+		if (item.secondary) {
+			setClause['secondary.id'] = oidToNumIdMap[String(item.secondary.id)] || -1;
 		}
-		if (newPS.tertiary) {
-			// @ts-ignore
-			newPS.tertiary.id = oidToNumIdMap[String(newPS.tertiary.id)] || -1;
+		if (item.tertiary) {
+			setClause['tertiary.id'] = oidToNumIdMap[String(item.tertiary.id)] || -1;
 		}
 		
 		ops4.push({
-			deleteOne: {
+			updateOne: {
 				filter: {
-					_id: item._id
+					_id: item._id,
+				},
+				update: {
+					$set: setClause,
 				}
-			}
-		});
-		ops4.push({
-			insertOne: {
-				document: newPS
 			}
 		});
 	});
 	
+	console.log('Scoutingpairs...');
 	console.log(await utilities.bulkWrite('scoutingpairs', ops2));
+	console.log('Matchscouting...');
 	console.log(await utilities.bulkWrite('matchscouting', ops3));
+	console.log('Pitscouting...');
 	console.log(await utilities.bulkWrite('pitscouting', ops4));
 	
 	process.exit(0);
