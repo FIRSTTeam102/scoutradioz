@@ -11,6 +11,12 @@ export class HttpError extends Error {
 	}
 }
 
+/**
+ * Sends a fetch request to the specified URL.
+ * @param url URL to fetch
+ * @param options Options to pass to the HTTP fetch API
+ * @returns response
+ */
 export async function fetchJSON<T = any>(url: string, options?: RequestInit): Promise<T> {
 	let response = await fetch(url, options);
 
@@ -19,6 +25,34 @@ export async function fetchJSON<T = any>(url: string, options?: RequestInit): Pr
 		return json;
 	else
 		throw new HttpError(response.status, json['message'] || response.statusText);
+}
+
+/**
+ * Sends an AJAX POST request to the specified url, using the HTTP fetch API.
+ * 
+ * Shorthand for:
+ * 
+ * 		fetchJSON(url, {
+ * 			method: 'POST',
+ * 			headers: {
+ * 				'Content-Type': 'application/json',
+ * 			},
+ * 			body: JSON.stringify(data)
+ * 		});
+ */
+export async function postJSON<T = any>(url: string, body: any, options?: RequestInit): Promise<T> {
+	if (!options) options = {};
+	options.method = 'POST';
+	// just in case they wanna provide other headers, merge existing headers object with the content-type default thing
+	let jsonHeader = { 'Content-Type': 'application/json' };
+	if (options.headers) options.headers = {
+		...options.headers,
+		...jsonHeader,
+	};
+	else options.headers = jsonHeader;
+	options.body = JSON.stringify(body);
+	
+	return fetchJSON<T>(url, options);
 }
 
 type hasTeamKey = AnyDict & {

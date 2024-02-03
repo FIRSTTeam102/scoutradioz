@@ -31,7 +31,9 @@ utilities.config(dbJSON, {
 	},
 	debug: (env.UTILITIES_DEBUG === 'true'),
 	// ObjectIDs result in an error "Data returned from `load` while rendering / is not serializable: Cannot stringify arbitrary non-POJOs (data.user._id)"
-	stringifyObjectIDs: true,
+	// JL TODO: (note 2024-02-02): current stringifyObjectIds implementation is bork.
+	// 	Dates get turned into strings due to the JSON-parse-JSON-stringify method.
+	// stringifyObjectIDs: true,
 	mongoClientOptions: mongoClientOptions
 });
 

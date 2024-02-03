@@ -156,6 +156,10 @@
 				<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
 				<LText>{msg('layout.nav.user.switchorg')}</LText>
 			</LItem>
+			<LItem href="/login/pick-user">
+				<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+				<LText>Pick user</LText>
+			</LItem>
 			<LItem href="/preferences">
 				<LGraphic class="material-icons" aria-hidden="true">settings</LGraphic>
 				<LText>{msg('user.preferences.title')}</LText>

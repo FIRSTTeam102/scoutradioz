@@ -126,6 +126,11 @@ section.comfortable {
 	place-items: center;
 }
 
+// Makes a Button the same height as a select or text input, so they can be shown inline.
+.btn-same-height-as-input {
+	--mdc-filled-button-container-height: 56px;
+}
+
 @media(max-width: 600px) {
 	section.pad {
 		padding: 8px 4px;

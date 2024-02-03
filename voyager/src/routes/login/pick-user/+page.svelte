@@ -12,14 +12,13 @@
 	import { fetchJSON } from '$lib/utils';
 	import { getLogger } from '$lib/logger';
 
-	import { org, org_password, user } from '../login-stores';
-
 	import type { PageData } from './$types';
 	import { getContext, onDestroy, onMount } from 'svelte';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 
 	export let data: PageData;
+	let user: LightUser|null = null;
 
 	// Retrieve the orgs from the database
 	$: users = liveQuery(async () => {
@@ -37,14 +36,14 @@
 	
 	async function downloadUsers(showSnackbarWhenDone?: boolean) {
 		try {
-			if (!$org) throw new Error('No org selected');
+			if (!data.org) throw new Error('No org selected');
 			const users = await fetchJSON<WithStringDbId<User>[]>(`/api/orgs/${data.org_key}/users`);
 			logger.debug(`Fetched ${users.length} users`);
 
 			// Delete existing users that match this org key
 			let deletedUsers = await db.lightusers
 				.where({
-					org_key: $org.org_key
+					org_key: data.org_key
 				})
 				.delete();
 			logger.info(`Deleted ${deletedUsers} users from database`);
@@ -52,7 +51,7 @@
 			await db.lightusers.bulkPut(users);
 			await db.syncstatus.put({
 				table: 'lightusers',
-				filter: `org=${$org.org_key}`,
+				filter: `org=${data.org_key}`,
 				time: new Date()
 			});
 			logger.debug('Successfully saved users and saved syncstatus to database');
@@ -82,7 +81,7 @@
 	const USER_SYNC_TOO_OLD = 1000 * 3600 * 24 * 7; // 1 week
 
 	onMount(async () => {
-		if (!$org) {
+		if (!data.org) {
 			logger.warn('No org selected; redirecting to /');
 			goto('/');
 			return;
@@ -99,7 +98,7 @@
 		let userSyncStatus = await db.syncstatus
 			.where({
 				table: 'lightusers',
-				filter: `org=${$org.org_key}`
+				filter: `org=${data.org.org_key}`
 			})
 			.first();
 
@@ -128,9 +127,9 @@
 </script>
 
 <section class="comfortable">
-	<h1>Choose account for {$org?.nickname}</h1>
+	<h1>Choose account for {data.org?.nickname}</h1>
 	<!-- TODO: event nickname -->
-	<s1>{$org?.nickname} is currently at {$org?.event_key}</s1>
+	<s1>{data.org?.nickname} is currently at {data.org?.event_key}</s1>
 	<br>
 	<div class="md:flex flex-row sm:space-y-2 md:space-x-2">
 		<div class="basis-1/2 grow">
@@ -141,14 +140,14 @@
 				options={$users}
 				disabled={!$users}
 				getOptionLabel={getUserOptionLabel}
-				bind:value={$user}
-				label={`Members of ${$org?.nickname}`}
+				bind:value={user}
+				label={`Members of ${data.org?.nickname}`}
 			/>
 		</div>
 		<div class="basis-1/2 grow">
-			<Button variant="unelevated" style="width: 100%" disabled={!$user} on:click={async () => {
+			<Button variant="unelevated" style="width: 100%" disabled={!user} on:click={async () => {
 				// Log in user
-				await updateUser($user);
+				await updateUser(user);
 				goto(`/sync/lead#2`)
 			}}>
 				<BLabel>Done</BLabel>
