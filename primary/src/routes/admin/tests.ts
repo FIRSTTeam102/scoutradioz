@@ -73,7 +73,9 @@ router.all('/password-creation-data', async (req, res, next) => {
 			present: false,
 			assigned: false,
 		},
+		oauth: {},
 		visible: true,
+		removed: false,
 		password: 'default'
 	};
 	await utilities.insert('users', tempUser);

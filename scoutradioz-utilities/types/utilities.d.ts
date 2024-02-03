@@ -9,7 +9,9 @@ export type ValidQueryPrimitive = string | number | undefined | null | boolean |
 /**
  * Valid type for the `_id` field in a mongodb query
  */
-export type ValidID = ObjectId | string | FilterOps<ObjectId>;
+export type ValidID<T extends {
+    _id?: ObjectId | number;
+}, ThisIDType = Required<Pick<T, '_id'>>['_id']> = ThisIDType | string | FilterOps<ThisIDType>;
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
@@ -60,14 +62,14 @@ export interface FindOptionsWithProjection extends FindOptions {
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-    _id?: ValidID;
+    _id?: ValidID<MongoDocument>;
     [key: string]: QueryItem | ValidQueryPrimitive;
 }
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
  */
-export type FilterQueryTyped<T> = {
-    _id?: ValidID;
+export type FilterQueryTyped<T extends MongoDocument> = {
+    _id?: ValidID<T>;
     $or?: FilterQueryTyped<T>[];
     $and?: FilterQueryTyped<T>[];
     $expr?: FilterQueryTyped<T>;
@@ -103,6 +105,7 @@ export declare class UtilitiesOptions {
          */
         maxAge: number;
     };
+    schemasWithNumberIds?: CollectionName[];
     /**
      * Options for the MongoClient that we are wrapping.
      */

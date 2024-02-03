@@ -44,7 +44,7 @@ block content
 									div(style="height: 10px;")
 										if assignment.assigned_scorer
 											//- Serve bold when it's the logged in user
-											if user && user._id.equals(assignment.assigned_scorer.id)
+											if user && user._id === (assignment.assigned_scorer.id)
 												span.b= assignment.assigned_scorer.name
 											else
 												span= assignment.assigned_scorer.name

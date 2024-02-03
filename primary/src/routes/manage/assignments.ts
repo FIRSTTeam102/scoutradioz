@@ -194,7 +194,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
 	
-	const availableArray: ObjectId[] = []; // User IDs
+	const availableArray: number[] = []; // User IDs
 	let stoppingForBreaks = true;
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
@@ -204,7 +204,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			const userName = user.split('|')[1]; // unused
 			logger.trace(`user: ${userId} | ${userName}`);
 			assert(userId && userName, 'Could not find both userId and userName');
-			availableArray.push(ObjectId.createFromHexString(userId));
+			availableArray.push(Number(userId));
 		}
 		else {
 			logger.debug('Assignments will continue past breaks!');
@@ -465,7 +465,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	// 2022-11-10 JL: changed scoutArray to be a list of _ids and names
 	let scoutArray: ScouterRecord[] = [];  // the current set of scouts (gets regenerated every N matches)
 	let scoutAvailableMap: Dict<ScouterRecord> = {};  // pool of available scouts
-	let scoutAssignedList: string[] = []; // list of IDs of assigned scouters
+	let scoutAssignedList: number[] = []; // list of IDs of assigned scouters
 	
 	let redBlueToggle = 0;  // flips between 0 and 1, signals whether to allocate red alliance or blue alliance first
 
@@ -593,7 +593,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 				// 2024-01-23, M.O'C: If there are fewer than 6 available scouts, some entries might be null
 				if (thisScout != null) {
 					// Save this scouter as being assigned
-					let thisScoutId = String(thisScout.id);
+					let thisScoutId = thisScout.id;
 					if (!scoutAssignedList.includes(thisScoutId)) 
 						scoutAssignedList.push(thisScoutId);
 
@@ -626,7 +626,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// }, 
 		{
 			updateMany: {
-				filter: {_id: {$in: scoutAssignedObjectIdList}},
+				filter: {_id: {$in: scoutAssignedList}},
 				update: {$set: {'event_info.assigned': true}}
 			}
 		}
@@ -667,13 +667,13 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 	
 	logger.trace(`Selected members: ${data}`);
 	
-	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
+	let member1 = await utilities.findOne('users', {_id: Number(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
 	let member2;
 	if (selectedMembers.member2)
-		member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key});
+		member2 = await utilities.findOne('users', {_id: Number(selectedMembers.member2), org_key});
 	let member3;
 	if (selectedMembers.member3)
-		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key});
+		member3 = await utilities.findOne('users', {_id: Number(selectedMembers.member3), org_key});
 	
 	let idList = [member1._id]; // for bulkWrite operation
 	
@@ -1069,7 +1069,7 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	
 	// Iterate through scoutingpairs; create {1st: 2nd: 3rd:} and add to 'dict' keying off 1st <1, or 1/2 2/1, or 1/2/3 2/3/1 3/1/2>
 	let primaryAndBackupMap: Dict<PitScoutingSet> = {};
-	let scoutingAssignedArray: ObjectId[] = [];
+	let scoutingAssignedArray: number[] = [];
 	
 	for (let i in scoutingpairs) {
 		const thisPair = scoutingpairs[i];

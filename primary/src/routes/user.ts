@@ -8,7 +8,6 @@ import Permissions from '../helpers/permissions';
 import e, { assert } from 'scoutradioz-http-errors';
 import { matchData as matchDataHelper } from 'scoutradioz-helpers';
 import type { Role, Org, User, Layout } from 'scoutradioz-types';
-import { ObjectId } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('user');
@@ -135,7 +134,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	logger.addContext('funcName', 'login/withoutpassword[post]');
 	
 	//This is where /user/login/selectuser sends a request first
-	let userID = req.body.user;
+	let userID = parseInt(req.body.user);
 	let org_key = req.body.org_key;
 	let org_password = req.body.org_password;
 	
@@ -150,7 +149,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	}
 	
 	//If no user is selected, send an alert message
-	if(typeof userID !== 'string'){
+	if(isNaN(userID)){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
@@ -182,7 +181,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 	//Find user info that matches selected id
 	// 2023-1-8 JL note: Explicitly declaring it as 'any' because of the req.login not liking Express.User casting to Scoutradioz User
 	// 2024-01-24 JL: added visible: true to the filter criteria because they should only be using this page to log in as a visible user
-	let user = await utilities.findOne<any>('users', {_id: new ObjectId(userID), 'visible': true});
+	let user = await utilities.findOne<any>('users', {_id: Number(userID), 'visible': true});
 	
 	//if user doesn't exist in database for some reason, then cry
 	if(!user){
@@ -299,7 +298,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 router.post('/login/withpassword', wrap(async (req, res) => {
 	logger.addContext('funcName', 'login/withpassword[post]');
 	
-	let userID = req.body.user;
+	let userID = parseInt(req.body.user);
 	let userPassword = req.body.password;
 	let org_key = req.body.org_key;
 	let org_password = req.body.org_password;
@@ -315,7 +314,7 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 	}
 	
 	//If no user is selected, send an alert message
-	if(!userID){
+	if(isNaN(userID)){
 		return res.send({
 			status: 400,
 			alert: req.msg('user.selectuser')
