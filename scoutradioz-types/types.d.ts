@@ -256,6 +256,7 @@ export declare interface MatchScouting extends DbDocument {
 	assigned_scorer?: ScouterRecord;
 	actual_scorer?: ScouterRecord;
 	data?: MatchFormData;
+	super_data?: MatchFormData;
 	useragent?: UserAgent;
 }
 
@@ -375,6 +376,7 @@ export declare interface PitScouting {
 	tertiary?: ScouterRecord;
 	actual_scouter?: ScouterRecord;
 	data?: StringDict;
+	super_data?: StringDict;
 	useragent?: UserAgent;
 }
 
