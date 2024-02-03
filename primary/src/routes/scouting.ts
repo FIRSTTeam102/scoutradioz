@@ -1,13 +1,12 @@
+import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
-import bcrypt from 'bcryptjs';
-import wrap from '../helpers/express-async-handler';
-import utilities from 'scoutradioz-utilities';
-import Permissions from '../helpers/permissions';
-import { upload as uploadHelper, matchData as matchDataHelper } from 'scoutradioz-helpers';
+import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
-import type { MatchScouting, Team, Layout, PitScouting, User, ScouterRecord, MatchFormData } from 'scoutradioz-types';
-import { ObjectId } from 'mongodb';
+import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User } from 'scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../helpers/express-async-handler';
+import Permissions from '../helpers/permissions';
 
 const router = express.Router();
 const logger = getLogger('scouting');

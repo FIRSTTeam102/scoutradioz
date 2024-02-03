@@ -1,10 +1,9 @@
 import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../../helpers/express-async-handler';
-import utilities from 'scoutradioz-utilities';
-import Permissions from '../../helpers/permissions';
 import type { User } from 'scoutradioz-types';
-import type { ObjectId } from 'mongodb';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../../helpers/express-async-handler';
+import Permissions from '../../helpers/permissions';
 
 const router = express.Router();
 const logger = getLogger('tests');
