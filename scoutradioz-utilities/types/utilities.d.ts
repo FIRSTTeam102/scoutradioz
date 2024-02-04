@@ -299,9 +299,9 @@ export declare class Utilities {
     private dbLock;
     private open;
     /**
-     * Fix filter queries by replacing String IDs with the proper ObjectID
+     * Fix filter queries by replacing String IDs with the proper ID type of the specified collection
      * @param query Query with or without _id
-     * @returns Query with _id replaced with an ObjectId
+     * @returns Query with _id replaced with an ObjectId or number, depending on the collection
      */
     private castID;
 }
