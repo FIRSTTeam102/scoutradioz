@@ -1,0 +1,52 @@
+//-
+	Pit scouting page.
+		scouting.js
+		'/scouting/pit'
+			QUERY: team_key (Team key)
+extends ../layout
+block content
+	style.
+		.w3-check{
+			top: 7.7px!important;
+		}
+		.image-input{
+			opacity: 0;
+			position: absolute;
+			z-index: -1;
+			width: 1px; /* So the page doesn't display too wide on some mobile browsers */
+			height: 1px;
+		}
+	h3!=msg('scouting.pitHeading', {team: key.replace('frc', '')})
+	h5!=msgMarked('scouting.subheading', {team: team.nickname, city: team.city, state: team.state_prov})
+	p
+	div(class="")
+		form#scoutform(class="" name="scoutform" method="post" action="/scouting/pit/supersubmit")
+			input#teamkey(type="hidden", name="teamkey", value=`${key}`)
+			div(class="w3-auto")
+				- let element = {"year":event_year,"order":"1","type":"textblock","label":"Super-Scout Notes","id":"otherNotes","org_key":org_key,"form_type":"superpitscouting"}
+				- let answer = "";
+				- if (pitData) answer = pitData[element.id];
+				- if (element.label) element.label = resolveLabelTemplate(element.label, teamKey);
+				
+				case element.type
+					when "checkbox"
+						include templates/formCheckbox
+					when "counter"
+						include templates/formCounterTextInput
+					when "badcounter"
+						include templates/formBadCounter
+					when "slider"
+						include templates/formSlider
+					when "multiselect"
+						include templates/formMultiselect
+					when "textblock"
+						include templates/formTextBlock
+					when "h2"
+						include templates/formHeader
+					when "h3"
+						include templates/formSubHeader
+					when "spacer"
+						include templates/formSpacer
+			br
+			button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit")!=msg('scouting.submit')
+

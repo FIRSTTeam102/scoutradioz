@@ -1,14 +1,13 @@
 import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../../helpers/express-async-handler';
-import utilities from 'scoutradioz-utilities';
-import Permissions from '../../helpers/permissions';
+import type Mathjs from 'mathjs';
 import { upload as uploadHelper } from 'scoutradioz-helpers';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from 'scoutradioz-types';
-import type { ObjectId } from 'mongodb';
-import type Mathjs from 'mathjs';
+import type { AnyDict, Match, MatchFormData, MatchScouting, MatchTeamKey, Upload } from 'scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../../helpers/express-async-handler';
+import Permissions from '../../helpers/permissions';
 const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
 const router = express.Router();
@@ -73,7 +72,7 @@ router.get('/', wrap(async (req, res) =>  {
 	
 	// Gets whether a user is a youth, for adult covering students
 	const scouterIsYouthMap: Dict<boolean> = {};
-	async function isYouth(scouterId: ObjectId) {
+	async function isYouth(scouterId: number) {
 		let scouterIdString = String(scouterId);
 		if (scouterIsYouthMap.hasOwnProperty(scouterIdString)) return scouterIsYouthMap[scouterIdString];
 		const thisScouter = await utilities.findOne('users', {_id: scouterId}, {}, {allowCache: true});
@@ -114,7 +113,7 @@ router.get('/', wrap(async (req, res) =>  {
 			if (thisScoreData.data && thisScoreData.actual_scorer){
 				
 				
-				if (thisScoreData.assigned_scorer?.id.equals(thisScoreData.actual_scorer.id))
+				if (thisScoreData.assigned_scorer?.id === thisScoreData.actual_scorer.id)
 					auditElementChar = 'Y';
 				// 2018-03-22, M.O'C: Adding parent option
 				// 2022-11-02, M.O'C: Eliminating parent option

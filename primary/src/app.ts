@@ -61,6 +61,7 @@ utilities.config(require('../databases.json'), {
 		maxAge: 30,
 	},
 	debug: (process.env.UTILITIES_DEBUG === 'true'),
+	schemasWithNumberIds: ['users'],
 });
 //Load helper functions
 const helpers = require('scoutradioz-helpers');

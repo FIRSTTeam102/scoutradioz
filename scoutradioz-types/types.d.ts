@@ -32,15 +32,22 @@ export declare interface DbDocument {
 	_id?: ObjectId;
 }
 
+/** Document with an auto-incrementing number, for use in Voyager QR codes */
+export declare interface DbDocumentWithNumberId {
+	/**
+	 * Numerical ID. (JL note: Utilities driver does the auto-incrementing)
+	 */
+	_id?: number;
+}
+
 /**
  * Optionally explicitly declare that a given object retrieved from the database has `_id` set.
  * @example
  * 
  * 	let users: WithDbId<User>[] = await utilities.find('users', {});
  */
-export declare type WithDbId<T> = T & {
-	_id: ObjectId
-}
+export declare type WithDbId<T extends DbDocument|DbDocumentWithNumberId> = T & Required<Pick<T, '_id'>>
+
 
 /**
  * Contains the min, max, average, and variance for a given numerical metric from an org's match scouting form.
@@ -234,7 +241,7 @@ export declare interface ScouterRecord {
 	/**
 	 * {@link User}'s _id
 	 */
-	id: ObjectId;
+	id: number;
 	name: string;
 }
 
@@ -256,6 +263,7 @@ export declare interface MatchScouting extends DbDocument {
 	assigned_scorer?: ScouterRecord;
 	actual_scorer?: ScouterRecord;
 	data?: MatchFormData;
+	super_data?: MatchFormData;
 	useragent?: UserAgent;
 }
 
@@ -365,7 +373,7 @@ export declare interface PitScoutingSet extends DbDocument {
  * @collection pitscouting
  * @interface PitScouting
  */
-export declare interface PitScouting {
+export declare interface PitScouting extends DbDocument {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
@@ -375,6 +383,7 @@ export declare interface PitScouting {
 	tertiary?: ScouterRecord;
 	actual_scouter?: ScouterRecord;
 	data?: StringDict;
+	super_data?: StringDict;
 	useragent?: UserAgent;
 }
 
@@ -456,7 +465,7 @@ export declare interface Session extends DbDocument {
  */
 export declare interface LuciaSession extends DbDocument {
 	expiresAt: Date;
-	user_id?: ObjectId;
+	user_id?: number;
     attributes: any;
 }
 
@@ -538,7 +547,7 @@ export declare interface Upload extends DbDocument {
  * @collection users
  * @interface User
  */
-export declare interface User extends DbDocument {
+export declare interface User extends DbDocumentWithNumberId {
 	org_key: OrgKey;
 	name: string;
 	role_key: RoleKey;

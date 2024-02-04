@@ -24,6 +24,9 @@ block content
 			th!=msg('dashboard.teamName')
 			if images
 				th!=msg('dashboard.photo')
+			//- TODOSUPER: Replace permission check with ACCESS_SUPER_SCOUT
+			if user.role && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
+				th!=msg('scouting.superpit')
 			each team, i in teamAssignments
 				if( user.name == team.primary )
 					- style = "strong";
@@ -52,6 +55,12 @@ block content
 							- if (images[i] && images[i].main)
 								a(href=images[i].main.lg target="_blank")
 									img(src=images[i].main.sm alt="" style="max-height:80px; max-width: 50px;")
+					//- TODOSUPER: Replace permission check with ACCESS_SUPER_SCOUT
+					if user.role && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
+						td(class="theme-spacer")
+							a(href=`/scouting/superpit?key=${team.team_key}`) 
+								div(class="w3-btn w3-col theme-link w3-padding")
+									span!=msg('scouting.superpit')
 		h6
 			a(class="gear-btn theme-link w3-btn" href="/dashboard/pits?loadPhotos=1")!=msg('dashboard.loadTeamPhotos')
 

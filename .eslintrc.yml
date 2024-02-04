@@ -39,10 +39,6 @@ rules:
   semi:
     - error
     - always
-  no-unused-vars: off # JL: typescript-eslint supercedes eslint's no-unused-vars
-  '@typescript-eslint/no-unused-vars':
-    - warn
-    - args: none
   global-require: error
   no-new-require: error
   no-mixed-requires: error
