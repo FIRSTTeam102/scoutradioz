@@ -460,7 +460,7 @@ export class Utilities {
 		if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
 		if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
-		let castQuery = this.castID(query);
+		let castQuery = this.castID(collection, query);
 
 		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(castQuery)}, ${JSON.stringify(opts)}, maxCacheAge: ${cacheOptions.maxCacheAge}`);
 		let timeLogName = `find: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
@@ -554,7 +554,7 @@ export class Utilities {
 		if (cacheOptions.maxCacheAge != undefined && typeof cacheOptions.maxCacheAge != 'number') throw new TypeError('cacheOptions.maxCacheAge must be of type number');
 		if (!cacheOptions.allowCache) cacheOptions.allowCache = false;
 		if (!cacheOptions.maxCacheAge) cacheOptions.maxCacheAge = this.options.cache.maxAge;
-		query = this.castID(query);
+		query = this.castID(collection, query);
 
 		if (this.options.debug) logger.trace(`${collection}, ${JSON.stringify(query)}, ${JSON.stringify(opts)}`);
 		let timeLogName = `findOne: ${collection} cache=${cacheOptions.allowCache && this.options.cache.enable}`;
@@ -626,7 +626,7 @@ export class Utilities {
 		options?: UpdateOptions
 	): Promise<UpdateResult | MongoDocument>;
 	// JL: Can't remove the separate declaration/implementation function headers cuz TS has this weird bug where it thinks UpdateFilter<MongoDocument> and UpdateFilter<CollectionSchema<colName>> are incompatible though they're the same
-	async update(collection: string, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument> {
+	async update(collection: CollectionName, query: FilterQuery, update: UpdateFilter<MongoDocument>, options?: UpdateOptions): Promise<UpdateResult | MongoDocument> {
 		logger.addContext('funcName', 'update');
 
 		//Collection filter
@@ -639,7 +639,7 @@ export class Utilities {
 		//Query options filter
 		if (!options) options = {};
 		if (typeof options != 'object') throw new TypeError('Utilities.update: Options must be of type object');
-		query = this.castID(query);
+		query = this.castID(collection, query);
 
 		if (this.options.debug) logger.trace(`utilities.update: ${collection}, param: ${JSON.stringify(query)}, update: ${JSON.stringify(update)}, options: ${JSON.stringify(options)}`);
 		let timeLogName = `update: ${collection}`;
@@ -803,7 +803,7 @@ export class Utilities {
 		if (!query) query = {};
 		//If query exists and is not an object, throw an error. 
 		if (typeof (query) != 'object') throw new TypeError('Utilities.distinct: query must be of type object');
-		query = this.castID(query);
+		query = this.castID(collection, query);
 
 		let timeLogName = `distinct: ${collection}`;
 		this.consoleTime(timeLogName);
@@ -889,7 +889,7 @@ export class Utilities {
 		if (!query) query = {};
 		//If query exists and is not an object, throw an error. 
 		if (typeof query != 'object') throw new TypeError('utilities.remove: query must be of type object');
-		query = this.castID(query);
+		query = this.castID(collection, query);
 
 		if (this.options.debug) logger.trace(`${collection}, param: ${JSON.stringify(query)}`);
 
@@ -1179,15 +1179,22 @@ export class Utilities {
 	}
 
 	/**
-	 * Fix filter queries by replacing String IDs with the proper ObjectID
+	 * Fix filter queries by replacing String IDs with the proper ID type of the specified collection
 	 * @param query Query with or without _id
-	 * @returns Query with _id replaced with an ObjectId
+	 * @returns Query with _id replaced with an ObjectId or number, depending on the collection
 	 */
-	private castID(query: Filter<MongoDocument>) {
+	private castID(collection: CollectionName, query: Filter<MongoDocument>) {
 		if (typeof query !== 'object') return query;
 
 		if (typeof query._id === 'string') {
-			query._id = new ObjectId(query._id);
+			if (this.options.schemasWithNumberIds?.includes(collection)) {
+				let newId = parseInt(query._id);
+				if (isNaN(newId)) {
+					throw new TypeError(`Attempted to parseInt specified _id: ${query._id} but it is NaN! (collection = ${collection})`);
+				}
+				query._id = newId;
+			}
+			else query._id = new ObjectId(query._id);
 		}
 		return query;
 	}
