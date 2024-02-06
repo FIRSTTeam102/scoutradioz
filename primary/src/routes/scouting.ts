@@ -24,6 +24,7 @@ router.get('/match*', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match[get]');
 	logger.info('ENTER');
 
+	let eventKey = req.event.key;
 	let eventYear = req.event.year;
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
@@ -78,6 +79,14 @@ router.get('/match*', wrap(async (req, res) => {
 	let allianceLocale = (alliance.toLowerCase().startsWith('b')) ? req.msg('alliance.blueShort') : req.msg('alliance.redShort');
 	let title = `#${scoringdata[0]?.match_number} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
 
+	// 2024-02-05, M.O'C: Add super-scout pit text to page
+	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : eventKey, 'team_key' : teamKey }, {});
+	let pit_super_data: StringDict|null = null;
+	if (pitFind && pitFind[0])
+		if (pitFind[0].super_data)
+			pit_super_data = pitFind[0].super_data;
+	logger.debug(`pit_super_data=${JSON.stringify(pit_super_data)}`);
+
 	//render page
 	res.render('./scouting/match', {
 		title: title,
@@ -88,6 +97,7 @@ router.get('/match*', wrap(async (req, res) => {
 		teamKey: teamKey,
 		images: images,
 		team: team,
+		pit_super_data: pit_super_data
 	});
 }));
 
