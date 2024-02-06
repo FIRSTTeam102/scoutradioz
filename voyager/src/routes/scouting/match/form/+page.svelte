@@ -7,7 +7,7 @@
 	import { getLogger } from '$lib/logger';
 	import db from '$lib/localDB';
 	import { goto } from '$app/navigation';
-	import { deviceOnline } from '$lib/stores';
+	import { canAutoSync } from '$lib/stores';
 	import { fetchJSON, matchKeyToCompLevel } from '$lib/utils';
 	import type { BulkWriteResult } from 'mongodb';
 	import Card from '@smui/card';
@@ -120,7 +120,7 @@
 					.first();
 				if (!entry) return;
 
-				if ($deviceOnline) {
+				if ($canAutoSync) {
 					logger.debug('navigator.onLine = true; going to attempt a cloud sync myself');
 
 					// Save a promise for use in the sync display thingy in the qr code popup
@@ -243,6 +243,7 @@
 				on:click={() => {
 					if (data.hasUpcomingBreak) {
 					}
+					// JL TODO: check whether I should set cloudUploadPromise = undefined
 					goto(`/scouting/match/form?key=${data.nextAssignment.match_team_key}#top`);
 				}}
 			>
