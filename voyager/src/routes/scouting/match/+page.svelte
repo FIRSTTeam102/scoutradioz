@@ -62,7 +62,7 @@
 								<SecondaryText>Assigned to: {asg.assigned_scorer?.name}</SecondaryText>
 							</Text>
 							<Meta>
-								<Button href={`/scouting/match/form?key=${asg.match_team_key}`}>
+								<Button href={`/scouting/match/${asg.match_team_key}`}>
 									<BLabel>Scout</BLabel>
 									<i class="material-icons" aria-hidden="true">arrow_forward</i>
 								</Button>

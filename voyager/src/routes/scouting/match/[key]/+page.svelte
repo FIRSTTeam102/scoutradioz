@@ -4,6 +4,7 @@
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	import type BottomAppBar from '@smui-extra/bottom-app-bar';
 	import CircularProgress from '@smui/circular-progress';
+	import Switch from '@smui/switch';
 	import { getLogger } from '$lib/logger';
 	import db from '$lib/localDB';
 	import { goto } from '$app/navigation';
@@ -20,6 +21,7 @@
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 	import FormField from '@smui/form-field';
 	import Checkbox from '@smui/checkbox';
+	import { onMount } from 'svelte';
 
 	export let data: PageData;
 
@@ -27,7 +29,7 @@
 	let qrDialogOpen = false;
 	let matchIdentifier = data.matchScoutingEntry.match_key.split('_')[1];
 	let matchCompLevel = matchIdentifier.substring(0, 2);
-	let base64Data: Promise<string>;
+	let base64Data: Promise<string>|string;
 	let scannedByScoutingLead = false;
 
 	// JL note: This is in a handler function instead of a $: magic-handler because I don't want the db query to
@@ -49,10 +51,12 @@
 	let bottomAppBar: BottomAppBar;
 
 	// Initialize formData if necessary
-	let formData: Required<typeof data.matchScoutingEntry.data>;
+	// let formData: Required<typeof data.matchScoutingEntry.data>;
 	// JL note: This is in a $: handler because navigating between match scouting form pages does not reload the page,
 	// 	nor does it re-run onMount().
-	$: formData = data.matchScoutingEntry.data || {};
+	// $: formData = data.matchScoutingEntry.data || {};
+	// console.log('data', data);
+	// $: console.log('formData', formData);
 	let allDefaultValues: boolean;
 
 	$: scouterRecord = {
@@ -65,7 +69,7 @@
 	$: {
 		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
 		db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-			data: allDefaultValues ? undefined : formData,
+			data: allDefaultValues ? undefined : data.matchScoutingEntry.data,
 			synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
 			completed: false, // Additionally, if it's been changed since the last time the done button is pressed, mark it as not completed
 			actual_scorer: scouterRecord
@@ -109,7 +113,7 @@
 						id: data.user_id,
 						name: data.user_name
 					},
-					data: formData,
+					data: data.matchScoutingEntry.data,
 					completed: true,
 					synced: false // since the entry is being updated locally, we must force synced=false until it definitely is synced
 				});
@@ -139,6 +143,14 @@
 								synced: true
 							});
 							resolve(bulkWriteResult);
+							// Since the entry is now synced, we must update the QR code. 
+							// 	However, we should await it here before updating the string so that the user doesn't see a flash of the LinarProgress.
+							logger.debug('Updating qr code with synced=true!');
+							let newEntry = {
+								...entry!,
+								synced: true
+							};
+							base64Data = await encodeOneMatchScoutingResult(newEntry);
 						} else {
 							reject(bulkWriteResult);
 						}
@@ -182,7 +194,7 @@
 <ScoutingForm
 	bind:allDefaultValues
 	layout={data.layout}
-	bind:formData
+	bind:formData={data.matchScoutingEntry.data}
 	teamNumber={data.team.team_number}
 />
 
@@ -244,7 +256,7 @@
 					if (data.hasUpcomingBreak) {
 					}
 					// JL TODO: check whether I should set cloudUploadPromise = undefined
-					goto(`/scouting/match/form?key=${data.nextAssignment.match_team_key}#top`);
+					goto(`/scouting/match/${data.nextAssignment.match_team_key}`, { invalidateAll: true });
 				}}
 			>
 				<Icon class="material-icons">navigate_next</Icon>

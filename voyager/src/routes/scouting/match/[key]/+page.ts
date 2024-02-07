@@ -3,11 +3,11 @@ import { error, redirect } from '@sveltejs/kit';
 import type { LayoutField } from '$lib/types';
 import db from '$lib/localDB';
 
-export const load: PageLoad = async ({ url, fetch, parent }) => {
+export const load: PageLoad = async ({ url, fetch, parent, params }) => {
 	const { event_key, org_key, user_id, event } = await parent();
 	if (!event) throw redirect(307, '/');
 
-	const key = url.searchParams.get('key');
+	const key = params.key;
 	if (!key) throw error(400, new Error('Match-team key not specified'));
 
 	const team_key = key.split('_')[2];
@@ -22,7 +22,7 @@ export const load: PageLoad = async ({ url, fetch, parent }) => {
 	
 	// TODO: multi org
 	const matchScoutingEntry = await db.matchscouting
-		.where('match_team_key').equals(key).first();
+		.where({match_team_key: key}).first();
 	
 	if (!matchScoutingEntry) throw error(404, new Error(`Match scouting assignment not found for key ${key}!`));
 	
