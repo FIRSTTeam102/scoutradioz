@@ -433,7 +433,8 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// Avoid crashing server if all matches at an event are done
-	let latestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	if (timestampArray && timestampArray[0]) {
 		let latestMatch = timestampArray[0];
 		latestTimestamp = latestMatch.time + 1;
@@ -853,7 +854,8 @@ router.get('/swapmatchscouters', wrap(async (req, res) => {
 	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let latestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	if (matchDocs && matchDocs[0]) {
 		let latestMatch = matchDocs[0];
 		latestTimestamp = latestMatch.time + 1;
@@ -912,7 +914,8 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let latestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	if (matchDocs && matchDocs[0]) {
 		let latestMatch = matchDocs[0];
 		latestTimestamp = latestMatch.time + 1;
