@@ -20,9 +20,9 @@ export const load: PageLoad = async ({ url, fetch, parent, params }) => {
 		})
 		.toArray();
 	
-	// TODO: multi org
 	const matchScoutingEntry = await db.matchscouting
-		.where({match_team_key: key}).first();
+		.where({match_team_key: key})
+		.and(asg => asg.org_key === org_key).first();
 	
 	if (!matchScoutingEntry) throw error(404, new Error(`Match scouting assignment not found for key ${key}!`));
 	
