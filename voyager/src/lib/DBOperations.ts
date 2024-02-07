@@ -3,7 +3,7 @@ import { page } from '$app/stores';
 import { fetchJSON } from './utils';
 import { getLogger } from './logger';
 import type { Layout, Event } from 'scoutradioz-types';
-import type { MatchScoutingLocal, TeamLocal, WithStringDbId, LightMatch, str } from './localDB';
+import type { MatchScoutingLocal, TeamLocal, WithStringDbId, LightMatch, str, PitScoutingLocal } from './localDB';
 import db from './localDB';
 import assert from './assert';
 
@@ -25,6 +25,7 @@ abstract class CollectionOperations {
 
 export class EventOperations extends CollectionOperations {
 	static async download() {
+		logger.info('ENTER');
 		const { event_key } = getKeys();
 
 		const event = await fetchJSON<str<Event>>(`/api/${event_key}`);
@@ -40,6 +41,7 @@ export class EventOperations extends CollectionOperations {
 export class TeamOperations extends CollectionOperations {
 	@setFuncName('TeamOperations.download')
 	static async download() {
+		logger.info('ENTER');
 		const { event_key } = getKeys();
 
 		const teams = await fetchJSON<TeamLocal[]>(`/api/${event_key}/teams`);
@@ -62,6 +64,7 @@ export class TeamOperations extends CollectionOperations {
 export class MatchOperations extends CollectionOperations {
 	@setFuncName('MatchOperations.download')
 	static async download() {
+		logger.info('ENTER');
 		const { event_key } = getKeys();
 
 		const matches = await fetchJSON<LightMatch[]>(`/api/${event_key}/matches`);
@@ -88,6 +91,7 @@ export class MatchOperations extends CollectionOperations {
 export class MatchScoutingOperations extends CollectionOperations {
 	@setFuncName('MatchScoutingOperations.download')
 	static async download() {
+		logger.info('ENTER');
 		const { event_key, org_key } = getKeys();
 
 		// Fetch list of match scouting assignments for this event
@@ -105,7 +109,7 @@ export class MatchScoutingOperations extends CollectionOperations {
 
 		const localMatchScouting = await db.matchscouting.where({org_key, event_key}).toArray();
 		for (let localMatch of localMatchScouting) {
-			if (localMatch.data) {
+			if (localMatch.data && Object.keys(localMatch.data).length > 0) {
 				let this_match_team_key = localMatch.match_team_key;
 				if (keyToIndex[this_match_team_key]) {
 					matchScouting[ keyToIndex[this_match_team_key] ].data = localMatch.data;
@@ -126,9 +130,52 @@ export class MatchScoutingOperations extends CollectionOperations {
 	}
 }
 
+export class PitScoutingOperations extends CollectionOperations {
+	@setFuncName('PitScoutingOperations.download')
+	static async download() {
+		logger.info('ENTER');
+		const { event_key, org_key } = getKeys();
+
+		// Fetch list of pit scouting assignments for this event
+		const pitScouting = await fetchJSON<PitScoutingLocal[]>(
+			`/api/orgs/${org_key}/${event_key}/assignments/pit`
+		);
+
+		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
+		let keyToIndex: {[key: string]: number} = {};
+		if (pitScouting && pitScouting.length > 0)
+			for (let i = 0; i < pitScouting.length; i++) {
+				let thisObj = pitScouting[i];
+				keyToIndex[thisObj.team_key] = i;
+			}
+
+		const localPitScouting = await db.pitscouting.where({org_key, event_key}).toArray();
+		for (let localPit of localPitScouting) {
+			if (localPit.data) {
+				let this_team_key = localPit.team_key;
+				if (keyToIndex[this_team_key]) {
+					pitScouting[ keyToIndex[this_team_key] ].data = localPit.data;
+				}
+			}
+		}
+
+		logger.trace('Begin transaction');
+		await db.transaction('rw', db.pitscouting, db.syncstatus, async () => {
+			await db.pitscouting.bulkPut(pitScouting);
+			await db.syncstatus.put({
+				table: 'orgs',
+				filter: `org=${org_key},event=${event_key}`,
+				time: new Date()
+			});
+		});
+		logger.trace('Done');
+	}
+}
+
 export class FormLayoutOperations extends CollectionOperations {
 	@setFuncName('FormLayoutOperations.download')
 	static async download() {
+		logger.info('ENTER');
 		const { event_key, org_key } = getKeys();
 
 		// grab year from event key
