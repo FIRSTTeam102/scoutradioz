@@ -311,6 +311,11 @@
 	}
 	#page {
 		padding-top: $header-height;
+		// margin-top: $header-height;
+		// overflow: auto;
+		// display: flex;
+		// flex-direction: column;
+		// position: relative;
 	}
 	:global(app),
 	:global(body),
@@ -319,6 +324,9 @@
 		height: auto !important;
 		width: auto !important;
 		position: static !important;
+		// display: flex;
+		// flex-direction: column;
+		// height: 100vh;
 	}
 	:global(.mdc-drawer--modal) {
 		top: 0;

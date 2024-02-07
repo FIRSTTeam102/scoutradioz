@@ -13,6 +13,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const orgs = await utilities.find('orgs', filter, {
 		sort: { org_key: 1 },
 		projection: {
+			_id: 0,
 			org_key: 1,
 			nickname: 1,
 			team_number: 1,

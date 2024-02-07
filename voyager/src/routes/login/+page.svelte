@@ -18,7 +18,7 @@
 
 	import { LightOrgOperations } from '$lib/DBOperations';
 
-	const logger = getLogger('login/OrgPicker');
+	const logger = getLogger('login');
 	
 	let org: Org|null = null;
 	let org_password = '';

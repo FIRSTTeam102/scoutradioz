@@ -74,7 +74,7 @@ export interface LightOrg {
  * of that org. The default_password field is removed because it's considered bad practices
  * (as far as I'm aware) to give people/devices access to hashed passwords.
  */
-export type OrgLocal = Omit<str<Org>, 'default_password'>;
+export type OrgLocal = Omit<Org, 'default_password'|'_id'>;
 
 export interface MatchScoutingWithTeamName extends WithStringDbId<MatchScouting> {
 	team_name?: string;
