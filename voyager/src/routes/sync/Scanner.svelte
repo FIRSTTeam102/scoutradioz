@@ -109,14 +109,29 @@
 					let teams = decodedData.data.teams as TeamLocal[];
 					let event = decodedData.data.event as str<Event>;
 					logger.debug('org', org, 'users', users, 'teams', teams, 'event', event);
-					await db.orgs.put(org);
-					await db.lightusers.bulkPut(users);
-					await db.teams.bulkPut(teams);
-					await db.events.put(event);
+					await db.transaction('rw', db.orgs, db.lightusers, db.teams, db.events, async () => {
+						let existingOrg = await db.orgs.where({org_key: org.org_key}).first();
+						// If the org already exists in Dexie, then the scouter will already have the org config, so don't overwrite it (only update current event)
+						if (existingOrg) {
+							await db.orgs.update(org.org_key, {
+								event_key: org.event_key,
+								// Might as well update the fields that were included in the qr code just in case
+								nickname: org.nickname, 
+								team_number: org.team_number,
+								team_numbers: org.team_numbers,
+								team_key: org.team_key,
+								team_keys: org.team_keys,
+							});
+						}
+						else await db.orgs.put(org);
+						await db.lightusers.bulkPut(users);
+						await db.teams.bulkPut(teams);
+						await db.events.put(event);
+					})
 					break;
 				}
 				case '1matchdata': {
-					let { match_team_key, data, actual_scorer } = decodedData.data as Awaited<
+					let { match_team_key, data, actual_scorer, completed, synced } = decodedData.data as Awaited<
 						ReturnType<typeof decodeOneMatchScoutingResult>
 					>['data'];
 					logger.debug('1matchdata', match_team_key, data, actual_scorer);
@@ -128,12 +143,13 @@
 					await db.matchscouting.update(match_team_key, {
 						data,
 						actual_scorer,
-						synced: false, // since we've updated the entry locally, it's now no longer synced
+						synced, // If the scouter informed us that it's already synced, then we include that here
+						completed,
 					});
 					break;
 				}
 				case '1pitdata': {
-					let { actual_scouter, data, org_key, event_key, team_key } = decodedData.data as Awaited<
+					let { actual_scouter, data, org_key, event_key, team_key, completed, synced } = decodedData.data as Awaited<
 						ReturnType<typeof decodeOnePitScoutingResult>
 					>['data'];
 					logger.debug('Retrieved the following:', actual_scouter, data, org_key, event_key, team_key);
@@ -146,7 +162,8 @@
 					await db.pitscouting.update(existingAssignment, {
 						data,
 						actual_scouter,
-						synced: false, // since we've updated the entry locally, it's now no longer synced
+						synced, // If the scouter informed us that it's already synced, then we include that here
+						completed,
 					});
 					break;
 				}

@@ -1,5 +1,5 @@
 import assert from '$lib/assert';
-import type { str, LightUser, TeamLocal, MatchScoutingLocal, ScouterRecordLocal, WithStringDbId, PitScoutingLocal } from '$lib/localDB';
+import type { str, LightUser, TeamLocal, MatchScoutingLocal, ScouterRecordLocal, WithStringDbId, PitScoutingLocal, OrgLocal } from '$lib/localDB';
 import type { EventKey, MatchScouting, OrgKey, ScouterRecord, User, Org, Event } from 'scoutradioz-types';
 import LZMA from './lzma';
 import db from '$lib/localDB';
@@ -62,24 +62,21 @@ export function getLZMA() {
 
 function scouterRecordToString(sr: ScouterRecordLocal) {
 	// return sr.id + ':' + sr.name;
-	return sr.id;
+	return String(sr.id);
 }
 
 async function stringToScouterRecord(str: string): Promise<ScouterRecordLocal> {
-	let scouter = await db.lightusers.where('_id').equals(str).first();
+	let id = parseInt(str);
+	assert(!isNaN(id), `Scouter record ${str} is NaN!`);
+	let scouter = await db.lightusers.where('_id').equals(id).first();
 	if (scouter) return {
-		id: str,
+		id,
 		name: scouter.name
 	};
 	else return {
-		id: str,
+		id,
 		name: '(Unknown)'
 	};
-	// let split = str.split(':');
-	// return {
-	// 	id: split[0],
-	// 	name: split[1]
-	// }
 }
 
 async function stringToTeam(str: string) {
@@ -183,6 +180,7 @@ export function encodeMetadata(org: str<Org>, users: LightUser[], teams: TeamLoc
 		
 		getLZMA();
 			
+		console.log(ret);
 		let str = JSON.stringify(ret);
 		lzma.compress(str, 9, (result, err) => {
 			if (err) return reject(err);
@@ -206,10 +204,9 @@ export function decodeMetadata(data: CompressedItem) {
 	
 	let orgItems = json.org.split(';');
 	
-	let org: Org = {
+	let org: OrgLocal = {
 		org_key: orgItems[0],
 		nickname: orgItems[1],
-		default_password: '', // not needed in local dexie db
 		config: {
 			members: {
 				subteams: [], // not needed in local dexie db
@@ -239,7 +236,9 @@ export function decodeMetadata(data: CompressedItem) {
 	let team_keys: string[] = [];
 	
 	for (let user of userStrings) {
-		let [_id, name, role_key] = user.split(':');
+		let [idString, name, role_key] = user.split(':');
+		let _id = parseInt(idString);
+		assert(!isNaN(_id), `_id (original string is ${idString}) is NaN!`);
 		users.push({
 			_id,
 			org_key: org.org_key,
@@ -330,7 +329,7 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 		ret.event_key = data[0].event_key;
 		ret.year = data[0].year;
 		
-		// find list of unique scouter ids and 
+		// find list of unique scouter ids and teams
 		let scouters: string[] = [];
 		let teams: string[] = [];
 		
@@ -404,6 +403,7 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 		
 		getLZMA(); // Import the LZMA object if it has not been imported yet
 		
+		console.log(ret);
 		let str = JSON.stringify(ret);
 		console.log('version2 str', str.length);
 		lzma.compress(str, 9, (result, err) => {
@@ -536,7 +536,9 @@ export async function encodeOneMatchScoutingResult(entry: MatchScoutingLocal): P
 			_: '1matchdata',
 			as: entry.actual_scorer,
 			data: entry.data,
-			mtc: entry.match_team_key
+			mtc: entry.match_team_key,
+			c: entry.completed ? 1 : 0,
+			s: entry.synced ? 1 : 0,
 		});
 		
 		getLZMA();
@@ -560,6 +562,8 @@ export async function decodeOneMatchScoutingResult(data: CompressedItem) {
 		as: ScouterRecordLocal, // actual_scorer
 		data: MatchScoutingLocal['data'],
 		mtc: string, // match team key
+		c: number, // completed (1 for true, 0 for false)
+		s: number, // synced (1 for true, 0 for false)
 	};
 	return {
 		type: '1matchdata',
@@ -568,7 +572,11 @@ export async function decodeOneMatchScoutingResult(data: CompressedItem) {
 			actual_scorer: json.as,
 			data: json.data,
 			match_team_key: json.mtc,
-		}
+			// 1 is truthy, 0 is falsy
+			completed: !!json.c,
+			synced: !!json.s,
+		} as MatchScoutingLocal,
+		
 	};	
 }
 
@@ -581,6 +589,8 @@ export async function encodeOnePitScoutingResult(entry: PitScoutingLocal): Promi
 			org: entry.org_key,
 			event: entry.event_key,
 			key: entry.team_key,
+			c: entry.completed ? 1 : 0,
+			s: entry.synced ? 1 : 0,
 		});
 		
 		getLZMA();
@@ -615,6 +625,9 @@ export async function decodeOnePitScoutingResult(data: CompressedItem) {
 			org_key: json.org,
 			event_key: json.event,
 			team_key: json.key,
+			// 1 is truthy, 0 is falsy
+			completed: !!json.c,
+			synced: !!json.s,
 		}
 	};	
 }
