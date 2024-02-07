@@ -1,24 +1,23 @@
 <script lang="ts">
-	import Button, { Group, Label as BLabel, Icon } from '@smui/button';
-	import Card, { Actions as CActions, Content } from '@smui/card';
 	import Autocomplete from '@smui-extra/autocomplete';
-	import Textfield from '@smui/textfield';
-	import HelperText from '@smui/textfield/helper-text';
+	import Button, { Label as BLabel } from '@smui/button';
 
-	import db, { type LightUser, type WithStringDbId } from '$lib/localDB';
+	import db, { type LightUser } from '$lib/localDB';
 	import { liveQuery } from 'dexie';
 
-	import type { User } from 'scoutradioz-types';
-	import { fetchJSON } from '$lib/utils';
 	import { getLogger } from '$lib/logger';
+	import { addRefreshButtonFunctionality, getPageLayoutContexts } from '$lib/utils';
 
+	import { goto, invalidateAll } from '$app/navigation';
+	import { LightUserOperations } from '$lib/DBOperations';
+	import { msg } from '$lib/i18n';
+	import Textfield from '@smui/textfield';
+	import HelperText from '@smui/textfield/helper-text';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { getContext, onDestroy, onMount } from 'svelte';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
-	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 
 	export let data: PageData;
-	let user: LightUser|null = null;
+	let user: LightUser | null = null;
 
 	// Retrieve the orgs from the database
 	$: users = liveQuery(async () => {
@@ -30,30 +29,15 @@
 	});
 
 	const logger = getLogger('login (user)');
-	const snackbar = getContext('snackbar') as SnackbarContext;
-	const refreshButton = getContext('refreshButton') as RefreshContext;
-	const refreshButtonAnimation = getContext('refreshButtonAnimation') as RefreshButtonAnimationContext;
-	
+
+	const { snackbar, refreshButton, refreshButtonAnimation } = getPageLayoutContexts();
+
+	addRefreshButtonFunctionality(() =>
+		LightUserOperations.download(data.org_key).catch(snackbar.error)
+	);
+
 	async function downloadUsers(showSnackbarWhenDone?: boolean) {
 		try {
-			if (!data.org) throw new Error('No org selected');
-			const users = await fetchJSON<WithStringDbId<User>[]>(`/api/orgs/${data.org_key}/users`);
-			logger.debug(`Fetched ${users.length} users`);
-
-			// Delete existing users that match this org key
-			let deletedUsers = await db.lightusers
-				.where({
-					org_key: data.org_key
-				})
-				.delete();
-			logger.info(`Deleted ${deletedUsers} users from database`);
-
-			await db.lightusers.bulkPut(users);
-			await db.syncstatus.put({
-				table: 'lightusers',
-				filter: `org=${data.org_key}`,
-				time: new Date()
-			});
 			logger.debug('Successfully saved users and saved syncstatus to database');
 			if (showSnackbarWhenDone) {
 				snackbar.open('Updated list of users from the remote database.');
@@ -63,7 +47,7 @@
 		}
 	}
 
-	async function updateUser(user: LightUser|null) {
+	async function updateUser(user: LightUser | null) {
 		if (!user) return logger.error('updateUser called with user not defined');
 		try {
 			logger.debug('Clearing user');
@@ -78,31 +62,15 @@
 		}
 	}
 
-	const USER_SYNC_TOO_OLD = 1000 * 3600 * 24 * 7; // 1 week
-
 	onMount(async () => {
-		if (!data.org) {
+		if (!data.org_key) {
 			logger.warn('No org selected; redirecting to /');
 			goto('/');
 			return;
 		}
-		
-		refreshButton.set({
-			supported: true,
-			onClick: () => {
-				downloadUsers(true);
-			},
-			tooltip: 'Refresh list of users'
-		})
-		
-		let userSyncStatus = await db.syncstatus
-			.where({
-				table: 'lightusers',
-				filter: `org=${data.org.org_key}`
-			})
-			.first();
 
-		if (!userSyncStatus || userSyncStatus.time.valueOf() < Date.now() - USER_SYNC_TOO_OLD) {
+		let needsSync = await LightUserOperations.needsSync(data.org_key);
+		if (needsSync) {
 			if (!navigator.onLine) {
 				//  TODO show a message to the user or wait for navigator.online event to download users
 				return logger.warn(
@@ -110,28 +78,28 @@
 				);
 			}
 			logger.info('Users are too old or have not been downloaded; downloading new ones');
-			refreshButtonAnimation.autoplay(downloadUsers);
+			refreshButtonAnimation.autoplay(() => LightUserOperations.download(data.org_key));
 		}
 	});
-	
-	onDestroy(() => {
-		refreshButton.set({
-			supported: false,
-		});
-	})
-	
+
 	const getUserOptionLabel = (user: LightUser) => {
 		if (!user) return '';
 		return user.name;
-	}
+	};
+
+	// todo: implement lol
+	let needsPassword = false;
+	let needsToCreatePassword = false;
+	
+	let password = '';
 </script>
 
 <section class="comfortable">
 	<h1>Choose account for {data.org?.nickname}</h1>
 	<!-- TODO: event nickname -->
 	<s1>{data.org?.nickname} is currently at {data.org?.event_key}</s1>
-	<br>
-	<div class="md:flex flex-row sm:space-y-2 md:space-x-2">
+	<br />
+	<div class="md:flex flex-row space-y-2 md:space-y-0 md:space-x-2">
 		<div class="basis-1/2 grow">
 			<Autocomplete
 				textfield$variant="filled"
@@ -144,12 +112,32 @@
 				label={`Members of ${data.org?.nickname}`}
 			/>
 		</div>
-		<div class="basis-1/2 grow">
-			<Button variant="unelevated" style="width: 100%" disabled={!user} on:click={async () => {
-				// Log in user
-				await updateUser(user);
-				goto(`/sync/lead#2`)
-			}}>
+		<!-- WIP -->
+		{#if needsPassword}
+			<div class="basis-1/2 grow">
+				<Textfield
+					label={msg('user.login.personalpassword')}
+					variant="filled"
+					style="width: 100%"
+					type="password"
+					bind:value={password}
+				>
+					<HelperText slot="helper">{msg('user.login.orgpasswordhelptext')}</HelperText>
+				</Textfield>
+			</div>
+		{/if}
+		<div class="basis-1/2 grow justify-self-center self-start">
+			<Button
+				variant="unelevated"
+				class="btn-same-height-as-input"
+				style="width: 100%"
+				disabled={!user}
+				on:click={async () => {
+					// Log in user
+					await updateUser(user);
+					goto(`/sync/lead#2`);
+				}}
+			>
 				<BLabel>Done</BLabel>
 			</Button>
 		</div>

@@ -1,11 +1,13 @@
+import type { MatchScoutingLocal } from '$lib/localDB';
+import { validateUserOrg } from '$lib/server/api-utils';
 import utilities from '$lib/server/utilities';
 import { error, json } from '@sveltejs/kit';
+import { type AnyBulkWriteOperation } from 'mongodb';
 import type { MatchScouting, StringDict } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
-import type { MatchScoutingLocal } from '$lib/localDB';
-import { ObjectId, type AnyBulkWriteOperation } from 'mongodb';
 
-export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, params, locals, cookies, getClientAddress }) => {
+	validateUserOrg(locals, params.org_key);
 	let data = (await request.json()) as MatchScoutingLocal[];
 	
 	// TODO: (important) user authentication
@@ -46,13 +48,14 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		// TODO: verify that the user has access to push data for this org
 		const { event_key, org_key, actual_scorer, data, match_team_key } = localMatch;
 		if (actual_scorer) {
+			if (isNaN(actual_scorer.id) || typeof actual_scorer.id !== 'number') throw error(400, new Error('actual_scorer is not a number!'));
 			bulkWriteOp.push({
 				updateOne: {
 					filter: { match_team_key, event_key, org_key },
 					update: {
 						$set: {
 							actual_scorer: {
-								id: new ObjectId(actual_scorer.id),
+								id: actual_scorer.id,
 								name: actual_scorer.name
 							}
 						}

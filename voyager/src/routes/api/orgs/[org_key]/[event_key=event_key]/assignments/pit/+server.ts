@@ -1,9 +1,11 @@
+import { validateUserOrg } from '$lib/server/api-utils';
 import utilities from '$lib/server/utilities';
+import { json } from '@sveltejs/kit';
 import type { PitScouting } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
-import { error, json } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ locals, params }) => {
+	validateUserOrg(locals, params.org_key);
 	const pitscouting: PitScouting[] = await utilities.find('pitscouting', {
 		org_key: params.org_key,
 		event_key: params.event_key,

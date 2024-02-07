@@ -3,7 +3,16 @@ import { page } from '$app/stores';
 import { fetchJSON } from './utils';
 import { getLogger } from './logger';
 import type { Layout, Event } from 'scoutradioz-types';
-import type { MatchScoutingLocal, TeamLocal, WithStringDbId, LightMatch, str, PitScoutingLocal } from './localDB';
+import type {
+	MatchScoutingLocal,
+	TeamLocal,
+	WithStringDbId,
+	LightMatch,
+	str,
+	PitScoutingLocal,
+	LightOrg,
+	LightUser
+} from './localDB';
 import db from './localDB';
 import assert from './assert';
 
@@ -14,18 +23,23 @@ function getKeys() {
 	return { event_key, org_key };
 }
 
-const logger = getLogger('lib/localDB');
+const logger = getLogger('lib/DBOperations');
 
-abstract class CollectionOperations {
+export const DEFAULT_SYNC_AGE_THRESHOLD = 1000 * 3600 * 24 * 7; // 1 week
+
+abstract class TableOperations {
 	/** Download from the API endpoint */
 	static download(...args: any[]) {
 		throw new Error('Not implemented');
 	}
+	/** Check if the given table is out of date and needs a sync */
+	static needsSync(...args: any[]) {
+		throw new Error('Not implemented');
+	}
 }
 
-export class EventOperations extends CollectionOperations {
+export class EventOperations extends TableOperations {
 	static async download() {
-		logger.info('ENTER');
 		const { event_key } = getKeys();
 
 		const event = await fetchJSON<str<Event>>(`/api/${event_key}`);
@@ -38,10 +52,9 @@ export class EventOperations extends CollectionOperations {
 	}
 }
 
-export class TeamOperations extends CollectionOperations {
+export class TeamOperations extends TableOperations {
 	@setFuncName('TeamOperations.download')
 	static async download() {
-		logger.info('ENTER');
 		const { event_key } = getKeys();
 
 		const teams = await fetchJSON<TeamLocal[]>(`/api/${event_key}/teams`);
@@ -61,10 +74,9 @@ export class TeamOperations extends CollectionOperations {
 	}
 }
 
-export class MatchOperations extends CollectionOperations {
+export class MatchOperations extends TableOperations {
 	@setFuncName('MatchOperations.download')
 	static async download() {
-		logger.info('ENTER');
 		const { event_key } = getKeys();
 
 		const matches = await fetchJSON<LightMatch[]>(`/api/${event_key}/matches`);
@@ -88,10 +100,9 @@ export class MatchOperations extends CollectionOperations {
 	}
 }
 
-export class MatchScoutingOperations extends CollectionOperations {
+export class MatchScoutingOperations extends TableOperations {
 	@setFuncName('MatchScoutingOperations.download')
 	static async download() {
-		logger.info('ENTER');
 		const { event_key, org_key } = getKeys();
 
 		// Fetch list of match scouting assignments for this event
@@ -100,19 +111,19 @@ export class MatchScoutingOperations extends CollectionOperations {
 		);
 
 		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
-		let keyToIndex: {[key: string]: number} = {};
+		let keyToIndex: { [key: string]: number } = {};
 		if (matchScouting && matchScouting.length > 0)
 			for (let i = 0; i < matchScouting.length; i++) {
 				let thisObj = matchScouting[i];
 				keyToIndex[thisObj.match_team_key] = i;
 			}
 
-		const localMatchScouting = await db.matchscouting.where({org_key, event_key}).toArray();
+		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
 		for (let localMatch of localMatchScouting) {
-			if (localMatch.data && Object.keys(localMatch.data).length > 0) {
+			if (localMatch.data) {
 				let this_match_team_key = localMatch.match_team_key;
 				if (keyToIndex[this_match_team_key]) {
-					matchScouting[ keyToIndex[this_match_team_key] ].data = localMatch.data;
+					matchScouting[keyToIndex[this_match_team_key]].data = localMatch.data;
 				}
 			}
 		}
@@ -130,7 +141,7 @@ export class MatchScoutingOperations extends CollectionOperations {
 	}
 }
 
-export class PitScoutingOperations extends CollectionOperations {
+export class PitScoutingOperations extends TableOperations {
 	@setFuncName('PitScoutingOperations.download')
 	static async download() {
 		logger.info('ENTER');
@@ -142,19 +153,19 @@ export class PitScoutingOperations extends CollectionOperations {
 		);
 
 		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
-		let keyToIndex: {[key: string]: number} = {};
+		let keyToIndex: { [key: string]: number } = {};
 		if (pitScouting && pitScouting.length > 0)
 			for (let i = 0; i < pitScouting.length; i++) {
 				let thisObj = pitScouting[i];
 				keyToIndex[thisObj.team_key] = i;
 			}
 
-		const localPitScouting = await db.pitscouting.where({org_key, event_key}).toArray();
+		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
 		for (let localPit of localPitScouting) {
 			if (localPit.data) {
 				let this_team_key = localPit.team_key;
 				if (keyToIndex[this_team_key]) {
-					pitScouting[ keyToIndex[this_team_key] ].data = localPit.data;
+					pitScouting[keyToIndex[this_team_key]].data = localPit.data;
 				}
 			}
 		}
@@ -172,10 +183,9 @@ export class PitScoutingOperations extends CollectionOperations {
 	}
 }
 
-export class FormLayoutOperations extends CollectionOperations {
+export class FormLayoutOperations extends TableOperations {
 	@setFuncName('FormLayoutOperations.download')
 	static async download() {
-		logger.info('ENTER');
 		const { event_key, org_key } = getKeys();
 
 		// grab year from event key
@@ -225,6 +235,88 @@ export class FormLayoutOperations extends CollectionOperations {
 			]);
 		});
 		logger.trace('Done');
+	}
+}
+
+export class LightOrgOperations extends TableOperations {
+	@setFuncName('LightOrgOperations.download')
+	static async download() {
+		const orgs = await fetchJSON<LightOrg[]>(`/api/orgs`);
+		logger.debug(`Fetched ${orgs.length} orgs`);
+
+		await db.transaction('rw', db.lightorgs, db.syncstatus, async () => {
+			await db.lightorgs.clear();
+			logger.info('Cleared orgs db');
+
+			await db.lightorgs.bulkPut(orgs);
+			await db.syncstatus.put({
+				table: 'lightorgs',
+				filter: '',
+				time: new Date()
+			});
+			logger.debug('Successfully saved orgs and saved syncstatus to database');
+		});
+	}
+	@setFuncName('LightOrgOperations.needsSync')
+	static async needsSync(timespan = DEFAULT_SYNC_AGE_THRESHOLD) {
+		let orgSyncStatus = await db.syncstatus
+			.where({
+				table: 'lightorgs',
+				filter: ''
+			})
+			.first();
+		logger.debug('Org sync status:', orgSyncStatus);
+
+		if (!orgSyncStatus || orgSyncStatus.time.valueOf() < Date.now() - timespan) {
+			logger.trace('Returning true');
+			return true;
+		}
+		logger.trace('Returning false');
+		return false;
+	}
+}
+
+export class LightUserOperations extends TableOperations {
+	@setFuncName('LightUserOperations.needsSync')
+	static async needsSync(org_key: string, timespan = DEFAULT_SYNC_AGE_THRESHOLD) {
+		let userSyncStatus = await db.syncstatus
+			.where({
+				table: 'lightusers',
+				filter: `org=${org_key}`
+			})
+			.first();
+		logger.debug('User sync status:', userSyncStatus);
+
+		if (!userSyncStatus || userSyncStatus.time.valueOf() < Date.now() - timespan) {
+			logger.trace('Returning true');
+			return true;
+		}
+		logger.trace('Returning false');
+		return false;
+	}
+
+	@setFuncName('LightUserOperations.download')
+	static async download(org_key: string) {
+		if (!org_key) throw new Error('No org selected');
+		const users = await fetchJSON<LightUser[]>(`/api/orgs/${org_key}/users`);
+		logger.debug(`Fetched ${users.length} users`);
+
+		await db.transaction('rw', db.lightusers, db.syncstatus, async () => {
+			// Delete existing users that match this org key
+			let deletedUsers = await db.lightusers
+				.where({
+					org_key
+				})
+				.delete();
+			logger.info(`Deleted ${deletedUsers} users from database`);
+
+			await db.lightusers.bulkPut(users);
+			await db.syncstatus.put({
+				table: 'lightusers',
+				filter: `org=${org_key}`,
+				time: new Date()
+			});
+		})
 	}
 }
 

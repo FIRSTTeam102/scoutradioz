@@ -98,7 +98,8 @@
 				"fallback": "User",
 				"login": "Log in: [[{org}]]",
 				"logout": "Log out",
-				"switchorg": "Change organization"
+				"switchorg": "Change organization",
+				"selectorg": "Select an organization"
 			},
 			"help": "Need help? Check our wiki!"
 		}

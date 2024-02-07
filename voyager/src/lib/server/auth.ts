@@ -1,11 +1,10 @@
-// src/lib/server/auth.ts
-import { Lucia, TimeSpan, type DatabaseUser } from 'lucia';
 import { dev } from '$app/environment';
-import LuciaAdapter from './LuciaAdapter';
-import type { User } from 'scoutradioz-types';
-import { GitHub } from 'arctic';
 import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } from '$env/static/private';
+import { GitHub } from 'arctic';
+import { Lucia, TimeSpan } from 'lucia';
 import { generateRandomString } from 'oslo/crypto';
+import type { User } from 'scoutradioz-types';
+import LuciaAdapter from './LuciaAdapter';
 
 export const github = new GitHub(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET);
 
@@ -16,7 +15,8 @@ export const lucia = new Lucia(adapter, {
 		attributes: {
 			// set to `true` when using HTTPS
 			secure: !dev
-		}
+		},
+		name: 'LuciaSessionCookie',
 	},
 	sessionExpiresIn: new TimeSpan(30, 'd'), // 30 days
 	getUserAttributes: (attributes: DatabaseUserAttributes) => {

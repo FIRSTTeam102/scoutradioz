@@ -1,5 +1,5 @@
-import { redirect } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.session) {
@@ -16,4 +16,4 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		sessionId: locals.session.id,
 	};
-}
+};

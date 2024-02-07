@@ -12,7 +12,6 @@ export function handleError({ error, event }: { error: Error; event: RequestEven
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-	console.log('hooks.server.ts running!');
 	const sessionId = event.cookies.get(lucia.sessionCookieName);
 	// If there's no session cookie
 	if (!sessionId) {

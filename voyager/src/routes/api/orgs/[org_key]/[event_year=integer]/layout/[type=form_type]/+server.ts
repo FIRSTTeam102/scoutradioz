@@ -1,9 +1,11 @@
+import { validateUserOrg } from '$lib/server/api-utils';
 import utilities from '$lib/server/utilities';
-import { json } from '@sveltejs/kit';
 import type { LayoutField } from '$lib/types';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
+	validateUserOrg(locals, params.org_key);
 	const form_type = (params.type + 'scouting') as 'pitscouting'|'matchscouting';
 
 	const layout: LayoutField[] = await utilities.find('layout', {

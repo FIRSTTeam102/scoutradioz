@@ -1,34 +1,32 @@
 <script lang="ts">
 	import { classMap } from '@smui/common/internal';
-	import TopAppBar, { Row, Section, AutoAdjust } from '@smui/top-app-bar';
 	import Drawer, {
-		AppContent,
 		Content as DContent,
 		Header as DHeader,
-		Title as DTitle,
 		Subtitle as DSubtitle,
+		Title as DTitle,
 		Scrim
 	} from '@smui/drawer';
 	import List, {
-		Item as LItem,
-		Text as LText,
 		Graphic as LGraphic,
+		Item as LItem,
 		Separator as LSeparator,
-		Subheader as LSubheader
+		Subheader as LSubheader,
+		Text as LText
 	} from '@smui/list';
 	import Tooltip, { Wrapper } from '@smui/tooltip';
+	import TopAppBar, { Row, Section } from '@smui/top-app-bar';
 
-	import { deviceOnline } from '$lib/stores';
 	import { afterNavigate } from '$app/navigation';
-	import IconButton from '@smui/icon-button';
 	import { assets } from '$app/paths';
-	import { share } from '$lib/share';
-	import { setContext } from 'svelte';
+	import { deviceOnline } from '$lib/stores';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
+	import IconButton from '@smui/icon-button';
+	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 	
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import LanguagePicker from '$lib/LanguagePicker.svelte';
+	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { msg } from '$lib/i18n';
 
 	import '../theme/extras.scss';
@@ -143,7 +141,7 @@
 		{/if}
 	</DHeader>
 	<DContent>
-		<List>
+		<List data-sveltekit-preload-data="false">
 			<LItem href="/home">
 				<LGraphic class="material-icons" aria-hidden="true">home</LGraphic>
 				<LText>{msg('home.title')}</LText>
@@ -152,14 +150,23 @@
 				<LGraphic class="material-icons" aria-hidden="true">calendar_month</LGraphic>
 				<LText>Schedule</LText>
 			</LItem>
-			<LItem href="/">
-				<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
-				<LText>{msg('layout.nav.user.switchorg')}</LText>
-			</LItem>
-			<LItem href="/login/pick-user">
-				<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
-				<LText>Pick user</LText>
-			</LItem>
+			<!-- If logged in to an org -->
+			{#if data.org}
+				<LItem href="/login/switch-org">
+					<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
+					<LText>{msg('layout.nav.user.switchorg')}</LText>
+				</LItem>
+				<LItem href="/login/pick-user">
+					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+					<LText>Pick user</LText>
+				</LItem>
+			<!-- Not logged in to an org -->
+			{:else}
+				<LItem href="/login">
+					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+					<LText>{msg('layout.nav.user.selectorg')}</LText>
+				</LItem>
+			{/if}
 			<LItem href="/preferences">
 				<LGraphic class="material-icons" aria-hidden="true">settings</LGraphic>
 				<LText>{msg('user.preferences.title')}</LText>
@@ -229,7 +236,7 @@
 						menuOpen = !menuOpen;
 					}}>menu</IconButton
 				>
-				<a href="/home" class="header-logo">
+				<a href="/" class="header-logo">
 					<img
 						src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`}
 						alt="Scoutradioz logo"
