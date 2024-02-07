@@ -105,40 +105,45 @@ class Logger {
 			});
 		}
 	}
+	
+	getConsoleLogPrepender() {
+		if (this.funcName) return `[${this.group} - ${this.funcName}]`;
+		return `[${this.group}]`;
+	}
 
 	async trace(...messages: unknown[]) {
 		if (globalLogLevel > 0) return;
-		if (dev) console.debug(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('trace', messages);
 	}
   
 	async debug(...messages: unknown[]) {
 		if (globalLogLevel > 1) return;
-		if (dev) console.debug(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('debug', messages);
 	}
   
 	async info(...messages: unknown[]) {
 		if (globalLogLevel > 2) return;
-		if (dev) console.log(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.log(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('info', messages);
 	}
   
 	async warn(...messages: unknown[]) {
 		if (globalLogLevel > 3) return;
-		if (dev) console.warn(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.warn(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('warn', messages);
 	}
   
 	async error(...messages: unknown[]) {
 		if (globalLogLevel > 4) return;
-		if (dev) console.error(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.error(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('error', messages);
 	}
   
 	async fatal(...messages: unknown[]) {
 		if (globalLogLevel > 5) return;
-		if (dev) console.error(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.error(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('fatal', messages);
 	}
 }
