@@ -43,7 +43,7 @@ block content
 	if pit_super_data && pit_super_data.otherNotes
 		div(style="white-space: pre-wrap;")
 			i
-				h3!=msg('scouting.supernotes')
+				h3!=msg('scouting.supernotes', {team: titleParts[2]})
 				p= pit_super_data.otherNotes
 	form#matchform(name="matchform" class="w3-centered")
 		input#match_team_key(type="hidden", name="match_team_key", value=`${key}`)
