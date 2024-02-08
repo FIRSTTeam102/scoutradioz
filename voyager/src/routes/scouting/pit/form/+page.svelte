@@ -7,7 +7,7 @@
 	import db from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import { goto } from '$app/navigation';
-	import { fetchJSON } from '$lib/utils';
+	import { fetchJSON, getNewSubmissionHistory } from '$lib/utils';
 	import type { BulkWriteResult } from 'mongodb';
 
 	export let data: PageData;
@@ -50,7 +50,9 @@
 					db.pitscouting.update(data.pitScoutingEntry, {
 						data: undefined,
 						actual_scouter: undefined,
-						synced: false
+						synced: false,
+						completed: false,
+						history: getNewSubmissionHistory(data.pitScoutingEntry, data.user._id, data.user.name)
 					});
 					goto('/scouting/pit');
 				}
@@ -69,7 +71,8 @@
 						id: data.user._id,
 						name: data.user.name,
 					},
-					synced: false
+					synced: false,
+					history: getNewSubmissionHistory(data.pitScoutingEntry, data.user._id, data.user.name),
 				});
 
 				if ($deviceOnline) {

@@ -1,5 +1,6 @@
 import { getContext, onDestroy, onMount } from "svelte";
 import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext } from "./types";
+import type { ScouterHistoryRecord } from 'scoutradioz-types';
 
 export class HttpError extends Error {
 	status: number;
@@ -152,6 +153,28 @@ export function updateSimpleHash(hash: number, nextValue: number) {
 	let h2 = ((hash << 5) - hash) + nextValue;
 	h2 = h2 & h2;
 	return h2;
+}
+
+export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecord[]}>(assignment: T, user_id: number, user_name: string) {
+	let newRecord: ScouterHistoryRecord = {
+		id: user_id,
+		name: user_name,
+		time: new Date(),
+	};
+
+	if (!assignment.history) return [newRecord]; // If there's no history, we don't need to do any shenanigans
+
+	let history = [...assignment.history]; // Create a clone of the original history object
+	let lastEntry = history[history.length - 1];
+	// If this is an edit by the same person who made the last change, then replace the record
+	if (lastEntry.id === user_id) {
+		history[history.length - 1] = newRecord;
+	}
+	// if the last edit was done by someone else, then add a new entry to the stack
+	else {
+		history.push(newRecord);
+	}
+	return history;
 }
 
 /**

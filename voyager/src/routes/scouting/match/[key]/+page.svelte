@@ -9,7 +9,7 @@
 	import db from '$lib/localDB';
 	import { goto } from '$app/navigation';
 	import { canAutoSync } from '$lib/stores';
-	import { fetchJSON, matchKeyToCompLevel } from '$lib/utils';
+	import { fetchJSON, getNewSubmissionHistory, matchKeyToCompLevel } from '$lib/utils';
 	import type { BulkWriteResult } from 'mongodb';
 	import Card from '@smui/card';
 	import { msg } from '$lib/i18n';
@@ -88,7 +88,11 @@
 				) {
 					logger.info(`Discarding form data from match ${data.matchScoutingEntry.match_team_key}`);
 					db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-						data: undefined
+						data: undefined,
+						actual_scorer: undefined,
+						synced: false,
+						completed: false,
+						history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name),
 					});
 					goto('/scouting/match');
 				}
@@ -115,7 +119,8 @@
 					},
 					data: data.matchScoutingEntry.data,
 					completed: true,
-					synced: false // since the entry is being updated locally, we must force synced=false until it definitely is synced
+					synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
+					history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name),
 				});
 
 				let entry = await db.matchscouting

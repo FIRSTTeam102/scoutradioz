@@ -238,11 +238,21 @@ declare class MatchVideo {
  * Record of who is assigned to / completed a scouting assignment.
  */
 export declare interface ScouterRecord {
-	/**
-	 * {@link User}'s _id
-	 */
+	/** {@link User}'s _id */
 	id: number;
 	name: string;
+}
+
+/**
+ * Record of an edit/submission of a scouting assignment.
+ */
+export declare interface ScouterHistoryRecord {
+	/** {@link User}'s _id */
+	id: number;
+	name: string;
+	/** Exact time that the submission was saved locally. */
+	time: Date;
+	useragent?: UserAgent;
 }
 
 /**
@@ -265,6 +275,8 @@ export declare interface MatchScouting extends DbDocument {
 	data?: MatchFormData;
 	super_data?: MatchFormData;
 	useragent?: UserAgent;
+	/** Update history of this document. For dealing with "merge conflicts" in the future. */
+	history?: ScouterHistoryRecord[];
 }
 
 /**
@@ -385,6 +397,9 @@ export declare interface PitScouting extends DbDocument {
 	data?: StringDict;
 	super_data?: StringDict;
 	useragent?: UserAgent;
+	date_completed?: Date;
+	/** Update history of this document. For dealing with "merge conflicts" in the future. */
+	history?: ScouterHistoryRecord[];
 }
 
 /**
