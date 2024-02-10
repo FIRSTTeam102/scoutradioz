@@ -10,6 +10,7 @@ export const load: PageLoad = async ({ url, fetch, parent }) => {
 	const teamNumber = Number(team_key?.replace('frc', ''));
 
 	if (!team_key || !teamNumber) throw error(404, new Error('Team key is either not defined or invalid'));
+	if (!event) throw error(404, new Error('Event not found'));
 
 	const layout = await db.layout
 		.where({
