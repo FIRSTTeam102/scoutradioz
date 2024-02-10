@@ -176,7 +176,14 @@
 </script>
 
 <div class="grid mt-4">
-	<Card padded class="place-self-center bg-red-600">
+	<Card
+		padded
+		class={classMap({
+			'place-self-center': true,
+			'bg-red-600': data.matchScoutingEntry.alliance === 'red',
+			'bg-blue-600': data.matchScoutingEntry.alliance === 'blue',
+		})}
+	>
 		<h2>
 			{msg('scouting.matchHeading', {
 				match: data.matchScoutingEntry.match_number,
