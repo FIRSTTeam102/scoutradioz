@@ -8,8 +8,9 @@
 		type str,
 		type WithStringDbId,
 		type PitScoutingLocal,
+		type LightUser,
 	} from '$lib/localDB';
-	import { MatchScoutingOperations, FormLayoutOperations } from '$lib/DBOperations';
+	import { MatchScoutingOperations, FormLayoutOperations, PitScoutingOperations } from '$lib/DBOperations';
 	import { liveQuery } from 'dexie';
 	import { getLogger } from '$lib/logger';
 
@@ -174,32 +175,6 @@
 		}
 	}
 
-	async function downloadPitScouting() {
-		try {
-			// Fetch list of match scouting assignments for this event
-			// JL note: once PitScouting is sent over the airwaves, it becomes local because the ObjectIds get converted to string
-			const pitScouting = await fetchJSON<WithStringDbId<PitScoutingLocal>[]>(
-				`/api/orgs/${org_key}/${event_key}/assignments/pit`
-			);
-			// Since it's comign from the server, it's by definition synced
-			pitScouting.forEach((pit) => (pit.synced = true));
-
-			// Delete existing match scouting entries (We'll have to code something less dangerous at some point, cuz this'll override non-synced data)
-			let numDeleted = await db.pitscouting
-				.where({
-					event_key: event_key,
-					org_key: org_key
-				})
-				.delete();
-			logger.info(`${numDeleted} deleted from db`);
-
-			// Insert the assignments into Dexie
-			await db.pitscouting.bulkAdd(pitScouting);
-		} catch (err) {
-			handleError(err);
-		}
-	}
-
 	let dangerouslyUploadAll = false;
 
 	// TODO: only sync ones with data, and/or only sync ones marked as not synced?
@@ -299,7 +274,7 @@
 
 	async function downloadUsers() {
 		try {
-			const users = await fetchJSON<WithStringDbId<User>[]>(`/api/orgs/${org_key}/users`);
+			const users = await fetchJSON<LightUser[]>(`/api/orgs/${org_key}/users`);
 
 			// let numDeleted = await db.lightusers.where({
 			// 	org_key: org_key
@@ -411,7 +386,7 @@
 				<Group variant="outlined">
 					<Button
 						variant="outlined"
-						on:click={() => refreshButtonAnimation.autoplay(downloadPitScouting)}
+						on:click={() => wrap(PitScoutingOperations.download)}
 					>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>

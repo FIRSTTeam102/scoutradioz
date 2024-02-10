@@ -1,6 +1,8 @@
 import { getContext, onDestroy, onMount } from "svelte";
 import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext } from "./types";
 import type { ScouterHistoryRecord } from 'scoutradioz-types';
+import { sha1 } from "oslo/crypto";
+import {  } from 'oslo';
 
 export class HttpError extends Error {
 	status: number;
@@ -208,4 +210,32 @@ export function addRefreshButtonFunctionality(clickHandler?: () => any) {
 	onDestroy(() => {
 		refreshButton.set({supported: false});
 	})
+}
+
+// Taken from oslo (These functions are not exported in the node package)
+function byteToBinary(byte: number) {
+    return byte.toString(2).padStart(8, "0");
+}
+function bytesToBinary(bytes: Uint8Array) {
+    return [...bytes].map((val) => byteToBinary(val)).join("");
+}
+function binaryToInteger(bits: string) {
+    return parseInt(bits, 2);
+}
+
+/** Encode a string with a custom base-32 alphabet, omitting I, 1, O, and 0 for readability */
+export async function base32Hash(data: string) {
+	let st = performance.now();
+	// Tweak of oslo's encodeBase32 function with a different alphabet
+	const encoded = new TextEncoder().encode(data);
+	const hash = await sha1(encoded);
+	const bits = bytesToBinary(new Uint8Array(hash));
+	const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+	let result = '';
+	for (let i = 0; i < Math.ceil(bits.length / 5); i++) {
+		const key = binaryToInteger(bits.slice(i * 5, (i+1) * 5).padEnd(5, '0'));
+		const val = alphabet[key];
+		result += val;
+	}
+	return result;
 }

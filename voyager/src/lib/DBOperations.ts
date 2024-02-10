@@ -1,6 +1,6 @@
 import { get as getStore } from 'svelte/store';
 import { page } from '$app/stores';
-import { fetchJSON } from './utils';
+import { base32Hash, fetchJSON } from './utils';
 import { getLogger } from './logger';
 import type { Layout, Event } from 'scoutradioz-types';
 import type {
@@ -34,6 +34,10 @@ abstract class TableOperations {
 	}
 	/** Check if the given table is out of date and needs a sync */
 	static needsSync(...args: any[]) {
+		throw new Error('Not implemented');
+	}
+	/** Upload completed data */
+	static upload(...args: any[]) {
 		throw new Error('Not implemented');
 	}
 }
@@ -132,7 +136,7 @@ export class MatchScoutingOperations extends TableOperations {
 		await db.transaction('rw', db.matchscouting, db.syncstatus, async () => {
 			await db.matchscouting.bulkPut(matchScouting);
 			await db.syncstatus.put({
-				table: 'orgs',
+				table: 'matchscouting',
 				filter: `org=${org_key},event=${event_key}`,
 				time: new Date()
 			});
@@ -162,21 +166,40 @@ export class PitScoutingOperations extends TableOperations {
 
 		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
 		for (let localPit of localPitScouting) {
-			if (localPit.data) {
+			if (localPit.data /* && localPit.synced && localPit.completed? (-JL) */) {
 				let this_team_key = localPit.team_key;
 				if (keyToIndex[this_team_key]) {
 					pitScouting[keyToIndex[this_team_key]].data = localPit.data;
+					// copy over synced & completed? (-JL)
 				}
 			}
 		}
+		
+		// 2024-02-09 JL: Add a checksum to the pit scouting schedule, stored in syncstatus
+		// 	(it takes like 200ms on my PC to calculate the checksum, so we shouldn't do it on-the-fly in the dashboard)
+		const listToChecksum = pitScouting.map((asg) => {
+			return {
+				year: asg.year,
+				event_key: asg.event_key,
+				org_key: asg.org_key,
+				team_key: asg.team_key,
+				primary: asg.primary,
+				secondary: asg.secondary,
+				tertiary: asg.tertiary
+			};
+		});
+		const checksum = await base32Hash(JSON.stringify(listToChecksum));
 
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.pitscouting, db.syncstatus, async () => {
 			await db.pitscouting.bulkPut(pitScouting);
 			await db.syncstatus.put({
-				table: 'orgs',
+				table: 'pitscouting',
 				filter: `org=${org_key},event=${event_key}`,
-				time: new Date()
+				time: new Date(),
+				data: {
+					checksum
+				},
 			});
 		});
 		logger.trace('Done');

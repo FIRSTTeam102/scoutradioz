@@ -156,6 +156,11 @@ export interface SyncStatus {
 	 * pages that use it, for any given table. Syntaxes can be different between tables.
 	 */
 	filter: string;
+	/** 
+	 * Any extra information to store in the syncstatus. For example: storing a letter
+	 * for the current version of the pit scouting schedule
+	 */
+	data?: any;
 }
 
 export const defaultPreferences = {
