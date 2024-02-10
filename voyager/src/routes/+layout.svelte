@@ -15,15 +15,15 @@
 		Text as LText
 	} from '@smui/list';
 	import Tooltip, { Wrapper } from '@smui/tooltip';
-	import TopAppBar, { Row, Section } from '@smui/top-app-bar';
+	import TopAppBar, { Row, Section, Title as TABTitle,  } from '@smui/top-app-bar';
 
 	import { afterNavigate } from '$app/navigation';
 	import { assets } from '$app/paths';
 	import { deviceOnline } from '$lib/stores';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 	import IconButton from '@smui/icon-button';
-	import { setContext } from 'svelte';
-	import { writable } from 'svelte/store';
+	import { getContext, setContext } from 'svelte';
+	import { writable, type Writable } from 'svelte/store';
 	
 	import LanguagePicker from '$lib/LanguagePicker.svelte';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
@@ -31,6 +31,7 @@
 
 	import '../theme/extras.scss';
 	import type { LayoutData } from './$types';
+	import SvelteMarkdown from 'svelte-markdown';
 
 	afterNavigate(() => (menuOpen = false));
 	
@@ -107,6 +108,10 @@
 	//  fully appearing when the page is *just barely* taller than 1vh
 	let lastScrollTop = 0;
 	let headerBarHidden = false;
+	
+	// TODO title bar
+	// let title: Writable<string|undefined> = writable(undefined);
+	// setContext('title', title);
 
 	const onScroll = () => {
 		// we want to keep as little code as possible in here for performance reasons
@@ -236,12 +241,16 @@
 						menuOpen = !menuOpen;
 					}}>menu</IconButton
 				>
+				<!-- {#if $title}
+					<TABTitle><SvelteMarkdown source={$title} /></TABTitle>
+				{:else} -->
 				<a href="/" class="header-logo">
 					<img
 						src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`}
 						alt="Scoutradioz logo"
 					/>
 				</a>
+				<!-- {/if} -->
 			</Section>
 			<Section align="end" toolbar>
 				{#if $refreshContext.supported}
@@ -290,8 +299,6 @@
 <SimpleSnackbar bind:this={snackbar} />
 <LanguagePicker bind:this={languagePicker} />
 
-<!-- <BottomNavBar bind:bottomAppBar items={navItems}/> -->
-
 <style lang="scss">
 	/* Hide everything above this component. */
 	$header-height: 48px;
@@ -304,6 +311,9 @@
 		// &:global(.slidAway) {
 		// 	top: -$header-height;
 		// }
+		& :global(p) {
+			margin: 0;
+		}
 	}
 	:global(.mdc-top-app-bar) {
 		top: 0px;

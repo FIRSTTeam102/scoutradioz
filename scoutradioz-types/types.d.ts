@@ -1,5 +1,7 @@
 // JL: Should these be put into a separate package?
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import type { ObjectId } from 'mongodb';
 
 // General interfaces/types that don't need to be exported

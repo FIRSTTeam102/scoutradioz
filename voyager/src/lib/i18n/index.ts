@@ -102,7 +102,7 @@ export class I18n {
 	}
 
 	private notifyReady() {
-		logger.debug('Running notifyReady');
+		logger.trace('Running notifyReady');
 		this.isReady = true;
 		this.readyResolve();
 	}
