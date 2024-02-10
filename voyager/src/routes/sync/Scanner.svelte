@@ -14,6 +14,7 @@
 	import { getLogger } from '$lib/logger';
 	import { getContext } from 'svelte';
 	import type { SnackbarContext } from '$lib/types';
+	import { MatchScoutingOperations } from '$lib/DBOperations';
 
 	let qrcodeEnabled = true;
 
@@ -42,10 +43,9 @@
 
 			switch (decodedData.type) {
 				case 'sched': {
-					let matchscouting = decodedData.data as MatchScoutingLocal[];
-					console.log(matchscouting);
-					let result = await db.matchscouting.bulkPut(matchscouting);
-					console.log(result);
+					let matchscouting = decodedData.data.matchscouting as MatchScoutingLocal[];
+					let checksum = decodedData.data.checksum as string;
+					await MatchScoutingOperations.insertFromQR(matchscouting, checksum);
 					// Try and rebuild all the LightMatches from these matchscouting data
 					let matchMap: Dict<LightMatch> = {};
 					for (let asg of matchscouting) {

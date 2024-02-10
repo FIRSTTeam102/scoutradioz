@@ -1,48 +1,33 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
-	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
-	import type BottomAppBar from '@smui-extra/bottom-app-bar';
-	import CircularProgress from '@smui/circular-progress';
-	import Switch from '@smui/switch';
-	import { getLogger } from '$lib/logger';
-	import db from '$lib/localDB';
 	import { goto } from '$app/navigation';
+	import { encodeOneMatchScoutingResult } from '$lib/compression';
+	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
+	import { msg } from '$lib/i18n';
+	import db from '$lib/localDB';
+	import { getLogger } from '$lib/logger';
+	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	import { canAutoSync } from '$lib/stores';
 	import { fetchJSON, getNewSubmissionHistory, matchKeyToCompLevel } from '$lib/utils';
-	import type { BulkWriteResult } from 'mongodb';
+	import type BottomAppBar from '@smui-extra/bottom-app-bar';
 	import Card from '@smui/card';
-	import { msg } from '$lib/i18n';
-	import { encodeOneMatchScoutingResult } from '$lib/compression';
+	import CircularProgress from '@smui/circular-progress';
 	import LinearProgress from '@smui/linear-progress';
+	import type { BulkWriteResult } from 'mongodb';
+	import type { PageData } from './$types';
+	import { classMap } from '@smui/common/internal';
 
-	import Dialog, { Header, Title, Content, Actions } from '@smui/dialog';
-	import Button, { Label, Icon } from '@smui/button';
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
-	import FormField from '@smui/form-field';
+	import Button, { Icon, Label } from '@smui/button';
 	import Checkbox from '@smui/checkbox';
-	import { onMount } from 'svelte';
+	import Dialog, { Actions, Content, Header, Title } from '@smui/dialog';
+	import FormField from '@smui/form-field';
 
 	export let data: PageData;
 
 	// popup for the qr code thingy, TODO: put into separate component
 	let qrDialogOpen = false;
-	let matchIdentifier = data.matchScoutingEntry.match_key.split('_')[1];
-	let matchCompLevel = matchIdentifier.substring(0, 2);
-	let base64Data: Promise<string>|string;
+	let base64Data: Promise<string> | string;
 	let scannedByScoutingLead = false;
-
-	// JL note: This is in a handler function instead of a $: magic-handler because I don't want the db query to
-	// 	run whenever qrDialogOpen changes
-	function handleScannedByLeadChange() {
-		// JL TODO: Maybe add syncedToCloud boolean as another check to determine whether to set synced=false when checkbox unchecked
-		if (qrDialogOpen) {
-			logger.debug(`Updating db entry synced=${scannedByScoutingLead}`);
-			db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-				synced: scannedByScoutingLead
-			});
-		}
-	}
 
 	let cloudUploadPromise: Promise<BulkWriteResult> | undefined = undefined;
 
@@ -50,13 +35,6 @@
 
 	let bottomAppBar: BottomAppBar;
 
-	// Initialize formData if necessary
-	// let formData: Required<typeof data.matchScoutingEntry.data>;
-	// JL note: This is in a $: handler because navigating between match scouting form pages does not reload the page,
-	// 	nor does it re-run onMount().
-	// $: formData = data.matchScoutingEntry.data || {};
-	// console.log('data', data);
-	// $: console.log('formData', formData);
 	let allDefaultValues: boolean;
 
 	$: scouterRecord = {
@@ -79,7 +57,7 @@
 	let bottomBarActions: NavBarItem[] = [
 		// Discard
 		{
-			onClick: () => {
+			onClick: async () => {
 				// TODO: use nice dialog instead of confirm()
 				if (
 					confirm(
@@ -87,12 +65,12 @@
 					)
 				) {
 					logger.info(`Discarding form data from match ${data.matchScoutingEntry.match_team_key}`);
-					db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
+					await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
 						data: undefined,
 						actual_scorer: undefined,
 						synced: false,
 						completed: false,
-						history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name),
+						history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name)
 					});
 					goto('/scouting/match');
 				}
@@ -120,7 +98,7 @@
 					data: data.matchScoutingEntry.data,
 					completed: true,
 					synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
-					history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name),
+					history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name)
 				});
 
 				let entry = await db.matchscouting
@@ -148,7 +126,7 @@
 								synced: true
 							});
 							resolve(bulkWriteResult);
-							// Since the entry is now synced, we must update the QR code. 
+							// Since the entry is now synced, we must update the QR code.
 							// 	However, we should await it here before updating the string so that the user doesn't see a flash of the LinarProgress.
 							logger.debug('Updating qr code with synced=true!');
 							let newEntry = {
@@ -164,8 +142,6 @@
 					logger.info('Device offline; not attempting a cloud sync');
 					cloudUploadPromise = undefined; // make sure it's not defined for when the QR code dialog opens
 				}
-				// goto('/scouting/match');
-				console.log('setting qrDialogOpen=true')
 				base64Data = encodeOneMatchScoutingResult(entry);
 				qrDialogOpen = true;
 			},
@@ -214,7 +190,7 @@
 	<Header>
 		<Title
 			>{msg('reports.match', {
-				level: msg(`matchType.${matchCompLevel}`),
+				level: msg(`matchType.${matchKeyToCompLevel(data.matchScoutingEntry.match_key)}`),
 				number: data.matchScoutingEntry.match_number
 			})}
 			<br />
@@ -233,7 +209,7 @@
 		</div>
 		{#await base64Data}
 			<LinearProgress indeterminate />
-		{:then resolvedData} 
+		{:then resolvedData}
 			<QrCodeDisplay data={resolvedData} />
 		{/await}
 		<Card variant="outlined" class="flex-row items-center p-2">
@@ -251,7 +227,16 @@
 			{/if}
 		</Card>
 		<FormField class="pl-2 flex-row justify-center">
-			<Checkbox bind:checked={scannedByScoutingLead} on:change={handleScannedByLeadChange} />
+			<Checkbox
+				bind:checked={scannedByScoutingLead}
+				on:change={() => {
+					// JL TODO: Maybe add syncedToCloud boolean as another check to determine whether to set synced=false when checkbox unchecked
+					logger.debug(`Updating db entry synced=${scannedByScoutingLead}`);
+					db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
+						synced: scannedByScoutingLead
+					});
+				}}
+			/>
 			<span slot="label" class="py-4">{msg('scouting.scannedByScoutingLead')}</span>
 		</FormField>
 	</Content>

@@ -42,6 +42,7 @@ interface CompressedMatchScouting extends CompressedItem {
     matches: string;
     assigned: string;
     actual: string;
+	checksum: string;
 }
 
 interface CompressedMetadata extends CompressedItem {
@@ -308,7 +309,7 @@ export function decodeMetadata(data: CompressedItem) {
  *  - Max of 100 scouters and 100 teams
  *  - assumes matches are sorted by time
  */
-export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string> {
+export function encodeMatchScouting(data: MatchScoutingLocal[], checksum: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		let ret: CompressedMatchScouting = {
 			_: 'sched',
@@ -324,6 +325,7 @@ export function encodeMatchScouting(data: MatchScoutingLocal[]): Promise<string>
 			matches: '', // List of team keys per match, [blue blue blue red red red], broken by match via ';'
 			assigned: '', // List of assigned_scorer ids
 			actual: '', // List of actual_scorer ids
+			checksum: checksum.substring(0, 3),
 		};
 		ret.org_key = data[0].org_key;
 		ret.event_key = data[0].event_key;
@@ -525,7 +527,10 @@ export async function decodeMatchScouting(data: CompressedItem) {
 	return {
 		type: 'sched',
 		label: 'Match scouting schedule',
-		data: decodedMatchScouting
+		data: {
+			matchscouting: decodedMatchScouting,
+			checksum: json.checksum,
+		}
 	};
 }
 
@@ -615,6 +620,8 @@ export async function decodeOnePitScoutingResult(data: CompressedItem) {
 		org: string,
 		event: string,
 		key: string,
+		c: number,
+		s: number,
 	};
 	return {
 		type: '1pitdata',

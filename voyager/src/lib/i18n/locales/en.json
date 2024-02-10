@@ -172,7 +172,8 @@
 	"scouting": {
 		"match": "Match scouting",
 		"pit": "Pit scouting",
-		"pitScheduleChecksum": "Pit scouting schedule: {checksum}",
+		"pitScheduleChecksum": "Pit scouting schedule: (code: `{checksum}`)",
+		"matchScheduleChecksum": "Match scouting schedule (code: `{checksum}`)",
 		"subheading": "{team} <span class=\"unimportant\">from {city}, {state}</span>",
 		"pitHeading": "Team #{team}",
 		"upload": {

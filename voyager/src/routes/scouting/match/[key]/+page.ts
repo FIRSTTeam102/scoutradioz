@@ -42,8 +42,6 @@ export const load: PageLoad = async ({ url, fetch, parent, params }) => {
 	
 	// Whether their next assignment is the next match or if they have a break.
 	const hasUpcomingBreak = (nextAssignment?.match_number === matchScoutingEntry.match_number + 1);
-	
-	console.warn('match/form +page.ts loading!');
 
 	return { layout, key, team, matchScoutingEntry, nextAssignment, hasUpcomingBreak };
 };

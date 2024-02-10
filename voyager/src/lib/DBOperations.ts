@@ -113,35 +113,110 @@ export class MatchScoutingOperations extends TableOperations {
 		const matchScouting = await fetchJSON<MatchScoutingLocal[]>(
 			`/api/orgs/${org_key}/${event_key}/assignments/match`
 		);
-
-		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
-		let keyToIndex: { [key: string]: number } = {};
-		if (matchScouting && matchScouting.length > 0)
-			for (let i = 0; i < matchScouting.length; i++) {
-				let thisObj = matchScouting[i];
-				keyToIndex[thisObj.match_team_key] = i;
-			}
-
+		// Merge with existing data
 		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
-		for (let localMatch of localMatchScouting) {
-			if (localMatch.data) {
-				let this_match_team_key = localMatch.match_team_key;
-				if (keyToIndex[this_match_team_key]) {
-					matchScouting[keyToIndex[this_match_team_key]].data = localMatch.data;
-				}
-			}
-		}
+		const mergedMatchScouting = await MatchScoutingOperations.merge(matchScouting, localMatchScouting);
+		
+		const checksum = await MatchScoutingOperations.getChecksum(mergedMatchScouting);
 
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.matchscouting, db.syncstatus, async () => {
-			await db.matchscouting.bulkPut(matchScouting);
+			await db.matchscouting.bulkPut(mergedMatchScouting);
 			await db.syncstatus.put({
 				table: 'matchscouting',
 				filter: `org=${org_key},event=${event_key}`,
-				time: new Date()
+				time: new Date(),
+				data: {
+					checksum,
+					source: 'download',
+				},
 			});
 		});
 		logger.trace('Done');
+	}
+	
+	/**
+	 * "Enrich" the new assignments/etc that were just downloaded/scanned with data that's on the local db
+	 * @param newItems The new items that were just downloaded/scanned
+	 * @param oldItems The existing items in the local database
+	 */
+	static async merge(newItems: MatchScoutingLocal[], oldItems: MatchScoutingLocal[]) {
+		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
+		let keyToIndex: { [key: string]: number } = {};
+		if (newItems && newItems.length > 0)
+			for (let i = 0; i < newItems.length; i++) {
+				let thisObj = newItems[i];
+				keyToIndex[thisObj.match_team_key] = i;
+			}
+		
+		// JL: Sometimes the remote db has data === null and not undefined, and I think this 
+		// 	breaks the export let formData = {} stuff
+		for (let match of newItems) if (match.data === null) match.data = undefined;
+		
+		// TODO (IMPORTANT) also copy over synced and completed booleans, and maybe compare the history states
+		for (let localMatch of oldItems) {
+			if (localMatch.data) {
+				let this_match_team_key = localMatch.match_team_key;
+				if (keyToIndex[this_match_team_key]) {
+					newItems[keyToIndex[this_match_team_key]].data = localMatch.data;
+				}
+			}
+		}
+		
+		return [...newItems];
+	}
+	
+	@setFuncName('MatchScoutingOperations.insertFromQR')
+	static async insertFromQR(newMatchScouting: MatchScoutingLocal[], checksum: string) {
+		assert(newMatchScouting.length > 0);
+		const { org_key, event_key } = newMatchScouting[0];
+
+		logger.info(`Inserting ${newMatchScouting.length} documents with org_key=${org_key}, event_key=${event_key}`)
+		
+		// Merge with existing data
+		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
+		const mergedMatchScouting = await MatchScoutingOperations.merge(newMatchScouting, localMatchScouting);
+		
+		logger.debug('mergedMatchScouting:', mergedMatchScouting);
+		
+		logger.trace('Begin transaction');
+		await db.transaction('rw', db.matchscouting, db.syncstatus, async () => {
+			await db.matchscouting.where({org_key, event_key}).delete();
+			await db.matchscouting.bulkPut(mergedMatchScouting);
+			await db.syncstatus.put({
+				table: 'matchscouting',
+				filter: `org=${org_key},event=${event_key}`,
+				time: new Date(),
+				data: {
+					checksum,
+					source: 'qr',
+				},
+			});
+		});
+		logger.trace('Done');
+	}
+	
+	static async getChecksum(items: MatchScoutingLocal[]) {
+		const listToChecksum = items.map(asg => {
+			return {
+				year: asg.year,
+				event_key: asg.event_key,
+				org_key: asg.org_key,
+				match_key: asg.match_key,
+				match_number: asg.match_number,
+				time: asg.time,
+				alliance: asg.alliance,
+				team_key: asg.team_key,
+				match_team_key: asg.match_team_key,
+				assigned_scorer: asg.assigned_scorer
+			};
+		})
+		logger.debug(JSON.stringify(listToChecksum));
+
+		// Checksum for comparing schedules
+		const checksum = await base32Hash(JSON.stringify(listToChecksum));
+		logger.debug(`Checksum: ${checksum}`);
+		return checksum;
 	}
 }
 
@@ -155,6 +230,10 @@ export class PitScoutingOperations extends TableOperations {
 		const pitScouting = await fetchJSON<PitScoutingLocal[]>(
 			`/api/orgs/${org_key}/${event_key}/assignments/pit`
 		);
+
+		// JL: Sometimes the remote db has data === null and not undefined, and I think this 
+		// 	breaks the export let formData = {} stuff
+		for (let pit of pitScouting) if (pit.data === null) pit.data = undefined;
 
 		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
 		let keyToIndex: { [key: string]: number } = {};

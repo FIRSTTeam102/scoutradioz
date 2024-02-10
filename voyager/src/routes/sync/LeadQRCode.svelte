@@ -64,14 +64,18 @@
 				if (data.length > 0) {
 					matchscouting = data;
 					console.log('Compressing data');
-					base64Data = await encodeMatchScouting(data);
+					
+					const syncstatus = await db.syncstatus.where({table: 'matchscouting', filter: `org=${org_key},event=${event_key}`}).first();
+					assert(syncstatus && syncstatus.data?.checksum, 'syncstatus / checksum could not be found!');
+					
+					base64Data = await encodeMatchScouting(data, syncstatus.data.checksum);
 				} else {
 					matchscouting = undefined;
-					snackbar.error(
+					throw new Error(
 						'Couldn\'t find matches. Try going back to the matches screen & decreasing the "current match number" or downloading from the "Server" tab.'
 					);
 				}
-			});
+			}).catch(err => snackbar.error(String(err)));
 	} else if (qrCodeType === 'metadata') {
 		(async () => {
 			assert(typeof org_key === 'string' && typeof event_key === 'string');
