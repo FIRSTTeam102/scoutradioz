@@ -48,7 +48,10 @@ export const POST: RequestHandler = async ({ request, params, locals, cookies, g
 		// TODO: verify that the user has access to push data for this org
 		const { event_key, org_key, actual_scorer, data, match_team_key } = localMatch;
 		if (actual_scorer) {
-			if (isNaN(actual_scorer.id) || typeof actual_scorer.id !== 'number') throw error(400, new Error('actual_scorer is not a number!'));
+			if (isNaN(actual_scorer.id) || typeof actual_scorer.id !== 'number') {
+				console.log(`ERROR: actual_scorer.id is not a number! actual_scorer=${JSON.stringify(actual_scorer)}, localMatch=${JSON.stringify(localMatch)}`);
+				throw error(400, new Error('actual_scorer.id is not a number!'));
+			}
 			bulkWriteOp.push({
 				updateOne: {
 					filter: { match_team_key, event_key, org_key },
