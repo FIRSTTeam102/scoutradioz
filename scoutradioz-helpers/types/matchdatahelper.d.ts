@@ -1,5 +1,5 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData } from 'scoutradioz-types';
+import type { Match, TeamKey, AggRange, MatchFormData, PitScouting } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -85,6 +85,7 @@ export declare interface AllianceStatsData {
     maxTable: MetricRow[];
     avgNorms: MetricRow[];
     maxNorms: MetricRow[];
+    pitData: PitScouting[];
 }
 export declare interface MetricRow {
     key: string;
