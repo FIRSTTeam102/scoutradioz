@@ -525,7 +525,11 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// }
 		// logger.trace('scoutAvailablemap: ' + JSON.stringify(scoutAvailableMap));
 		
-		let matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
+		let matchGap = 0;
+		// 2024-02-17, M.O'C: Super-jank at the moment fix for scheduling
+		// ..."1234" is the 'special' timestamp used when no matches are in the system yet (see above)
+		if (lastMatchTimestamp != 1234) 
+			matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
 		// 2024-01-24, M.O'C: Might optionally not be stopping for breaks
 		if (stoppingForBreaks)
