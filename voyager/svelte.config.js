@@ -7,7 +7,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		serviceWorker: {
-			register: false,
+			register: true,
 		},
 	},
 	onwarn: (warning, handler) => {
