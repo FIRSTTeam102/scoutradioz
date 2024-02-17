@@ -456,10 +456,10 @@ router.post('/updatepresent', wrap(async (req, res) => {
 	
 	let query = {'_id': {$in: allPresentMembers}, org_key: orgKey};
 	let update = {$set: {'event_info.present': true}};
-	
+
 	await utilities.update('users', query, update, {});
 	
-	res.redirect('./present');
+	res.redirect(`/manage?alert=${res.msgUrl('manage.members.successSetPresent')}`);
 }));
 
 module.exports = router;

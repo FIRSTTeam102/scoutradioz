@@ -434,7 +434,8 @@
 			"passwordAuditLink": "Check here to see if they have set a password.",
 			"noMembersOfType": "No members of this type.",
 			"permissionLevel": "Permission level",
-			"yearsOnTeam": "Years on team"
+			"yearsOnTeam": "Years on team",
+			"successSetPresent": "Present members updated successfully."
 		},
 		"assignments": {
 			"pit": "Pit scouting assignments",
