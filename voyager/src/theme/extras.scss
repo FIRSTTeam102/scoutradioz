@@ -1,0 +1,156 @@
+// This file is for styles utilizing Material's Sass mixins but unrelated to Svelte Material UI
+@use '@material/typography/mdc-typography';
+// See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-snackbar
+@use '@material/snackbar/mixins';
+// See https://github.com/material-components/material-components-web/tree/v14.0.0/packages/mdc-theme
+@use '@material/theme/color-palette';
+@use '@material/theme/theme-color';
+
+// Import the mixins.
+@use '@material/typography/mixins' as typography;
+
+// JL: This line imports Tailwind's utility classes. VS Code's SCSS extension doesn't recognize it since it's
+// 	a PostCSS rule, but since PostCSS runs after SCSS is compiled, it still loads Tailwind's classes fine.
+@tailwind utilities;
+
+:root {
+	font-size: 15px; // JL: 16px makes the interface a little too big imo on an iphone 5/SE
+	--font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;
+	--mdc-typography-font-family: var(--font-family);
+	--mdc-typography-headline1-font-size: 2.5rem;
+	--mdc-typography-headline2-font-size: 1.75rem;
+	--mdc-typography-headline3-font-size: 1.375rem;
+	--mdc-typography-headline4-font-size: 1.25rem;
+	--mdc-typography-headline5-font-size: 1.125rem;
+	--mdc-typography-headline6-font-size: 1.125rem;
+	--mdc-typography-headline1-line-height: 1.2;
+	--mdc-typography-headline2-line-height: 1.2;
+	--mdc-typography-headline3-line-height: 1.2;
+	--mdc-typography-headline4-line-height: 1.2;
+	--mdc-typography-headline5-line-height: 1.333;
+	--mdc-typography-headline6-line-height: 2;
+}
+ 
+// To simplify development, use default typography styles for the associated
+// elements instead of relying on the (very long) class names.
+html {
+  @include typography.typography('body1');
+	font-family: var(--font-family);
+}
+ 
+// The headline typography mixins don't include anything about margin,
+// so we need to override the default browser margin. Since h1/h2 have
+// large margin relative to their text size, and since MDC typography 
+// uses a really large font size, h1 with the default margin is HUGE
+h1 {
+  @include typography.typography('headline1');
+  margin: 0
+}
+ 
+h2 {
+  @include typography.typography('headline2');
+  margin: 0
+}
+ 
+h3 {
+  @include typography.typography('headline3');
+  margin: 0
+}
+ 
+h4 {
+  @include typography.typography('headline4');
+  margin: 0
+}
+ 
+h5 {
+  @include typography.typography('headline5');
+  margin: 0
+}
+ 
+h6 {
+  @include typography.typography('headline6');
+  margin: 0
+}
+
+s1 {
+	@include typography.typography('subtitle1');
+	display: block;
+}
+s2 {
+	@include typography.typography('subtitle2');
+	display: block;
+}
+
+inline-icon.material-icons {
+	font-size: revert;
+	vertical-align: middle;
+}
+ 
+caption {
+  @include typography.typography('caption');
+}
+
+@media (min-width: 600px) {
+	h1 {
+		font-size: 3.75rem;
+	}
+	h2 {
+		font-size: 2.5rem;
+	}
+	h3 {
+		font-size: 1.75rem;
+	}
+}
+.smaller {
+	font-size: 0.875em;
+}
+
+.unimportant {
+	opacity: 0.8;
+}
+
+section.pad {
+	padding: 16px 8px;
+}
+
+section.comfortable {
+	padding: 24px 16px;
+	max-width: 1200px;
+	margin: auto;
+}
+
+.sameSizeAsCheckbox {
+	width: var(--mdc-checkbox-touch-target-size, 40px);
+	height: var(--mdc-checkbox-touch-target-size, 40px);
+	display: grid;
+	place-items: center;
+}
+
+// Makes a Button the same height as a select or text input, so they can be shown inline.
+.btn-same-height-as-input {
+	--mdc-filled-button-container-height: 56px;
+}
+
+@media(max-width: 600px) {
+	section.pad {
+		padding: 8px 4px;
+	}
+	section.comfortable {
+		padding: 8px 4px;
+	}
+}
+
+@media(max-width: 400px) {
+	section.pad, section.comfortable {
+		padding-left: 0;
+		padding-right: 0;
+	}
+}
+
+.mdc-snackbar.error {
+	@include mixins.fill-color(color-palette.$red-500);
+	@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$red-500));
+	& .mdc-snackbar__action {
+		color: color-palette.$grey-900;
+	}
+}

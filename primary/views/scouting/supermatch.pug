@@ -1,0 +1,59 @@
+//-
+	Super-Scout Match scouting page.
+	PARAM
+		layout	[Object Array] [{type, label, id}] from db.scoringlayout
+		scouting.js
+		'/scouting/supermatch'
+			QUERY: key (match key, event_match_team)
+	//
+extends ../layout
+block content
+	style.
+		/*
+		If we want it to be prettier, we can add this; but it might lead to worse battery performance on low end phones
+		#matchform > *{
+			transition: filter 0.2s, opacity 0.2s;
+		}
+		*/
+	form#matchform(name="matchform" class="w3-centered" method="post" action="/scouting/match/supersubmit")
+		input#match_team_key(type="hidden", name="match_key", value=`${key}`)
+		each data in superdata
+			- let this_match_team_key = data.match_team_key;
+			- let this_team_key = data.team_key;
+			- var titleParts = this_match_team_key.split('_').map(key => key.replace(/\D/g, '')); // 2022mrcmp_qm77_frc102 to ['2022', '77', '102']
+			- let element = {"year":{"$numberInt":titleParts[0]},"order":"1","type":"textblock","label":"Super-Scout Notes","id":`${this_team_key}_otherNotes`,"org_key":org_key,"form_type":"supermatchscouting"}
+			- var btnColor = data.alliance ? ((data.alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
+			p
+			h3
+				div(class=`${btnColor} w3-btn`)
+					span!=msg('scouting.matchHeading', {match: titleParts[1], team: titleParts[2]})
+			p
+
+			- let answer = "";
+			- if (data.super_data && data.super_data.otherNotes) answer = data.super_data.otherNotes;
+			
+			case element.type
+				when "checkbox"
+					include templates/formCheckbox
+				when "counter"
+					include templates/formCounter
+				when "counterallownegative"
+					include templates/formCounterAllowNegative
+				when "badcounter"
+					include templates/formBadCounter
+				when "slider"
+				when "timeslider"
+					include templates/formSlider
+				when "multiselect"
+					include templates/formMultiselect
+				when "textblock"
+					include templates/formTextBlock
+				when "h2"
+					include templates/formHeader
+					- headerList.push(element.id);
+				when "h3"
+					include templates/formSubHeader
+				when "spacer"
+					include templates/formSpacer
+		br 
+		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit")!=msg('scouting.submit')

@@ -5,15 +5,17 @@ import type { CollectionName, CollectionSchema, CollectionSchemaWithId } from 's
 /**
  * Valid primitives for use in mongodb queries
  */
-type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
+export type ValidQueryPrimitive = string | number | undefined | null | boolean | ObjectId;
 /**
  * Valid type for the `_id` field in a mongodb query
  */
-type ValidID = ObjectId | string | FilterOps<ObjectId>;
+export type ValidID<T extends {
+    _id?: ObjectId | number;
+}, ThisIDType = Required<Pick<T, '_id'>>['_id']> = ThisIDType | string | FilterOps<ThisIDType>;
 /**
  * `Omit<FilterOperators<T>, '_id'>` breaks code completion, so this is just copied from MongoDB's FilterOperators code
  */
-interface FilterOps<TValue> {
+export interface FilterOps<TValue> {
     $eq?: TValue;
     $gt?: TValue;
     $gte?: TValue;
@@ -50,24 +52,24 @@ interface FilterOps<TValue> {
     $bitsAnySet?: BitwiseFilter;
     $rand?: Record<string, never>;
 }
-interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
+export interface QueryItem<T = any> extends Omit<FilterOps<T>, '_id'>, RootFilterOperators<T> {
     [key: string]: any;
 }
-interface FindOptionsWithProjection extends FindOptions {
+export interface FindOptionsWithProjection extends FindOptions {
     projection: MongoDocument;
 }
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations
  */
 export interface FilterQuery {
-    _id?: ValidID;
+    _id?: ValidID<MongoDocument>;
     [key: string]: QueryItem | ValidQueryPrimitive;
 }
 /**
  * Filter query for {@link Utilities.find} and {@link Utilities.findOne} operations with a specified (generic) type
  */
-export type FilterQueryTyped<T> = {
-    _id?: ValidID;
+export type FilterQueryTyped<T extends MongoDocument> = {
+    _id?: ValidID<T>;
     $or?: FilterQueryTyped<T>[];
     $and?: FilterQueryTyped<T>[];
     $expr?: FilterQueryTyped<T>;
@@ -103,6 +105,7 @@ export declare class UtilitiesOptions {
          */
         maxAge: number;
     };
+    schemasWithNumberIds?: CollectionName[];
     /**
      * Options for the MongoClient that we are wrapping.
      */
@@ -296,9 +299,9 @@ export declare class Utilities {
     private dbLock;
     private open;
     /**
-     * Fix filter queries by replacing String IDs with the proper ObjectID
+     * Fix filter queries by replacing String IDs with the proper ID type of the specified collection
      * @param query Query with or without _id
-     * @returns Query with _id replaced with an ObjectId
+     * @returns Query with _id replaced with an ObjectId or number, depending on the collection
      */
     private castID;
 }

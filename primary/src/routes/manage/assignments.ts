@@ -1,12 +1,11 @@
-import express from 'express';
 import bcrypt from 'bcryptjs';
+import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../../helpers/express-async-handler';
-import utilities, { MongoDocument } from 'scoutradioz-utilities';
-import Permissions from '../../helpers/permissions';
 import e, { assert, lightAssert } from 'scoutradioz-http-errors';
-import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, Team, TeamKey, User, UserAgent, WithDbId} from 'scoutradioz-types';
-import { AnyBulkWriteOperation, ObjectId } from 'mongodb';
+import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitScoutingSet, ScouterRecord, ScoutingPair, TeamKey, User, UserAgent, WithDbId } from 'scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../../helpers/express-async-handler';
+import Permissions from '../../helpers/permissions';
 
 const router = express.Router();
 const logger = getLogger('assignments');
@@ -194,7 +193,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	
 	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
 	
-	const availableArray: ObjectId[] = []; // User IDs
+	const availableArray: number[] = []; // User IDs
 	let stoppingForBreaks = true;
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
@@ -204,7 +203,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			const userName = user.split('|')[1]; // unused
 			logger.trace(`user: ${userId} | ${userName}`);
 			assert(userId && userName, 'Could not find both userId and userName');
-			availableArray.push(ObjectId.createFromHexString(userId));
+			availableArray.push(Number(userId));
 		}
 		else {
 			logger.debug('Assignments will continue past breaks!');
@@ -430,20 +429,21 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	//
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	//
-	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// Avoid crashing server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	if (timestampArray && timestampArray[0]) {
-		let earliestMatch = timestampArray[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = timestampArray[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
-
 
 	// Clear 'assigned_scorer' from all unresolved team@matches
 	await utilities.bulkWrite('matchscouting', 
 		[{updateMany: {
-			filter: { org_key, event_key, time: { $gte: earliestTimestamp } }, 
+			filter: { org_key, event_key, time: { $gte: latestTimestamp } }, 
 			update: { $unset: { 'assigned_scorer' : '' } }
 		}}]
 	);
@@ -455,17 +455,17 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	let comingMatches: Match[] = await utilities.find('matches', 
-		{event_key: event_key, time: {$gte: earliestTimestamp}},
+		{event_key: event_key, time: {$gte: latestTimestamp}},
 		{sort: {time: 1}}
 	);
-	let lastMatchTimestamp = earliestTimestamp;
+	let lastMatchTimestamp = latestTimestamp;
 	
 	let matchBlockCounter = matchBlockSize;  // initialize at the max size so in the first loop iteration, it'll set up the scout list
 	let scoutPointer = 0;  // start off with the 0th position
 	// 2022-11-10 JL: changed scoutArray to be a list of _ids and names
 	let scoutArray: ScouterRecord[] = [];  // the current set of scouts (gets regenerated every N matches)
 	let scoutAvailableMap: Dict<ScouterRecord> = {};  // pool of available scouts
-	let scoutAssignedList: string[] = []; // list of IDs of assigned scouters
+	let scoutAssignedList: number[] = []; // list of IDs of assigned scouters
 	
 	let redBlueToggle = 0;  // flips between 0 and 1, signals whether to allocate red alliance or blue alliance first
 
@@ -593,7 +593,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 				// 2024-01-23, M.O'C: If there are fewer than 6 available scouts, some entries might be null
 				if (thisScout != null) {
 					// Save this scouter as being assigned
-					let thisScoutId = String(thisScout.id);
+					let thisScoutId = thisScout.id;
 					if (!scoutAssignedList.includes(thisScoutId)) 
 						scoutAssignedList.push(thisScoutId);
 
@@ -613,8 +613,6 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	// lastly, mark assigned scouters as assigned
-	let scoutAssignedObjectIdList = scoutAssignedList.map(id => new ObjectId(id));
-	
 	let writeResult = await utilities.bulkWrite('users', [
 		
 		// JL: TODO LATER AFTER WE MAKE SURE THIS DOESN'T BREAK THINGS: Set scouters NOT assigend to match scouting to event_info.assigned = false
@@ -626,7 +624,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// }, 
 		{
 			updateMany: {
-				filter: {_id: {$in: scoutAssignedObjectIdList}},
+				filter: {_id: {$in: scoutAssignedList}},
 				update: {$set: {'event_info.assigned': true}}
 			}
 		}
@@ -667,13 +665,13 @@ router.post('/setscoutingpair', wrap(async (req, res) => {
 	
 	logger.trace(`Selected members: ${data}`);
 	
-	let member1 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
+	let member1 = await utilities.findOne('users', {_id: parseInt(selectedMembers.member1), org_key}); // JL: Temporary until i fix the most recent version of utilities
 	let member2;
 	if (selectedMembers.member2)
-		member2 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member2), org_key});
+		member2 = await utilities.findOne('users', {_id: parseInt(selectedMembers.member2), org_key});
 	let member3;
 	if (selectedMembers.member3)
-		member3 = await utilities.findOne('users', {_id: new ObjectId(selectedMembers.member3), org_key});
+		member3 = await utilities.findOne('users', {_id: parseInt(selectedMembers.member3), org_key});
 	
 	let idList = [member1._id]; // for bulkWrite operation
 	
@@ -852,18 +850,20 @@ router.get('/swapmatchscouters', wrap(async (req, res) => {
 	logger.info('ENTER eventKey=' + eventKey + ',org_key=' + org_key);
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': -1 },{sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matchDocs = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	if (matchDocs && matchDocs[0]) {
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 		
 	// Get the distinct list of scorers from the unresolved matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: earliestTimestamp }}) as ScouterRecord[];
+	let scorers = await utilities.distinct('matchscouting', 'assigned_scorer', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: latestTimestamp }}) as ScouterRecord[];
 	logger.debug('distinct assigned_scorers: ' + JSON.stringify(scorers));
 	
 	// 2022-02-07 JL: sorting le scorers' names
@@ -897,8 +897,8 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	logger.info(thisFuncName + 'ENTER org_key=' + org_key);
 	
 	// Extract 'from' & 'to' from req
-	let swapoutID = req.body.swapout;
-	let swapinID = req.body.swapin;
+	let swapoutID = parseInt(req.body.swapout);
+	let swapinID = parseInt(req.body.swapin);
 	
 	if (!swapoutID || !swapinID) return res.redirect('?alert=Please select both users to swap.&type=error');
 	
@@ -910,20 +910,21 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	assert(swapout && swapin, new e.InternalDatabaseError('Could not find both users in database!')); // Make sure users are found in the db
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 },{sort: {'time': 1}});
-	// matchCol.find({ event_key: eventKey, "alliances.red.score": -1 },{sort: {"time": 1}}, function(e, docs){
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matchDocs = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	if (matchDocs && matchDocs[0]) {
-		let earliestMatch = matchDocs[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matchDocs[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 		
 	// Do the updateMany - change instances of swapout to swapin
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2023-02-07 JL: changing scouter name to ScouterRecord
-	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': new ObjectId(swapoutID), org_key, event_key, time: { $gte: earliestTimestamp } }, 
+	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, 
 		update:{ $set: { assigned_scorer: {
 			id: swapin._id,
 			name: swapin.name
@@ -956,11 +957,11 @@ router.get('/swappitassignments', wrap(async (req, res) => {
 	let teams2: PitScouting[] = [];
 	if (scoutId) {
 		assert(typeof scoutId === 'string', 'Invalid scout ID provided');
-		let scoutObjectId = new ObjectId(scoutId);
+		let scoutIdNumber = parseInt(scoutId);
 		// find teams which have the specified scout in primary OR secondary OR tertiary
-		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ 'primary.id': scoutObjectId}, {'secondary.id': scoutId}, {'tertiary.id': scoutId}]}, { });
+		teams1 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, $or: [{ 'primary.id': scoutIdNumber}, {'secondary.id': scoutId}, {'tertiary.id': scoutId}]}, { });
 		// find teams which do NOT have the specified scout in primary NOR in secondary NOR in tertiary 
-		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, 'primary.id': {$ne: scoutObjectId}, 'secondary.id': {$ne: scoutObjectId}, 'tertiary.id': {$ne: scoutObjectId} }, { });
+		teams2 = await utilities.find('pitscouting', {'org_key': org_key, 'event_key': event_key, data: {$exists: false}, 'primary.id': {$ne: scoutIdNumber}, 'secondary.id': {$ne: scoutIdNumber}, 'tertiary.id': {$ne: scoutIdNumber} }, { });
 	}
 	else {
 		// just get two sets of all teams
@@ -1068,7 +1069,7 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	
 	// Iterate through scoutingpairs; create {1st: 2nd: 3rd:} and add to 'dict' keying off 1st <1, or 1/2 2/1, or 1/2/3 2/3/1 3/1/2>
 	let primaryAndBackupMap: Dict<PitScoutingSet> = {};
-	let scoutingAssignedArray: ObjectId[] = [];
+	let scoutingAssignedArray: number[] = [];
 	
 	for (let i in scoutingpairs) {
 		const thisPair = scoutingpairs[i];

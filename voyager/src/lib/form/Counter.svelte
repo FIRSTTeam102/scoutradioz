@@ -4,8 +4,11 @@
 
 	export let value: any = 0; // any because of weird casting to generic data
 	export let field: LayoutField;
+	export let allowNegative: boolean = false;
 	export let isBad = false;
-	const changeByValue = (change: number) => (value = Math.max(0, value + change));
+	export let isDefaultValue: boolean;
+	$: isDefaultValue = (value === 0);
+	const changeByValue = (change: number) => (value = (allowNegative ? value + change : Math.max(0, value + change)));
 </script>
 
 <div>
@@ -29,13 +32,11 @@
 		justify-content: space-between;
 	}
 
-	:global {
-		.good {
-			@include mdc-fab.accessible(color-palette.$blue-300);
-		}
-		.bad {
-			@include mdc-fab.accessible(color-palette.$red-900);
-			@include mdc-fab.shape-radius(25%);
-		}
+	:global(.good) {
+		@include mdc-fab.accessible(color-palette.$blue-300);
+	}
+	:global(.bad) {
+		@include mdc-fab.accessible(color-palette.$red-900);
+		@include mdc-fab.shape-radius(25%);
 	}
 </style>

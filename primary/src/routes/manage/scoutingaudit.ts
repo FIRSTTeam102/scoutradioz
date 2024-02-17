@@ -1,14 +1,13 @@
 import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../../helpers/express-async-handler';
-import utilities from 'scoutradioz-utilities';
-import Permissions from '../../helpers/permissions';
+import type Mathjs from 'mathjs';
 import { upload as uploadHelper } from 'scoutradioz-helpers';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { MatchScouting, MatchTeamKey, Upload, Match, AnyDict, MatchFormData } from 'scoutradioz-types';
-import type { ObjectId } from 'mongodb';
-import type Mathjs from 'mathjs';
+import type { AnyDict, Match, MatchFormData, MatchScouting, MatchTeamKey, Upload } from 'scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../../helpers/express-async-handler';
+import Permissions from '../../helpers/permissions';
 const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
 const router = express.Router();
@@ -40,23 +39,25 @@ router.get('/', wrap(async (req, res) =>  {
 	let event_key = req.event.key;
 	let org_key = req._user.org_key;
 
-	let matches: Match[] = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': -1 }, {sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matches: Match[] = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} }, {sort: {'time': -1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	if (matches && matches[0]) {
-		let earliestMatch = matches[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matches[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 	
-	logger.debug(`Scoring audit: earliestTimestamp=${earliestTimestamp}, earliest match=${matches[0]?.key}`);
+	logger.debug(`Scoring audit: latestTimestamp=${latestTimestamp}, latest match=${matches[0]?.key}`);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	let scoreData: MatchScouting[] = await utilities.find('matchscouting', 
 		{
 			org_key, 
 			event_key, 
-			'time': { $lt: earliestTimestamp }
+			'time': { $lt: latestTimestamp }
 		}, 
 		{ 
 			sort: {'assigned_scorer.name': 1, 'time': 1, 'alliance': 1, 'team_key': 1} 
@@ -72,7 +73,7 @@ router.get('/', wrap(async (req, res) =>  {
 	
 	// Gets whether a user is a youth, for adult covering students
 	const scouterIsYouthMap: Dict<boolean> = {};
-	async function isYouth(scouterId: ObjectId) {
+	async function isYouth(scouterId: number) {
 		let scouterIdString = String(scouterId);
 		if (scouterIsYouthMap.hasOwnProperty(scouterIdString)) return scouterIsYouthMap[scouterIdString];
 		const thisScouter = await utilities.findOne('users', {_id: scouterId}, {}, {allowCache: true});
@@ -113,7 +114,7 @@ router.get('/', wrap(async (req, res) =>  {
 			if (thisScoreData.data && thisScoreData.actual_scorer){
 				
 				
-				if (thisScoreData.assigned_scorer?.id.equals(thisScoreData.actual_scorer.id))
+				if (thisScoreData.assigned_scorer?.id === thisScoreData.actual_scorer.id)
 					auditElementChar = 'Y';
 				// 2018-03-22, M.O'C: Adding parent option
 				// 2022-11-02, M.O'C: Eliminating parent option
@@ -297,20 +298,22 @@ router.get('/bymatch', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matches: Match[] = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': -1}, {sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matches: Match[] = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': {$ne: -1}}, {sort: {'time': -1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	
 	if (matches[0]){
-		let earliestMatch = matches[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matches[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 	
-	logger.debug('Per-match audit: earliestTimestamp=' + earliestTimestamp);
+	logger.debug('Per-match audit: latestTimestamp=' + latestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: earliestTimestamp }}, { sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: latestTimestamp }}, { sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	//Create array of matches for audit, with each match-team inside each match
 	let audit = [];
@@ -371,22 +374,24 @@ router.get('/comments', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 		
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
-	let matches: Match[] = await utilities.find('matches', {event_key: event_key, 'alliances.red.score': -1}, {sort: {'time': 1}});
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	let matches: Match[] = await utilities.find('matches', {event_key: event_key, 'alliances.red.score': {$ne: -1}}, {sort: {'time': -1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
-	let earliestTimestamp = 9999999999;
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
 	
 	if (matches[0]){
-		let earliestMatch = matches[0];
-		earliestTimestamp = earliestMatch.time;
+		let latestMatch = matches[0];
+		latestTimestamp = latestMatch.time + 1;
 	}
 	
-	logger.debug('Comments audit: earliestTimestamp=' + earliestTimestamp);
+	logger.debug('Comments audit: latestTimestamp=' + latestTimestamp);
 		
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2023-02-13 JL: Added the otherNotes check into the DB query instead of a JS loop later
 	let scoreData: MatchScouting[] = await utilities.find('matchscouting', 
-		{org_key, event_key, time: { $lt: earliestTimestamp }, 'data.otherNotes': {$regex: '.+'}}, 
+		{org_key, event_key, time: { $lt: latestTimestamp }, 'data.otherNotes': {$regex: '.+'}}, 
 		{ sort: {'actual_scorer.name': 1, 'time': 1, 'alliance': 1, 'team_key': 1} }
 	);
 	

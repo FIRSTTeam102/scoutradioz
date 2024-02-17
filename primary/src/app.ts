@@ -61,6 +61,7 @@ utilities.config(require('../databases.json'), {
 		maxAge: 30,
 	},
 	debug: (process.env.UTILITIES_DEBUG === 'true'),
+	schemasWithNumberIds: ['users'],
 });
 //Load helper functions
 const helpers = require('scoutradioz-helpers');
@@ -98,6 +99,8 @@ app.get('/*', (req, res, next) => {
 
 //Must be the very first app.use
 app.use(utilities.refreshTier);
+
+app.use(usefunctions.maintenanceMode);
 
 //Boilerplate setup
 app.set('views', path.join(__dirname, '..', 'views'));

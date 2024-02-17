@@ -32,15 +32,22 @@ export declare interface DbDocument {
 	_id?: ObjectId;
 }
 
+/** Document with an auto-incrementing number, for use in Voyager QR codes */
+export declare interface DbDocumentWithNumberId {
+	/**
+	 * Numerical ID. (JL note: Utilities driver does the auto-incrementing)
+	 */
+	_id?: number;
+}
+
 /**
  * Optionally explicitly declare that a given object retrieved from the database has `_id` set.
  * @example
  * 
  * 	let users: WithDbId<User>[] = await utilities.find('users', {});
  */
-export declare type WithDbId<T> = T & {
-	_id: ObjectId
-}
+export declare type WithDbId<T extends DbDocument|DbDocumentWithNumberId> = T & Required<Pick<T, '_id'>>
+
 
 /**
  * Contains the min, max, average, and variance for a given numerical metric from an org's match scouting form.
@@ -96,7 +103,7 @@ declare interface FormSliderOptions {
 export declare interface Layout extends DbDocument {
 	year: number;
 	order: number|string;
-	type: 'checkbox'|'counter'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
+	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
 	form_type: 'matchscouting'|'pitscouting';
 	org_key: OrgKey;
 	label?: string;
@@ -234,7 +241,7 @@ export declare interface ScouterRecord {
 	/**
 	 * {@link User}'s _id
 	 */
-	id: ObjectId;
+	id: number;
 	name: string;
 }
 
@@ -256,6 +263,7 @@ export declare interface MatchScouting extends DbDocument {
 	assigned_scorer?: ScouterRecord;
 	actual_scorer?: ScouterRecord;
 	data?: MatchFormData;
+	super_data?: MatchFormData;
 	useragent?: UserAgent;
 }
 
@@ -365,7 +373,7 @@ export declare interface PitScoutingSet extends DbDocument {
  * @collection pitscouting
  * @interface PitScouting
  */
-export declare interface PitScouting {
+export declare interface PitScouting extends DbDocument {
 	year: number;
 	event_key: EventKey;
 	org_key: OrgKey;
@@ -375,6 +383,7 @@ export declare interface PitScouting {
 	tertiary?: ScouterRecord;
 	actual_scouter?: ScouterRecord;
 	data?: StringDict;
+	super_data?: StringDict;
 	useragent?: UserAgent;
 }
 
@@ -450,6 +459,17 @@ export declare interface Session extends DbDocument {
 }
 
 /**
+ * Session for Lucia package, used within SvelteKit
+ * @collection sveltesessions
+ * @interface LuciaSession
+ */
+export declare interface LuciaSession extends DbDocument {
+	expiresAt: Date;
+	user_id?: number;
+    attributes: any;
+}
+
+/**
  * Contains a team's 40x40 avatar for a given event year -- From FIRST API.
  * @collection teamavatars
  * @interface TeamAvatar
@@ -490,6 +510,19 @@ export declare interface Team extends DbDocument {
 }
 
 /**
+ * Simplified Team info -- from TBA API. Not stored explicitly in the database, but can be achieved through projection in a DB query.
+ */
+export declare interface TeamSimple extends DbDocument {
+	city: string|null;
+	country: string|null;
+	key: TeamKey;
+	name: string;
+	nickname: string;
+	state_prov: string|null;
+	team_number: number;
+}
+
+/**
  * Contains info for a user-uploaded image.
  * @collection uploads
  * @interface Upload
@@ -514,11 +547,11 @@ export declare interface Upload extends DbDocument {
  * @collection users
  * @interface User
  */
-export declare interface User extends DbDocument {
+export declare interface User extends DbDocumentWithNumberId {
 	org_key: OrgKey;
 	name: string;
 	role_key: RoleKey;
-	password: string;
+	password: 'default'|'disabled'|string;
 	org_info: {
 		subteam_key: string;
 		class_key: string;
@@ -529,7 +562,11 @@ export declare interface User extends DbDocument {
 		present: boolean;
 		assigned: boolean;
 	};
+	oauth: {
+		github_id?: number;
+	};
 	visible: boolean;
+	removed: boolean; // New
 	push_subscription?: PushSubscription
 }
 
@@ -555,7 +592,7 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
@@ -575,6 +612,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'roles' ? Role :
 	colName extends 'scoutingpairs' ? ScoutingPair :
 	colName extends 'sessions' ? Session :
+	colName extends 'sveltesessions' ? LuciaSession :
 	colName extends 'teams' ? Team :
 	colName extends 'uploads' ? Upload :
 	colName extends 'users' ? User : 

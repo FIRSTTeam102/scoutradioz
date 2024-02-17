@@ -26,8 +26,8 @@ logger.level = 'trace';
 
 utilities.config({
 	app: {url: 'mongodb://127.0.0.1:27017/app'},
-	dev: {url: 'mongodb://localhost:27017/dev'}
-}, {cache: {enable: true}, debug: true});
+	dev: {url: 'mongodb://127.0.0.1:27017/dev'}
+}, {cache: {enable: true}, debug: true, schemasWithNumberIds: ['users']});
 
 //Test utilities.getURL
 async function testGetUrl() {
@@ -84,6 +84,13 @@ async function testMultipleDbs(){
 	
 	var delResult = await utilities.remove('test', {'foo': 'bar'});
 	logger.info(`delResult: ${JSON.stringify(delResult)}`);
+	
+	await utilities.insert('users', {
+		name: 'test_user',
+		org_key: 'none',
+	});
+
+	await utilities.insert('users', [{name: 'test_user 2'}, {name: 'test_user 3'}, {name: 'test_user 4'}, {name: 'test_user 5'}]);
 	
 	process.env.TIER = 'app';
 	utilities.refreshTier();

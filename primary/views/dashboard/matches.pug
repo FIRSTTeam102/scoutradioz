@@ -44,7 +44,7 @@ block content
 									div(style="height: 10px;")
 										if assignment.assigned_scorer
 											//- Serve bold when it's the logged in user
-											if user && user._id.equals(assignment.assigned_scorer.id)
+											if user && user._id === (assignment.assigned_scorer.id)
 												span.b= assignment.assigned_scorer.name
 											else
 												span= assignment.assigned_scorer.name
@@ -66,3 +66,8 @@ block content
 								div(class="w3-col s5 w3-left-align" style="margin: auto;")
 									div(class="w3-col" style="margin-top: -5px;")
 										span(style="")= assignment.team_nickname
+						//- TODOSUPER: Replace permission check with ACCESS_SUPER_SCOUT
+						if user.role && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
+							a(href=`/scouting/supermatch?key=${match.match_key}`) 
+								div(class="w3-btn w3-col theme-link w3-padding")
+									span!=msg('scouting.supermatch', {n: match.match_number})

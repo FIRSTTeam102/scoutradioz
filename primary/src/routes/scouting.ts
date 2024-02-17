@@ -1,13 +1,12 @@
+import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
-import bcrypt from 'bcryptjs';
-import wrap from '../helpers/express-async-handler';
-import utilities from 'scoutradioz-utilities';
-import Permissions from '../helpers/permissions';
-import { upload as uploadHelper, matchData as matchDataHelper } from 'scoutradioz-helpers';
+import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
-import type { MatchScouting, Team, Layout, PitScouting, User, ScouterRecord, MatchFormData } from 'scoutradioz-types';
-import { ObjectId } from 'mongodb';
+import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User } from 'scoutradioz-types';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../helpers/express-async-handler';
+import Permissions from '../helpers/permissions';
 
 const router = express.Router();
 const logger = getLogger('scouting');
@@ -178,7 +177,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	else
 		thisScouterRecord = { 
 			name: 'Mr. Unknown', 
-			id: new ObjectId() 
+			id: -1, 
 		};
 	
 	let matchData = req.body;
@@ -360,6 +359,186 @@ router.get('/', wrap(async (req, res) => {
 	res.redirect('/dashboard/pits');
 }));
 
+//
+// Super-scout functions
+//
+
+// TODOSUPER: Replace TEAM_ADMIN permission check with SUPER_SCOUT
+router.get('/supermatch*', wrap(async (req, res) => {
+	if (!await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {
+		return;
+	}
+	logger.addContext('funcName', 'supermatch[get]');
+	logger.info('ENTER');
+
+	let eventYear = req.event.year;
+	let thisUser = req._user;
+	let thisUserName = thisUser.name;
+	let match_key = req.query.key;
+	let org_key = thisUser.org_key;
+	if (typeof match_key !== 'string') throw new e.UserError(req.msg('scouting.invalidMatchKey'));
+	
+	logger.debug(`match_key: ${match_key} user: ${thisUserName}`);
+	
+	if (!match_key) {
+		res.redirect('/dashboard');
+		return;
+	}
+	
+	// check if there is already data for this match
+	let superdata: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_key': match_key}, {sort: {'alliance': -1, 'team_key': 1}});
+	// make a quick map of team_key: data
+	let answers_map: { [key: string]: MatchFormData } = {};
+	if ( superdata && superdata[0] ) 
+		for (let thisdata of superdata) 
+			if (thisdata.super_data)
+				answers_map[thisdata.team_key] = thisdata.super_data;
+
+	let title = `#${superdata[0]?.match_number}`;
+	let layout = null;  // POSSIBLE FUTURE EXPANSION
+
+	//render page
+	res.render('./scouting/supermatch', {
+		title: title,
+		layout: layout,
+		key: match_key,
+		answers_map: answers_map,
+		superdata: superdata
+	});
+}));
+
+router.post('/match/supersubmit', wrap(async (req, res) => {
+	logger.addContext('funcName', 'match/supersubmit[post]');
+	logger.info('ENTER');
+
+	let eventYear = req.event.year;
+	let thisUser = req._user;
+	let thisUserName = thisUser.name;
+
+	let matchData = req.body;
+	//let teamKey =  matchData.teamkey;
+	//delete pitData.teamkey;
+	logger.debug('thisUserName=' + thisUserName + '|matchData=' + JSON.stringify(matchData));
+
+	let match_key = matchData['match_key'];
+
+	let event_key = req.event.key;
+	let org_key = thisUser.org_key;
+
+	let superdata: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_key': match_key}, {sort: {'alliance': -1, 'team_key': 1}});
+
+	if ( superdata && superdata[0] ) 
+		for (let thisdata of superdata) {
+			let match_team_key = thisdata.match_team_key;
+			let team_key = thisdata.team_key;
+
+			let super_data_blob: MatchFormData = {};
+			for (let key in matchData) {
+				let key_team = key.substring(0, key.indexOf('_'));
+				let this_value = matchData[key];
+				if (this_value && this_value !== '')
+					if (key_team == team_key) {
+						let key_id = key.substring(key.indexOf('_') + 1);
+						//logger.debug('key_team=' + key_team + '|key_id=' + key_id + '|this_value=' + this_value);
+						super_data_blob[key_id] = this_value;
+					}
+			}
+			logger.trace('team_key=' + team_key + '|superdata_blob=' + JSON.stringify(super_data_blob));
+
+			// only update if there was data to update
+			if (Object.keys(super_data_blob).length !== 0)
+				await utilities.update('matchscouting', { 
+					org_key, 
+					match_team_key 
+				}, { 
+					$set: { super_data: super_data_blob
+					} 
+				});
+		}
+
+	//redirect to pits dashboard
+	res.redirect('/dashboard/matches');
+}));
+
+// TODOSUPER: Replace TEAM_ADMIN permission check with SUPER_SCOUT
+router.get('/superpit*', wrap(async (req, res) => {
+	if (!await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {
+		return;
+	}
+	logger.addContext('funcName', 'superpit[get]');
+	logger.info('ENTER');
+
+	let event_key = req.event.key;
+	let thisUser = req._user;
+	let thisUserName = thisUser.name;
+	let team_key = req.query.key;
+	let event_year = req.event.year;
+	let org_key = thisUser.org_key;
+	if (typeof team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
+	
+	logger.debug(`team_key: ${team_key} user: ${thisUserName}`);
+	
+	if (!team_key) {
+		res.redirect('/dashboard');
+		return;
+	}
+	
+	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : team_key }, {});
+	let pitData: StringDict|null = null;
+	if (pitFind && pitFind[0])
+		if (pitFind[0].super_data)
+			pitData = pitFind[0].super_data;
+	logger.trace(`pitData=${JSON.stringify(pitData)}`);
+
+	const team: Team = await utilities.findOne('teams', {key: team_key}, {}, {allowCache: true});
+
+	let title = `Super Scouting for Team ${team_key}`;
+	let layout = null;  // POSSIBLE FUTURE EXPANSION
+
+	//render page
+	res.render('./scouting/superpit', {
+		team: team,
+		event_year: event_year,
+		title: title,
+		layout: layout,
+		key: team_key,
+		pitData: pitData
+	});
+}));
+
+// TODOSUPER: Replace TEAM_ADMIN permission check with SUPER_SCOUT
+router.post('/pit/supersubmit', wrap(async (req, res) => {
+	if (!await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {
+		return;
+	}
+	logger.addContext('funcName', 'match/supersubmit[post]');
+	logger.info('ENTER');
+
+	let thisUser = req._user;
+	let thisUserName = thisUser.name;
+
+	let pitData = req.body;
+	let teamKey = pitData.teamkey;
+	logger.debug('teamKey=' + teamKey + '|thisUserName=' + thisUserName + '|pitData=' + JSON.stringify(pitData));
+
+	let event_key = req.event.key;
+	let org_key = thisUser.org_key;
+
+	await utilities.update(
+		'pitscouting',
+		{ org_key: org_key, event_key: event_key, team_key: teamKey },
+		{
+			$set: {
+				super_data: pitData
+			},
+		}
+	);
+
+	//redirect to pits dashboard
+	res.redirect('/dashboard/pits');
+}));
+
+	
 // (Org manager only) - Deletes the scouting data from a given match. Requires a password.
 router.post('/match/delete-data', wrap(async (req, res) => {
 	if (!await req.authenticate (Permissions.ACCESS_TEAM_ADMIN)) {

@@ -18,6 +18,7 @@ primary/public/js
 build
 *.tsbuildinfo
 .svelte-kit
+yarn-error.log
 
 # below: temporary
 voyager/static/*.css*
