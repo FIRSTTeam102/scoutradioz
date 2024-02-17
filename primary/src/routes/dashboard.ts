@@ -92,6 +92,8 @@ router.get('/driveteam', wrap(async (req, res) => {
 	let maxTable = allianceStatsData.maxTable;
 	let avgNorms = allianceStatsData.avgNorms;
 	let maxNorms = allianceStatsData.maxNorms;
+	// 2024-02-07, M.O'C: Adding super-scout notes
+	let pitData = allianceStatsData.pitData;
 
 	let dataForChartJS: ChartJSData = {
 		labels: [],
@@ -226,7 +228,8 @@ router.get('/driveteam', wrap(async (req, res) => {
 		selectedTeam: teamKey,
 		teamNumbers: teamNumbers,
 		noMatchesFoundForTeam: noMatchesFoundForTeam,
-		dataForChartJS: JSON.stringify(dataForChartJS)
+		dataForChartJS: JSON.stringify(dataForChartJS),
+		pitData: pitData
 	});
 }));
 

@@ -163,6 +163,8 @@
 		"pit": "Pit scouting",
 		"supermatch": "Super scout match {n}",
 		"superpit": "Super scout",
+		"supermatchnotes": "Super scout match notes:",
+		"supernotes": "Super scout notes for team {team}:",
 		"subheading": "{team} <span class=\"unimportant\">from {city}, {state}</span>",
 		"pitHeading": "Team #{team}",
 		"upload": {

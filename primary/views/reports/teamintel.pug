@@ -41,7 +41,15 @@ block content
 			a(class="theme-link w3-btn" href=`/reports/upcoming?team_key=${team.key}`)!=msg('reports.upcomingMatchesTeam', {team: teamNum})
 		div(class="w3-padding")
 			a(class="theme-link w3-btn" href=`/reports/teamintelhistory?team_key=${team.key}`)!=msg('reports.teamDataYear', {team: teamNum})
-		br
+		//- for the comments
+		//- 2024-02-12, M.O'C: Moved the 'isScouter' definition here for the first set of "super scout" notes
+		- let isScouter = false; 
+		- if (user && user.role.access_level >= Permissions.ACCESS_SCOUTER) isScouter = true;
+		if isScouter && superData && superData.otherNotes
+			div(style="white-space: pre-wrap;")
+				i
+					h3!=msg('scouting.supernotes', {team: teamNum})
+					p= superData.otherNotes
 		//-Pit scouting section
 		div(class="w3-padding-small")
 			+intelTogglerSectionHeader('reports.teamIntel.pitScouting')
@@ -142,9 +150,11 @@ block content
 						border-radius: 9px;
 						border-color: #dfe1e9!important;
 					}
-				//- for the comments
-				- let isScouter = false; 
-				- if (user && user.role.access_level >= Permissions.ACCESS_SCOUTER) isScouter = true;
+				if (matches && matches.length > 0)		
+					each match in matches
+						if (match.superdata && isScouter)
+							h5(class="theme-text")!=msg('scouting.supermatchnotes')
+								<strong> #{match.superdata['otherNotes']}</strong>
 				if (matches && matches.length > 0)		
 					each match in matches
 						if (match.scoringdata && isScouter)
@@ -164,6 +174,9 @@ block content
 					
 					each match in matches
 						+completedMatch(match, undefined, team.key)
+						if (match.superdata && isScouter)
+							h5(class="theme-text")!=msg('scouting.supermatchnotes')
+								<strong> #{match.superdata['otherNotes']}</strong>
 						if (match.scoringdata && isScouter)
 							each element in scorelayout
 								case element.type
