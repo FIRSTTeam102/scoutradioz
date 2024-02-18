@@ -2,10 +2,13 @@ import type { PageLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
 import type { LayoutField } from '$lib/types';
 import db from '$lib/localDB';
+import { redirectWithAlert } from '$lib/utils';
 
 export const load: PageLoad = async ({ url, fetch, parent, params }) => {
 	const { event_key, org_key, user_id, event } = await parent();
-	if (!event) throw redirect(307, '/');
+	if (!event) {
+		throw redirectWithAlert('/sync/lead', 'Event not found in local database, try re-syncing');
+	}
 
 	const key = params.key;
 	if (!key) throw error(400, new Error('Match-team key not specified'));

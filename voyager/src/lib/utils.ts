@@ -2,7 +2,8 @@ import { getContext, onDestroy, onMount } from "svelte";
 import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext } from "./types";
 import type { ScouterHistoryRecord } from 'scoutradioz-types';
 import { sha1 } from "oslo/crypto";
-import {  } from 'oslo';
+import { alertStore } from "./stores";
+import { redirect } from "@sveltejs/kit";
 
 export class HttpError extends Error {
 	status: number;
@@ -238,4 +239,13 @@ export async function base32Hash(data: string) {
 		result += val;
 	}
 	return result;
+}
+
+export function redirectWithAlert(path: string, message: string, type?: 'info'|'success'|'warn'|'error') {
+	if (!type) type = 'info';
+	alertStore.set({
+		message,
+		type
+	});
+	return redirect(307, path);
 }

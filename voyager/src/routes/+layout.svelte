@@ -19,10 +19,10 @@
 
 	import { afterNavigate } from '$app/navigation';
 	import { assets } from '$app/paths';
-	import { deviceOnline } from '$lib/stores';
+	import { alertStore, deviceOnline } from '$lib/stores';
 	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 	import IconButton from '@smui/icon-button';
-	import { getContext, setContext } from 'svelte';
+	import { getContext, onMount, setContext } from 'svelte';
 	import { writable, type Writable } from 'svelte/store';
 	
 	import LanguagePicker from '$lib/LanguagePicker.svelte';
@@ -131,6 +131,15 @@
 		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
 		lastScrollTop = scrollTop;
 	};
+	
+	onMount(() => {
+		alertStore.subscribe(value => {
+			if (value) {
+				snackbar.open(value.message, undefined, undefined, value.type);
+				alertStore.set(null);
+			}
+		})
+	})
 </script>
 
 <svelte:window on:scroll={onScroll} />
