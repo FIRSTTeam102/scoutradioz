@@ -24,13 +24,14 @@
 	
 	// When formData changes (any time a form is edited), update the entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
-	$: {
+	function onFormChange() {
 		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
 		// JL note: Dexie lets you pass an object in, but I think it only checks the multi-entry primary key
 		// 	TS doesn't like it if I just pass the multi-entry primary key in like in a .where() call
 		db.pitscouting.update({...data.pitScoutingEntry}, {
 			data: allDefaultValues ? undefined : data.pitScoutingEntry.data,
 			synced: false,
+			completed: false,
 			actual_scouter: scouterRecord
 		});
 	}
@@ -70,6 +71,7 @@
 						name: data.user.name,
 					},
 					synced: false,
+					completed: true,
 					history: getNewSubmissionHistory(data.pitScoutingEntry, data.user._id, data.user.name),
 				});
 
@@ -114,6 +116,7 @@
 	layout={data.layout}
 	bind:formData={data.pitScoutingEntry.data}
 	teamNumber={data.teamNumber}
+	on:change={onFormChange}
 />
 
 <BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />

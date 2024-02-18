@@ -4,6 +4,7 @@
 	import Slider from './Slider.svelte';
 	import Multiselect from './Multiselect.svelte';
 	import Textblock from './Textblock.svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	// import type { AnyDict } from 'scoutradioz-types';
 	import type { LayoutField } from '$lib/types';
@@ -33,12 +34,14 @@
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:checked={formData[field.id]}
 				{field}
+				on:change
 			/>
 		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
 			<Counter
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 				isBad={field.type === 'badcounter'}
 				allowNegative={field.type === 'counterallownegative'}
 			/>
@@ -47,6 +50,7 @@
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 				isTime={field.type === 'timeslider'}
 			/>
 		{:else if field.id && field.type === 'multiselect'}
@@ -54,12 +58,14 @@
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 			/>
 		{:else if field.id && field.type === 'textblock'}
 			<Textblock
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 			/>
 		{:else if field.type === 'h2'}
 			<h2 id={field.id}>{field.label}</h2>

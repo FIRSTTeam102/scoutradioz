@@ -23,6 +23,7 @@
 	max={options.max}
 	step={Math.abs(options.step)}
 	discrete
+	on:change
 />
 </div>
 <div class="below" class:reversed>

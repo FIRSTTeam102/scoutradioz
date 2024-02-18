@@ -11,7 +11,7 @@
 	$: isDefaultValue = (value === options[0]);
 </script>
 
-<Select bind:value label={field.label}>
+<Select bind:value label={field.label} on:change>
 	{#each options as option}
 		<Option value={option}>{option}</Option>
 	{/each}

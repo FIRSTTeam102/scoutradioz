@@ -44,7 +44,7 @@
 
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
-	$: {
+	function onFormChange() {
 		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
 		db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
 			data: allDefaultValues ? undefined : data.matchScoutingEntry.data,
@@ -184,6 +184,7 @@
 	layout={data.layout}
 	bind:formData={data.matchScoutingEntry.data}
 	teamNumber={data.team.team_number}
+	on:change={onFormChange}
 />
 
 <Dialog bind:open={qrDialogOpen} aria-labelledby="simple-title" aria-describedby="simple-content">
