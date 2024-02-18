@@ -27,7 +27,7 @@
 		let collection =
 			selectedLogGroup !== 'all'
 				? db.logs.where({ group: selectedLogGroup })
-				: db.logs.orderBy('id');
+				: db.logs.orderBy('time');
 		return collection
 			.and((log) => log.level >= selectedLevelNum)
 			.reverse()
@@ -66,7 +66,8 @@
 
 	// Allow the changing of the recorded log level
 	let recordedLogLevel: logLevel = getGlobalLogLevel();
-
+	
+	// JL: for some reason on:change wasn't working for the select so i need to do this in a $: magic func
 	$: setGlobalLogLevel(recordedLogLevel);
 </script>
 
@@ -148,19 +149,19 @@
 <DataTable table$aria-label="User list" style="width: 100%;">
 	<Head>
 		<Row>
-			<Cell colspan='1' numeric>ID</Cell>
-			<Cell colspan='1'>Group</Cell>
-			<Cell colspan='1'>Level</Cell>
-			<Cell colspan='4' style="width: 100%">Message</Cell>
+			<Cell colspan={1}>Group</Cell>
+			<Cell colspan={1}>Level</Cell>
+			<Cell colspan={1}>Time</Cell>
+			<Cell colspan={4} style="width: 100%">Message</Cell>
 		</Row>
 	</Head>
 	<Body>
 		{#if $items}
 			{#each slice as item}
 				<Row>
-					<Cell numeric>{item.id}</Cell>
 					<Cell>{item.group}</Cell>
 					<Cell>{logLevelNumberToString(item.level)}</Cell>
+					<Cell>{item.time.toLocaleString()}</Cell>
 					<Cell>{item.message?.replace(/,/g, ', ')}</Cell>
 				</Row>
 			{/each}

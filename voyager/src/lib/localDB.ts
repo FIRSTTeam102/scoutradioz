@@ -137,6 +137,7 @@ export interface Log {
 	id?: number;
 	group: string;
 	level: number;
+	time: Date;
 	message: string;
 }
 
@@ -195,7 +196,7 @@ export class LocalDB extends Dexie {
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(48).stores({
+		this.version(49).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches:
 				'&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
@@ -214,14 +215,17 @@ export class LocalDB extends Dexie {
 			teams: '&key, team_number',
 			orgs: '&org_key',
 
-			logs: '++id, group, level',
+			logs: '++id, group, time',
 			syncstatus: '&[table+filter], date',
 			preferences: '++id'
 		});
 	}
 }
 
-const db = new LocalDB();
+let db: LocalDB;
+if (browser) db = new LocalDB();
+// @ts-ignore
+export default db;
 
 // WIP code to detect when there's an upgrade error "Not yet support for changing primary key"
 if ('addEventListener' in globalThis)
@@ -254,8 +258,6 @@ if ('addEventListener' in globalThis)
 			}
 		}
 	});
-
-export default db;
 
 //@ts-ignore
 if (browser) window.db = db; // For debugging

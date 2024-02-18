@@ -31,35 +31,6 @@ export function logLevelStringToNumber(level: logLevel): number {
 let buffer: Log[] = [];
 let idleCallbackID: number | undefined;
 
-/** Log level threshold, i.e. any logs below this level will be ignored and not logged */
-let globalLogLevel = 1; // default: debug
-
-// Grab saved log level from localStorage.
-// TODO maybe: Extract this out of the logger mini-library and put it in some other app-level component?
-if ('localStorage' in globalThis) {
-	let level = Number(localStorage.getItem('logLevel'));
-	if (level && !isNaN(level)) {
-		globalLogLevel = level;
-	}
-}
-
-/**
- * Set the log level threshold for all logs, below which all entries will be completely ignored.
- * @param level Level to set
- */
-export function setGlobalLogLevel(level: logLevel) {
-	globalLogLevel = logLevelStringToNumber(level);
-	// Save for later
-	localStorage.setItem('logLevel', level);
-}
-
-/**
- * Get the currently set log level for recording.
- */
-export function getGlobalLogLevel() {
-	return logLevelNumberToString(globalLogLevel);
-}
-
 // Safari doesn't support requestIdleCallback. In this case, just use a regular ole timeout.
 if (!('requestIdleCallback' in globalThis)) {
 	globalThis.requestIdleCallback = function (cb, options) {
@@ -92,6 +63,7 @@ class Logger {
 		buffer.push({
 			group: this.group,
 			level: logLevelStringToNumber(level),
+			time: new Date(),
 			message: str,
 		});
 
@@ -157,4 +129,36 @@ export function getLogger(group?: string) {
 		loggers[group] = new Logger(group);
 		return loggers[group];
 	}
+}
+
+
+/** Log level threshold, i.e. any logs below this level will be ignored and not logged */
+let globalLogLevel = 1; // default: debug
+
+// Grab saved log level from localStorage.
+// TODO maybe: Extract this out of the logger mini-library and put it in some other app-level component?
+if ('localStorage' in globalThis) {
+	let level = parseInt(String(localStorage.getItem('logLevel')));
+	console.log('level', level, typeof level);
+	if (!isNaN(level)) {
+		globalLogLevel = level;
+	}
+}
+
+
+/**
+ * Set the log level threshold for all logs, below which all entries will be completely ignored.
+ * @param level Level to set
+ */
+export function setGlobalLogLevel(level: logLevel) {
+	globalLogLevel = logLevelStringToNumber(level);
+	// Save for later
+	localStorage.setItem('logLevel', String(globalLogLevel));
+}
+
+/**
+ * Get the currently set log level for recording.
+ */
+export function getGlobalLogLevel() {
+	return logLevelNumberToString(globalLogLevel);
 }
