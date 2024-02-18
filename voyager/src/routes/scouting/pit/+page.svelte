@@ -7,6 +7,7 @@
 	import { encodeHex, encodeBase32 } from 'oslo/encoding';
 	import { base32Hash } from '$lib/utils';
 	import { msg } from '$lib/i18n';
+	import SvelteMarkdown from 'svelte-markdown';
 
 	export let data: PageData;
 
@@ -41,9 +42,11 @@
 	});
 </script>
 
-<h2>{msg('scouting.pitScheduleChecksum', {checksum: data.checksum})}</h2>
-<SlidingTabs {tabs} {initialActiveIndex}>
-	<PitAssignmentList slot="1" assignments={myAssignments} />
-	<PitAssignmentList slot="2" assignments={partnersAssignments} />
-	<PitAssignmentList slot="3" assignments={allAssignments} />
-</SlidingTabs>
+<section class="comfortable">
+	<h2><SvelteMarkdown source={msg('scouting.pitScheduleChecksum', {checksum: data.checksum})}/></h2>
+	<SlidingTabs {tabs} {initialActiveIndex}>
+		<PitAssignmentList slot="1" assignments={myAssignments} />
+		<PitAssignmentList slot="2" assignments={partnersAssignments} />
+		<PitAssignmentList slot="3" assignments={allAssignments} />
+	</SlidingTabs>
+</section>
