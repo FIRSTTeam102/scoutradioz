@@ -98,7 +98,8 @@
 				"logout": "Log out",
 				"switchorg": "Change organization"
 			},
-			"help": "Need help? Check our wiki!"
+			"help": "Need help? Check our wiki!",
+			"thanks": "Special thanks"
 		}
 	},
 	"home": {
@@ -113,6 +114,14 @@
 		"management": "Management",
 		"admin": "Admin",
 		"specifyTeam": "You must specify a team."
+	},
+	"thankyou": {
+		"title": "Thank you!",
+		"thanks": "Thanks to our Early-Access Partners!",
+		"threestarters": "The Three Starters",
+		"2020to2022": "{year2020} to {year2022}",
+		"2023inseason": "2023 In Season",
+		"2023offseason": "2023 Off Season"
 	},
 	"share": {
 		"changeOrg": "You are viewing {org}.\nTo change the organization you wish to view, click *Org: {org}* in the menu and select *Change Organization*."

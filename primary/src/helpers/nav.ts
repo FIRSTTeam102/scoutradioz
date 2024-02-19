@@ -346,6 +346,11 @@ class NavHelpers {
 			label: '!layout.nav.help',
 			sprite: 'help',
 			href: 'https://github.com/FIRSTTeam102/scoutradioz/wiki'
+		},
+		{
+			label: '!layout.nav.thanks',
+			href: '/thankyou',
+			sprite: 'heart'
 		}
 	];
 	
