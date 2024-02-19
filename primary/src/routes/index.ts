@@ -149,17 +149,9 @@ router.get('/thankyou', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'thankyou[get]');
 	logger.debug('ENTER');
 	
-	let redirect = req.getRedirectURL();
-	if (redirect) {
-		logger.debug(`redirect: ${redirect}`);
-		res.redirect(redirect);
-	}
-	else if (!req.user) res.redirect('/');
-	else {
-		res.render('./thankyou', { 
-			title: res.msg('thankyou.title'),
-		});
-	}
+	res.render('./thankyou', { 
+		title: res.msg('thankyou.title'),
+	});
 }));
 
 router.get('/throwanerror', wrap(async (req, res) => {
