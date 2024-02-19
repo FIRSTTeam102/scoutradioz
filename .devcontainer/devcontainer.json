@@ -37,7 +37,8 @@
 	},
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "bash .devcontainer/setup.sh",
+	"postAttachCommand": "sed 's/\r$//' .devcontainer/setup.sh | bash",
+	"postCreateCommand": "sed 's/\r$//' .devcontainer/import-database.sh | bash",
 
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "node"

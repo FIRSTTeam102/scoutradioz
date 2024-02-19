@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout } from 'scoutradioz-types';
 import assert from 'assert';
 
 const logger = log4js.getLogger('helpers.matchData');
@@ -652,7 +652,7 @@ export class MatchDataHelper {
 		logger.addContext('funcName', 'getUpcomingMatchData');
 		logger.info('ENTER event_key=' + event_key + ',team_key=' + team_key + ',org_key=' + org_key);
 		//console.log('ENTER event_key=' + event_key + ',team_key=' + team_key + ',org_key=' + org_key);
-	
+
 		let returnData: UpcomingMatchData;
 	
 		let teamKey = team_key;
@@ -1083,7 +1083,10 @@ export class MatchDataHelper {
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges
 		let currentAggRanges = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
-		
+
+		// 2024-02-07, M.O'C: Adding in super-scout notes
+		let pitData: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key': event_key, 'team_key': { $in: teamList }, 'super_data.otherNotes': {$ne: null} });
+
 		// set up the return data
 		let returnData: AllianceStatsData = {
 			teams, 
@@ -1092,7 +1095,8 @@ export class MatchDataHelper {
 			avgTable, 
 			maxTable, 
 			avgNorms, 
-			maxNorms
+			maxNorms,
+			pitData
 		};
 		logger.removeContext('funcName');
 		return returnData;	
@@ -1125,6 +1129,7 @@ export declare interface AllianceStatsData {
 	maxTable: MetricRow[]; // you get the picture
 	avgNorms: MetricRow[];
 	maxNorms: MetricRow[];
+	pitData: PitScouting[];
 }
 
 export declare interface MetricRow {
