@@ -345,7 +345,14 @@ class NavHelpers {
 		{
 			label: '!layout.nav.help',
 			sprite: 'help',
-			href: 'https://github.com/FIRSTTeam102/scoutradioz/wiki'
+			// 2024-02-19, M.O'C: Changing to the team MediaWiki
+			//href: 'https://github.com/FIRSTTeam102/scoutradioz/wiki' -> moved GitHub link to bottom of menu [layout.pug]
+			href: 'https://wiki.team102.org/scoutradioz/start'
+		},
+		{
+			label: '!layout.nav.thanks',
+			href: '/thankyou',
+			sprite: 'heart'
 		}
 	];
 	
