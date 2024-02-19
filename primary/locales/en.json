@@ -22,7 +22,8 @@
 				"management": "Event management tools such as auditing match assignments, swapping scouters in and out, and managing a list of members",
 				"free": "And of course, it's completely free!"
 			},
-			"github": "See our code & documentation on GitHub",
+			"github": "Check out our code on GitHub",
+			"wiki": "See our wiki for detailed documentation",
 			"discord": "Join our Discord",
 			"partner": "Apply to be an Early-Access partner",
 			"signup": "Sign up for your team to use Scoutradioz",
