@@ -125,26 +125,30 @@ class NavigationBar{
 	eventHandlers(){
 		
 		//Our main toggle boi
-		$('#burger').click(() => {
-			
-			//console.log("Burger has been clicked");
-			//If menu is fully closed
-			if (!this.opened && !this.moving) {
-				//Run pre-opening sequence
-				this.preMenuOpen();
-				//Run main opening sequence after interval
-				setTimeout(() => {
-					this.menuOpen();
-				}, this.opts.openingInterval);
+		$('#burger').on('click', () => {
+			try {
+				//console.log("Burger has been clicked");
+				//If menu is fully closed
+				if (!this.opened && !this.moving) {
+					//Run pre-opening sequence
+					this.preMenuOpen();
+					//Run main opening sequence after interval
+					setTimeout(() => {
+						this.menuOpen();
+					}, this.opts.openingInterval);
+				}
+				//If menu is fully opened
+				else if (!this.moving) {
+					//run pre-closing sequence
+					this.preMenuClose();
+					//run main closing sequence after interval
+					setTimeout(() => {
+						this.menuClose();
+					}, this.opts.openingInterval);
+				}
 			}
-			//If menu is fully opened
-			else if (!this.moving) {
-				//run pre-closing sequence
-				this.preMenuClose();
-				//run main closing sequence after interval
-				setTimeout(() => {
-					this.menuClose();
-				}, this.opts.openingInterval);
+			catch (err) {
+				NotificationCard.error(String(err));
 			}
 		});
 		

@@ -40,6 +40,11 @@ block content
 			span!=msg('scouting.matchHeading', {match: titleParts[1], team: titleParts[2]})
 	h5!=msgMarked('scouting.subheading', {team: team.nickname, city: team.city, state: team.state_prov})
 	p
+	if pit_super_data && pit_super_data.otherNotes
+		div(style="white-space: pre-wrap;")
+			i
+				h3!=msg('scouting.supernotes', {team: titleParts[2]})
+				p= pit_super_data.otherNotes
 	form#matchform(name="matchform" class="w3-centered")
 		input#match_team_key(type="hidden", name="match_team_key", value=`${key}`)
 		- var headerList = []; // for sticky bar

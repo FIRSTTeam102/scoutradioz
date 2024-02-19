@@ -143,7 +143,15 @@ block content
 												td(class=`${valueCol}` style=`padding: 8px 0px; background-color: rgb(${getValR(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])},${getValG(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])},${getValB(aggRangeMap[agg.key].MAXmin, aggRangeMap[agg.key].MAXmax, agg[team])})`)= agg[team]
 											else
 												td(class=`${valueCol}`)= agg[team]
-						
+			//-Super-scout notes
+			- if (user && user.role.access_level >= Permissions.ACCESS_SCOUTER)
+				if pitData && pitData[0]
+					each pit in pitData
+						div(style="white-space: pre-wrap;")
+							h4!=msg('scouting.supernotes', {team: pit.team_key.substring(3)})
+							i
+								p= pit.super_data.otherNotes
+
 			hr
 			if selectedTeam == 'all'
 				h4!=msg('driveDashboard.futureMatches')

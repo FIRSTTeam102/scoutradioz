@@ -180,9 +180,12 @@ router.get('/teamintel', wrap(async (req, res) => {
 		{ 'org_key': orgKey, 'event_key' : eventKey, 'team_key' : teamKey }
 	);
 	let pitData = null;
-	if (pitFind)
+	let superData = null;
+	if (pitFind) {
 		pitData = pitFind.data;
-	
+		superData = pitFind.super_data;
+	}
+
 	// Pit data layout
 	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
 	let layout: Layout[] = await utilities.find('layout', 
@@ -198,7 +201,9 @@ router.get('/teamintel', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', {'org_key': orgKey, 'team_key': teamKey, 'event_key': eventKey}, {});
 	// Build a map of match_key->data
+	// 2024-02-12, M.O'C: Add super scout data
 	let matchDataMap: Dict<MatchFormData> = {};
+	let matchSuperDataMap: Dict<MatchFormData> = {};
 	if (matchDataFind && matchDataFind.length > 0) {
 		for (let mDMidx = 0; mDMidx < matchDataFind.length; mDMidx++) {
 			let thisTeamMatch = matchDataFind[mDMidx];
@@ -206,6 +211,9 @@ router.get('/teamintel', wrap(async (req, res) => {
 			if (thisTeamMatch.data) {
 				//logger.debug('Adding data to map');
 				matchDataMap[thisTeamMatch.match_key] = thisTeamMatch.data;
+			}
+			if (thisTeamMatch.super_data) {
+				matchSuperDataMap[thisTeamMatch.match_key] = thisTeamMatch.super_data;
 			}
 		}
 	}
@@ -224,6 +232,13 @@ router.get('/teamintel', wrap(async (req, res) => {
 				//logger.debug('Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
 				// @ts-ignore JL note - legacy code
 				matches[matchesIdx].scoringdata = thisScoreData;
+			}
+			// 2024-02-12, M.O'C: Adding super scout data
+			let thisSuperData = matchSuperDataMap[matches[matchesIdx].key];
+			if (thisSuperData) {
+				//logger.debug('Enhancing match #' + matchesIdx + ': match_key=' + matches[matchesIdx].match_key + ', thisScoreData=' + JSON.stringify(thisScoreData));
+				// @ts-ignore JL note - legacy code
+				matches[matchesIdx].superdata = thisSuperData;
 			}
 		}
 	}
@@ -346,6 +361,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 		team,
 		ranking,
 		data: pitData,
+		superData: superData,
 		layout,
 		scorelayout,
 		aggdata: aggTable,
