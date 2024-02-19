@@ -56,7 +56,8 @@
 		"footer": {
 			"copyright": "Copyright {date} FIRST Team 102 and Robotics Fund Inc.\nOpen-source & licensed with AGPLv3.",
 			"tba": "Powered by The Blue Alliance.",
-			"frc": "We are proud to be participants of FIRST Robotics Competition."
+			"frc": "We are proud to be participants of FIRST Robotics Competition.",
+			"github": "Check out our source code on GitHub"
 		},
 		"nav": {
 			"home": "Home",
