@@ -204,6 +204,14 @@
 		"dataUploadedToCloud": "Data already uploaded to cloud",
 		"scannedByScoutingLead": "Scanned by scouting lead"
 	},
+	"qrsync": {
+		"matchesRange": "Matches # {first} - {last}",
+		"usersAndTeams": "Users & team nicknames",
+		"numMatchesToDisplay": "Number of matches to display",
+		"everyone": "Everyone",
+		"onlyAssignedAndPresent": "Only assigned & present",
+		"whomToInclude": "Whom to include in the QR code"
+	},
 	"notifications": {
 		"status": "Match notifications are {status} for this device.",
 		"enabled": "enabled",

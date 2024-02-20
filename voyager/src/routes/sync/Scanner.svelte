@@ -7,14 +7,14 @@
 		decodeOneMatchScoutingResult,
 		decodeOnePitScoutingResult
 	} from '$lib/compression';
-	import type { LightMatch, LightUser, MatchScoutingLocal, str, TeamLocal } from '$lib/localDB';
+	import type { LightMatch, LightUser, MatchScoutingLocal, PitScoutingLocal, str, TeamLocal } from '$lib/localDB';
 	import type { Event } from 'scoutradioz-types';
 	import db from '$lib/localDB';
 	import type { Org } from 'scoutradioz-types';
 	import { getLogger } from '$lib/logger';
 	import { getContext } from 'svelte';
 	import type { SnackbarContext } from '$lib/types';
-	import { MatchScoutingOperations } from '$lib/DBOperations';
+	import { MatchScoutingOperations, PitScoutingOperations } from '$lib/DBOperations';
 
 	let qrcodeEnabled = true;
 
@@ -101,6 +101,13 @@
 						throw new Error("Not all matches' team keys were found! Check the logs for details.");
 					}
 					await db.lightmatches.bulkPut(rebuiltMatches);
+					break;
+				}
+				case 'pit': {
+					let pitscouting = decodedData.data.pitscouting as PitScoutingLocal[];
+					let checksum = decodedData.data.checksum as string;
+					logger.debug('pitscouting', pitscouting, 'checksum', checksum);
+					await PitScoutingOperations.insertFromQR(pitscouting, checksum);
 					break;
 				}
 				case 'meta': {

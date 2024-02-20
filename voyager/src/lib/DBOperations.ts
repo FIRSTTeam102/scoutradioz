@@ -49,8 +49,13 @@ export class EventOperations extends TableOperations {
 		const event = await fetchJSON<str<Event>>(`/api/${event_key}`);
 
 		logger.trace('Begin transaction');
-		await db.transaction('rw', db.events, async () => {
-			await db.events.add(event);
+		await db.transaction('rw', db.events, db.syncstatus, async () => {
+			await db.events.put(event);
+			await db.syncstatus.put({
+				table: 'events',
+				filter: `event=${event_key}`,
+				time: new Date(),
+			})
 		});
 		logger.trace('Done');
 	}
@@ -66,13 +71,17 @@ export class TeamOperations extends TableOperations {
 
 		// Clear teams
 		logger.trace('Begin transaction');
-		await db.transaction('rw', db.events, async () => {
+		await db.transaction('rw', db.events, db.teams, db.syncstatus, async () => {
 			const event = await db.events.where({ key: event_key }).first();
 			assert(event, 'Event not found in local db');
 
-			let numDeleted = await db.teams.where('key').anyOf(event.team_keys).delete();
-			logger.info(`${numDeleted} teams deleted from db`);
-			await db.teams.bulkAdd(teams);
+			logger.info(`Inserted ${teams.length} into db`);
+			await db.teams.bulkPut(teams);
+			await db.syncstatus.put({
+				table: 'teams',
+				filter: `event=${event_key}`,
+				time: new Date(),
+			})
 		});
 		logger.trace('Done');
 	}
@@ -88,11 +97,7 @@ export class MatchOperations extends TableOperations {
 
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.lightmatches, db.syncstatus, async () => {
-			let numDeleted = await db.lightmatches
-				.where({
-					event_key: event_key
-				})
-				.delete();
+			let numDeleted = await db.lightmatches.where({event_key}).delete();
 			logger.debug(`${numDeleted} matches deleted from db`);
 			await db.lightmatches.bulkAdd(matches);
 			await db.syncstatus.put({
@@ -115,8 +120,11 @@ export class MatchScoutingOperations extends TableOperations {
 		);
 		// Merge with existing data
 		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
-		const mergedMatchScouting = await MatchScoutingOperations.merge(matchScouting, localMatchScouting);
-		
+		const mergedMatchScouting = await MatchScoutingOperations.merge(
+			matchScouting,
+			localMatchScouting
+		);
+
 		const checksum = await MatchScoutingOperations.getChecksum(mergedMatchScouting);
 
 		logger.trace('Begin transaction');
@@ -128,13 +136,13 @@ export class MatchScoutingOperations extends TableOperations {
 				time: new Date(),
 				data: {
 					checksum,
-					source: 'download',
-				},
+					source: 'download'
+				}
 			});
 		});
 		logger.trace('Done');
 	}
-	
+
 	/**
 	 * "Enrich" the new assignments/etc that were just downloaded/scanned with data that's on the local db
 	 * @param newItems The new items that were just downloaded/scanned
@@ -148,11 +156,11 @@ export class MatchScoutingOperations extends TableOperations {
 				let thisObj = newItems[i];
 				keyToIndex[thisObj.match_team_key] = i;
 			}
-		
-		// JL: Sometimes the remote db has data === null and not undefined, and I think this 
+
+		// JL: Sometimes the remote db has data === null and not undefined, and I think this
 		// 	breaks the export let formData = {} stuff
 		for (let match of newItems) if (match.data === null) match.data = undefined;
-		
+
 		// TODO (IMPORTANT) also copy over synced and completed booleans, and maybe compare the history states
 		for (let localMatch of oldItems) {
 			if (localMatch.data) {
@@ -162,26 +170,31 @@ export class MatchScoutingOperations extends TableOperations {
 				}
 			}
 		}
-		
+
 		return [...newItems];
 	}
-	
+
 	@setFuncName('MatchScoutingOperations.insertFromQR')
 	static async insertFromQR(newMatchScouting: MatchScoutingLocal[], checksum: string) {
 		assert(newMatchScouting.length > 0);
 		const { org_key, event_key } = newMatchScouting[0];
 
-		logger.info(`Inserting ${newMatchScouting.length} documents with org_key=${org_key}, event_key=${event_key}`)
-		
+		logger.info(
+			`Inserting ${newMatchScouting.length} documents with org_key=${org_key}, event_key=${event_key}`
+		);
+
 		// Merge with existing data
 		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
-		const mergedMatchScouting = await MatchScoutingOperations.merge(newMatchScouting, localMatchScouting);
-		
+		const mergedMatchScouting = await MatchScoutingOperations.merge(
+			newMatchScouting,
+			localMatchScouting
+		);
+
 		logger.debug('mergedMatchScouting:', mergedMatchScouting);
-		
+
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.matchscouting, db.syncstatus, async () => {
-			await db.matchscouting.where({org_key, event_key}).delete();
+			await db.matchscouting.where({ org_key, event_key }).delete();
 			await db.matchscouting.bulkPut(mergedMatchScouting);
 			await db.syncstatus.put({
 				table: 'matchscouting',
@@ -189,15 +202,15 @@ export class MatchScoutingOperations extends TableOperations {
 				time: new Date(),
 				data: {
 					checksum,
-					source: 'qr',
-				},
+					source: 'qr'
+				}
 			});
 		});
 		logger.trace('Done');
 	}
-	
+
 	static async getChecksum(items: MatchScoutingLocal[]) {
-		const listToChecksum = items.map(asg => {
+		const listToChecksum = items.map((asg) => {
 			return {
 				year: asg.year,
 				event_key: asg.event_key,
@@ -210,7 +223,7 @@ export class MatchScoutingOperations extends TableOperations {
 				match_team_key: asg.match_team_key,
 				assigned_scorer: asg.assigned_scorer
 			};
-		})
+		});
 		logger.debug(JSON.stringify(listToChecksum));
 
 		// Checksum for comparing schedules
@@ -231,32 +244,92 @@ export class PitScoutingOperations extends TableOperations {
 			`/api/orgs/${org_key}/${event_key}/assignments/pit`
 		);
 
-		// JL: Sometimes the remote db has data === null and not undefined, and I think this 
-		// 	breaks the export let formData = {} stuff
-		for (let pit of pitScouting) if (pit.data === null) pit.data = undefined;
+		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
+		const mergedPitScouting = await PitScoutingOperations.merge(pitScouting, localPitScouting);
+		const checksum = await PitScoutingOperations.getChecksum(mergedPitScouting);
 
+		logger.trace('Begin transaction');
+		await db.transaction('rw', db.pitscouting, db.syncstatus, async () => {
+			await db.pitscouting.bulkPut(pitScouting);
+			await db.syncstatus.put({
+				table: 'pitscouting',
+				filter: `org=${org_key},event=${event_key}`,
+				time: new Date(),
+				data: {
+					checksum,
+					source: 'download'
+				}
+			});
+		});
+		logger.trace('Done');
+	}
+
+	/**
+	 * "Enrich" the new assignments/etc that were just downloaded/scanned with data that's on the local db
+	 * @param newItems The new items that were just downloaded/scanned
+	 * @param oldItems The existing items in the local database
+	 */
+	static async merge(newItems: PitScoutingLocal[], oldItems: PitScoutingLocal[]) {
 		// 2024-02-03, M.O'C: Handling not overwriting un-commited data!!!
 		let keyToIndex: { [key: string]: number } = {};
-		if (pitScouting && pitScouting.length > 0)
-			for (let i = 0; i < pitScouting.length; i++) {
-				let thisObj = pitScouting[i];
+		if (newItems && newItems.length > 0)
+			for (let i = 0; i < newItems.length; i++) {
+				let thisObj = newItems[i];
 				keyToIndex[thisObj.team_key] = i;
 			}
 
-		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
-		for (let localPit of localPitScouting) {
-			if (localPit.data /* && localPit.synced && localPit.completed? (-JL) */) {
-				let this_team_key = localPit.team_key;
-				if (keyToIndex[this_team_key]) {
-					pitScouting[keyToIndex[this_team_key]].data = localPit.data;
-					// copy over synced & completed? (-JL)
+		// JL: Sometimes the remote db has data === null and not undefined, and I think this
+		// 	breaks the export let formData = {} stuff
+		for (let match of newItems) if (match.data === null) match.data = undefined;
+
+		// TODO (IMPORTANT) also copy over synced and completed booleans, and maybe compare the history states
+		for (let localPit of oldItems) {
+			if (localPit.data) {
+				let thisTeamKey = localPit.team_key;
+				if (keyToIndex[thisTeamKey]) {
+					newItems[keyToIndex[thisTeamKey]].data = localPit.data;
 				}
 			}
 		}
-		
+
+		return [...newItems];
+	}
+
+	@setFuncName('PitScoutingOperations.insertFromQR')
+	static async insertFromQR(newPitScouting: PitScoutingLocal[], checksum: string) {
+		assert(newPitScouting.length > 0);
+		const { org_key, event_key } = newPitScouting[0];
+
+		logger.info(
+			`Inserting ${newPitScouting.length} documents with org_key=${org_key}, event_key=${event_key}`
+		);
+
+		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
+		const mergedPitScouting = await PitScoutingOperations.merge(newPitScouting, localPitScouting);
+
+		logger.debug('mergedPitScouting:', mergedPitScouting);
+
+		logger.trace('Begin transaction');
+		await db.transaction('rw', db.pitscouting, db.syncstatus, async () => {
+			await db.pitscouting.where({ org_key, event_key }).delete();
+			await db.pitscouting.bulkPut(mergedPitScouting);
+			await db.syncstatus.put({
+				table: 'pitscouting',
+				filter: `org=${org_key},event=${event_key}`,
+				time: new Date(),
+				data: {
+					checksum,
+					source: 'qr'
+				}
+			});
+		});
+		logger.trace('Done');
+	}
+
+	static async getChecksum(items: PitScoutingLocal[]) {
 		// 2024-02-09 JL: Add a checksum to the pit scouting schedule, stored in syncstatus
 		// 	(it takes like 200ms on my PC to calculate the checksum, so we shouldn't do it on-the-fly in the dashboard)
-		const listToChecksum = pitScouting.map((asg) => {
+		const listToChecksum = items.map((asg) => {
 			return {
 				year: asg.year,
 				event_key: asg.event_key,
@@ -268,20 +341,8 @@ export class PitScoutingOperations extends TableOperations {
 			};
 		});
 		const checksum = await base32Hash(JSON.stringify(listToChecksum));
-
-		logger.trace('Begin transaction');
-		await db.transaction('rw', db.pitscouting, db.syncstatus, async () => {
-			await db.pitscouting.bulkPut(pitScouting);
-			await db.syncstatus.put({
-				table: 'pitscouting',
-				filter: `org=${org_key},event=${event_key}`,
-				time: new Date(),
-				data: {
-					checksum
-				},
-			});
-		});
-		logger.trace('Done');
+		logger.debug(`Checksum: ${checksum}`);
+		return checksum;
 	}
 }
 
@@ -418,7 +479,7 @@ export class LightUserOperations extends TableOperations {
 				filter: `org=${org_key}`,
 				time: new Date()
 			});
-		})
+		});
 	}
 }
 

@@ -57,6 +57,7 @@ class Logger {
 		let str = messages.map(message => {
 			if (this.funcName) message = `[${this.funcName}] `;
 			if (typeof message === 'string') return message;
+			if (message instanceof Error) return String(message);
 			else return JSON.stringify(message);
 		}).join(' ');
 

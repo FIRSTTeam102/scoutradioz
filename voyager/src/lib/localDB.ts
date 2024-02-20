@@ -196,7 +196,7 @@ export class LocalDB extends Dexie {
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(49).stores({
+		this.version(50).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches:
 				'&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
@@ -210,8 +210,8 @@ export class LocalDB extends Dexie {
 			layout: '++_id, [org_key+year+form_type], order',
 			// JL TODO: matchscouting can't have its primary key be match_team_key because it breaks multi-org stuff
 			matchscouting: '&match_team_key, [org_key+event_key], team_key, year, time, match_number',
-			pitscouting:
-				'&[org_key+event_key+team_key], [org_key+event_key], primary.id, secondary.id, tertiary.id',
+			// 2024-02-19 JL: Removed primary/secondary/tertiary indexes from collection b/c it can't handle when they are undefined
+			pitscouting: '&[org_key+event_key+team_key], [org_key+event_key]',
 			teams: '&key, team_number',
 			orgs: '&org_key',
 
