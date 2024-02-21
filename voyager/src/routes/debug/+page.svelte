@@ -66,9 +66,6 @@
 
 	// Allow the changing of the recorded log level
 	let recordedLogLevel: logLevel = getGlobalLogLevel();
-	
-	// JL: for some reason on:change wasn't working for the select so i need to do this in a $: magic func
-	$: setGlobalLogLevel(recordedLogLevel);
 </script>
 
 <h1>Debug stuff</h1>
@@ -106,7 +103,7 @@
 </button>
 
 <h1>Logging behavior</h1>
-<Select variant="filled" label="Log level to record" bind:value={recordedLogLevel}>
+<Select variant="filled" label="Log level to record" bind:value={recordedLogLevel} on:MDCSelect:change={() => setGlobalLogLevel(recordedLogLevel)}>
 	<Option value="trace">Trace</Option>
 	<Option value="debug">Debug</Option>
 	<Option value="info">Info</Option>

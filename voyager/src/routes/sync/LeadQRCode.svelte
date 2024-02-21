@@ -49,7 +49,7 @@
 	let firstMatchNumber = 0;
 	let lastMatchNumber = 0;
 	
-	$: (async () => {
+	async function handleChange () {
 		console.log('func running');
 		try {
 			if (qrCodeType === 'matchscouting' && numMatchesToGrab > 0) {
@@ -135,7 +135,7 @@
 			snackbar.error(String(err));
 			base64Data = '';
 		}
-	})();
+	}
 
 	const numMatchesGetKey = (num: number) => String(num);
 </script>
@@ -143,7 +143,7 @@
 <section class="pad grid grid-cols-1 place-items-center gap-4">
 	<div class="grid grid-cols-2 gap-4">
 		<div>
-			<Select variant="filled" bind:value={qrCodeType}>
+			<Select variant="filled" bind:value={qrCodeType} on:MDCSelect:change={handleChange}>
 				<Option value="matchscouting">{msg('scouting.match')}</Option>
 				<Option value="pitscouting">{msg('scouting.pit')}</Option>
 				<Option value="metadata">{msg('qrsync.usersAndTeams')}</Option>
@@ -151,7 +151,7 @@
 		</div>
 		<!-- JL note: not using an if block because numMatchesToGrab becomes undefined when the select is unmounted -->
 		<div class:hidden={qrCodeType !== 'matchscouting'}>
-			<Select variant="filled" bind:value={numMatchesToGrab} label="Matches" key={numMatchesGetKey}>
+			<Select variant="filled" bind:value={numMatchesToGrab} label="Matches" key={numMatchesGetKey} on:MDCSelect:change={handleChange}>
 				<!-- JL note: the " || 50" is to guarantee that there are some options in the select to avoid numMatchesToGrab becoming undefined -->
 				{#each Array($numMatchesAtEvent || 50) as _, index}
 					<!-- Blocks of 5 OR total # of matches -->
