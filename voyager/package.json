@@ -77,6 +77,8 @@
   },
   "type": "module",
   "dependencies": {
+    "@node-rs/argon2": "^1.7.2",
+    "@node-rs/bcrypt": "^1.9.2",
     "dexie": "^3.2.4",
     "js-cookie": "^3.0.5",
     "lucia": "^3.0.1",
