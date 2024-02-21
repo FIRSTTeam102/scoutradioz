@@ -319,6 +319,11 @@ class NavHelpers {
 			visible: (req, res) => !!req.user && req._user.name === 'default_user',
 			href: '/user/login'
 		},
+		{
+			label: '!layout.nav.voyager',
+			sprite: 'voyager',
+			href: 'https://voyager.scoutradioz.com'
+		},
 		// Change org
 		{
 			label: '!layout.nav.user.switchorg',

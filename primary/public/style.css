@@ -2348,6 +2348,12 @@ hr {
 .sprite.sp-paper {
   --position: -22;
 }
+.sprite.sp-heart {
+  --position: -23;
+}
+.sprite.sp-voyager {
+  --position: -24;
+}
 .scouting-counter {
   font-weight: bold;
   box-sizing: content-box;
