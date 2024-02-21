@@ -92,6 +92,7 @@
 					"present": "Set who is present at current event"
 				}
 			},
+			"voyager": "Switch to Voyager offline module",
 			"admin": "Admin",
 			"user": {
 				"main": "User: [[{user}]]",
