@@ -162,11 +162,16 @@ export class MatchScoutingOperations extends TableOperations {
 		for (let match of newItems) if (match.data === null) match.data = undefined;
 
 		// TODO (IMPORTANT) also copy over synced and completed booleans, and maybe compare the history states
+		// 	Need some more robust logic for edge cases
 		for (let localMatch of oldItems) {
 			if (localMatch.data) {
 				let this_match_team_key = localMatch.match_team_key;
-				if (keyToIndex[this_match_team_key]) {
-					newItems[keyToIndex[this_match_team_key]].data = localMatch.data;
+				let index = keyToIndex[this_match_team_key];
+				if (index && newItems[index]) {
+					newItems[index].data = localMatch.data;
+					newItems[index].synced = localMatch.synced;
+					newItems[index].completed = localMatch.completed;
+					newItems[index].history = localMatch.history;
 				}
 			}
 		}
@@ -286,8 +291,12 @@ export class PitScoutingOperations extends TableOperations {
 		for (let localPit of oldItems) {
 			if (localPit.data) {
 				let thisTeamKey = localPit.team_key;
-				if (keyToIndex[thisTeamKey]) {
-					newItems[keyToIndex[thisTeamKey]].data = localPit.data;
+				let index = keyToIndex[thisTeamKey];
+				if (index && newItems[index]) {
+					newItems[index].data = localPit.data;
+					newItems[index].synced = localPit.synced;
+					newItems[index].completed = localPit.completed;
+					newItems[index].history = localPit.history;
 				}
 			}
 		}
