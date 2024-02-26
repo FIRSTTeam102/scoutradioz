@@ -212,12 +212,12 @@ router.post('/match/submit', wrap(async (req, res) => {
 	);
 
 	let layoutTypeById: StringDict = {};
-	logger.debug('layout=' + JSON.stringify(layout));
+	logger.trace('layout=' + JSON.stringify(layout));
 	for (let property in layout) {
 		if (layout.hasOwnProperty(property)) {
 			let thisLayoutItem = layout[property];
 			if (typeof thisLayoutItem.id === 'string') {
-				logger.debug(thisLayoutItem.id + ' is a ' + thisLayoutItem.type);
+				logger.trace(thisLayoutItem.id + ' is a ' + thisLayoutItem.type);
 				layoutTypeById[thisLayoutItem.id] = thisLayoutItem.type;
 			}
 		}
