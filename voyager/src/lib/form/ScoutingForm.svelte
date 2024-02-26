@@ -1,14 +1,13 @@
 <script lang="ts">
 	import Checkbox from './Checkbox.svelte';
 	import Counter from './Counter.svelte';
-	import Slider from './Slider.svelte';
 	import Multiselect from './Multiselect.svelte';
+	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
-	import { createEventDispatcher } from 'svelte';
 
-	// import type { AnyDict } from 'scoutradioz-types';
 	import type { LayoutField } from '$lib/types';
-
+	import { onMount } from 'svelte';
+	
 	export let layout: LayoutField[];
 	export let teamNumber: number;
 	layout.map((item) => {
@@ -18,8 +17,6 @@
 	export let formData: {
 		[key: string]: unknown;
 	} = {};
-	export let allDefaultValues: boolean;
-	$: allDefaultValues = Object.values(defaultValuesMap).every((val) => val === true);
 
 	let defaultValuesMap: { [key: string]: boolean } = {};
 </script>

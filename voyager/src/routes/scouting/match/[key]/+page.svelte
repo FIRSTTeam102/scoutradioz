@@ -3,7 +3,12 @@
 	import { encodeOneMatchScoutingResult } from '$lib/compression';
 	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
 	import { msg } from '$lib/i18n';
-	import db from '$lib/localDB';
+	import db, {
+		type MatchScoutingLocal,
+		type ScouterRecordLocal,
+		type TeamLocal,
+		type str
+	} from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	import { canAutoSync } from '$lib/stores';
@@ -15,6 +20,7 @@
 	import type { BulkWriteResult } from 'mongodb';
 	import type { PageData } from './$types';
 	import { classMap } from '@smui/common/internal';
+	import type { Layout } from 'scoutradioz-types';
 
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 	import Button, { Icon, Label } from '@smui/button';
@@ -34,29 +40,93 @@
 	const logger = getLogger('scouting/match/form');
 
 	let bottomAppBar: BottomAppBar;
-
 	let allDefaultValues: boolean;
+	let matchScoutingEntry: MatchScoutingLocal;
+	let nextAssignment: MatchScoutingLocal | undefined;
+	let formData: MatchScoutingLocal['data'];
+	let team: TeamLocal;
+	let layout: str<Layout>[];
+	let hasUpcomingBreak: boolean;
 
 	$: scouterRecord = {
 		id: data.user_id,
 		name: data.user_name
-	};
+	} as ScouterRecordLocal;
+
+	let loading = true;
+	$: if (data.key) loadData(data.key);
+
+	async function loadData(key: string) {
+		logger.info('loadData running!');
+		loading = true;
+		qrDialogOpen = false;
+		const team_key = key.split('_')[2];
+
+		const layoutDb = await db.layout
+			.where({
+				org_key: data.org_key,
+				year: data.event.year,
+				form_type: 'matchscouting'
+			})
+			.toArray();
+
+		const matchScoutingEntryDb = await db.matchscouting
+			.where({ match_team_key: key })
+			.and((asg) => asg.org_key === data.org_key)
+			.first();
+
+		if (!matchScoutingEntryDb)
+			throw new Error(`Match scouting assignment not found for key ${key}!`);
+
+		const teamDb = await db.teams.where('key').equals(team_key).first();
+
+		if (!teamDb) throw new Error(`Team info not found for key ${team_key}!`);
+
+		logger.debug(
+			` event_key=${data.event_key} org_key=${data.org_key} user_id=${data.user_id}, match_mumber=${matchScoutingEntryDb.match_number}`
+		);
+
+		// This user's next scouting assignment.
+		const nextAssignmentsDb = await db.matchscouting
+			.where({ event_key: data.event_key, org_key: data.org_key })
+			.and(
+				(asg) =>
+					asg.match_number > matchScoutingEntryDb.match_number &&
+					asg.assigned_scorer?.id === data.user_id
+			)
+			.sortBy('match_number');
+		const nextAssignmentDb = nextAssignmentsDb[0];
+		logger.debug('nextAssignment:', nextAssignmentDb);
+
+		// Whether their next assignment is the next match or if they have a break.
+		hasUpcomingBreak = nextAssignmentDb?.match_number === matchScoutingEntryDb.match_number + 1;
+		matchScoutingEntry = matchScoutingEntryDb;
+		nextAssignment = nextAssignmentDb;
+		formData = matchScoutingEntry.data;
+		team = teamDb;
+		layout = layoutDb;
+		logger.info('loadData done! setting loading = false');
+		loading = false;
+	}
 
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
 	function onFormChange() {
 		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
-		db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-			data: allDefaultValues ? undefined : data.matchScoutingEntry.data,
+		db.matchscouting.update(matchScoutingEntry.match_team_key, {
+			// 2024-02-25 JL: disabled setting data to undefined - hopefully shouldn't break other logic cuz completed is marked as false
+			// data: allDefaultValues ? undefined : formData,
+			actual_scorer: scouterRecord,
 			synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
-			completed: false, // Additionally, if it's been changed since the last time the done button is pressed, mark it as not completed
-			actual_scorer: scouterRecord
+			completed: false // Additionally, if it's been changed since the last time the done button is pressed, mark it as not completed
 		});
 	}
 
 	let bottomBarActions: NavBarItem[] = [
 		// Discard
 		{
+			label: msg('Discard'),
+			icon: 'delete',
 			onClick: async () => {
 				// TODO: use nice dialog instead of confirm()
 				if (
@@ -64,46 +134,46 @@
 						'Really reset the data from this match? (The changes will only be local; this action will not delete data on the server if it exists)'
 					)
 				) {
-					logger.info(`Discarding form data from match ${data.matchScoutingEntry.match_team_key}`);
-					await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
+					logger.info(`Discarding form data from match ${matchScoutingEntry.match_team_key}`);
+					await db.matchscouting.update(matchScoutingEntry.match_team_key, {
 						data: undefined,
 						actual_scorer: undefined,
 						synced: false,
 						completed: false,
-						history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name)
+						history: getNewSubmissionHistory(matchScoutingEntry, data.user._id, data.user.name)
 					});
 					goto('/scouting/match');
 				}
-			},
-			label: msg('Discard'),
-			icon: 'delete'
+			}
 		},
 		// Done
 		{
+			label: msg('Done'),
+			icon: 'done',
 			onClick: async () => {
 				if (!data.user_id || !data.user_name) {
 					throw logger.error('Not logged in! This should have been handled in +page.ts');
 				}
 				logger.info(
-					`Saving actual_scorer for match acouting key ${data.matchScoutingEntry.match_team_key}`
+					`Saving actual_scorer for match acouting key ${matchScoutingEntry.match_team_key}`
 				);
 				// Intentional design decision: Write data to the local db when they hit the check/done button even if
 				// 	the data are at defaults, because in cases where a robot no-shows, some orgs might not have
 				// 	checkboxes like no-show / died during match, so some orgs might accept empty forms
-				await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
+				await db.matchscouting.update(matchScoutingEntry.match_team_key, {
 					actual_scorer: {
 						id: data.user_id,
 						name: data.user_name
 					},
-					data: data.matchScoutingEntry.data,
+					data: formData,
 					completed: true,
 					synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
-					history: getNewSubmissionHistory(data.matchScoutingEntry, data.user._id, data.user.name)
+					history: getNewSubmissionHistory(matchScoutingEntry, data.user._id, data.user.name)
 				});
 
 				let entry = await db.matchscouting
 					.where('match_team_key')
-					.equals(data.matchScoutingEntry.match_team_key)
+					.equals(matchScoutingEntry.match_team_key)
 					.first();
 				if (!entry) return;
 
@@ -122,7 +192,7 @@
 						logger.info('bulkWriteResult: ', bulkWriteResult);
 						// If submitted successfully, mark this local match scouting entry as synced
 						if (bulkWriteResult.ok) {
-							await db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
+							await db.matchscouting.update(matchScoutingEntry.match_team_key, {
 								synced: true
 							});
 							resolve(bulkWriteResult);
@@ -144,134 +214,139 @@
 				}
 				base64Data = encodeOneMatchScoutingResult(entry);
 				qrDialogOpen = true;
-			},
-			label: msg('Done'),
-			icon: 'done'
+			}
 		}
 	];
 </script>
 
-<div class="grid mt-4">
-	<Card
-		padded
-		class={classMap({
-			'place-self-center': true,
-			'bg-red-600': data.matchScoutingEntry.alliance === 'red',
-			'bg-blue-600': data.matchScoutingEntry.alliance === 'blue',
-		})}
-	>
-		<h2>
-			{msg('scouting.matchHeading', {
-				match: data.matchScoutingEntry.match_number,
-				team: data.matchScoutingEntry.team_key.substring(3)
+<!-- We have to make sure matchScoutingEntry and team have loaded before allowing the html to load. -->
+<!-- Note: the reason I didn't do {#if loading === false} is because I think it would destroy and recreate
+	the Svelte components while loading === true, which is not necessary -->
+{#if matchScoutingEntry && team}
+	<div class="grid mt-4">
+		<Card
+			padded
+			class={classMap({
+				'place-self-center': true,
+				'bg-red-600': matchScoutingEntry.alliance === 'red',
+				'bg-blue-600': matchScoutingEntry.alliance === 'blue'
 			})}
-		</h2>
-		<s1>
-			{#if data.team.city && (data.team.state_prov || data.team.country)}
-				{@html msg('scouting.subheading', {
-					team: data.team.nickname,
-					city: data.team.city,
-					state: data.team.state_prov || data.team.country || ''
+		>
+			<h2>
+				{msg('scouting.matchHeading', {
+					match: matchScoutingEntry.match_number,
+					team: matchScoutingEntry.team_key.substring(3)
 				})}
-			{:else}
-				{data.team.nickname}
-			{/if}
-		</s1>
-	</Card>
-</div>
-<ScoutingForm
-	bind:allDefaultValues
-	layout={data.layout}
-	bind:formData={data.matchScoutingEntry.data}
-	teamNumber={data.team.team_number}
-	on:change={onFormChange}
-/>
-
-<Dialog bind:open={qrDialogOpen} aria-labelledby="simple-title" aria-describedby="simple-content">
-	<Header>
-		<Title
-			>{msg('reports.match', {
-				level: msg(`matchType.${matchKeyToCompLevel(data.matchScoutingEntry.match_key)}`),
-				number: data.matchScoutingEntry.match_number
-			})}
-			<br />
-			{msg('alliance.red')} - {msg('scouting.pitHeading', {
-				team: data.matchScoutingEntry.team_key.substring(3)
-			})}
-		</Title>
-	</Header>
-	<Content class="grid grid-cols-1 gap-2">
-		<div>
-			{msg('scouting.completedBy', {
-				user:
-					data.user_name ||
-					'Unknown' /* JL note: user_name should not be undefined b/c +layout.ts checks for it */
-			})}
-		</div>
-		{#await base64Data}
-			<LinearProgress indeterminate />
-		{:then resolvedData}
-			<QrCodeDisplay data={resolvedData} />
-		{/await}
-		<Card variant="outlined" class="flex-row items-center p-2">
-			{#if cloudUploadPromise}
-				{#await cloudUploadPromise}
-					<CircularProgress indeterminate style="width: 1.5em; height: 1.5em; margin: 8px;" />
-					{msg('scouting.dataUploadingToCloud')}
-				{:then}
-					<i class="material-icons sameSizeAsCheckbox">done</i>
-					{msg('scouting.dataUploadedToCloud')}
-				{/await}
-			{:else}
-				<i class="material-icons sameSizeAsCheckbox">cloud_off</i>
-				{msg('scouting.dataSavedOffline')}
-			{/if}
-		</Card>
-		<FormField class="pl-2 flex-row justify-center">
-			<Checkbox
-				bind:checked={scannedByScoutingLead}
-				on:change={() => {
-					// JL TODO: Maybe add syncedToCloud boolean as another check to determine whether to set synced=false when checkbox unchecked
-					logger.debug(`Updating db entry synced=${scannedByScoutingLead}`);
-					db.matchscouting.update(data.matchScoutingEntry.match_team_key, {
-						synced: scannedByScoutingLead
-					});
-				}}
-			/>
-			<span slot="label" class="py-4">{msg('scouting.scannedByScoutingLead')}</span>
-		</FormField>
-	</Content>
-	<Actions class="grid grid-cols-2">
-		<!-- Back to list link -->
-		<Button href="/scouting/match">
-			<Icon class="material-icons">done</Icon>
-			<Label>{msg('scouting.backToList')}</Label>
-		</Button>
-		<!-- Next assignment button -->
-		{#if data.nextAssignment}
-			<Button
-				on:click={() => {
-					if (data.hasUpcomingBreak) {
-					}
-					// JL TODO: check whether I should set cloudUploadPromise = undefined
-					goto(`/scouting/match/${data.nextAssignment.match_team_key}`, { invalidateAll: true });
-				}}
-			>
-				<Icon class="material-icons">navigate_next</Icon>
-				<Label
-					>{msg('scouting.nextAssignment', {
-						typeShort: msg(`matchTypeShort.${matchKeyToCompLevel(data.nextAssignment.match_key)}`),
-						number: data.nextAssignment.match_number,
-						team: data.nextAssignment.team_key.substring(3)
+			</h2>
+			<s1>
+				{#if team.city && (team.state_prov || team.country)}
+					{@html msg('scouting.subheading', {
+						team: team.nickname,
+						city: team.city,
+						state: team.state_prov || team.country || ''
 					})}
-				</Label>
-			</Button>
-		{:else}
-			<Button disabled>
-				<Label>{msg('scouting.noUpcomingAssignments')}</Label>
-			</Button>
+				{:else}
+					{team.nickname}
+				{/if}
+			</s1>
+		</Card>
+	</div>
+	<!-- Destroy and recreate the ScoutingForm whenever the match-team key changes -->
+	{#key data.key}
+		<!-- There's a few milliseconds where formData and team are not defined while the data is loading, 
+			so we need to only create the ScoutingForm when loading is set to false -->
+		{#if loading === false}
+			<ScoutingForm {layout} bind:formData teamNumber={team.team_number} on:change={onFormChange} />
 		{/if}
-	</Actions>
-</Dialog>
+	{/key}
 
-<BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />
+	<Dialog bind:open={qrDialogOpen} aria-labelledby="simple-title" aria-describedby="simple-content">
+		<Header>
+			<Title
+				>{msg('reports.match', {
+					level: msg(`matchType.${matchKeyToCompLevel(matchScoutingEntry.match_key)}`),
+					number: matchScoutingEntry.match_number
+				})}
+				<br />
+				{msg('alliance.red')} - {msg('scouting.pitHeading', {
+					team: matchScoutingEntry.team_key.substring(3)
+				})}
+			</Title>
+		</Header>
+		<Content class="grid grid-cols-1 gap-2">
+			<div>
+				{msg('scouting.completedBy', {
+					user:
+						data.user_name ||
+						'Unknown' /* JL note: user_name should not be undefined b/c +layout.ts checks for it */
+				})}
+			</div>
+			{#await base64Data}
+				<LinearProgress indeterminate />
+			{:then resolvedData}
+				<QrCodeDisplay data={resolvedData} />
+			{/await}
+			<Card variant="outlined" class="flex-row items-center p-2">
+				{#if cloudUploadPromise}
+					{#await cloudUploadPromise}
+						<CircularProgress indeterminate style="width: 1.5em; height: 1.5em; margin: 8px;" />
+						{msg('scouting.dataUploadingToCloud')}
+					{:then}
+						<i class="material-icons sameSizeAsCheckbox">done</i>
+						{msg('scouting.dataUploadedToCloud')}
+					{/await}
+				{:else}
+					<i class="material-icons sameSizeAsCheckbox">cloud_off</i>
+					{msg('scouting.dataSavedOffline')}
+				{/if}
+			</Card>
+			<FormField class="pl-2 flex-row justify-center">
+				<Checkbox
+					bind:checked={scannedByScoutingLead}
+					on:change={() => {
+						// JL TODO: Maybe add syncedToCloud boolean as another check to determine whether to set synced=false when checkbox unchecked
+						logger.debug(`Updating db entry synced=${scannedByScoutingLead}`);
+						db.matchscouting.update(matchScoutingEntry.match_team_key, {
+							synced: scannedByScoutingLead
+						});
+					}}
+				/>
+				<span slot="label" class="py-4">{msg('scouting.scannedByScoutingLead')}</span>
+			</FormField>
+		</Content>
+		<Actions class="grid grid-cols-2">
+			<!-- Back to list link -->
+			<Button href="/scouting/match">
+				<Icon class="material-icons">done</Icon>
+				<Label>{msg('scouting.backToList')}</Label>
+			</Button>
+			<!-- Next assignment button -->
+			{#if nextAssignment}
+				<Button
+					on:click={() => {
+						if (!nextAssignment) throw new Error('nextAssignment undefined on click handler!');
+						if (hasUpcomingBreak) {
+						}
+						// JL TODO: check whether I should set cloudUploadPromise = undefined
+						goto(`/scouting/match/${nextAssignment.match_team_key}`, { invalidateAll: true });
+					}}
+				>
+					<Icon class="material-icons">navigate_next</Icon>
+					<Label
+						>{msg('scouting.nextAssignment', {
+							typeShort: msg(`matchTypeShort.${matchKeyToCompLevel(nextAssignment.match_key)}`),
+							number: nextAssignment.match_number,
+							team: nextAssignment.team_key.substring(3)
+						})}
+					</Label>
+				</Button>
+			{:else}
+				<Button disabled>
+					<Label>{msg('scouting.noUpcomingAssignments')}</Label>
+				</Button>
+			{/if}
+		</Actions>
+	</Dialog>
+
+	<BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />
+{/if}
