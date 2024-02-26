@@ -102,7 +102,9 @@
 				"selectorg": "Select an organization"
 			},
 			"help": "Need help? Check our wiki!"
-		}
+		},
+		"updateAvailable": "Update available. Click to reload Voyager and install the update.",
+		"justUpdated": "Scoutradioz Voyager has updated successfully."
 	},
 	"home": {
 		"title": "Home",

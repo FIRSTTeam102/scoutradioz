@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { EventOperations, FormLayoutOperations, LightUserOperations, MatchOperations, MatchScoutingOperations, PitScoutingOperations, TeamOperations } from '$lib/DBOperations';
+	import {
+		EventOperations,
+		FormLayoutOperations,
+		LightUserOperations,
+		MatchOperations,
+		MatchScoutingOperations,
+		PitScoutingOperations,
+		TeamOperations
+	} from '$lib/DBOperations';
 	import db, {
 		type LightMatch,
 		type MatchScoutingLocal,
@@ -169,7 +177,7 @@
 					return;
 				pitscouting = await pitCol.toArray();
 			} else {
-				pitscouting = await pitCol.and((pit) => pit.synced === false).toArray();
+				pitscouting = await pitCol.and((pit) => (pit.synced === false && pit.completed === true)).toArray();
 			}
 
 			if (pitscouting.length === 0)
@@ -218,7 +226,7 @@
 					return;
 				matchscouting = await matchCol.toArray();
 			} else {
-				matchscouting = await matchCol.and((match) => match.synced === false).toArray();
+				matchscouting = await matchCol.and((match) => (match.synced === false && match.completed === true)).toArray();
 			}
 
 			if (matchscouting.length === 0)
@@ -252,17 +260,17 @@
 		// Download current event info, including teams
 		await EventOperations.download();
 		await TeamOperations.download();
-		
+
 		// Download the org's users
 		await LightUserOperations.download(org_key);
 
 		// Download the org's full info
 		const org = await fetchJSON<str<Org>>(`/api/orgs/${org_key}`);
 		await db.orgs.put(org);
-		
+
 		// Include the form layout download in this action
 		await FormLayoutOperations.download();
-		
+
 		// since event_key can be updated after org is downloaded, force a reload
 		await invalidateAll();
 	}
@@ -276,7 +284,7 @@
 		snackbar.error(errorMessage);
 	}
 
-	async function wrap(func: () => void|Promise<void>) {
+	async function wrap(func: () => void | Promise<void>) {
 		try {
 			console.log('autoplay begin');
 			await refreshButtonAnimation.autoplay(func);
@@ -302,7 +310,8 @@
 					{$orgs} orgs in db
 				</p>
 				<p>
-					{$matchscoutingFormElements} match form layout items, {$pitscoutingFormElements} pit form layout items
+					{$matchscoutingFormElements} match form layout items, {$pitscoutingFormElements} pit form layout
+					items
 				</p>
 			</Content>
 			<CActions>
@@ -330,17 +339,11 @@
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
-					<Button
-						variant="outlined"
-						on:click={() => wrap(MatchOperations.download)}
-					>
+					<Button variant="outlined" on:click={() => wrap(MatchOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download matches</BLabel>
 					</Button>
-					<Button
-						variant="outlined"
-						on:click={() => wrap(uploadMatchScouting)}
-					>
+					<Button variant="outlined" on:click={() => wrap(uploadMatchScouting)}>
 						<Icon class="material-icons">upload</Icon>
 						<BLabel>Upload data</BLabel>
 					</Button>
@@ -356,17 +359,11 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button
-						variant="outlined"
-						on:click={() => wrap(PitScoutingOperations.download)}
-					>
+					<Button variant="outlined" on:click={() => wrap(PitScoutingOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
-					<Button
-						variant="outlined"
-						on:click={() => wrap(uploadPitScouting)}
-					>
+					<Button variant="outlined" on:click={() => wrap(uploadPitScouting)}>
 						<Icon class="material-icons">upload</Icon>
 						<BLabel>Upload data</BLabel>
 					</Button>

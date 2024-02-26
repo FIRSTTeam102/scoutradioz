@@ -11,6 +11,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"experimentalDecorators": true,
+		"lib": ["DOM", "WebWorker", "ES2020"]
 	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//

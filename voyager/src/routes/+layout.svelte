@@ -15,7 +15,7 @@
 		Text as LText
 	} from '@smui/list';
 	import Tooltip, { Wrapper } from '@smui/tooltip';
-	import TopAppBar, { Row, Section, Title as TABTitle,  } from '@smui/top-app-bar';
+	import TopAppBar, { Row, Section, Title as TABTitle } from '@smui/top-app-bar';
 
 	import { afterNavigate } from '$app/navigation';
 	import { assets } from '$app/paths';
@@ -24,7 +24,7 @@
 	import IconButton from '@smui/icon-button';
 	import { getContext, onMount, setContext } from 'svelte';
 	import { writable, type Writable } from 'svelte/store';
-	
+
 	import LanguagePicker from '$lib/LanguagePicker.svelte';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { msg } from '$lib/i18n';
@@ -32,10 +32,13 @@
 	import '../theme/extras.scss';
 	import type { LayoutData } from './$types';
 	import SvelteMarkdown from 'svelte-markdown';
+	import { getLogger } from '$lib/logger';
 
 	afterNavigate(() => (menuOpen = false));
-	
+
 	export let data: LayoutData;
+
+	const logger = getLogger('layout');
 
 	let topAppBar: TopAppBar;
 	let headerBar: HTMLDivElement;
@@ -92,11 +95,9 @@
 			this.play();
 			try {
 				await cb();
-			}
-			catch (err) {
+			} catch (err) {
 				throw err; // Propagate the error
-			}
-			finally {
+			} finally {
 				this.stop();
 			}
 		}
@@ -108,7 +109,7 @@
 	//  fully appearing when the page is *just barely* taller than 1vh
 	let lastScrollTop = 0;
 	let headerBarHidden = false;
-	
+
 	// TODO title bar
 	// let title: Writable<string|undefined> = writable(undefined);
 	// setContext('title', title);
@@ -131,24 +132,158 @@
 		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
 		lastScrollTop = scrollTop;
 	};
-	
-	onMount(() => {
-		alertStore.subscribe(value => {
+
+	let updateAvailable = false;
+	let waitingWorker: ServiceWorker | null = null;
+
+	onMount(async () => {
+		alertStore.subscribe((value) => {
 			if (value) {
 				snackbar.open(value.message, undefined, undefined, value.type);
 				alertStore.set(null);
 			}
-		})
-	})
+		});
+
+		if ('serviceWorker' in navigator) {
+			logger.debug('Registering serviceworker');
+			navigator.serviceWorker.addEventListener('message', (event) => {
+				if (!event.data) return;
+				// Only reload the page if we've marked an update as being available
+				if (event.data.msg === 'UPDATE_DONE') {
+					logger.warn('Update done!');
+					if (!updateAvailable) return;
+					sessionStorage.setItem('justUpdated', 'true'); // store a flag for a message to show once the page reloads
+					location.reload();
+				}
+			});
+			const registration = await navigator.serviceWorker.register('/service-worker.js', {
+				type: 'module'
+			});
+
+			// If we have a currently active service worker AND one that's waiting for activation, then we can say that an update is available
+			if (registration.waiting && registration.active) {
+				waitingWorker = registration.waiting;
+				updateAvailable = true;
+			}
+
+			registration.onupdatefound = () => {
+				logger.warn(
+					`updatefound event firing! installing=${!!registration.installing}, waiting=${!!registration.waiting}`
+				);
+				// Only show an update available if there's currently a service worker
+				if (registration.installing && registration.active) {
+					let installingWorker = registration.installing;
+					installingWorker.onstatechange = () => {
+						if (installingWorker.state === 'installed') {
+							logger.warn('New worker is waiting to be activated!');
+							updateAvailable = true;
+							waitingWorker = installingWorker;
+						}
+					};
+				}
+			};
+		} else logger.error('serviceWorker not found!');
+
+		// show a snackbar if we just got an update
+		if (sessionStorage.getItem('justUpdated') === 'true') {
+			snackbar.open(msg('layout.justUpdated'));
+			sessionStorage.removeItem('justUpdated');
+		}
+	});
 </script>
 
 <svelte:window on:scroll={onScroll} />
+
+<div
+	class="header-bar"
+	bind:this={headerBar}
+	class:slidAway={headerBarHidden}
+	bind:clientHeight={headerBarHeight}
+>
+	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
+		<Row>
+			<Section>
+				<IconButton
+					class="material-icons"
+					aria-label="Open menu"
+					on:click={() => {
+						menuOpen = !menuOpen;
+					}}>menu</IconButton
+				>
+				<!-- {#if $title}
+					<TABTitle><SvelteMarkdown source={$title} /></TABTitle>
+				{:else} -->
+				<a href="/" class="header-logo">
+					<img
+						src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`}
+						alt="Scoutradioz logo"
+					/>
+				</a>
+				<!-- {/if} -->
+			</Section>
+			<Section align="end" toolbar>
+				{#if updateAvailable}
+					<Wrapper>
+						<IconButton
+							class="material-icons"
+							on:click={() => {
+								if (!waitingWorker) return snackbar.error('waitingReg not defined!');
+								logger.info('Posting SKIP_WAITING message to service worker!');
+								waitingWorker.postMessage({ msg: 'SKIP_WAITING' });
+							}}>system_update</IconButton
+						>
+						<Tooltip>{msg('layout.updateAvailable')}</Tooltip>
+					</Wrapper>
+				{/if}
+				{#if $refreshContext.supported}
+					<Wrapper>
+						<IconButton
+							class={classMap({
+								'material-icons': true,
+								refreshButton: true,
+								spinning: refreshButtonSpinning
+							})}
+							aria-label="Sync"
+							on:click={async () => {
+								if (!$refreshContext.onClick) return;
+								refreshButtonAnimationContext.play();
+								await $refreshContext.onClick();
+								refreshButtonAnimationContext.stop();
+							}}
+							disabled={!$deviceOnline || refreshButtonSpinning}
+						>
+							{#if $deviceOnline}
+								sync
+							{:else}
+								sync_disabled
+							{/if}
+						</IconButton>
+						<Tooltip>{$refreshContext.tooltip || ''}</Tooltip>
+					</Wrapper>
+				{/if}
+				<!-- <Wrapper> -->
+				<!-- 	<IconButton class="material-icons" aria-label="Share" on:click={() => share()} -->
+				<!-- 		>qr_code_scanner</IconButton -->
+				<!-- 	> -->
+				<!-- 	<Tooltip>Share</Tooltip> -->
+				<!-- </Wrapper> -->
+			</Section>
+		</Row>
+	</TopAppBar>
+</div>
+
+<div id="page">
+	<slot />
+</div>
+
+<SimpleSnackbar bind:this={snackbar} />
+<LanguagePicker bind:this={languagePicker} />
 
 <!-- modal is better but it won't close, so dismissible with position:fixed works -->
 <Drawer variant="modal" bind:open={menuOpen} fixed={true}>
 	<DHeader>
 		{#if data.user && data.org}
-			<DTitle>{msg('hello.name', {name: data.user.name})}</DTitle>
+			<DTitle>{msg('hello.name', { name: data.user.name })}</DTitle>
 			<DSubtitle>{data.org.nickname}</DSubtitle>
 		{:else}
 			<DTitle>{msg('index.welcome')}</DTitle>
@@ -174,7 +309,7 @@
 					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
 					<LText>Pick user</LText>
 				</LItem>
-			<!-- Not logged in to an org -->
+				<!-- Not logged in to an org -->
 			{:else}
 				<LItem href="/login">
 					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
@@ -185,10 +320,12 @@
 				<LGraphic class="material-icons" aria-hidden="true">settings</LGraphic>
 				<LText>{msg('user.preferences.title')}</LText>
 			</LItem>
-			<LItem on:click={() => {
-				menuOpen = false;
-				languagePicker.open();
-			}}>
+			<LItem
+				on:click={() => {
+					menuOpen = false;
+					languagePicker.open();
+				}}
+			>
 				<LGraphic class="material-icons" aria-hidden="true">language</LGraphic>
 				<LText>{msg('language')}</LText>
 			</LItem>
@@ -233,80 +370,6 @@
 </Drawer>
 
 <Scrim />
-
-<div
-	class="header-bar"
-	bind:this={headerBar}
-	class:slidAway={headerBarHidden}
-	bind:clientHeight={headerBarHeight}
->
-	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
-		<Row>
-			<Section>
-				<IconButton
-					class="material-icons"
-					aria-label="Open menu"
-					on:click={() => {
-						menuOpen = !menuOpen;
-					}}>menu</IconButton
-				>
-				<!-- {#if $title}
-					<TABTitle><SvelteMarkdown source={$title} /></TABTitle>
-				{:else} -->
-				<a href="/" class="header-logo">
-					<img
-						src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`}
-						alt="Scoutradioz logo"
-					/>
-				</a>
-				<!-- {/if} -->
-			</Section>
-			<Section align="end" toolbar>
-				{#if $refreshContext.supported}
-					<Wrapper>
-						<IconButton
-							class={classMap({
-								'material-icons': true,
-								refreshButton: true,
-								spinning: refreshButtonSpinning
-							})}
-							aria-label="Sync"
-							on:click={async () => {
-								if (!$refreshContext.onClick) return;
-								refreshButtonAnimationContext.play();
-								await $refreshContext.onClick();
-								refreshButtonAnimationContext.stop();
-							}}
-							disabled={!$deviceOnline || refreshButtonSpinning}
-						>
-							{#if $deviceOnline}
-								sync
-							{:else}
-								sync_disabled
-							{/if}
-						</IconButton>
-						{#if $refreshContext.tooltip}
-							<Tooltip>{$refreshContext.tooltip}</Tooltip>
-						{/if}
-					</Wrapper>
-				{/if}
-				<!-- <Wrapper> -->
-				<!-- 	<IconButton class="material-icons" aria-label="Share" on:click={() => share()} -->
-				<!-- 		>qr_code_scanner</IconButton -->
-				<!-- 	> -->
-				<!-- 	<Tooltip>Share</Tooltip> -->
-				<!-- </Wrapper> -->
-			</Section>
-		</Row>
-	</TopAppBar>
-</div>
-
-<div id="page">
-	<slot />
-</div>
-
-<SimpleSnackbar bind:this={snackbar} />
-<LanguagePicker bind:this={languagePicker} />
 
 <style lang="scss">
 	/* Hide everything above this component. */
