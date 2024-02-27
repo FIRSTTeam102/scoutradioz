@@ -169,8 +169,6 @@ router.post('/image', upload.single('image'), wrap(async (req, res, next) => {
 		const uploadTime = Date.now();
 		const s3Key = mainFile.key;
 		
-		logger.debug('userId:', userId);
-		
 		const user = await utilities.findOne('users', {_id: userId});
 		var userName;
 		
