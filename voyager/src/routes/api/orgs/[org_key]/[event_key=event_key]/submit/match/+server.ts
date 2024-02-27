@@ -5,11 +5,23 @@ import { error, json } from '@sveltejs/kit';
 import { type AnyBulkWriteOperation } from 'mongodb';
 import type { MatchScouting, StringDict } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
+import httpAssert from '$lib/httpAssert';
+import * as helpers from 'scoutradioz-helpers';
+const matchDataHelper = helpers.default.matchData;
 
-export const POST: RequestHandler = async ({ request, params, locals, cookies, getClientAddress }) => {
+matchDataHelper.config(utilities);
+
+export const POST: RequestHandler = async ({
+	request,
+	params,
+	locals,
+	cookies,
+	getClientAddress
+}) => {
 	validateUserOrg(locals, params.org_key);
 	let data = (await request.json()) as MatchScoutingLocal[];
-	
+	httpAssert(Array.isArray(data), 400, 'Submitted data is not an array');
+
 	// TODO: (important) user authentication
 
 	// JL note: I was writing this thing out and then realized that we don't (currently) want
@@ -44,12 +56,70 @@ export const POST: RequestHandler = async ({ request, params, locals, cookies, g
 
 	let bulkWriteOp: AnyBulkWriteOperation<MatchScouting>[] = [];
 
+	const event = await utilities.findOne(
+		'events',
+		{ key: params.event_key },
+		{},
+		{ allowCache: true }
+	);
+	httpAssert(event, 404, `Event ${params.event_key} not found`);
+
+	const layout = await utilities.find(
+		'layout',
+		{ org_key: params.org_key, year: event.year, form_type: 'matchscouting' },
+		{ sort: { order: 1 } },
+		{ allowCache: true }
+	);
+
+	// Cache the type of each item in the layout for type checking/conversions
+	let layoutTypeById: StringDict = {};
+	for (let layoutItem of layout) {
+		if (typeof layoutItem.id === 'string') {
+			console.debug(`${layoutItem.id} is a ${layoutItem.type}`);
+			layoutTypeById[layoutItem.id] = layoutItem.type;
+		}
+	}
+
+	console.log(
+		`User ${locals.user?.name} from ${params.org_key} is submitting data from the following ${data.length} matches: `,
+		data.map((match) => match.match_number).join(',')
+	);
+
 	for (let localMatch of data) {
-		// TODO: verify that the user has access to push data for this org
-		const { event_key, org_key, actual_scorer, data, match_team_key } = localMatch;
+		let { event_key, org_key, actual_scorer, data, match_team_key, history } = localMatch;
+		if (!data) {
+			console.warn(`Match ${localMatch.match_team_key} does not have data in submission; ignoring and keeping data`);
+			continue;
+		}
+		// Verify authorization - params.org_key has been validated at the top of this route
+		httpAssert(
+			org_key === params.org_key,
+			401,
+			`You are authorized on org ${params.org_key} but you attempted to submit data for org ${org_key}!`
+		);
+		
+		console.debug('data(pre-modified)=', JSON.stringify(data));
+
+		for (let property in data) {
+			console.debug(property);
+			if (layoutTypeById.hasOwnProperty(property)) {
+				data[property] = matchDataHelper.fixDatumType(data[property], layoutTypeById[property]);
+			}
+			// TODO later: Reject submissions from devices with outdated JSON layout, but then we need to give them a way to fix that client-side
+			else console.warn(`Match has unexpected property ${property}!`);
+		}
+		console.debug('data(UPDATED:1)=', JSON.stringify(data));
+		console.log(matchDataHelper.fixDatumType, matchDataHelper.calculateDerivedMetrics);
+		data = await matchDataHelper.calculateDerivedMetrics(org_key, event.year, data);
+		console.debug('data(UPDATED:2)=', JSON.stringify(data));
+
 		if (actual_scorer) {
 			if (isNaN(actual_scorer.id) || typeof actual_scorer.id !== 'number') {
-				console.log(`ERROR: actual_scorer.id is not a number! actual_scorer=${JSON.stringify(actual_scorer)}, localMatch=${JSON.stringify(localMatch)}`);
+				console.log(
+					`ERROR: actual_scorer.id is not a number! actual_scorer=${JSON.stringify(
+						actual_scorer
+					)}, localMatch=${JSON.stringify(localMatch)}`
+				);
 				throw error(400, new Error('actual_scorer.id is not a number!'));
 			}
 			bulkWriteOp.push({
@@ -70,7 +140,7 @@ export const POST: RequestHandler = async ({ request, params, locals, cookies, g
 			updateOne: {
 				filter: { match_team_key, event_key, org_key },
 				update: {
-					$set: { data }
+					$set: { data, history }
 				}
 			}
 		});
@@ -78,59 +148,6 @@ export const POST: RequestHandler = async ({ request, params, locals, cookies, g
 		// 	look into node package ua-parser-js. ip can be found with getClientAddress() and useragent string can be found with request.headers.get('user-agent')
 	}
 	let writeResult = await utilities.bulkWrite('matchscouting', bulkWriteOp);
-	
+
 	return json(writeResult);
-};
-
-export const GET: RequestHandler = async ({ url, params }) => {
-	const onlyAssigned =
-		url.searchParams.get('onlyAssigned') !== null ? { assigned_scorer: { $ne: undefined } } : {};
-
-	let st = performance.now();
-
-	const event_key = params.event_key;
-	const org_key = params.org_key;
-
-	const currentEvent = await utilities.findOne('events', { key: event_key }, {}, {});
-
-	if (!currentEvent) throw error(404, new Error(`Event ${event_key} not found`));
-	if (!currentEvent.team_keys || currentEvent.team_keys.length === 0)
-		throw error(500, new Error(`Event ${event_key} list of teams is 0`));
-
-	const teamNames: StringDict = (
-		await utilities.find(
-			'teams',
-			{ key: { $in: currentEvent.team_keys } },
-			{ projection: { _id: 0, key: 1, nickname: 1 }, sort: { team_number: 1 } },
-			{ allowCache: true, maxCacheAge: 300 }
-		)
-	).reduce(
-		(obj: StringDict, item: typeof teamNames) => Object.assign(obj, { [item.key]: item.nickname }),
-		{}
-	);
-
-	let matchscouting = await utilities.find(
-		'matchscouting',
-		{
-			org_key,
-			event_key,
-			...onlyAssigned
-		},
-		{
-			// limit: 60,
-			sort: { time: 1, alliance: -1, team_key: 1 }
-		},
-		{ allowCache: true }
-	);
-
-	console.log(performance.now() - st);
-
-	let all = matchscouting.map((match) => {
-		return {
-			...match,
-			team_name: teamNames[match.team_key]
-		};
-	});
-
-	return json(all);
 };

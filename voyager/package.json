@@ -86,6 +86,7 @@
     "mongodb": "4.13.0",
     "oslo": "^1.0.3",
     "qrcode": "^1.5.3",
+    "scoutradioz-helpers": "../scoutradioz-helpers/",
     "scoutradioz-utilities": "../scoutradioz-utilities/",
     "ua-parser-js": "^1.0.37"
   }
