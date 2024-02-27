@@ -315,7 +315,9 @@
 					video: videoConstraints
 				});
 			} else {
-				snackbar.error('We were unable to start the camera. Is another app already using it, or does your device not have a camera?');
+				snackbar.error(
+					'We were unable to start the camera. Is another app already using it, or does your device not have a camera?'
+				);
 				throw err;
 			}
 		}
@@ -416,10 +418,11 @@
 	<!-- <div class="debug-info">{@html debugInfo}</div> -->
 	<canvas id="canvas" bind:this={canvas} />
 	{#if scanning}
-	<div id="wrongResolutionMsg">
-		If you can see this, it means we predicted the resolution of the video stream wrong. Please send
-		a screenshot to the Scoutradioz discord server with your OS version, device model, and browser.
-	</div>
+		<div id="wrongResolutionMsg">
+			If you can see this, it means we predicted the resolution of the video stream wrong (or you're
+			using Firefox). If you're not using Firefox, please send a screenshot to the Scoutradioz
+			discord server with your OS version, device model, and browser.
+		</div>
 	{/if}
 </div>
 
