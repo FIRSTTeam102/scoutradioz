@@ -192,6 +192,19 @@ class NavHelpers {
 				{
 					label: '!allianceselection.title',
 					href: '/dashboard/allianceselection',
+				},
+				{
+					label: '!home.formDemos',
+					submenu: [
+						{
+							label: '!home.matchFormDemo',
+							href: '/scouting/match?key=2024srdemo_qm99_frc999999&alliance=Blue'
+						},
+						{
+							label: '!home.pitFormDemo',
+							href: '/scouting/pit?team_key=frc999999'
+						},
+					]
 				}
 			]
 		},

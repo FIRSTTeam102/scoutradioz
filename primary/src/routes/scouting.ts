@@ -33,7 +33,9 @@ router.get('/match*', wrap(async (req, res) => {
 	let org_key = thisUser.org_key;
 	if (typeof match_team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidMatchKey')); // 2022-05-17 JL: Throw if they don't have a match key set in the url OR if they set two, making it an array
 	let teamKey = match_team_key.split('_')[2];
-	
+	// 2024-02-29, M.O'C: special case, we're going to handle "frc999999" for form demo purposes
+	const demoTeamKey = 'frc999999';
+
 	logger.debug(`match_team_key: ${match_team_key} alliance: ${alliance} user: ${thisUserName} teamKey=${teamKey}`);
 	
 	if (!match_team_key) {
@@ -72,8 +74,31 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	
 	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
-	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	
+	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
+	if (teamKey == demoTeamKey)
+		team = {
+			address: null,
+			city: 'DN', 
+			country: null,
+			gmaps_place_id: null,
+			gmaps_url: null,
+			key: 'frc999999',
+			lat: null,
+			lng: null,
+			location_name: null,
+			motto: null,
+			name: 'DNGN999999',
+			nickname: 'DNGN999999',
+			postal_code: null,
+			rookie_year: null,
+			school_name: null,
+			state_prov: 'GN',
+			team_number: 999999,
+			website: null
+		};
+
 	if (!team) throw new e.UserError(req.msg('scouting.invalidTeam', {team: teamKey}));
 
 	let allianceLocale = (alliance.toLowerCase().startsWith('b')) ? req.msg('alliance.blueShort') : req.msg('alliance.redShort');
@@ -290,6 +315,8 @@ router.get('/pit*', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 
 	let teamKey = req.query.team_key;
+	// 2024-02-29, M.O'C: special case, we're going to handle "frc999999" for form demo purposes
+	const demoTeamKey = 'frc999999';
 	
 	if (typeof teamKey !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
 		
@@ -310,7 +337,29 @@ router.get('/pit*', wrap(async (req, res) => {
 			
 	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
 	
-	const team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
+	if (teamKey == demoTeamKey)
+		team = {
+			address: null,
+			city: 'DN', 
+			country: null,
+			gmaps_place_id: null,
+			gmaps_url: null,
+			key: 'frc999999',
+			lat: null,
+			lng: null,
+			location_name: null,
+			motto: null,
+			name: 'DNGN999999',
+			nickname: 'DNGN999999',
+			postal_code: null,
+			rookie_year: null,
+			school_name: null,
+			state_prov: 'GN',
+			team_number: 999999,
+			website: null
+		};
 	
 	res.render('./scouting/pit', {
 		title: req.msg('scouting.pit'),

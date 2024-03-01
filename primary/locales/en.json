@@ -116,7 +116,10 @@
 		"scoutingDashboard": "Scouting dashboard",
 		"management": "Management",
 		"admin": "Admin",
-		"specifyTeam": "You must specify a team."
+		"specifyTeam": "You must specify a team.",
+		"formDemos": "Review the forms",
+		"matchFormDemo": "Match form",
+		"pitFormDemo": "Pit form"
 	},
 	"thankyou": {
 		"title": "Thank you!",
