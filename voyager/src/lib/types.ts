@@ -2,6 +2,7 @@ import type { Layout } from 'scoutradioz-types';
 import type { str } from '$lib/localDB';
 export declare type LayoutField = str<Layout>;
 import type SimpleSnackbar from './SimpleSnackbar.svelte';
+import type SimpleDialog from './SimpleDialog.svelte';
 import type { Writable } from 'svelte/store';
 
 /**
@@ -12,6 +13,10 @@ export type SnackbarContext = {
 	error: (...args: Parameters<SimpleSnackbar['error']>) => ReturnType<SimpleSnackbar['error']>,
 	close: (...args: Parameters<SimpleSnackbar['close']>) => ReturnType<SimpleSnackbar['close']>,
 }
+
+export type DialogContext = {
+	show: (...args: Parameters<SimpleDialog['show']>) => ReturnType<SimpleDialog['show']>,
+};
 
 /**
  * Control a contextual "refresh the contents of this page" button on the top bar.

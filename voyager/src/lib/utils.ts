@@ -1,5 +1,5 @@
 import { getContext, onDestroy, onMount } from "svelte";
-import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext } from "./types";
+import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext, DialogContext } from "./types";
 import type { ScouterHistoryRecord } from 'scoutradioz-types';
 import { sha1 } from "oslo/crypto";
 import { alertStore } from "./stores";
@@ -192,7 +192,8 @@ export function getPageLayoutContexts() {
 	const refreshButtonAnimation = getContext(
 		'refreshButtonAnimation'
 	) as RefreshButtonAnimationContext;
-	return { snackbar, refreshButton, refreshButtonAnimation };
+	const dialog = getContext('dialog') as DialogContext;
+	return { snackbar, refreshButton, refreshButtonAnimation, dialog };
 }
 
 /**

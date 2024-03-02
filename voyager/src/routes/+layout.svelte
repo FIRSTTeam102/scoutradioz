@@ -20,7 +20,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { assets } from '$app/paths';
 	import { alertStore, deviceOnline } from '$lib/stores';
-	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
+	import type { DialogContext, RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
 	import IconButton from '@smui/icon-button';
 	import { getContext, onMount, setContext } from 'svelte';
 	import { writable, type Writable } from 'svelte/store';
@@ -33,6 +33,7 @@
 	import type { LayoutData } from './$types';
 	import SvelteMarkdown from 'svelte-markdown';
 	import { getLogger } from '$lib/logger';
+	import SimpleDialog from '$lib/SimpleDialog.svelte';
 
 	afterNavigate(() => (menuOpen = false));
 
@@ -46,7 +47,17 @@
 	let headerBarHeight = NaN;
 
 	let snackbar: SimpleSnackbar;
+	let dialog: SimpleDialog;
 	let languagePicker: LanguagePicker;
+	
+	let dialogContext: DialogContext = {
+		show: (...args) => {
+			if (!dialog) throw new Error('Dialog not defined');
+			return dialog.open(...args);
+		}
+	}
+	
+	setContext('dialog', dialogContext);
 
 	let snackbarContext: SnackbarContext = {
 		open: (...args) => {
@@ -277,6 +288,7 @@
 </div>
 
 <SimpleSnackbar bind:this={snackbar} />
+<SimpleDialog bind:this={dialog} />
 <LanguagePicker bind:this={languagePicker} />
 
 <!-- modal is better but it won't close, so dismissible with position:fixed works -->
