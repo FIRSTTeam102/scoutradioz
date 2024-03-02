@@ -1,23 +1,17 @@
 import utilities from 'scoutradioz-utilities';
 import dbJSON from '$lib/../databases.json';
 import { env } from '$env/dynamic/private';
-import dotenv from 'dotenv';
 
 console.log(`Environment variables: TIER=${env.TIER}`);
-
-// hacky temporary fix 
-if (env.TIER) {
-	// JL note: also a dumb temporary fix i need to figure out a less janky solution
-	process.env.TIER = env.TIER;
-}
-else {
-	dotenv.config();
+if (!env.TIER) {
+	console.error('env.TIER not defined! Please edit voyager/.env and set the TIER environment variable (preferrably to "dev").');
+	process.exit(1);
 }
 
 let mongoClientOptions = {};
 // JL note: I find myself often forgetting to run mongod in the background. Setting a low 
 // 	server selection timeout will help remind me/us that the server is not running.
-if (process.env.TIER === 'dev') {
+if (env.TIER === 'dev') {
 	mongoClientOptions = {
 		connectTimeoutMS: 1000,
 		serverSelectionTimeoutMS: 1000,
@@ -38,6 +32,6 @@ utilities.config(dbJSON, {
 	schemasWithNumberIds: ['users'],
 });
 
-utilities.refreshTier();
+utilities.refreshTier(env.TIER);
 
 export default utilities;

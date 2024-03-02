@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "sst bind \"vite dev --host\"",
+    "dev": "vite dev --host",
     "build": "vite build",
     "preview": "sst bind vite preview",
     "smui-theme": "smui-theme compile static/smui.css -i src/theme",
