@@ -295,25 +295,41 @@
 				<LGraphic class="material-icons" aria-hidden="true">home</LGraphic>
 				<LText>{msg('home.title')}</LText>
 			</LItem>
-			<LItem href="/schedule">
+			<!-- <LItem href="/schedule">
 				<LGraphic class="material-icons" aria-hidden="true">calendar_month</LGraphic>
 				<LText>Schedule</LText>
-			</LItem>
+			</LItem> -->
 			<!-- If logged in to an org -->
 			{#if data.org}
-				<LItem href="/login/switch-org">
-					<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
-					<LText>{msg('layout.nav.user.switchorg')}</LText>
-				</LItem>
-				<LItem href="/login/pick-user">
-					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
-					<LText>Pick user</LText>
-				</LItem>
+				{#if $deviceOnline}
+					<LItem href="/login/switch-org">
+						<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
+						<LText>{msg('layout.nav.user.switchorg')}</LText>
+					</LItem>
+					<LItem href="/login/pick-user">
+						<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+						<LText>{msg('layout.nav.user.pickuser')}</LText>
+					</LItem>
+				{:else}
+					<LItem disabled>
+						<LGraphic class="material-icons unimportant" aria-hidden="true">logout</LGraphic>
+						<LText>{msg('layout.nav.user.switchorgoffline')}</LText>
+					</LItem>
+					<LItem disabled>
+						<LGraphic class="material-icons unimportant" aria-hidden="true">login</LGraphic>
+						<LText>{msg('layout.nav.user.pickuseroffline')}</LText>
+					</LItem>
+				{/if}
 				<!-- Not logged in to an org -->
-			{:else}
+			{:else if $deviceOnline}
 				<LItem href="/login">
 					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
 					<LText>{msg('layout.nav.user.selectorg')}</LText>
+				</LItem>
+			{:else}
+				<LItem disabled>
+					<LGraphic class="material-icons unimportant" aria-hidden="true">login</LGraphic>
+					<LText>{msg('layout.nav.user.selectorgoffline')}</LText>
 				</LItem>
 			{/if}
 			<LItem href="/preferences">
