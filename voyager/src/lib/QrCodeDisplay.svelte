@@ -37,6 +37,7 @@
 						},
 						(err) => {
 							if (err) {
+								logger.error(String(err));
 								snackbar.error(String(err));
 								clearCanvas();
 							}
