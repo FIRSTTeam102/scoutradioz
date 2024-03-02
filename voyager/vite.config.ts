@@ -16,6 +16,10 @@ if (process.env.NODE_ENV === 'production') {
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	optimizeDeps: {
+		// https://github.com/sveltejs/kit/issues/11793
+		include: ['@smui-extra/autocomplete', '@smui-extra/bottom-app-bar', '@smui/button', '@smui/card', '@smui/checkbox', '@smui/circular-progress', '@smui/common', '@smui/common/internal', '@smui/data-table', '@smui/dialog', '@smui/drawer', '@smui/fab', '@smui/form-field', '@smui/icon-button', '@smui/layout-grid', '@smui/linear-progress', '@smui/list', '@smui/paper', '@smui/ripple', '@smui/select', '@smui/slider', '@smui/snackbar', '@smui/switch', '@smui/tab', '@smui/tab-bar', '@smui/textfield', '@smui/textfield/helper-text', '@smui/tooltip', '@smui/top-app-bar', '@smui/touch-target', 'workbox-precaching', 'svelte-markdown', 'dexie', 'js-cookie', 'oslo/crypto', 'oslo/encoding', 'ua-parser-js', 'qrcode'],
+	},
 	define: {
 		'process.env.NODE_ENV': '"production"'
 	}
