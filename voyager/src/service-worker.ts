@@ -4,8 +4,9 @@ import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 
 declare const self: ServiceWorkerGlobalScope;
 
-// Filter out any paths with ".unused" in the path, e.g. IBM Plex Sans fonts that are not being used
-let filteredFiles = files.filter((path) => !path.match(/\.unused/g));
+// Filter out any files starting with a . or in folders starting with a ., i.e. marked as hidden
+// 	e.g. .unused folder containing unused font files
+let filteredFiles = files.filter((path) => !path.match(/\.\w+/g));
 
 const precache_list = [
 	'/', // Attention: might not be ideal for your use case - read more below.

@@ -4,78 +4,78 @@
 /* Regular */
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-Thin.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-Thin.woff2');
 	font-weight: 100;
 } */
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-ExtraLight.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-ExtraLight.woff2');
 	font-weight: 200;
 } */
 @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-Light.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-Light.woff2');
 	font-weight: 300;
 }
 @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-Regular.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-Regular.woff2');
 }
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-Medium.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-Medium.woff2');
 	font-weight: 500;
 } */
 @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-SemiBold.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-SemiBold.woff2');
 	font-weight: 700;
 }
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-Bold.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-Bold.woff2');
 	font-weight: 900;
 } */
 /* Italic */
 
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-ThinItalic.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-ThinItalic.woff2');
 	font-weight: 100;
 	font-style: italic;
 } */
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-ExtraLightItalic.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-ExtraLightItalic.woff2');
 	font-weight: 200;
 	font-style: italic;
 } */
 @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-LightItalic.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-LightItalic.woff2');
 	font-weight: 300;
 	font-style: italic;
 }
 @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-Italic.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-Italic.woff2');
 	font-style: italic;
 }
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-MediumItalic.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-MediumItalic.woff2');
 	font-weight: 500;
 	font-style: italic;
 } */
 @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-SemiBoldItalic.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-SemiBoldItalic.woff2');
 	font-weight: 700;
 	font-style: italic;
 }
 /* @font-face {
 	font-family: 'IBM Plex Sans';
-	src: url('./ibm-plex-sans/IBMPlexSans-BoldItalic.ttf');
+	src: url('./ibm-plex-sans/IBMPlexSans-BoldItalic.woff2');
 	font-weight: 900;
 	font-style: italic;
 } */
