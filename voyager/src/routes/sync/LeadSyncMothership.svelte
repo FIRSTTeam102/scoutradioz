@@ -39,6 +39,7 @@
 
 	$: org_key = $page.data.org_key as string;
 	$: event_key = $page.data.event_key as string;
+	$: event_year = parseInt(event_key);
 
 	// Retrieve the # of matchscouting and pitscouting layout elements in the DB
 	$: matchscoutingFormElements = liveQuery(async () => {
@@ -53,6 +54,17 @@
 			.count();
 	});
 
+	$: matchChecksum = liveQuery(async () => {
+		const syncStatus = await db.syncstatus
+			.where({
+				table: 'layout',
+				filter: `org=${org_key},year=${event_year},type=matchscouting`
+			})
+			.first();
+		if (!syncStatus || typeof syncStatus.data?.checksum !== 'string') return '???';
+		return syncStatus.data.checksum.substring(0, 3);
+	});
+
 	$: pitscoutingFormElements = liveQuery(async () => {
 		assert(event_key);
 
@@ -63,6 +75,17 @@
 				form_type: 'pitscouting'
 			})
 			.count();
+	});
+
+	$: pitChecksum = liveQuery(async () => {
+		const syncStatus = await db.syncstatus
+			.where({
+				table: 'layout',
+				filter: `org=${org_key},year=${event_year},type=pitscouting`
+			})
+			.first();
+		if (!syncStatus || typeof syncStatus.data?.checksum !== 'string') return '???';
+		return syncStatus.data.checksum.substring(0, 3);
 	});
 
 	// Retrieve the # of match scouting entries with and without data
@@ -177,11 +200,10 @@
 					return;
 				pitscouting = await pitCol.toArray();
 			} else {
-				pitscouting = await pitCol.and((pit) => (pit.synced === false && pit.completed === true)).toArray();
+				pitscouting = await pitCol.and((pit) => pit.synced === false && pit.completed === true).toArray();
 			}
 
-			if (pitscouting.length === 0)
-				throw new Error('No pitscouting found that was not already synced');
+			if (pitscouting.length === 0) throw new Error('No pitscouting found that was not already synced');
 
 			let bulkWriteResult = await fetchJSON(`/api/orgs/${org_key}/${event_key}/submit/pit`, {
 				body: JSON.stringify(pitscouting),
@@ -198,9 +220,7 @@
 					.modify((pit) => (pit.synced = true));
 				snackbar.open(`Uploaded data from ${pitscouting.length} assignments successfully.`);
 			} else {
-				throw new Error(
-					`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`
-				);
+				throw new Error(`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`);
 			}
 		} catch (err) {
 			handleError(err);
@@ -226,11 +246,10 @@
 					return;
 				matchscouting = await matchCol.toArray();
 			} else {
-				matchscouting = await matchCol.and((match) => (match.synced === false && match.completed === true)).toArray();
+				matchscouting = await matchCol.and((match) => match.synced === false && match.completed === true).toArray();
 			}
 
-			if (matchscouting.length === 0)
-				throw new Error('No matchscouting found that was not already synced');
+			if (matchscouting.length === 0) throw new Error('No matchscouting found that was not already synced');
 
 			let bulkWriteResult = await fetchJSON(`/api/orgs/${org_key}/${event_key}/submit/match`, {
 				body: JSON.stringify(matchscouting),
@@ -247,9 +266,7 @@
 					.modify((match) => (match.synced = true));
 				snackbar.open(`Uploaded data from ${matchscouting.length} assignments successfully.`);
 			} else {
-				throw new Error(
-					`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`
-				);
+				throw new Error(`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`);
 			}
 		} catch (err) {
 			handleError(err);
@@ -310,15 +327,15 @@
 					{$orgs} orgs in db
 				</p>
 				<p>
-					{$matchscoutingFormElements} match form layout items, {$pitscoutingFormElements} pit form layout
-					items
+					{$matchscoutingFormElements} match form layout items (code: <code>{$matchChecksum}</code>), {$pitscoutingFormElements} pit form
+					layout items (code: <code>{$pitChecksum}</code>)
 				</p>
 			</Content>
 			<CActions>
 				<Group variant="outlined">
 					<Button variant="outlined" on:click={() => wrap(downloadOrgInfo)}>
 						<Icon class="material-icons">person</Icon>
-						<BLabel>Download users / org info</BLabel>
+						<BLabel>Download users / org info / event info</BLabel>
 					</Button>
 				</Group>
 			</CActions>

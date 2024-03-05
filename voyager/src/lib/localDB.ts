@@ -123,6 +123,8 @@ export type PitScoutingLocal = Omit<
 	synced?: boolean;
 };
 
+export type EventLocal = Omit<Event, '_id'>;
+
 export interface TeamLocal {
 	city: string | null;
 	country: string | null;
@@ -182,7 +184,7 @@ export class LocalDB extends Dexie {
 	lightorgs!: Table<LightOrg>;
 	user!: Table<LightUser>;
 	// Schemas straight from the DB
-	events!: Table<str<Event>>;
+	events!: Table<EventLocal>;
 	layout!: Table<str<Layout>>;
 	matchscouting!: Table<MatchScoutingLocal>;
 	pitscouting!: Table<PitScoutingLocal>;

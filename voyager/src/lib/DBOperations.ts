@@ -54,8 +54,8 @@ export class EventOperations extends TableOperations {
 			await db.syncstatus.put({
 				table: 'events',
 				filter: `event=${event_key}`,
-				time: new Date(),
-			})
+				time: new Date()
+			});
 		});
 		logger.trace('Done');
 	}
@@ -80,8 +80,8 @@ export class TeamOperations extends TableOperations {
 			await db.syncstatus.put({
 				table: 'teams',
 				filter: `event=${event_key}`,
-				time: new Date(),
-			})
+				time: new Date()
+			});
 		});
 		logger.trace('Done');
 	}
@@ -97,7 +97,7 @@ export class MatchOperations extends TableOperations {
 
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.lightmatches, db.syncstatus, async () => {
-			let numDeleted = await db.lightmatches.where({event_key}).delete();
+			let numDeleted = await db.lightmatches.where({ event_key }).delete();
 			logger.debug(`${numDeleted} matches deleted from db`);
 			await db.lightmatches.bulkAdd(matches);
 			await db.syncstatus.put({
@@ -115,15 +115,10 @@ export class MatchScoutingOperations extends TableOperations {
 		const { event_key, org_key } = getKeys();
 
 		// Fetch list of match scouting assignments for this event
-		const matchScouting = await fetchJSON<MatchScoutingLocal[]>(
-			`/api/orgs/${org_key}/${event_key}/assignments/match`
-		);
+		const matchScouting = await fetchJSON<MatchScoutingLocal[]>(`/api/orgs/${org_key}/${event_key}/assignments/match`);
 		// Merge with existing data
 		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
-		const mergedMatchScouting = await MatchScoutingOperations.merge(
-			matchScouting,
-			localMatchScouting
-		);
+		const mergedMatchScouting = await MatchScoutingOperations.merge(matchScouting, localMatchScouting);
 
 		const checksum = await MatchScoutingOperations.getChecksum(mergedMatchScouting);
 
@@ -184,16 +179,11 @@ export class MatchScoutingOperations extends TableOperations {
 		assert(newMatchScouting.length > 0);
 		const { org_key, event_key } = newMatchScouting[0];
 
-		logger.info(
-			`Inserting ${newMatchScouting.length} documents with org_key=${org_key}, event_key=${event_key}`
-		);
+		logger.info(`Inserting ${newMatchScouting.length} documents with org_key=${org_key}, event_key=${event_key}`);
 
 		// Merge with existing data
 		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
-		const mergedMatchScouting = await MatchScoutingOperations.merge(
-			newMatchScouting,
-			localMatchScouting
-		);
+		const mergedMatchScouting = await MatchScoutingOperations.merge(newMatchScouting, localMatchScouting);
 
 		logger.debug('mergedMatchScouting:', mergedMatchScouting);
 
@@ -214,6 +204,7 @@ export class MatchScoutingOperations extends TableOperations {
 		logger.trace('Done');
 	}
 
+	@setFuncName('MatchScoutingOperations.getChecksum')
 	static async getChecksum(items: MatchScoutingLocal[]) {
 		const listToChecksum = items.map((asg) => {
 			return {
@@ -245,9 +236,7 @@ export class PitScoutingOperations extends TableOperations {
 		const { event_key, org_key } = getKeys();
 
 		// Fetch list of pit scouting assignments for this event
-		const pitScouting = await fetchJSON<PitScoutingLocal[]>(
-			`/api/orgs/${org_key}/${event_key}/assignments/pit`
-		);
+		const pitScouting = await fetchJSON<PitScoutingLocal[]>(`/api/orgs/${org_key}/${event_key}/assignments/pit`);
 
 		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
 		const mergedPitScouting = await PitScoutingOperations.merge(pitScouting, localPitScouting);
@@ -309,9 +298,7 @@ export class PitScoutingOperations extends TableOperations {
 		assert(newPitScouting.length > 0);
 		const { org_key, event_key } = newPitScouting[0];
 
-		logger.info(
-			`Inserting ${newPitScouting.length} documents with org_key=${org_key}, event_key=${event_key}`
-		);
+		logger.info(`Inserting ${newPitScouting.length} documents with org_key=${org_key}, event_key=${event_key}`);
 
 		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
 		const mergedPitScouting = await PitScoutingOperations.merge(newPitScouting, localPitScouting);
@@ -365,29 +352,24 @@ export class FormLayoutOperations extends TableOperations {
 		assert(!isNaN(year), `Failed to pull year from event_key: ${event_key}, got a NaN!`);
 
 		// Fetch list of match scouting form elements for the associated year
-		const matchFormData = await fetchJSON<WithStringDbId<Layout>[]>(
+		const matchFormData = await fetchJSON<str<Layout>[]>(
 			`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/match`
 		);
-		// await db.layout.bulkPut(matchFormData);
 
 		// Fetch list of match scouting form elements for the associated year
-		const pitFormData = await fetchJSON<WithStringDbId<Layout>[]>(
+		const pitFormData = await fetchJSON<str<Layout>[]>(
 			`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/pit`
 		);
-		// await db.layout.bulkPut(pitFormData);
-		logger.debug(
-			`Retrieved ${matchFormData.length} match items and ${pitFormData.length} pit items`
-		);
+		logger.debug(`Retrieved ${matchFormData.length} match items and ${pitFormData.length} pit items`);
+		
+		const matchChecksum = await FormLayoutOperations.getChecksum(matchFormData);
+		const pitChecksum = await FormLayoutOperations.getChecksum(pitFormData);
 
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.layout, db.syncstatus, async () => {
 			// Remove existing layout for this org+year, because maybe some elements got deleted
-			let pitDeleteCount = await db.layout
-				.where({ org_key, year, form_type: 'pitscouting' })
-				.delete();
-			let matchDeleteCount = await db.layout
-				.where({ org_key, year, form_type: 'matchscouting' })
-				.delete();
+			let pitDeleteCount = await db.layout.where({ org_key, year, form_type: 'pitscouting' }).delete();
+			let matchDeleteCount = await db.layout.where({ org_key, year, form_type: 'matchscouting' }).delete();
 			logger.debug(`Deleted ${pitDeleteCount} pit items and ${matchDeleteCount} match items`);
 			logger.trace('Putting match & pit scouting into db...');
 			await db.layout.bulkPut(pitFormData);
@@ -397,16 +379,32 @@ export class FormLayoutOperations extends TableOperations {
 				{
 					table: 'layout',
 					filter: `org=${org_key},year=${year},type=matchscouting`,
-					time: new Date()
+					time: new Date(),
+					data: {
+						checksum: matchChecksum,
+						source: 'download',
+					}
 				},
 				{
 					table: 'layout',
 					filter: `org=${org_key},year=${year},type=pitscouting`,
-					time: new Date()
+					time: new Date(),
+					data: {
+						checksum: pitChecksum,
+						source: 'download',
+					},
 				}
 			]);
 		});
 		logger.trace('Done');
+	}
+
+	@setFuncName('FormLayoutOperations.getChecksum')
+	static async getChecksum(items: str<Layout>[]) {
+		logger.debug('Items to hash:', items);
+		const checksum = await base32Hash(JSON.stringify(items));
+		logger.debug(`Checksum: ${checksum}`);
+		return checksum;
 	}
 }
 
