@@ -20,7 +20,12 @@
 	import { afterNavigate } from '$app/navigation';
 	import { assets } from '$app/paths';
 	import { alertStore, deviceOnline } from '$lib/stores';
-	import type { DialogContext, RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
+	import type {
+		DialogContext,
+		RefreshButtonAnimationContext,
+		RefreshContext,
+		SnackbarContext
+	} from '$lib/types';
 	import IconButton from '@smui/icon-button';
 	import { getContext, onMount, setContext } from 'svelte';
 	import { writable, type Writable } from 'svelte/store';
@@ -49,14 +54,14 @@
 	let snackbar: SimpleSnackbar;
 	let dialog: SimpleDialog;
 	let languagePicker: LanguagePicker;
-	
+
 	let dialogContext: DialogContext = {
 		show: (...args) => {
 			if (!dialog) throw new Error('Dialog not defined');
 			return dialog.open(...args);
 		}
-	}
-	
+	};
+
 	setContext('dialog', dialogContext);
 
 	let snackbarContext: SnackbarContext = {
@@ -156,51 +161,75 @@
 		});
 
 		if ('serviceWorker' in navigator) {
-			logger.debug('Registering serviceworker');
-			navigator.serviceWorker.addEventListener('message', (event) => {
-				if (!event.data) return;
-				// Only reload the page if we've marked an update as being available
-				if (event.data.msg === 'UPDATE_DONE') {
-					logger.warn('Update done!');
-					if (!updateAvailable) return;
-					sessionStorage.setItem('justUpdated', 'true'); // store a flag for a message to show once the page reloads
-					location.reload();
-				}
-			});
-			const registration = await navigator.serviceWorker.register('/service-worker.js', {
-				type: 'module'
-			});
-
-			// If we have a currently active service worker AND one that's waiting for activation, then we can say that an update is available
-			if (registration.waiting && registration.active) {
-				waitingWorker = registration.waiting;
-				updateAvailable = true;
+			if ($deviceOnline) {
+				logger.info('Device online; attempting to register serviceWorker');
+				attemptServiceWorkerRegistration().catch((err) => logger.error(err));
+			} else {
+				logger.info('Device not online; Waiting for that to change');
+				let unsub = deviceOnline.subscribe((online) => {
+					if (online) {
+						attemptServiceWorkerRegistration()
+							.then(unsub)
+							.catch((err) => logger.error(err));
+					}
+				});
 			}
-
-			registration.onupdatefound = () => {
-				logger.warn(
-					`updatefound event firing! installing=${!!registration.installing}, waiting=${!!registration.waiting}`
-				);
-				// Only show an update available if there's currently a service worker
-				if (registration.installing && registration.active) {
-					let installingWorker = registration.installing;
-					installingWorker.onstatechange = () => {
-						if (installingWorker.state === 'installed') {
-							logger.warn('New worker is waiting to be activated!');
-							updateAvailable = true;
-							waitingWorker = installingWorker;
-						}
-					};
-				}
-			};
 		} else logger.error('serviceWorker not found!');
 
 		// show a snackbar if we just got an update
 		if (sessionStorage.getItem('justUpdated') === 'true') {
-			snackbar.open(msg('layout.justUpdated'));
+			snackbar.open(msg('pwa.justUpdated'));
 			sessionStorage.removeItem('justUpdated');
 		}
 	});
+
+	async function attemptServiceWorkerRegistration() {
+		logger.debug('Attempting to register serviceworker');
+		navigator.serviceWorker.addEventListener('message', (event) => {
+			if (!event.data) return;
+			// Only reload the page if we've marked an update as being available
+			if (event.data.msg === 'UPDATE_DONE') {
+				logger.warn('Update done!');
+				if (!updateAvailable) return;
+				sessionStorage.setItem('justUpdated', 'true'); // store a flag for a message to show once the page reloads
+				location.reload();
+			}
+		});
+		const registration = await navigator.serviceWorker.register('/service-worker.js', {
+			type: 'module'
+		});
+
+		// If we have a currently active service worker AND one that's waiting for activation, then we can say that an update is available
+		if (registration.waiting && registration.active) {
+			waitingWorker = registration.waiting;
+			updateAvailable = true;
+		}
+
+		registration.onupdatefound = () => {
+			logger.warn(
+				`updatefound event firing! installing=${!!registration.installing}, waiting=${!!registration.waiting}`
+			);
+			// Only show an update available if there's currently a service worker
+			if (registration.installing && registration.active) {
+				let installingWorker = registration.installing;
+				installingWorker.onstatechange = () => {
+					if (installingWorker.state === 'installed') {
+						logger.warn('New worker is waiting to be activated!');
+						updateAvailable = true;
+						waitingWorker = installingWorker;
+					}
+				};
+			}
+		};
+		logger.trace('Done with attemptServiceWorkerRegistration');
+	}
+
+	async function handleInstallButtonClick() {
+		if (!waitingWorker) return snackbar.error('waitingWorker not defined!');
+		// let result = await dialogContext.show()
+		logger.info('Posting SKIP_WAITING message to service worker!');
+		waitingWorker.postMessage({ msg: 'SKIP_WAITING' });
+	}
 </script>
 
 <svelte:window on:scroll={onScroll} />
@@ -235,15 +264,10 @@
 			<Section align="end" toolbar>
 				{#if updateAvailable}
 					<Wrapper>
-						<IconButton
-							class="material-icons"
-							on:click={() => {
-								if (!waitingWorker) return snackbar.error('waitingReg not defined!');
-								logger.info('Posting SKIP_WAITING message to service worker!');
-								waitingWorker.postMessage({ msg: 'SKIP_WAITING' });
-							}}>system_update</IconButton
+						<IconButton class="material-icons" on:click={handleInstallButtonClick}
+							>system_update</IconButton
 						>
-						<Tooltip>{msg('layout.updateAvailable')}</Tooltip>
+						<Tooltip>{msg('pwa.updateAvailable')}</Tooltip>
 					</Wrapper>
 				{/if}
 				{#if $refreshContext.supported}
