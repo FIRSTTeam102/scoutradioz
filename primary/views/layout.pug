@@ -122,6 +122,15 @@ html(lang=locale dir=getLocaleDirection(locale))
 					setTimeout(function(){
 						alert("It appears you are using an unsupported browser. Please use a modern browser (e.g. Chromium, Firefox, Edge, and newer versions of Safari) for Scoutradioz. Note: The site is built for mobile! Try it on your Android or iPhone!");
 					}, 20);
+		script.
+			try {
+				eval("() => {let a = 1; const b = 2;}");
+			}
+			catch (err) {
+				setTimeout(function () {
+					alert("It appears you are using an unsupported browser. Please use a modern browser (e.g. Chromium, Firefox, Edge, and newer versions of Safari) for Scoutradioz. Unfortunately, iOS versions 9 and below are not supported.");
+				})
+			}
 	body(class="theme-text")
 		div(id="page")
 			noscript

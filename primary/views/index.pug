@@ -130,7 +130,7 @@ block content
 				}
 			})			
 			$('input[name=customer]').on('change', function (e) {
-				requestAnimationFrame(() => {
+				requestAnimationFrame(function () {
 					let val = $(e.target).val();
 					let blurbViewData = $('#blurbViewData');
 					let blurbLearnMore = $('#blurbLearnMore');
