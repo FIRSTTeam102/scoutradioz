@@ -353,6 +353,7 @@ function doExportAndArchive() {
 	
 	// aaand last, add a global admin user
 	const user: User = {
+		_id: 9999999999,
 		org_key: 'frc102',
 		name: '00 Dev Account',
 		role_key: 'global_admin',
@@ -367,8 +368,11 @@ function doExportAndArchive() {
 			present: true,
 			assigned: false,
 		},
+		oauth: {},
 		visible: true,
+		removed: false,
 	};
+	// @ts-ignore - doesn't like numerical id
 	await dbExport.collection('users').insertOne(user);
 
 	await doExportAndArchive();
