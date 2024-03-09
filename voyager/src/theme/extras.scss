@@ -155,6 +155,10 @@ section.comfortable {
 	}
 }
 
+.error {
+	color: color-palette.$red-500;
+}
+
 .mdc-snackbar {
 	&.error {
 		@include mixins.fill-color(color-palette.$red-500);

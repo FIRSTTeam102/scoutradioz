@@ -93,4 +93,7 @@
 		width: 100%;
 		border-color: rgba(255, 255, 255, 0.25);
 	}
+	:global(body) {
+		overflow-x: hidden; // JL: if this is not true then sometimes headers that are too wide will mess with page width
+	}
 </style>
