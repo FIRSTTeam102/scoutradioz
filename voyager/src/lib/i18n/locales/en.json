@@ -209,12 +209,26 @@
 		"scannedByScoutingLead": "Scanned by scouting lead"
 	},
 	"qrsync": {
+		"title": "QR code",
+		"foundOneMatchResult": "Found match scouting result: {match}, scored by {name}",
+		"foundBulkMatchResults": "Found {count} match scouting results, scored by {name}",
+		"foundOnePitResult": "Found pit scouting result: {team}, filled by {name}",
+		"foundBulkPitResults": "Found {count} pit scouting results, filled by {name}",
+		"foundMatchScoutingSchedule": "Found match scouting schedule",
+		"foundPitScoutingSchedule": "Found pit scouting schedule",
+		"foundMetadata": "Found metadata (users, event info, and team numbers/nicknames)",
+		"goTo": "Go to {location} or scan more QR codes?",
+		"go": "Go",
+		"scanMore": "Scan more",
+		"decodeFailed": "Failed to decode QR code",
+		"tryAgain": "Try again to decode the last failed QR code?",
 		"matchesRange": "Matches # {first} - {last}",
 		"usersAndTeams": "Users & team nicknames",
 		"numMatchesToDisplay": "Number of matches to display",
 		"everyone": "Everyone",
 		"onlyAssignedAndPresent": "Only assigned & present",
-		"whomToInclude": "Whom to include in the QR code"
+		"whomToInclude": "Whom to include in the QR code",
+		"scanCompleteTryAgain": "Successfully scanned new QR code. Attempt to decode the previous QR code again?"
 	},
 	"notifications": {
 		"status": "Match notifications are {status} for this device.",

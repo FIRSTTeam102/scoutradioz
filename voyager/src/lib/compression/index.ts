@@ -1,5 +1,6 @@
 import assert from '$lib/assert';
 import type {
+	EventLocal,
 	LightUser,
 	MatchScoutingLocal,
 	OrgLocal,
@@ -31,12 +32,12 @@ interface PaginatedItem {
 	data: string;
 }
 
-interface CompressedItem {
+export interface EncodedItem {
 	/** Type of data */
 	_: string;
 }
 
-interface CompressedMatchScouting extends CompressedItem {
+interface EncodedMatchScouting extends EncodedItem {
 	_: 'sched';
 	org_key: string;
 	event_key: string;
@@ -53,7 +54,7 @@ interface CompressedMatchScouting extends CompressedItem {
 	checksum: string;
 }
 
-interface CompressedPitScouting extends CompressedItem {
+interface EncodedPitScouting extends EncodedItem {
 	_: 'pit';
 	org_key: string;
 	event_key: string;
@@ -63,7 +64,15 @@ interface CompressedPitScouting extends CompressedItem {
 	checksum: string;
 }
 
-interface CompressedMetadata extends CompressedItem {
+interface EncodedPitScoutingResults extends EncodedItem {
+	_: 'pitresults';
+	sched_checksum: string;
+	form_checksum: string;
+	results: string[];
+	scouter: string;
+}
+
+interface EncodedMetadata extends EncodedItem {
 	_: 'meta';
 	org: string;
 	teams: string;
@@ -103,24 +112,17 @@ async function stringToTeam(str: string) {
 	let key = 'frc' + str;
 	let team = await db.teams.where('key').equals(key).first();
 	if (!team) {
-		throw new Error(`Team not found: ${key}`);
+		throw new Error(
+			`Info on team ${key} not found on your device. Scan the "Users & team nicknames" QR code and try again.`
+		);
 	}
 	return {
 		team_key: key,
 		team_name: team.nickname
 	};
-	// let split = str.split(':');
-	// return {
-	// 	team_key: split[0],
-	// 	team_name: split[1]
-	// }
 }
 
-export function decode(str: string): Promise<{
-	type: CompressedItem['_'];
-	label: string;
-	data: any;
-}> {
+export function decompress(str: string): Promise<EncodedItem> {
 	return new Promise((resolve, reject) => {
 		getLZMA(); // Import the LZMA object if it has not been imported yet
 
@@ -132,33 +134,10 @@ export function decode(str: string): Promise<{
 			lzmaData,
 			async (result, err) => {
 				// try-catch wrapper for the asserts
+				if (err) return reject(err);
 				try {
-					if (err) return reject(err);
-					let json: CompressedItem = JSON.parse(result);
-
-					switch (json._) {
-						case 'meta':
-							resolve(await decodeMetadata(json));
-							break;
-
-						case 'sched':
-							resolve(await decodeMatchScouting(json));
-							break;
-
-						case 'pit':
-							resolve(await decodePitScouting(json));
-
-						case '1matchdata':
-							resolve(await decodeOneMatchScoutingResult(json));
-							break;
-
-						case '1pitdata':
-							resolve(await decodeOnePitScoutingResult(json));
-							break;
-
-						default:
-							reject(`Unknown qr code type: ${json._}`);
-					}
+					let json: EncodedItem = JSON.parse(result);
+					resolve(json);
 				} catch (err) {
 					reject(err);
 				}
@@ -177,10 +156,10 @@ export function encodeMetadata(
 	org: OrgLocal,
 	users: LightUser[],
 	teams: TeamLocal[],
-	event: str<Event>
+	event: EventLocal
 ): Promise<string> {
 	return new Promise((resolve, reject) => {
-		let ret: CompressedMetadata = {
+		let ret: EncodedMetadata = {
 			_: 'meta',
 			org: '',
 			teams: '',
@@ -189,12 +168,7 @@ export function encodeMetadata(
 		};
 
 		// Encode the most critical info of the org (maybe later we can add config too)
-		ret.org = [
-			org.org_key,
-			org.nickname,
-			org.event_key,
-			(org.team_numbers || [org.team_number]).join(',')
-		].join(';');
+		ret.org = [org.org_key, org.nickname, org.event_key, (org.team_numbers || [org.team_number]).join(',')].join(';');
 
 		// Team number and nickname
 		ret.teams = teams.map((team) => `${team.team_number}:${team.nickname}`).join(';');
@@ -225,8 +199,8 @@ export function encodeMetadata(
  * Limitations:
  *  - Present and assigned booleans set to true
  */
-export function decodeMetadata(data: CompressedItem) {
-	let json = data as CompressedMetadata;
+export function decodeMetadata(data: EncodedItem) {
+	let json = data as EncodedMetadata;
 
 	let orgItems = json.org.split(';');
 
@@ -292,7 +266,7 @@ export function decodeMetadata(data: CompressedItem) {
 	}
 
 	// Event
-	let event: Event;
+	let event: EventLocal;
 	{
 		let [key, name, start_date, end_date, country, state_prov, event_type] = json.event.split(';');
 		let year = parseInt(key.substring(0, 4));
@@ -315,25 +289,18 @@ export function decodeMetadata(data: CompressedItem) {
 	}
 
 	return {
-		type: 'meta',
-		label: 'Metadata (Users, event info, & team numbers/nicknames)',
-		data: {
-			org,
-			users,
-			teams,
-			event
-		}
+		org,
+		users,
+		teams,
+		event
 	};
 }
 
-export async function encodePitScouting(
-	data: PitScoutingLocal[],
-	checksum: string
-): Promise<string> {
+export async function encodePitScouting(data: PitScoutingLocal[], checksum: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		assert(data.length, 'array is empty!');
 
-		let ret: CompressedPitScouting = {
+		let ret: EncodedPitScouting = {
 			_: 'pit',
 			org_key: data[0].org_key,
 			event_key: data[0].event_key,
@@ -367,33 +334,27 @@ export async function encodePitScouting(
 
 		ret.pits = pits.join(';');
 		// 1,2,3;4,5,6; ...
-		ret.groups = groups
-			.map((group) => group.map(scouterRecordToId).join(','))
-			.join(';');
+		ret.groups = groups.map((group) => group.map(scouterRecordToId).join(',')).join(';');
 
 		let str = JSON.stringify(ret);
 		getLZMA();
-		lzma.compress(
-			str,
-			9,
-			(result, err) => {
-				if (err) return reject(err);
-				if (result) {
-					// lzma's result varies from -128 to 127
-					let byteArray = result.map((num) => num + 128);
-					let base64 = b64encode(byteArray);
-					resolve(base64);
-				}
-			},
-		);
+		lzma.compress(str, 9, (result, err) => {
+			if (err) return reject(err);
+			if (result) {
+				// lzma's result varies from -128 to 127
+				let byteArray = result.map((num) => num + 128);
+				let base64 = b64encode(byteArray);
+				resolve(base64);
+			}
+		});
 	});
 }
 
-export async function decodePitScouting(data: CompressedItem) {
-	let json = data as CompressedPitScouting;
-	
+export async function decodePitScouting(data: EncodedItem) {
+	let json = data as EncodedPitScouting;
+
 	// Reassemble 2d array of scouting groups
-	let scoutingGroupsIds = json.groups.split(';').map(str => str.split(','));
+	let scoutingGroupsIds = json.groups.split(';').map((str) => str.split(','));
 	let scoutingGroups: ScouterRecordLocal[][] = [];
 	for (let i in scoutingGroupsIds) {
 		scoutingGroups[i] = [];
@@ -402,19 +363,17 @@ export async function decodePitScouting(data: CompressedItem) {
 		}
 	}
 	let pitStrings = json.pits.split(';');
-	
+
 	let pitscouting: PitScoutingLocal[] = [];
-	
+
 	for (let string of pitStrings) {
 		let [teamNum, primaryId] = string.split(',');
-		let primary: ScouterRecordLocal|undefined;
-		let secondary: ScouterRecordLocal|undefined;
-		let tertiary: ScouterRecordLocal|undefined;
+		let primary: ScouterRecordLocal | undefined;
+		let secondary: ScouterRecordLocal | undefined;
+		let tertiary: ScouterRecordLocal | undefined;
 		if (primaryId != '-1') primary = await scouterIdToScouterRecord(primaryId);
 		// Find the scouting group
-		let scouterGroup = scoutingGroups.find((group) =>
-			group.some((scouter) => scouter.id === primary?.id)
-		);
+		let scouterGroup = scoutingGroups.find((group) => group.some((scouter) => scouter.id === primary?.id));
 		// This is SO un-elegant, but I couldn't think of a better way to do this
 		// Populate secondary and tertiary from the scouter group array
 		if (scouterGroup) {
@@ -430,7 +389,7 @@ export async function decodePitScouting(data: CompressedItem) {
 				}
 			}
 		}
-		
+
 		pitscouting.push({
 			year: json.year,
 			event_key: json.event_key,
@@ -440,17 +399,13 @@ export async function decodePitScouting(data: CompressedItem) {
 			secondary,
 			tertiary,
 			synced: false,
-			completed: false,
+			completed: false
 		});
 	}
-	
+
 	return {
-		type: 'pit',
-		label: 'Pit scouting schedule',
-		data: {
-			pitscouting,
-			checksum: json.checksum,
-		}
+		pitscouting,
+		checksum: json.checksum
 	};
 }
 
@@ -461,9 +416,9 @@ export async function decodePitScouting(data: CompressedItem) {
  *  - Max of 100 scouters and 100 teams
  *  - assumes matches are sorted by time
  */
-export function encodeMatchScouting(data: MatchScoutingLocal[], checksum: string): Promise<string> {
+export function encodeMatchScoutingSchedule(data: MatchScoutingLocal[], checksum: string): Promise<string> {
 	return new Promise((resolve, reject) => {
-		let ret: CompressedMatchScouting = {
+		let ret: EncodedMatchScouting = {
 			_: 'sched',
 			org_key: data[0].org_key,
 			event_key: data[0].event_key,
@@ -529,17 +484,11 @@ export function encodeMatchScouting(data: MatchScoutingLocal[], checksum: string
 			group.forEach((item) => {
 				// let thisTeam = item.team_key.substring(3) + ':' + (item.team_name || '');
 				let thisTeam = item.team_key.substring(3);
-				let thisAssigned = item.assigned_scorer
-					? scouterRecordToId(item.assigned_scorer)
-					: undefined;
-				let thisActualScorer = item.actual_scorer
-					? scouterRecordToId(item.actual_scorer)
-					: undefined;
+				let thisAssigned = item.assigned_scorer ? scouterRecordToId(item.assigned_scorer) : undefined;
+				let thisActualScorer = item.actual_scorer ? scouterRecordToId(item.actual_scorer) : undefined;
 
 				let thisTeamIdx = String(teams.indexOf(thisTeam)).padStart(2, '0');
-				let thisAssignedIdx = thisAssigned
-					? scouters.indexOf(thisAssigned).toString().padStart(2, '0')
-					: '|'; // put a pipe if there's no scouter in the map
+				let thisAssignedIdx = thisAssigned ? scouters.indexOf(thisAssigned).toString().padStart(2, '0') : '|'; // put a pipe if there's no scouter in the map
 				let thisActualScorerIdx = thisActualScorer
 					? scouters.indexOf(thisActualScorer).toString().padStart(2, '0')
 					: '|';
@@ -587,8 +536,8 @@ export function encodeMatchScouting(data: MatchScoutingLocal[], checksum: string
  * Limitations:
  * 	- assumes qualifying matches only
  */
-export async function decodeMatchScouting(data: CompressedItem) {
-	let json = data as CompressedMatchScouting;
+export async function decodeMatchScoutingSchedule(data: EncodedItem) {
+	let json = data as EncodedMatchScouting;
 
 	let scouterStrings = json.scouters.split(';');
 	let teamNumbers = json.teams.split(';');
@@ -599,19 +548,8 @@ export async function decodeMatchScouting(data: CompressedItem) {
 
 	let timeStrings = json.times.split(';');
 
-	// Get scouter info from the db
-	// const scouters = await db.lightusers
-	// 	.where('_id').anyOf(scouterIDs)
-	// 	.toArray();
-
-	// const scouterIdMap: Dict<LightUser> = {};
-	// for (let scouter of scouters) {
-	// 	scouterIdMap[scouter._id] = scouter;
-	// }
-
 	assert(
-		teamStrings.length === assignedStrings.length &&
-			teamStrings.length === actualScorerStrings.length,
+		teamStrings.length === assignedStrings.length && teamStrings.length === actualScorerStrings.length,
 		'Length mismatch!'
 	);
 
@@ -694,14 +632,65 @@ export async function decodeMatchScouting(data: CompressedItem) {
 	); // validation
 
 	return {
-		type: 'sched',
-		label: 'Match scouting schedule',
-		data: {
-			matchscouting: decodedMatchScouting,
-			checksum: json.checksum
-		}
+		matchscouting: decodedMatchScouting,
+		checksum: json.checksum
 	};
 }
+
+// export async function encodeBulkPitScoutingResults(entry: PitScoutingLocal[]): Promise<string> {
+// 	return new Promise((resolve, reject) => {
+// 		let str = JSON.stringify({
+// 			_: '1pitdata',
+// 			as: entry.actual_scouter,
+// 			data: entry.data,
+// 			org: entry.org_key,
+// 			event: entry.event_key,
+// 			key: entry.team_key,
+// 			c: entry.completed ? 1 : 0,
+// 			s: entry.synced ? 1 : 0,
+// 			history: entry.history,
+// 		});
+
+// 		getLZMA();
+// 		lzma.compress(str, 9, (result, err) => {
+// 			if (err) return reject(err);
+// 			if (result) {
+// 				let byteArray = result.map((num) => num + 128);
+// 				let base64 = b64encode(byteArray);
+// 				resolve(base64);
+// 			}
+// 		});
+// 	});
+// }
+
+// export async function decodeBulkPitScoutingResults(data: EncodedItem) {
+// 	let json = data as {
+// 		_: '1pitdata';
+// 		as: ScouterRecordLocal; // actual_scorer
+// 		data: PitScoutingLocal['data'];
+// 		org: string;
+// 		event: string;
+// 		key: string;
+// 		c: number;
+// 		s: number;
+// 		history?: ScouterHistoryRecord;
+// 	};
+// 	return {
+// 		type: '1pitdata',
+// 		label: `Pit scouting result: ${json.key} scouted by ${json.as?.name}`,
+// 		data: {
+// 			actual_scouter: json.as,
+// 			data: json.data,
+// 			org_key: json.org,
+// 			event_key: json.event,
+// 			team_key: json.key,
+// 			// 1 is truthy, 0 is falsy
+// 			completed: !!json.c,
+// 			synced: !!json.s,
+// 			history: json.history,
+// 		}
+// 	};
+// }
 
 export async function encodeOneMatchScoutingResult(entry: MatchScoutingLocal): Promise<string> {
 	return new Promise((resolve, reject) => {
@@ -712,7 +701,7 @@ export async function encodeOneMatchScoutingResult(entry: MatchScoutingLocal): P
 			mtc: entry.match_team_key,
 			c: entry.completed ? 1 : 0,
 			s: entry.synced ? 1 : 0,
-			history: entry.history,
+			history: entry.history
 		});
 
 		getLZMA();
@@ -727,7 +716,7 @@ export async function encodeOneMatchScoutingResult(entry: MatchScoutingLocal): P
 	});
 }
 
-export async function decodeOneMatchScoutingResult(data: CompressedItem) {
+export async function decodeOneMatchScoutingResult(data: EncodedItem) {
 	let json = data as {
 		_: '1matchdata';
 		as: ScouterRecordLocal; // actual_scorer
@@ -737,18 +726,20 @@ export async function decodeOneMatchScoutingResult(data: CompressedItem) {
 		s: number; // synced (1 for true, 0 for false)
 		history?: ScouterHistoryRecord;
 	};
+	let match_team_key = json.mtc;
+	let split = match_team_key.split('_');
+	let match_key = split.slice(0, 2).join('_');
+	let match_number = parseInt(split[1].substring(2));
 	return {
-		type: '1matchdata',
-		label: `Match scouting result: ${json.mtc} scored by ${json.as?.name}`,
-		data: {
-			actual_scorer: json.as,
-			data: json.data,
-			match_team_key: json.mtc,
-			// 1 is truthy, 0 is falsy
-			completed: !!json.c,
-			synced: !!json.s,
-			history: json.history,
-		} as MatchScoutingLocal
+		actual_scorer: json.as,
+		data: json.data,
+		match_team_key: json.mtc,
+		// 1 is truthy, 0 is falsy
+		completed: !!json.c,
+		synced: !!json.s,
+		history: json.history,
+		match_key,
+		match_number,
 	};
 }
 
@@ -763,7 +754,7 @@ export async function encodeOnePitScoutingResult(entry: PitScoutingLocal): Promi
 			key: entry.team_key,
 			c: entry.completed ? 1 : 0,
 			s: entry.synced ? 1 : 0,
-			history: entry.history,
+			history: entry.history
 		});
 
 		getLZMA();
@@ -778,7 +769,7 @@ export async function encodeOnePitScoutingResult(entry: PitScoutingLocal): Promi
 	});
 }
 
-export async function decodeOnePitScoutingResult(data: CompressedItem) {
+export async function decodeOnePitScoutingResult(data: EncodedItem) {
 	let json = data as {
 		_: '1pitdata';
 		as: ScouterRecordLocal; // actual_scorer
@@ -791,20 +782,16 @@ export async function decodeOnePitScoutingResult(data: CompressedItem) {
 		history?: ScouterHistoryRecord;
 	};
 	return {
-		type: '1pitdata',
-		label: `Pit scouting result: ${json.key} scouted by ${json.as?.name}`,
-		data: {
-			actual_scouter: json.as,
-			data: json.data,
-			org_key: json.org,
-			event_key: json.event,
-			team_key: json.key,
-			// 1 is truthy, 0 is falsy
-			completed: !!json.c,
-			synced: !!json.s,
-			history: json.history,
-		}
-	};
+		actual_scouter: json.as,
+		data: json.data,
+		org_key: json.org,
+		event_key: json.event,
+		team_key: json.key,
+		// 1 is truthy, 0 is falsy
+		completed: !!json.c,
+		synced: !!json.s,
+		history: json.history
+	} as PitScoutingLocal;
 }
 
 function b64encode(x: number[]) {

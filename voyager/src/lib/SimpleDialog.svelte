@@ -19,6 +19,7 @@
 		noText?: string;
 		yesTimeout?: number;
 		prompt?: 'password' | 'text' | boolean;
+		disableNo?: boolean;
 	}
 
 	let open = false;
@@ -30,18 +31,19 @@
 	let text = '';
 
 	const defaultOptions = {
-		yesText: msg('yes'),
-		noText: msg('no'),
+		yesText: msg('ok'),
+		noText: msg('cancel'),
 		yesTimeout: -1,
-		prompt: false
+		prompt: false,
+		disableNo: false,
 	};
 
 	let options: Required<ConfirmOptions> = defaultOptions;
 
-	type Result = { cancelled: boolean; password?: string; text?: string };
+	type DialogResult = { cancelled: boolean; password?: string; text?: string };
 
 	export function show(title: string, body: string, opts?: Partial<ConfirmOptions>) {
-		return new Promise<Result>((resolve) => {
+		return new Promise<DialogResult>((resolve) => {
 			dlgTitle = title;
 			dlgBody = body;
 
@@ -49,12 +51,13 @@
 				yesText: opts?.yesText ?? defaultOptions.yesText,
 				noText: opts?.noText ?? defaultOptions.noText,
 				yesTimeout: opts?.yesTimeout ?? defaultOptions.yesTimeout,
-				prompt: opts?.prompt ?? defaultOptions.prompt
+				prompt: opts?.prompt ?? defaultOptions.prompt,
+				disableNo: opts?.disableNo ?? defaultOptions.disableNo,
 			};
 
 			onClose = (e) => {
 				console.log(e);
-				let ret: Result = { cancelled: true };
+				let ret: DialogResult = { cancelled: true };
 				// 'Yes' button clicked (Anything except "Yes" results in cancelled = true)
 				if (e.detail.action === 'yes') {
 					ret.cancelled = false;
@@ -95,9 +98,11 @@
 		<Textfield bind:value={password} class={classMap({ hidden: options.prompt !== 'text' })} />
 	</Content>
 	<Actions>
-		<Button action="no">
-			<Label>{options.noText}</Label>
-		</Button>
+		{#if !options.disableNo}
+			<Button action="no">
+				<Label>{options.noText}</Label>
+			</Button>
+		{/if}
 		<Button
 			defaultAction
 			variant="unelevated"

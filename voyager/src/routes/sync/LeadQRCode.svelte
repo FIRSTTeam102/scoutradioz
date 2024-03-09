@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 	import assert from '$lib/assert';
-	import { decodePitScouting, encodeMatchScouting, encodeMetadata, encodePitScouting } from '$lib/compression';
+	import { decodePitScouting, encodeMatchScoutingSchedule, encodeMetadata, encodePitScouting } from '$lib/compression';
 	import { msg } from '$lib/i18n';
 	import db, { type MatchScoutingLocal } from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
@@ -78,7 +78,7 @@
 					firstMatchNumber = matchscouting[0].match_number;
 					lastMatchNumber = matchscouting[matchscouting.length - 1].match_number;
 
-					base64Data = await encodeMatchScouting(matchscouting, syncstatus.data.checksum);
+					base64Data = await encodeMatchScoutingSchedule(matchscouting, syncstatus.data.checksum);
 				} else {
 					firstMatchNumber = 0;
 					lastMatchNumber = 0;
@@ -108,7 +108,7 @@
 					.equals(org_key)
 					.filter((user) => {
 						if (whichUsersToInclude === 'everyone') return true;
-						return user.event_info.assigned === true || user.event_info.present === true;
+						return user.event_info.assigned === true || user.event_info.present === true || user.name === 'default_user';
 					})
 					.toArray();
 

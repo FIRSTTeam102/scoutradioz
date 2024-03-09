@@ -133,7 +133,7 @@
 	else stopScan();
 
 	// Dispatcher lets us send a custom 'data' event where the qr code has been read
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{data: {text: string, ms: number}}>();
 
 	function onQrCodeData(decodedText: string, millis: number) {
 		logger.trace('ONQRCODEDATA');
