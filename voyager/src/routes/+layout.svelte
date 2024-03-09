@@ -58,7 +58,7 @@
 	let dialogContext: DialogContext = {
 		show: (...args) => {
 			if (!dialog) throw new Error('Dialog not defined');
-			return dialog.open(...args);
+			return dialog.show(...args);
 		}
 	};
 
@@ -326,7 +326,7 @@
 		{/if}
 	</DHeader>
 	<DContent>
-		<List data-sveltekit-preload-data="false">
+		<List>
 			<LItem href="/home">
 				<LGraphic class="material-icons" aria-hidden="true">home</LGraphic>
 				<LText>{msg('home.title')}</LText>

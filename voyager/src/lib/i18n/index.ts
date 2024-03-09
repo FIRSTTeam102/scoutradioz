@@ -5,7 +5,7 @@ import { fetchJSON } from '../utils';
 import Cookies from 'js-cookie';
 import { browser } from '$app/environment';
 
-const logger = getLogger('i18n');
+const logger = getLogger('lib/i18n');
 
 export class I18n {
 	locales: Dict<LocaleTree> = {};

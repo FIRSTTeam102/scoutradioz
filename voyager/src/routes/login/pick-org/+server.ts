@@ -32,7 +32,6 @@ export async function POST(event: RequestEvent): Promise<Response> {
 	
 	// and log em in!
 	const sessionId = createSessionId();
-	console.log(sessionId, new ObjectId());
 	const session = await lucia.createSession(String(defaultUser._id), {}, {sessionId});
 	const sessionCookie = lucia.createSessionCookie(session.id);
 	event.cookies.set(sessionCookie.name, sessionCookie.value, {

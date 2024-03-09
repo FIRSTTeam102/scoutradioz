@@ -18,6 +18,7 @@
 
 	export let data: PageData;
 	let user: LightUser | null = null;
+	let userPicker: Autocomplete;
 
 	// Retrieve the orgs from the database
 	$: users = liveQuery(async () => {
@@ -63,6 +64,8 @@
 	}
 
 	onMount(async () => {
+		userPicker.focus();
+
 		if (!data.org_key) {
 			logger.warn('No org selected; redirecting to /');
 			goto('/');
@@ -109,6 +112,7 @@
 				disabled={!$users}
 				getOptionLabel={getUserOptionLabel}
 				bind:value={user}
+				bind:this={userPicker}
 				label={`Members of ${data.org?.nickname}`}
 			/>
 		</div>
