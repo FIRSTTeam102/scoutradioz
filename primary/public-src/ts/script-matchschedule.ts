@@ -201,24 +201,24 @@ function updateTime(timeString: string, dayNumber: number, timeInput: HTMLInputE
 }
 		
 //parseTime function from somewhere on stackoverflow
-function parseDateTime(dayNumber: number, t: string, callback: (error: string | null, date: luxon.DateTime|null) => void ) {
+function parseDateTime(dayNumber: number, timeString: string, callback: (error: string | null, date: luxon.DateTime|null) => void ) {
 			
 	if(eventDate){
-		//Create new date obj, from eventDate
-		let d = new Date(eventDate.valueOf());
+	
+		let time = luxon.DateTime.fromFormat(timeString, 'h:mm a');
+		if (!time.isValid) {
+			time = luxon.DateTime.fromFormat(timeString, 'h:mm');
+		}
 				
-		let time = t.match( /(\d+)(?::(\d\d))?\s*(p?)/ );
-				
-		if(time){
-			d.setHours( parseInt( time[1]) + (time[3] ? 12 : 0) );
-			d.setMinutes( parseInt( time[2]) || 0 );
+		if(time.isValid){
 			
+			// TODO: timezone
 			let date = luxon.DateTime.fromObject({
 				year: eventDate.year, 
 				month: eventDate.month, 
 				day: eventDate.day,
-				hour: parseInt( time[1]) + (time[3] ? 12 : 0),
-				minute: parseInt( time[2]) || 0
+				hour: time.hour,
+				minute: time.minute,
 			})
 				.plus({days: dayNumber - 1}); // add the day number
 			
