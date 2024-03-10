@@ -65,9 +65,11 @@ declare function onResize(cb: () => void): void;
 	$(debugLogger).css({
 		'background-color': 'white',
 		'color': 'black',
-		'z-index': '99',
-		'position': 'absolute',
+		'z-index': '9999',
+		'position': 'fixed',
+		'line-height': '1',
 		'top': '0',
+		'right': '0',
 		'width': '25%',
 		'padding': '8px 16px',
 	});
@@ -95,7 +97,7 @@ declare function onResize(cb: () => void): void;
 		}
 		
 		let newTextElem = document.createElement('pre');
-		$(newTextElem).text(text);
+		$(newTextElem).text(text).css({'margin': '0.5em 0px'});
 		
 		$(debugLogger).append(newTextElem);
 	};

@@ -5,7 +5,13 @@ const log4js = require('log4js');						//for extensive logging functionality
 
 const usefunctions = require('./helpers/usefunctions');
 const utilities = require('@firstteam102/scoutradioz-utilities');
-utilities.config(require('./databases.json'));
+utilities.config(require('./databases.json'), {
+	cache: {
+		enable: true,
+		maxAge: 300,
+	},
+	schemasWithNumberIds: ['users'],
+});
 
 //AWS middleware magic
 require('aws-serverless-express/middleware');

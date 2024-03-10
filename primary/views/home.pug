@@ -61,6 +61,19 @@ block content
 				a(href="/admin")
 					div(class="gear-btn theme-link w3-btn")!=msg('home.admin')
 
+	a(href="http://voyager.scoutradioz.com")
+		i
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('layout.nav.voyager')
+
+	if user.role && user.role.access_level >= Permissions.ACCESS_SCOUTER
+		div(class="w3-container w3-section")
+			h4(class="theme-text")!=msg('home.formDemos')
+			a(href="/scouting/match?key=2024srdemo_qm99_frc999999&alliance=Blue")
+				div(class="gear-btn theme-link w3-btn")!=msg('home.matchFormDemo')
+			a(href="/scouting/pit?team_key=frc999999")
+				div(class="gear-btn theme-link w3-btn")!=msg('home.pitFormDemo')
+
 	script.
 		$(function(){
 			//If user presses back button and teamselect is populated, gotta un-disable stats btn

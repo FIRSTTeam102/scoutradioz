@@ -22,7 +22,8 @@
 				"management": "Event management tools such as auditing match assignments, swapping scouters in and out, and managing a list of members",
 				"free": "And of course, it's completely free!"
 			},
-			"github": "See our code & documentation on GitHub",
+			"github": "Check out our code on GitHub",
+			"wiki": "See our wiki for detailed documentation",
 			"discord": "Join our Discord",
 			"partner": "Apply to be an Early-Access partner",
 			"signup": "Sign up for your team to use Scoutradioz",
@@ -56,7 +57,8 @@
 		"footer": {
 			"copyright": "Copyright {date} FIRST Team 102 and Robotics Fund Inc.\nOpen-source & licensed with AGPLv3.",
 			"tba": "Powered by The Blue Alliance.",
-			"frc": "We are proud to be participants of FIRST Robotics Competition."
+			"frc": "We are proud to be participants of FIRST Robotics Competition.",
+			"github": "Check out our source code on GitHub"
 		},
 		"nav": {
 			"home": "Home",
@@ -90,6 +92,7 @@
 					"present": "Set who is present at current event"
 				}
 			},
+			"voyager": "Switch to Voyager offline module",
 			"admin": "Admin",
 			"user": {
 				"main": "User: [[{user}]]",
@@ -98,7 +101,8 @@
 				"logout": "Log out",
 				"switchorg": "Change organization"
 			},
-			"help": "Need help? Check our wiki!"
+			"help": "Need help? Check our wiki!",
+			"thanks": "Special thanks"
 		}
 	},
 	"home": {
@@ -112,7 +116,18 @@
 		"scoutingDashboard": "Scouting dashboard",
 		"management": "Management",
 		"admin": "Admin",
-		"specifyTeam": "You must specify a team."
+		"specifyTeam": "You must specify a team.",
+		"formDemos": "Preview the forms",
+		"matchFormDemo": "Match form",
+		"pitFormDemo": "Pit form"
+	},
+	"thankyou": {
+		"title": "Thank you!",
+		"thanks": "Thanks to our Early-Access Partners!",
+		"threestarters": "The Three Starters",
+		"2020to2022": "{year2020} to {year2022}",
+		"2023inseason": "2023 In Season",
+		"2023offseason": "2023 Off Season"
 	},
 	"share": {
 		"changeOrg": "You are viewing {org}.\nTo change the organization you wish to view, click *Org: {org}* in the menu and select *Change Organization*."

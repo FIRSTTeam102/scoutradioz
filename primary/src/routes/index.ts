@@ -140,6 +140,20 @@ router.get('/home', wrap(async (req, res) =>  {
 	}
 }));
 
+/**
+ * Thank-you page
+ * @url /thankyou
+ * @view /thankyou
+ */
+router.get('/thankyou', wrap(async (req, res) =>  {
+	logger.addContext('funcName', 'thankyou[get]');
+	logger.debug('ENTER');
+	
+	res.render('./thankyou', { 
+		title: res.msg('thankyou.title'),
+	});
+}));
+
 router.get('/throwanerror', wrap(async (req, res) => {
 	logger.addContext('funcName', 'throwanerror[get]');
 	
