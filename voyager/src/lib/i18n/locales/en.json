@@ -476,6 +476,7 @@
 	},
 	"pwa": {
 		"updateAvailable": "Update available. Click to reload Voyager and install the update.",
+		"updateDownloading": "Update downloading in the background...",
 		"justUpdated": "Scoutradioz Voyager has updated successfully."
 	},
 	"cancel": "Cancel",
