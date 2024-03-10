@@ -1,5 +1,6 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData, PitScouting } from 'scoutradioz-types';
+import type { AnyDict, Match, TeamKey, AggRange, MatchFormData, PitScouting } from 'scoutradioz-types';
+import type Mathjs from 'mathjs';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -67,6 +68,15 @@ export declare class MatchDataHelper {
     static getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any): Promise<AllianceStatsData>;
 }
 export default MatchDataHelper;
+/**
+ * Get a number from an AnyDict, defaulting to 0. Easier than doing an inline ternary for each variable.
+ */
+export declare function getNumberFrom(dict: AnyDict | MatchFormData | undefined, key: string): number;
+export declare interface LinearSolve {
+    matrix: number[][];
+    vector: number[][];
+    solution: Mathjs.MathNumericType[][];
+}
 export declare interface AllianceStatsData {
     /**
      * Return of getAllianceStatsData

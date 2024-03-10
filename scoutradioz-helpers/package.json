@@ -21,6 +21,7 @@
 	"homepage": "https://github.com/firstteam102/scoutradioz#readme",
 	"dependencies": {
 		"@log4js-node/log4js-api": "^1.0.2",
+		"mathjs": "^11.5.1",
 		"scoutradioz-types": "file:../scoutradioz-types",
 		"scoutradioz-utilities": "file:../scoutradioz-utilities",
 		"ztable": "^1.0.7"

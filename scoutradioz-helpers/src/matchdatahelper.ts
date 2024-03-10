@@ -2,8 +2,10 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout } from 'scoutradioz-types';
+import type { AnyDict, Match, Team, Ranking, TeamKey, Layout, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout } from 'scoutradioz-types';
 import assert from 'assert';
+import type Mathjs from 'mathjs';
+const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -502,14 +504,224 @@ export class MatchDataHelper {
 	static async calculateAndStoreAggRanges(org_key: string, event_year: number, event_key: string) {
 		logger.addContext('funcName', 'calculateAndStoreAggRanges');
 		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
-	
-		let scorelayout = await utilities.find('layout', 
+
+		let scorelayout: Layout[] = await utilities.find('layout', 
 			{org_key: org_key, year: event_year, form_type: 'matchscouting'}, 
 			{sort: {'order': 1}},
 			{allowCache: true}
 		);
 		logger.trace('scorelayout=' + JSON.stringify(scorelayout));        
-		
+
+		//
+		// 2024, M.O'C: Calculate event-level analytics (e.g., OPR, etc.)
+		//
+
+		// map team keys to indexes
+		//let event: Event = await utilities.findOne('events', {'key': event_key}, {});
+		//let team_keys: TeamKey[] = event.team_keys;		
+
+		// extract the 'contributedPoints' numbers
+		// Build the aggregation data
+		let aggQueryCp = [];
+		aggQueryCp.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
+		//get the alpha from the process.env
+		//TODO if (!process.env.EMA_ALPHA) throw new e.InternalServerError('EMA_ALPHA not defined');
+		let emaAlphaCp = parseFloat(process.env.EMA_ALPHA);
+		//initialize setWindowFieldsClause
+		let setWindowFieldsClauseCp: MongoDocument = {};
+		setWindowFieldsClauseCp['partitionBy'] = '$team_key';
+		let sortFieldCp: MongoDocument = {};
+		sortFieldCp['time'] = 1;
+		setWindowFieldsClauseCp['sortBy'] = sortFieldCp;
+		let outputClauseCp: MongoDocument = {};
+
+		let foundContributedPoints = false;
+		let aggArrayCp = [];
+		let teamKeyToIdx: NumericalDict = {};
+		let numCp = 0;
+		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+			//pull this layout element from score layout
+			let thisLayout = scorelayout[scoreIdx];
+			if (thisLayout.id === 'contributedPoints') {
+				foundContributedPoints = true;
+
+				let thisEMAclause: MongoDocument = {};
+				let thisEMAinner: MongoDocument = {};
+				thisEMAinner['alpha'] = emaAlphaCp;
+				thisEMAinner['input'] = '$data.' + thisLayout.id;
+				thisEMAclause['$expMovingAvg'] = thisEMAinner;
+				outputClauseCp[thisLayout.id + 'EMA'] = thisEMAclause;
+
+				setWindowFieldsClauseCp['output'] = outputClauseCp;
+				logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClauseCp));
+				aggQueryCp.push({$setWindowFields: setWindowFieldsClauseCp});
+				
+				let groupClause: MongoDocument = {};
+				groupClause['_id'] = '$team_key';
+			
+				groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
+				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+
+				aggQueryCp.push({ $group: groupClause });
+				aggQueryCp.push({ $sort: { _id: 1 } });
+
+				let aggR = await utilities.aggregate('matchscouting', aggQueryCp);
+				if (aggR)
+					aggArrayCp = aggR;
+
+				// save the count of 'contributedPoints' values
+				numCp = aggArrayCp.length;
+				// extract the per-team values of 'contributedPoints'
+				for (let aggIdx = 0; aggIdx < aggArrayCp.length; aggIdx++) {
+					let thisAgg = aggArrayCp[aggIdx];
+					//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+					let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+					let roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+					thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
+					thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
+
+					// map team keys to indexes
+					teamKeyToIdx[thisAgg._id] = aggIdx;
+				}
+			}
+		}
+		logger.debug(`teamKeyToIndex=${JSON.stringify(teamKeyToIdx)}`);
+		logger.debug(`aggArrayCp=${JSON.stringify(aggArrayCp)}`);
+
+		// get match data so far
+		let matches: Match[] = await utilities.find('matches',
+			{ 'event_key': event_key, 'comp_level': 'qm', 'match_number': { '$gt': 0, '$lt': 99999 }, 'score_breakdown': { '$ne': undefined } }, { sort: { match_number: -1 } },
+			{allowCache: true, maxCacheAge: 10}
+		);
+
+		// dictionary of metricType:[arrays] 
+
+		let event_analytics: LinearSolveDict = {};
+		event_analytics['opr'] = {matrix: [], vector: [], solution: []};
+		event_analytics['xpr'] = {matrix: [], vector: [], solution: []};
+		event_analytics['dpr'] = {matrix: [], vector: [], solution: []};
+		event_analytics['apr'] = {matrix: [], vector: [], solution: []};
+
+		// do the linear algebra
+		// matrix should be NxN (N = # of teams)
+		//let oprMatrix:number[][] = [];
+		// vector should be Nx1 (multiple pushes of [0])
+		//let oprVector:number[][] = [];
+		// initialize the matrices
+		for (let rowIdx = 0; rowIdx < numCp; rowIdx++) {
+			for (let key in event_analytics) {
+				let newRow = new Array(numCp).fill(0);
+				event_analytics[key].matrix.push(newRow);
+				event_analytics[key].vector.push([0]);
+			}
+		}
+
+		// cycle through match objects; for each one, cycle through 'red' and 'blue' array
+		// perform appropriate analytics based on the use case
+		let allianceArray: Array<'red'|'blue'> = ['red', 'blue'];
+		for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
+			let thisMatch = matches[matchIdx];
+			for (let allianceIdx = 0; allianceIdx < allianceArray.length; allianceIdx++) {
+				let otherAllianceIdx = 1- allianceIdx;
+				
+				let thisAlliance = allianceArray[allianceIdx];
+				let otherAlliance = allianceArray[otherAllianceIdx];
+
+				let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
+				// Only use 'totalPoints' minus 'foulPoints'
+				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
+				let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
+				let frcTot = totalPoints - foulPoints;
+
+				// linear algebra matrix & vector updates... 3 robots per alliance
+				let thisTeamKeys = thisMatch.alliances[thisAlliance].team_keys;
+				let otherTeamKeys = thisMatch.alliances[otherAlliance].team_keys;
+
+				let thisAllianceCp = 0;
+				let otherAllianceCp = 0;
+				// get expected contributed points for each alliance
+				for (let z = 0; z < 3; z++) {
+					thisAllianceCp += Number(aggArrayCp[teamKeyToIdx[thisTeamKeys[z]]].contributedPointsAVG);
+					otherAllianceCp += Number(aggArrayCp[teamKeyToIdx[otherTeamKeys[z]]].contributedPointsAVG);
+				}
+				logger.trace(`thisTeamKeys=${JSON.stringify(thisTeamKeys)}~thisAllianceCp=${thisAllianceCp} ... otherTeamKeys=${JSON.stringify(otherTeamKeys)}~otherAllianceCp=${otherAllianceCp}`);
+
+				for (let x = 0; x < 3; x++) {
+					let thisBotKey = thisTeamKeys[x];
+					let xIndex = teamKeyToIdx[thisBotKey];
+					let otherBotKey = otherTeamKeys[x];
+					let xIndexOther = teamKeyToIdx[otherBotKey];
+
+					// OPR
+					event_analytics.opr.vector[xIndex][0] = event_analytics.opr.vector[xIndex][0] + frcTot;
+					// XPR
+					event_analytics.xpr.vector[xIndex][0] = event_analytics.xpr.vector[xIndex][0] + (frcTot - thisAllianceCp);
+					// APR vs DPR
+					if (frcTot > thisAllianceCp) {
+						// APR: actual score was GREATER than expected? Someone on THIS alliance was "assisting"!
+						event_analytics.apr.vector[xIndex][0] = event_analytics.apr.vector[xIndex][0] + (frcTot - thisAllianceCp);
+					}
+					else {
+						// DPR: actual score was LESS than expected? Someone on the OTHER alliance was "defending"!
+						event_analytics.dpr.vector[xIndexOther][0] = event_analytics.dpr.vector[xIndexOther][0] + (thisAllianceCp - frcTot);
+					}
+						
+					for (let y = 0; y < 3; y++) {
+						let thisBotKey2 = thisTeamKeys[y];
+						let yIndex = teamKeyToIdx[thisBotKey2];
+						let otherBotKey2 = otherTeamKeys[y];
+						let yIndexOther = teamKeyToIdx[otherBotKey2];
+
+						// OPR
+						event_analytics.opr.matrix[yIndex][xIndex] = event_analytics.opr.matrix[yIndex][xIndex] + 1;
+						// XPR
+						event_analytics.xpr.matrix[yIndex][xIndex] = event_analytics.xpr.matrix[yIndex][xIndex] + 1;
+						// APR vs DPR
+						if (frcTot > thisAllianceCp) {
+							// APR: actual score was GREATER than expected? Someone on THIS alliance was "assisting"!
+							event_analytics.apr.matrix[yIndex][xIndex] = event_analytics.apr.matrix[yIndex][xIndex] + 1;
+						}
+						else {
+							// DPR: actual score was LESS than expected? Someone on the OTHER alliance was "defending"!
+							event_analytics.dpr.matrix[yIndexOther][xIndexOther] = event_analytics.dpr.matrix[yIndexOther][xIndexOther] + 1;
+						}
+					}
+				}
+				//logger.debug(`typeof=${instanceof matrix[0]}`);
+				//logger.debug(`matrix=${JSON.stringify(matrix, function(k,v) { if(typeof v === 'object') return JSON.stringify(v); return v; }, 2)}`);
+
+				//logger.trace(`matrix=${JSON.stringify(event_analytics.opr.matrix)}`);
+				//logger.trace(`vector=${JSON.stringify(event_analytics.opr.vector)}`);
+			}
+		}
+		for (let key in event_analytics) {
+			// what is the determinant?
+			logger.debug(`matrix[${key}]=${JSON.stringify(event_analytics[key].matrix)}`);
+			if (event_analytics[key].matrix.length > 0)
+				logger.debug(`...math.det(matrix)=${mathjs.det(event_analytics[key].matrix)}`);
+			else
+				logger.debug('...math.det(matrix)=matrix_is_zero_size');
+			logger.debug(`vector[${key}]=${JSON.stringify(event_analytics[key].vector)}`);
+
+			// solve!
+			try {
+				let solution = mathjs.lusolve(event_analytics[key].matrix, event_analytics[key].vector) as Mathjs.MathNumericType[][];
+				logger.debug(`solution[${key}]=${JSON.stringify(solution)}`);
+				event_analytics[key].solution = solution;
+
+				// for (let key in scoutScoreDict) {
+				// 	let thisSprIndex:number = scoutScoreDict[key].sprIndex;
+				// 	scoutScoreDict[key].sprScore = Number(solution[thisSprIndex][0]);
+				// }
+			}
+			catch (err) {
+				logger.warn(`could not calculate solution! err=${err}`);
+			}
+		}
+
+		//
+		// Calculate agg ranges for defined metrics
+		//
 		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
 	
@@ -625,7 +837,11 @@ export class MatchDataHelper {
 			}
 		}
 		logger.trace('aggMinMaxArray=' + JSON.stringify(aggMinMaxArray));
-	
+
+		//
+		// TODO incorporate event-level analytics into aggranges
+		//
+
 		// 2020-02-08, M.O'C: Tweaking agg ranges
 		// Delete the current agg ranges
 		// await utilities.remove("currentaggranges", {});
@@ -637,8 +853,10 @@ export class MatchDataHelper {
 		let inserted = -1;
 		if (aggMinMaxArray)
 			inserted = aggMinMaxArray.length;
-		logger.info('EXIT org_key=' + org_key + ', inserted ' + inserted);
-		
+		logger.info('aggMinMax completed for org_key=' + org_key + ', inserted ' + inserted);
+
+		logger.info(`EXIT completed for org_key=${org_key}, event_year=${event_year}, event_key=${event_key}`);
+
 		logger.removeContext('funcName');
 	}
 
@@ -1106,10 +1324,25 @@ export class MatchDataHelper {
 module.exports = MatchDataHelper;
 export default MatchDataHelper;
 
+/**
+ * Get a number from an AnyDict, defaulting to 0. Easier than doing an inline ternary for each variable.
+ */
+export function getNumberFrom(dict: AnyDict|MatchFormData|undefined, key: string): number {
+	if (!dict) return 0;
+	let thisItem = dict[key];
+	if (typeof thisItem === 'number') return thisItem;
+	else return 0;
+}
+
 // parseInt in reality can accept any type.
 declare function parseInt(value: string|number|boolean|undefined|null): number;
 declare function parseFloat(value: string|number|boolean|undefined|null): number;
 
+export declare interface LinearSolve {
+	matrix: number[][];
+	vector: number[][];
+	solution: Mathjs.MathNumericType[][];
+}
 
 export declare interface AllianceStatsData {
 	/**
@@ -1167,6 +1400,10 @@ export declare interface PredictiveBlock {
 
 declare interface NumericalDict {
 	[key: string]: number;
+}
+
+declare interface LinearSolveDict {
+	[key: string]: LinearSolve;
 }
 
 declare interface StringDict {
