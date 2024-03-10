@@ -15,7 +15,7 @@
 		Text as LText
 	} from '@smui/list';
 	import Tooltip, { Wrapper } from '@smui/tooltip';
-	import TopAppBar, { Row, Section, Title as TABTitle } from '@smui/top-app-bar';
+	import TopAppBar, { Row, Section } from '@smui/top-app-bar';
 
 	import { afterNavigate } from '$app/navigation';
 	import { assets } from '$app/paths';
@@ -27,18 +27,17 @@
 		SnackbarContext
 	} from '$lib/types';
 	import IconButton from '@smui/icon-button';
-	import { getContext, onMount, setContext } from 'svelte';
-	import { writable, type Writable } from 'svelte/store';
+	import { onMount, setContext } from 'svelte';
+	import { writable } from 'svelte/store';
 
 	import LanguagePicker from '$lib/LanguagePicker.svelte';
 	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { msg } from '$lib/i18n';
 
+	import SimpleDialog from '$lib/SimpleDialog.svelte';
+	import { getLogger } from '$lib/logger';
 	import '../theme/extras.scss';
 	import type { LayoutData } from './$types';
-	import SvelteMarkdown from 'svelte-markdown';
-	import { getLogger } from '$lib/logger';
-	import SimpleDialog from '$lib/SimpleDialog.svelte';
 
 	afterNavigate(() => (menuOpen = false));
 
@@ -150,6 +149,7 @@
 	};
 
 	let updateAvailable = false;
+	let updateInstalling = false;
 	let waitingWorker: ServiceWorker | null = null;
 
 	onMount(async () => {
@@ -189,20 +189,45 @@
 			if (!event.data) return;
 			// Only reload the page if we've marked an update as being available
 			if (event.data.msg === 'UPDATE_DONE') {
-				logger.warn('Update done!');
+				let newVersion = String(event.data.version);
+				logger.warn(`Update done! Version=${newVersion}`);
+				updateInstalling = false;
+				// Save the version of the newly installed service worker
+				localStorage.setItem('serviceWorkerVersion', newVersion);
 				if (!updateAvailable) return;
 				sessionStorage.setItem('justUpdated', 'true'); // store a flag for a message to show once the page reloads
 				location.reload();
+			}
+			if (event.data.msg === 'RETURN_VERSION') {
+				let lastKnownVersion = localStorage.getItem('serviceWorkerVersion');
+				let currentVersion = String(event.data.version);
+				logger.debug(`Received service worker version: ${currentVersion} - Last known worker version: ${lastKnownVersion}`);
+				if (lastKnownVersion !== currentVersion) {
+					logger.info('Version mismatch found! Notifying user and saving version...');
+					localStorage.setItem('serviceWorkerVersion', currentVersion);
+					snackbar.open(msg('pwa.justUpdated'));
+				}
 			}
 		});
 		const registration = await navigator.serviceWorker.register('/service-worker.js', {
 			type: 'module'
 		});
+		
+		if (registration.installing) {
+			updateInstalling = true;
+		}
 
 		// If we have a currently active service worker AND one that's waiting for activation, then we can say that an update is available
 		if (registration.waiting && registration.active) {
 			waitingWorker = registration.waiting;
 			updateAvailable = true;
+		}
+		
+		if (registration.active && !registration.waiting && !registration.installing) {
+			logger.warn('There is an active worker and none that are installing or waiting. Requesting current version...');
+			if (registration.active !== navigator.serviceWorker.controller)
+				logger.warn('navigator.serviceWorker.controller is not the same as registration.active!');
+			registration.active.postMessage({msg: 'GET_VERSION'});
 		}
 
 		registration.onupdatefound = () => {
@@ -211,12 +236,17 @@
 			);
 			// Only show an update available if there's currently a service worker
 			if (registration.installing && registration.active) {
+				updateInstalling = true;
 				let installingWorker = registration.installing;
 				installingWorker.onstatechange = () => {
 					if (installingWorker.state === 'installed') {
 						logger.warn('New worker is waiting to be activated!');
 						updateAvailable = true;
+						updateInstalling = false;
 						waitingWorker = installingWorker;
+					}
+					if (installingWorker.state === 'activated') {
+						updateInstalling = false;
 					}
 				};
 			}
@@ -268,6 +298,12 @@
 							>system_update</IconButton
 						>
 						<Tooltip>{msg('pwa.updateAvailable')}</Tooltip>
+					</Wrapper>
+				{/if}
+				{#if updateInstalling}
+					<Wrapper>
+						<IconButton class="material-icons hourglass">hourglass_empty</IconButton>
+						<Tooltip>{msg('pwa.updateDownloading')}</Tooltip>
 					</Wrapper>
 				{/if}
 				{#if $refreshContext.supported}
@@ -496,6 +532,23 @@
 		to {
 			// JL note: can be 180deg because the icon is symmetrical
 			transform: rotate(-180deg);
+		}
+	}
+	:global(.hourglass) {
+		animation-name: hourglass;
+		animation-duration: 4s;
+		animation-timing-function: linear;
+		animation-iteration-count: infinite;
+	}
+	@keyframes hourglass {
+		0% {
+			transform: rotate(0deg);
+		}
+		20% {
+			transform: rotate(180deg);
+		}
+		100% {
+			transform: rotate(180deg);
 		}
 	}
 </style>

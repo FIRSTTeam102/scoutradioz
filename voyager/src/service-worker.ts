@@ -39,9 +39,15 @@ cleanupOutdatedCaches();
 
 // +layout.svelte sends us SKIP_WAITING when the user indicates that they are ready for the app to update
 sw.addEventListener('message', (event) => {
-	if (event.data && event.data.msg === 'SKIP_WAITING') {
-		console.log('Received SKIP_WAITING instruction. Skipping wait...');
-		sw.skipWaiting();
+	if (event.data) {
+		if (event.data.msg === 'SKIP_WAITING') {
+			console.log('Received SKIP_WAITING instruction. Skipping wait...');
+			sw.skipWaiting();
+		}
+		if (event.data.msg === 'GET_VERSION') {
+			// Send a return message to the client that sent this message
+			event.source?.postMessage({ msg: 'RETURN_VERSION', version});
+		}
 	}
 });
 
@@ -51,7 +57,9 @@ sw.addEventListener('activate', (event) => {
 	event.waitUntil(
 		sw.clients.claim().then(() => {
 			// Send message back to +layout.svelte that the app has finished updating
-			sw.clients.matchAll().then((clients) => clients.forEach((client) => client.postMessage({ msg: 'UPDATE_DONE' })));
+			sw.clients.matchAll().then((clients) => clients.forEach((client) => client.postMessage({ msg: 'UPDATE_DONE', version })));
 		})
 	);
 });
+
+// console.log('hi');
