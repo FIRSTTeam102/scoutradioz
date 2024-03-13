@@ -7,15 +7,26 @@
 	//
 extends ../layout
 block content
-	script(src=`${fileRoot}/lib/chart.min.js?v=1`)
+	script(src=`${fileRoot}/lib/chart.umd.js?v=0`)
 	style.
 		html{
 			overflow-x: visible;
 		}
+		/* 2024-03-13 JL: Fixed charts displaying wrong on Firefox by changing the way they are positioned to use flexbox */
 		.radar-canvas{
-			/* 2022-03-19 JL: Not sure what changed from chartjs v2.9 to v3.7, but to keep the same 
-			 	aspect ratio as before, we need to give the canvases some horizontal padding */
-			margin: 0 6%;
+			max-width: 100%;
+		}
+		.radar-chart-parent {
+			display: flex;
+			flex-flow: row wrap;
+		}
+		.radar-chart {
+			flex: 1 0 50%;
+		}
+		@media(max-width: 600px) {
+			.radar-chart {
+				flex: 1 0 100%;
+			}
 		}
 	include ../reports/templates/heatmap
 	include ../reports/mixins/upcomingMatch
@@ -69,22 +80,22 @@ block content
 				h4!=msg('driveDashboard.relativeStrengths')
 				h6
 					i!=msg('driveDashboard.legendShowHide')
-				div
-					div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
+				div(class="radar-chart-parent")
+					div(class="radar-chart")
 						h5!=msg('alliance.red')
-						canvas(id="RadarRedAlliance" class="radar-canvas" width="250" height="215")
-					div(class="w3-mobile w3-show-inline-block" style="width: 50%;")
+						canvas(id="RadarRedAlliance" class="radar-canvas")
+					div(class="radar-chart")
 						h5!=msg('alliance.blue')
-						canvas(id="RadarBlueAlliance" class="radar-canvas" width="250" height="215")
+						canvas(id="RadarBlueAlliance" class="radar-canvas")
 			//-Table
 			div(class="w3-section")
 				h4!=msg('metrics.raw')
 				div
 					span!=msg('metrics.show') 
 					input(type="radio" id="showAvg" name="sel" onclick="showAvg();" checked)
-					label(for="showAvg")!=msg('metrics.AVG')    
+					label(for="showAvg") &nbsp;!{msg('metrics.AVG')}&#32;
 					input(type="radio" id="showMax" name="sel" onclick="showMax();")
-					label(for="showMax")!=msg('metrics.MAX')
+					label(for="showMax") &nbsp;!{msg('metrics.MAX')}&#32;
 				p
 				- var aggRangeMap = [];
 				for scoreItem in currentAggRanges
