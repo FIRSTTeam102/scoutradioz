@@ -339,6 +339,7 @@
 		"allTeams": "all teams",
 		"allianceStats": "Alliance team statistics",
 		"allTeamMetrics": "All team metrics",
+		"browsePastEvents": "Browse data from past events",
 		"completedMatches": "Completed matches",
 		"upcomingMatches": "Upcoming matches",
 		"upcomingMatchesTeam": "Upcoming matches for {team}",
@@ -495,5 +496,6 @@
 	"add": "Add",
 	"class": "Class",
 	"subteam": "Subteam",
-	"update": "Update"
+	"update": "Update",
+	"year": "Year"
 }
