@@ -125,7 +125,7 @@ class NavHelpers {
 						href: '/reports/allteammetrics',
 					},
 					{
-						label: 'WIP - Browse data from other events',
+						label: '!reports.browsePastEvents',
 						href: '/reports/browseevents',
 					},
 					{
