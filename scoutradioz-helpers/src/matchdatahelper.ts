@@ -655,7 +655,7 @@ export class MatchDataHelper {
 					// OPR
 					event_analytics.opr.vector[xIndex][0] = event_analytics.opr.vector[xIndex][0] + frcTot;
 					// XPR
-					event_analytics.xpr.vector[xIndex][0] = event_analytics.xpr.vector[xIndex][0] + (frcTot - thisAllianceCp);
+					event_analytics.xpr.vector[xIndexOther][0] = event_analytics.xpr.vector[xIndexOther][0] + frcTot;
 					// APR vs DPR
 					if (frcTot > thisAllianceCp) {
 						// APR: actual score was GREATER than expected? Someone on THIS alliance was "assisting"!
@@ -675,7 +675,7 @@ export class MatchDataHelper {
 						// OPR
 						event_analytics.opr.matrix[yIndex][xIndex] = event_analytics.opr.matrix[yIndex][xIndex] + 1;
 						// XPR
-						event_analytics.xpr.matrix[yIndex][xIndex] = event_analytics.xpr.matrix[yIndex][xIndex] + 1;
+						event_analytics.xpr.matrix[yIndexOther][xIndexOther] = event_analytics.xpr.matrix[yIndexOther][xIndexOther] + 1;
 						// APR vs DPR
 						if (frcTot > thisAllianceCp) {
 							// APR: actual score was GREATER than expected? Someone on THIS alliance was "assisting"!
