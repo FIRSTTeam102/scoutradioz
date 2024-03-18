@@ -71,7 +71,8 @@ router.get('/match*', wrap(async (req, res) => {
 		{sort: {'order': 1}},
 		{allowCache: true}
 	);
-	
+
+	let groupedLayout = splitLayoutIntoGroups(layout);
 	
 	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
@@ -113,14 +114,15 @@ router.get('/match*', wrap(async (req, res) => {
 	//render page
 	res.render('./scouting/match', {
 		title: title,
-		layout: layout,
+		layout,
+		groupedLayout,
 		key: match_team_key,
-		alliance: alliance,
-		answers: answers,
-		teamKey: teamKey,
-		images: images,
+		alliance,
+		answers,
+		teamKey,
+		images,
 		team: team,
-		pit_super_data: pit_super_data
+		pit_super_data,
 	});
 }));
 
@@ -171,11 +173,13 @@ router.post('/testform', wrap(async (req, res) => {
 		website: null
 	};
 
-	if (form_type == 'matchscouting')
-		//render page
+	//render page
+	if (form_type == 'matchscouting') {
+		let groupedLayout = splitLayoutIntoGroups(layout);
 		res.render('./scouting/match', {
 			title: req.msg('scouting.match'),
 			layout: layout,
+			groupedLayout,
 			key: match_team_key,
 			alliance: alliance,
 			answers: null,
@@ -183,6 +187,7 @@ router.post('/testform', wrap(async (req, res) => {
 			images: null,
 			team: team,
 		});
+	}
 	else
 		res.render('./scouting/pit', {
 			title: req.msg('scouting.pit'),
@@ -650,5 +655,24 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 		});
 	}
 }));
+
+// Split the layout into groups, based on the header, making it easier to do the dynamic scrolling
+function splitLayoutIntoGroups(layout: Layout[]) {
+
+	let groupedLayout = layout.reduce((list, current) => {
+		if (current.type === 'h2') {
+			list.push({
+				label: current.label || 'unknown',
+				items: [current]
+			});
+		}
+		else {
+			let idx = list.length - 1;
+			list[idx].items.push(current);
+		}
+		return list;
+	}, [{label: 'Unknown', items: []}] as Array<{label: string, items: Layout[]}>);
+	return groupedLayout;
+}
 
 module.exports = router;
