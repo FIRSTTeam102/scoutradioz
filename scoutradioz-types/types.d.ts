@@ -1,8 +1,5 @@
-// JL: Should these be put into a separate package?
-
 import type { ObjectId } from 'mongodb';
 
-// General interfaces/types that don't need to be exported
 declare interface NumericalDict {
 	[key: string]: number;
 }
@@ -12,15 +9,16 @@ declare interface StringDict {
 }
 
 declare type integer = number;
-export declare type formDataOutput = number|boolean|string|null;
+declare type formDataOutput = number|boolean|string|null;
 
-export declare interface MatchFormData {
+declare interface MatchFormData {
 	[key: string]: formDataOutput;
 }
 
 declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
 }
+
 
 // 2022-12-10 JL: Removed 'extends Document' and renamed to 'DocumentWithID' to:
 // 	1. Allow our schemas to be modified via Omit (the fact that Document has [key: string]: any messes things up)
@@ -39,15 +37,6 @@ export declare interface DbDocumentWithNumberId {
 	 */
 	_id?: number;
 }
-
-/**
- * Optionally explicitly declare that a given object retrieved from the database has `_id` set.
- * @example
- * 
- * 	let users: WithDbId<User>[] = await utilities.find('users', {});
- */
-export declare type WithDbId<T extends DbDocument|DbDocumentWithNumberId> = T & Required<Pick<T, '_id'>>
-
 
 /**
  * Contains the min, max, average, and variance for a given numerical metric from an org's match scouting form.
@@ -213,7 +202,7 @@ export declare interface Match extends DbDocument {
 		red: AnyDict;
 		blue: AnyDict;
 	};
-	videos?: Array<MatchVideo>;
+	videos?: MatchVideo[];
 	time: number;
 	actual_time: number|'';
 	predicted_time: number;
@@ -223,10 +212,10 @@ export declare interface Match extends DbDocument {
 }
 
 declare class MatchAllianceInfo {
-	team_keys: Array<TeamKey>;
+	team_keys: TeamKey[];
 	score: number;
-	surrogate_team_keys: Array<TeamKey>;
-	dq_team_keys: Array<TeamKey>;
+	surrogate_team_keys: TeamKey[];
+	dq_team_keys: TeamKey[];
 }
 
 declare class MatchVideo {
@@ -282,8 +271,8 @@ export declare interface Org extends DbDocument {
 	default_password: string;
 	config: {
 		members: {
-			subteams: Array<OrgSubteam>;
-			classes: Array<OrgClass>;
+			subteams: OrgSubteam[];
+			classes: OrgClass[];
 		};
 		columnDefaults: StringDict;
 	}
@@ -588,38 +577,3 @@ export declare interface UserAgent {
 	os: string;
 	browser: string;
 }
-
-/**
- * Possible collection names in the SR database.
- */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
-/**
- * Gets the correct schema for the given collection name.
- */
-export declare type CollectionSchema<colName extends CollectionName> =
-	colName extends 'aggranges' ? AggRange :
-	colName extends 'events' ? Event :
-	// colName extends 'i18n' ?  :
-	colName extends 'layout' ? (DerivedLayout|Layout) :
-	colName extends 'matches' ? Match :
-	colName extends 'matchscouting' ? MatchScouting :
-	colName extends 'orgs' ? Org :
-	colName extends 'orgteamvalues' ? OrgTeamValue :
-	colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
-	colName extends 'pitscouting' ? PitScouting :
-	colName extends 'rankingpoints' ? RankingPoints :
-	colName extends 'rankings' ? Ranking :
-	colName extends 'roles' ? Role :
-	colName extends 'scoutingpairs' ? ScoutingPair :
-	colName extends 'sessions' ? Session :
-	colName extends 'sveltesessions' ? LuciaSession :
-	colName extends 'teams' ? Team :
-	colName extends 'uploads' ? Upload :
-	colName extends 'users' ? User : 
-	any;
-/**
- * Gets the correct schema for the given collection name, with a guaranteed `_id` ObjectId.
- */
-export declare type CollectionSchemaWithId<colName extends CollectionName> = WithDbId<CollectionSchema<colName>>;
-
-declare let x: CollectionSchema<'layout'>;

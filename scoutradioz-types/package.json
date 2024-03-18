@@ -2,9 +2,14 @@
 	"name": "scoutradioz-types",
 	"version": "2.0.0",
 	"description": "Type declarations for objects in the Scoutradioz database.",
-	"types": "types.d.ts",
+	"types": "index.d.ts",
+	"exports": {
+		".": "./index.d.ts",
+		"./interface-checker": "./types.d-ti.ts"
+	},
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "ts-interface-builder types.d.ts"
 	},
 	"repository": {
 		"type": "git",
@@ -18,5 +23,8 @@
 	"homepage": "https://github.com/firstteam102/scoutradioz#readme",
 	"peerDependencies": {
 		"mongodb": ">=4.1.0"
+	},
+	"devDependencies": {
+		"ts-interface-builder": "^0.3.3"
 	}
 }
