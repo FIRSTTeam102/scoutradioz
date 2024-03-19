@@ -79,6 +79,64 @@ router.post('/teams', wrap(async (req, res) => {
 }));
 
 /**
+ * Admin page to manually edit rankings currently in the DB
+ * @url /manage/manualdata/rankings
+ * @views manualdata/rankings
+ */
+router.get('/rankings', wrap(async (req, res) => {
+	logger.addContext('funcName', 'rankings[get]');
+	logger.info('ENTER');
+
+	let eventKey = req.event.key;
+
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	let rankings: Ranking[] = await utilities.find('rankings', 
+		{'event_key': eventKey}, 
+		{sort:{rank: 1}}
+	);
+
+	res.render('./manage/manualdata/rankings', {
+		title: 'Adjust Rankings',
+		rankings,
+	});
+}));
+
+/**
+ * POST Method that increments or decrements a team's ranking value at a given event
+ * @param team_key Team being modified
+ * @param valueToAdd The amount to change the current ranking by (usually 1 or -1)
+ * @return the team key and the new value
+ */
+router.post('/updateteamranking', wrap(async (req, res) => {
+	//Check authentication for team admin level
+	if( !await req.authenticate( Permissions.ACCESS_TEAM_ADMIN ) ) return;
+	
+	logger.addContext('funcName', 'updateteamranking[post]');
+	logger.info('ENTER');
+	
+	const team_key = req.body.key;
+	const valueToAdd = parseInt(req.body.value);
+	const event_key = req.event.key;
+	
+	if (!team_key || !valueToAdd) throw new e.UserError('Provide a team_key and a value.');
+	
+	let currentTeamValue: Ranking = await utilities.findOne('rankings', {team_key: team_key, event_key: event_key});
+	
+	let newValue;
+	
+	if (currentTeamValue) {
+		newValue = currentTeamValue.rank + valueToAdd;
+		
+		logger.debug(`Setting ${team_key}'s value to ${newValue} for event ${event_key}`);
+		await utilities.update('rankings', {team_key: team_key}, {$set: {rank: newValue}});
+	}
+	res.send({
+		team_key: team_key,
+		value: newValue
+	});
+}));
+
+/**
  * POST Method that fetches info on a team from TheBlueAlliance.
  * @param team_number Team number to fetch
  * @return [Object] Team info from TBA. If the team is invalid, object contains only an array named "Errors".
