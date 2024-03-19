@@ -304,7 +304,8 @@ router.get('/matchresults', wrap(async (req, res) => {
  */
 router.post('/matchresults', wrap(async (req, res) => {
 	logger.addContext('funcName', 'matchresults[post]');
-	
+	logger.info('ENTER');
+
 	let event_key = req.event.key;
 	const year = req.event.year;
 	let event_year = req.event.year;
@@ -351,15 +352,6 @@ router.post('/matchresults', wrap(async (req, res) => {
 			continue;
 		}
 		
-		//Modify winning alliance
-		switch (userInputThisMatch.WinningAlliance) {
-			case 'red': match.winning_alliance = 'red'; break;
-			case 'blue': match.winning_alliance = 'blue'; break;
-			case '': match.winning_alliance = ''; break;
-			default: 
-				throw new e.UserError(`Match ${match_key} WinningAlliance invalid (input: ${userInputThisMatch.WinningAlliance})`);
-		}
-		
 		//If score_brakdown has not yet been created, create it now.
 		if(!match.score_breakdown){
 			match.score_breakdown = {
@@ -372,14 +364,33 @@ router.post('/matchresults', wrap(async (req, res) => {
 		//Modify blue score
 		match.alliances.blue.score = isNaN(parseInt(userInputThisMatch.BlueScore)) ? -1 : parseInt(userInputThisMatch.BlueScore);
 		match.score_breakdown.blue.totalPoints = isNaN(parseInt(userInputThisMatch.BlueScore)) ? -1 : parseInt(userInputThisMatch.BlueScore);
+		//Modify blue fouls
+		match.score_breakdown.blue.foulPoints = isNaN(parseInt(userInputThisMatch.BlueFouls)) ? -1 : parseInt(userInputThisMatch.BlueFouls);
 		//Modify red score
 		match.alliances.red.score = isNaN(parseInt(userInputThisMatch.RedScore)) ? -1 : parseInt(userInputThisMatch.RedScore);
 		match.score_breakdown.red.totalPoints = isNaN(parseInt(userInputThisMatch.RedScore)) ? -1 : parseInt(userInputThisMatch.RedScore);
+		//Modify red fouls
+		match.score_breakdown.red.foulPoints = isNaN(parseInt(userInputThisMatch.RedFouls)) ? -1 : parseInt(userInputThisMatch.RedFouls);
 		// Ranking points
 		for (let rp of rankingpoints.attributes) {
 			match.score_breakdown.blue[rp.name] = !!userInputThisMatch[`Blue${rp.name}`]; // ex: BluecompleteRocketRankingPoint
 			match.score_breakdown.red[rp.name] = !!userInputThisMatch[`Red${rp.name}`];
 		}
+		
+		//Modify winning alliance
+		// 2024-03-18, M.O'C: Calculating winning alliance based on the scores		
+		// switch (userInputThisMatch.WinningAlliance) {
+		// 	case 'red': match.winning_alliance = 'red'; break;
+		// 	case 'blue': match.winning_alliance = 'blue'; break;
+		// 	case '': match.winning_alliance = ''; break;
+		// 	default: 
+		// 		throw new e.UserError(`Match ${match_key} WinningAlliance invalid (input: ${userInputThisMatch.WinningAlliance})`);
+		// }
+		match.winning_alliance = '';
+		if (match.alliances.blue.score > match.alliances.red.score)
+			match.winning_alliance = 'blue';
+		if (match.alliances.red.score > match.alliances.blue.score)
+			match.winning_alliance = 'red';
 		
 		match.manually_entered = true; // 2023-02-20 JL: added manually entered
 	}

@@ -31,18 +31,16 @@ block content
 							div(class="w3-col s1 m2") #
 							div(class="w3-col s2 m0") &nbsp;
 							div(class="w3-col s5 m5") Time
-						div(class="w3-col s6 m2 w3-padding-small")
-							div(class="w3-col s2") &nbsp;
-							div(class="w3-col s8") Winner&nbsp;
-							div(class="w3-col s2") &nbsp;
-						div(class="w3-col s12 m4 w3-padding-small")
-							div(class="w3-col s3") Blue
-							div(class="w3-col s3") &nbsp;Blue Score
-							div(class="w3-col s6") Blue RP
-						div(class="w3-col s12 m4 w3-padding-small")
+						div(class="w3-col s12 m5 w3-padding-small")
 							div(class="w3-col s3") Red
-							div(class="w3-col s3") &nbsp;Red Score
-							div(class="w3-col s6") Red RP
+							div(class="w3-col s2") &nbsp;Score
+							div(class="w3-col s2") &nbsp;Pts from Fouls
+							div(class="w3-col s5") Red RP
+						div(class="w3-col s12 m5 w3-padding-small")
+							div(class="w3-col s3") Blue
+							div(class="w3-col s2") &nbsp;Score
+							div(class="w3-col s2") &nbsp;Pts from Fouls
+							div(class="w3-col s5") Blue RP
 					br 
 				each match in matches
 					div(class="w3-col s12 m0 w3-section theme-spacer")
@@ -53,63 +51,61 @@ block content
 							div(class="w3-col s1 m2")= match.match_number
 							div(class="w3-col s2 m0") &nbsp;
 							div(class="w3-col s5 m5")= zoneTime(1000*match.time).toLocaleString(DateTime.TIME_SIMPLE)
-						//-Winner
-						div(class="w3-col s6 m2 w3-padding-small")
-							div(class="w3-col s2") &nbsp;
-							div(class="w3-col s8" style="margin-top: -10px;")
-								select(class="w3-input theme-input w3-no-border theme-inline-padding" type="multiselect" name=`WinningAlliance_${match.key}` id=`WinningAlliance_${match.key}`)
-									if match.winning_alliance == "blue"
-										option(value="") 
-										option(value="blue" selected) Blue
-										option(value="red") Red
-									else if match.winning_alliance == "red"
-										option(value="") 
-										option(value="blue") Blue
-										option(value="red" selected) Red
-									else
-										option(value="" selected) 
-										option(value="blue") Blue
-										option(value="red") Red
-							div(class="w3-col s2") &nbsp;
 						//-Spacer
 						div(class="w3-col s12 m0") &nbsp;
-						//-Blue
-						div(class="w3-col s12 m4 w3-padding-small")
-							//-team #s
-							div(class="w3-col s3" style="margin-top: -10px;")= match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3)
-							//-score
-							div(class="w3-col s3" style="margin-top: -10px; padding-left: 8px;")
-								if (match.alliances.blue.score > -1)
-									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-blue" type="text" name=`BlueScore_${match.key}` value=`${match.alliances.blue.score}`)
-								else
-									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-blue" type="text" name=`BlueScore_${match.key}`)
-							//-ranking points
-							div(class="w3-col s6" style="margin-top: -10px;")
-								each rp in rankingpoints.attributes
-									//- rp: label, name, and abbr
-									- let key = `Blue${rp.name}_${match.key}`;
-									label(for=key class="w3-tooltip" style="margin-right: 4px; margin-left: 8px;") #{rp.abbr}
-										span(class="w3-tooltiptext" style="width: 160px; margin-left: -80px;") #{rp.label}
-									input(type="checkbox" class="w3-check alliance-blue" name=key id=key checked=(match.score_breakdown && match.score_breakdown.blue[rp.name]))
-						//-Spacer
-						div(class="w3-col s12 m0") &nbsp;
+
 						//-Red
-						div(class="w3-col s12 m4 w3-padding-small")
+						div(class="w3-col s12 m5 w3-padding-small")
 							//-team #s
 							div(class="w3-col s3" style="margin-top: -10px;")= match.alliances.red.team_keys[0].substring(3)+', '+match.alliances.red.team_keys[1].substring(3)+', '+match.alliances.red.team_keys[2].substring(3)
 							//-score
-							div(class="w3-col s3" style="margin-top: -10px; padding-left: 8px;")
+							div(class="w3-col s2" style="margin-top: -10px; padding-left: 8px;")
 								if (match.alliances.red.score > -1)
 									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-red" type="text" name=`RedScore_${match.key}` value=`${match.alliances.red.score}`)
 								else
 									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-red" type="text" name=`RedScore_${match.key}`)
+							//-fouls
+							div(class="w3-col s2" style="margin-top: -10px; padding-left: 8px;")
+								if (match.score_breakdown && match.score_breakdown.red  && match.score_breakdown.red.foulPoints > -1)
+									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-red" type="text" name=`RedFouls_${match.key}` value=`${match.score_breakdown.red.foulPoints}`)
+								else
+									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-red" type="text" name=`RedFouls_${match.key}`)
 							//-ranking points
-							div(class="w3-col s6" style="margin-top: -10px;")
+							div(class="w3-col s5" style="margin-top: -10px;")
 								each rp in rankingpoints.attributes
 									//- rp: label, name, and abbr
 									- let key = `Red${rp.name}_${match.key}`;
 									label(for=key class="w3-tooltip" style="margin-right: 4px; margin-left: 8px;") #{rp.abbr}
 										span(class="w3-tooltiptext" style="width: 160px; margin-left: -80px;") #{rp.label}
 									input(type="checkbox" class="w3-check alliance-red" name=key id=key checked=(match.score_breakdown && match.score_breakdown.red[rp.name]))
+
+						//-Spacer
+						div(class="w3-col s12 m0") &nbsp;
+
+						//-Blue
+						div(class="w3-col s12 m5 w3-padding-small")
+							//-team #s
+							div(class="w3-col s3" style="margin-top: -10px;")= match.alliances.blue.team_keys[0].substring(3)+', '+match.alliances.blue.team_keys[1].substring(3)+', '+match.alliances.blue.team_keys[2].substring(3)
+							//-score
+							div(class="w3-col s2" style="margin-top: -10px; padding-left: 8px;")
+								if (match.alliances.blue.score > -1)
+									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-blue" type="text" name=`BlueScore_${match.key}` value=`${match.alliances.blue.score}`)
+								else
+									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-blue" type="text" name=`BlueScore_${match.key}`)
+							//-fouls
+							div(class="w3-col s2" style="margin-top: -10px; padding-left: 8px;")
+								if (match.score_breakdown && match.score_breakdown.blue  && match.score_breakdown.blue.foulPoints > -1)
+									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-blue" type="text" name=`BlueFouls_${match.key}` value=`${match.score_breakdown.blue.foulPoints}`)
+								else
+									input(class="w3-input theme-input w3-no-border theme-inline-padding alliance-blue" type="text" name=`BlueFouls_${match.key}`)
+							//-ranking points
+							div(class="w3-col s5" style="margin-top: -10px;")
+								each rp in rankingpoints.attributes
+									//- rp: label, name, and abbr
+									- let key = `Blue${rp.name}_${match.key}`;
+									label(for=key class="w3-tooltip" style="margin-right: 4px; margin-left: 8px;") #{rp.abbr}
+										span(class="w3-tooltiptext" style="width: 160px; margin-left: -80px;") #{rp.label}
+									input(type="checkbox" class="w3-check alliance-blue" name=key id=key checked=(match.score_breakdown && match.score_breakdown.blue[rp.name]))
+
 			div(class="w3-section w3-auto")
 				button(class="w3-btn theme-submit" type="submit") Submit

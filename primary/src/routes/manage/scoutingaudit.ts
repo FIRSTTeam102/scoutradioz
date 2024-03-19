@@ -590,7 +590,7 @@ router.get('/spr', wrap(async (req, res) => {
 	// sort scoutScoreDict by sprScore
 	let sortedValues:Array<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = Object.values(scoutScoreDict);
 	// reverse sort!
-	sortedValues.sort((a, b) => b.sprScore - a.sprScore);
+	sortedValues.sort((a, b) => a.sprScore - b.sprScore);
 	logger.trace('sortedValues=' + JSON.stringify(sortedValues));
 
 	// reconstruct scoutScoreDict
