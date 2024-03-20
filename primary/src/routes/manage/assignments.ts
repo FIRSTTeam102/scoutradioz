@@ -487,6 +487,8 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		scoutsPerMatch = matchScoutsPlusScoutedCount.length;
 	}
 
+	// 2024-03-20, M.O'C: The changes to "use latest timestamp" instead of "next unplayed timestamp" broke scheduling when you're doing the 2nd run past breaks
+	let notFirstMatch: boolean = false;
 	for (let matchesIdx in comingMatches) {
 		const thisMatch = comingMatches[matchesIdx];
 		const thisMatchKey = thisMatch.key;
@@ -532,11 +534,13 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
 		// 2024-01-24, M.O'C: Might optionally not be stopping for breaks
-		if (stoppingForBreaks)
+		// 2024-03-20, M.O'C: Only check for breaks on the 2nd and later matches - 'notFirstMatch' is initially "false"
+		if (stoppingForBreaks && notFirstMatch)
 			if (matchGap > matchGapBreakThreshold) {
 				logger.trace('matchGap=' + matchGap + '... found a break');
 				break;
 			}
+		notFirstMatch = true;
 		
 		let teamArray: TeamKey[] = [];
 		if (redBlueToggle == 0)
