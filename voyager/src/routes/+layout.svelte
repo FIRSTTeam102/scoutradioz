@@ -138,7 +138,7 @@
 		// only update if there was enough of a change
 		if (Math.abs(lastScrollTop - scrollTop) <= headerBarHeight) return;
 
-		headerBarHidden = scrollTop > lastScrollTop;
+		headerBarHidden = scrollTop > lastScrollTop && scrollTop > 0 /* don't hide bar if iphone scrolls up into the negatives and pops back  */;
 		// // Scrolled down, hide
 		// if (scrollTop > lastScrollTop) headerBar.classList.add('hidden');
 		// // Scrolled up, show
@@ -468,9 +468,9 @@
 		width: 100%;
 		top: 0px;
 		transition: top 0.15s ease-out;
-		// &:global(.slidAway) {
-		// 	top: -$header-height;
-		// }
+		&:global(.slidAway) {
+			top: -$header-height;
+		}
 		& :global(p) {
 			margin: 0;
 		}
