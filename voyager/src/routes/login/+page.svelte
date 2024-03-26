@@ -123,6 +123,7 @@
 									// and put the "full" org info into the orgs table, i.e. the one with org config and all that but without hashed password
 									await db.orgs.put(data.org);
 								});
+								await FormLayoutOperations.download('both');
 								console.log('doing goto pick-user!');
 								goto('/login/pick-user');
 								console.log('post goto');
