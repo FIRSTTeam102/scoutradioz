@@ -379,20 +379,16 @@
 						<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
 						<LText>{msg('layout.nav.user.switchorg')}</LText>
 					</LItem>
-					<LItem href="/login/pick-user">
-						<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
-						<LText>{msg('layout.nav.user.pickuser')}</LText>
-					</LItem>
 				{:else}
 					<LItem disabled>
 						<LGraphic class="material-icons unimportant" aria-hidden="true">logout</LGraphic>
 						<LText>{msg('layout.nav.user.switchorgoffline')}</LText>
 					</LItem>
-					<LItem disabled>
-						<LGraphic class="material-icons unimportant" aria-hidden="true">login</LGraphic>
-						<LText>{msg('layout.nav.user.pickuseroffline')}</LText>
-					</LItem>
 				{/if}
+				<LItem href="/login/pick-user">
+					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+					<LText>{msg('layout.nav.user.pickuser')}</LText>
+				</LItem>
 				<!-- Not logged in to an org -->
 			{:else if $deviceOnline}
 				<LItem href="/login">
