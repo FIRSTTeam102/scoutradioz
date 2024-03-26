@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { MatchScoutingOperations } from '$lib/DBOperations';
 	import SlidingTabs from '$lib/SlidingTabs.svelte';
 	import { msg } from '$lib/i18n';
+	import { addRefreshButtonFunctionality, getPageLayoutContexts, setPageTitle } from '$lib/utils';
 	import Button, { Label as BLabel } from '@smui/button';
-	import SvelteMarkdown from 'svelte-markdown';
 	import type { PageData } from './$types';
 	import MatchAssignmentList from './MatchAssignmentList.svelte';
 
 	export let data: PageData;
+	setPageTitle(msg('scouting.match'), msg('scouting.scheduleVersion', {checksum: data.checksum}));
 
 	const tabs = [
 		{ id: 'mine', icon: 'person', label: 'Assigned' },
@@ -17,13 +19,15 @@
 
 	$: initialActiveIndex = data.myMatches.length ? 0 : 1;
 	
-	// TODO title bar
-	// let title = getContext('title') as Writable<string>;
-	// title.set(msg('scouting.matchScheduleChecksum', {checksum: data.checksum}))
+	const { snackbar } = getPageLayoutContexts();
+	addRefreshButtonFunctionality(async () => {
+		const changed = await MatchScoutingOperations.download();
+		if (changed) snackbar.open(msg('cloudsync.newDataDownloaded'), 4000);
+		else snackbar.open(msg('cloudsync.upToDate'), 4000);
+	})
 </script>
 
 <section class="comfortable">
-	<h2><SvelteMarkdown source={msg('scouting.matchScheduleChecksum', {checksum: data.checksum})} /></h2>
 	<!-- JL: yes this is hacky as HECK but i only have a few minutes to throw this together -->
 	<p>
 		Current match number: {data.firstMatchNumber}

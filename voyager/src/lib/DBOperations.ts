@@ -114,6 +114,14 @@ export class MatchScoutingOperations extends TableOperations {
 	static async download() {
 		const { event_key, org_key } = getKeys();
 
+		const filter = `org=${org_key},event=${event_key}`;
+		const syncstatus = await db.syncstatus
+			.where({
+				table: 'matchscouting',
+				filter
+			})
+			.first();
+
 		// Fetch list of match scouting assignments for this event
 		const matchScouting = await fetchJSON<MatchScoutingLocal[]>(`/api/orgs/${org_key}/${event_key}/assignments/match`);
 		// Merge with existing data
@@ -127,7 +135,7 @@ export class MatchScoutingOperations extends TableOperations {
 			await db.matchscouting.bulkPut(mergedMatchScouting);
 			await db.syncstatus.put({
 				table: 'matchscouting',
-				filter: `org=${org_key},event=${event_key}`,
+				filter,
 				time: new Date(),
 				data: {
 					checksum,
@@ -135,7 +143,14 @@ export class MatchScoutingOperations extends TableOperations {
 				}
 			});
 		});
+
+		let changed = true;
+		if (typeof syncstatus?.data?.checksum === 'string')
+			changed = syncstatus.data.checksum.substring(3) !== checksum.substring(3);
+		logger.debug(`Newly calculated checksum: ${checksum}. Changed=${changed}`);
+
 		logger.trace('Done');
+		return changed;
 	}
 
 	/**
@@ -235,6 +250,13 @@ export class PitScoutingOperations extends TableOperations {
 		logger.info('ENTER');
 		const { event_key, org_key } = getKeys();
 
+		const syncstatus = await db.syncstatus
+			.where({
+				table: 'pitscouting',
+				filter: `org=${org_key},event=${event_key}`
+			})
+			.first();
+
 		// Fetch list of pit scouting assignments for this event
 		const pitScouting = await fetchJSON<PitScoutingLocal[]>(`/api/orgs/${org_key}/${event_key}/assignments/pit`);
 
@@ -255,7 +277,14 @@ export class PitScoutingOperations extends TableOperations {
 				}
 			});
 		});
+
+		let changed = true;
+		if (typeof syncstatus?.data?.checksum === 'string')
+			changed = syncstatus.data.checksum.substring(3) !== checksum.substring(3);
+		logger.debug(`Newly calculated checksum: ${checksum}. Changed=${changed}`);
+
 		logger.trace('Done');
+		return changed;
 	}
 
 	/**
@@ -344,59 +373,106 @@ export class PitScoutingOperations extends TableOperations {
 
 export class FormLayoutOperations extends TableOperations {
 	@setFuncName('FormLayoutOperations.download')
-	static async download() {
+	static async download(type: 'match' | 'pit' | 'both' = 'both') {
 		const { event_key, org_key } = getKeys();
+
+		const doPit = type === 'pit' || type === 'both';
+		const doMatch = type === 'match' || type === 'both';
+		logger.info(`ENTER, downloading ${type}`);
 
 		// grab year from event key
 		const year = Number(event_key.substring(0, 4));
 		assert(!isNaN(year), `Failed to pull year from event_key: ${event_key}, got a NaN!`);
 
-		// Fetch list of match scouting form elements for the associated year
-		const matchFormData = await fetchJSON<str<Layout>[]>(
-			`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/match`
-		);
+		let matchChanged = false,
+			pitChanged = false;
 
-		// Fetch list of match scouting form elements for the associated year
-		const pitFormData = await fetchJSON<str<Layout>[]>(
-			`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/pit`
-		);
-		logger.debug(`Retrieved ${matchFormData.length} match items and ${pitFormData.length} pit items`);
-		
-		const matchChecksum = await FormLayoutOperations.getChecksum(matchFormData);
-		const pitChecksum = await FormLayoutOperations.getChecksum(pitFormData);
-
-		logger.trace('Begin transaction');
-		await db.transaction('rw', db.layout, db.syncstatus, async () => {
-			// Remove existing layout for this org+year, because maybe some elements got deleted
-			let pitDeleteCount = await db.layout.where({ org_key, year, form_type: 'pitscouting' }).delete();
-			let matchDeleteCount = await db.layout.where({ org_key, year, form_type: 'matchscouting' }).delete();
-			logger.debug(`Deleted ${pitDeleteCount} pit items and ${matchDeleteCount} match items`);
-			logger.trace('Putting match & pit scouting into db...');
-			await db.layout.bulkPut(pitFormData);
-			await db.layout.bulkPut(matchFormData);
-			logger.trace('Saving sync status...');
-			await db.syncstatus.bulkPut([
-				{
+		if (doMatch) {
+			const filter = `org=${org_key},year=${year},type=matchscouting`;
+			const syncstatus = await db.syncstatus
+				.where({
 					table: 'layout',
-					filter: `org=${org_key},year=${year},type=matchscouting`,
+					filter
+				})
+				.first();
+			// Fetch list of match scouting form elements for the associated year
+			const matchFormData = await fetchJSON<str<Layout>[]>(
+				`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/match`
+			);
+			logger.debug(`Retrieved ${matchFormData.length} match items`);
+			const matchChecksum = await FormLayoutOperations.getChecksum(matchFormData);
+			await db.transaction('rw', db.layout, db.syncstatus, async () => {
+				// Remove existing layout for this org+year, because maybe some elements got deleted
+				let matchDeleteCount = await db.layout.where({ org_key, year, form_type: 'matchscouting' }).delete();
+				logger.debug(`Deleted ${matchDeleteCount} match items`);
+				logger.trace('Putting match scouting into db...');
+				await db.layout.bulkPut(matchFormData);
+				logger.trace('Saving sync status for match scouting...');
+				await db.syncstatus.put({
+					table: 'layout',
+					filter,
 					time: new Date(),
 					data: {
 						checksum: matchChecksum,
-						source: 'download',
+						source: 'download'
 					}
-				},
-				{
+				});
+			});
+
+			// Default to true if syncstatus was not found
+			matchChanged = true;
+			if (typeof syncstatus?.data?.checksum === 'string') {
+				logger.debug(`Existing checksum: ${syncstatus.data.checksum}`);
+				matchChanged = matchChecksum.substring(0, 3) !== syncstatus.data.checksum.substring(0, 3);
+			}
+		}
+
+		if (doPit) {
+			const filter = `org=${org_key},year=${year},type=pitscouting`;
+			const syncstatus = await db.syncstatus
+				.where({
 					table: 'layout',
-					filter: `org=${org_key},year=${year},type=pitscouting`,
+					filter
+				})
+				.first();
+			// Fetch list of match scouting form elements for the associated year
+			const pitFormData = await fetchJSON<str<Layout>[]>(
+				`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/pit`
+			);
+			logger.debug(`Retrieved ${pitFormData.length} pit items`);
+
+			const pitChecksum = await FormLayoutOperations.getChecksum(pitFormData);
+
+			logger.trace('Begin transaction');
+			await db.transaction('rw', db.layout, db.syncstatus, async () => {
+				// Remove existing layout for this org+year, because maybe some elements got deleted
+				let pitDeleteCount = await db.layout.where({ org_key, year, form_type: 'pitscouting' }).delete();
+				logger.debug(`Deleted ${pitDeleteCount} pit items items`);
+				logger.trace('Putting pit scouting into db...');
+				await db.layout.bulkPut(pitFormData);
+				logger.trace('Saving sync status...');
+				await db.syncstatus.put({
+					table: 'layout',
+					filter,
 					time: new Date(),
 					data: {
 						checksum: pitChecksum,
-						source: 'download',
-					},
-				}
-			]);
-		});
+						source: 'download'
+					}
+				});
+			});
+
+			// Default to true if syncstatus was not found
+			pitChanged = true;
+			if (typeof syncstatus?.data?.checksum === 'string') {
+				logger.debug(`Existing checksum: ${syncstatus.data.checksum}`);
+				pitChanged = pitChecksum.substring(0, 3) !== syncstatus.data.checksum.substring(0, 3);
+			}
+		}
+
 		logger.trace('Done');
+		// Return true if EITHER the pit checksum or match checksum changed
+		return pitChanged || matchChanged;
 	}
 
 	@setFuncName('FormLayoutOperations.getChecksum')

@@ -2,11 +2,13 @@
 	import { msg } from '$lib/i18n';
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
-	import { preferences, } from '$lib/stores';
+	import { preferences } from '$lib/stores';
+	import { setPageTitle } from '$lib/utils';
+
+	setPageTitle(msg('user.preferences.title'));
 </script>
 
 <section class="comfortable">
-	<h1>{msg('user.preferences.title')}</h1>
 	<div class="flex flex-col">
 		<FormField>
 			<Checkbox bind:checked={$preferences.enableAutoSync} touch />
