@@ -1059,7 +1059,7 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 }));
 
 async function generateTeamAllocations(req: express.Request, res: express.Response) {
-	logger.addContext('funcName', 'generateTEAMallocations');
+	logger.addContext('funcName', 'generateTeamAllocations');
 	
 	const event_key = req.event.key;
 	const year = req.event.year;
@@ -1146,7 +1146,8 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	const teamArray = req.teams;
 	
 	// 2023-02-12 JL: Added a query to get existing scouting data on a per-team basis
-	const existingScoutingData = await utilities.find('pitscouting', {event_key, org_key, data: {$ne: undefined}});
+	// 2024-03-26 M.O'C: Include super-scouting data
+	const existingScoutingData = await utilities.find('pitscouting', {event_key, org_key, $or: [ {data: { $ne: undefined }}, {super_data: { $ne: undefined }} ]});
 	
 	//
 	// Cycle through teams, adding 1st 2nd 3rd to each based on array of 1st2nd3rds
@@ -1189,10 +1190,14 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 		}
 		
 		// 2023-02-12 JL: Check for existing scouting data and insert it 
+		// 2024-03-26 M.O'C: Adding super_data, plus checks for each type
 		for (let thisEntry of existingScoutingData) {
 			if (thisEntry.team_key === team_key) {
 				logger.trace(`Appending data for team_key ${team_key}`);
-				thisAssignment.data = thisEntry.data;
+				if (thisEntry.data)
+					thisAssignment.data = thisEntry.data;
+				if (thisEntry.super_data)
+					thisAssignment.super_data = thisEntry.super_data;
 			}
 		}
 		
@@ -1206,7 +1211,8 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	
 	// Sanity check for data deletion
 	let teamAssignmentsWithData = 0;
-	for (let assignment of teamAssignments) if (assignment.data) teamAssignmentsWithData++;
+	// 2024-03-26, M.O'C: Adding super_data to the check
+	for (let assignment of teamAssignments) if (assignment.data || assignment.super_data) teamAssignmentsWithData++;
 	logger.info(`Generated team assignments with data inserted: ${teamAssignmentsWithData}. Previously found: ${existingScoutingData.length}`);
 	if (teamAssignmentsWithData !== existingScoutingData.length) {
 		logger.warn('Numbers do not match!!!');
