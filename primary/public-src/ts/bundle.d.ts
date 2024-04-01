@@ -17,6 +17,12 @@ declare class Dialog {
      * 			then(data => Dialog.show(data));
      */
     static show(html: string): void;
+    /**
+     * Open the modal dialog and populate it with the URL you specified.
+     * The web request will set the InModalDialog to true automatically, disabling the page heaader.
+     * @param url URL to open
+     */
+    static showURL(url: string): void;
 }
 declare class FormSubmission {
     /**

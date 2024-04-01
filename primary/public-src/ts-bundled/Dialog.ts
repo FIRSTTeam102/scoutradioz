@@ -37,4 +37,15 @@ class Dialog {
 		iframe[0].srcdoc = html;
 		dialog[0].showModal();
 	}
+
+	/**
+	 * Open the modal dialog and populate it with the URL you specified. 
+	 * The web request will set the InModalDialog to true automatically, disabling the page heaader.
+	 * @param url URL to open
+	 */
+	static showURL(url: string) {
+		fetch(url, {method: 'GET', headers: {'In-Modal-Dialog': 'true'}})
+			.then(response => response.text())
+			.then(html => Dialog.show(html));
+	}
 }

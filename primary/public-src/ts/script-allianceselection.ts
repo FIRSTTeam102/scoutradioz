@@ -76,6 +76,16 @@ $(function(){
 
 	$('#numAlliances').on('change', (e) => doNumChange(e.target, 'numAlliances'));
 	$('#numRounds').on('change', (e) => doNumChange(e.target, 'numRounds'));
+	
+	// When a team number is clicked, open a dialog with their super scout notes
+	$('[super-scout-link]').on('click', function() {
+		let team_key = $(this).attr('super-scout-link');
+		Dialog.showURL(`/reports/teamintel?team_key=${team_key}`);
+		// for now, just fetch their team intel page
+		// fetch(`/reports/teamintel?team_key=${team_key}`)
+		// 	.then(data => data.text())
+		// 	.then(html => Dialog.show(html));
+	});
 });
 
 function doNumChange(el: Element, param: string) {
