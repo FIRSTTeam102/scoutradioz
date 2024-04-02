@@ -270,7 +270,7 @@
 		"title": "Alliance selection",
 		"intro": "Tap a team, then tap the empty slot [2] or [3] to move them up.\nAs teams are selected for alliances, they will gray out in the table below.",
 		"preferred": "Before alliance selection, you and your team lead(s) can mark your preferred teams on <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">this page</a>.",
-		"tapForPopup": "Tap a team number to view that team's super scout notes.",
+		"tapForPopup": "Tap a team number to view that team's intel, including scouter notes.",
 		"undo": "Undo",
 		"allianceNumber": "Alliance {number}",
 		"showData": "Show team data",
