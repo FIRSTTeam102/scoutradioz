@@ -13,6 +13,14 @@ router.all('/*', wrap(async (req, res, next) => {
 	next();
 }));
 
+// April fools 20224
+router.get('/try-video-scouting', wrap(async (req, res) => {
+	res.render('./aprilfools', {
+		title: 'Generative AI Scouting',
+		disableAIthing: true,
+	});
+}));
+
 /**
  * The "index" page that loads is now a form to select an organization.
  */

@@ -190,6 +190,24 @@ html(lang=locale dir=getLocaleDirection(locale))
 		div(class="background")
 		div(style="position: absolute; width: 0px; height: 0px; top: -50px; left: 0px;")
 			input(id='shareURLInput' type='text' style="")
+		
+		//- TODO: Remove after a little while
+		if !disableAIthing
+			div(id="april-fools")
+				a(href="/try-video-scouting" class="link")
+					span(class="sprite sp-16 sp-inline sp-info") &nbsp;
+					span Click here to beta test our AI video scouting feature!
+			
+			style.
+				#april-fools {
+					position: fixed;
+					bottom: 0;
+					right: 0;
+					width: 100%;
+					padding: 16px 8px;
+					color: white;
+					text-shadow: 1px 1px 1px black, -1px -1px 1px black;
+				}
 
 		//- The following mixins are for dynamically creating sliding menu items. See helpers/nav.ts for the nav menu creation process.
 		- const bracketsRegex = /\[\[(.*)\]\]/; // For "unimportant text" in a label, put it inside [[]]
