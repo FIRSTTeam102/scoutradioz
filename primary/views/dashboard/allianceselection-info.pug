@@ -22,6 +22,7 @@ if (aggdata)
 	for scoreItem in currentAggRanges
 		- aggRangeMap[scoreItem.key] = scoreItem;
 
+	p.i=msg('allianceselection.tapForPopup')
 	+metricSwitcher()
 	p
 	each key in ['AVG', 'MAX']
@@ -44,7 +45,8 @@ if (aggdata)
 					td(class="w3-center")= row.value
 					- var style = ''; // class to add to the team number; strikethrough if less than 0, bold if 1, bolder if >1
 					- if (row.value < 0) style = 'strike'; else if (row.value > 1) style = 'stronger'; else if (row.value > 0) style = 'strong';
-					td(class=("w3-center " + style))= row._id.substring(3)
+					//- Team number
+					td(class=("w3-center underline clickable " + style) team-key=row._id)= row._id.substring(3)
 					td(class="w3-right-align")= row.rank
 					for item in layout
 						-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')

@@ -17,6 +17,7 @@ block content
 		The two buttons on the left can keep track of preferred (and otherwise) teams for Alliance Selection.
 		<br>Numbers under the "V" are visible and sortable by your scouting lead on the <a class="link" href="/dashboard/allianceselection" target="_blank">Alliance Selection dashboard</a>.
 	p.i Don't pull your punches! Only people who have logged in to your organization can see these numbers.
+	p.i=msg('allianceselection.tapForPopup')
 	if (aggdata)
 		- var aggRangeMap = [];
 		for scoreItem in currentAggRanges
@@ -42,7 +43,7 @@ block content
 						button(class="w3-button w3-hover-green theme-submit scouting-counter sc-small" onclick=`setValue('${row._id}', 1)` type="button") +
 					td(class="w3-center" team-value key=row._id)= row.value
 					//- Change the team number's class depending on the row value
-					td(class="w3-center" team-number key=row._id class=(row.value > 0 ? 'wanted-team' : row.value < 0 ? 'unwanted-team' : ''))= row._id.substring(3)
+					td(class="w3-center underline clickable" team-number key=row._id class=(row.value > 0 ? 'wanted-team' : row.value < 0 ? 'unwanted-team' : ''))= row._id.substring(3)
 					td(class="w3-right-align")= row.rank
 					for item in layout
 						-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
@@ -54,7 +55,7 @@ block content
 							else
 								td(class=`${valStyle}`)= row[item.key]
 	else
-		p <i>Insufficient data at this time, come back later!</i>
+		p.i Insufficient data at this time, come back later!
 	script.
 		function setValue(teamKey, value)
 		{
@@ -78,5 +79,12 @@ block content
 					NotificationCard.error(err.statusText);
 				});
 		}
+		
+		$(() => {
+			$('td[team-number]').on('click', function () {
+				let team_key = $(this).attr('key');
+				Dialog.showURL(`/reports/teamintel?team_key=${team_key}`);
+			})
+		})
 	//- the "Priority" header takes up 2 columns so offset row by an extra 1
 	+tableSorter(1)
