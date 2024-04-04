@@ -81,11 +81,8 @@ $(function(){
 	$('[team-key]').on('click', function() {
 		let team_key = $(this).attr('team-key');
 		Dialog.showURL(`/reports/teamintel?team_key=${team_key}`);
-		// for now, just fetch their team intel page
-		// fetch(`/reports/teamintel?team_key=${team_key}`)
-		// 	.then(data => data.text())
-		// 	.then(html => Dialog.show(html));
 	});
+	
 });
 
 function doNumChange(el: Element, param: string) {

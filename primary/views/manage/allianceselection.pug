@@ -13,55 +13,71 @@ block content
 		}
 	include ../reports/templates/heatmap
 	h2 Alliance Selection Data
-	p.i.
-		The two buttons on the left can keep track of preferred (and otherwise) teams for Alliance Selection.
-		<br>Numbers under the "V" are visible and sortable by your scouting lead on the <a class="link" href="/dashboard/allianceselection" target="_blank">Alliance Selection dashboard</a>.
-	p.i Don't pull your punches! Only people who have logged in to your organization can see these numbers.
-	p.i=msg('allianceselection.tapForPopup')
-	if (aggdata)
-		- var aggRangeMap = [];
-		for scoreItem in currentAggRanges
-			- aggRangeMap[scoreItem.key] = scoreItem;
-		table(class="w3-table" id="metricTable")
-			tr
-				th(colspan=2 no-sort) Priority
-				th(class="w3-center") V
-				th(class="w3-center") Team
-				th(class="w3-center") Rank
-				- var colIdx = 4;
-				for item in layout
-					-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
-					if (matchDataHelper.isQuantifiableType(item.type))
-						- var text = item.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-						th(class="w3-right-align")= result2
-						- colIdx++
-			for row in aggdata
+	//- Dropdown to pick between team_keys at the org
+	if orgTeamKeys && orgTeamKeys.length > 1
+		form#teamKeyForm(class="w3-container w3-padding-16" method="get" action="/manage/allianceselection")
+			label(class="w3-label")
+				span(class="sprite sp-help sp-inline sp-16 w3-tooltip") &nbsp;
+					span(class="w3-tooltiptext")!=msg('allianceselection.tooltipPicklist')
+				span=msg('allianceselection.choosePicklist')
+			select(class="theme-input" name="picklist_key")
+				//- Show blank by default, require user to select their team from the dropdown
+				if !picklist_key
+					option(selected value="")
+				each thisTeamKey in orgTeamKeys
+					option(value=thisTeamKey selected=(picklist_key === thisTeamKey))=thisTeamKey.substring(3)
+	//- Display the rest of the page only if picklist_key is specified OR if there's only 1 team on the org
+	if !orgTeamKeys || picklist_key
+		p.i.
+			The two buttons on the left can keep track of preferred (and otherwise) teams for Alliance Selection.
+			<br>Numbers under the "V" are visible and sortable by your scouting lead on the <a class="link" href="/dashboard/allianceselection" target="_blank">Alliance Selection dashboard</a>.
+		p.i Don't pull your punches! Only people who have logged in to your organization can see these numbers.
+		p.i=msg('allianceselection.tapForPopup')
+		if (aggdata)
+			- var aggRangeMap = [];
+			for scoreItem in currentAggRanges
+				- aggRangeMap[scoreItem.key] = scoreItem;
+			table(class="w3-table" id="metricTable")
 				tr
-					td(style="padding: 2px!important;")
-						button(class="w3-button theme-red scouting-counter sc-small" onclick=`setValue('${row._id}', -1)` type="button") -
-					td(style="padding: 2px!important;")
-						button(class="w3-button w3-hover-green theme-submit scouting-counter sc-small" onclick=`setValue('${row._id}', 1)` type="button") +
-					td(class="w3-center" team-value key=row._id)= row.value
-					//- Change the team number's class depending on the row value
-					td(class="w3-center underline clickable" team-number key=row._id class=(row.value > 0 ? 'wanted-team' : row.value < 0 ? 'unwanted-team' : ''))= row._id.substring(3)
-					td(class="w3-right-align")= row.rank
+					th(colspan=2 no-sort) Priority
+					th(class="w3-center") V
+					th(class="w3-center") Team
+					th(class="w3-center") Rank
+					- var colIdx = 4;
 					for item in layout
 						-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
 						if (matchDataHelper.isQuantifiableType(item.type))
-							- var valStyle = 'w3-right-align w3-text-white'
-							- if (row[item.key] == 0) valStyle = 'w3-right-align w3-text-gray'
-							if (aggRangeMap[item.key])
-								td(class=`${valStyle}` style=`background-color: rgb(${getValR(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValG(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValB(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])})`)= row[item.key]
-							else
-								td(class=`${valStyle}`)= row[item.key]
-	else
-		p.i Insufficient data at this time, come back later!
+							- var text = item.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+							th(class="w3-right-align")= result2
+							- colIdx++
+				for row in aggdata
+					tr
+						td(style="padding: 2px!important;")
+							button(class="w3-button theme-red scouting-counter sc-small" onclick=`setValue('${row._id}', -1, "${picklist_key}")` type="button") -
+						td(style="padding: 2px!important;")
+							button(class="w3-button w3-hover-green theme-submit scouting-counter sc-small" onclick=`setValue('${row._id}', 1, "${picklist_key}")` type="button") +
+						td(class="w3-center" team-value key=row._id)= row.value
+						//- Change the team number's class depending on the row value
+						td(class="w3-center underline clickable" team-number key=row._id class=(row.value > 0 ? 'wanted-team' : row.value < 0 ? 'unwanted-team' : ''))= row._id.substring(3)
+						td(class="w3-right-align")= row.rank
+						for item in layout
+							-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
+							if (matchDataHelper.isQuantifiableType(item.type))
+								- var valStyle = 'w3-right-align w3-text-white'
+								- if (row[item.key] == 0) valStyle = 'w3-right-align w3-text-gray'
+								if (aggRangeMap[item.key])
+									td(class=`${valStyle}` style=`background-color: rgb(${getValR(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValG(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])},${getValB(aggRangeMap[item.key].AVGmin, aggRangeMap[item.key].AVGmax, row[item.key])})`)= row[item.key]
+								else
+									td(class=`${valStyle}`)= row[item.key]
+		else
+			p.i Insufficient data at this time, come back later!
 	script.
-		function setValue(teamKey, value)
+		function setValue(teamKey, value, picklist_key)
 		{
-			console.log("teamKey " + teamKey + ", value " + value);
+			console.log(`teamKey=${teamKey}, value=${value}, picklist_key=${picklist_key}`);
+			if (picklist_key === 'undefined') picklist_key = undefined;
 			
-			$.post('/manage/allianceselection/updateteamvalue', {key: teamKey, value: value})
+			$.post('/manage/allianceselection/updateteamvalue', {key: teamKey, value, picklist_key})
 				.done(msg => {
 					//- Update the row with the team's new value
 					var newValue = msg.value;
@@ -84,6 +100,9 @@ block content
 			$('td[team-number]').on('click', function () {
 				let team_key = $(this).attr('key');
 				Dialog.showURL(`/reports/teamintel?team_key=${team_key}`);
+			})
+			$('select[name=picklist_key]').on('change', () => {
+				$('#teamKeyForm').trigger('submit');
 			})
 		})
 	//- the "Priority" header takes up 2 columns so offset row by an extra 1

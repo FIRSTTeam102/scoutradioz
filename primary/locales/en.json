@@ -267,6 +267,7 @@
 		"chooseTeam": "[Choose a team]",
 		"viewOr": "or",
 		"allTeams": "All teams",
+		"otherTeams": "Other teams",
 		"selectedTeam": "Selected team",
 		"nextMatch": "Next match:",
 		"nextMatchTeam": "Next match for team {team}:",
@@ -295,7 +296,9 @@
 		"team": "Team",
 		"rank": "FRC Rank",
 		"numAlliances": "Number of alliances:",
-		"numRounds": "Number of rounds:"
+		"numRounds": "Number of rounds:",
+		"tooltipPicklist": "Each FRC team in an organization has their own picklist. Pick which team's picklist to view.",
+		"choosePicklist": "View picklist for..."
 	},
 	"metrics": {
 		"raw": "Raw data",
@@ -496,6 +499,17 @@
 			"submitNewGroup": "Submit selected members as a new scouting group",
 			"swapMatchAssignments": "Swap in/out match scouts",
 			"swapPitAssignments": "Swap teams between pit scout groups"
+		},
+		"config": {
+			"title": "Configure {org}",
+			"tooltipSubteamKey": "Write a unique identifier for each subteam. After you create a subteam, the label can change but the key should not change.",
+			"tooltipClassKey": "Write a unique identifier for each class. After you create a class, the label can change but the key should not change.",
+			"tooltipTeams": "Place the number of all FRC teams associated with this organization, separated by a comma. There can be multiple if your organization is a scouting collective, or if your team is pooling scouters with another FRC team.",
+			"invalidTeams": "Could not find a team with the number \"{number}\". Please enter a comma-separated list of FRC team numbers.",
+			"updatedSuccessfully": "Updated successfully.",
+			"updatedButFixSubteams": "Org config has updated, but one or more users will need to be updated due to subteam / class keys changing.\n- *Go through the list of users and make sure everyone has a subteam and class.\n- Click 'Update' for each user that has been updated.*",
+			"id": "ID",
+			"teams": "Team(s)"
 		}
 	},
 	"date": "Date",

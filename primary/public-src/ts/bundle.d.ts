@@ -59,7 +59,10 @@ declare class FormSubmission {
     submit(cb: ObjectCallback): void;
     _getFromLocalStorage(): string | null;
     _addToLocalStorage(): void;
-    _getFormData(form: HTMLFormElement | JQuery): Dictionary<string>;
+    /**
+     * Get a key-value object from any form element (useful outside of the FormSubmission class)
+     */
+    static getFormData(form: HTMLFormElement | JQuery): Dictionary<string>;
 }
 interface ObjectCallback {
     (error: JQueryXHR | Error | string | null, response?: SRResponse): void;
