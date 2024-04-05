@@ -345,6 +345,8 @@ router.get('/', wrap(async (req, res) => {
 	},{
 		sort: {'time': -1}
 	});
+	// 2024-04-04, M.O'C: Also get the *unresolved* matches (for 'comp_level')
+	let unresolvedMatches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$eq: -1} },{sort: {'time': -1}});
 		
 	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
 	let latestTimestamp = 1234;
@@ -360,10 +362,17 @@ router.get('/', wrap(async (req, res) => {
 			//logger.debug('associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
 			matchLookup[matchDocs[matchIdx].key] = matchDocs[matchIdx];
 		}
+	// 2024-04-04, M.O'C - Also build a map of *unresolved* matches
+	let unresolvedMatchLookup: Dict<Match> = {};
+	if (unresolvedMatches)
+		for (let matchIdx = 0; matchIdx < unresolvedMatches.length; matchIdx++) {
+			//logger.debug(`matches[matchIdx].key=${unresolvedMatches[matchIdx].key}`);
+			unresolvedMatchLookup[unresolvedMatches[matchIdx].key] = unresolvedMatches[matchIdx];
+		}
 		
 	// Get all the UNRESOLVED matches where they're set to score
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoringMatches: MatchScouting[] = await utilities.find('matchscouting', {
+	let scoringMatches: (MatchScouting & {comp_level?: string, set_number?: number})[] = await utilities.find('matchscouting', {
 		'org_key': org_key, 
 		'event_key': eventKey, 
 		'assigned_scorer.id': thisUserId, 
@@ -381,6 +390,15 @@ router.get('/', wrap(async (req, res) => {
 		if (scoringMatches[scoreIdx] && scoringMatches[scoreIdx] && matchLookup[scoringMatches[scoreIdx].match_key])
 			// @ts-ignore - JL note: don't wanna bother with this rn
 			scoringMatches[scoreIdx].predicted_time = matchLookup[scoringMatches[scoreIdx].match_key].predicted_time;
+		// 2024-04-04, M.O'C: While we're here... also pass up the 'comp_level' of the match
+		if (scoringMatches[scoreIdx].match_key && unresolvedMatchLookup[scoringMatches[scoreIdx].match_key]) {
+			scoringMatches[scoreIdx].comp_level = unresolvedMatchLookup[scoringMatches[scoreIdx].match_key].comp_level;
+			scoringMatches[scoreIdx].set_number = unresolvedMatchLookup[scoringMatches[scoreIdx].match_key].set_number;
+			//logger.debug(`comp_level=${scoreData[i].comp_level}`);
+		}
+		else {
+			logger.debug(`scoringMatches[i].match_key=${scoringMatches[scoreIdx].match_key} & ${(scoringMatches[scoreIdx].match_key ? unresolvedMatchLookup[scoringMatches[scoreIdx].match_key] : '(nvrmind)')}`);
+		}
 	}
 	
 	res.render('./dashboard/index',{
@@ -730,6 +748,8 @@ router.get('/matches', wrap(async (req, res) => {
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
 	let matches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
+	// 2024-04-04, M.O'C: Also get the *unresolved* matches (for 'comp_level')
+	let unresolvedMatches: Match[] = await utilities.find('matches', { event_key: eventKey, 'alliances.red.score': {$eq: -1} },{sort: {'time': -1}});
 
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
@@ -744,7 +764,15 @@ router.get('/matches', wrap(async (req, res) => {
 	if (matches)
 		for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
 			//logger.debug('associating ' + matches[matchIdx].predicted_time + ' with ' + matches[matchIdx].key);
+			//logger.debug(`matches[matchIdx].key=${matches[matchIdx].key}`);
 			matchLookup[matches[matchIdx].key] = matches[matchIdx];
+		}
+	// 2024-04-04, M.O'C - Also build a map of *unresolved* matches
+	let unresolvedMatchLookup: Dict<Match> = {};
+	if (unresolvedMatches)
+		for (let matchIdx = 0; matchIdx < unresolvedMatches.length; matchIdx++) {
+			//logger.debug(`matches[matchIdx].key=${unresolvedMatches[matchIdx].key}`);
+			unresolvedMatchLookup[unresolvedMatches[matchIdx].key] = unresolvedMatches[matchIdx];
 		}
 
 	logger.debug('latestTimestamp=' + latestTimestamp);
@@ -752,7 +780,7 @@ router.get('/matches', wrap(async (req, res) => {
 	// Get all the UNRESOLVED matches
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2022-03-17 JL: Reversed alliance sorting order to show red first
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: latestTimestamp }}, { limit: 90, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
+	let scoreData: (MatchScouting & {comp_level?: string, set_number?: number})[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $gte: latestTimestamp }}, { limit: 90, sort: {'time': 1, 'alliance': -1, 'team_key': 1} });
 
 	if(!scoreData)
 		return logger.error('mongo error at dashboard/matches');
@@ -773,9 +801,10 @@ router.get('/matches', wrap(async (req, res) => {
 
 	for (let scoreIdx = 0; scoreIdx < scoreData.length; scoreIdx++) {
 		//logger.debug('getting for ' + scoreData[scoreIdx].match_key);
-		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key])
+		if (scoreData[scoreIdx] && matchLookup[scoreData[scoreIdx].match_key]) {
 			// @ts-ignore - JL note: don't wanna bother with this rn
 			scoreData[scoreIdx].predicted_time = matchLookup[scoreData[scoreIdx].match_key].predicted_time;
+		}
 	}
 	
 	logger.trace('DEBUG getting nicknames next?');
@@ -800,6 +829,15 @@ router.get('/matches', wrap(async (req, res) => {
 		else {
 			// @ts-ignore - JL note: don't wanna bother with this rn
 			scoreData[i].team_nickname = res.msg('dashboard.none');
+		}
+		// 2024-04-04, M.O'C: While we're here... also pass up the 'comp_level' of the match
+		if (scoreData[i].match_key && unresolvedMatchLookup[scoreData[i].match_key]) {
+			scoreData[i].comp_level = unresolvedMatchLookup[scoreData[i].match_key].comp_level;
+			scoreData[i].set_number = unresolvedMatchLookup[scoreData[i].match_key].set_number;
+			//logger.debug(`comp_level=${scoreData[i].comp_level}`);
+		}
+		else {
+			logger.debug(`scoreData[i].match_key=${scoreData[i].match_key} & ${(scoreData[i].match_key ? unresolvedMatchLookup[scoreData[i].match_key] : '(nvrmind)')}`);
 		}
 	}
 	//this line has a definition problem ^

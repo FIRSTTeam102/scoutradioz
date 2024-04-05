@@ -21,6 +21,8 @@ block content
 			- let this_match_team_key = data.match_team_key;
 			- let this_team_key = data.team_key;
 			- var titleParts = this_match_team_key.split('_').map(key => key.replace(/\D/g, '')); // 2022mrcmp_qm77_frc102 to ['2022', '77', '102']
+			- if (this_match_team_key.split('_')[1].substring(0, 2) == 'sf') titleParts[1] = (this_match_team_key.split('_')[1].split('m').map(key => key.replace(/\D/g, '')))[0]; // 2022mrcmp_sf4m1_frc102 to '4'
+			- if (this_match_team_key.split('_')[1].substring(0, 1) == 'f') titleParts[1] = (this_match_team_key.split('_')[1].split('m').map(key => key.replace(/\D/g, '')))[1]; // 2022mrcmp_f1m2_frc102 to '2'
 			- let element = {"year":{"$numberInt":titleParts[0]},"order":"1","type":"textblock","label":"Super-Scout Notes","id":`${this_team_key}_otherNotes`,"org_key":org_key,"form_type":"supermatchscouting"}
 			- var btnColor = data.alliance ? ((data.alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
 			p

@@ -186,7 +186,7 @@
 	"scouting": {
 		"match": "Match scouting",
 		"pit": "Pit scouting",
-		"supermatch": "Super scout match {n}",
+		"supermatch": "Super scout this match",
 		"superpit": "Super scout",
 		"supermatchnotes": "Super scout match notes:",
 		"supernotes": "Super scout notes for team {team}:",
@@ -241,6 +241,8 @@
 		"pitScoutingPartner": "Partner's pit scouting assignments",
 		"upcomingMatches": "Upcoming matches to be scouted",
 		"matchNumber": "Match {number}",
+		"sfNumber": "Semifinal {number}",
+		"fNumber": "Final {number}",
 		"matchResultMissedWarning": "WARNING: A match result may have been missed!",
 		"matchResultMissedAdmin": "Click here, check FIRST match data and update any missing matches.",
 		"matchResultMissedNotAdmin": "Ask a team admin to check FIRST match data and update any missing matches.",
@@ -493,6 +495,7 @@
 			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
 			"scoutingGroups": "Scouting groups",
 			"skipBreaks": "Check this box to generate assignments ignoring breaks in the schedule",
+			"scoutPlayoffs": "Check this box to generate assignments for playoff matches as well",
 			"submitNewGroup": "Submit selected members as a new scouting group",
 			"swapMatchAssignments": "Swap in/out match scouts",
 			"swapPitAssignments": "Swap teams between pit scout groups"
