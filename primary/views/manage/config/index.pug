@@ -47,16 +47,22 @@ block content
 							option(value="1") true
 	div(class="w3-auto w3-content")
 		h2=title
-		form(id=`updateOrg_${org.org_key}` method="post" action="/manage/config")
+		form(id="updateOrg" method="post" action="/manage/config")
 			div(class="w3-row")
 				//- Top row
-				div(class="w3-col s0 m2 w3-padding-small") ID
-				div(class="w3-col s0 m8 w3-padding-small") Nickname
+				div(class="w3-col s6 m2 w3-padding-small") ID
+				div(class="w3-col s6 m4 w3-padding-small") 
+					span Team(s)&nbsp;
+					span(class="w3-tooltip sprite sp-help sp-16") &nbsp;
+						span(class="w3-tooltiptext")=msg('manage.config.tooltipTeams')
+				div(class="w3-col s6 m4 w3-padding-small") Nickname
 				div(class="w3-col s0 m2 w3-padding-small") &nbsp;
 				div(class="w3-col s6 m2 w3-padding-small")
 					input(disabled type="text" class="theme-input w3-disabled" value=org.org_key)
 					input(type="hidden" name="org_key" value=org.org_key)
-				div(class="w3-col s6 m8 w3-padding-small")
+				div(class="w3-col s6 m4 w3-padding-small")
+					input(type="text" class="theme-input" name="team_numbers" value=team_numbers.join(', '))
+				div(class="w3-col s6 m4 w3-padding-small")
 					input(type="text" class="theme-input" name="nickname" value=org.nickname)
 				div(class="w3-col m2 w3-padding-small")
 					button(type="submit" class="w3-btn theme-submit") Update Org
@@ -67,7 +73,7 @@ block content
 					div(class="w3-col s4") 
 						span Key&nbsp;
 						span(class="w3-tooltip sprite sp-help sp-16") &nbsp;
-							span(class="w3-tooltiptext") Write a unique identifier for each subteam. After you create a subteam, the label can change but the key should not change.
+							span(class="w3-tooltiptext")=msg('manage.config.tooltipSubteamKey')
 					div(class="w3-col s4") Pit scout?
 					div(id=`subteams_${org.org_key}`)
 						each subteam, i in org.config.members.subteams 
@@ -82,7 +88,7 @@ block content
 					div(class="w3-col s3") 
 						span Key&nbsp;
 						span(class="w3-tooltip sprite sp-help sp-16") &nbsp;
-							span(class="w3-tooltiptext") Write a unique identifier for each class. After you create a class, the label can change but the key should not change.
+							span(class="w3-tooltiptext")=msg('manage.config.tooltipClassKey')
 					div(class="w3-col s3") Seniority
 					div(class="w3-col s3") Youth?
 					div(id=`classes_${org.org_key}`)
@@ -108,3 +114,18 @@ block content
 			+classname('num', {label: '', key: '', seniority: '', youth: true})
 	//- Load orgs script
 	script(src=`${fileRoot}/js/script-orgs.js`)
+	script.
+		$('#updateOrg').on('submit', function(e) {
+			e.preventDefault();
+			let data = FormSubmission.getFormData(this);
+			$.post('/manage/config', data)
+				.done(response => {
+					console.log(response);
+					NotificationCard.good(response);
+				})
+				.fail(response => {
+					console.error(response);
+					NotificationCard.error(response.responseText)
+				})
+			return false;
+		})

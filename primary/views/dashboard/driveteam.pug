@@ -46,16 +46,16 @@ block content
 				span(class="w3-mobile w3-margin-top")
 					label(class="w3-label" style="padding-right: 8px")!=msg('driveDashboard.viewFor')
 					select(class="theme-input" style="min-width: 100;" name="team_key")
-						noscript
-							if selectedTeam == 'all'
-								option(selected value='all')!=msg('driveDashboard.chooseTeam')
-							//- else
-								option(value='all') All teams
+						if selectedTeam == 'all'
+							option(selected value='all')!=msg('driveDashboard.chooseTeam')
+						//- List of team keys in this org
+						if orgTeamKeys.length > 0
+							each team_key in orgTeamKeys
+								option(value=team_key selected=(team_key === selectedTeam))=team_key.substring(3)	
+							option ----- !{msg('driveDashboard.otherTeams')} -----
 						each team in teams 
-							if team.key == selectedTeam
-								option(selected value=team.key)=team.team_number
-							else 
-								option(value=team.key)=team.team_number
+							if !orgTeamKeys.includes(team.key)
+								option(selected=(team.key === selectedTeam) value=team.key)=team.team_number
 					noscript
 						//- JL: I made the multiselect auto-submit on change, but to make it still work in browsers with JS disabled, this submit button will act in its place.
 						button(class="w3-btn theme-submit w3-margin-left" type="submit" name="selected" value="true")!=msg('driveDashboard.selectedTeam')

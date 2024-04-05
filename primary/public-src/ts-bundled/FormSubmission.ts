@@ -29,7 +29,7 @@ class FormSubmission{
 	constructor(form: HTMLFormElement|JQuery, url: string, key: string, options?: {autoRetry: boolean}){
 		
 		if (form && url && key) {
-			this.data = this._getFormData(form);
+			this.data = FormSubmission.getFormData(form);
 			this.url = url;
 			this.key = key; //Date.now().toString();
 			
@@ -104,7 +104,10 @@ class FormSubmission{
 		localStorage.setItem(this.key, JSON.stringify(this.data));
 	}
 	
-	_getFormData(form: HTMLFormElement|JQuery){
+	/**
+	 * Get a key-value object from any form element (useful outside of the FormSubmission class)
+	 */
+	static getFormData(form: HTMLFormElement|JQuery) {
 		let unIndexedData = $(form).serializeArray();
 		let indexedData: Dictionary<string> = {};
 	

@@ -33,14 +33,31 @@ router.get('/driveteam', wrap(async (req, res) => {
 	
 	//set teamKey to query or org default
 	// 2022-03-16 JL: Adding an "all" button
+	// 2024-04-04 JL: Added cookie to store which team key (of the team keys in the org) we think the user belongs to
+	let teamKeyCookie = req.cookies['selectedTeamKey'];
 	if (typeof req.query.team_key === 'string' && !req.query.all) {
 		teamKey = req.query.team_key;
+		if (thisUser.org.team_keys?.includes(teamKey)) {
+			logger.debug('Setting teamKey cookie from query parameter because it\'s in the org\'s list of team_keys');
+			res.cookie('selectedTeamKey', teamKey);
+		}
+	}
+	else if (teamKeyCookie && thisUser.org.team_keys?.includes(teamKeyCookie)) {
+		logger.debug(`Setting teamKey to ${teamKeyCookie} from cookie`);
+		teamKey = teamKeyCookie;
 	}
 	else if (thisUser.org.team_key && !req.query.all) {
+		logger.debug(`Setting teamKey ${teamKey} from org team key`);
 		teamKey = thisUser.org.team_key;
 	}
 	else {
 		teamKey = 'all';
+	}
+	
+	// Remove team key cookie if it's set but isn't inside the list of team_keys the org has
+	if (teamKeyCookie && !thisUser.org.team_keys?.includes(teamKeyCookie)) {
+		logger.info(`teamKeyCookie ${teamKeyCookie} not in list of org keys; removing cookie`);
+		res.clearCookie('selectedTeamKey');
 	}
 	
 	logger.debug(`eventKey=${eventKey} orgKey=${orgKey} teamKey=${teamKey}`);
@@ -215,6 +232,10 @@ router.get('/driveteam', wrap(async (req, res) => {
 		}
 	}
 	
+	let orgTeamKeys = [];
+	if (req._user.org.team_key) orgTeamKeys.push(req._user.org.team_key);
+	if (req._user.org.team_keys) orgTeamKeys.push(...req._user.org.team_keys);
+	
 	res.render('./dashboard/driveteam', {
 		title: res.msg('driveDashboard.title'),
 		teamList: teamList,
@@ -227,6 +248,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 		teamRanks: teamRanks,
 		selectedTeam: teamKey,
 		teamNumbers: teamNumbers,
+		orgTeamKeys,
 		noMatchesFoundForTeam: noMatchesFoundForTeam,
 		dataForChartJS: JSON.stringify(dataForChartJS),
 		pitData: pitData
@@ -443,16 +465,19 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	let numRounds = typeof req.query.numRounds === 'string'
 		? parseInt(req.query.numRounds) : 3;
 	logger.debug(`numAlliances: ${numAlliances}, numRounds: ${numRounds}`);
-
-	// if (numAlliances < 2) throw new e.UserError('invalid numAlliances');
-	// if (numRounds < 2 || 4 < numRounds) throw new e.UserError('invalid numRounds');
+	
+	// 2024-04-04 JL: Added multiple picklists
+	// Check which team_key has been specified, if any, being one of the team_keys of the org
+	//- JL note: (maybe TODO between seasons): when picklist_key is undefined and team_keys.length > 1, it still loads orgteamvalues with picklist_key undefined, and loads data even though it wont' be displayed
+	let picklist_key: string|undefined = undefined;
+	if (typeof req.query.picklist_key === 'string') picklist_key = req.query.picklist_key;
+	if (picklist_key && !(req._user.org.team_keys?.includes(picklist_key))) throw new e.UserError(`Team key ${picklist_key} specified but it is not in your org's list of team_keys!`);
 
 	// 2019-03-21, M.O'C: Utilize the currentaggranges
 	// 2019-11-11 JL: Put everything inside a try/catch block with error conditionals throwing
 	try {
 		
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-		//var rankings = await utilities.find("currentrankings", {}, {});
 		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, { sort: {'rank': 1} });
 		if(!rankings[0])
 			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
@@ -471,7 +496,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		// numAlliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
 		let alliances: TeamKey[][] = [];
 		for (let i = 0; i < numAlliances; i++) {
-			alliances[i] = new Array().fill(numRounds);
+			alliances[i] = [].fill(numRounds);
 			alliances[i][0] = rankings[i].team_key; // preload first team 
 		}
 		logger.debug(`alliances=${JSON.stringify(alliances)}`);
@@ -543,7 +568,6 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				// 2022-03-13 JL: Unlike on other pages like allteammetrics, the main focus of these data are the averages (instead of being switchable). 
 				//	Therefore, keeping the avg as .id and adding MAX as an "option" (to be displayed small on the table)
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
-				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 				groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
 			}
@@ -560,6 +584,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 					{$eq: ['$team_key', '$$team_key']},
 					{$eq: ['$org_key', org_key]},
 					{$eq: ['$event_key', event_key]},
+					{$eq: ['$picklist_key', picklist_key]}, // 2024-04-04 JL: added picklist_key
 				]}}},
 				{$project: {_id: 0, team_key: 0, event_key: 0, org_key: 0}}
 			],
@@ -632,7 +657,6 @@ router.get('/allianceselection', wrap(async (req, res) => {
 	
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges
-		// var currentAggRanges = await utilities.find("currentaggranges", {}, {});
 		let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
 	
 		//logger.debug('aggArray=' + JSON.stringify(aggArray));
@@ -643,11 +667,13 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			numAlliances,
 			numRounds,
 			aggdata: aggArray,
-			currentAggRanges: currentAggRanges,
+			currentAggRanges,
 			layout: scoreLayout,
-			sortedTeams: sortedTeams,
-			matchcountConsistent: matchcountConsistent,
-			matchDataHelper: matchDataHelper
+			sortedTeams,
+			matchcountConsistent,
+			matchDataHelper,
+			picklist_key,
+			orgTeamKeys: req._user.org.team_keys,
 		});
 	}
 	catch (err) {

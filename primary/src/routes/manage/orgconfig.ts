@@ -5,7 +5,7 @@ import wrap from '../../helpers/express-async-handler';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
-import e, { assert } from 'scoutradioz-http-errors';
+import e, { HttpError, assert } from 'scoutradioz-http-errors';
 import type { Layout, LayoutEdit, MatchScouting, MatchFormData } from 'scoutradioz-types';
 import type { DeleteResult, InsertManyResult } from 'mongodb';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
@@ -25,10 +25,17 @@ router.all('/*', wrap(async (req, res, next) => {
 router.get('/', wrap(async (req, res) => {
 
 	const org = req._user.org;
+	
+	// Get a list of the team numbers at this org
+	let team_numbers: string[] = [];
+	if (org.team_key) team_numbers.push(org.team_key.substring(3));
+	if (org.team_keys) team_numbers.push(...org.team_keys.map(key => key.substring(3)));
+
 
 	res.render('./manage/config/index', {
-		title: `Configure ${org.nickname}`,
-		org: org
+		title: req.msg('manage.config.title', {org: org.nickname}),
+		org,
+		team_numbers,
 	});
 
 }));
@@ -36,58 +43,105 @@ router.get('/', wrap(async (req, res) => {
 router.post('/', wrap(async (req, res) => {
 	logger.addContext('funcName', 'root[post]');
 
-	const org_key = req.body.org_key;
-	const nickname = req.body.nickname;
-
-	assert(org_key === req._user.org.org_key, new e.UnauthorizedError(`Unauthorized to edit org ${org_key}`));
-
-	logger.info(`Updating org ${org_key}, nickname=${nickname}`);
-
-	let subteams, classes, uniqueClassKeys, uniqueSubteamKeys;
 	try {
-		let ret = getSubteamsAndClasses(req.body);
-		subteams = ret.subteams;
-		classes = ret.classes;
-		uniqueClassKeys = ret.uniqueClassKeys;
-		uniqueSubteamKeys = ret.uniqueSubteamKeys;
+
+		const org_key = req.body.org_key;
+		const nickname = req.body.nickname;
+
+		assert(org_key === req._user.org.org_key, new e.UnauthorizedError(`Unauthorized to edit org ${org_key}`));
+
+		logger.info(`Updating org ${org_key}, nickname=${nickname}`);
+		let { subteams, classes, uniqueClassKeys, uniqueSubteamKeys } = getSubteamsAndClasses(req.body);
+		logger.debug(`subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
+
+		// Get the list of team numbers provided
+		let teamNumbersStr = req.body.team_numbers;
+		assert(typeof teamNumbersStr === 'string', new e.UserError('Team numbers not provided'));
+		
+		// Parse the team numbers provided. If an empty string is provided, then assume that means no teams on the org.
+		let teamNumbers: number[] = [];
+		if (teamNumbersStr.trim() !== '') {
+			teamNumbers = teamNumbersStr.split(',').map(str => parseInt(str.trim()));
+			// Make sure they're all valid ints
+			assert(!teamNumbers.some(number => isNaN(number)), new e.UserError('Please enter a comma-separated list of FRC team numbers.'));
+			assert(teamNumbers.length < 20, new e.UserError('Too many team numbers provided! (Max = 20)'));
+			for (let team_number of teamNumbers) {
+				let team = await utilities.findOne('teams', {team_number});
+				assert(team, new e.UserError(req.msg('manage.config.invalidTeams', {number: team_number})));
+			}
+		}
+
+		// Check for users which don't have a class key or subteam key in the list
+		let usersWithInvalidKeys = await utilities.find('users', {
+			org_key,
+			visible: true,
+			$or: [
+				{ 'org_info.class_key': { $not: { $in: uniqueClassKeys } } },
+				{ 'org_info.subteam_key': { $not: { $in: uniqueSubteamKeys } } }
+			]
+		});
+
+		//Create update query
+		let updateQuery: MongoDocument = {
+			$set: {
+				nickname: nickname,
+				'config.members.subteams': subteams,
+				'config.members.classes': classes,
+			},
+		};
+		
+		// 1 team key and team number
+		if (teamNumbers.length === 1) {
+			updateQuery.$set.team_number = teamNumbers[0];
+			updateQuery.$set.team_key = 'frc'+teamNumbers[0];
+			// Remove the team_numbers/team_keys field
+			updateQuery.$unset = {
+				team_numbers: true,
+				team_keys: true,
+			};
+		}
+		// No teams / team_keys provided
+		else if (teamNumbers.length === 0) {
+			updateQuery.$unset = {
+				team_numbers: true,
+				team_keys: true,
+				team_number: true,
+				team_key: true,
+			};
+		}
+		// Multiple team keys and team numbers
+		else {
+			updateQuery.$set.team_numbers = teamNumbers;
+			updateQuery.$set.team_keys = teamNumbers.map(number => 'frc'+number);
+			updateQuery.$unset = {
+				team_number: true,
+				team_key: true,
+			};
+		}
+
+		logger.debug(`updateQuery=${JSON.stringify(updateQuery)}`);
+
+		const writeResult = await utilities.update('orgs',
+			{ org_key }, updateQuery
+		);
+
+		logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+
+		// 2024-04-04 JL: Changed to AJAX
+		if (usersWithInvalidKeys.length === 0) {
+			return res.status(200).send(req.msg('manage.config.updatedSuccessfully'));
+		}
+		else {
+			return res.status(200).send(req.msg('manage.config.updatedButFixSubteams'));
+		}
 	}
 	catch (err) {
-		return res.redirect(`/manage/config?alert=${err}&type=error`);
-	}
-	logger.debug(`subteams=${JSON.stringify(subteams)} classes=${JSON.stringify(classes)}`);
-
-	// Check for users which don't have a class key or subteam key in the list
-	let usersWithInvalidKeys = await utilities.find('users', {
-		org_key,
-		visible: true,
-		$or: [
-			{ 'org_info.class_key': { $not: { $in: uniqueClassKeys } } },
-			{ 'org_info.subteam_key': { $not: { $in: uniqueSubteamKeys } } }
-		]
-	});
-
-	//Create update query
-	let updateQuery: MongoDocument = {
-		$set: {
-			nickname: nickname,
-			'config.members.subteams': subteams,
-			'config.members.classes': classes,
-		},
-	};
-
-	logger.debug(`updateQuery=${JSON.stringify(updateQuery)}`);
-
-	const writeResult = await utilities.update('orgs',
-		{ org_key }, updateQuery
-	);
-
-	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
-
-	if (usersWithInvalidKeys.length === 0) {
-		res.redirect('/manage/config?alert=Updated successfully.&type=good');
-	}
-	else {
-		res.redirect('/manage/members?alert=Org config has updated, but one or more users will need to be updated due to subteam / class keys changing.\n- *Go through the list of users and make sure everyone has a subteam and class.\n- Click \'Update\' for each user that has been updated.*&type=error');
+		logger.error(err);
+		// 2024-04-04 JL: Changed to AJAX
+		if (err instanceof HttpError)
+			return res.status(err.status).send(String(err));
+		else
+			return res.status(400).send(String(err));
 	}
 }));
 
