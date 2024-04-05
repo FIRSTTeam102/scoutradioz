@@ -6,9 +6,10 @@ import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
-import type { Layout, LayoutEdit, MatchScouting, MatchFormData } from 'scoutradioz-types';
+import type { Layout, LayoutEdit, Match, MatchScouting, MatchFormData } from 'scoutradioz-types';
 import type { DeleteResult, InsertManyResult } from 'mongodb';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
+import { matchData as matchDataHelper } from 'scoutradioz-helpers';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -281,6 +282,215 @@ router.post('/submitform', wrap(async (req, res) => {
 	res.redirect('/manage');
 }));
 
+router.get('/inferpredictive', wrap(async (req, res) => {
+	if (!await req.authenticate(Permissions.ACCESS_TEAM_ADMIN)) return;
+	logger.addContext('funcName', 'submitform[post]');
+	logger.info('ENTER');
+
+	// for later querying by event_key
+	let eventKey = req.event.key;
+	let eventYear = req.event.year;
+	let orgKey = req._user.org_key;
+	logger.debug('event_key=' + eventKey);
+
+	// Get the currently completed matches
+	// Match history info
+	let matches: Match[] = await utilities.find('matches', {'alliances.red.score': { $ne: -1}, 'event_key' : eventKey}, {sort: {time: -1}});
+
+	// 
+	// Currently replicated from reports/allteammetrics
+	//
+	let cookie_key = orgKey + '_' + eventYear + '_cols';
+	let colCookie = req.cookies[cookie_key];
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+
+	// build the aggregation data
+	let aggQuery = [];
+	aggQuery.push({ $match : { 'org_key': orgKey, 'event_key': eventKey } });
+
+	// get the alpha from the process.env
+	if (!process.env.EMA_ALPHA) throw new e.InternalServerError('EMA_ALPHA not defined');
+	let emaAlpha = parseFloat(process.env.EMA_ALPHA);
+
+	// initialize setWindowFieldsClause
+	let setWindowFieldsClause: MongoDocument = {};
+	setWindowFieldsClause['partitionBy'] = '$team_key';
+	let sortField: MongoDocument = {};
+	sortField['time'] = 1;
+	setWindowFieldsClause['sortBy'] = sortField;
+	let outputClause: MongoDocument = {};
+
+	// iterate through scoringlayout
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		// pull this layout element from score layout
+		let thisLayout = scorelayout[scoreIdx];
+		thisLayout.key = thisLayout.id;
+		scorelayout[scoreIdx] = thisLayout;
+		// if it is a valid data type, add this layout's ID to groupClause
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			let thisEMAclause: MongoDocument = {};
+			let thisEMAinner: MongoDocument = {};
+			thisEMAinner['alpha'] = emaAlpha;
+			thisEMAinner['input'] = '$data.' + thisLayout.id;
+			thisEMAclause['$expMovingAvg'] = thisEMAinner;
+			outputClause[thisLayout.id + 'EMA'] = thisEMAclause;
+		}
+	}
+	setWindowFieldsClause['output'] = outputClause;
+	logger.debug('setWindowFieldsClause=' + JSON.stringify(setWindowFieldsClause));
+	aggQuery.push({$setWindowFields: setWindowFieldsClause});
+	
+	let groupClause: MongoDocument = {};
+	groupClause['_id'] = '$team_key';
+
+	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+		let thisLayout = scorelayout[scoreIdx];
+		// if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
+			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+		}
+	}
+	aggQuery.push({ $group: groupClause });
+	aggQuery.push({ $sort: { _id: 1 } });
+
+	// get the result 
+	let aggR = await utilities.aggregate('matchscouting', aggQuery);
+	let aggArray = [];
+	if (aggR && aggR.length > 0) {
+		logger.debug('Have agg values');
+		aggArray = aggR;
+		// aggArray=[{"_id":"frc102","contributedPointsAVG":7.24,"contributedPointsMAX":15,"totalAutoPointsAVG":1.8,"totalAutoPointsMAX":5,"totalTeleopPointsAVG":4.8,...},
+		//           {"_id":"frc103","contributedPointsAVG":23.76,"contributedPointsMAX":26,"totalAutoPointsAVG":12,"totalAutoPointsMAX":15,"totalTeleopPointsAVG":8.4...},
+		//           {...}, ...]
+		//logger.debug(`aggArray=${JSON.stringify(aggArray)}`);
+
+		// build a map of agg rows by team key
+		let aggByTeam: { [id: string]: any } = {};
+		for (let aggIdx in aggArray) {
+			let thisAgg = aggArray[aggIdx];
+			let thisKey = thisAgg['_id'];
+			aggByTeam[thisKey] = thisAgg;
+		}
+
+		// array of metric success levels
+		let metricPredictive: { key: string, predSuccess: number }[] = [];
+
+		// go through each 'AVG' metric
+		let firstAgg = aggArray[0];
+		logger.debug(`firstAgg=${JSON.stringify(firstAgg)}`);
+		let aggKeys = Object.keys(firstAgg);
+		for (let metricIdx in aggKeys) {
+			let thisMetric = aggKeys[metricIdx];
+			// needs to have 'AVG' in it
+			if (thisMetric.includes('AVG')) {
+				//logger.debug(`thisMetric=${thisMetric}`);
+
+				// per metric tracking
+				let metricArray: string[] = [ thisMetric ];
+				let metricFactors: number[] = [ 1.0 ];
+				let { successfulPred, thisMetricRatioAvg } = calcPredictiveRates(matches, aggByTeam, metricArray, metricFactors);
+
+				//logger.debug(`thisMetric=${thisMetric}: successfulPred=${successfulPred}, thisMetricRatioAvg=${thisMetricRatioAvg}`);
+				metricPredictive.push({key: thisMetric, predSuccess: (successfulPred + thisMetricRatioAvg)});
+			}
+		}
+
+		// sort by 'predSuccess'
+		metricPredictive.sort(function(a, b) {
+			if (a.predSuccess > b.predSuccess) return -1;
+			if (a.predSuccess < b.predSuccess) return 1;
+			return 0;
+		});
+		logger.debug(`sorted metricPredictive=${JSON.stringify(metricPredictive)}`);
+
+		// TODO make this interactive
+		let numPredMetrics = metricPredictive.length;
+		let convergeRate = .05;    // what % of the distance to 1.0 to go each test/move
+		let maxIterations = 100;  // if we haven't converged by now... 
+
+		//
+		// if the number of metrics to process is 2 or more...
+		//
+		if (numPredMetrics > 1) {
+			// initialize the factors with equal parts from 1.0 total\
+			let metricArr: string[] = [];
+			let factorArr: number[] = [];
+			for (let factorIdx = 0; factorIdx < numPredMetrics; factorIdx++) {
+				metricArr.push(metricPredictive[factorIdx].key);
+				logger.debug(`${factorIdx}: ${metricPredictive[factorIdx].key}`);
+				factorArr.push(1.0/numPredMetrics);
+			}
+
+			let foundMaxima = false;
+			let { successfulPred, thisMetricRatioAvg } = calcPredictiveRates(matches, aggByTeam, metricArr, factorArr);
+			let thisPredSuccess = successfulPred + thisMetricRatioAvg;
+			//logger.debug(`initial values: successfulPred=${successfulPred}, thisMetricRatioAvg=${thisMetricRatioAvg}`);
+
+			for (let thisIter = 0; thisIter < maxIterations; thisIter++) {
+				logger.debug(`factorArr=${JSON.stringify(factorArr)} - thisPredSuccess=${thisPredSuccess}`);
+				let foundBetter = false;
+				let betterPredSuccess = thisPredSuccess;
+				let betterFactorIdx = -1;
+				let betterFactors: number[] = [];
+				for (let betterIdx = 0; betterIdx < numPredMetrics; betterIdx++)
+					betterFactors.push(0.0);
+
+				for (let factorIdx = 0; factorIdx < numPredMetrics; factorIdx++) {
+					// which direction to go? for each factor, tweak that one toward 1.0 and the others down 
+					let testFactorArr: number[] = [];
+					let currentTestFactor = factorArr[factorIdx];
+					let otherFactors = (1.0 - currentTestFactor);
+					let adjustment = (1.0 - currentTestFactor) * convergeRate;
+					currentTestFactor = currentTestFactor + adjustment;
+
+					for (let testFactorIdx = 0; testFactorIdx < numPredMetrics; testFactorIdx++) {
+						if (testFactorIdx == factorIdx)
+							testFactorArr.push(currentTestFactor);
+						else
+							testFactorArr.push(factorArr[testFactorIdx] * ((otherFactors - adjustment) / otherFactors));
+					}
+
+					let { successfulPred, thisMetricRatioAvg } = calcPredictiveRates(matches, aggByTeam, metricArr, testFactorArr);
+					let testPredSuccess = successfulPred + thisMetricRatioAvg;
+					logger.trace(`test ${factorIdx}: testFactorArr=${JSON.stringify(testFactorArr)}... testPredSuccess=${testPredSuccess}`);
+
+					// is it better?
+					if (testPredSuccess > betterPredSuccess) {
+						//logger.debug('found better so far');
+						foundBetter = true;
+						betterPredSuccess = testPredSuccess;
+						betterFactorIdx = factorIdx;
+						for (let betterIdx = 0; betterIdx < numPredMetrics; betterIdx++)
+							betterFactors[betterIdx] = testFactorArr[betterIdx];
+					}
+				}
+
+				// did we find a better one?
+				if (foundBetter) {
+					logger.debug(`Found better along #${betterFactorIdx}`);
+					// update the factor array
+					for (let betterIdx = 0; betterIdx < numPredMetrics; betterIdx++)
+						factorArr[betterIdx] = betterFactors[betterIdx];
+
+					thisPredSuccess = betterPredSuccess;
+				}
+				else {
+					logger.debug('No better! Local maxima!');
+					break;
+				}
+			}
+		}
+	}
+
+
+	let title = 'Inferring predictive';
+
+	res.render('./manage/config/inferpredictive', {
+		title: title,
+	});
+}));
+
 router.get('/pitsurvey', wrap(async (req, res) => {
 	if (!await req.authenticate(Permissions.ACCESS_TEAM_ADMIN)) return;
 
@@ -304,3 +514,77 @@ router.get('/pitsurvey', wrap(async (req, res) => {
 }));
 
 module.exports = router;
+
+function calcPredictiveRates(matches: Match[], aggByTeam: { [id: string]: any; }, metricList: string[], metricFactors: number[]) {
+	let thisMetricRatioAvg = -1;
+	let successfulPred = 0;
+
+	// go through all the matches, see how predictive
+	for (let matchIdx in matches) {
+		let thisMatch = matches[matchIdx];
+		let redAllianceList = thisMatch.alliances.red.team_keys;
+		let blueAllianceList = thisMatch.alliances.blue.team_keys;
+
+		let frcRedScore = thisMatch.alliances.red.score;
+		let frcBlueScore = thisMatch.alliances.blue.score;
+		let frcRatio = 1.0;
+		if (frcRedScore > frcBlueScore)
+			frcRatio = frcBlueScore / frcRedScore;
+		if (frcBlueScore > frcRedScore)
+			frcRatio = frcRedScore / frcBlueScore;
+
+		// red prediction
+		let predRedValue = 0;
+		for (let teamIdx in redAllianceList) {
+			let thisTeamKey = redAllianceList[teamIdx];
+			for (let factorIdx in metricFactors) {
+				let thisMetric = metricList[factorIdx];
+				let thisFactor = metricFactors[factorIdx];
+				predRedValue += (aggByTeam[thisTeamKey][thisMetric] * thisFactor);
+			}
+		}
+		// blue prediction
+		let predBlueValue = 0;
+		for (let teamIdx in blueAllianceList) {
+			let thisTeamKey = blueAllianceList[teamIdx];
+			for (let factorIdx in metricFactors) {
+				let thisMetric = metricList[factorIdx];
+				let thisFactor = metricFactors[factorIdx];
+				predBlueValue += (aggByTeam[thisTeamKey][thisMetric] * thisFactor);
+			}
+		}
+
+		// compare
+		let wasSuccessfulPred = false;
+		let thisCompRatio = 1.0;
+		let thisPredRatio = 1.0;
+
+		if ((frcRedScore > frcBlueScore) && (predRedValue > predBlueValue)) {
+			wasSuccessfulPred = true;
+			thisPredRatio = predBlueValue / predRedValue;
+		}
+		if ((frcBlueScore > frcRedScore) && (predBlueValue > predRedValue)) {
+			wasSuccessfulPred = true;
+			thisPredRatio = predRedValue / predBlueValue;
+		}
+		if ((frcBlueScore == frcRedScore) && (predBlueValue == predRedValue)) {
+			wasSuccessfulPred = true;
+		}
+
+		if (wasSuccessfulPred) {
+			successfulPred += 1;
+			if (frcRatio > thisPredRatio)
+				thisCompRatio = thisPredRatio / frcRatio;
+			if (thisPredRatio > frcRatio)
+				thisCompRatio = frcRatio / thisPredRatio;
+
+			if (successfulPred == 1)
+				thisMetricRatioAvg = thisCompRatio;
+
+			else
+				thisMetricRatioAvg = ((thisMetricRatioAvg * (successfulPred - 1.0)) + thisCompRatio) / successfulPred;
+		}
+	}
+	return { successfulPred, thisMetricRatioAvg };
+}
+
