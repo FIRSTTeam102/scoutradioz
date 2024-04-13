@@ -5,11 +5,11 @@
 		"browse": {
 			"link": "Or click here to browse data by event",
 			"title": "View data by event and org",
-			"tspsExplained": "'TSPS' is **relative** Total Scouting Performance Score (useful for friendly inter-org Scouting competitions!)",
+			"tspsExplained": "'TSPS' is **relative** Total Scouting Performance Score (useful for friendly inter-org Scouting competitions!) - and 'Mdn.' is short for Median",
 			"pastEvents": "To see older data you may need to use the menu option under Info and Reports, 'Browse data from past events'",
 			"orgKeyAndNickname": "Org key - Nickname",
 			"matchScoutingEntries": "# Match scouting entries",
-			"avgErrorRate": "Avg. error rate (and minimum)",
+			"avgErrorRate": "Mdn. error rate (and minimum)",
 			"tspsScore": "TSPS"
 		},
 		"choice": "Are you:",

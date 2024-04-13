@@ -222,7 +222,7 @@ router.get('/browse', wrap(async (req, res, next) => {
 
 		// get the matches for this event
 		let matches: Match[] = await utilities.find('matches',
-			{ 'event_key': thisEventKey, 'comp_level': 'qm', 'score_breakdown': { '$ne': undefined } }, { sort: { match_number: 1 } },
+			{ 'event_key': thisEventKey, 'comp_level': 'qm', 'score_breakdown': { '$ne': undefined }, 'alliances.red.score': {$ne: -1} }, { sort: { match_number: 1 } },
 			{allowCache: true, maxCacheAge: 300}
 		);
 		let matchDict: { [id: string]: Match } = {};
