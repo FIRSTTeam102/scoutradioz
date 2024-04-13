@@ -22,7 +22,7 @@ block content
 		$('#toggleSticky').prop('checked', window.stickyBarEnabled);
 	script(src=`${fileRoot}/js/script-matchscouting.js?v=${functionVersion}`)
 	- var titleParts = key.split('_').map(key => key.replace(/\D/g, '')); // 2022mrcmp_qm77_frc102 to ['2022', '77', '102']
-	- var btnColor = alliance ? ((alliance.toLowerCase().startsWith('r')) ? "alliance-red" : "alliance-blue") : '';
+	- var btnColor = alliance ? ((alliance.toLowerCase().startsWith('b')) ? "alliance-blue" : "alliance-red") : '';
 	p
 	if images && images.main
 		div(style="width:80%; margin-left:auto; margin-right:auto; display:block;")

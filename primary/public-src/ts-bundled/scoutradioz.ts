@@ -41,7 +41,7 @@ declare function onResize(cb: () => void): void;
 	
 	window.onResize = function(cb: () => void) {
 		resizeCallbacks.push(cb);
-		cb(); // Run the callback once
+		requestAnimationFrame(cb); // Run the callback once
 	};
 	
 	let ticking = false;

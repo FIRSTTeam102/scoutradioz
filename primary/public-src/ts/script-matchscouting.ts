@@ -182,8 +182,8 @@ $(function () {
 			left: '',
 		});
 	}
-
-	window.onResize(() => {
+	
+	function handleResize() {
 		// Sections calculation needs to be done even if sticky bar is disabled
 		let bodyRect = document.body.getBoundingClientRect(); // need to subtract bodyRect.top to get absolute position
 		sections = [];
@@ -226,7 +226,12 @@ $(function () {
 			text.style.fontSize = textSize + 'em';
 			iterations++;
 		}
-	});
+
+	}
+
+	window.onResize(handleResize);
+	// when team image loads, recalculate page size too
+	$('img').on('load', handleResize);
 });
 
 $(function () {
