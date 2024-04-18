@@ -188,9 +188,6 @@ async function test() {
 	let jsonString = await validate();
 	if (jsonString == null)
 		return;
-
-	const iframe = document.getElementById('previewFrame') as HTMLIFrameElement;
-	const dialog = document.getElementById('previewDialog') as HTMLDialogElement;
 	
 	fetch('/scouting/testform', {
 		method: 'POST',
@@ -205,8 +202,7 @@ async function test() {
 	})
 		.then(response => response.text())
 		.then(data => {
-			iframe.srcdoc = data;
-			dialog.showModal();
+			Dialog.show(data);
 		});
 }
 
@@ -223,14 +219,8 @@ async function submit() {
 	document.forms.submitForm.submit();
 }
 
-function closePreviewDialog() {
-	const dialog = document.getElementById('previewDialog') as HTMLDialogElement;
-	dialog.close();
-}
-
 $(() => {
 	$('#testBtn').on('click', test);
 	$('#submitBtn').on('click', submit);
 	$('#validateBtn').on('click', validate);
-	$('#closePreviewBtn').on('click', closePreviewDialog);
 });

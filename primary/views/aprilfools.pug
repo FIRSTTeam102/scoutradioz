@@ -1,0 +1,27 @@
+extends layout
+block content
+	style.
+		#container {
+			margin: auto;
+			max-width: 100%;
+		}
+		#img {
+			width: 560px;
+			max-width: 100%;
+			aspect-ratio: 1.7777;
+		}
+	h2 Fully Automated Scouting with Generative AI (April Fools 2024)
+	section(style="max-width: 1200px; margin: auto")
+		p.i Scouting in robotics competitions just got a whole lot easier with Scoutradioz' revolutionary new fully automated scouting feature. Powered by advanced AI technology, this game-changing addition takes the hassle out of data collection, allowing teams to focus on strategy and innovation.
+		p.i Our AI model, codenamed Scott, trained through generative AI and prompt engineering, analyzes match footage in real-time, extracting valuable insights effortlessly. From movement patterns to scoring capabilities, our system does it all, providing actionable insights and predictions to give teams a competitive edge.
+		p.i Customizable and rigorously tested for accuracy and reliability, our automated scouting feature is the future of robotics competition. Ready to revolutionize your scouting process? Try it today and elevate your game.
+		p.i Check out our video explaining how it works and join us in shaping the future of robotics competition!
+	
+	div#container
+		a(href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank")
+			img#img(src=`${fileRoot}/images/april-fools-thumbnail.png`)
+	
+	h3 Try it out now!
+
+	p.i You must watch the introductory video before proceeding!
+	button(class=`w3-btn theme-dim w3-btn disabled` disabled) Try generative AI match scouting

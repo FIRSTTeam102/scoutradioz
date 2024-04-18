@@ -19,9 +19,15 @@ $(() => {
 		if (navMenu.opened || Math.abs(lastScrollTop - scrollTop) <= headerbarHeight) return;
 
 		// scrolled down, hide
-		if (scrollTop > lastScrollTop) headerbar.addClass('hidden');
+		if (scrollTop > lastScrollTop) {
+			headerbar.addClass('hidden');
+			$(document.body).addClass('headerBarHidden');
+		}
 		// scrolled up, show
-		else headerbar.removeClass('hidden');
+		else {
+			headerbar.removeClass('hidden');
+			$(document.body).removeClass('headerBarHidden');
+		} 
 
 		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
 		lastScrollTop = scrollTop;

@@ -4,7 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import { matchData as matchDataHelper } from 'scoutradioz-helpers';
-import e from 'scoutradioz-http-errors';
+import e, { assert } from 'scoutradioz-http-errors';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import type {  Ranking, AggRange, OrgTeamValue } from 'scoutradioz-types';
 
@@ -24,35 +24,30 @@ router.get('/', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 	logger.debug(thisFuncName + 'event_key=' + event_key);
 	
+	// 2024-04-04 JL: Added multiple picklists
+	// Check which team_key has been specified, if any, being one of the team_keys of the org
+	//- JL note: (maybe TODO between seasons): when picklist_key is undefined and team_keys.length > 1, it still loads orgteamvalues with picklist_key undefined, and loads data even though it wont' be displayed
+	let picklist_key: string|undefined = undefined;
+	if (typeof req.query.picklist_key === 'string') picklist_key = req.query.picklist_key;
+	if (picklist_key && !(req._user.org.team_keys?.includes(picklist_key))) throw new e.UserError(`Team key ${picklist_key} specified but it is not in your org's list of team_keys!`);
+	
 	// get the current rankings
 	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	//var rankings = await utilities.find("currentrankings", {}, {});
-	let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
+	let rankings: Ranking[] = await utilities.find('rankings', {event_key}, {});
 
 	let rankMap: Dict<Ranking> = {};
 	for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
 		//logger.debug(thisFuncName + 'rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
 		rankMap[rankings[rankIdx].team_key] = rankings[rankIdx];
 	}
-	//logger.debug(thisFuncName + 'rankMap=' + JSON.stringify(rankMap));
 
-	// Match data layout - use to build dynamic Mongo aggregation query  --- Comboing twice, on two sets of team keys: red alliance & blue alliance
-	// db.scoringdata.aggregate( [ 
-	// { $match : { "team_key":{$in: [...]}, "event_key": event_key } }, 
-	// { $group : { _id: "$event_key",
-	// "autoScaleAVG": {$avg: "$data.autoScale"},
-	// "teleScaleAVG": {$avg: "$data.teleScale"},
-	//  } }
-	// ] );						
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	//var scorelayout = await utilities.find("scoringlayout", { "year": event_year }, {sort: {"order": 1}});
-	//var scorelayout = await utilities.find("layout", {org_key: org_key, year: event_year, form_type: "matchscouting"}, {sort: {"order": 1}})
 	let cookie_key = org_key + '_' + event_year + '_cols';
 	let colCookie = req.cookies[cookie_key];
 	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 
 	let aggQuery = [];
-	aggQuery.push({ $match : { 'org_key': org_key, 'event_key': event_key } });
+	aggQuery.push({ $match : { org_key, event_key } });
 	let groupClause: MongoDocument = {};
 	// group teams for 1 row per team
 	groupClause['_id'] = '$team_key';
@@ -76,6 +71,7 @@ router.get('/', wrap(async (req, res) => {
 				{$eq: ['$team_key', '$$team_key']},
 				{$eq: ['$org_key', org_key]},
 				{$eq: ['$event_key', event_key]},
+				{$eq: ['$picklist_key', picklist_key]}, // 2024-04-04 JL: added picklist_key
 			]}}},
 			{$project: {_id: 0, team_key: 0, event_key: 0, org_key: 0}}
 		],
@@ -119,9 +115,11 @@ router.get('/', wrap(async (req, res) => {
 	res.render('./manage/allianceselection', {
 		title: 'Alliance Selection',
 		aggdata: aggArray,
-		currentAggRanges: currentAggRanges,
+		currentAggRanges,
 		layout: scorelayout,
-		matchDataHelper: matchDataHelper
+		matchDataHelper,
+		picklist_key,
+		orgTeamKeys: req._user.org.team_keys,
 	});
 }));
 
@@ -144,17 +142,21 @@ router.post('/updateteamvalue', wrap(async (req, res) => {
 	const valueToAdd = parseInt(req.body.value);
 	const org_key = req._user.org_key;
 	const event_key = req.event.key;
+	// 2024-04-04 JL: Added picklist key
+	// 	Note: Behavior gets a little wonky if the list of team_keys changes at the same event *after* the picklist has been edited
+	let picklist_key = req.body.picklist_key;
+	if (picklist_key === 'undefined') picklist_key = undefined;
 	
 	if (!team_key || !valueToAdd) throw new e.UserError('Provide a team_key and a value.');
 	
-	let currentTeamValue: OrgTeamValue = await utilities.findOne('orgteamvalues', {org_key: org_key, team_key: team_key, event_key: event_key});
+	let currentTeamValue: OrgTeamValue = await utilities.findOne('orgteamvalues', {org_key, team_key, event_key, picklist_key});
 	
 	let newValue;
 	
 	if (currentTeamValue) {
 		newValue = currentTeamValue.value + valueToAdd;
 		
-		logger.debug(`Setting ${team_key}'s value to ${newValue} for org ${org_key}`);
+		logger.debug(`Setting ${team_key}'s value to ${newValue} for org ${org_key} and picklist ${picklist_key} and event ${event_key}`);
 		// If the value to set is 0, then just delete the record
 		if (newValue === 0) {
 			logger.debug('Deleting record');
@@ -167,12 +169,13 @@ router.post('/updateteamvalue', wrap(async (req, res) => {
 	// If there's no team in the values collection, create it
 	else {
 		newValue = valueToAdd;
-		logger.debug(`Creating entry for ${team_key} for org ${org_key}, value=${newValue}`);
+		logger.debug(`Creating entry for ${team_key} for org ${org_key}, value=${newValue}, picklist=${picklist_key}`);
 		
 		let newEntry = {
-			org_key: org_key, 
-			team_key: team_key,
-			event_key: event_key,
+			org_key, 
+			team_key,
+			event_key,
+			picklist_key,
 			value: newValue
 		};
 		

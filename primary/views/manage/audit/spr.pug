@@ -5,12 +5,62 @@
 			QUERY: lookbackto (the match # to look back to; if omitted, will show & calculate across all matches so far at the current event
 extends ../../layout
 include ../../reports/mixins/metricTables
+mixin scouterName(report)
+	- var name = report.actual_scorer.name
+	a(target="_blank" href=`/scouting/match?key=${report.match_team_key}` class="w3-tooltip")=name
+		if scouterScoring[name]
+			span(class="w3-tooltiptext") SPR: #{scouterScoring[name].sprScore}<br>Team: #{report.team_key.substring(3)}
 block content
 	style.
+		#content-container {
+			overflow-x: unset; /* To fix sticky headers */
+		}
 		.w3-tooltip .w3-tooltiptext{
 			width: 120px;
 			padding: 8px 16px;
 			margin-left: -60px;
+		}
+		.spr-table {
+			border-collapse: collapse;
+			border-spacing: 0;
+			width: 100%;
+		}
+		.spr-table td, .spr-table th {
+			padding: 8px;
+			text-align: start;
+			vertical-align: top;
+		}
+		.spr-table .stickyTableHeader {
+			background: black;
+		}
+	style.
+		@media(max-width: 800px) {
+			.spr-table, .spr-table thead, .spr-table tbody, .spr-table th, .spr-table td, .spr-table tr {
+				display: block;
+			}
+			.spr-table thead tr {
+				display: none;
+			}
+			.spr-table td { 
+				/* Behave  like a "row" */
+				border: none;
+				border-bottom: 1px solid #ffffff40; 
+				position: relative;
+				padding-left: 50%; 
+			}
+			
+			.spr-table td:before { 
+				/* Now like a table header */
+				position: absolute;
+				/* Top/left values mimic padding */
+				top: 6px;
+				left: 6px;
+				width: 45%; 
+				padding-right: 10px; 
+				white-space: nowrap;
+				content: attr(data-header);
+				opacity: 0.7;
+			}
 		}
 
 	h2(class="theme-text") Scouter Performance Ratings
@@ -35,9 +85,9 @@ block content
 	h6 <i>Click on a column header to sort by that column's information (click again to change sort direction)</i>
 
 	div(class="w3-show-inline-block")
-		table(class="w3-table" id="metricTable")
+		table(class="w3-table w3-bordered" id="metricTable")
 			tr
-				th(class="w3-center") Scout
+				th(class="w3-left-align") Scout
 				th(class="w3-right-align w3-tooltip")  SPR
 					span.w3-tooltiptext Scouter Performance Rating (Lower Is Better)
 				th(class="w3-right-align w3-tooltip")  Count
@@ -48,20 +98,39 @@ block content
 					span.w3-tooltiptext Average ratio of error
 			each scout, i in scouterScoring
 				tr
-					td(class="w3-text-light-gray w3-center")= i
-					td(class="w3-text-light-gray w3-center")= Math.round(scout.sprScore*10)/10
-					td(class="w3-text-light-gray w3-center")= scout.count
-					td(class="w3-text-light-gray w3-center")= Math.round(scout.avgDiff*10)/10
-					td(class="w3-text-light-gray w3-center")= Math.round(scout.avgRatio*100)/100
+					td(class="w3-text-light-gray w3-left-align")= i
+					td(class="w3-text-light-gray w3-right-align")= Math.round(scout.sprScore*10)/10
+					td(class="w3-text-light-gray w3-right-align")= scout.count
+					td(class="w3-text-light-gray w3-right-align")= Math.round(scout.avgDiff*10)/10
+					td(class="w3-text-light-gray w3-right-align")= Math.round(scout.avgRatio*100)/100
 	+tableSorter()
 
 	h2(class="theme-text") Per-match auditing
 
 	h6 <i>Click on a match or list of scouts to see FIRST data or per-scout data respectively</i>
 
-	div(class="w3-show-inline-block")
-		table(class="w3-table")
-			tr
+	div
+		table(class="spr-table")
+			thead(class="stickyTableHeader")
+				tr(class="w3-border-bottom w3-hide-small")
+					th Match
+					th Alliance
+					th Scouts
+					th.w3-tooltip FRC points
+						span.w3-tooltiptext Official score, not counting fouls
+					th.w3-tooltip Scout points
+						span.w3-tooltiptext Estimated score based on Contributed Points from scouting data
+					th.w3-tooltip Point diff
+						span.w3-tooltiptext Difference between FRC points and Scout points
+					th Err ratio
+				tr(class="w3-border-bottom w3-show-small")
+					th Match - Alliance<br>Scouts
+					th.w3-tooltip Scout points
+						span.w3-tooltiptext Estimated score based on Contributed Points from scouting data
+					th.w3-tooltip Point diff
+						span.w3-tooltiptext Difference between FRC points and Scout points
+					th Err ratio
+			//- tr
 				th(class="w3-center") Match/scouts
 				th(class="w3-right-align w3-tooltip") Point diff
 					span.w3-tooltiptext Count of matches scouted
@@ -71,8 +140,42 @@ block content
 					span.w3-tooltiptext Average ratio of error
 			- var rowToggle = 0;
 			- var thisMatch = '';
-			each matchall, i in compareTable
+			each row, i in compareTable
+				- var matchTitle;
+				- if (row.match.comp_level === 'f') matchTitle = msg('dashboard.fNumber', {number: row.match.match_number}); // finals always have set_number=1
+				- if (row.match.comp_level === 'sf') matchTitle = msg('dashboard.sfNumber', {number: row.match.set_number}); // semis always have match_number=1
+				- else matchTitle = msg('dashboard.matchNumber', {number: row.match.match_number}); // qualifying matches
+				//- Match # and blue alliance
 				tr
+					td(rowspan="2" data-header="Match")!=matchTitle
+					td.alliance-blue-faded(data-header="Alliance")!=msg('alliance.blueShort')
+					if row.blue
+						td.alliance-blue-faded(data-header="Scouts")
+							+scouterName(row.blue.reports[0])
+							span , 
+							+scouterName(row.blue.reports[1])
+							span , 
+							+scouterName(row.blue.reports[2])
+						td.alliance-blue-faded(data-header="FRC points")= row.blue.frcTot
+						td.alliance-blue-faded(data-header="Scout points")= row.blue.orgTot
+						td.alliance-blue-faded.b(data-header="Point difference")= row.blue.errDiff
+						td.alliance-blue-faded(data-header="Err ratio")= Math.round(row.blue.errRatio * 100) / 100
+				//- FRC score and red alliance
+				tr.w3-border-bottom
+					td.alliance-red-faded(data-header="Alliance")!=msg('alliance.redShort')
+					if row.red
+						td.alliance-red-faded(data-header="Scouts")
+							+scouterName(row.red.reports[0])
+							span , 
+							+scouterName(row.red.reports[1])
+							span , 
+							+scouterName(row.red.reports[2])
+						td.alliance-red-faded(data-header="FRC points")= row.red.frcTot
+						td.alliance-red-faded(data-header="Scout points")= row.red.orgTot
+						td.alliance-red-faded.b(data-header="Point difference")= row.red.errDiff
+						td.alliance-red-faded(data-header="Err ratio")= Math.round(row.red.errRatio * 100) / 100
+
+				//- tr
 					- if (rowToggle == 0) thisMatch = matchall[0].split(" ")[0];
 					- if (rowToggle == 0)
 						td(class="w3-text-light-gray w3-center")

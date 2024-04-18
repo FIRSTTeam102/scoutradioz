@@ -62,6 +62,20 @@
 	&.tier-dev{background-color: @header-tier-dev;}
 }
 
+@headerTransition: top 0.15s ease-in-out;
+
+// Table header that's sticky needs to react to the header position at the top of the page
+.stickyTableHeader {
+	transition: @headerTransition;
+	top: @headerbar-height;
+	position: sticky;
+	z-index: 100;
+}
+// NavMenu.ts adds/removes 'headerBarHidden' class to document.body
+.headerBarHidden .stickyTableHeader {
+	top: 0px;
+}
+
 .header{
 	.header-color;
 	& .tierlabel {
@@ -79,7 +93,7 @@
 	width: 100%;
 	z-index: 100;
 	top: 0;
-	transition: top .15s ease-in-out;
+	transition: @headerTransition;
 	
 	// JL 2022-11-24: Adjusting navbar classes to use flexbox for positioning instead of absolute/inline-block/float tricks
 	display: flex;

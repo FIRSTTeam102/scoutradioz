@@ -28,7 +28,10 @@
 			"first": "En savoir plus sur *FIRST* et FRC"
 		},
 		"view": "Afficher",
-		"login": "Connexion"
+		"login": "Connexion",
+		"browse": {
+			"link": "Ou cliquez ici pour chercher des données par évènement"
+		}
 	},
 	"hello": {
 		"world": "Bonjour le monde!",

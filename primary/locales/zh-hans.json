@@ -27,7 +27,7 @@
 			"partner": "申请成为抢先体验合作伙伴",
 			"first": "有关 *FIRST* 和 FRC 的更多信息"
 		},
-		"view": "看法",
+		"view": "浏览",
 		"login": "登录"
 	},
 	"hello": {
@@ -40,7 +40,7 @@
 		"report": {
 			"intro": "为了帮助我们修复此错误，请：",
 			"screenshot": "截取此错误消息的屏幕截图，",
-			"url": "单击页面顶部的“共享”，复制此页面的完整 URL，",
+			"url": "单击页面顶部的“共享”，复制此页面的完整链接（URL），",
 			"send": "将屏幕截图发布到我们的 Discord 服务器或我们的 {github}GitHub 页面{/github}，包括相关信息，例如您点击了导致此错误的链接。"
 		},
 		"stack": "堆栈跟踪："
@@ -58,7 +58,7 @@
 			"frc": "我们很自豪能成为 FIRST 机器人竞赛的参与者。"
 		},
 		"nav": {
-			"home": "家",
+			"home": "主页",
 			"reports": {
 				"main": "信息和报告：[[{event}]]",
 				"teams": "团队",
@@ -66,7 +66,7 @@
 				"teamStats": "球队数据",
 				"yearStats": "{year}的完整统计数据",
 				"export": {
-					"main": "导出为 CSV",
+					"main": "导出数据",
 					"match": "匹配球探数据：[[{event}]]",
 					"pit": "场地侦察数据：[[{event}]]",
 					"matchAll": "匹配球探数据：[[所有 {year}]]",
@@ -78,17 +78,17 @@
 				"main": "管理：[[{org}]]",
 				"members": {
 					"main": "成员",
-					"list": "会员名单",
-					"passwords": "审核/重置会员密码"
+					"list": "成员名单",
+					"passwords": "审核/重置队员密码"
 				},
 				"scouters": {
-					"main": "童子军",
+					"main": "侦查员",
 					"event": "童子军：[[{event}]]",
 					"audit": "侦察审核",
-					"present": "设置礼物"
+					"present": "设定参与此活动的人员"
 				}
 			},
-			"admin": "行政",
+			"admin": "管理员",
 			"user": {
 				"main": "用户：[[{user}]]",
 				"fallback": "用户",
@@ -96,11 +96,12 @@
 				"logout": "登出",
 				"switchorg": "改变组织"
 			},
-			"help": "需要帮忙？检查我们的维基！"
+			"help": "需要帮忙？检查我们的维基！",
+			"thanks": "特别鸣谢"
 		}
 	},
 	"home": {
-		"title": "家",
+		"title": "主页",
 		"menu": "点击左上角的{menu}打开菜单",
 		"tournamentInfo": "赛事信息",
 		"teamInfo": "团队信息",
@@ -110,7 +111,9 @@
 		"scoutingDashboard": "侦察仪表板",
 		"management": "管理",
 		"admin": "行政",
-		"specifyTeam": "您必须指定一个团队。"
+		"specifyTeam": "您必须指定一个团队。",
+		"formDemos": "表格预览",
+		"matchFormDemo": "赛事表格"
 	},
 	"share": {
 		"changeOrg": "您正在查看 {org}。\n要更改您希望查看的组织，请单击菜单中的 *Org: {org}* 并选择 *Change Organization*。"
@@ -119,10 +122,10 @@
 		"loginOrg": "登录 {org}",
 		"orgpassword": "机构密码：",
 		"next": "下一个",
-		"name": "名称：",
+		"name": "姓名：",
 		"personalpassword": "个人密码：",
 		"createnew": "请创建一个新密码。",
-		"mustcreate": "您在您的组织中拥有提升的权限，因此您必须设置密码以确保其他人无法以您的身份登录。",
+		"mustcreate": "您在您的组织中拥有更高的的权限，因此您必须设置密码以确保其他人无法以您的身份登录。",
 		"currentpassword": "当前密码：",
 		"newpassword": "新密码：",
 		"newpassword2": "确认：",
@@ -131,8 +134,8 @@
 		"changepassword": "更改密码",
 		"blankpassword": "如果您还没有自己的密码，请留空。",
 		"selectorg": "请选择要登录的组织。",
-		"logoutbeforelogin": "请先注销，然后才能登录其他用户。",
-		"orgpasswordrequired": "请输入您所在组织的密码。要返回，请打开左上角的导航。",
+		"logoutbeforelogin": "在以其他用户的身份登录前请先登出当前账号",
+		"orgpasswordrequired": "请输入您所在组织的密码。若想返回，请打开左上角的导航键。",
 		"orgpasswordincorrect": "组织 {org} 的密码不正确。",
 		"resubmitlogin": "抱歉，请重新提交您的组织登录信息。",
 		"selectuser": "请选择一个用户。",
@@ -166,17 +169,17 @@
 			"small": "上传小#{n}",
 			"preprocess": "预处理照片以节省移动数据？"
 		},
-		"matchHeading": "比赛#{match}，球队#{team}",
+		"matchHeading": "比赛#{match}，团队#{team}",
 		"dynamicScrolling": "启用动态滚动",
 		"submit": "提交",
-		"orgManagerActions": "组织经理行动：",
+		"orgManagerActions": "组织管理人行动：",
 		"clearData": "清除数据",
 		"clearDataConfirm": "如果您*确定*想要*永久删除*本场比赛的球探数据，请在下方输入您的密码。",
 		"invalidMatchKey": "无效的匹配键集。",
 		"invalidTeam": "团队 {team} 不存在。",
 		"invalidTeamKey": "团队密钥未定义或无效。",
 		"noDataSubmit": "没有数据发送到 {url}。",
-		"submitSuccess": "提交数据成功。",
+		"submitSuccess": "成功提交数据。",
 		"deleteSuccess": "删除数据成功。如果您希望在屏幕上重新提交数据，您将不会被重定向离开该页面。"
 	},
 	"notifications": {
@@ -192,14 +195,14 @@
 		"dbSaveFailed": "已收到订阅，但我们无法将其保存到我们的数据库中。",
 		"testPageTitle": "通知测试页面",
 		"invalidKey": "没有匹配 & 匹配团队密钥",
-		"invalidMatch": "未找到匹配项",
+		"invalidMatch": "未找到比赛",
 		"content": {
 			"title": "{match} 即将开始",
 			"body": "您被分配到 {alliance} 联盟的团队 {team}。",
 			"ifFocused": "别忘了，{match} 即将开始！"
 		},
 		"actions": {
-			"scout": "球探比赛"
+			"scout": "比赛侦察"
 		}
 	},
 	"dashboard": {
@@ -414,5 +417,12 @@
 	"tryAgainLater": "请稍后再试。",
 	"yes": "是的",
 	"no": "不",
-	"matches": "火柴"
+	"matches": "火柴",
+	"name": "姓名",
+	"year": "年份",
+	"thankyou": {
+		"2023offseason": "2023非赛季",
+		"2023inseason": "2023赛季"
+	},
+	"update": "更新"
 }
