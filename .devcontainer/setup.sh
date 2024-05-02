@@ -25,3 +25,6 @@ done
 
 # Install node modules
 yarn setup
+
+# Run dev script (in devcontainer mode)
+yarn devcontainer

@@ -3,7 +3,6 @@ const aws = require('aws-sdk');
 const lambda = new aws.Lambda({
 	region: 'us-east-1'
 });
-require('colors');
 
 var aliasPromoteTo;
 var aliasPromoteFrom;
@@ -38,7 +37,7 @@ promoteCode((err, data) => {
 	if (err) throw err;
 	else {
 		console.log(data);
-		console.log('Done! ' + 'DON\'T FORGET TO SYNC STATIC FILES!!'.brightRed);
+		console.log('Done! ' + 'DON\'T FORGET TO SYNC STATIC FILES!!');
 	}
 });
 

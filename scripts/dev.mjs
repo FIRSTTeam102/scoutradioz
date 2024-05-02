@@ -1,18 +1,34 @@
-const fs = require('fs');
-const { spawn, ChildProcessWithoutNullStreams } = require('child_process');
-require('colors');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
-const { mongodName, primaryName, uploadName, lessName, errorName } = require('./names');
-const { pathToPrimary, pathToUpload, pathToLess } = require('./paths');
-const { compileLess } = require('./compileLess');
+import { mongodName, primaryName, uploadName, lessName, errorName} from './names.mjs';
+import { pathToPrimary, pathToUpload, pathToLess } from './paths.mjs';
+import { compileLess } from './compileLess.mjs';
 
-/** @type ChildProcessWithoutNullStreams  */
+import { parseArgs } from 'util';
+
+const { values: options } = parseArgs({
+	args: process.argv,
+	options: {
+		devcontainer: {
+			type: 'boolean',
+		}
+	},
+	strict: true,
+	allowPositionals: true,
+});
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url)); // __dirname is only supported in CommonJS modules
+
+/** @type {import('child_process').ChildProcessWithoutNullStreams}  */
 let childMongod, 
-	/** @type ChildProcessWithoutNullStreams  */
+	/** @type {import('child_process').ChildProcessWithoutNullStreams}  */
 	childPrimary, 
-	/** @type ChildProcessWithoutNullStreams  */
+	/** @type {import('child_process').ChildProcessWithoutNullStreams}  */
 	childUpload,
-	/** @type ChildProcessWithoutNullStreams  */
+	/** @type {import('child_process').ChildProcessWithoutNullStreams}  */
 	childTS;
 
 
@@ -21,61 +37,67 @@ let gracefulShutdown = false;
 
 function init() {
 	// MONGODB
-	
-	const mongodbOptions = [];
-	// Allow environment variable "MONGODB_PATH" to specify the database path
-	if (process.env.MONGODB_PATH) {
-		mongodbOptions.push('--dbpath');
-		mongodbOptions.push(process.env.MONGODB_PATH);
-		console.log(`${mongodName}: Starting with dbpath = "${process.env.MONGODB_PATH}"`);
+
+	if (options.devcontainer) {
+		console.warn(`${mongodName}: The dev script is running in devcontainer mode, so MongoDB is launched in a separate Docker container instead of a child process of this script.`);
 	}
 	
-	childMongod = spawn('mongod', mongodbOptions, {cwd: process.cwd(), stdio: ['ipc'], killSignal: 'SIGINT'});
-	childMongod.on('error', (e) => console.error(e));
-	
-	childMongod.on('close', function (status, signal) {
-		console.log(`${mongodName}: Process exited with status ${status || signal} (${interpretMongoStatusCode(status)})`);
-		// If the database failed to run, then abort the program
-		if (status !== 0 && status !== 12 && !gracefulShutdown && (status !== -2  && status !== -4058 /* no mongod */)) {
-			console.log('Database closed unexpectedly. Shutting down all scripts.');
-			lessWatcher?.close();
-			childPrimary?.kill('SIGINT');
-			childUpload?.kill('SIGINT');
-			childTS?.kill('SIGINT');
-			process.exit();
+	if (!options.devcontainer) {
+		const mongodbOptions = [];
+		// Allow environment variable "MONGODB_PATH" to specify the database path
+		if (process.env.MONGODB_PATH) {
+			mongodbOptions.push('--dbpath');
+			mongodbOptions.push(process.env.MONGODB_PATH);
+			console.log(`${mongodName}: Starting with dbpath = "${process.env.MONGODB_PATH}"`);
 		}
-	});
-	// Fires whenever mongodb outputs to the console
-	childMongod.stdout.on('data', function (data) {
-		// console.log(`${mongodName}: ${data}`);
-		let str = String(data);
-		let split = str.split('\n');
-		for (let line of split) {
-			if (line) {
-				try {
-					// https://www.mongodb.com/docs/manual/reference/log-messages/
-					let message = JSON.parse(line);
-					let severity = message.s;
-					// Fatal or Error
-					if (severity === 'F' || severity === 'E') {
-						let shortMsg = message.msg; // General error message
-						let longMsg = message.attr?.error; // Some (or all?) errors will add a more specific error in 'attr'
-						console.log(`${mongodName}: ${errorName}: ${shortMsg}`);
-						if (longMsg) {
-							console.log(`${mongodName}: ${errorName}: ${JSON.stringify(longMsg)}`);
+		
+		childMongod = spawn('mongod', mongodbOptions, {cwd: process.cwd(), stdio: ['ipc'], killSignal: 'SIGINT'});
+		childMongod.on('error', (e) => console.error(e));
+		
+		childMongod.on('close', function (status, signal) {
+			console.log(`${mongodName}: Process exited with status ${status || signal} (${interpretMongoStatusCode(status)})`);
+			// If the database failed to run, then abort the program
+			if (status !== 0 && status !== 12 && !gracefulShutdown && (status !== -2  && status !== -4058 /* no mongod */)) {
+				console.log('Database closed unexpectedly. Shutting down all scripts.');
+				lessWatcher?.close();
+				childPrimary?.kill('SIGINT');
+				childUpload?.kill('SIGINT');
+				childTS?.kill('SIGINT');
+				process.exit();
+			}
+		});
+		// Fires whenever mongodb outputs to the console
+		childMongod.stdout.on('data', function (data) {
+			// console.log(`${mongodName}: ${data}`);
+			let str = String(data);
+			let split = str.split('\n');
+			for (let line of split) {
+				if (line) {
+					try {
+						// https://www.mongodb.com/docs/manual/reference/log-messages/
+						let message = JSON.parse(line);
+						let severity = message.s;
+						// Fatal or Error
+						if (severity === 'F' || severity === 'E') {
+							let shortMsg = message.msg; // General error message
+							let longMsg = message.attr?.error; // Some (or all?) errors will add a more specific error in 'attr'
+							console.log(`${mongodName}: ${errorName}: ${shortMsg}`);
+							if (longMsg) {
+								console.log(`${mongodName}: ${errorName}: ${JSON.stringify(longMsg)}`);
+							}
 						}
 					}
-				}
-				catch (err) {
-					console.log(`Error parsing JSON line from childMongod.stdout: ${err}`);
+					catch (err) {
+						console.log(`Error parsing JSON line from childMongod.stdout: ${err}`);
+					}
 				}
 			}
-		}
-	});
-	// Fires when mongod initializes
-	childMongod.on('spawn', function (data) {
-		console.log(`${mongodName}: Database has started running.`);
-	});
+		});
+		// Fires when mongod initializes
+		childMongod.on('spawn', function (data) {
+			console.log(`${mongodName}: Database has started running.`);
+		});
+	}
 	
 	// PRIMARY
 	
@@ -135,14 +157,8 @@ function init() {
 	// STATIC TYPESCRIPT
 	// 	It's not important to record when this subprocess exits
 	childTS = spawn('node', [
-		'watchTS.js'
-	], {shell: true, cwd: __dirname});
-	childTS.stderr.on('data', function (data) {
-		process.stderr.write(data); // Newlines & prepends are already included
-	});
-	childTS.stdout.on('data', function (data) {
-		process.stdout.write(data); // Newlines & prepends are already included
-	});
+		'watchTS.mjs'
+	], {shell: true, cwd: __dirname, stdio: 'inherit'});
 	
 	// LESS
 	// 	Sometimes the fs watcher will fire a change detected instantly, so this timeout will help prevent LESS from compiling twice 

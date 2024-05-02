@@ -1,10 +1,10 @@
 // TS compilation is computationally expensive, so it's better that we do it in a child thread
-const ts = require('typescript');
-const path = require('path');
-const fs = require('fs');
-require('colors');
-const { bundledName, indivName, errorName } = require('./names');
-const { pathToTsBundled, pathToTs, pathToPublicJs } = require('./paths');
+import fs from 'fs';
+import path from 'path';
+import ts from 'typescript';
+import { bundledName, indivName, errorName } from './names.mjs';
+import { pathToTsBundled, pathToTs, pathToPublicJs } from './paths.mjs';
+import chalk from 'chalk';
 
 const formatHost = {
 	getCanonicalFileName: path => path,
@@ -58,7 +58,7 @@ function watchPath(path, name, afterProgramCreate) {
 	return watchProgram;
   
 	function reportDiagnostic(diagnostic) {
-		console.error(`${name.brightYellow}: ${errorName}: ${ts.flattenDiagnosticMessageText( diagnostic.messageText, formatHost.getNewLine())}`);
+		console.error(`${name}: ${errorName}: ${ts.flattenDiagnosticMessageText( diagnostic.messageText, formatHost.getNewLine())}`);
 	}
 	
 	/**
@@ -67,7 +67,7 @@ function watchPath(path, name, afterProgramCreate) {
 	 * @param {ts.Diagnostic} diagnostic
 	 */
 	function reportWatchStatusChanged(diagnostic) {
-		console.log(`${name.brightYellow}: ${diagnostic.messageText}`);
+		console.log(`${name}: ${diagnostic.messageText}`);
 	}
 }
 

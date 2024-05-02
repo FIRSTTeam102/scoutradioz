@@ -1,11 +1,12 @@
 // Script to compile our LESS source into CSS.
-const fs = require('fs');
-const path = require('path');
-const less = require('less');
-const LessPluginCleanCss = require('less-plugin-clean-css');
+import fs from 'fs';
+import path from 'path';
+import less from 'less';
+import LessPluginCleanCss from 'less-plugin-clean-css';
+import esMain from 'es-main';
 
-const { pathToLess, pathToPublicCss } = require('./paths');
-const { lessName, errorName } = require('./names');
+import { pathToLess, pathToPublicCss } from './paths.mjs';
+import { lessName, errorName } from './names.mjs';
 
 const cleanCssPlugin = new LessPluginCleanCss({
 	advanced: true,
@@ -13,7 +14,7 @@ const cleanCssPlugin = new LessPluginCleanCss({
 	compatibility: 'ie8',
 });
 
-async function compileLess() {
+export async function compileLess() {
 	const lessBase = path.join(pathToLess, 'base.less');
 	const cssOutput = path.join(pathToPublicCss, 'style.css');
 	const mapOutpput = path.join(pathToPublicCss, 'style.css.map');
@@ -47,11 +48,7 @@ async function compileLess() {
 		});
 }
 
-module.exports = {
-	compileLess,
-};
-
-if (require.main === module) {
+if (esMain(import.meta)) {
 	// If this script is called directly (instead of via require), then run the compile script(s) immediately
 	compileLess();
 }
