@@ -280,7 +280,7 @@ interface ConfirmOptions {
     noText?: string;
     yesTimeout?: number;
 }
-declare function debugToHTML(message: any): void;
+declare function debugToHTML(message: any, replace?: boolean): void;
 /**
  * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
  * @param cb Callback to run on a resize event.
