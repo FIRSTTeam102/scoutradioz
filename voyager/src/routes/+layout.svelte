@@ -15,7 +15,7 @@
 		Text as LText
 	} from '@smui/list';
 	import Tooltip, { Wrapper } from '@smui/tooltip';
-	import TopAppBar, { Row, Section } from '@smui/top-app-bar';
+	import TopAppBar, { Row, Section, Title as TABTitle } from '@smui/top-app-bar';
 
 	import { afterNavigate } from '$app/navigation';
 	import { assets } from '$app/paths';
@@ -24,7 +24,8 @@
 		DialogContext,
 		RefreshButtonAnimationContext,
 		RefreshContext,
-		SnackbarContext
+		SnackbarContext,
+		TitleContext
 	} from '$lib/types';
 	import IconButton from '@smui/icon-button';
 	import { onMount, setContext } from 'svelte';
@@ -36,6 +37,7 @@
 
 	import SimpleDialog from '$lib/SimpleDialog.svelte';
 	import { getLogger } from '$lib/logger';
+	import SvelteMarkdown from 'svelte-markdown';
 	import '../theme/extras.scss';
 	import type { LayoutData } from './$types';
 
@@ -93,6 +95,12 @@
 	let timeRefreshButtonWasPressed = 0; // For smooth stopping
 	const ANIMATION_TIME = 1000;
 
+	const title: TitleContext = writable('');
+	const subtitle: TitleContext = writable('');
+
+	setContext('title', title);
+	setContext('subtitle', subtitle);
+
 	const refreshButtonAnimationContext: RefreshButtonAnimationContext = {
 		play: () => {
 			refreshButtonSpinning = true;
@@ -100,8 +108,7 @@
 		},
 		stop: () => {
 			// Only set refreshButtonSpinning = false after some multiple of [animation_time] seconds after it started playing
-			let timeRemainingInAnimation =
-				ANIMATION_TIME - ((Date.now() - timeRefreshButtonWasPressed) % ANIMATION_TIME);
+			let timeRemainingInAnimation = ANIMATION_TIME - ((Date.now() - timeRefreshButtonWasPressed) % ANIMATION_TIME);
 			setTimeout(() => {
 				refreshButtonSpinning = false;
 			}, timeRemainingInAnimation);
@@ -125,10 +132,6 @@
 	let lastScrollTop = 0;
 	let headerBarHidden = false;
 
-	// TODO title bar
-	// let title: Writable<string|undefined> = writable(undefined);
-	// setContext('title', title);
-
 	const onScroll = () => {
 		// we want to keep as little code as possible in here for performance reasons
 		// so anything that persists should be declared outside of it
@@ -138,7 +141,9 @@
 		// only update if there was enough of a change
 		if (Math.abs(lastScrollTop - scrollTop) <= headerBarHeight) return;
 
-		headerBarHidden = scrollTop > lastScrollTop;
+		headerBarHidden =
+			scrollTop > lastScrollTop &&
+			scrollTop > 0 /* don't hide bar if iphone scrolls up into the negatives and pops back  */;
 		// // Scrolled down, hide
 		// if (scrollTop > lastScrollTop) headerBar.classList.add('hidden');
 		// // Scrolled up, show
@@ -201,7 +206,9 @@
 			if (event.data.msg === 'RETURN_VERSION') {
 				let lastKnownVersion = localStorage.getItem('serviceWorkerVersion');
 				let currentVersion = String(event.data.version);
-				logger.debug(`Received service worker version: ${currentVersion} - Last known worker version: ${lastKnownVersion}`);
+				logger.debug(
+					`Received service worker version: ${currentVersion} - Last known worker version: ${lastKnownVersion}`
+				);
 				if (lastKnownVersion !== currentVersion) {
 					logger.info('Version mismatch found! Notifying user and saving version...');
 					localStorage.setItem('serviceWorkerVersion', currentVersion);
@@ -212,7 +219,7 @@
 		const registration = await navigator.serviceWorker.register('/service-worker.js', {
 			type: 'module'
 		});
-		
+
 		if (registration.installing) {
 			updateInstalling = true;
 		}
@@ -222,12 +229,12 @@
 			waitingWorker = registration.waiting;
 			updateAvailable = true;
 		}
-		
+
 		if (registration.active && !registration.waiting && !registration.installing) {
 			logger.warn('There is an active worker and none that are installing or waiting. Requesting current version...');
 			if (registration.active !== navigator.serviceWorker.controller)
 				logger.warn('navigator.serviceWorker.controller is not the same as registration.active!');
-			registration.active.postMessage({msg: 'GET_VERSION'});
+			registration.active.postMessage({ msg: 'GET_VERSION' });
 		}
 
 		registration.onupdatefound = () => {
@@ -264,12 +271,7 @@
 
 <svelte:window on:scroll={onScroll} />
 
-<div
-	class="header-bar"
-	bind:this={headerBar}
-	class:slidAway={headerBarHidden}
-	bind:clientHeight={headerBarHeight}
->
+<div class="header-bar" bind:this={headerBar} class:slidAway={headerBarHidden} bind:clientHeight={headerBarHeight}>
 	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
 		<Row>
 			<Section>
@@ -278,25 +280,25 @@
 					aria-label="Open menu"
 					on:click={() => {
 						menuOpen = !menuOpen;
-					}}>menu</IconButton
-				>
-				<!-- {#if $title}
-					<TABTitle><SvelteMarkdown source={$title} /></TABTitle>
-				{:else} -->
-				<a href="/" class="header-logo">
-					<img
-						src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`}
-						alt="Scoutradioz logo"
-					/>
-				</a>
-				<!-- {/if} -->
+					}}>menu</IconButton>
+				<IconButton class="header-logo" disabled>
+					<img src={`${assets}/icon-64.png`} alt="Scoutradioz logo" />
+				</IconButton>
+				<TABTitle>
+					<p class="title">
+						<SvelteMarkdown source={$title} isInline />
+					</p>
+					{#if $subtitle}
+						<p class="subtitle">
+							<SvelteMarkdown source={$subtitle} isInline />
+						</p>
+					{/if}
+				</TABTitle>
 			</Section>
 			<Section align="end" toolbar>
 				{#if updateAvailable}
 					<Wrapper>
-						<IconButton class="material-icons" on:click={handleInstallButtonClick}
-							>system_update</IconButton
-						>
+						<IconButton class="material-icons" on:click={handleInstallButtonClick}>system_update</IconButton>
 						<Tooltip>{msg('pwa.updateAvailable')}</Tooltip>
 					</Wrapper>
 				{/if}
@@ -311,8 +313,8 @@
 						<IconButton
 							class={classMap({
 								'material-icons': true,
-								refreshButton: true,
-								spinning: refreshButtonSpinning
+								'refreshButton': true,
+								'spinning': refreshButtonSpinning
 							})}
 							aria-label="Sync"
 							on:click={async () => {
@@ -321,8 +323,7 @@
 								await $refreshContext.onClick();
 								refreshButtonAnimationContext.stop();
 							}}
-							disabled={!$deviceOnline || refreshButtonSpinning}
-						>
+							disabled={!$deviceOnline || refreshButtonSpinning}>
 							{#if $deviceOnline}
 								sync
 							{:else}
@@ -378,20 +379,16 @@
 						<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
 						<LText>{msg('layout.nav.user.switchorg')}</LText>
 					</LItem>
-					<LItem href="/login/pick-user">
-						<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
-						<LText>{msg('layout.nav.user.pickuser')}</LText>
-					</LItem>
 				{:else}
 					<LItem disabled>
 						<LGraphic class="material-icons unimportant" aria-hidden="true">logout</LGraphic>
 						<LText>{msg('layout.nav.user.switchorgoffline')}</LText>
 					</LItem>
-					<LItem disabled>
-						<LGraphic class="material-icons unimportant" aria-hidden="true">login</LGraphic>
-						<LText>{msg('layout.nav.user.pickuseroffline')}</LText>
-					</LItem>
 				{/if}
+				<LItem href="/login/pick-user">
+					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+					<LText>{msg('layout.nav.user.pickuser')}</LText>
+				</LItem>
 				<!-- Not logged in to an org -->
 			{:else if $deviceOnline}
 				<LItem href="/login">
@@ -412,8 +409,7 @@
 				on:click={() => {
 					menuOpen = false;
 					languagePicker.open();
-				}}
-			>
+				}}>
 				<LGraphic class="material-icons" aria-hidden="true">language</LGraphic>
 				<LText>{msg('language')}</LText>
 			</LItem>
@@ -468,9 +464,9 @@
 		width: 100%;
 		top: 0px;
 		transition: top 0.15s ease-out;
-		// &:global(.slidAway) {
-		// 	top: -$header-height;
-		// }
+		&:global(.slidAway) {
+			top: -$header-height;
+		}
 		& :global(p) {
 			margin: 0;
 		}
@@ -501,21 +497,28 @@
 	:global(.mdc-drawer--modal) {
 		top: 0;
 	}
-	.header-logo {
-		height: 100%;
-		display: block;
-		padding: 6px;
-		box-sizing: border-box;
+	:global(.header-logo) {
+		padding-left: 0px;
+		padding-right: 0px;
+		margin-left: -8px;
+		margin-right: -12px;
+		img {
+			max-width: 100%;
+			max-height: 100%;
+			vertical-align: middle;
+		}
 	}
-	.header-logo img {
-		max-height: 100%;
-		max-width: 100%;
-		vertical-align: middle;
-		padding-left: 8px;
+	.title {
+		line-height: 1.625rem;
 	}
-	#page {
+	.subtitle {
+		font-size: 0.8rem;
+		opacity: 0.7;
+		line-height: 1.125rem;
+	}
+	// #page {
 		// padding: 0 0.5em;
-	}
+	// }
 	:global(.refreshButton:disabled) {
 		opacity: 0.7;
 	}

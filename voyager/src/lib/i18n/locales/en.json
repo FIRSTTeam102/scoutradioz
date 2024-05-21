@@ -149,7 +149,9 @@
 			"passwordalreadyexists": "Password already exists. Please submit your current password.",
 			"newpasswordboth": "Please fill both password forms.",
 			"newpasswordsuccess": "Set password successfully.",
-			"linkOAuthToOrg": "Looks like this account hasn't been used yet. We need each account to be tied to at least one organization."
+			"linkOAuthToOrg": "Looks like this account hasn't been used yet. We need each account to be tied to at least one organization.",
+			"haveNotLinkedYet": "Haven't linked an account yet?",
+			"currentlyAt": "Currently at {event}"
 		},
 		"changepassword": "Change password",
 		"blankpassword": "Leave blank if you do not have your own password yet.",
@@ -176,8 +178,9 @@
 	"scouting": {
 		"match": "Match scouting",
 		"pit": "Pit scouting",
-		"pitScheduleChecksum": "Pit scouting schedule: (code: `{checksum}`)",
-		"matchScheduleChecksum": "Match scouting schedule (code: `{checksum}`)",
+		"pitSchedule": "Pit scouting schedule",
+		"matchSchedule": "Match scouting schedule",
+		"scheduleVersion": "Schedule version: `{checksum}`",
 		"subheading": "{team} <span class=\"unimportant\">from {city}, {state}</span>",
 		"pitHeading": "Team #{team}",
 		"upload": {
@@ -208,6 +211,15 @@
 		"dataUploadedToCloud": "Data already uploaded to cloud",
 		"scannedByScoutingLead": "Scanned by scouting lead"
 	},
+	"cloudsync": {
+		"newDataDownloaded": "New data found.",
+		"upToDate": "Already up to date.",
+		"layoutTooltip": "Re-download survey questions",
+		"pitScheduleTooltip": "Re-download pit scouting assignments",
+		"matchScheduleTooltip": "Re-download match scouting schedule",
+		"pitSurvey": "Pit survey questions",
+		"matchSurvey": "Match survey questions"
+	},
 	"qrsync": {
 		"title": "QR code",
 		"foundOneMatchResult": "Found match scouting result: {match}, scored by {name}",
@@ -228,7 +240,8 @@
 		"everyone": "Everyone",
 		"onlyAssignedAndPresent": "Only assigned & present",
 		"whomToInclude": "Whom to include in the QR code",
-		"scanCompleteTryAgain": "Successfully scanned new QR code. Attempt to decode the previous QR code again?"
+		"scanCompleteTryAgain": "Successfully scanned new QR code. Attempt to decode the previous QR code again?",
+		"version": "Version: {checksum}"
 	},
 	"notifications": {
 		"status": "Match notifications are {status} for this device.",

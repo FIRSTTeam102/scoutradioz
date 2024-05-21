@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import assert from '$lib/assert';
 	import db from '$lib/localDB';
-	import { addRefreshButtonFunctionality, getPageLayoutContexts, postJSON } from '$lib/utils';
+	import { addRefreshButtonFunctionality, getPageLayoutContexts, postJSON, setPageTitle } from '$lib/utils';
 
 	import Autocomplete from '@smui-extra/autocomplete';
 	import Button, { Label as BLabel } from '@smui/button';
@@ -16,7 +16,9 @@
 	import type { Org } from 'scoutradioz-types';
 	import { onMount } from 'svelte';
 
-	import { LightOrgOperations } from '$lib/DBOperations';
+	import { FormLayoutOperations, LightOrgOperations } from '$lib/DBOperations';
+	
+	setPageTitle(msg('user.login.title'))
 
 	const logger = getLogger('login');
 	
@@ -63,14 +65,12 @@
 </script>
 
 <section class="comfortable grid columns">
-	<h1>Sign in</h1>
-	<s1>Hi there! Nice to see you again.</s1>
 	<!-- <div style="height: 200px; border: 1px solid gray; padding: 8px">
 		<p>OAuth</p>
 		<a href="/login/github">Sign in with GitHub</a>
 	</div> -->
 	<br />
-	<s2><i>Haven't linked an account yet?</i></s2>
+	<s2><i>{msg('user.login.haveNotLinkedYet')} {msg('user.login.selectorg')}</i></s2>
 	<br />
 	<form action="#">
 		<div class="md:flex flex-row space-y-2 md:space-y-0 md:space-x-2">
@@ -123,6 +123,7 @@
 									// and put the "full" org info into the orgs table, i.e. the one with org config and all that but without hashed password
 									await db.orgs.put(data.org);
 								});
+								await FormLayoutOperations.download('both');
 								console.log('doing goto pick-user!');
 								goto('/login/pick-user');
 								console.log('post goto');

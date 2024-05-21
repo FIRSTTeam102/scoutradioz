@@ -1,13 +1,10 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import { PitScoutingOperations } from '$lib/DBOperations';
 	import SlidingTabs from '$lib/SlidingTabs.svelte';
-	import PitAssignmentList from './PitAssignmentList.svelte';
-	import { sha1 } from 'oslo/crypto';
-	import { onMount } from 'svelte';
-	import { encodeHex, encodeBase32 } from 'oslo/encoding';
-	import { base32Hash } from '$lib/utils';
 	import { msg } from '$lib/i18n';
-	import SvelteMarkdown from 'svelte-markdown';
+	import { addRefreshButtonFunctionality, getPageLayoutContexts, setPageTitle } from '$lib/utils';
+	import type { PageData } from './$types';
+	import PitAssignmentList from './PitAssignmentList.svelte';
 
 	export let data: PageData;
 
@@ -25,25 +22,18 @@
 
 	let initialActiveIndex = myAssignments.length ? 0 : partnersAssignments.length ? 1 : 2;
 
-	// our own base 32: 
-	onMount(async () => {
-		let st = performance.now();
-		const listToChecksum = allAssignments.map((asg) => {
-			return {
-				year: asg.year,
-				event_key: asg.event_key,
-				org_key: asg.org_key,
-				team_key: asg.team_key,
-				primary: asg.primary,
-				secondary: asg.secondary,
-				tertiary: asg.tertiary
-			};
-		});
-	});
+	const { snackbar } = getPageLayoutContexts();
+
+	setPageTitle(msg('scouting.pit'), msg('scouting.scheduleVersion', { checksum: data.checksum }));
+	addRefreshButtonFunctionality(async () => {
+		let changed = await PitScoutingOperations.download();
+		// changed ||= await FormLayoutOperations.download('pit');
+		if (changed) snackbar.open(msg('cloudsync.newDataDownloaded'), 4000);
+		else snackbar.open(msg('cloudsync.upToDate'), 4000);
+	}, msg('cloudsync.pitScheduleTooltip'));
 </script>
 
 <section class="comfortable">
-	<h2><SvelteMarkdown source={msg('scouting.pitScheduleChecksum', {checksum: data.checksum})}/></h2>
 	<SlidingTabs {tabs} {initialActiveIndex}>
 		<PitAssignmentList slot="1" assignments={myAssignments} />
 		<PitAssignmentList slot="2" assignments={partnersAssignments} />

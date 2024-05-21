@@ -1,39 +1,53 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { FormLayoutOperations } from '$lib/DBOperations';
 	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
 	import { msg } from '$lib/i18n';
 	import db from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
-	import { getNewSubmissionHistory } from '$lib/utils';
+	import { addRefreshButtonFunctionality, getNewSubmissionHistory, getPageLayoutContexts, setPageTitle } from '$lib/utils';
 	import type BottomAppBar from '@smui-extra/bottom-app-bar';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+	setPageTitle(
+		msg('scouting.pitHeading', { team: data.teamNumber }),
+		// Only show team nickname if we don't have their city or state/country, which is true if the metadata was scanned via QR
+		data.team.city && (data.team.state_prov || data.team.country)
+			? msg('scouting.subheading', {
+					team: data.team.nickname,
+					city: data.team.city,
+					state: data.team.state_prov || data.team.country || ''
+			  })
+			: data.team.nickname
+	);
 
 	const logger = getLogger('scouting/pit/form');
 
 	let bottomAppBar: BottomAppBar;
 
-	let allDefaultValues: boolean;
-
 	$: scouterRecord = {
 		id: data.user._id,
-		name: data.user.name,
-	}
-	
+		name: data.user.name
+	};
+
 	// When formData changes (any time a form is edited), update the entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
 	function onFormChange() {
-		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
+		logger.trace(`Updating formData in the database`);
 		// JL note: Dexie lets you pass an object in, but I think it only checks the multi-entry primary key
 		// 	TS doesn't like it if I just pass the multi-entry primary key in like in a .where() call
-		db.pitscouting.update({...data.pitScoutingEntry}, {
-			data: allDefaultValues ? undefined : data.pitScoutingEntry.data,
-			synced: false,
-			completed: false,
-			actual_scouter: scouterRecord
-		});
+		db.pitscouting.update(
+			{ ...data.pitScoutingEntry },
+			{
+				// 2024-03-24 JL: disabled setting data to undefined - hopefully shouldn't break other logic cuz completed is marked as false
+				data: data.pitScoutingEntry.data,
+				synced: false,
+				completed: false,
+				actual_scouter: scouterRecord
+			}
+		);
 	}
 
 	let bottomBarActions: NavBarItem[] = [
@@ -68,18 +82,18 @@
 				await db.pitscouting.update(data.pitScoutingEntry, {
 					actual_scouter: {
 						id: data.user._id,
-						name: data.user.name,
+						name: data.user.name
 					},
 					synced: false,
 					completed: true,
-					history: getNewSubmissionHistory(data.pitScoutingEntry, data.user._id, data.user.name),
+					history: getNewSubmissionHistory(data.pitScoutingEntry, data.user._id, data.user.name)
 				});
 
 				// 2024-02-09 JL: Disabled auto sync for pit scouting because we don't want to show a qr code at the end of each match,
 				// 	so it would be a little weird to show a popup just for the auto sync, and it would be a lot of work to do a background
 				// 	sync task manager thing, and we don't want to freeze the screen while it's doing a background sync.
 				// 	Maybe todo: add a FAB in the pit scouting dashboard screen for uploading the completed assignments and qr code
-				
+
 				// if ($deviceOnline) {
 				// 	logger.debug('device online; going to attempt a cloud sync!');
 				// 	// retrieve the full entry once more
@@ -107,16 +121,21 @@
 			},
 			label: msg('Done'),
 			icon: 'done'
-		},
+		}
 	];
+	
+	const { snackbar } = getPageLayoutContexts();
+	addRefreshButtonFunctionality(async () => {
+		const changed = await FormLayoutOperations.download('pit');
+		if (changed) snackbar.open(msg('cloudsync.newDataDownloaded'), 4000);
+		else snackbar.open(msg('cloudsync.upToDate'), 4000)
+	}, msg('cloudsync.layoutTooltip'))
 </script>
 
 <ScoutingForm
-	bind:allDefaultValues
 	layout={data.layout}
 	bind:formData={data.pitScoutingEntry.data}
 	teamNumber={data.teamNumber}
-	on:change={onFormChange}
-/>
+	on:change={onFormChange} />
 
 <BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />

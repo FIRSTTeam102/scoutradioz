@@ -3,25 +3,21 @@
 	import { encodeOneMatchScoutingResult } from '$lib/compression';
 	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
 	import { msg } from '$lib/i18n';
-	import db, {
-		type MatchScoutingLocal,
-		type ScouterRecordLocal,
-		type TeamLocal,
-		type str
-	} from '$lib/localDB';
+	import db, { type MatchScoutingLocal, type ScouterRecordLocal, type TeamLocal, type str } from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	import { canAutoSync } from '$lib/stores';
-	import { fetchJSON, getNewSubmissionHistory, matchKeyToCompLevel } from '$lib/utils';
+	import { addRefreshButtonFunctionality, fetchJSON, getNewSubmissionHistory, getPageLayoutContexts, matchKeyToCompLevel, setPageTitle } from '$lib/utils';
 	import type BottomAppBar from '@smui-extra/bottom-app-bar';
 	import Card from '@smui/card';
 	import CircularProgress from '@smui/circular-progress';
+	import { classMap } from '@smui/common/internal';
 	import LinearProgress from '@smui/linear-progress';
 	import type { BulkWriteResult } from 'mongodb';
-	import type { PageData } from './$types';
-	import { classMap } from '@smui/common/internal';
 	import type { Layout } from 'scoutradioz-types';
+	import type { PageData } from './$types';
 
+	import { FormLayoutOperations } from '$lib/DBOperations';
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 	import Button, { Icon, Label } from '@smui/button';
 	import Checkbox from '@smui/checkbox';
@@ -29,6 +25,7 @@
 	import FormField from '@smui/form-field';
 
 	export let data: PageData;
+	setPageTitle(msg('scouting.match'));
 
 	// popup for the qr code thingy, TODO: put into separate component
 	let qrDialogOpen = false;
@@ -40,7 +37,6 @@
 	const logger = getLogger('scouting/match/form');
 
 	let bottomAppBar: BottomAppBar;
-	let allDefaultValues: boolean;
 	let matchScoutingEntry: MatchScoutingLocal;
 	let nextAssignment: MatchScoutingLocal | undefined;
 	let formData: MatchScoutingLocal['data'];
@@ -75,8 +71,7 @@
 			.and((asg) => asg.org_key === data.org_key)
 			.first();
 
-		if (!matchScoutingEntryDb)
-			throw new Error(`Match scouting assignment not found for key ${key}!`);
+		if (!matchScoutingEntryDb) throw new Error(`Match scouting assignment not found for key ${key}!`);
 
 		const teamDb = await db.teams.where('key').equals(team_key).first();
 
@@ -89,11 +84,7 @@
 		// This user's next scouting assignment.
 		const nextAssignmentsDb = await db.matchscouting
 			.where({ event_key: data.event_key, org_key: data.org_key })
-			.and(
-				(asg) =>
-					asg.match_number > matchScoutingEntryDb.match_number &&
-					asg.assigned_scorer?.id === data.user_id
-			)
+			.and((asg) => asg.match_number > matchScoutingEntryDb.match_number && asg.assigned_scorer?.id === data.user_id)
 			.sortBy('match_number');
 		const nextAssignmentDb = nextAssignmentsDb[0];
 		logger.debug('nextAssignment:', nextAssignmentDb);
@@ -112,7 +103,7 @@
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
 	function onFormChange() {
-		logger.trace(`Updating formData in the database - allDefault=${allDefaultValues}`);
+		logger.trace(`Updating formData in the database`);
 		db.matchscouting.update(matchScoutingEntry.match_team_key, {
 			// 2024-02-25 JL: disabled setting data to undefined - hopefully shouldn't break other logic cuz completed is marked as false
 			// data: allDefaultValues ? undefined : formData,
@@ -154,9 +145,7 @@
 				if (!data.user_id || !data.user_name) {
 					throw logger.error('Not logged in! This should have been handled in +page.ts');
 				}
-				logger.info(
-					`Saving actual_scorer for match acouting key ${matchScoutingEntry.match_team_key}`
-				);
+				logger.info(`Saving actual_scorer for match acouting key ${matchScoutingEntry.match_team_key}`);
 				// Intentional design decision: Write data to the local db when they hit the check/done button even if
 				// 	the data are at defaults, because in cases where a robot no-shows, some orgs might not have
 				// 	checkboxes like no-show / died during match, so some orgs might accept empty forms
@@ -171,10 +160,7 @@
 					history: getNewSubmissionHistory(matchScoutingEntry, data.user._id, data.user.name)
 				});
 
-				let entry = await db.matchscouting
-					.where('match_team_key')
-					.equals(matchScoutingEntry.match_team_key)
-					.first();
+				let entry = await db.matchscouting.where('match_team_key').equals(matchScoutingEntry.match_team_key).first();
 				if (!entry) return;
 
 				if ($canAutoSync) {
@@ -182,13 +168,10 @@
 
 					// Save a promise for use in the sync display thingy in the qr code popup
 					cloudUploadPromise = new Promise(async (resolve, reject) => {
-						let bulkWriteResult = (await fetchJSON(
-							`/api/orgs/${data.org_key}/${data.event_key}/submit/match`,
-							{
-								body: JSON.stringify([entry]),
-								method: 'POST'
-							}
-						)) as BulkWriteResult;
+						let bulkWriteResult = (await fetchJSON(`/api/orgs/${data.org_key}/${data.event_key}/submit/match`, {
+							body: JSON.stringify([entry]),
+							method: 'POST'
+						})) as BulkWriteResult;
 						logger.info('bulkWriteResult: ', bulkWriteResult);
 						// If submitted successfully, mark this local match scouting entry as synced
 						if (bulkWriteResult.ok) {
@@ -217,6 +200,13 @@
 			}
 		}
 	];
+	
+	const { snackbar } = getPageLayoutContexts();
+	addRefreshButtonFunctionality(async () => {
+		const changed = await FormLayoutOperations.download('match');
+		if (changed) snackbar.open(msg('cloudsync.newDataDownloaded'), 4000);
+		else snackbar.open(msg('cloudsync.upToDate'), 4000)
+	}, msg('cloudsync.layoutTooltip'))
 </script>
 
 <!-- We have to make sure matchScoutingEntry and team have loaded before allowing the html to load. -->
@@ -230,8 +220,7 @@
 				'place-self-center': true,
 				'bg-red-600': matchScoutingEntry.alliance === 'red',
 				'bg-blue-600': matchScoutingEntry.alliance === 'blue'
-			})}
-		>
+			})}>
 			<h2>
 				{msg('scouting.matchHeading', {
 					match: matchScoutingEntry.match_number,
@@ -277,8 +266,7 @@
 			<div>
 				{msg('scouting.completedBy', {
 					user:
-						data.user_name ||
-						'Unknown' /* JL note: user_name should not be undefined b/c +layout.ts checks for it */
+						data.user_name || 'Unknown' /* JL note: user_name should not be undefined b/c +layout.ts checks for it */
 				})}
 			</div>
 			{#await base64Data}
@@ -309,8 +297,7 @@
 						db.matchscouting.update(matchScoutingEntry.match_team_key, {
 							synced: scannedByScoutingLead
 						});
-					}}
-				/>
+					}} />
 				<span slot="label" class="py-4">{msg('scouting.scannedByScoutingLead')}</span>
 			</FormField>
 		</Content>
@@ -329,8 +316,7 @@
 						}
 						// JL TODO: check whether I should set cloudUploadPromise = undefined
 						goto(`/scouting/match/${nextAssignment.match_team_key}`, { invalidateAll: true });
-					}}
-				>
+					}}>
 					<Icon class="material-icons">navigate_next</Icon>
 					<Label
 						>{msg('scouting.nextAssignment', {

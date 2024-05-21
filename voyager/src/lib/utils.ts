@@ -1,5 +1,5 @@
 import { getContext, onDestroy, onMount } from "svelte";
-import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext, DialogContext } from "./types";
+import { type SnackbarContext, type RefreshContext, type RefreshButtonAnimationContext, type DialogContext, type TitleContext } from "./types";
 import type { ScouterHistoryRecord } from 'scoutradioz-types';
 import { sha1 } from "oslo/crypto";
 import { alertStore } from "./stores";
@@ -201,16 +201,33 @@ export function getPageLayoutContexts() {
  * This method auto adds refresh button functionality on the given page and removes it on onDestroy.
  * Provide the onClick handler for the refresh button.
  */
-export function addRefreshButtonFunctionality(clickHandler?: () => any) {
+export function addRefreshButtonFunctionality(clickHandler?: () => any, tooltip?: string) {
 	const refreshButton = getContext('refreshButton') as RefreshContext;
 	onMount(() => {
 		refreshButton.set({
 			supported: true,
-			onClick: clickHandler
+			onClick: clickHandler,
+			tooltip,
 		});
 	});
 	onDestroy(() => {
 		refreshButton.set({supported: false});
+	})
+}
+
+/**
+ * Sets the current page title and automatically unsets when the page is destroyed
+ */
+export function setPageTitle(title: string, subtitle?: string) {
+	const titleContext = getContext<TitleContext>('title');
+	const subtitleContext = getContext<TitleContext>('subtitle');
+		titleContext.set(title);
+		subtitleContext.set(subtitle || '')
+	onMount(() => {
+	});
+	onDestroy(() => {
+		titleContext.set('');
+		subtitleContext.set('');
 	})
 }
 

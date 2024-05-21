@@ -6,7 +6,7 @@
 	import { liveQuery } from 'dexie';
 
 	import { getLogger } from '$lib/logger';
-	import { addRefreshButtonFunctionality, getPageLayoutContexts } from '$lib/utils';
+	import { addRefreshButtonFunctionality, getPageLayoutContexts, setPageTitle } from '$lib/utils';
 
 	import { goto, invalidateAll } from '$app/navigation';
 	import { LightUserOperations } from '$lib/DBOperations';
@@ -17,6 +17,10 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+	setPageTitle(
+		msg('user.loginOrg', { org: data.org.nickname }),
+		msg('user.login.currentlyAt', { event: data.event?.name || data.event_key || 'unknown' })
+	);
 	let user: LightUser | null = null;
 	let userPicker: Autocomplete;
 
@@ -33,9 +37,7 @@
 
 	const { snackbar, refreshButton, refreshButtonAnimation } = getPageLayoutContexts();
 
-	addRefreshButtonFunctionality(() =>
-		LightUserOperations.download(data.org_key).catch(snackbar.error)
-	);
+	addRefreshButtonFunctionality(() => LightUserOperations.download(data.org_key).catch(snackbar.error));
 
 	async function downloadUsers(showSnackbarWhenDone?: boolean) {
 		try {
@@ -93,7 +95,7 @@
 	// todo: implement lol
 	let needsPassword = false;
 	let needsToCreatePassword = false;
-	
+
 	let password = '';
 </script>
 
@@ -113,8 +115,7 @@
 				getOptionLabel={getUserOptionLabel}
 				bind:value={user}
 				bind:this={userPicker}
-				label={`Members of ${data.org?.nickname}`}
-			/>
+				label={`Members of ${data.org?.nickname}`} />
 		</div>
 		<!-- WIP -->
 		{#if needsPassword}
@@ -124,8 +125,7 @@
 					variant="filled"
 					style="width: 100%"
 					type="password"
-					bind:value={password}
-				>
+					bind:value={password}>
 					<HelperText slot="helper">{msg('user.login.orgpasswordhelptext')}</HelperText>
 				</Textfield>
 			</div>
@@ -140,8 +140,7 @@
 					// Log in user
 					await updateUser(user);
 					goto(`/sync/lead#2`);
-				}}
-			>
+				}}>
 				<BLabel>Done</BLabel>
 			</Button>
 		</div>

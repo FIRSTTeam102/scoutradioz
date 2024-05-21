@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		type: { $ne: 'derived' } // not needed for ui, might change later
 	}, {
 		sort: { order: 1 },
-		projection: {  }
+		projection: { _id: 0 }
 	}, { allowCache: true });
 
 	return json(layout);

@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
-import db from '$lib/localDB';
+import db, { type EventLocal } from '$lib/localDB';
 
-export const load: PageLoad = async (event) => {
+export const load: PageLoad = async () => {
 	console.log('pick-user page.ts running!');
 
 	// Pull the data used by the svelte page straight from the db in this page
@@ -16,9 +16,12 @@ export const load: PageLoad = async (event) => {
 	if (!org) {
 		throw error(500, new Error('Full org details not found in Dexie!'));
 	}
+	let event: EventLocal|undefined;
+	if (org.event_key) event = await db.events.where({key: org.event_key}).first();
 	return {
 		user,
 		org,
 		org_key,
+		event,
 	};
 };

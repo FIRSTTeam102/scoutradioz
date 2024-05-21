@@ -44,6 +44,8 @@ export type RefreshContext = Writable<{
 	tooltip?: string,
 }>
 
+export type TitleContext = Writable<string>;
+
 /**
  * Control whether the refresh button plays a little spinny animation.
  */
