@@ -1,8 +1,7 @@
-import type { LayoutLoad } from './$types';
-import { i18n } from '$lib/i18n';
 import { browser } from '$app/environment';
-import db, { type str } from '$lib/localDB';
-import type { Event } from 'scoutradioz-types';
+import { i18n } from '$lib/i18n';
+import db, { type EventLocal } from '$lib/localDB';
+import type { LayoutLoad } from './$types';
 export const ssr = false;
 export const prerender = false;
 
@@ -18,7 +17,7 @@ export const load: LayoutLoad = async () => {
 		const org = await db.orgs.where({ org_key }).first();
 
 		let event_key: string | undefined;
-		let event: str<Event> | undefined;
+		let event: EventLocal | undefined;
 		if (org?.event_key) {
 			event_key = org.event_key;
 			event = await db.events.where('key').equals(event_key).first();
