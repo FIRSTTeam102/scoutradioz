@@ -2,20 +2,19 @@
 	import db, { type Log } from '$lib/localDB';
 
 	import {
-		type logLevel,
-		logLevelStringToNumber,
+		getGlobalLogLevel,
 		logLevelNumberToString,
+		logLevelStringToNumber,
 		setGlobalLogLevel,
-		getGlobalLogLevel
+		type logLevel
 	} from '$lib/logger';
-	import Select, { Option } from '@smui/select';
-	import DataTable, { Head, Body, Row, Cell, Pagination, Label } from '@smui/data-table';
+	import { getPageLayoutContexts } from '$lib/utils';
+	import DataTable, { Body, Cell, Head, Label, Pagination, Row } from '@smui/data-table';
 	import IconButton from '@smui/icon-button';
+	import Select, { Option } from '@smui/select';
 	import { liveQuery, type IndexableTypeArray, type Observable } from 'dexie';
-	import { getContext } from 'svelte';
-	import type { SnackbarContext } from '$lib/types';
 
-	let snackbar = getContext('snackbar') as SnackbarContext;
+	const { snackbar, dialog} = getPageLayoutContexts();
 
 	let groups: Observable<IndexableTypeArray>;
 	$: groups = liveQuery(() => db.logs.orderBy('group').uniqueKeys());
@@ -35,6 +34,8 @@
 	});
 	let rowsPerPage = 10;
 	let currentPage = 0;
+	
+	const maxMessageLength = 100;
 
 	$: start = currentPage * rowsPerPage;
 	$: end = Math.min(start + rowsPerPage, $items?.length);
@@ -93,15 +94,6 @@
 	}}>Flush server database cache</button
 >
 
-<button
-	on:click={async () => {
-		let reason = await snackbar.open('Test', -1, 'Test');
-		console.log(reason);
-	}}
->
-	Snackbar test
-</button>
-
 <h1>Logging behavior</h1>
 <Select variant="filled" label="Log level to record" bind:value={recordedLogLevel} on:MDCSelect:change={() => setGlobalLogLevel(recordedLogLevel)}>
 	<Option value="trace">Trace</Option>
@@ -159,7 +151,13 @@
 					<Cell>{item.group}</Cell>
 					<Cell>{logLevelNumberToString(item.level)}</Cell>
 					<Cell>{item.time.toLocaleString()}</Cell>
-					<Cell>{item.message?.replace(/,/g, ', ')}</Cell>
+					{#if item.message?.length > maxMessageLength}
+						<Cell class='cursor-pointer text-ellipsis overflow-hidden' on:click={() => {
+							dialog.show(item.time.toLocaleString(), item.message.replace(/\n/g, '<br>'), {disableNo: true,})
+						}}>{item.message.substring(0, maxMessageLength)}...</Cell>
+					{:else}
+						<Cell>{item.message}</Cell>
+					{/if}
 				</Row>
 			{/each}
 		{/if}
