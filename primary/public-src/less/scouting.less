@@ -87,7 +87,11 @@
 	right: 0;
 	z-index: 1;
 }
+// Using a CSS variable so it can be disabled in JS
+:root {
+	--disabled-form-filter: blur(2px);
+}
 .disabled-form{
 	opacity: 0.7;
-	filter: blur(2px);
+	filter: var(--disabled-form-filter);
 }

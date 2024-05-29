@@ -14,6 +14,12 @@ let sections = [] as Array<{
 }>;
 
 $(function () {
+	// disable blur when the page loads if it's been disabled before in this session
+	if (sessionStorage.blurDisabled) {
+		console.log('Disabling blur due to session variable');
+		disableBlur();
+	}
+
 	$('#toggleStickyToggle').addClass('animate');
 
 	$('#toggleSticky').on('change', () => {
@@ -111,6 +117,13 @@ $(function () {
 		
 		setSection(closestSection);
 	}
+	
+	// For older devices that don't have the performance to handle blur
+	function disableBlur() {
+		$(':root').css({
+			'--disabled-form-filter': 'none'
+		});
+	}
 
 	function setSection(idx: number) {
 		assert(sections[idx], new RangeError());
@@ -130,7 +143,18 @@ $(function () {
 			}
 		}
 		stickyBarTitle.text(sections[idx].label);
-		console.log(performance.now() - st);
+		// Check the time it takes to do the layout recalc
+		if (!sessionStorage.blurDisabled) {
+			let t2 = performance.now();
+			document.body.offsetWidth;
+			let t3 = performance.now();
+			// if it takes a long time to do the recalc, disable blur
+			if (t3 - t2 > 50) {
+				console.log('Disabling blur');
+				disableBlur();
+				sessionStorage.blurDisabled = '1';
+			}
+		}
 	}
 
 	stickyBarLeft.on('click', () => {
