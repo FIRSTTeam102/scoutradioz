@@ -98,7 +98,12 @@
 				"fallback": "User",
 				"login": "Log in: [[{org}]]",
 				"logout": "Log out",
-				"switchorg": "Change organization"
+				"switchorg": "Change organization",
+				"pickuser": "Pick user",
+				"selectorg": "Select an organization",
+				"switchorgoffline": "Go online to switch org",
+				"pickuseroffline": "Go online to pick user",
+				"selectorgoffline": "Go online to select an org"
 			},
 			"help": "Need help? Check our wiki!"
 		}
@@ -144,7 +149,9 @@
 			"passwordalreadyexists": "Password already exists. Please submit your current password.",
 			"newpasswordboth": "Please fill both password forms.",
 			"newpasswordsuccess": "Set password successfully.",
-			"linkOAuthToOrg": "Looks like this account hasn't been used yet. We need each account to be tied to at least one organization."
+			"linkOAuthToOrg": "Looks like this account hasn't been used yet. We need each account to be tied to at least one organization.",
+			"haveNotLinkedYet": "Haven't linked an account yet?",
+			"currentlyAt": "Currently at {event}"
 		},
 		"changepassword": "Change password",
 		"blankpassword": "Leave blank if you do not have your own password yet.",
@@ -171,6 +178,9 @@
 	"scouting": {
 		"match": "Match scouting",
 		"pit": "Pit scouting",
+		"pitSchedule": "Pit scouting schedule",
+		"matchSchedule": "Match scouting schedule",
+		"scheduleVersion": "Schedule version: `{checksum}`",
 		"subheading": "{team} <span class=\"unimportant\">from {city}, {state}</span>",
 		"pitHeading": "Team #{team}",
 		"upload": {
@@ -200,6 +210,38 @@
 		"dataUploadingToCloud": "Device is online. Uploading to cloud...",
 		"dataUploadedToCloud": "Data already uploaded to cloud",
 		"scannedByScoutingLead": "Scanned by scouting lead"
+	},
+	"cloudsync": {
+		"newDataDownloaded": "New data found.",
+		"upToDate": "Already up to date.",
+		"layoutTooltip": "Re-download survey questions",
+		"pitScheduleTooltip": "Re-download pit scouting assignments",
+		"matchScheduleTooltip": "Re-download match scouting schedule",
+		"pitSurvey": "Pit survey questions",
+		"matchSurvey": "Match survey questions"
+	},
+	"qrsync": {
+		"title": "QR code",
+		"foundOneMatchResult": "Found match scouting result: {match}, scored by {name}",
+		"foundBulkMatchResults": "Found {count} match scouting results, scored by {name}",
+		"foundOnePitResult": "Found pit scouting result: {team}, filled by {name}",
+		"foundBulkPitResults": "Found {count} pit scouting results, filled by {name}",
+		"foundMatchScoutingSchedule": "Found match scouting schedule",
+		"foundPitScoutingSchedule": "Found pit scouting schedule",
+		"foundMetadata": "Found metadata (users, event info, and team numbers/nicknames)",
+		"goTo": "Go to {location} or scan more QR codes?",
+		"go": "Go",
+		"scanMore": "Scan more",
+		"decodeFailed": "Failed to decode QR code",
+		"tryAgain": "Try again to decode the last failed QR code?",
+		"matchesRange": "Matches # {first} - {last}",
+		"usersAndTeams": "Users & team nicknames",
+		"numMatchesToDisplay": "Number of matches to display",
+		"everyone": "Everyone",
+		"onlyAssignedAndPresent": "Only assigned & present",
+		"whomToInclude": "Whom to include in the QR code",
+		"scanCompleteTryAgain": "Successfully scanned new QR code. Attempt to decode the previous QR code again?",
+		"version": "Version: {checksum}"
 	},
 	"notifications": {
 		"status": "Match notifications are {status} for this device.",
@@ -445,7 +487,13 @@
 			"successSetEvent": "Set current event to *{eventName}* successfuly."
 		}
 	},
+	"pwa": {
+		"updateAvailable": "Update available. Click to reload Voyager and install the update.",
+		"updateDownloading": "Update downloading in the background...",
+		"justUpdated": "Scoutradioz Voyager has updated successfully."
+	},
 	"cancel": "Cancel",
+	"ok": "OK",
 	"discard": "Discard",
 	"done": "Done",
 	"language": "Language",

@@ -30,7 +30,12 @@ export default {
 							contentType: 'application/wasm',
 						}
 					]
-				}
+				},
+				nodejs: {
+					loader: {
+						'.node': 'copy',
+					},
+				},
 			});
 			stack.addOutputs({
 				url: site.url,

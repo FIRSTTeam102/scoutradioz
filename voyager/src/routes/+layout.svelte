@@ -1,42 +1,51 @@
 <script lang="ts">
 	import { classMap } from '@smui/common/internal';
-	import TopAppBar, { Row, Section, AutoAdjust } from '@smui/top-app-bar';
 	import Drawer, {
-		AppContent,
 		Content as DContent,
 		Header as DHeader,
-		Title as DTitle,
 		Subtitle as DSubtitle,
+		Title as DTitle,
 		Scrim
 	} from '@smui/drawer';
 	import List, {
-		Item as LItem,
-		Text as LText,
 		Graphic as LGraphic,
+		Item as LItem,
 		Separator as LSeparator,
-		Subheader as LSubheader
+		Subheader as LSubheader,
+		Text as LText
 	} from '@smui/list';
 	import Tooltip, { Wrapper } from '@smui/tooltip';
+	import TopAppBar, { Row, Section, Title as TABTitle } from '@smui/top-app-bar';
 
-	import { deviceOnline } from '$lib/stores';
 	import { afterNavigate } from '$app/navigation';
-	import IconButton from '@smui/icon-button';
 	import { assets } from '$app/paths';
-	import { share } from '$lib/share';
-	import { setContext } from 'svelte';
-	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
+	import { alertStore, deviceOnline } from '$lib/stores';
+	import type {
+		DialogContext,
+		RefreshButtonAnimationContext,
+		RefreshContext,
+		SnackbarContext,
+		TitleContext
+	} from '$lib/types';
+	import IconButton from '@smui/icon-button';
+	import { onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
-	
-	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
+
 	import LanguagePicker from '$lib/LanguagePicker.svelte';
+	import SimpleSnackbar from '$lib/SimpleSnackbar.svelte';
 	import { msg } from '$lib/i18n';
 
+	import SimpleDialog from '$lib/SimpleDialog.svelte';
+	import { getLogger } from '$lib/logger';
+	import SvelteMarkdown from 'svelte-markdown';
 	import '../theme/extras.scss';
 	import type { LayoutData } from './$types';
 
 	afterNavigate(() => (menuOpen = false));
-	
+
 	export let data: LayoutData;
+
+	const logger = getLogger('layout');
 
 	let topAppBar: TopAppBar;
 	let headerBar: HTMLDivElement;
@@ -44,7 +53,17 @@
 	let headerBarHeight = NaN;
 
 	let snackbar: SimpleSnackbar;
+	let dialog: SimpleDialog;
 	let languagePicker: LanguagePicker;
+
+	let dialogContext: DialogContext = {
+		show: (...args) => {
+			if (!dialog) throw new Error('Dialog not defined');
+			return dialog.show(...args);
+		}
+	};
+
+	setContext('dialog', dialogContext);
 
 	let snackbarContext: SnackbarContext = {
 		open: (...args) => {
@@ -76,6 +95,12 @@
 	let timeRefreshButtonWasPressed = 0; // For smooth stopping
 	const ANIMATION_TIME = 1000;
 
+	const title: TitleContext = writable('');
+	const subtitle: TitleContext = writable('');
+
+	setContext('title', title);
+	setContext('subtitle', subtitle);
+
 	const refreshButtonAnimationContext: RefreshButtonAnimationContext = {
 		play: () => {
 			refreshButtonSpinning = true;
@@ -83,8 +108,7 @@
 		},
 		stop: () => {
 			// Only set refreshButtonSpinning = false after some multiple of [animation_time] seconds after it started playing
-			let timeRemainingInAnimation =
-				ANIMATION_TIME - ((Date.now() - timeRefreshButtonWasPressed) % ANIMATION_TIME);
+			let timeRemainingInAnimation = ANIMATION_TIME - ((Date.now() - timeRefreshButtonWasPressed) % ANIMATION_TIME);
 			setTimeout(() => {
 				refreshButtonSpinning = false;
 			}, timeRemainingInAnimation);
@@ -93,11 +117,9 @@
 			this.play();
 			try {
 				await cb();
-			}
-			catch (err) {
+			} catch (err) {
 				throw err; // Propagate the error
-			}
-			finally {
+			} finally {
 				this.stop();
 			}
 		}
@@ -119,7 +141,9 @@
 		// only update if there was enough of a change
 		if (Math.abs(lastScrollTop - scrollTop) <= headerBarHeight) return;
 
-		headerBarHidden = scrollTop > lastScrollTop;
+		headerBarHidden =
+			scrollTop > lastScrollTop &&
+			scrollTop > 0 /* don't hide bar if iphone scrolls up into the negatives and pops back  */;
 		// // Scrolled down, hide
 		// if (scrollTop > lastScrollTop) headerBar.classList.add('hidden');
 		// // Scrolled up, show
@@ -128,15 +152,211 @@
 		// lastScrollTop will only update in blocks of headerbarHeight since it's after the return
 		lastScrollTop = scrollTop;
 	};
+
+	let updateAvailable = false;
+	let updateInstalling = false;
+	let waitingWorker: ServiceWorker | null = null;
+
+	onMount(async () => {
+		alertStore.subscribe((value) => {
+			if (value) {
+				snackbar.open(value.message, undefined, undefined, value.type);
+				alertStore.set(null);
+			}
+		});
+
+		if ('serviceWorker' in navigator) {
+			if ($deviceOnline) {
+				logger.info('Device online; attempting to register serviceWorker');
+				attemptServiceWorkerRegistration().catch((err) => logger.error(err));
+			} else {
+				logger.info('Device not online; Waiting for that to change');
+				let unsub = deviceOnline.subscribe((online) => {
+					if (online) {
+						attemptServiceWorkerRegistration()
+							.then(unsub)
+							.catch((err) => logger.error(err));
+					}
+				});
+			}
+		} else logger.error('serviceWorker not found!');
+
+		// show a snackbar if we just got an update
+		if (sessionStorage.getItem('justUpdated') === 'true') {
+			snackbar.open(msg('pwa.justUpdated'));
+			sessionStorage.removeItem('justUpdated');
+		}
+	});
+
+	async function attemptServiceWorkerRegistration() {
+		logger.debug('Attempting to register serviceworker');
+		navigator.serviceWorker.addEventListener('message', (event) => {
+			if (!event.data) return;
+			// Only reload the page if we've marked an update as being available
+			if (event.data.msg === 'UPDATE_DONE') {
+				let newVersion = String(event.data.version);
+				logger.warn(`Update done! Version=${newVersion}`);
+				updateInstalling = false;
+				// Save the version of the newly installed service worker
+				localStorage.setItem('serviceWorkerVersion', newVersion);
+				if (!updateAvailable) return;
+				sessionStorage.setItem('justUpdated', 'true'); // store a flag for a message to show once the page reloads
+				location.reload();
+			}
+			if (event.data.msg === 'RETURN_VERSION') {
+				let lastKnownVersion = localStorage.getItem('serviceWorkerVersion');
+				let currentVersion = String(event.data.version);
+				logger.debug(
+					`Received service worker version: ${currentVersion} - Last known worker version: ${lastKnownVersion}`
+				);
+				if (lastKnownVersion !== currentVersion) {
+					logger.info('Version mismatch found! Notifying user and saving version...');
+					localStorage.setItem('serviceWorkerVersion', currentVersion);
+					snackbar.open(msg('pwa.justUpdated'));
+				}
+			}
+		});
+		const registration = await navigator.serviceWorker.register('/service-worker.js', {
+			type: 'module'
+		});
+
+		if (registration.installing) {
+			updateInstalling = true;
+		}
+
+		// If we have a currently active service worker AND one that's waiting for activation, then we can say that an update is available
+		if (registration.waiting && registration.active) {
+			waitingWorker = registration.waiting;
+			updateAvailable = true;
+		}
+
+		if (registration.active && !registration.waiting && !registration.installing) {
+			logger.warn('There is an active worker and none that are installing or waiting. Requesting current version...');
+			if (registration.active !== navigator.serviceWorker.controller)
+				logger.warn('navigator.serviceWorker.controller is not the same as registration.active!');
+			registration.active.postMessage({ msg: 'GET_VERSION' });
+		}
+
+		registration.onupdatefound = () => {
+			logger.warn(
+				`updatefound event firing! installing=${!!registration.installing}, waiting=${!!registration.waiting}`
+			);
+			// Only show an update available if there's currently a service worker
+			if (registration.installing && registration.active) {
+				updateInstalling = true;
+				let installingWorker = registration.installing;
+				installingWorker.onstatechange = () => {
+					if (installingWorker.state === 'installed') {
+						logger.warn('New worker is waiting to be activated!');
+						updateAvailable = true;
+						updateInstalling = false;
+						waitingWorker = installingWorker;
+					}
+					if (installingWorker.state === 'activated') {
+						updateInstalling = false;
+					}
+				};
+			}
+		};
+		logger.trace('Done with attemptServiceWorkerRegistration');
+	}
+
+	async function handleInstallButtonClick() {
+		if (!waitingWorker) return snackbar.error('waitingWorker not defined!');
+		// let result = await dialogContext.show()
+		logger.info('Posting SKIP_WAITING message to service worker!');
+		waitingWorker.postMessage({ msg: 'SKIP_WAITING' });
+	}
 </script>
 
 <svelte:window on:scroll={onScroll} />
+
+<div class="header-bar" bind:this={headerBar} class:slidAway={headerBarHidden} bind:clientHeight={headerBarHeight}>
+	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
+		<Row>
+			<Section>
+				<IconButton
+					class="material-icons"
+					aria-label="Open menu"
+					on:click={() => {
+						menuOpen = !menuOpen;
+					}}>menu</IconButton>
+				<IconButton class="header-logo" disabled>
+					<img src={`${assets}/icon-64.png`} alt="Scoutradioz logo" />
+				</IconButton>
+				<TABTitle>
+					<p class="title">
+						<SvelteMarkdown source={$title} isInline />
+					</p>
+					{#if $subtitle}
+						<p class="subtitle">
+							<SvelteMarkdown source={$subtitle} isInline />
+						</p>
+					{/if}
+				</TABTitle>
+			</Section>
+			<Section align="end" toolbar>
+				{#if updateAvailable}
+					<Wrapper>
+						<IconButton class="material-icons" on:click={handleInstallButtonClick}>system_update</IconButton>
+						<Tooltip>{msg('pwa.updateAvailable')}</Tooltip>
+					</Wrapper>
+				{/if}
+				{#if updateInstalling}
+					<Wrapper>
+						<IconButton class="material-icons hourglass">hourglass_empty</IconButton>
+						<Tooltip>{msg('pwa.updateDownloading')}</Tooltip>
+					</Wrapper>
+				{/if}
+				{#if $refreshContext.supported}
+					<Wrapper>
+						<IconButton
+							class={classMap({
+								'material-icons': true,
+								'refreshButton': true,
+								'spinning': refreshButtonSpinning
+							})}
+							aria-label="Sync"
+							on:click={async () => {
+								if (!$refreshContext.onClick) return;
+								refreshButtonAnimationContext.play();
+								await $refreshContext.onClick();
+								refreshButtonAnimationContext.stop();
+							}}
+							disabled={!$deviceOnline || refreshButtonSpinning}>
+							{#if $deviceOnline}
+								sync
+							{:else}
+								sync_disabled
+							{/if}
+						</IconButton>
+						<Tooltip>{$refreshContext.tooltip || ''}</Tooltip>
+					</Wrapper>
+				{/if}
+				<!-- <Wrapper> -->
+				<!-- 	<IconButton class="material-icons" aria-label="Share" on:click={() => share()} -->
+				<!-- 		>qr_code_scanner</IconButton -->
+				<!-- 	> -->
+				<!-- 	<Tooltip>Share</Tooltip> -->
+				<!-- </Wrapper> -->
+			</Section>
+		</Row>
+	</TopAppBar>
+</div>
+
+<div id="page">
+	<slot />
+</div>
+
+<SimpleSnackbar bind:this={snackbar} />
+<SimpleDialog bind:this={dialog} />
+<LanguagePicker bind:this={languagePicker} />
 
 <!-- modal is better but it won't close, so dismissible with position:fixed works -->
 <Drawer variant="modal" bind:open={menuOpen} fixed={true}>
 	<DHeader>
 		{#if data.user && data.org}
-			<DTitle>{msg('hello.name', {name: data.user.name})}</DTitle>
+			<DTitle>{msg('hello.name', { name: data.user.name })}</DTitle>
 			<DSubtitle>{data.org.nickname}</DSubtitle>
 		{:else}
 			<DTitle>{msg('index.welcome')}</DTitle>
@@ -148,26 +368,48 @@
 				<LGraphic class="material-icons" aria-hidden="true">home</LGraphic>
 				<LText>{msg('home.title')}</LText>
 			</LItem>
-			<LItem href="/schedule">
+			<!-- <LItem href="/schedule">
 				<LGraphic class="material-icons" aria-hidden="true">calendar_month</LGraphic>
 				<LText>Schedule</LText>
-			</LItem>
-			<LItem href="/">
-				<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
-				<LText>{msg('layout.nav.user.switchorg')}</LText>
-			</LItem>
-			<LItem href="/login/pick-user">
-				<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
-				<LText>Pick user</LText>
-			</LItem>
+			</LItem> -->
+			<!-- If logged in to an org -->
+			{#if data.org}
+				{#if $deviceOnline}
+					<LItem href="/login/switch-org">
+						<LGraphic class="material-icons" aria-hidden="true">logout</LGraphic>
+						<LText>{msg('layout.nav.user.switchorg')}</LText>
+					</LItem>
+				{:else}
+					<LItem disabled>
+						<LGraphic class="material-icons unimportant" aria-hidden="true">logout</LGraphic>
+						<LText>{msg('layout.nav.user.switchorgoffline')}</LText>
+					</LItem>
+				{/if}
+				<LItem href="/login/pick-user">
+					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+					<LText>{msg('layout.nav.user.pickuser')}</LText>
+				</LItem>
+				<!-- Not logged in to an org -->
+			{:else if $deviceOnline}
+				<LItem href="/login">
+					<LGraphic class="material-icons" aria-hidden="true">login</LGraphic>
+					<LText>{msg('layout.nav.user.selectorg')}</LText>
+				</LItem>
+			{:else}
+				<LItem disabled>
+					<LGraphic class="material-icons unimportant" aria-hidden="true">login</LGraphic>
+					<LText>{msg('layout.nav.user.selectorgoffline')}</LText>
+				</LItem>
+			{/if}
 			<LItem href="/preferences">
 				<LGraphic class="material-icons" aria-hidden="true">settings</LGraphic>
 				<LText>{msg('user.preferences.title')}</LText>
 			</LItem>
-			<LItem on:click={() => {
-				menuOpen = false;
-				languagePicker.open();
-			}}>
+			<LItem
+				on:click={() => {
+					menuOpen = false;
+					languagePicker.open();
+				}}>
 				<LGraphic class="material-icons" aria-hidden="true">language</LGraphic>
 				<LText>{msg('language')}</LText>
 			</LItem>
@@ -213,78 +455,6 @@
 
 <Scrim />
 
-<div
-	class="header-bar"
-	bind:this={headerBar}
-	class:slidAway={headerBarHidden}
-	bind:clientHeight={headerBarHeight}
->
-	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
-		<Row>
-			<Section>
-				<IconButton
-					class="material-icons"
-					aria-label="Open menu"
-					on:click={() => {
-						menuOpen = !menuOpen;
-					}}>menu</IconButton
-				>
-				<a href="/home" class="header-logo">
-					<img
-						src={`${assets}/images/brand-logos/scoutradioz-white-sm.png`}
-						alt="Scoutradioz logo"
-					/>
-				</a>
-			</Section>
-			<Section align="end" toolbar>
-				{#if $refreshContext.supported}
-					<Wrapper>
-						<IconButton
-							class={classMap({
-								'material-icons': true,
-								refreshButton: true,
-								spinning: refreshButtonSpinning
-							})}
-							aria-label="Sync"
-							on:click={async () => {
-								if (!$refreshContext.onClick) return;
-								refreshButtonAnimationContext.play();
-								await $refreshContext.onClick();
-								refreshButtonAnimationContext.stop();
-							}}
-							disabled={!$deviceOnline || refreshButtonSpinning}
-						>
-							{#if $deviceOnline}
-								sync
-							{:else}
-								sync_disabled
-							{/if}
-						</IconButton>
-						{#if $refreshContext.tooltip}
-							<Tooltip>{$refreshContext.tooltip}</Tooltip>
-						{/if}
-					</Wrapper>
-				{/if}
-				<!-- <Wrapper> -->
-				<!-- 	<IconButton class="material-icons" aria-label="Share" on:click={() => share()} -->
-				<!-- 		>qr_code_scanner</IconButton -->
-				<!-- 	> -->
-				<!-- 	<Tooltip>Share</Tooltip> -->
-				<!-- </Wrapper> -->
-			</Section>
-		</Row>
-	</TopAppBar>
-</div>
-
-<div id="page">
-	<slot />
-</div>
-
-<SimpleSnackbar bind:this={snackbar} />
-<LanguagePicker bind:this={languagePicker} />
-
-<!-- <BottomNavBar bind:bottomAppBar items={navItems}/> -->
-
 <style lang="scss">
 	/* Hide everything above this component. */
 	$header-height: 48px;
@@ -294,9 +464,12 @@
 		width: 100%;
 		top: 0px;
 		transition: top 0.15s ease-out;
-		// &:global(.slidAway) {
-		// 	top: -$header-height;
-		// }
+		&:global(.slidAway) {
+			top: -$header-height;
+		}
+		& :global(p) {
+			margin: 0;
+		}
 	}
 	:global(.mdc-top-app-bar) {
 		top: 0px;
@@ -304,6 +477,11 @@
 	}
 	#page {
 		padding-top: $header-height;
+		// margin-top: $header-height;
+		// overflow: auto;
+		// display: flex;
+		// flex-direction: column;
+		// position: relative;
 	}
 	:global(app),
 	:global(body),
@@ -312,25 +490,35 @@
 		height: auto !important;
 		width: auto !important;
 		position: static !important;
+		// display: flex;
+		// flex-direction: column;
+		// height: 100vh;
 	}
 	:global(.mdc-drawer--modal) {
 		top: 0;
 	}
-	.header-logo {
-		height: 100%;
-		display: block;
-		padding: 6px;
-		box-sizing: border-box;
+	:global(.header-logo) {
+		padding-left: 0px;
+		padding-right: 0px;
+		margin-left: -8px;
+		margin-right: -12px;
+		img {
+			max-width: 100%;
+			max-height: 100%;
+			vertical-align: middle;
+		}
 	}
-	.header-logo img {
-		max-height: 100%;
-		max-width: 100%;
-		vertical-align: middle;
-		padding-left: 8px;
+	.title {
+		line-height: 1.625rem;
 	}
-	#page {
+	.subtitle {
+		font-size: 0.8rem;
+		opacity: 0.7;
+		line-height: 1.125rem;
+	}
+	// #page {
 		// padding: 0 0.5em;
-	}
+	// }
 	:global(.refreshButton:disabled) {
 		opacity: 0.7;
 	}
@@ -347,6 +535,23 @@
 		to {
 			// JL note: can be 180deg because the icon is symmetrical
 			transform: rotate(-180deg);
+		}
+	}
+	:global(.hourglass) {
+		animation-name: hourglass;
+		animation-duration: 4s;
+		animation-timing-function: linear;
+		animation-iteration-count: infinite;
+	}
+	@keyframes hourglass {
+		0% {
+			transform: rotate(0deg);
+		}
+		20% {
+			transform: rotate(180deg);
+		}
+		100% {
+			transform: rotate(180deg);
 		}
 	}
 </style>

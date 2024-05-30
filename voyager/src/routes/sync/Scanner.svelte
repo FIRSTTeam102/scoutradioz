@@ -1,164 +1,132 @@
 <script lang="ts">
-	import Paper from '@smui/paper';
+	import { goto } from '$app/navigation';
 	import QrCodeScanner from '$lib/QrCodeScanner.svelte';
 	import {
-		decode,
-		decodeMatchScouting,
-		decodeOneMatchScoutingResult,
-		decodeOnePitScoutingResult
-	} from '$lib/compression';
-	import type { LightMatch, LightUser, MatchScoutingLocal, str, TeamLocal } from '$lib/localDB';
-	import type { Event } from 'scoutradioz-types';
-	import db from '$lib/localDB';
-	import type { Org } from 'scoutradioz-types';
+		importMatchScoutingSchedule,
+		importMetadata,
+		importOneMatchScoutingResult,
+		importOnePitScoutingResult,
+		importPitScoutingSchedule
+	} from '$lib/QrDataImport';
+	import { decompress } from '$lib/compression';
+	import { msg } from '$lib/i18n';
 	import { getLogger } from '$lib/logger';
-	import { getContext } from 'svelte';
-	import type { SnackbarContext } from '$lib/types';
+	import { getPageLayoutContexts, matchKeyToCompLevel } from '$lib/utils';
+
+	// Cache last QR code data that failed, for processing later
+	// 	(original intention is for storing failed match schedule QR while scanning users & nicknames QR)
+	let lastFailedCode = '';
 
 	let qrcodeEnabled = true;
-
+	const { snackbar, dialog } = getPageLayoutContexts();
 	const logger = getLogger('sync/Scanner');
-	const snackbar = getContext('snackbar') as SnackbarContext;
 
-	async function onQrCodeData(e: CustomEvent<{ text: string; ms: number }>) {
+	async function attemptImportQr(base64: string) {
+		logger.info('base64', base64);
 		try {
-			console.log('ONQRCODEDATA EVENT FIRED');
-			qrcodeEnabled = false; // Disable scanning while we process the data
-
-			// snackbar.open(e.detail.text);
-			let base64 = e.detail.text as string;
-			// console.log('got le data', base64);
-			let decodedData = await decode(base64);
-			console.log('DECODED FROM QR CODE!!');
-
-			let snackbarClosedPromise = snackbar.open(
-				`Found: ${decodedData.label} (${e.detail.ms} ms)`,
-				undefined,
-				'Scan more'
-			);
-			snackbarClosedPromise.then(() => {
-				qrcodeEnabled = true;
-			});
-
-			switch (decodedData.type) {
+			let encodedData = await decompress(base64);
+			switch (encodedData._) {
+				// Match scouting schedule
 				case 'sched': {
-					let matchscouting = decodedData.data as MatchScoutingLocal[];
-					console.log(matchscouting);
-					let result = await db.matchscouting.bulkPut(matchscouting);
-					console.log(result);
-					// Try and rebuild all the LightMatches from these matchscouting data
-					let matchMap: Dict<LightMatch> = {};
-					for (let asg of matchscouting) {
-						const { match_team_key } = asg;
-						const event_key = match_team_key.split('_')[0]; // e.g. 2019paca
-						const match_identifier = match_team_key.split('_')[1]; // e.g. qm11
-						const team_key = match_team_key.split('_')[2]; // e.g. frc102
-						const match_key = `${event_key}_${match_identifier}`; // e.g. 2019paca_qm11
-						const comp_level = match_identifier.substring(0, 2); // e.g. qm
-						const set_number = 1; // TODO: pull this from the match_team_key in case scouting qf/sf/f
-						const match_number = parseInt(match_identifier.substring(2));
-						const time = asg.time; // TODO: check if this matches the match's time
-						if (isNaN(match_number)) {
-							throw new Error(
-								`Failed to decode match info for match_team_key ${match_team_key}: match_number is NaN!!!`
-							);
-						}
-						if (!matchMap[match_key]) {
-							matchMap[match_key] = {
-								key: match_key,
-								event_key,
-								comp_level,
-								set_number,
-								match_number,
-								alliances: {
-									red: {
-										team_keys: [],
-										score: -1 // TODO: include score in the qr code
-									},
-									blue: {
-										team_keys: [],
-										score: -1
-									}
-								},
-								time
-							};
-						}
-						// Add this team key to the match's alliance
-						matchMap[match_key].alliances[asg.alliance].team_keys.push(team_key);
+					let result = await importMatchScoutingSchedule(encodedData);
+					logger.info('Got:', result);
+					let dlgResult = await dialog.show(
+						msg('qrsync.foundMatchScoutingSchedule'),
+						msg('qrsync.goTo', { location: msg('scouting.match') }),
+						{ noText: msg('qrsync.scanMore'), yesText: msg('qrsync.go') }
+					);
+					if (dlgResult.cancelled === false) {
+						return goto('/scouting/match');
 					}
-					const rebuiltMatches = Object.values(matchMap);
-					if (
-						!rebuiltMatches.every(
-							(match) =>
-								match.alliances.blue.team_keys.length === 3 &&
-								match.alliances.red.team_keys.length === 3
-						)
-					) {
-						logger.error(
-							"Not all matches' team keys were found! Match list that was recovered:",
-							rebuiltMatches
-						);
-						throw new Error("Not all matches' team keys were found! Check the logs for details.");
-					}
-					await db.lightmatches.bulkPut(rebuiltMatches);
 					break;
 				}
+				// Pit scouting assignments
+				case 'pit': {
+					let result = await importPitScoutingSchedule(encodedData);
+					logger.info('Got:', result);
+					let dlgResult = await dialog.show(
+						msg('qrsync.foundPitScoutingSchedule'),
+						msg('qrsync.goTo', { location: msg('scouting.pit') }),
+						{ noText: msg('qrsync.scanMore'), yesText: msg('qrsync.go') }
+					);
+					if (dlgResult.cancelled === false) {
+						return goto('/scouting/pit');
+					}
+					break;
+				}
+				// Org/event metadata
 				case 'meta': {
-					let org = decodedData.data.org as str<Org>;
-					let users = decodedData.data.users as LightUser[];
-					let teams = decodedData.data.teams as TeamLocal[];
-					let event = decodedData.data.event as str<Event>;
-					logger.debug('org', org, 'users', users, 'teams', teams, 'event', event);
-					await db.orgs.put(org);
-					await db.lightusers.bulkPut(users);
-					await db.teams.bulkPut(teams);
-					await db.events.put(event);
+					let result = await importMetadata(encodedData);
+					logger.info('Got:', result);
+					// If we've cached a failed scan, offer to reprocess it
+					if (lastFailedCode) {
+						// TODO: add picker to select which user you are
+						// 	for the time being: just select default_user
+						let dlgResult = await dialog.show(msg('qrsync.foundMetadata'), msg('qrsync.tryAgain'), {
+							yesText: msg('yes'),
+							noText: msg('no')
+						});
+						if (dlgResult.cancelled === false) {
+							logger.info('Attempting to re-import cached failed QR code');
+							// Since the catch of this very function will re-set lastFailedcode when the import fails,
+							// we should clear it BEFORE reimporting, not after.
+							let codeToRetry = lastFailedCode;
+							lastFailedCode = '';
+							await attemptImportQr(codeToRetry);
+						}
+					}
+					// otherwise, just show OK
+					else {
+						let dlgResult = await dialog.show(msg('qrsync.foundMetadata'), '', { disableNo: true });
+					}
 					break;
 				}
+				// 1 match result
 				case '1matchdata': {
-					let { match_team_key, data, actual_scorer } = decodedData.data as Awaited<
-						ReturnType<typeof decodeOneMatchScoutingResult>
-					>['data'];
-					logger.debug('1matchdata', match_team_key, data, actual_scorer);
-					if ((await db.matchscouting.where({ match_team_key }).count()) === 0) {
-						throw new Error(
-							`Match scouting assignment not found for match_team_key ${match_team_key}!`
-						);
-					}
-					await db.matchscouting.update(match_team_key, {
-						data,
-						actual_scorer,
-						synced: false, // since we've updated the entry locally, it's now no longer synced
-					});
+					let result = await importOneMatchScoutingResult(encodedData);
+					logger.info('Got:', result);
+					let matchLevel = msg(`matchType.${matchKeyToCompLevel(result.match_key)}`)
+					snackbar.open(msg('qrsync.foundOneMatchResult', {
+						match: msg('reports.match', {number: result.match_number, level: matchLevel}),
+						name: result.actual_scorer?.name || 'unknown',
+					}), 4000)
 					break;
 				}
+				// 1 pit scouting result
 				case '1pitdata': {
-					let { actual_scouter, data, org_key, event_key, team_key } = decodedData.data as Awaited<
-						ReturnType<typeof decodeOnePitScoutingResult>
-					>['data'];
-					logger.debug('Retrieved the following:', actual_scouter, data, org_key, event_key, team_key);
-					let existingAssignment = await db.pitscouting.where({org_key, event_key, team_key}).first();
-					if (!existingAssignment) {
-						throw new Error(
-							`Pit scouting assignment not found for org_key ${org_key}, event_key ${event_key}, team_key ${team_key}!`
-						);
-					}
-					await db.pitscouting.update(existingAssignment, {
-						data,
-						actual_scouter,
-						synced: false, // since we've updated the entry locally, it's now no longer synced
-					});
+					let result = await importOnePitScoutingResult(encodedData);
+					logger.info('Got:', result);
+					snackbar.open(msg('qrsync.foundOnePitResult', {
+						team: result.team_key.substring(3),
+						name: result.actual_scouter?.name || 'unknown',
+					}), 4000)
 					break;
 				}
 			}
+			qrcodeEnabled = true; // re enable scanning after user responds
 		} catch (err) {
-			snackbar.close();
-			console.error(err);
-			let message = err instanceof Error ? err.message : err;
-			snackbar.error(`Error: ${message}`);
+			logger.error(err);
+			await dialog.show(msg('qrsync.decodeFailed'), String(err), {
+				disableNo: true
+			});
+			lastFailedCode = base64; // store for reprocessing later
 			qrcodeEnabled = true; // Attempt to resume scanning
 		}
 	}
 </script>
 
-<QrCodeScanner on:data={onQrCodeData} enabled={qrcodeEnabled} />
+<QrCodeScanner
+	on:data={async (e) => {
+		qrcodeEnabled = false; // Disable scanning while we process the data
+
+		let qr = e.detail.text;
+		logger.trace(`Got QR code: ${qr.substring(0, 100)}...`);
+
+		// // We're expecting the QR to be a URL, https://(domain)/qr?q=[actual data]
+		// let index = qr.indexOf('?q=');
+		// assert(index > 0, `Expected but did not find '?q=' in qrcode`);
+		// let base64 = qr.substring(index + 3);
+		let base64 = qr; //
+		attemptImportQr(base64);
+	}}
+	enabled={qrcodeEnabled} />

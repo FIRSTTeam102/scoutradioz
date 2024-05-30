@@ -1,5 +1,6 @@
 {
 	"extends": "./.svelte-kit/tsconfig.json",
+	"exclude": [".sst", ".svelte-kit"],
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
@@ -10,6 +11,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"experimentalDecorators": true,
+		"lib": ["DOM", "WebWorker", "ES2020"]
 	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//

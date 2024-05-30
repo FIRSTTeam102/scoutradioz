@@ -5,7 +5,7 @@ import { fetchJSON } from '../utils';
 import Cookies from 'js-cookie';
 import { browser } from '$app/environment';
 
-const logger = getLogger('i18n');
+const logger = getLogger('lib/i18n');
 
 export class I18n {
 	locales: Dict<LocaleTree> = {};
@@ -61,13 +61,14 @@ export class I18n {
 	async middleware() {
 		let possibleLocales = [
 			// 1st priority: query parameter (if set)
-			('location' in globalThis) && new URLSearchParams(location.search).get(this.config.queryParameter),
+			'location' in globalThis &&
+				new URLSearchParams(location.search).get(this.config.queryParameter),
 			// 2nd priority: cookie (if set)
 			Cookies && Cookies.get(this.config.cookie),
 			// then, navigator.languages (browser default[s])
 			...navigator.languages
 		];
-		
+
 		this.fallbackChain = []; // Reset for each page load
 		for (let _locale of possibleLocales) {
 			try {
@@ -87,8 +88,21 @@ export class I18n {
 					if (this.availableLocales[jsonImportKey]) {
 						logger.debug(`Fetching locale ${jsonImportKey} for locale ${locale}`);
 						this.locales[locale] = await this.availableLocales[jsonImportKey]();
-					} else {
+					}
+					else {
 						logger.debug(`Locale ${jsonImportKey} could not be found`);
+						// 2024-01-18 JL: load fallback locale during the initialization process
+						let fallbackLocale = fallbackLocales[locale];
+						if (!this.locales[fallbackLocale]) {
+							jsonImportKey = `./locales/${fallbackLocale}.json`;
+							if (this.availableLocales[jsonImportKey]) {
+								logger.debug(`Found fallback ${fallbackLocale} for requested locale ${locale}`);
+								this.locales[locale] = await this.availableLocales[jsonImportKey]();
+							}
+							else {
+								logger.debug(`Could not find fallback ${fallbackLocale} for requested locale ${locale}`);
+							}
+						}
 					}
 				}
 			} catch (e) {
@@ -96,13 +110,13 @@ export class I18n {
 			}
 		}
 		this.locale = this.fallbackChain[0] || this.config.defaultLocale;
-		
-		logger.debug('Locale chain:', this.fallbackChain);
+
+		logger.debug('Locale chain:', this.fallbackChain, 'found locales:', Object.keys(this.locales));
 		this.notifyReady();
 	}
 
 	private notifyReady() {
-		logger.debug('Running notifyReady');
+		logger.trace('Running notifyReady');
 		this.isReady = true;
 		this.readyResolve();
 	}
@@ -111,7 +125,7 @@ export class I18n {
 	getLocales() {
 		return Object.keys(this.availableLocales).map((localePath) => {
 			// e.g. ./locales/en.json -> en
-			let locale = localePath.replace('./locales/', '').replace('.json', '')
+			let locale = localePath.replace('./locales/', '').replace('.json', '');
 			return {
 				lang: locale,
 				name: this.getLocaleName(locale),
@@ -194,7 +208,7 @@ export class I18n {
 
 		// Don't recurse forever
 		if (locale === this.config.defaultLocale || localeFallbackIndex === this.fallbackChain.length) {
-			logger.trace('Done recursing');
+			logger.trace(`Done recursing (isReady=${this.isReady})`);
 			return msg;
 		}
 
@@ -284,23 +298,8 @@ function qqxOutput(outputWrapper = (output: string) => output) {
 	};
 }
 // ISO 639-1 language codes
-const rtlLocales = [
-	'ar',
-	'arc',
-	'ckb',
-	'dv',
-	'fa',
-	'ha',
-	'he',
-	'khw',
-	'ks',
-	'ku',
-	'ps',
-	'sd',
-	'ur',
-	'yi',
-	/* for testing */ 'rtl'
-];
+// prettier-ignore
+const rtlLocales = [ 'ar', 'arc', 'ckb', 'dv', 'fa', 'ha', 'he', 'khw', 'ks', 'ku', 'ps', 'sd', 'ur', 'yi', /* for testing */ 'rtl' ];
 const fallbackLocales: Record<string, string> = {
 	'en-au': 'en',
 	'en-gb': 'en',

@@ -10,6 +10,6 @@
 </script>
 
 <FormField>
-	<Checkbox bind:checked />
+	<Checkbox bind:checked on:change/>
 	<span slot="label">{field.label}</span>
 </FormField>

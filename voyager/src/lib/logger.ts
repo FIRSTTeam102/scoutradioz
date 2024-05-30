@@ -31,35 +31,6 @@ export function logLevelStringToNumber(level: logLevel): number {
 let buffer: Log[] = [];
 let idleCallbackID: number | undefined;
 
-/** Log level threshold, i.e. any logs below this level will be ignored and not logged */
-let globalLogLevel = 1; // default: debug
-
-// Grab saved log level from localStorage.
-// TODO maybe: Extract this out of the logger mini-library and put it in some other app-level component?
-if ('localStorage' in globalThis) {
-	let level = Number(localStorage.getItem('logLevel'));
-	if (level && !isNaN(level)) {
-		globalLogLevel = level;
-	}
-}
-
-/**
- * Set the log level threshold for all logs, below which all entries will be completely ignored.
- * @param level Level to set
- */
-export function setGlobalLogLevel(level: logLevel) {
-	globalLogLevel = logLevelStringToNumber(level);
-	// Save for later
-	localStorage.setItem('logLevel', level);
-}
-
-/**
- * Get the currently set log level for recording.
- */
-export function getGlobalLogLevel() {
-	return logLevelNumberToString(globalLogLevel);
-}
-
 // Safari doesn't support requestIdleCallback. In this case, just use a regular ole timeout.
 if (!('requestIdleCallback' in globalThis)) {
 	globalThis.requestIdleCallback = function (cb, options) {
@@ -86,12 +57,14 @@ class Logger {
 		let str = messages.map(message => {
 			if (this.funcName) message = `[${this.funcName}] `;
 			if (typeof message === 'string') return message;
-			else return JSON.stringify(message);
+			if (message instanceof Error) return message.stack || String(message)
+			else return JSON.stringify(message).replace(/,/g, ', ');
 		}).join(' ');
 
 		buffer.push({
 			group: this.group,
 			level: logLevelStringToNumber(level),
+			time: new Date(),
 			message: str,
 		});
 
@@ -105,40 +78,45 @@ class Logger {
 			});
 		}
 	}
+	
+	getConsoleLogPrepender() {
+		if (this.funcName) return `[${this.group} - ${this.funcName}]`;
+		return `[${this.group}]`;
+	}
 
 	async trace(...messages: unknown[]) {
 		if (globalLogLevel > 0) return;
-		if (dev) console.debug(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('trace', messages);
 	}
   
 	async debug(...messages: unknown[]) {
 		if (globalLogLevel > 1) return;
-		if (dev) console.debug(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('debug', messages);
 	}
   
 	async info(...messages: unknown[]) {
 		if (globalLogLevel > 2) return;
-		if (dev) console.log(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.log(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('info', messages);
 	}
   
 	async warn(...messages: unknown[]) {
 		if (globalLogLevel > 3) return;
-		if (dev) console.warn(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.warn(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('warn', messages);
 	}
   
 	async error(...messages: unknown[]) {
 		if (globalLogLevel > 4) return;
-		if (dev) console.error(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.error(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('error', messages);
 	}
   
 	async fatal(...messages: unknown[]) {
 		if (globalLogLevel > 5) return;
-		if (dev) console.error(`[${this.group} - ${this.funcName || ''}]`, ...messages);
+		if (dev) console.error(this.getConsoleLogPrepender(), ...messages);
 		await this.logToDexie('fatal', messages);
 	}
 }
@@ -152,4 +130,36 @@ export function getLogger(group?: string) {
 		loggers[group] = new Logger(group);
 		return loggers[group];
 	}
+}
+
+
+/** Log level threshold, i.e. any logs below this level will be ignored and not logged */
+let globalLogLevel = 1; // default: debug
+
+// Grab saved log level from localStorage.
+// TODO maybe: Extract this out of the logger mini-library and put it in some other app-level component?
+if ('localStorage' in globalThis) {
+	let level = parseInt(String(localStorage.getItem('logLevel')));
+	console.log('level', level, typeof level);
+	if (!isNaN(level)) {
+		globalLogLevel = level;
+	}
+}
+
+
+/**
+ * Set the log level threshold for all logs, below which all entries will be completely ignored.
+ * @param level Level to set
+ */
+export function setGlobalLogLevel(level: logLevel) {
+	globalLogLevel = logLevelStringToNumber(level);
+	// Save for later
+	localStorage.setItem('logLevel', String(globalLogLevel));
+}
+
+/**
+ * Get the currently set log level for recording.
+ */
+export function getGlobalLogLevel() {
+	return logLevelNumberToString(globalLogLevel);
 }

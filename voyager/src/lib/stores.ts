@@ -4,6 +4,7 @@ import type { Writable } from 'svelte/store';
 import { liveQuery } from 'dexie';
 import db, { defaultPreferences, type Preferences } from './localDB';
 import { getLogger } from '$lib/logger';
+import { browser } from '$app/environment';
 
 const logger = getLogger('lib/stores');
 
@@ -18,7 +19,7 @@ export const preferences = {
 	}
 };
 // Load preferences store
-db.preferences
+if (browser) db.preferences
 	.toCollection()
 	.first()
 	.then(async (data) => {
@@ -75,6 +76,15 @@ export const deviceOnline = readable(
 export const canAutoSync = derived([deviceOnline, preferences], ([online, preferences]) => {
 	return online && preferences.enableAutoSync;
 });
+
+/** 
+ * For alert messages, providing a similar functionality to the LEMoN stack's res.redirect('/path?alert=(message)&type=(type)') 
+ * 
+ * Usage:
+ * 
+ * 		import 
+ */
+export const alertStore: Writable<{message: string, type: 'info'|'error'|'success'|'warn'|undefined}|null> = writable(null);
 
 // 2024-01-27 JL: commenting out for now, but i'm pretty sure this won't be needed after
 // 	changing the data-loading to be inside +layout.ts

@@ -55,7 +55,7 @@ export class MatchDataHelper {
 	 * @param {string} type The type of the element, e.g. checkbox/counter/slider.
 	 * @return {string|number} 
 	 */
-	static fixDatumType(value: string|number|boolean, type: string) {
+	static fixDatumType(value: formDataOutput, type: string) {
 	
 		let newVal;
 		

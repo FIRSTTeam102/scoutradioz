@@ -5,7 +5,7 @@
 	import { getContext } from 'svelte';
 
 	const snackbar = getContext('snackbar') as SnackbarContext;
-	const logger = getLogger('QrCodeDisplay');
+	const logger = getLogger('lib/QrCodeDisplay');
 
 	let canvas: HTMLCanvasElement;
 
@@ -37,6 +37,7 @@
 						},
 						(err) => {
 							if (err) {
+								logger.error(String(err));
 								snackbar.error(String(err));
 								clearCanvas();
 							}

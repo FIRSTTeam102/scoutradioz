@@ -65,7 +65,6 @@ export default class LuciaAdapter implements Adapter {
 			expiresAt: session.expiresAt,
 			attributes: session.attributes,
 		} as LuciaSession;
-		console.log(session.userId, session.userId.length, 'transformsessiontodb')
 		if (session.userId) sessionDb.user_id = Number(session.userId);
 		return sessionDb;
 	}

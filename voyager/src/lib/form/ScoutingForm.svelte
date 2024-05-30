@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Checkbox from './Checkbox.svelte';
 	import Counter from './Counter.svelte';
-	import Slider from './Slider.svelte';
 	import Multiselect from './Multiselect.svelte';
+	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
 
-	// import type { AnyDict } from 'scoutradioz-types';
 	import type { LayoutField } from '$lib/types';
-
+	import { onMount } from 'svelte';
+	
 	export let layout: LayoutField[];
 	export let teamNumber: number;
 	layout.map((item) => {
@@ -17,8 +17,6 @@
 	export let formData: {
 		[key: string]: unknown;
 	} = {};
-	export let allDefaultValues: boolean;
-	$: allDefaultValues = Object.values(defaultValuesMap).every((val) => val === true);
 
 	let defaultValuesMap: { [key: string]: boolean } = {};
 </script>
@@ -33,12 +31,14 @@
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:checked={formData[field.id]}
 				{field}
+				on:change
 			/>
 		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
 			<Counter
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 				isBad={field.type === 'badcounter'}
 				allowNegative={field.type === 'counterallownegative'}
 			/>
@@ -47,6 +47,7 @@
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 				isTime={field.type === 'timeslider'}
 			/>
 		{:else if field.id && field.type === 'multiselect'}
@@ -54,12 +55,14 @@
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 			/>
 		{:else if field.id && field.type === 'textblock'}
 			<Textblock
 				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
+				on:change
 			/>
 		{:else if field.type === 'h2'}
 			<h2 id={field.id}>{field.label}</h2>
@@ -89,5 +92,8 @@
 	hr {
 		width: 100%;
 		border-color: rgba(255, 255, 255, 0.25);
+	}
+	:global(body) {
+		overflow-x: hidden; // JL: if this is not true then sometimes headers that are too wide will mess with page width
 	}
 </style>

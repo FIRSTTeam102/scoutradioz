@@ -1,5 +1,9 @@
 import { getContext, onDestroy, onMount } from "svelte";
-import type { SnackbarContext, RefreshContext, RefreshButtonAnimationContext } from "./types";
+import { type SnackbarContext, type RefreshContext, type RefreshButtonAnimationContext, type DialogContext, type TitleContext } from "./types";
+import type { ScouterHistoryRecord } from 'scoutradioz-types';
+import { sha1 } from "oslo/crypto";
+import { alertStore } from "./stores";
+import { redirect } from "@sveltejs/kit";
 
 export class HttpError extends Error {
 	status: number;
@@ -154,6 +158,28 @@ export function updateSimpleHash(hash: number, nextValue: number) {
 	return h2;
 }
 
+export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecord[]}>(assignment: T, user_id: number, user_name: string) {
+	let newRecord: ScouterHistoryRecord = {
+		id: user_id,
+		name: user_name,
+		time: new Date(),
+	};
+
+	if (!assignment.history) return [newRecord]; // If there's no history, we don't need to do any shenanigans
+
+	let history = [...assignment.history]; // Create a clone of the original history object
+	let lastEntry = history[history.length - 1];
+	// If this is an edit by the same person who made the last change, then replace the record
+	if (lastEntry.id === user_id) {
+		history[history.length - 1] = newRecord;
+	}
+	// if the last edit was done by someone else, then add a new entry to the stack
+	else {
+		history.push(newRecord);
+	}
+	return history;
+}
+
 /**
  * JL: Made this cuz I hate copy-pasted boilerplate and I'm SHOCKED that this actually works.
  * This method returns all of the "getContext"able items from +layout.svelte.
@@ -166,7 +192,8 @@ export function getPageLayoutContexts() {
 	const refreshButtonAnimation = getContext(
 		'refreshButtonAnimation'
 	) as RefreshButtonAnimationContext;
-	return { snackbar, refreshButton, refreshButtonAnimation };
+	const dialog = getContext('dialog') as DialogContext;
+	return { snackbar, refreshButton, refreshButtonAnimation, dialog };
 }
 
 /**
@@ -174,15 +201,69 @@ export function getPageLayoutContexts() {
  * This method auto adds refresh button functionality on the given page and removes it on onDestroy.
  * Provide the onClick handler for the refresh button.
  */
-export function addRefreshButtonFunctionality(clickHandler?: () => any) {
+export function addRefreshButtonFunctionality(clickHandler?: () => any, tooltip?: string) {
 	const refreshButton = getContext('refreshButton') as RefreshContext;
 	onMount(() => {
 		refreshButton.set({
 			supported: true,
-			onClick: clickHandler
+			onClick: clickHandler,
+			tooltip,
 		});
 	});
 	onDestroy(() => {
 		refreshButton.set({supported: false});
 	})
+}
+
+/**
+ * Sets the current page title and automatically unsets when the page is destroyed
+ */
+export function setPageTitle(title: string, subtitle?: string) {
+	const titleContext = getContext<TitleContext>('title');
+	const subtitleContext = getContext<TitleContext>('subtitle');
+		titleContext.set(title);
+		subtitleContext.set(subtitle || '')
+	onMount(() => {
+	});
+	onDestroy(() => {
+		titleContext.set('');
+		subtitleContext.set('');
+	})
+}
+
+// Taken from oslo (These functions are not exported in the node package)
+function byteToBinary(byte: number) {
+    return byte.toString(2).padStart(8, "0");
+}
+function bytesToBinary(bytes: Uint8Array) {
+    return [...bytes].map((val) => byteToBinary(val)).join("");
+}
+function binaryToInteger(bits: string) {
+    return parseInt(bits, 2);
+}
+
+/** Encode a string with a custom base-32 alphabet, omitting I, 1, O, and 0 for readability */
+export async function base32Hash(data: string) {
+	let st = performance.now();
+	// Tweak of oslo's encodeBase32 function with a different alphabet
+	const encoded = new TextEncoder().encode(data);
+	const hash = await sha1(encoded);
+	const bits = bytesToBinary(new Uint8Array(hash));
+	const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+	let result = '';
+	for (let i = 0; i < Math.ceil(bits.length / 5); i++) {
+		const key = binaryToInteger(bits.slice(i * 5, (i+1) * 5).padEnd(5, '0'));
+		const val = alphabet[key];
+		result += val;
+	}
+	return result;
+}
+
+export function redirectWithAlert(path: string, message: string, type?: 'info'|'success'|'warn'|'error') {
+	if (!type) type = 'info';
+	alertStore.set({
+		message,
+		type
+	});
+	return redirect(307, path);
 }

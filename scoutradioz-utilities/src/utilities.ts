@@ -775,7 +775,7 @@ export class Utilities {
 
 		const hash = crypto.createHash('sha1');
 		//2020-03-23 JL: added tier to hash
-		hash.update(process.env.TIER + type + collection + param1String + param2String);
+		hash.update(this.activeTier + type + collection + param1String + param2String);
 
 		//logger.removeContext('funcName');
 		return hash.digest('hex');

@@ -27,9 +27,9 @@
 						<BLabel>
 							Scout
 							<!-- TODO: make better and more clear, e.g. with colors -->
-							{#if asg.data && asg.synced}
+							{#if asg.completed && asg.synced}
 								(Complete)
-							{:else if asg.data && !asg.synced}
+							{:else if asg.completed && !asg.synced}
 								(Complete but not synced)
 							{/if}
 						</BLabel>

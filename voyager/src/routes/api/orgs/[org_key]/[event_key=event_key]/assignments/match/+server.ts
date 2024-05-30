@@ -1,9 +1,11 @@
+import { validateUserOrg } from '$lib/server/api-utils';
 import utilities from '$lib/server/utilities';
 import { error, json } from '@sveltejs/kit';
-import type { MatchScouting, StringDict } from 'scoutradioz-types';
+import type { StringDict } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ url, params }) => {
+export const GET: RequestHandler = async ({ locals, url, params }) => {
+	validateUserOrg(locals, params.org_key);
 	const onlyAssigned = url.searchParams.get('onlyAssigned') !== null ? { assigned_scorer: { $ne: undefined } } : {};
 	
 	let st = performance.now();

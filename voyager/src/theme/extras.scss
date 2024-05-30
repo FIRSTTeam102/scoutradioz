@@ -72,6 +72,7 @@ h6 {
   margin: 0
 }
 
+// Subheaders/subtitles
 s1 {
 	@include typography.typography('subtitle1');
 	display: block;
@@ -79,6 +80,13 @@ s1 {
 s2 {
 	@include typography.typography('subtitle2');
 	display: block;
+}
+
+// This is for SvelteMarkdown, since SvelteMarkdown adds a paragraph element
+h1, h2, h3, h4, h5, h6, s1, s2 {
+	& p {
+		margin: 0;
+	}
 }
 
 inline-icon.material-icons {
@@ -147,10 +155,33 @@ section.comfortable {
 	}
 }
 
-.mdc-snackbar.error {
-	@include mixins.fill-color(color-palette.$red-500);
-	@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$red-500));
-	& .mdc-snackbar__action {
-		color: color-palette.$grey-900;
+.error {
+	color: color-palette.$red-500;
+}
+
+.mdc-snackbar {
+	&.error {
+		@include mixins.fill-color(color-palette.$red-500);
+		@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$red-500));
+		& .mdc-snackbar__action {
+			color: color-palette.$grey-900;
+		}
+	}
+	&.warn {
+		@include mixins.fill-color(color-palette.$amber-700);
+		@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$amber-700));
+		& .mdc-snackbar__action {
+			color: color-palette.$grey-900;
+		}
+	}
+	&.info {
+		// default
+	}
+	&.success {
+		@include mixins.fill-color(color-palette.$green-400);
+		@include mixins.label-ink-color(theme-color.accessible-ink-color(color-palette.$green-400));
+		& .mdc-snackbar__action {
+			color: color-palette.$grey-900;
+		}
 	}
 }

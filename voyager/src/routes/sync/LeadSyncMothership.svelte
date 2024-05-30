@@ -1,25 +1,30 @@
 <script lang="ts">
-	import Button, { Group, Label as BLabel, Icon } from '@smui/button';
-	import Card, { Actions as CActions, Content } from '@smui/card';
+	import {
+		EventOperations,
+		FormLayoutOperations,
+		LightUserOperations,
+		MatchOperations,
+		MatchScoutingOperations,
+		PitScoutingOperations,
+		TeamOperations
+	} from '$lib/DBOperations';
 	import db, {
-		type TeamLocal,
 		type LightMatch,
 		type MatchScoutingLocal,
-		type str,
-		type WithStringDbId,
 		type PitScoutingLocal,
+		type TeamLocal,
+		type str
 	} from '$lib/localDB';
-	import { MatchScoutingOperations, FormLayoutOperations } from '$lib/DBOperations';
-	import { liveQuery } from 'dexie';
 	import { getLogger } from '$lib/logger';
+	import Button, { Label as BLabel, Group, Icon } from '@smui/button';
+	import Card, { Actions as CActions, Content } from '@smui/card';
+	import { liveQuery } from 'dexie';
 
-	import { addRefreshButtonFunctionality, fetchJSON, getPageLayoutContexts } from '$lib/utils';
-	import assert from '$lib/assert';
-	import type { MatchScouting, PitScouting, User, Event, Org, Layout } from 'scoutradioz-types';
-	import { getContext, onDestroy, onMount } from 'svelte';
-	import type { RefreshButtonAnimationContext, RefreshContext, SnackbarContext } from '$lib/types';
-	import { page } from '$app/stores';
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/stores';
+	import assert from '$lib/assert';
+	import { addRefreshButtonFunctionality, fetchJSON, getPageLayoutContexts } from '$lib/utils';
+	import type { Event, Org } from 'scoutradioz-types';
 
 	const logger = getLogger('sync/LeadSyncMothership');
 
@@ -34,6 +39,7 @@
 
 	$: org_key = $page.data.org_key as string;
 	$: event_key = $page.data.event_key as string;
+	$: event_year = parseInt(event_key);
 
 	// Retrieve the # of matchscouting and pitscouting layout elements in the DB
 	$: matchscoutingFormElements = liveQuery(async () => {
@@ -48,6 +54,17 @@
 			.count();
 	});
 
+	$: matchChecksum = liveQuery(async () => {
+		const syncStatus = await db.syncstatus
+			.where({
+				table: 'layout',
+				filter: `org=${org_key},year=${event_year},type=matchscouting`
+			})
+			.first();
+		if (!syncStatus || typeof syncStatus.data?.checksum !== 'string') return '???';
+		return syncStatus.data.checksum.substring(0, 3);
+	});
+
 	$: pitscoutingFormElements = liveQuery(async () => {
 		assert(event_key);
 
@@ -58,6 +75,17 @@
 				form_type: 'pitscouting'
 			})
 			.count();
+	});
+
+	$: pitChecksum = liveQuery(async () => {
+		const syncStatus = await db.syncstatus
+			.where({
+				table: 'layout',
+				filter: `org=${org_key},year=${event_year},type=pitscouting`
+			})
+			.first();
+		if (!syncStatus || typeof syncStatus.data?.checksum !== 'string') return '???';
+		return syncStatus.data.checksum.substring(0, 3);
 	});
 
 	// Retrieve the # of match scouting entries with and without data
@@ -124,26 +152,6 @@
 		return await db.lightusers.where({ org_key: org_key }).count();
 	});
 
-	async function downloadFormData() {
-		try {
-			assert(event_key, 'event_key not defined');
-
-			// Fetch list of match scouting form elements for the associated year
-			const matchFormData = await fetchJSON<WithStringDbId<Layout>[]>(
-				`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/match`
-			);
-			await db.layout.bulkPut(matchFormData);
-
-			// Fetch list of match scouting form elements for the associated year
-			const pitFormData = await fetchJSON<WithStringDbId<Layout>[]>(
-				`/api/orgs/${org_key}/${event_key?.substring(0, 4)}/layout/pit`
-			);
-			await db.layout.bulkPut(pitFormData);
-		} catch (err) {
-			handleError(err);
-		}
-	}
-
 	async function downloadMatches() {
 		try {
 			const matches = await fetchJSON<LightMatch[]>(`/api/${event_key}/matches`);
@@ -174,32 +182,6 @@
 		}
 	}
 
-	async function downloadPitScouting() {
-		try {
-			// Fetch list of match scouting assignments for this event
-			// JL note: once PitScouting is sent over the airwaves, it becomes local because the ObjectIds get converted to string
-			const pitScouting = await fetchJSON<WithStringDbId<PitScoutingLocal>[]>(
-				`/api/orgs/${org_key}/${event_key}/assignments/pit`
-			);
-			// Since it's comign from the server, it's by definition synced
-			pitScouting.forEach((pit) => (pit.synced = true));
-
-			// Delete existing match scouting entries (We'll have to code something less dangerous at some point, cuz this'll override non-synced data)
-			let numDeleted = await db.pitscouting
-				.where({
-					event_key: event_key,
-					org_key: org_key
-				})
-				.delete();
-			logger.info(`${numDeleted} deleted from db`);
-
-			// Insert the assignments into Dexie
-			await db.pitscouting.bulkAdd(pitScouting);
-		} catch (err) {
-			handleError(err);
-		}
-	}
-
 	let dangerouslyUploadAll = false;
 
 	// TODO: only sync ones with data, and/or only sync ones marked as not synced?
@@ -218,11 +200,10 @@
 					return;
 				pitscouting = await pitCol.toArray();
 			} else {
-				pitscouting = await pitCol.and((pit) => pit.synced === false).toArray();
+				pitscouting = await pitCol.and((pit) => pit.synced === false && pit.completed === true).toArray();
 			}
 
-			if (pitscouting.length === 0)
-				throw new Error('No pitscouting found that was not already synced');
+			if (pitscouting.length === 0) throw new Error('No pitscouting found that was not already synced');
 
 			let bulkWriteResult = await fetchJSON(`/api/orgs/${org_key}/${event_key}/submit/pit`, {
 				body: JSON.stringify(pitscouting),
@@ -239,9 +220,7 @@
 					.modify((pit) => (pit.synced = true));
 				snackbar.open(`Uploaded data from ${pitscouting.length} assignments successfully.`);
 			} else {
-				throw new Error(
-					`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`
-				);
+				throw new Error(`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`);
 			}
 		} catch (err) {
 			handleError(err);
@@ -267,11 +246,10 @@
 					return;
 				matchscouting = await matchCol.toArray();
 			} else {
-				matchscouting = await matchCol.and((match) => match.synced === false).toArray();
+				matchscouting = await matchCol.and((match) => match.synced === false && match.completed === true).toArray();
 			}
 
-			if (matchscouting.length === 0)
-				throw new Error('No matchscouting found that was not already synced');
+			if (matchscouting.length === 0) throw new Error('No matchscouting found that was not already synced');
 
 			let bulkWriteResult = await fetchJSON(`/api/orgs/${org_key}/${event_key}/submit/match`, {
 				body: JSON.stringify(matchscouting),
@@ -288,38 +266,30 @@
 					.modify((match) => (match.synced = true));
 				snackbar.open(`Uploaded data from ${matchscouting.length} assignments successfully.`);
 			} else {
-				throw new Error(
-					`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`
-				);
+				throw new Error(`Response from the server was not marked as ok! ${JSON.stringify(bulkWriteResult)}`);
 			}
 		} catch (err) {
 			handleError(err);
 		}
 	}
 
-	async function downloadUsers() {
-		try {
-			const users = await fetchJSON<WithStringDbId<User>[]>(`/api/orgs/${org_key}/users`);
+	async function downloadOrgInfo() {
+		// Download current event info, including teams
+		await EventOperations.download();
+		await TeamOperations.download();
 
-			// let numDeleted = await db.lightusers.where({
-			// 	org_key: org_key
-			// }).delete();
-			// console.log(`${numDeleted} users deleted from db`);
+		// Download the org's users
+		await LightUserOperations.download(org_key);
 
-			// await db.lightusers.bulkAdd(users);
-			let result = await db.lightusers.bulkPut(users);
-			logger.trace(result);
+		// Download the org's full info
+		const org = await fetchJSON<str<Org>>(`/api/orgs/${org_key}`);
+		await db.orgs.put(org);
 
-			const org = await fetchJSON<str<Org>>(`/api/orgs/${org_key}`);
-			// numDeleted = await db.orgs.where({org_key: org_key}).delete();
-			// console.log(`${numDeleted} orgs deleted from db`);
-			// await db.orgs.add(org);
-			await db.orgs.put(org);
-			// since event_key can be updated after org is downloaded
-			await invalidateAll();
-		} catch (err) {
-			handleError(err);
-		}
+		// Include the form layout download in this action
+		await FormLayoutOperations.download();
+
+		// since event_key can be updated after org is downloaded, force a reload
+		await invalidateAll();
 	}
 
 	function handleError(err: unknown) {
@@ -331,12 +301,13 @@
 		snackbar.error(errorMessage);
 	}
 
-	async function wrap(func: () => void|Promise<void>) {
+	async function wrap(func: () => void | Promise<void>) {
 		try {
 			console.log('autoplay begin');
 			await refreshButtonAnimation.autoplay(func);
 		} catch (err) {
-			console.log('caught!')
+			console.log(err);
+			logger.error(err);
 			handleError(err);
 		}
 	}
@@ -355,12 +326,16 @@
 				<p>
 					{$orgs} orgs in db
 				</p>
+				<p>
+					{$matchscoutingFormElements} match form layout items (code: <code>{$matchChecksum}</code>), {$pitscoutingFormElements} pit form
+					layout items (code: <code>{$pitChecksum}</code>)
+				</p>
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button variant="outlined" on:click={downloadUsers}>
+					<Button variant="outlined" on:click={() => wrap(downloadOrgInfo)}>
 						<Icon class="material-icons">person</Icon>
-						<BLabel>Download users / org info</BLabel>
+						<BLabel>Download users / org info / event info</BLabel>
 					</Button>
 				</Group>
 			</CActions>
@@ -381,19 +356,11 @@
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
-					<Button
-						variant="outlined"
-						on:click={() => refreshButtonAnimation.autoplay(downloadMatches)}
-					>
+					<Button variant="outlined" on:click={() => wrap(MatchOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download matches</BLabel>
 					</Button>
-					<Button
-						variant="outlined"
-						on:click={() => {
-							refreshButtonAnimation.autoplay(uploadMatchScouting);
-						}}
-					>
+					<Button variant="outlined" on:click={() => wrap(uploadMatchScouting)}>
 						<Icon class="material-icons">upload</Icon>
 						<BLabel>Upload data</BLabel>
 					</Button>
@@ -409,37 +376,15 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button
-						variant="outlined"
-						on:click={() => refreshButtonAnimation.autoplay(downloadPitScouting)}
-					>
+					<Button variant="outlined" on:click={() => wrap(PitScoutingOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
-					<Button
-						variant="outlined"
-						on:click={() => {
-							refreshButtonAnimation.autoplay(uploadPitScouting);
-						}}
-					>
+					<Button variant="outlined" on:click={() => wrap(uploadPitScouting)}>
 						<Icon class="material-icons">upload</Icon>
 						<BLabel>Upload data</BLabel>
 					</Button>
 				</Group>
-			</CActions>
-		</Card>
-		<Card>
-			<Content>
-				<h5>Form data</h5>
-				<p>
-					{$matchscoutingFormElements} match form entries, {$pitscoutingFormElements} pit form entries
-				</p>
-			</Content>
-			<CActions>
-				<Button variant="outlined" on:click={() => wrap(FormLayoutOperations.download)}>
-					<Icon class="material-icons">download</Icon>
-					<BLabel>Download form data</BLabel>
-				</Button>
 			</CActions>
 		</Card>
 	</div>

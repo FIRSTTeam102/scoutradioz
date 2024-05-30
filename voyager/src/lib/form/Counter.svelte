@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Fab, { Icon } from '@smui/fab';
 	import type { LayoutField } from '$lib/types';
+	import { createEventDispatcher } from 'svelte';
 
 	export let value: any = 0; // any because of weird casting to generic data
 	export let field: LayoutField;
@@ -8,7 +9,11 @@
 	export let isBad = false;
 	export let isDefaultValue: boolean;
 	$: isDefaultValue = (value === 0);
-	const changeByValue = (change: number) => (value = (allowNegative ? value + change : Math.max(0, value + change)));
+	const dispatch = createEventDispatcher();
+	const changeByValue = (change: number) => {
+		value = (allowNegative ? value + change : Math.max(0, value + change));
+		dispatch('change');
+	};
 </script>
 
 <div>

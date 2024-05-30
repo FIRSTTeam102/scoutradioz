@@ -1,5 +1,5 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData, PitScouting } from 'scoutradioz-types';
+import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -19,7 +19,7 @@ export declare class MatchDataHelper {
      * @param {string} type The type of the element, e.g. checkbox/counter/slider.
      * @return {string|number}
      */
-    static fixDatumType(value: string | number | boolean, type: string): string | number | boolean;
+    static fixDatumType(value: formDataOutput, type: string): formDataOutput;
     /**
      * Returns whether a layout element type is a metric.
      * @param {string} type Type of layout element

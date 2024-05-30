@@ -1,11 +1,13 @@
+import type { PitScoutingLocal } from '$lib/localDB';
+import { validateUserOrg } from '$lib/server/api-utils';
 import utilities from '$lib/server/utilities';
 import { error, json } from '@sveltejs/kit';
-import type { StringDict, PitScouting } from 'scoutradioz-types';
+import { type AnyBulkWriteOperation } from 'mongodb';
+import type { PitScouting, StringDict } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
-import type { PitScoutingLocal } from '$lib/localDB';
-import { ObjectId, type AnyBulkWriteOperation } from 'mongodb';
 
-export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
+export const POST: RequestHandler = async ({ params, locals, request, cookies, getClientAddress }) => {
+	validateUserOrg(locals, params.org_key);
 	let data = (await request.json()) as PitScoutingLocal[];
 	
 	console.log('submit/pit: ENTER', JSON.stringify(data));
@@ -17,13 +19,14 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	for (let localPit of data) {
 		const { event_key, org_key, team_key, data, actual_scouter } = localPit;
 		if (actual_scouter) {
+			if (isNaN(actual_scouter.id) || typeof actual_scouter.id !== 'number') throw error(400, new Error('actual_scouter is not a number!'));
 			bulkWriteOp.push({
 				updateOne: {
 					filter: { team_key, org_key, event_key },
 					update: {
 						$set: {
 							actual_scouter: {
-								id: new ObjectId(actual_scouter.id),
+								id: actual_scouter.id,
 								name: actual_scouter.name,
 							}
 						}

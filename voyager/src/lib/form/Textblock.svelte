@@ -14,4 +14,5 @@
 	textarea
 	bind:value
 	label={field.label}
+	on:change
 />
