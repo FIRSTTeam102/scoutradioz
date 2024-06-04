@@ -325,6 +325,7 @@ export declare interface OrgClass {
 export declare interface OrgTeamValue extends DbDocument {
 	org_key: OrgKey;
 	team_key: TeamKey;
+	picklist_key: string|undefined;
 	event_key: EventKey;
 	value: number;
 }

@@ -14,10 +14,10 @@ for dbsfile in "${dbsfiles[@]}"; do
 		touch $dbsfile
 		printf "{
 \t\"dev\": {
-\t\t\"url\": \"mongodb://localhost:27017/app\"
+\t\t\"url\": \"mongodb://127.0.0.1:27017/app\"
 \t},
 \t\"default\": {
-\t\t\"url\": \"mongodb://localhost:27017/app\"
+\t\t\"url\": \"mongodb://127.0.0.1:27017/app\"
 \t}
 }" >> $dbsfile
 fi

@@ -221,6 +221,11 @@ class UseFunctions {
 		// expose Luxon DateTime to views
 		res.locals.DateTime = DateTime;
 		
+		// When fetching something to show in a modal dialog, set a view variable with that 
+		if (req.headers['in-modal-dialog'] === 'true') {
+			res.locals.inModalDialog = true;
+		}
+		
 		// 2022-04-04 JL: Moving timezoneString calculations into initialMiddleware
 		let timezoneString = req.timezoneString;
 		let fixedZone = getFixedZone(timezoneString);

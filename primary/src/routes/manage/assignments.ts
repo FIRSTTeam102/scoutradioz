@@ -195,19 +195,27 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	
 	const availableArray: number[] = []; // User IDs
 	let stoppingForBreaks = true;
+	let scoutPlayoffs = false;
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
 		const userId = user.split('|')[0];
 		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
-		if (userId != 'skipBreaks') { 
+		// 2024-04-04, M.O'C: Enable option to assign scouting to playoffs
+		if (userId != 'skipBreaks' && userId != 'scoutPlayoffs') { 
 			const userName = user.split('|')[1]; // unused
 			logger.trace(`user: ${userId} | ${userName}`);
 			assert(userId && userName, 'Could not find both userId and userName');
 			availableArray.push(Number(userId));
 		}
 		else {
-			logger.debug('Assignments will continue past breaks!');
-			stoppingForBreaks = false;
+			if (userId === 'skipBreaks') {
+				logger.debug('Assignments will continue past breaks!');
+				stoppingForBreaks = false;
+			}
+			else if (userId === 'scoutPlayoffs') {
+				logger.debug('Assignments will be generated for playoffs!');
+				scoutPlayoffs = true;
+			}
 		}
 	}
 	
@@ -215,11 +223,22 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		{org_key, event_key},
 		{sort: {time: 1}}
 	);
-	
-	const matchArray: Match[] = await utilities.find('matches', 
-		{event_key, comp_level: 'qm'},
-		{sort: {time: 1}}
-	);
+
+	let matchArray: Match[] = [];
+	if (scoutPlayoffs) {
+		// 2024-04-04, M.O'C: Do not filter on 'comp_level'
+		matchArray = await utilities.find('matches', 
+			{event_key},
+			{sort: {time: 1}}
+		);
+	}
+	// most of the time only scout quals
+	else {
+		matchArray = await utilities.find('matches', 
+			{event_key, comp_level: 'qm'},
+			{sort: {time: 1}}
+		);
+	}
 	
 	let outputNotes: string[] = []; // Notes to display to the scouting lead about what went on behind the scenes
 	
@@ -327,8 +346,11 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			logger.info('There are existing assignments in the DB, so we will attempt to re-populate existing data when re-generating...');
 			
 			// Populate a dict of all the existing data for the match
+			// 2024-04-04, M.O'C: Carrying over assigned scorer (and) super_data
 			const matchTeamKeyToSubmissionsMap: Dict<{
 				data: MatchFormData;
+				super_data?: MatchFormData;
+				assigned_scorer?: ScouterRecord;
 				actual_scorer?: ScouterRecord;
 				useragent?: UserAgent;
 			}> = {};
@@ -337,6 +359,8 @@ router.post('/matches/generate', wrap(async (req, res) => {
 				if (matchTeam.data) {
 					matchTeamKeyToSubmissionsMap[matchTeam.match_team_key] = {
 						data: matchTeam.data,
+						super_data: matchTeam.super_data,
+						assigned_scorer: matchTeam.assigned_scorer,
 						actual_scorer: matchTeam.actual_scorer,
 						useragent: matchTeam.useragent,
 					};
@@ -356,6 +380,9 @@ router.post('/matches/generate', wrap(async (req, res) => {
 					// JL note: actual_scouter and useragent could be undefined, so I'd rather not add the keys unless they're defined
 					if (thisSubmission.actual_scorer) matchTeam.actual_scorer = thisSubmission.actual_scorer;
 					if (thisSubmission.useragent) matchTeam.useragent = thisSubmission.useragent;
+					// 2024-04-04, M.O'C: Add in preserving assigned_scorer (and) super_data
+					if (thisSubmission.super_data) matchTeam.super_data = thisSubmission.super_data;
+					if (thisSubmission.assigned_scorer) matchTeam.assigned_scorer = thisSubmission.assigned_scorer;
 					// Now, delete the key from the submissions map so we can keep track of which entries have NOT yet been repopulated into the new array
 					delete matchTeamKeyToSubmissionsMap[matchTeam.match_team_key];
 				}
@@ -487,6 +514,8 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		scoutsPerMatch = matchScoutsPlusScoutedCount.length;
 	}
 
+	// 2024-03-20, M.O'C: The changes to "use latest timestamp" instead of "next unplayed timestamp" broke scheduling when you're doing the 2nd run past breaks
+	let notFirstMatch: boolean = false;
 	for (let matchesIdx in comingMatches) {
 		const thisMatch = comingMatches[matchesIdx];
 		const thisMatchKey = thisMatch.key;
@@ -532,11 +561,13 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			matchGap = comingMatches[matchesIdx].time - lastMatchTimestamp;
 		// Iterate until a "break" is found (or otherwise, if the loop is exhausted)
 		// 2024-01-24, M.O'C: Might optionally not be stopping for breaks
-		if (stoppingForBreaks)
+		// 2024-03-20, M.O'C: Only check for breaks on the 2nd and later matches - 'notFirstMatch' is initially "false"
+		if (stoppingForBreaks && notFirstMatch)
 			if (matchGap > matchGapBreakThreshold) {
 				logger.trace('matchGap=' + matchGap + '... found a break');
 				break;
 			}
+		notFirstMatch = true;
 		
 		let teamArray: TeamKey[] = [];
 		if (redBlueToggle == 0)
@@ -1055,7 +1086,7 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 }));
 
 async function generateTeamAllocations(req: express.Request, res: express.Response) {
-	logger.addContext('funcName', 'generateTEAMallocations');
+	logger.addContext('funcName', 'generateTeamAllocations');
 	
 	const event_key = req.event.key;
 	const year = req.event.year;
@@ -1142,7 +1173,8 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	const teamArray = req.teams;
 	
 	// 2023-02-12 JL: Added a query to get existing scouting data on a per-team basis
-	const existingScoutingData = await utilities.find('pitscouting', {event_key, org_key, data: {$ne: undefined}});
+	// 2024-03-26 M.O'C: Include super-scouting data
+	const existingScoutingData = await utilities.find('pitscouting', {event_key, org_key, $or: [ {data: { $ne: undefined }}, {super_data: { $ne: undefined }} ]});
 	
 	//
 	// Cycle through teams, adding 1st 2nd 3rd to each based on array of 1st2nd3rds
@@ -1185,10 +1217,14 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 		}
 		
 		// 2023-02-12 JL: Check for existing scouting data and insert it 
+		// 2024-03-26 M.O'C: Adding super_data, plus checks for each type
 		for (let thisEntry of existingScoutingData) {
 			if (thisEntry.team_key === team_key) {
 				logger.trace(`Appending data for team_key ${team_key}`);
-				thisAssignment.data = thisEntry.data;
+				if (thisEntry.data)
+					thisAssignment.data = thisEntry.data;
+				if (thisEntry.super_data)
+					thisAssignment.super_data = thisEntry.super_data;
 			}
 		}
 		
@@ -1202,7 +1238,8 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	
 	// Sanity check for data deletion
 	let teamAssignmentsWithData = 0;
-	for (let assignment of teamAssignments) if (assignment.data) teamAssignmentsWithData++;
+	// 2024-03-26, M.O'C: Adding super_data to the check
+	for (let assignment of teamAssignments) if (assignment.data || assignment.super_data) teamAssignmentsWithData++;
 	logger.info(`Generated team assignments with data inserted: ${teamAssignmentsWithData}. Previously found: ${existingScoutingData.length}`);
 	if (teamAssignmentsWithData !== existingScoutingData.length) {
 		logger.warn('Numbers do not match!!!');

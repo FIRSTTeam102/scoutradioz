@@ -38,104 +38,123 @@ block content
 			transition: 0s;
 		}
 	h2=title
-	div(class="w3-mobile w3-center")
-		p.i!=msg('allianceselection.intro')
-		p.i!=msgMarked('allianceselection.preferred')
-		if !matchcountConsistent
-			a(href="/manage/currentevent/matches") 
-				div(class="w3-btn theme-red") <b>WARNING: Rankings appear NOT to be up to date!</b><br/>Click here, update FIRST data before using for selection
-		div(class="w3-row w3-padding-small")
-			div(class="w3-left")
-				div(id="btnUndo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
-			div(class="w3-right")
-				div(id="btnOptions" class="w3-btn theme-input")!=msg('allianceselection.options', undefined, '\xa0')
-		section(class="w3-row")
-			div(id="allianceSelection")
-				each alliance, i in alliances
-					- var allianceNum = i + 1;
-					div(class="w3-padding-small w3-col s12 m6 l3")
-						div(class="theme-dim w3-padding-large w3-col")
-							div(class="w3-col s0 m12")!=msg('allianceselection.allianceNumber', {number: allianceNum})
-							div(class="w3-col s2 m0") 
-								p(class="w3-large") #{allianceNum}
-							div(class="w3-col s10 m12")
-								div(class="w3-col s4 w3-padding-small")
-									div(id=alliance[0] alliance=allianceNum available="true" class="alliance-team w3-border w3-border-white")
-										span=alliance[0].substring(3)
-								- var teamIndex = 1 // starts at 2
-								while ++teamIndex <= numRounds
-									- team = alliance[teamIndex]
+	//- Dropdown to pick between team_keys at the org
+	if orgTeamKeys && orgTeamKeys.length > 1
+		form#teamKeyForm(class="w3-container w3-padding-16" method="get" action="/dashboard/allianceselection")
+			label(class="w3-label")
+				span(class="sprite sp-help sp-inline sp-16 w3-tooltip") &nbsp;
+					span(class="w3-tooltiptext")!=msg('allianceselection.tooltipPicklist')
+				span=msg('allianceselection.choosePicklist')
+			select(class="theme-input" name="picklist_key")
+				//- Show blank by default, require user to select their team from the dropdown
+				if !picklist_key
+					option(selected value="")
+				each thisTeamKey in orgTeamKeys
+					option(value=thisTeamKey selected=(picklist_key === thisTeamKey))=thisTeamKey.substring(3)
+		script.
+			$('select[name=picklist_key]').on('change', () => {
+				$('#teamKeyForm').trigger('submit');
+			});
+	//- Display the rest of the page only if picklist_key is specified OR if there's only 1 team on the org
+	if !orgTeamKeys || picklist_key
+		div(class="w3-mobile w3-center")
+			p.i!=msg('allianceselection.intro')
+			p.i!=msgMarked('allianceselection.preferred')
+			if !matchcountConsistent
+				a(href="/manage/currentevent/matches") 
+					div(class="w3-btn theme-red") <b>WARNING: Rankings appear NOT to be up to date!</b><br/>Click here, update FIRST data before using for selection
+			div(class="w3-row w3-padding-small")
+				div(class="w3-left")
+					div(id="btnUndo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
+				div(class="w3-right")
+					div(id="btnOptions" class="w3-btn theme-input")!=msg('allianceselection.options', undefined, '\xa0')
+			section(class="w3-row")
+				div(id="allianceSelection")
+					each alliance, i in alliances
+						- var allianceNum = i + 1;
+						div(class="w3-padding-small w3-col s12 m6 l3")
+							div(class="theme-dim w3-padding-large w3-col")
+								div(class="w3-col s0 m12")!=msg('allianceselection.allianceNumber', {number: allianceNum})
+								div(class="w3-col s2 m0") 
+									p(class="w3-large") #{allianceNum}
+								div(class="w3-col s10 m12")
 									div(class="w3-col s4 w3-padding-small")
-										div(id=`all${allianceNum}team${teamIndex}` alliance=allianceNum class="alliance-team w3-border w3-border-white")
-											span=(team) ? team.substring(3) : `[${teamIndex}]`
-				hr(class="w3-col")
-				div(class="w3-col")
-					each team, i in sortedTeams
-						div(class="w3-col s4 m2 l1 w3-padding-small")
-							div(id=team.team_key available="true" class="theme-dim alliance-team w3-border w3-border-white")
-								span=team.team_key.substring(3)
-		hr(class="")
-		
-		div(class="w3-section")
-			input(class="w3-check w3-margin-right" type="checkbox" checked id="showHideData")
-			label(for="showHideData")!=msg('allianceselection.showData')
-		div#data()
-			include allianceselection-info
+										div(id=alliance[0] alliance=allianceNum available="true" class="alliance-team w3-border w3-border-white")
+											span=alliance[0].substring(3)
+									- var teamIndex = 1 // starts at 2
+									while ++teamIndex <= numRounds
+										- team = alliance[teamIndex]
+										div(class="w3-col s4 w3-padding-small")
+											div(id=`all${allianceNum}team${teamIndex}` alliance=allianceNum class="alliance-team w3-border w3-border-white")
+												span=(team) ? team.substring(3) : `[${teamIndex}]`
+					hr(class="w3-col")
+					div(class="w3-col")
+						each team, i in sortedTeams
+							div(class="w3-col s4 m2 l1 w3-padding-small")
+								div(id=team.team_key available="true" class="theme-dim alliance-team w3-border w3-border-white")
+									span=team.team_key.substring(3)
+			hr
+			
+			div(class="w3-section")
+				input(class="w3-check w3-margin-right" type="checkbox" checked id="showHideData")
+				label(for="showHideData")!=msg('allianceselection.showData')
+			div#data()
+				include allianceselection-info
 
-	hr
-	div(id="options")
-		div(class="w3-margin-top w3-show-inline-block w3-mobile")
-			label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numAlliances')
-			select(class="theme-input" style="min-width: 100;" name="numAlliances" id="numAlliances")
-				- var n = 1; // starts at 2
-				while ++n <= 8
-					option(selected=(n == numAlliances) value=n)=n
-		span(class="w3-hide-small") &nbsp;
-		div(class="w3-margin-top w3-show-inline-block w3-mobile")
-			label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numRounds')
-			select(class="theme-input" style="min-width: 100;" name="numRounds" id="numRounds")
-				- var n = 1; // starts at 2
-				while ++n <= 4
-					option(selected=(n == numRounds) value=n)=n
+		hr
+		div(id="options")
+			div(class="w3-margin-top w3-show-inline-block w3-mobile")
+				label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numAlliances')
+				select(class="theme-input" style="min-width: 100;" name="numAlliances" id="numAlliances")
+					- var n = 1; // starts at 2
+					while ++n <= 8
+						option(selected=(n == numAlliances) value=n)=n
+			span(class="w3-hide-small") &nbsp;
+			div(class="w3-margin-top w3-show-inline-block w3-mobile")
+				label(class="w3-label" style="padding-right: 8px")!=msg('allianceselection.numRounds')
+				select(class="theme-input" style="min-width: 100;" name="numRounds" id="numRounds")
+					- var n = 1; // starts at 2
+					while ++n <= 4
+						option(selected=(n == numRounds) value=n)=n
 
-	script.
-		//create selection state
-		window.state = {};
-		numAlliances = parseInt(#{numAlliances});
-		console.log(`numAlliances=${numAlliances}`);
-		numRounds = parseInt(#{numRounds});
-		//CURRENTLY UNUSED
-		//state.alliances = [["#{alliances[0][0]}""]];
-		//Starting alliance 1 captain, before any user input
-		window.startingCaptain = "#{alliances[0][0]}";
+		script.
+			//create selection state
+			window.state = {};
+			numAlliances = parseInt(#{numAlliances});
+			console.log(`numAlliances=${numAlliances}`);
+			numRounds = parseInt(#{numRounds});
+			//CURRENTLY UNUSED
+			//state.alliances = [["#{alliances[0][0]}""]];
+			//Starting alliance 1 captain, before any user input
+			window.startingCaptain = "#{alliances[0][0]}";
+			
+			state.rankings = [null];
+			//currently selected team
+			state.currentSelectedTeam = null;
+			//history of selected teams
+			/*
+				[
+					{
+						"teamKey": "frc102",
+						"previousSpot": rank before selected,
+						"allianceSpot": 2 or 3
+					}
+				]
+			*/
+			state.moveHistory = [];
+			//round 0 goes from alliance 1 to 8; round 1 goes from alliance 8 to 1
+			state.currentRound = 0;
+			//current alliance that is choosing a team
+			state.currentAlliance = 1;
+			//Previous states of allianceSelection
+			var previousStates = [];
 		
-		state.rankings = [null];
-		//currently selected team
-		state.currentSelectedTeam = null;
-		//history of selected teams
-		/*
-			[
-				{
-					"teamKey": "frc102",
-					"previousSpot": rank before selected,
-					"allianceSpot": 2 or 3
-				}
-			]
-		*/
-		state.moveHistory = [];
-		//round 0 goes from alliance 1 to 8; round 1 goes from alliance 8 to 1
-		state.currentRound = 0;
-		//current alliance that is choosing a team
-		state.currentAlliance = 1;
-		//Previous states of allianceSelection
-		var previousStates = [];
-	
-		// i18n messages used by client script
-		window.i18n = {};
-	| <script>
-	each team, i in rankings
-		| state.rankings[#{i+1}] = "#{team.team_key}";
-	each msg in ['wontSave', 'noPreviousState', 'noLastMove', 'noAllianceAttribute', 'noTeamStateRankings']
-		| i18n["#{msg}"] = !{msgJs('allianceselection.' + msg)};
-	| </script>
-	script(src=`${fileRoot}/js/script-allianceselection.js?v`)
+			// i18n messages used by client script
+			window.i18n = {};
+		| <script>
+		each team, i in rankings
+			| state.rankings[#{i+1}] = "#{team.team_key}";
+		each msg in ['wontSave', 'noPreviousState', 'noLastMove', 'noAllianceAttribute', 'noTeamStateRankings']
+			| i18n["#{msg}"] = !{msgJs('allianceselection.' + msg)};
+		| </script>
+		script(src=`${fileRoot}/js/script-allianceselection.js?v${functionVersion}`)

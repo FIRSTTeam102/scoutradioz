@@ -25,7 +25,7 @@ router.get('/match*', wrap(async (req, res) => {
 	logger.info('ENTER');
 
 	let eventKey = req.event.key;
-	let eventYear = req.event.year;
+	let year = req.event.year;
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
 	let match_team_key = req.query.key;
@@ -45,17 +45,18 @@ router.get('/match*', wrap(async (req, res) => {
 	
 	//check if there is already data for this match
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoringdata: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'year' : eventYear, 'match_team_key': match_team_key}, {sort: {'order': 1}});
+	let assignment = await utilities.findOne('matchscouting', {org_key, year, match_team_key}, {});
 		
 	//scouting answers for this match are initialized as null for visibility
 	let answers: MatchFormData|null = null;
 	
-	if( scoringdata && scoringdata[0] ){
+	if( assignment ){
 		
+		alliance = assignment.alliance; // 2024-04-06 JL: Pull alliance from matchscouting entry if possible to not rely on url
 		//if we have data for this match, 
-		let data = scoringdata[0].data;
+		let data = assignment.data;
 		if(data){
-			logger.debug(`data: ${JSON.stringify(scoringdata[0].data)}`);
+			logger.debug(`data: ${JSON.stringify(data)}`);
 			//set answers to data if exists
 			answers = data;
 		}
@@ -67,13 +68,14 @@ router.get('/match*', wrap(async (req, res) => {
 	//load layout
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let layout: Layout[] = await utilities.find('layout', 
-		{org_key: org_key, year: eventYear, form_type: 'matchscouting'}, 
+		{org_key: org_key, year: year, form_type: 'matchscouting'}, 
 		{sort: {'order': 1}},
 		{allowCache: true}
 	);
+
+	let groupedLayout = splitLayoutIntoGroups(layout);
 	
-	
-	const images = await uploadHelper.findTeamImages(org_key, eventYear, teamKey);
+	const images = await uploadHelper.findTeamImages(org_key, year, teamKey);
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	
 	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
@@ -102,7 +104,8 @@ router.get('/match*', wrap(async (req, res) => {
 	if (!team) throw new e.UserError(req.msg('scouting.invalidTeam', {team: teamKey}));
 
 	let allianceLocale = (alliance.toLowerCase().startsWith('b')) ? req.msg('alliance.blueShort') : req.msg('alliance.redShort');
-	let title = `#${scoringdata[0]?.match_number} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
+	let matchNumber = assignment?.match_number || match_team_key.split('_')[1]?.substring(2); // In case the matchscouting assignment isn't in the db
+	let title = `#${matchNumber} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
 
 	// 2024-02-05, M.O'C: Add super-scout pit text to page
 	let pitFind = await utilities.findOne('pitscouting', { 'org_key': org_key, 'event_key' : eventKey, 'team_key' : teamKey }, {});
@@ -113,14 +116,15 @@ router.get('/match*', wrap(async (req, res) => {
 	//render page
 	res.render('./scouting/match', {
 		title: title,
-		layout: layout,
+		layout,
+		groupedLayout,
 		key: match_team_key,
-		alliance: alliance,
-		answers: answers,
-		teamKey: teamKey,
-		images: images,
+		alliance,
+		answers,
+		teamKey,
+		images,
 		team: team,
-		pit_super_data: pit_super_data
+		pit_super_data,
 	});
 }));
 
@@ -171,11 +175,13 @@ router.post('/testform', wrap(async (req, res) => {
 		website: null
 	};
 
-	if (form_type == 'matchscouting')
-		//render page
+	//render page
+	if (form_type == 'matchscouting') {
+		let groupedLayout = splitLayoutIntoGroups(layout);
 		res.render('./scouting/match', {
 			title: req.msg('scouting.match'),
 			layout: layout,
+			groupedLayout,
 			key: match_team_key,
 			alliance: alliance,
 			answers: null,
@@ -183,6 +189,7 @@ router.post('/testform', wrap(async (req, res) => {
 			images: null,
 			team: team,
 		});
+	}
 	else
 		res.render('./scouting/pit', {
 			title: req.msg('scouting.pit'),
@@ -650,5 +657,24 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 		});
 	}
 }));
+
+// Split the layout into groups, based on the header, making it easier to do the dynamic scrolling
+function splitLayoutIntoGroups(layout: Layout[]) {
+
+	let groupedLayout = layout.reduce((list, current) => {
+		if (current.type === 'h2') {
+			list.push({
+				label: current.label || 'unknown',
+				items: [current]
+			});
+		}
+		else {
+			let idx = list.length - 1;
+			list[idx].items.push(current);
+		}
+		return list;
+	}, [{label: 'Unknown', items: []}] as Array<{label: string, items: Layout[]}>);
+	return groupedLayout;
+}
 
 module.exports = router;

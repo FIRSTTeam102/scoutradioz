@@ -57,8 +57,8 @@ class Logger {
 		let str = messages.map(message => {
 			if (this.funcName) message = `[${this.funcName}] `;
 			if (typeof message === 'string') return message;
-			if (message instanceof Error) return String(message);
-			else return JSON.stringify(message);
+			if (message instanceof Error) return message.stack || String(message)
+			else return JSON.stringify(message).replace(/,/g, ', ');
 		}).join(' ');
 
 		buffer.push({

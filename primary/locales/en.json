@@ -2,6 +2,16 @@
 	"index": {
 		"fulltitle": "Scoutradioz: FRC Scouting as a Service",
 		"welcome": "Welcome to Scoutradioz",
+		"browse": {
+			"link": "Or click here to browse data by event",
+			"title": "View data by event and org",
+			"tspsExplained": "'TSPS' is **relative** Total Scouting Performance Score (useful for friendly inter-org Scouting competitions!) - and 'Mdn.' is short for Median",
+			"pastEvents": "To see older data you may need to use the menu option under Info and Reports, 'Browse data from past events'",
+			"orgKeyAndNickname": "Org key - Nickname",
+			"matchScoutingEntries": "# Match scouting entries",
+			"avgErrorRate": "Mdn. error rate (and minimum)",
+			"tspsScore": "TSPS"
+		},
 		"choice": "Are you:",
 		"viewer": {
 			"choice": "Looking to view data",
@@ -176,7 +186,7 @@
 	"scouting": {
 		"match": "Match scouting",
 		"pit": "Pit scouting",
-		"supermatch": "Super scout match {n}",
+		"supermatch": "Super scout this match",
 		"superpit": "Super scout",
 		"supermatchnotes": "Super scout match notes:",
 		"supernotes": "Super scout notes for team {team}:",
@@ -231,6 +241,8 @@
 		"pitScoutingPartner": "Partner's pit scouting assignments",
 		"upcomingMatches": "Upcoming matches to be scouted",
 		"matchNumber": "Match {number}",
+		"sfNumber": "Semifinal {number}",
+		"fNumber": "Final {number}",
 		"matchResultMissedWarning": "WARNING: A match result may have been missed!",
 		"matchResultMissedAdmin": "Click here, check FIRST match data and update any missing matches.",
 		"matchResultMissedNotAdmin": "Ask a team admin to check FIRST match data and update any missing matches.",
@@ -257,6 +269,7 @@
 		"chooseTeam": "[Choose a team]",
 		"viewOr": "or",
 		"allTeams": "All teams",
+		"otherTeams": "Other teams",
 		"selectedTeam": "Selected team",
 		"nextMatch": "Next match:",
 		"nextMatchTeam": "Next match for team {team}:",
@@ -270,6 +283,7 @@
 		"title": "Alliance selection",
 		"intro": "Tap a team, then tap the empty slot [2] or [3] to move them up.\nAs teams are selected for alliances, they will gray out in the table below.",
 		"preferred": "Before alliance selection, you and your team lead(s) can mark your preferred teams on <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">this page</a>.",
+		"tapForPopup": "Tap a team number to view that team's intel, including scouter notes.",
 		"undo": "Undo",
 		"allianceNumber": "Alliance {number}",
 		"showData": "Show team data",
@@ -284,7 +298,9 @@
 		"team": "Team",
 		"rank": "FRC Rank",
 		"numAlliances": "Number of alliances:",
-		"numRounds": "Number of rounds:"
+		"numRounds": "Number of rounds:",
+		"tooltipPicklist": "Each FRC team in an organization has their own picklist. Pick which team's picklist to view.",
+		"choosePicklist": "View picklist for..."
 	},
 	"metrics": {
 		"raw": "Raw data",
@@ -339,6 +355,7 @@
 		"allTeams": "all teams",
 		"allianceStats": "Alliance team statistics",
 		"allTeamMetrics": "All team metrics",
+		"browsePastEvents": "Browse data from past events",
 		"completedMatches": "Completed matches",
 		"upcomingMatches": "Upcoming matches",
 		"upcomingMatchesTeam": "Upcoming matches for {team}",
@@ -433,9 +450,12 @@
 			"editMatchResults": "Edit match results",
 			"editMatchSchedule": "Edit match schedule",
 			"editTeams": "Edit team list",
+			"editRankings": "Adjust rankings",
+			"editRankingsInstructions": "Click on the minus/plus to change rankings; refresh page to resort",
 			"eventData": "Event data: [[{event}]]",
 			"getCurrentTeams": "Update list of teams",
 			"invalidEventKey": "Invalid event key: '{eventKey}'. Click on an event in the list to set it automatically.",
+			"manual": "Manual data entry",
 			"matches": "Matches (FIRST data)",
 			"noEvent": "No event has been set",
 			"recalcDerived": "Recalculate derived metrics",
@@ -478,9 +498,21 @@
 			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
 			"scoutingGroups": "Scouting groups",
 			"skipBreaks": "Check this box to generate assignments ignoring breaks in the schedule",
+			"scoutPlayoffs": "Check this box to generate assignments for playoff matches as well",
 			"submitNewGroup": "Submit selected members as a new scouting group",
 			"swapMatchAssignments": "Swap in/out match scouts",
 			"swapPitAssignments": "Swap teams between pit scout groups"
+		},
+		"config": {
+			"title": "Configure {org}",
+			"tooltipSubteamKey": "Write a unique identifier for each subteam. After you create a subteam, the label can change but the key should not change.",
+			"tooltipClassKey": "Write a unique identifier for each class. After you create a class, the label can change but the key should not change.",
+			"tooltipTeams": "Place the number of all FRC teams associated with this organization, separated by a comma. There can be multiple if your organization is a scouting collective, or if your team is pooling scouters with another FRC team.",
+			"invalidTeams": "Could not find a team with the number \"{number}\". Please enter a comma-separated list of FRC team numbers.",
+			"updatedSuccessfully": "Updated successfully.",
+			"updatedButFixSubteams": "Org config has updated, but one or more users will need to be updated due to subteam / class keys changing.\n- *Go through the list of users and make sure everyone has a subteam and class.\n- Click 'Update' for each user that has been updated.*",
+			"id": "ID",
+			"teams": "Team(s)"
 		}
 	},
 	"date": "Date",
@@ -495,5 +527,6 @@
 	"add": "Add",
 	"class": "Class",
 	"subteam": "Subteam",
-	"update": "Update"
+	"update": "Update",
+	"year": "Year"
 }

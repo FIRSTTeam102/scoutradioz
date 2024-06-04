@@ -1,6 +1,29 @@
 /// <reference types="jquery" />
 /// <reference types="jquery" />
 /// <reference types="jquery" />
+/**
+ * Modal dialog element with a close button.
+ */
+declare class Dialog {
+    static getDialog(): JQuery<HTMLDialogElement>;
+    /**
+     * Open the modal dialog and populate its body with the HTML that you specify.
+     * @param html The HTML to populate the dialog with. Need to fetch it ahead of time with a `fetch` statement.
+     *
+     * @example
+     *
+     * 		fetch('/url'), { method: 'GET' })
+     * 			.then(response => response.text())
+     * 			then(data => Dialog.show(data));
+     */
+    static show(html: string): void;
+    /**
+     * Open the modal dialog and populate it with the URL you specified.
+     * The web request will set the InModalDialog to true automatically, disabling the page heaader.
+     * @param url URL to open
+     */
+    static showURL(url: string): void;
+}
 declare class FormSubmission {
     /**
      * JL note 2022-04-03: Since all uses of FormSubmission follow the following response system:
@@ -36,7 +59,10 @@ declare class FormSubmission {
     submit(cb: ObjectCallback): void;
     _getFromLocalStorage(): string | null;
     _addToLocalStorage(): void;
-    _getFormData(form: HTMLFormElement | JQuery): Dictionary<string>;
+    /**
+     * Get a key-value object from any form element (useful outside of the FormSubmission class)
+     */
+    static getFormData(form: HTMLFormElement | JQuery): Dictionary<string>;
 }
 interface ObjectCallback {
     (error: JQueryXHR | Error | string | null, response?: SRResponse): void;

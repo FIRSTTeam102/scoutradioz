@@ -40,10 +40,10 @@ router.get('/browseevents', wrap(async (req, res) => {
 		if (!event_keys.includes(key)) event_keys.push(key);
 	});
 	
-	const events = await utilities.find('events', {key: {$in: event_keys}});
+	const events = await utilities.find('events', {key: {$in: event_keys}}, {sort: {start_date: -1}});
 	
 	res.render('./reports/browseevents', {
-		title: 'WIP - Browse events',
+		title: req.msg('reports.browsePastEvents'),
 		events
 	});
 }));

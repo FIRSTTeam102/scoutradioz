@@ -35,7 +35,10 @@ block content
 					div(class="w3-col m6 l4 w3-padding")
 						hr
 						div(class="w3-col w3-padding")
-							span !{msg('dashboard.matchNumber', {number: match.match_number})} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')}
+							- var matchMsg =  msg('dashboard.matchNumber', {number: match.match_number})
+							- if (match.comp_level == 'sf') matchMsg =  msg('dashboard.sfNumber', {number: match.set_number})
+							- if (match.comp_level == 'f') matchMsg =  msg('dashboard.fNumber', {number: match.match_number})
+							span !{matchMsg} <br/> #{zoneTime(match.time * 1000).toFormat('cccc @ t')}
 						each assignment, j in assignments
 							- assignment.alliance = (assignment.alliance == "red") ? "Red" : "Blue";
 							div(class="w3-col" style="height: 55px; display: flex;")

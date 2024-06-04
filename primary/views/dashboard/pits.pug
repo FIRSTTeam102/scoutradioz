@@ -58,9 +58,14 @@ block content
 					//- TODOSUPER: Replace permission check with ACCESS_SUPER_SCOUT
 					if user.role && user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN
 						td(class="theme-spacer")
-							a(href=`/scouting/superpit?key=${team.team_key}`) 
-								div(class="w3-btn w3-col theme-link w3-padding")
-									span!=msg('scouting.superpit')
+							if team.super_data
+								a(href=`/scouting/superpit?key=${team.team_key}`) 
+									div(class="w3-dark-grey w3-btn w3-section")
+										span!=msg('scouting.superpit')
+							else
+								a(href=`/scouting/superpit?key=${team.team_key}`) 
+									div(class="w3-btn w3-col theme-link w3-padding")
+										span!=msg('scouting.superpit')
 		h6
 			a(class="gear-btn theme-link w3-btn" href="/dashboard/pits?loadPhotos=1")!=msg('dashboard.loadTeamPhotos')
 

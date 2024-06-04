@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import assert from '$lib/assert';
 	import db from '$lib/localDB';
 	import { addRefreshButtonFunctionality, getPageLayoutContexts, postJSON, setPageTitle } from '$lib/utils';
@@ -116,6 +116,7 @@
 								if (!data.user || !data.org)
 									return snackbar.error('Unknown error - route succeeded but user not passed back');
 								// Replace user with the new logged-in default_user
+								logger.info('Logging in user:', data.user.name)
 								await db.transaction('rw', db.user, db.orgs, async () => {
 									// Replace the single "user" collection with the new user info returned
 									await db.user.clear();
@@ -123,6 +124,11 @@
 									// and put the "full" org info into the orgs table, i.e. the one with org config and all that but without hashed password
 									await db.orgs.put(data.org);
 								});
+								// JL note: invalidateAll() is needed because FormLayoutOperations.download('both') depends on the page layout
+								// 	contexts, which only refresh on a page load (and since we're switching db.user and db.orgs, the result of 
+								// 	the page layout context will be at its old value [possibly undefined]
+								logger.debug('Done inserting user; now downloading form layout')
+								await invalidateAll();
 								await FormLayoutOperations.download('both');
 								console.log('doing goto pick-user!');
 								goto('/login/pick-user');

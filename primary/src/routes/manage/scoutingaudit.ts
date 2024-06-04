@@ -294,12 +294,12 @@ router.post('/uploads/delete', wrap(async (req, res) => {
 
 router.get('/bymatch', wrap(async (req, res) => {
 	
-	let eventKey = req.event.key;
+	let event_key = req.event.key;
 	let org_key = req._user.org_key;
 
 	// Get the *min* time of the as-yet-unresolved matches [where alliance scores are still -1]
 	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
-	let matches: Match[] = await utilities.find('matches', {event_key: eventKey, 'alliances.red.score': {$ne: -1}}, {sort: {'time': -1}});
+	let matches: Match[] = await utilities.find('matches', {event_key, 'alliances.red.score': {$ne: -1}}, {sort: {'time': -1}});
 	
 	// 2018-03-13, M.O'C - Fixing the bug where dashboard crashes the server if all matches at an event are done
 	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
@@ -313,7 +313,7 @@ router.get('/bymatch', wrap(async (req, res) => {
 	logger.debug('Per-match audit: latestTimestamp=' + latestTimestamp);
 	
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': eventKey, 'time': { $lt: latestTimestamp }}, { sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
+	let scoreData: MatchScouting[] = await utilities.find('matchscouting', {org_key, event_key, 'time': { $lt: latestTimestamp }}, { sort: {'time': 1, 'alliance': 1, 'team_key': 1} });
 	
 	//Create array of matches for audit, with each match-team inside each match
 	let audit = [];
@@ -422,9 +422,27 @@ router.get('/spr', wrap(async (req, res) => {
 		{ 'event_key': eventKey, 'match_number': { '$gt': lookbacktoIndex, '$lt': lookforwardtoIndex }, 'score_breakdown': { '$ne': undefined } }, { sort: { match_number: -1 } },
 		{allowCache: true, maxCacheAge: 10}
 	);
+	
+	interface CompareTableItem {
+		match: Match,
+		blue?: {
+			errDiff: number;
+			errRatio: number;
+			orgTot: number;
+			frcTot: number;
+			reports: MatchScouting[],
+		};
+		red?: {
+			errDiff: number;
+			errRatio: number;
+			orgTot: number;
+			frcTot: number;
+			reports: MatchScouting[],
+		};
+	}
 
 	// set up the return data table - we'll add alternating rows of FRC & scouting data
-	let returnCompareTable = [];
+	let returnCompareTable: CompareTableItem[] = [];
 	// dictionary of scouts - each item should be keyed by scout name and contain (a) total matches scouted + (b) total error point diffs & ratios	
 	let scoutScoreDict: Dict<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = {};
 
@@ -439,6 +457,10 @@ router.get('/spr', wrap(async (req, res) => {
 	let allianceArray: Array<'red'|'blue'> = ['red', 'blue'];
 	for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
 		let thisMatch = matches[matchIdx];
+		// 2024-04-04 JL: Prettying up data presentation
+		let thisCompareTableItem: CompareTableItem = {
+			match: thisMatch,
+		};
 		for (let allianceIdx = 0; allianceIdx < allianceArray.length; allianceIdx++) {
 			let thisAlliance = allianceArray[allianceIdx];
 
@@ -560,9 +582,20 @@ router.get('/spr', wrap(async (req, res) => {
 				logger.trace('FRC=' + JSON.stringify(frcRow));
 				logger.trace('Org=' + JSON.stringify(orgRow));
 
-				returnCompareTable.push(frcRow);
-				returnCompareTable.push(orgRow);
+				// returnCompareTable.push(frcRow);
+				// returnCompareTable.push(orgRow);
+				thisCompareTableItem[thisAlliance] = {
+					errDiff,
+					errRatio,
+					frcTot,
+					orgTot,
+					reports: matchScoutReports,
+				};
 			}
+		}
+		// Only add this match to the list if we have processed 1 or both of the alliances.
+		if (thisCompareTableItem.red || thisCompareTableItem.blue) {
+			returnCompareTable.push(thisCompareTableItem);
 		}
 	}
 	// what is the determinant?
@@ -580,7 +613,7 @@ router.get('/spr', wrap(async (req, res) => {
 
 		for (let key in scoutScoreDict) {
 			let thisSprIndex:number = scoutScoreDict[key].sprIndex;
-			scoutScoreDict[key].sprScore = Number(solution[thisSprIndex][0]);
+			scoutScoreDict[key].sprScore = Math.round(+solution[thisSprIndex][0] * 10)/10;
 		}
 	}
 	catch (err) {
@@ -590,7 +623,7 @@ router.get('/spr', wrap(async (req, res) => {
 	// sort scoutScoreDict by sprScore
 	let sortedValues:Array<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = Object.values(scoutScoreDict);
 	// reverse sort!
-	sortedValues.sort((a, b) => b.sprScore - a.sprScore);
+	sortedValues.sort((a, b) => a.sprScore - b.sprScore);
 	logger.trace('sortedValues=' + JSON.stringify(sortedValues));
 
 	// reconstruct scoutScoreDict
