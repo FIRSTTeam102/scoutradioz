@@ -17,7 +17,7 @@
 		{ id: 'all', icon: 'groups', label: 'All' }
 	];
 
-	$: initialActiveIndex = data.myTeams.length ? 0 : 1;
+	$: initialActiveIndex = data.myMatches.length ? 0 : 1;
 	
 	const { snackbar } = getPageLayoutContexts();
 	addRefreshButtonFunctionality(async () => {
@@ -52,7 +52,7 @@
 	</p>
 	
 	<SlidingTabs {tabs} {initialActiveIndex}>
-		<MatchAssignmentList slot="1" matches={data.myTeams} firstMatchNumber={data.firstMatchNumber} />
+		<MatchAssignmentList slot="1" matches={data.myMatches} firstMatchNumber={data.firstMatchNumber} />
 		<MatchAssignmentList slot="2" matches={data.allMatches} firstMatchNumber={data.firstMatchNumber} />
 	</SlidingTabs>
 </section>
