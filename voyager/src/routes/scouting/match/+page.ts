@@ -53,11 +53,6 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
 	}
 	let checksum = syncStatus.data.checksum.substring(0, 3) as string;
 
-	console.log('Assignments:', assignments);
-	console.log('Grouped:', grouped);
-	console.log('My Matches:', myMatches);
-	console.log('My Team Matches:', myTeams);
-	console.log('User ID', user_id);
 	return { myMatches, myTeams, allMatches, firstMatchNumber, checksum };
 
 };
