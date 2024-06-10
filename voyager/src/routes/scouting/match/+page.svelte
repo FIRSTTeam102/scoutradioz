@@ -13,7 +13,7 @@
 	setPageTitle(msg('scouting.match'), msg('scouting.scheduleVersion', {checksum: data.checksum}));
 
 	const tabs = [
-		{ id: 'mine', icon: 'person', label: 'Assigned' },
+		{ id: 'mine', icon: 'person', label: 'Mine' },
 		{ id: 'all', icon: 'groups', label: 'All' }
 	];
 
