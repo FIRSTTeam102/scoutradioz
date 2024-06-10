@@ -24,3 +24,6 @@ yarn-error.log
 voyager/static/*.css*
 voyager/.sst
 scoutradioz-utilities/types/utilities.d.ts
+.devcontainer/docker-compose.yml
+.devcontainer/Dockerfile
+.devcontainer/import-database.sh
