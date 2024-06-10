@@ -9,7 +9,7 @@
 	export let data: PageData;
 
 	const tabs = [
-		{ id: 'mine', icon: 'person', label: 'Assigned' },
+		{ id: 'mine', icon: 'person', label: 'Mine' },
 		{ id: 'partner', icon: 'group', label: "Partner's" },
 		{ id: 'all', icon: 'groups', label: 'All' }
 	];
