@@ -25,3 +25,18 @@ done
 
 # Install node modules
 yarn setup
+
+# Detect the operating system version and set the NODE_VARIANT accordingly
+OS_VERSION=$(lsb_release -cs)
+
+if [ "$OS_VERSION" = "bullseye" ]; then
+  export NODE_VARIANT="18-bullseye"
+elif [ "$OS_VERSION" = "buster" ]; then
+  export NODE_VARIANT="18-buster"
+else
+  echo "Unsupported OS version: $OS_VERSION"
+  exit 1
+fi
+
+# Run docker-compose with the appropriate NODE_VARIANT
+docker-compose up --build
