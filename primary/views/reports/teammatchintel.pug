@@ -29,7 +29,7 @@ block content
 						br
 					//- 2023-03-19 JL: Switched hardcoded counter/badcounter/derived/etc. to "default" to allow for new numerical types to be displayed
 					default
-						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{data[element.id]}</strong>
+						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{typeof data[element.id] === "number" ? data[element.id].toFixed(2).replace(/\.?0*$/,'') : data[element.id]}</strong>
 		else
 			+noDataFound(msg('reports.noMatchScoutData', {team: teamKey.substring(3), match: teammatch.match_number}))
 	else
