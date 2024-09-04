@@ -49,7 +49,7 @@ async function validate() {
 				let thisLabel = jsonData[i]['label'];
 				if (!thisLabel) {
 					console.log(`${thisType} missing both id and label:`, jsonData[i]);
-					NotificationCard.error('h2 or h3 need either \'id\' or \'label\' attribute! Please correct.');
+					NotificationCard.error('Missing at least one \'label\' attribute on h2/h3! Please correct.');
 					return null;
 				}
 				thisId = thisType + '_' + thisLabel.replace(/\s+/g, '_');
