@@ -108,6 +108,18 @@ block content
 				//years
 				div(class="w3-col s6 m1 w3-padding-small")
 					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="Yrs. on team")
+		//add multiple members
+		div(class='w3-row')
+			h4!=msg('manage.members.addMultipleMembers')
+		div(class='w3-row')
+			form#addMembers(action='javascript:addMembers()' method='post')
+				input#fileUpload(type='file' accept='.json,.csv,application/json,text/csv' class='w3-hide')
+				div(class='w3-col m1 s6 w3-padding-small')
+					button(type='submit' class='w3-btn theme-submit w3-block')!=msg('add')
+				div(class='w3-padding-small w3-col m2 s6')
+					label(for='fileUpload' class='w3-btn w3-block theme-submit')!=msg('manage.members.uploadAFile')
+				div(class='w3-padding-small w3-col sauto')
+					p#fileName!=msg('manage.members.noFileSelected')
 		h6
 			i!=msg('manage.members.teamAdminPasswordReminder')
 			i 
@@ -123,6 +135,88 @@ block content
 			let thisUpdateButton = $(e.target).closest('form').find('button[type=submit]');
 			thisUpdateButton.addClass('animate-outline');
 		});
+
+		$('#fileUpload').on('change', () => {
+			const files = $('#fileUpload')[0].files;
+			if (files.length > 0) {
+				$('#fileName').text(files[0].name);
+			}
+		})
+
+		function addMembers(event) {
+			console.log(event);
+			const file = $('#fileUpload')[0].files[0];
+			if (!file) {
+				NotificationCard.error('No file selected.');
+				return;
+			} else if (file.type !== 'application/json' && file.type !== 'text/csv') {
+				NotificationCard.error('Invalid file type (must be JSON or CSV).');
+				return;
+			}
+			file.text().then(text => {
+				let toUpload = text;
+				if (file.type === 'text/csv') {
+					const output = [];
+					let currLine = [];
+					let currVal = '';
+					let quoted = false;
+					for (let i = 0; i < text.length; i++) {
+						const currentChar = text[i];
+						const nextChar = text[i + 1];
+						if (currentChar === '"' && nextChar === '"') {
+							currVal += '"';
+							i++;
+							continue;
+						}
+						if (currentChar === '"') {
+							quoted = !quoted;
+							continue;
+						}
+						if (currentChar === ',' && !quoted) {
+							currLine.push(currVal);
+							currVal = "";
+							continue;
+						}
+						if ((currentChar === '\n' || currentChar === '\r') && !quoted) {
+							if (currentChar === '\r' && nextChar === '\n') {
+								i++;
+							}
+							currLine.push(currVal);
+							if (currLine.length !== 5) {
+								NotificationCard.error('Line wrong length.');
+								return;
+							}
+							output.push({name: currLine[0], subteam_key: currLine[1], class_key: currLine[2], role_key: currLine[3], years: currLine[4]});
+							currLine = [];
+							currVal = '';
+							continue;
+						}
+						currVal += currentChar;
+					}
+					currLine.push(currVal);
+					if (currLine.length !== 5) {
+						NotificationCard.error('Line wrong length.');
+						return;
+					}
+					output.push({name: currLine[0], subteam_key: currLine[1], class_key: currLine[2], role_key: currLine[3], years: currLine[4]});
+					toUpload = JSON.stringify(output);
+				}
+				$.post({
+					url: '/manage/members/addmembers',
+					data: toUpload,
+					contentType: 'application/json',
+				}).done(response => {
+					if (response.status === 200) {
+						NotificationCard.show(response.message);
+						window.location.reload();
+					} else {
+						NotificationCard.error(response.message);
+					}
+				}).fail(() => {
+					NotificationCard.error('Failed to upload members, perhaps due to a syntax error in the JSON file.');
+				});
+			});
+		}
 		
 		function doBatch(key, question) {
 			let doProceed = true;

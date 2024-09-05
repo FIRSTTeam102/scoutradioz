@@ -472,7 +472,10 @@
 			"noMembersOfType": "No members of this type.",
 			"permissionLevel": "Permission level",
 			"yearsOnTeam": "Years on team",
-			"successSetPresent": "Present members updated successfully."
+			"successSetPresent": "Present members updated successfully.",
+			"noFileSelected": "No file selected.",
+			"uploadAFile": "Upload a file",
+			"addMultipleMembers": "Add multiple members"
 		},
 		"assignments": {
 			"pit": "Pit scouting assignments",
