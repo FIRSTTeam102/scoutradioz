@@ -136,6 +136,133 @@ router.post('/addmember', wrap(async (req, res) => {
 	res.redirect('/manage/members#addMember');
 }));
 
+router.post(
+	'/addmembers',
+	wrap(async (req, res) => {
+		logger.addContext('funcName', 'addmembers[post]');
+		logger.info('ENTER');
+
+		const thisUser = req._user;
+		const thisOrg = thisUser.org;
+
+		if (!Array.isArray(req.body)) {
+			return res.send({ status: 400, message: 'Invalid request body.' });
+		}
+
+		let newMembers: User[] = [];
+
+		for (const member of req.body) {
+			const { name, subteam_key, class_key, years, role_key } = member;
+			if (!name || name == '') {
+				return res.send({
+					status: 400,
+					message: 'Every user must have a name.',
+				});
+			}
+			if (
+				name.toLowerCase() === 'default_user' ||
+				name.toLowerCase() === 'scoutradioz_admin'
+			) {
+				return res.send({
+					status: 400,
+					message: 'You cannot create a user with that name.',
+				});
+			}
+			let requestedRole: Role = await utilities.findOne('roles', {
+				role_key,
+			});
+			if (!requestedRole) {
+				return res.send({
+					status: 400,
+					message: `Invalid role requested for user ${name}.`,
+				});
+			}
+			if (requestedRole.access_level > thisUser.role.access_level) {
+				return res.send({
+					status: 403,
+					message: `You do not have permission to create a user with that role. (user ${name})`,
+				});
+			}
+			if (!class_key || !subteam_key) {
+				return res.send({
+					status: 400,
+					message: `Please provide a subteam and class for user ${name}.`,
+				});
+			}
+			if (
+				!thisOrg.config.members.classes.some(
+					(thisClass) => thisClass.class_key === class_key
+				)
+			) {
+				return res.send({
+					status: 500,
+					message: `The provided class could not be found in your organization's configuration for user ${name}.`,
+				});
+			}
+			if (
+				!thisOrg.config.members.subteams.some(
+					(thisSubteam) => thisSubteam.subteam_key === subteam_key
+				)
+			) {
+				return res.send({
+					status: 500,
+					message: `The provided subteam could not be found in your organization's configuration for user ${name}.`,
+				});
+			}
+
+			console.debug(`Request to add member ${JSON.stringify(member)}`);
+
+			// calculate seniority
+			let seniority = years;
+			// sanity-check! use '0' if it's not already a parseable int
+			if (isNaN(parseInt(seniority))) seniority = '0';
+
+			// Get the first 3 characters, all lower case
+			let classPre = class_key.toLowerCase().substring(0, 3);
+			switch (classPre) {
+				case 'fre':
+					seniority += '.1';
+					break;
+				case 'sop':
+					seniority += '.2';
+					break;
+				case 'jun':
+					seniority += '.3';
+					break;
+				case 'sen':
+					seniority += '.4';
+					break;
+				default:
+					seniority += '.0';
+			}
+
+			newMembers.push({
+				org_key: thisOrg.org_key,
+				name,
+				role_key,
+				password: 'default',
+				org_info: {
+					subteam_key,
+					class_key,
+					years,
+					seniority,
+				},
+				event_info: {
+					present: false,
+					assigned: false,
+				},
+				oauth: {},
+				visible: true,
+				removed: false,
+			});
+		}
+
+		await utilities.insert('users', newMembers);
+
+		res.send({ status: 200, message: `Added ${newMembers.length} users successfully.` });
+	})
+);
+
 router.post('/updatemember', wrap(async (req, res) => {
 	logger.addContext('funcName', 'updatemember[post]');
 	logger.info('ENTER');
