@@ -127,6 +127,7 @@ block content
 			i 
 				a(href='/manage/members/passwords' class="link")!=msg('manage.members.passwordAuditLink')
 		input(type="hidden" name="selfUserId" value=user._id)
+	script(src=`${fileRoot}/lib/csv-parse.min.js`)
 	script.
 		$('#incrementYears').on('click', () => {
 			doBatch('incrementYears', "Are you sure you want to perform this batch action (incrementing # years by 1)? THE PAGE WILL REFRESH AND YOUR CURRENT CHANGES WILL BE LOST.");
@@ -160,29 +161,22 @@ block content
 				let toUpload = text;
 				if (file.type === 'text/csv') {
 					const output = [];
-					//- Convert tabs to commas and split into lines
-					const lines = text.replace(/\t/g, ',').split('\n');
-					for (i = 0; i < lines.length; i++) {
-						let line = lines[i];
-						let arr = line.split(',');
-						//- Remove quotation marks
-						arr = arr.map(str => {
-							if (str.startsWith('"') && str.endsWith('"')) str = str.substring(1, str.length - 1);
-							return str;
+					try {
+						const parsed = csv_parse_sync.parse(text, { 
+							columns: ["name", "subteam_key", "class_key", "role_key", "years", "id"],
+							relax_column_count_less: true,
 						});
-						//- Check length
-						if (arr.length < 5 || arr.length > 6) {
-							return NotificationCard.error('Line is wrong length. Each line should be: name, subteam, class, permission level, years on team, (optional)id');
+						for (let i = 0; i < parsed.length; i++) {
+							const row = parsed[i];
+							if (i === 0 && row.name.toLowerCase() === 'name' && row.subteam_key.toLowerCase() === 'subteam') continue;
+							if (row.name !== undefined && row.subteam_key !== undefined && row.class_key !== undefined && row.role_key !== undefined && row.years !== undefined) {
+								output.push(row);
+							} else {
+								return NotificationCard.error('CSV Parsing Error: not enough fields in row.');
+							}
 						}
-						//- Grab variables from array
-						let [name, subteam_key, class_key, role_key, years, id] = arr;
-						//- Detect if the first line of the csv appears to contain titles, if so, skip
-						if (i === 0 && name.toLowerCase() === 'name' && subteam_key.toLowerCase() === 'subteam') {
-							console.log('First line appears to be column titles; skipping');
-							continue;
-						}
-						//- Form JSON object
-						output.push({name, subteam_key, class_key, role_key, years, id});
+					} catch (error) {
+						return NotificationCard.error('CSV Parsing Error: ' + error.message);
 					}
 					toUpload = JSON.stringify(output);
 				}
