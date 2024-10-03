@@ -4,7 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import type { Org, Role, User } from 'scoutradioz-types';
-import { BulkWriteResult, type AnyBulkWriteOperation } from 'mongodb';
+import type { BulkWriteResult, AnyBulkWriteOperation } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('members');
