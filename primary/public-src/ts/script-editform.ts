@@ -45,6 +45,16 @@ async function validate() {
 
 		if (thisType != 'spacer') {
 			let thisId = jsonData[i]['id'];
+			if (!thisId && (thisType == 'h3' || thisType == 'h2')) {
+				let thisLabel = jsonData[i]['label'];
+				if (!thisLabel) {
+					console.log(`${thisType} missing both id and label:`, jsonData[i]);
+					NotificationCard.error('Missing at least one \'label\' attribute on h2/h3! Please correct.');
+					return null;
+				}
+				thisId = thisType + '_' + thisLabel.replace(/\s+/g, '_');
+				jsonData[i]['id'] = thisId;
+			}
 			// 2024-01-26 JL: changed `== null` comparison to truthiness check, because I think empty strings should not be a valid id ('' is falsy)
 			if (!thisId) {
 				console.log('Missing id:', jsonData[i]);
