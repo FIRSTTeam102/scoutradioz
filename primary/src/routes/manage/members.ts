@@ -4,7 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import type { Org, Role, User } from 'scoutradioz-types';
-import { type AnyBulkWriteOperation } from 'mongodb';
+import { BulkWriteResult, type AnyBulkWriteOperation } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('members');
@@ -290,10 +290,11 @@ router.post('/addmembers', wrap(async (req, res) => {
 		}
 	}
 	logger.debug(JSON.stringify(bulkWriteOps));
-	const bulkResult = await utilities.bulkWrite('users', bulkWriteOps);
-	await utilities.insert('users', newMembers);
+	let bulkResult: BulkWriteResult | undefined;
+	if (bulkWriteOps.length > 0) bulkResult = await utilities.bulkWrite('users', bulkWriteOps);
+	if (newMembers.length > 0) await utilities.insert('users', newMembers);
 
-	res.send({ status: 200, message: `Successfully added ${newMembers.length} and updated ${bulkResult.nModified} members.` });
+	res.send({ status: 200, message: `Successfully added ${newMembers.length} and updated ${bulkResult?.nModified ?? 0} members.` });
 })
 );
 
