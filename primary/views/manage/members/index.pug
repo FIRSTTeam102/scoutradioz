@@ -40,7 +40,7 @@ block content
 					//delete button
 					div(class="w3-col s5 mauto w3-padding-small" data-delete-button)
 						//-2019-09-26 JL: Added str.replace to member.name in case there are apostrophes in the name
-						button(class="w3-btn theme-red w3-block" onclick=`confirmDelete("${member.name}", "${member._id}")`)
+						button(class="w3-btn theme-red w3-block" onclick=`confirmDelete("${member.name.replace(/"/g, "\\\"")}", "${member._id}")`)
 							span(class="sprite sp-24 sp-inline sp-delete")
 					//-updateMember submits to javascript func.
 					form(id=`updateMember_${member._id}` update-member-form action=`javascript:updateMember('${member._id}')` method="post")
