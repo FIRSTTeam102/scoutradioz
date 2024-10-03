@@ -311,7 +311,7 @@ router.get('/download-csv', wrap(async (req, res) => {
 	
 	for (let member of orgMembers) {
 		let { name, role_key, _id, org_info: { subteam_key, class_key, years } } = member;
-		fullCSVoutput += `"${name}",${subteam_key},${class_key},${role_key},${years},${_id}\n`;
+		fullCSVoutput += `"${name.replace(/"/g, '""')}",${subteam_key},${class_key},${role_key},${years},${_id}\n`;
 	}
 	
 	res.setHeader('Content-Type', 'text/csv');
