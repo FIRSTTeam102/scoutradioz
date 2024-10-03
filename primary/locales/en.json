@@ -474,8 +474,9 @@
 			"yearsOnTeam": "Years on team",
 			"successSetPresent": "Present members updated successfully.",
 			"noFileSelected": "No file selected.",
-			"uploadAFile": "Upload a file",
-			"addMultipleMembers": "Add multiple members"
+			"selectAFile": "Select a file",
+			"importExport": "Import/export",
+			"downloadCSV": "Download as CSV"
 		},
 		"assignments": {
 			"pit": "Pit scouting assignments",
@@ -531,5 +532,6 @@
 	"class": "Class",
 	"subteam": "Subteam",
 	"update": "Update",
+	"upload": "Upload",
 	"year": "Year"
 }

@@ -110,16 +110,18 @@ block content
 					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="Yrs. on team")
 		//add multiple members
 		div(class='w3-row')
-			h4!=msg('manage.members.addMultipleMembers')
+			h4!=msg('manage.members.importExport')
 		div(class='w3-row')
 			form#addMembers(action='javascript:addMembers()' method='post')
 				input#fileUpload(type='file' accept='.json,.csv,application/json,text/csv' class='w3-hide')
 				div(class='w3-col m1 s6 w3-padding-small')
-					button(type='submit' class='w3-btn theme-submit w3-block')!=msg('add')
+					button(type='submit' class='w3-btn theme-submit w3-block')!=msg('upload')
 				div(class='w3-padding-small w3-col m2 s6')
-					label(for='fileUpload' class='w3-btn w3-block theme-submit')!=msg('manage.members.uploadAFile')
-				div(class='w3-padding-small w3-col sauto')
-					p#fileName!=msg('manage.members.noFileSelected')
+					label(for='fileUpload' class='w3-btn w3-block theme-submit')!=msg('manage.members.selectAFile')
+				div(class='w3-padding-small w3-col mauto')
+					div(class="theme-inline-padding")#fileName!=msg('manage.members.noFileSelected')
+			div(class="w3-right w3-padding-small")
+				a(class="w3-btn theme-submit w3-block" href="/manage/members/download-csv")!=msg('manage.members.downloadCSV')
 		h6
 			i!=msg('manage.members.teamAdminPasswordReminder')
 			i 
@@ -154,51 +156,34 @@ block content
 				return;
 			}
 			file.text().then(text => {
+				text = text.replace(/\r\n/g, '\n').trim();
 				let toUpload = text;
 				if (file.type === 'text/csv') {
 					const output = [];
-					let currLine = [];
-					let currVal = '';
-					let quoted = false;
-					for (let i = 0; i < text.length; i++) {
-						const currentChar = text[i];
-						const nextChar = text[i + 1];
-						if (currentChar === '"' && nextChar === '"') {
-							currVal += '"';
-							i++;
+					//- Convert tabs to commas and split into lines
+					const lines = text.replace(/\t/g, ',').split('\n');
+					for (i = 0; i < lines.length; i++) {
+						let line = lines[i];
+						let arr = line.split(',');
+						//- Remove quotation marks
+						arr = arr.map(str => {
+							if (str.startsWith('"') && str.endsWith('"')) str = str.substring(1, str.length - 1);
+							return str;
+						});
+						//- Check length
+						if (arr.length < 5 || arr.length > 6) {
+							return NotificationCard.error('Line is wrong length. Each line should be: name, subteam, class, permission level, years on team, (optional)id');
+						}
+						//- Grab variables from array
+						let [name, subteam_key, class_key, role_key, years, id] = arr;
+						//- Detect if the first line of the csv appears to contain titles, if so, skip
+						if (i === 0 && name.toLowerCase() === 'name' && subteam_key.toLowerCase() === 'subteam') {
+							console.log('First line appears to be column titles; skipping');
 							continue;
 						}
-						if (currentChar === '"') {
-							quoted = !quoted;
-							continue;
-						}
-						if (currentChar === ',' && !quoted) {
-							currLine.push(currVal);
-							currVal = "";
-							continue;
-						}
-						if ((currentChar === '\n' || currentChar === '\r') && !quoted) {
-							if (currentChar === '\r' && nextChar === '\n') {
-								i++;
-							}
-							currLine.push(currVal);
-							if (currLine.length !== 5) {
-								NotificationCard.error('Line wrong length.');
-								return;
-							}
-							output.push({name: currLine[0], subteam_key: currLine[1], class_key: currLine[2], role_key: currLine[3], years: currLine[4]});
-							currLine = [];
-							currVal = '';
-							continue;
-						}
-						currVal += currentChar;
+						//- Form JSON object
+						output.push({name, subteam_key, class_key, role_key, years, id});
 					}
-					currLine.push(currVal);
-					if (currLine.length !== 5) {
-						NotificationCard.error('Line wrong length.');
-						return;
-					}
-					output.push({name: currLine[0], subteam_key: currLine[1], class_key: currLine[2], role_key: currLine[3], years: currLine[4]});
 					toUpload = JSON.stringify(output);
 				}
 				$.post({
@@ -208,9 +193,11 @@ block content
 				}).done(response => {
 					if (response.status === 200) {
 						NotificationCard.show(response.message);
-						window.location.reload();
+						setTimeout(() => {
+							window.location.reload();
+						}, 1000);
 					} else {
-						NotificationCard.error(response.message);
+						NotificationCard.error(response.message, {ttl: 0, exitable: true});
 					}
 				}).fail(() => {
 					NotificationCard.error('Failed to upload members, perhaps due to a syntax error in the JSON file.');
