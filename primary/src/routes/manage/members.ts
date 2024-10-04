@@ -4,6 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import type { Org, Role, User } from 'scoutradioz-types';
+import type { BulkWriteResult, AnyBulkWriteOperation } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('members');
@@ -29,7 +30,6 @@ router.get('/', wrap(async (req, res) => {
 	let roles: Role[] = await utilities.find('roles', { access_level: { $lte: thisUser.role.access_level }});
 	
 	let config = org.config.members;
-	
 	
 	let membersByRole: Dict<User[]> = {};
 	
@@ -134,6 +134,197 @@ router.post('/addmember', wrap(async (req, res) => {
 	let writeResult = await utilities.insert('users', insertQuery);
 	
 	res.redirect('/manage/members#addMember');
+}));
+
+router.post('/addmembers', wrap(async (req, res) => {
+	logger.addContext('funcName', 'addmembers[post]');
+	logger.info('ENTER');
+
+	const thisUser = req._user;
+	const thisOrg = thisUser.org;
+
+	if (!Array.isArray(req.body)) {
+		return res.send({ status: 400, message: 'Invalid request body.' });
+	}
+		
+	let existingUserIds = await utilities.distinct('users', '_id', {org_key: thisOrg.org_key, visible: true}); // to allow only user ids in the org to be specified
+
+	let bulkWriteOps: AnyBulkWriteOperation<User>[] = []; // JL note: We can do updates to users in a bulkWrite, but NOT insert, because we need the utilities driver to add numerical IDs, and it's only done inside utilities.insert
+	let newMembers: User[] = [];
+
+	for (const member of req.body) {
+		const { name, subteam_key, class_key, years, role_key, id } = member;
+		if (!name || name == '') {
+			return res.send({
+				status: 400,
+				message: 'Every user must have a name.',
+			});
+		}
+		if (
+			name.toLowerCase() === 'default_user' ||
+				name.toLowerCase() === 'scoutradioz_admin'
+		) {
+			return res.send({
+				status: 400,
+				message: 'You cannot create a user with that name.',
+			});
+		}
+		let requestedRole: Role = await utilities.findOne('roles', { role_key }, {}, { allowCache: true });
+		if (!requestedRole) {
+			return res.send({
+				status: 400,
+				message: `Invalid role requested for user ${name}.`,
+			});
+		}
+		if (requestedRole.access_level > thisUser.role.access_level) {
+			return res.send({
+				status: 403,
+				message: `You do not have permission to create a user with that role. (user ${name})`,
+			});
+		}
+		if (!class_key || !subteam_key) {
+			return res.send({
+				status: 400,
+				message: `Please provide a subteam and class for user ${name}.`,
+			});
+		}
+		// Number("") is 0 so it passes this check, but any non-numeric characters in the string will cause Number() to become NaN, unlike parseFloat()
+		if (isNaN(Number(years))) {
+			return res.send({
+				status: 400,
+				message: `Years on team is not a number for user ${name}.`
+			});
+		}
+		if (
+			!thisOrg.config.members.classes.some(
+				(thisClass) => thisClass.class_key === class_key
+			)
+		) {
+			return res.send({
+				status: 500,
+				message: `The provided class could not be found in your organization's configuration for user ${name}.`,
+			});
+		}
+		if (
+			!thisOrg.config.members.subteams.some(
+				(thisSubteam) => thisSubteam.subteam_key === subteam_key
+			)
+		) {
+			return res.send({
+				status: 500,
+				message: `The provided subteam could not be found in your organization's configuration for user ${name}.`,
+			});
+		}
+
+
+		// calculate seniority
+		let seniority = years;
+		// sanity-check! use '0' if it's not already a parseable int
+		if (isNaN(parseInt(seniority))) seniority = '0';
+
+		// Get the first 3 characters, all lower case
+		let classPre = class_key.toLowerCase().substring(0, 3);
+		switch (classPre) {
+			case 'fre':
+				seniority += '.1';
+				break;
+			case 'sop':
+				seniority += '.2';
+				break;
+			case 'jun':
+				seniority += '.3';
+				break;
+			case 'sen':
+				seniority += '.4';
+				break;
+			default:
+				seniority += '.0';
+		}
+
+		// if id is specified, then attempt to update existing document
+		const numberId = parseInt(id);
+		if (!isNaN(numberId)) {
+			logger.debug(`Request to update member ${JSON.stringify(member)}`);
+			// validate that the user exists in the org already
+			if (!existingUserIds.includes(numberId)) {
+				return res.send({
+					status: 500,
+					message: `A user ID was specified (${numberId}) which does not correlate to an existing user in your org. For new users, do not put anything in the id column.`
+				});
+			}
+			bulkWriteOps.push({
+				updateOne: {
+					filter: {
+						_id: parseInt(id),
+						org_key: thisOrg.org_key, // make sure not to update members of another org
+						visible: true,
+						removed: {$ne: true},
+					},
+					update: {
+						$set: {
+							name,
+							role_key,
+							'org_info.subteam_key': subteam_key,
+							'org_info.class_key': class_key,
+							'org_info.years': years,
+							'org_info.seniority': seniority,
+						}
+					}
+				}
+			});
+		}
+		else {
+			logger.debug(`Request to add member ${JSON.stringify(member)}`);
+			newMembers.push({
+				org_key: thisOrg.org_key,
+				name,
+				role_key,
+				password: 'default',
+				org_info: {
+					subteam_key,
+					class_key,
+					years,
+					seniority,
+				},
+				event_info: {
+					present: false,
+					assigned: false,
+				},
+				oauth: {},
+				visible: true,
+				removed: false,
+			});
+		}
+	}
+	logger.debug(JSON.stringify(bulkWriteOps));
+	let bulkResult: BulkWriteResult | undefined;
+	if (bulkWriteOps.length > 0) bulkResult = await utilities.bulkWrite('users', bulkWriteOps);
+	if (newMembers.length > 0) await utilities.insert('users', newMembers);
+
+	res.send({ status: 200, message: `Successfully added ${newMembers.length} and updated ${bulkResult?.nModified ?? 0} members.` });
+})
+);
+
+router.get('/download-csv', wrap(async (req, res) => {
+	
+	const org_key = req._user.org_key;
+	
+	let orgMembers = await utilities.find('users', 
+		{ org_key, visible: true, removed: {$ne: true} },
+		{ sort: { role_key: 1, name: 1}}
+	);
+	
+	let fullCSVoutput = 'Name,Subteam,Class,Permission level,Years on team,ID (DO NOT EDIT THIS COLUMN OR ADD YOUR OWN)\n';
+	
+	for (let member of orgMembers) {
+		let { name, role_key, _id, org_info: { subteam_key, class_key, years } } = member;
+		fullCSVoutput += `"${name.replace(/"/g, '""')}",${subteam_key},${class_key},${role_key},${years},${_id}\n`;
+	}
+	
+	res.setHeader('Content-Type', 'text/csv');
+	res.setHeader('Content-Disposition', `attachment; filename=${org_key}_members.csv`);
+	
+	return res.send(fullCSVoutput);
 }));
 
 router.post('/updatemember', wrap(async (req, res) => {

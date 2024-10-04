@@ -40,7 +40,7 @@ block content
 					//delete button
 					div(class="w3-col s5 mauto w3-padding-small" data-delete-button)
 						//-2019-09-26 JL: Added str.replace to member.name in case there are apostrophes in the name
-						button(class="w3-btn theme-red w3-block" onclick=`confirmDelete("${member.name}", "${member._id}")`)
+						button(class="w3-btn theme-red w3-block" onclick=`confirmDelete("${member.name.replace(/"/g, "\\\"")}", "${member._id}")`)
 							span(class="sprite sp-24 sp-inline sp-delete")
 					//-updateMember submits to javascript func.
 					form(id=`updateMember_${member._id}` update-member-form action=`javascript:updateMember('${member._id}')` method="post")
@@ -108,11 +108,26 @@ block content
 				//years
 				div(class="w3-col s6 m1 w3-padding-small")
 					input(class="w3-input theme-input w3-no-border theme-inline-padding" name="years" type="number" placeholder="Yrs. on team")
+		//add multiple members
+		div(class='w3-row')
+			h4!=msg('manage.members.importExport')
+		div(class='w3-row')
+			form#addMembers(action='javascript:addMembers()' method='post')
+				input#fileUpload(type='file' accept='.json,.csv,application/json,text/csv' class='w3-hide')
+				div(class='w3-col m1 s6 w3-padding-small')
+					button(type='submit' class='w3-btn theme-submit w3-block')!=msg('upload')
+				div(class='w3-padding-small w3-col m2 s6')
+					label(for='fileUpload' class='w3-btn w3-block theme-submit')!=msg('manage.members.selectAFile')
+				div(class='w3-padding-small w3-col mauto')
+					div(class="theme-inline-padding")#fileName!=msg('manage.members.noFileSelected')
+			div(class="w3-right w3-padding-small")
+				a(class="w3-btn theme-submit w3-block" href="/manage/members/download-csv")!=msg('manage.members.downloadCSV')
 		h6
 			i!=msg('manage.members.teamAdminPasswordReminder')
 			i 
 				a(href='/manage/members/passwords' class="link")!=msg('manage.members.passwordAuditLink')
 		input(type="hidden" name="selfUserId" value=user._id)
+	script(src=`${fileRoot}/lib/csv-parse.min.js`)
 	script.
 		$('#incrementYears').on('click', () => {
 			doBatch('incrementYears', "Are you sure you want to perform this batch action (incrementing # years by 1)? THE PAGE WILL REFRESH AND YOUR CURRENT CHANGES WILL BE LOST.");
@@ -123,6 +138,66 @@ block content
 			let thisUpdateButton = $(e.target).closest('form').find('button[type=submit]');
 			thisUpdateButton.addClass('animate-outline');
 		});
+
+		$('#fileUpload').on('change', () => {
+			const files = $('#fileUpload')[0].files;
+			if (files.length > 0) {
+				$('#fileName').text(files[0].name);
+			}
+		})
+
+		function addMembers(event) {
+			console.log(event);
+			const file = $('#fileUpload')[0].files[0];
+			if (!file) {
+				NotificationCard.error('No file selected.');
+				return;
+			} else if (file.type !== 'application/json' && file.type !== 'text/csv') {
+				NotificationCard.error('Invalid file type (must be JSON or CSV).');
+				return;
+			}
+			file.text().then(text => {
+				text = text.replace(/\r\n/g, '\n').trim();
+				let toUpload = text;
+				if (file.type === 'text/csv') {
+					const output = [];
+					try {
+						const parsed = csv_parse_sync.parse(text, { 
+							columns: ["name", "subteam_key", "class_key", "role_key", "years", "id"],
+							relax_column_count_less: true,
+						});
+						for (let i = 0; i < parsed.length; i++) {
+							const row = parsed[i];
+							if (i === 0 && row.name.toLowerCase() === 'name' && row.subteam_key.toLowerCase() === 'subteam') continue;
+							if (row.name !== undefined && row.subteam_key !== undefined && row.class_key !== undefined && row.role_key !== undefined && row.years !== undefined) {
+								output.push(row);
+							} else {
+								return NotificationCard.error('CSV Parsing Error: not enough fields in row.');
+							}
+						}
+					} catch (error) {
+						return NotificationCard.error('CSV Parsing Error: ' + error.message);
+					}
+					toUpload = JSON.stringify(output);
+				}
+				$.post({
+					url: '/manage/members/addmembers',
+					data: toUpload,
+					contentType: 'application/json',
+				}).done(response => {
+					if (response.status === 200) {
+						NotificationCard.show(response.message);
+						setTimeout(() => {
+							window.location.reload();
+						}, 1000);
+					} else {
+						NotificationCard.error(response.message, {ttl: 0, exitable: true});
+					}
+				}).fail(() => {
+					NotificationCard.error('Failed to upload members, perhaps due to a syntax error in the JSON file.');
+				});
+			});
+		}
 		
 		function doBatch(key, question) {
 			let doProceed = true;

@@ -472,7 +472,11 @@
 			"noMembersOfType": "No members of this type.",
 			"permissionLevel": "Permission level",
 			"yearsOnTeam": "Years on team",
-			"successSetPresent": "Present members updated successfully."
+			"successSetPresent": "Present members updated successfully.",
+			"noFileSelected": "No file selected.",
+			"selectAFile": "Select a file",
+			"importExport": "Import/export",
+			"downloadCSV": "Download as CSV"
 		},
 		"assignments": {
 			"pit": "Pit scouting assignments",
@@ -528,5 +532,6 @@
 	"class": "Class",
 	"subteam": "Subteam",
 	"update": "Update",
+	"upload": "Upload",
 	"year": "Year"
 }
