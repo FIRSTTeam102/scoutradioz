@@ -54,6 +54,10 @@ router.get('/driveteam', wrap(async (req, res) => {
 		teamKey = 'all';
 	}
 	
+	let orgTeamKeys = [];
+	if (req._user.org.team_key) orgTeamKeys.push(req._user.org.team_key);
+	if (req._user.org.team_keys) orgTeamKeys.push(...req._user.org.team_keys);
+	
 	// Remove team key cookie if it's set but isn't inside the list of team_keys the org has
 	if (teamKeyCookie && !thisUser.org.team_keys?.includes(teamKeyCookie)) {
 		logger.info(`teamKeyCookie ${teamKeyCookie} not in list of org keys; removing cookie`);
@@ -77,10 +81,11 @@ router.get('/driveteam', wrap(async (req, res) => {
 	}
 	// If there are still no matches, then render the page with an error
 	if (!matches || !matches[0]) {
-		logger.debug('No matches found at all for the event');
+		logger.debug('No upcoming matches found for the event');
 		return res.render('./dashboard/driveteam', {
 			title: res.msg('driveDashboard.title'),
 			selectedTeam: 'all',
+			orgTeamKeys,
 		});
 	}
 	
@@ -231,10 +236,6 @@ router.get('/driveteam', wrap(async (req, res) => {
 			}
 		}
 	}
-	
-	let orgTeamKeys = [];
-	if (req._user.org.team_key) orgTeamKeys.push(req._user.org.team_key);
-	if (req._user.org.team_keys) orgTeamKeys.push(...req._user.org.team_keys);
 	
 	res.render('./dashboard/driveteam', {
 		title: res.msg('driveDashboard.title'),
@@ -496,6 +497,7 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		// numAlliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer
 		let alliances: TeamKey[][] = [];
 		for (let i = 0; i < numAlliances; i++) {
+			// @ts-ignore
 			alliances[i] = [].fill(numRounds);
 			alliances[i][0] = rankings[i].team_key; // preload first team 
 		}
