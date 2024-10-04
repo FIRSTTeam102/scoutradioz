@@ -188,6 +188,13 @@ router.post('/addmembers', wrap(async (req, res) => {
 				message: `Please provide a subteam and class for user ${name}.`,
 			});
 		}
+		// Number("") is 0 so it passes this check, but any non-numeric characters in the string will cause Number() to become NaN, unlike parseFloat()
+		if (isNaN(Number(years))) {
+			return res.send({
+				status: 400,
+				message: `Years on team is not a number for user ${name}.`
+			});
+		}
 		if (
 			!thisOrg.config.members.classes.some(
 				(thisClass) => thisClass.class_key === class_key
