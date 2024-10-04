@@ -22,13 +22,22 @@
 				"management": "כלים לניהול אירועים כגון ביקורת מטלות סקאוטינג במשחקים, החלפת סקאוטרים וניהול רשימת חברי קבוצה",
 				"free": "וכמובן, זה חינם לגמרי!"
 			},
-			"github": "ראה את הקוד והתיעוד שלנו ב-GitHub",
+			"github": "ראה את הקוד שלנו ב-GitHub",
 			"discord": "הצטרפו לדיסקורד שלנו",
 			"partner": "הגש בקשה להיות שותף בגישה מוקדמת",
-			"first": "עוד על *FIRST* ו-FRC"
+			"first": "עוד על *FIRST* ו-FRC",
+			"signup": "הירשם/י בשביל להשתמש ב-Scoutradioz בקבוצה שלך",
+			"wiki": "ראה/י את הוויקי שלנו בשביל תיעוד מפורט"
 		},
 		"view": "נוף",
-		"login": "התחבר/י"
+		"login": "התחבר/י",
+		"browse": {
+			"link": "או תלחץ/י כאן כדי לעיין במידע לפי אירוע",
+			"title": "עיין/י במידע לפי אירוע ואירגון",
+			"pastEvents": "כדי לראות מידע ישן יותר אולי תצטרך/י להשתמש באפשרות התפריט תחת אינפורמציה ודיווחים, 'עיין/י במידע מאירועים בעבר'",
+			"avgErrorRate": "חציון ציון הטעויות (ומינימום)",
+			"tspsScore": "TSPS"
+		}
 	},
 	"hello": {
 		"world": "שלום עולם!",
@@ -41,39 +50,41 @@
 			"intro": "על מנת לעזור לנו לתקן שגיאה זו, בבקשה:",
 			"screenshot": "צלם צילום מסך של הודעת השגיאה הזו,",
 			"url": "העתק את כתובת האתר המלאה של דף זה על ידי לחיצה על \"שתף\" בראש העמוד,",
-			"send": "פרסם את צילום המסך בשרת Discord שלנו או ב{github}דף GitHub{/github} שלנו, כולל מידע רלוונטי, כגון הקישור שלחצתם כדי להגיע לשגיאה זו."
+			"send": "פרסם את צילום המסך בשרת Discord שלנו או ב{github}דף ה-GitHub {/github} שלנו, כולל מידע רלוונטי, כגון הקישור שעקבתם כדי להגיע לשגיאה זו."
 		},
 		"stack": "עקבות מחסנית:"
 	},
 	"layout": {
 		"untitled": "עמוד ללא כותרת",
-		"share": "לַחֲלוֹק",
+		"share": "שיתוף",
 		"menu": {
-			"main": "תַפרִיט",
+			"main": "תפריט",
 			"user": "{user} - {org}"
 		},
 		"footer": {
-			"copyright": "זכויות יוצרים {date} FIRST Team 102 and Robotics Fund Inc.\nקוד פתוח וברישיון עם AGPLv3.",
-			"tba": "מופעל על ידי הברית הכחולה.",
-			"frc": "אנו גאים להיות משתתפים בתחרות רובוטיקה FIRST."
+			"copyright": "זכויות יוצרים {date} FIRST Team 102 and Robotics Fund Inc.\nקוד פתוח ברישיון AGPLv3.",
+			"tba": "מופעל על ידי The Blue Alliance.",
+			"frc": "אנו גאים להיות משתתפים ב-FIRST Robotics Competition.",
+			"github": "הסתכל/י בקוד המקור שלנו ב-GitHub"
 		},
 		"nav": {
-			"home": "בית",
+			"home": "דף בית",
 			"reports": {
-				"main": "מידע ודוחות: [[{event}]]",
-				"teams": "צוותים",
+				"main": "אינפורמציה ודיווחים: [[{event}]]",
+				"teams": "קבוצות",
 				"teamList": "{number}: {name}",
 				"teamStats": "סטטיסטיקה של הקבוצה",
 				"yearStats": "נתונים סטטיסטיים מלאים עבור {year}",
 				"export": {
-					"main": "ייצוא ל-CSV",
-					"match": "התאמה של נתוני צופים: [[{event}]]",
-					"pit": "נתוני סיור בורות: [[{event}]]",
-					"matchAll": "נתוני סקאוטינג תואמים: [[כל {year}]]",
-					"pitAll": "נתוני סיור בורות: [[כל {year}]]"
+					"main": "ייצוא מידע",
+					"match": "[CSV] מידע סקאוטינג Match: [[{event}]]",
+					"pit": "[CSV] מידע סקאוטינג פיט: [[{event}]]",
+					"matchAll": "[CSV] מידע סקאוטינג Match: [[הכל מ-{year}]]",
+					"pitAll": "[CSV] מידע סקאוטינג פיט: [[הכל מ-{year}]]",
+					"photos": "[Zip] תמונות רובוטים: [[הכל מ-{year}]]"
 				}
 			},
-			"scouting": "צוֹפִיוּת",
+			"scouting": "סקאוטינג",
 			"manage": {
 				"main": "נהל: [[{org}]]",
 				"members": {
@@ -82,35 +93,39 @@
 					"passwords": "ביקורת/אפס סיסמאות חברים"
 				},
 				"scouters": {
-					"main": "צופים",
-					"event": "צופים: [[{event}]]",
-					"audit": "ביקורת צופית",
-					"present": "הגדר מתנה"
+					"main": "סקאוטרים",
+					"event": "סקאוטרים: [[{event}]]",
+					"audit": "ביקורת סקאוטינג",
+					"present": "הגדר מי נמצא באירוע הנוכחי"
 				}
 			},
 			"admin": "מנהל מערכת",
 			"user": {
 				"main": "משתמש: [[{user}]]",
-				"fallback": "מִשׁתַמֵשׁ",
+				"fallback": "משתמש",
 				"login": "התחבר: [[{org}]]",
-				"logout": "להתנתק",
+				"logout": "התנתק",
 				"switchorg": "שנה ארגון"
 			},
-			"help": "זקוק לעזרה? בדוק את הוויקי שלנו!"
+			"help": "זקוק לעזרה? בדוק את הוויקי שלנו!",
+			"thanks": "תודות מיוחדות"
 		}
 	},
 	"home": {
-		"title": "בית",
+		"title": "דף בית",
 		"menu": "לחץ על {menu} בפינה השמאלית העליונה כדי לפתוח את התפריט",
 		"tournamentInfo": "מידע על הטורניר",
-		"teamInfo": "מידע על הצוות",
-		"teamNum": "צוות מס'",
+		"teamInfo": "מידע על הקבוצה",
+		"teamNum": "מס' קבוצה",
 		"stats": "סטטיסטיקות",
-		"userLogin": "כניסת משתמש",
-		"scoutingDashboard": "לוח מחוונים לצופים",
-		"management": "הַנהָלָה",
+		"userLogin": "התחברות משתמש",
+		"scoutingDashboard": "דשבורד לסקאוטינג",
+		"management": "ניהול",
 		"admin": "מנהל מערכת",
-		"specifyTeam": "עליך לציין צוות."
+		"specifyTeam": "עליך לציין צוות.",
+		"formDemos": "הצגה מוקדמת של הטפסים",
+		"matchFormDemo": "טופס ל-Match",
+		"pitFormDemo": "טופס לפיט"
 	},
 	"share": {
 		"changeOrg": "אתה צופה ב-{org}.\nכדי לשנות את הארגון שברצונך להציג, לחץ על *Org: {org}* בתפריט ובחר *Change Organization*."
@@ -219,7 +234,12 @@
 		"teamName": "שם קבוצה",
 		"none": "אף אחד",
 		"photo": "תמונה",
-		"loadTeamPhotos": "רענן עם תמונות צוות"
+		"loadTeamPhotos": "רענן עם תמונות צוות",
+		"sfNumber": "חצי גמר {number}",
+		"fNumber": "גמר {number}",
+		"matchResultMissedNotAdmin": "בקש ממנהל לבדוק מידע על Matches מ-FIRST ולעדכן כל Match חסר.",
+		"matchResultMissedAdmin": "לחץ כאן, בדק מידע ל-Match מ-FIRST ועדכן כל Match חסר.",
+		"matchResultMissedWarning": "אזהרה: ייתכן שהתפספסה תוצאת Match!"
 	},
 	"driveDashboard": {
 		"title": "לוח המחוונים של צוות Drive",
@@ -237,7 +257,8 @@
 		"legendShowHide": "לחץ על אגדה כדי להסתיר/להראות את הצוות",
 		"futureMatches": "משחקים עתידיים:",
 		"futureMatchesTeam": "משחקים עתידיים לקבוצה {team}:",
-		"compareAlliance": "השוו בריתות"
+		"compareAlliance": "השוו בריתות",
+		"otherTeams": "קבוצות אחרות"
 	},
 	"allianceselection": {
 		"title": "בחירת ברית",
@@ -254,7 +275,10 @@
 		"priority": "עדיפות",
 		"priorityAbbr": "V",
 		"team": "קְבוּצָה",
-		"rank": "דירוג FRC"
+		"rank": "דירוג FRC",
+		"numAlliances": "מספר בריתות:",
+		"numRounds": "מספר סבבים:",
+		"options": "אפשרויות &#9660;"
 	},
 	"metrics": {
 		"raw": "נתונים גולמיים",
@@ -374,7 +398,8 @@
 		"exportData": {
 			"noType": "לא צוין סוג נתונים (או לא חוקי) לייצוא.",
 			"noData": "לא נמצאו נתונים עבור סוג '{type}'."
-		}
+		},
+		"browsePastEvents": "עיין במידע מאירועים בעבר"
 	},
 	"errors": {
 		"teamMissing": "לא ניתן היה למצוא פרטים עבור הצוות {team}. האם רשימת הצוות השתנתה מאז שיצרת את משימות הסקאוטינג?",
@@ -402,17 +427,38 @@
 			"editTeams": "ערוך רשימת צוותים",
 			"eventData": "נתוני אירוע: [[{event}]]",
 			"getCurrentTeams": "עדכון רשימת הקבוצות",
-			"matches": "התאמות",
+			"matches": "Matches (מידע מ-FIRST)",
 			"recalcDerived": "חישוב מחדש של מדדים נגזרים",
-			"setCurrentEvent": "הגדר את האירוע הנוכחי"
+			"setCurrentEvent": "הגדר את האירוע הנוכחי",
+			"currentEvent": "אירוע נוכחי - {event}",
+			"confirmClear": "האם את/ה בטוח/ה שהינך רוצה למחוק את האירוע הנוכחי בשביל *{orgName}*?",
+			"manual": "הכנסת מידע ידנית",
+			"noEvent": "אף ארוע לא נרשם"
 		},
 		"assignments": {
 			"swapMatchAssignments": "החלף נקודות התאמה לכניסה/יציאה",
-			"swapPitAssignments": "החלפת משימות צופי בורות"
+			"swapPitAssignments": "החלפת משימות צופי בורות",
+			"availablePotentialScouters": {
+				"tooltip": "הסקאוטרים וחברים שמופיעים ברשימה זו הם רק אלו ש[נרשמו כנוכחים]({url})."
+			}
+		},
+		"members": {
+			"yearsOnTeam": "שנים בקבוצה",
+			"noMembersOfType": "אין משתמשים מסוג זה.",
+			"main": "חברי ארגון",
+			"passwordAuditLink": "בדק/י כאן כדי לראות אם הם יצרו ססמה.",
+			"teamAdminPasswordReminder": "אם את/ה יותר/ת משתמש מנהל קבוצה, אנא וודא/י שהם מתחברים ויוצרים ססמה בטוחה לעצמם. אחרת תלמיד יוכל להתחבר במקומם."
 		}
 	},
 	"tryAgainLater": "בבקשה נסה שוב מאוחר יותר.",
 	"yes": "כן",
 	"no": "לא",
-	"matches": "התאמות"
+	"matches": "Matches",
+	"thankyou": {
+		"2023inseason": "בעונת 2023",
+		"title": "תודה!",
+		"thanks": "תודה לשותפי הגישה המקדימה שלנו!",
+		"threestarters": "שלושת המתחילים",
+		"2020to2022": "{year2020} עד {year2022}"
+	}
 }
