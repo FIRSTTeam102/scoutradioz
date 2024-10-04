@@ -23,7 +23,7 @@ block content
 
 		table(class="w3-table" id="metricTable")
 			tr
-				th(class="w3-center")!=msg('reports.match')
+				th(class="w3-center")!=msg('reports.match', {level: '', number: '#'})
 				- var colIdx = 2;
 				for item in layout
 					-//if (item.type == 'checkbox' || item.type == 'counter' || item.type == 'badcounter')
