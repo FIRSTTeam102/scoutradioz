@@ -1,7 +1,7 @@
 {
 	"index": {
-		"fulltitle": "Scoutradioz：FRC 偵察即服務",
-		"welcome": "歡迎來到童軍電台",
+		"fulltitle": "Scoutradioz：FRC 童軍活動即服務",
+		"welcome": "歡迎來到 Scoutradioz",
 		"choice": "你是：",
 		"viewer": {
 			"choice": "想查看數據",
@@ -9,7 +9,7 @@
 			"action": "在下面選擇一個組織，看看他們收集了哪些數據！"
 		},
 		"scouter": {
-			"choice": "登錄偵察"
+			"choice": "正在登入偵察"
 		},
 		"info": {
 			"choice": "有興趣了解 Scoutradioz 以及您的團隊如何使用它",
@@ -22,13 +22,21 @@
 				"management": "事件管理工具，例如審核比賽分配、交換球探進出以及管理成員列表",
 				"free": "當然，它是完全免費的！"
 			},
-			"github": "在 GitHub 上查看我們的代碼和文檔",
+			"github": "在 GitHub 上查看我們的程式碼",
 			"discord": "加入我們的 Discord",
 			"partner": "申請成為搶先體驗合作夥伴",
-			"first": "有關 *FIRST* 和 FRC 的更多信息"
+			"first": "有關 *FIRST* 和 FRC 的更多資訊",
+			"wiki": "請參閱我們的維基以查看詳細的文件",
+			"signup": "為你的團隊註冊以使用 Scoutradioz"
 		},
-		"view": "看法",
-		"login": "登錄"
+		"view": "檢視",
+		"login": "登入",
+		"browse": {
+			"link": "或點擊此處按事件瀏覽資料",
+			"pastEvents": "要查看較舊的資料，您可能需要使用「資訊和報告」下的選單選項「瀏覽過去事件的資料」",
+			"title": "按事件和組織檢視資料",
+			"tspsScore": "TSPS"
+		}
 	},
 	"hello": {
 		"world": "你好世界！",
@@ -39,47 +47,48 @@
 		"title": "錯誤：{message}",
 		"report": {
 			"intro": "為了幫助我們修復此錯誤，請：",
-			"screenshot": "截取此錯誤消息的屏幕截圖，",
-			"url": "單擊頁面頂部的“共享”，複製此頁面的完整 URL，",
-			"send": "將屏幕截圖發佈到我們的 Discord 服務器或我們的 {github}GitHub 頁面{/github}，包括相關信息，例如您點擊了導致此錯誤的鏈接。"
+			"screenshot": "為此錯誤消息進行螢幕截圖，",
+			"url": "點擊頁面頂部的「分享」以複製此頁面的完整網址，",
+			"send": "將螢幕截圖發佈至我們的 Discord 伺服器或我們的 {github}GitHub 頁面{/github}中，包括相關資訊，例如你點擊的連結以得到此錯誤。"
 		},
 		"stack": "堆棧跟踪："
 	},
 	"layout": {
-		"untitled": "無標題頁",
+		"untitled": "無標題頁面",
 		"share": "分享",
 		"menu": {
-			"main": "菜單",
+			"main": "選單",
 			"user": "{user} - {org}"
 		},
 		"footer": {
-			"copyright": "版權所有 {date} FIRST Team 102 和 Robotics Fund Inc.\n開源並獲得 AGPLv3 許可。",
+			"copyright": "版權所有 {date} FIRST Team 102 和 Robotics Fund Inc.\n開源並基於許可證 AGPLv3。",
 			"tba": "由藍色聯盟提供支持。",
-			"frc": "我們很自豪能成為 FIRST 機器人競賽的參與者。"
+			"frc": "我們很自豪能成為 FIRST 機器人競賽的參與者。",
+			"github": "在 GitHub 上查看我們的原始碼"
 		},
 		"nav": {
-			"home": "家",
+			"home": "首頁",
 			"reports": {
-				"main": "信息和報告：[[{event}]]",
+				"main": "資訊與報告：[[{event}]]",
 				"teams": "團隊",
-				"teamList": "{number}: {name}",
-				"teamStats": "球隊數據",
-				"yearStats": "{year}的完整統計數據",
+				"teamList": "{number}：{name}",
+				"teamStats": "團隊統計",
+				"yearStats": "{year} 年的完整統計數據",
 				"export": {
-					"main": "導出為 CSV",
+					"main": "匯出資料",
 					"match": "匹配球探數據：[[{event}]]",
 					"pit": "場地偵察數據：[[{event}]]",
 					"matchAll": "匹配球探數據：[[所有 {year}]]",
 					"pitAll": "場地勘探數據：[[{year} 年]]"
 				}
 			},
-			"scouting": "偵察",
+			"scouting": "童軍活動",
 			"manage": {
 				"main": "管理：[[{org}]]",
 				"members": {
 					"main": "成員",
-					"list": "會員名單",
-					"passwords": "審核/重置會員密碼"
+					"list": "成員名單",
+					"passwords": "審核／重置成員密碼"
 				},
 				"scouters": {
 					"main": "童子軍",
@@ -90,13 +99,13 @@
 			},
 			"admin": "行政",
 			"user": {
-				"main": "用戶：[[{user}]]",
-				"fallback": "用戶",
-				"login": "登錄：[[{org}]]",
+				"main": "使用者：[[{user}]]",
+				"fallback": "使用者",
+				"login": "登入：[[{org}]]",
 				"logout": "登出",
-				"switchorg": "改變組織"
+				"switchorg": "變更組織"
 			},
-			"help": "需要幫忙？檢查我們的維基！"
+			"help": "需要幫忙？查看我們的維基！"
 		}
 	},
 	"home": {
@@ -110,7 +119,8 @@
 		"scoutingDashboard": "偵察儀表板",
 		"management": "管理",
 		"admin": "行政",
-		"specifyTeam": "您必須指定一個團隊。"
+		"specifyTeam": "您必須指定一個團隊。",
+		"formDemos": "預覽表單"
 	},
 	"share": {
 		"changeOrg": "您正在查看 {org}。\n要更改您希望查看的組織，請單擊菜單中的 *Org: {org}* 並選擇 *Change Organization*。"
@@ -226,9 +236,9 @@
 		"noTeams": "沒有找到參加本次錦標賽的球隊。",
 		"noMatches": "本次錦標賽沒有即將到來的比賽。",
 		"noMatchesTeam": "找不到團隊 {team} 的匹配項。",
-		"viewFor": "查看儀表板…",
+		"viewFor": "檢視儀錶板…",
 		"chooseTeam": "[選擇團隊]",
-		"viewOr": "或者",
+		"viewOr": "或",
 		"allTeams": "所有球隊",
 		"selectedTeam": "入選團隊",
 		"nextMatch": "下一場比賽：",
