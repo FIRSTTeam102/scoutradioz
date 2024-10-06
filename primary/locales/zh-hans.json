@@ -1,7 +1,7 @@
 {
 	"index": {
 		"fulltitle": "Scoutradioz：FRC 侦察即服务",
-		"welcome": "欢迎来到童军电台",
+		"welcome": "欢迎来到 Scoutradioz",
 		"choice": "你是：",
 		"viewer": {
 			"choice": "想查看数据",
@@ -25,10 +25,19 @@
 			"github": "在 GitHub 上查看我们的代码和文档",
 			"discord": "加入我们的 Discord",
 			"partner": "申请成为抢先体验合作伙伴",
-			"first": "有关 *FIRST* 和 FRC 的更多信息"
+			"first": "有关 *FIRST* 和 FRC 的更多信息",
+			"wiki": "请参阅我们的维基以查看详细的文件",
+			"signup": "为你的团队注册以使用 Scoutradioz"
 		},
 		"view": "浏览",
-		"login": "登录"
+		"login": "登录",
+		"browse": {
+			"link": "或点此浏览各赛事数据",
+			"title": "根据赛事与组织浏览数据",
+			"pastEvents": "若想浏览更早的数据可用“浏览更早赛事的数据”，位于 信息与报告 下的菜单选项",
+			"avgErrorRate": "Mdn. 错误率（与最小值）",
+			"tspsScore": "TSPS"
+		}
 	},
 	"hello": {
 		"world": "你好世界！",
@@ -70,7 +79,8 @@
 					"match": "匹配球探数据：[[{event}]]",
 					"pit": "场地侦察数据：[[{event}]]",
 					"matchAll": "匹配球探数据：[[所有 {year}]]",
-					"pitAll": "场地勘探数据：[[{year} 年]]"
+					"pitAll": "场地勘探数据：[[{year} 年]]",
+					"photos": "[Zip]机器人图片：[{year}的全部]"
 				}
 			},
 			"scouting": "侦察",
@@ -113,7 +123,8 @@
 		"admin": "行政",
 		"specifyTeam": "您必须指定一个团队。",
 		"formDemos": "表格预览",
-		"matchFormDemo": "赛事表格"
+		"matchFormDemo": "赛事表格",
+		"pitFormDemo": "维修站表"
 	},
 	"share": {
 		"changeOrg": "您正在查看 {org}。\n要更改您希望查看的组织，请单击菜单中的 *Org: {org}* 并选择 *Change Organization*。"
@@ -222,7 +233,11 @@
 		"teamName": "队名",
 		"none": "没有任何",
 		"photo": "照片",
-		"loadTeamPhotos": "刷新团队照片"
+		"loadTeamPhotos": "刷新团队照片",
+		"sfNumber": "半决赛 {number}",
+		"fNumber": "决赛{number}",
+		"matchResultMissedAdmin": "点此查看FIRST赛事数据并上传缺失赛事",
+		"matchResultMissedWarning": "警告：一场赛事结果可能被遗漏！"
 	},
 	"driveDashboard": {
 		"title": "驱动团队仪表板",
@@ -412,6 +427,9 @@
 		"assignments": {
 			"swapMatchAssignments": "换入/换出比赛账户",
 			"swapPitAssignments": "交换矿坑侦察任务"
+		},
+		"members": {
+			"passwordAuditLink": "点此查看他们是否有设置密码"
 		}
 	},
 	"tryAgainLater": "请稍后再试。",
@@ -422,7 +440,9 @@
 	"year": "年份",
 	"thankyou": {
 		"2023offseason": "2023非赛季",
-		"2023inseason": "2023赛季"
+		"2023inseason": "2023赛季",
+		"title": "谢谢！",
+		"2020to2022": "{year2020} 到 {year2022}"
 	},
 	"update": "更新"
 }
