@@ -125,6 +125,10 @@ function doExportAndArchive() {
 		.collection('users')
 		.find(orgKeyInSpecified)
 		.toArray();
+	const layout = await dbApp
+		.collection('layout')
+		.find(orgKeyAndYearInSpecified)
+		.toArray();
 	
 	const events = await dbApp
 		.collection('events')
@@ -179,6 +183,7 @@ function doExportAndArchive() {
 	if (rankings.length > 0) await dbExport.collection('rankings').insertMany(rankings);
 	if (teams.length > 0) await dbExport.collection('teams').insertMany(teams);
 	if (roles.length > 0) await dbExport.collection('roles').insertMany(roles);
+	if (layout.length > 0) await dbExport.collection('layout').insertMany(layout);
 	
 	// Now, to do some pruning...
 	console.log('Pruning users that have no scouting assignments...');
