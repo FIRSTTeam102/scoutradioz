@@ -29,7 +29,7 @@ $(() => {
 });
 
 
-declare function debugToHTML(message: any): void;
+declare function debugToHTML(message: any, replace?: boolean): void;
 /**
  * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
  * @param cb Callback to run on a resize event.
@@ -74,7 +74,7 @@ declare function onResize(cb: () => void): void;
 		'padding': '8px 16px',
 	});
 	
-	window.debugToHTML = function(message: string) {
+	window.debugToHTML = function(message: string, replace?: boolean) {
 		
 		let text;
 		
@@ -99,6 +99,7 @@ declare function onResize(cb: () => void): void;
 		let newTextElem = document.createElement('pre');
 		$(newTextElem).text(text).css({'margin': '0.5em 0px'});
 		
+		if (replace === true) $(debugLogger).html('');
 		$(debugLogger).append(newTextElem);
 	};
 })();
