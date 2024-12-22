@@ -1515,6 +1515,10 @@ router.get('/exportdata', wrap(async (req, res) => {
 					if (matchDataHelper.isMetric(thisItem.type) && !isOtherNotesAndUnauthorized(thisItem)) 
 						headerRow += ',' + thisItem.id;
 				}
+				// add super notes if authorized
+				if (isAuthorized) {
+					headerRow += ',superNotes';
+				}
 				//logger.debug("headerRow=" + headerRow);
 				fullCSVoutput = headerRow;
 			}
@@ -1548,10 +1552,10 @@ router.get('/exportdata', wrap(async (req, res) => {
 			// add scouter name if authorized
 			if (isAuthorized) {
 				if ('actual_scorer' in thisScored) 
-					dataRow += ',' + (thisScored.actual_scorer?.name ?? '');
+					dataRow += ',"' + (thisScored.actual_scorer?.name ?? '') + '"';
 				
 				else if ('actual_scouter' in thisScored) 
-					dataRow += ',' + (thisScored.actual_scouter?.name ?? '');
+					dataRow += ',"' + (thisScored.actual_scouter?.name ?? '') + '"';
 				
 				else
 					dataRow += ',';
@@ -1568,6 +1572,9 @@ router.get('/exportdata', wrap(async (req, res) => {
 						dataRow += '"' + thisVal.replace(/(\r\n|\n|\r)/gm,'') + '"';
 					}
 				}
+			}
+			if (isAuthorized) {
+				dataRow += ',"' + ('' + (thisScored.super_data?.otherNotes ?? '')).replace(/(\r\n|\n|\r)/gm,'') + '"';	
 			}
 			//logger.debug("dataRow=" + dataRow);
 			fullCSVoutput += '\n' + dataRow;
