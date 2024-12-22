@@ -1496,6 +1496,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	}
 	let pivotDataKeys = pivotDataCols.split(',');
 	let isFirstRow = true;
+	const isAuthorized = req._user.role.access_level >= Permissions.ACCESS_SCOUTER;
 	for (let i in scored) {
 		if (scored[i].data) {
 			let thisScored = scored[i];
@@ -1504,6 +1505,10 @@ router.get('/exportdata', wrap(async (req, res) => {
 				isFirstRow = false;
 				// initialize header row with particular columns
 				let headerRow = pivotDataCols;
+				// add scouter name if authorized
+				if (isAuthorized) {
+					headerRow += ',scouter';
+				}
 				// add on metric IDs
 				for (let thisItem of matchLayout) {
 					// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
@@ -1540,6 +1545,18 @@ router.get('/exportdata', wrap(async (req, res) => {
 				dataRow += thisVal.replace(/(\r\n|\n|\r)/gm,'');
 			}
 
+			// add scouter name if authorized
+			if (isAuthorized) {
+				if ('actual_scorer' in thisScored) 
+					dataRow += ',' + (thisScored.actual_scorer?.name ?? '');
+				
+				else if ('actual_scouter' in thisScored) 
+					dataRow += ',' + (thisScored.actual_scouter?.name ?? '');
+				
+				else
+					dataRow += ',';
+			}
+
 			// cycle through the metrics
 			for (let thisItem of matchLayout) {
 				// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
@@ -1559,7 +1576,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	
 	// If the layout item is otherNotes and the user is unauthorized to view it, return false.
 	function isOtherNotesAndUnauthorized(thisItem: Layout) {
-		return (thisItem.id === 'otherNotes' && req._user.role.access_level < Permissions.ACCESS_SCOUTER);
+		return (thisItem.id === 'otherNotes' && !isAuthorized);
 	}
 
 	logger.info('EXIT returning ' + scored.length + ' rows of CSV');
