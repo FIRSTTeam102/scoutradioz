@@ -203,6 +203,7 @@ async function test() {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
+			'in-modal-dialog': 'true',
 		},
 		body: JSON.stringify({
 			testData: jsonString,
