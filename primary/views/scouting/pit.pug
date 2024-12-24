@@ -101,8 +101,10 @@ block content
 						when "spacer"
 							include templates/formSpacer
 		br 
-		button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit")!=msg('scouting.submit')
-		p 
+		//- 2024-10-19 JL: Hide submit button if created from the test form button
+		if !inModalDialog
+			button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit")!=msg('scouting.submit')
+			p
 	each element in layout
 		case element.type
 			when "checkbox"
