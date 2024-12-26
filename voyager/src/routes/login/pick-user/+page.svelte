@@ -126,7 +126,9 @@
 					style="width: 100%"
 					type="password"
 					bind:value={password}>
-					<HelperText slot="helper">{msg('user.login.orgpasswordhelptext')}</HelperText>
+					{#snippet helper()}
+						<HelperText>{msg('user.login.orgpasswordhelptext')}</HelperText>
+					{/snippet}
 				</Textfield>
 			</div>
 		{/if}
@@ -136,7 +138,7 @@
 				class="btn-same-height-as-input"
 				style="width: 100%"
 				disabled={!user}
-				on:click={async () => {
+				onclick={async () => {
 					// Log in user
 					await updateUser(user);
 					goto(`/sync/lead#2`);

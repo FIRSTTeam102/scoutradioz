@@ -4,21 +4,24 @@
 	import Multiselect from './Multiselect.svelte';
 	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
+	import type { FormData } from './ScoutingFormUtils'
 
 	import type { LayoutField } from '$lib/types';
 	import { onMount } from 'svelte';
 	
-	export let layout: LayoutField[];
-	export let teamNumber: number;
-	layout.map((item) => {
-		if (item.label) item.label = item.label.replace(/\{\{team_number\}\}/g, String(teamNumber));
-		return item;
-	});
-	export let formData: {
-		[key: string]: unknown;
-	} = {};
+	interface Props {
+		layout: LayoutField[];
+		teamNumber: number;
+		formData: FormData;
+		onchange: () => void;
+	};
 
-	let defaultValuesMap: { [key: string]: boolean } = {};
+	let { layout, teamNumber, formData = $bindable(), onchange }: Props = $props();
+	
+	// layout.map((item) => {
+	// 	if (item.label) item.label = item.label.replace(/\{\{team_number\}\}/g, String(teamNumber));
+	// 	return item;
+	// });
 </script>
 
 <div class="form">
@@ -28,41 +31,36 @@
 	{#each layout as field}
 		{#if field.id && field.type === 'checkbox'}
 			<Checkbox
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:checked={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 			/>
 		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
 			<Counter
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 				isBad={field.type === 'badcounter'}
 				allowNegative={field.type === 'counterallownegative'}
 			/>
 		{:else if field.id && (field.type === 'slider' || field.type === 'timeslider')}
 			<Slider
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 				isTime={field.type === 'timeslider'}
 			/>
 		{:else if field.id && field.type === 'multiselect'}
 			<Multiselect
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 			/>
 		{:else if field.id && field.type === 'textblock'}
 			<Textblock
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 			/>
 		{:else if field.type === 'h2'}
 			<h2 id={field.id}>{field.label}</h2>

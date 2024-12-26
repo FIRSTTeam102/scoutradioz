@@ -75,5 +75,10 @@ export default defineConfig({
 	},
 	define: {
 		'process.env.NODE_ENV': '"production"'
+	},
+	resolve: {
+		alias: {
+			$modules: path.resolve('./node_modules')
+		}
 	}
 });

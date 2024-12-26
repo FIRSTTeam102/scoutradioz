@@ -104,7 +104,7 @@
 					style="width: 100%; justify-self: center"
 					variant="unelevated"
 					disabled={!org || !org_password}
-					on:click={() => {
+					onclick={() => {
 						assert(org && org_password, 'Org / org password not specified');
 
 						logger.debug('Sending request to /login/pick-org');

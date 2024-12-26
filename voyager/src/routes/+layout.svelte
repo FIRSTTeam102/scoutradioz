@@ -278,7 +278,7 @@
 				<IconButton
 					class="material-icons"
 					aria-label="Open menu"
-					on:click={() => {
+					onclick={() => {
 						menuOpen = !menuOpen;
 					}}>menu</IconButton>
 				<IconButton class="header-logo" disabled>
@@ -298,7 +298,7 @@
 			<Section align="end" toolbar>
 				{#if updateAvailable}
 					<Wrapper>
-						<IconButton class="material-icons" on:click={handleInstallButtonClick}>system_update</IconButton>
+						<IconButton class="material-icons" onclick={handleInstallButtonClick}>system_update</IconButton>
 						<Tooltip>{msg('pwa.updateAvailable')}</Tooltip>
 					</Wrapper>
 				{/if}
@@ -317,7 +317,7 @@
 								'spinning': refreshButtonSpinning
 							})}
 							aria-label="Sync"
-							on:click={async () => {
+							onclick={async () => {
 								if (!$refreshContext.onClick) return;
 								refreshButtonAnimationContext.play();
 								await $refreshContext.onClick();
@@ -334,7 +334,7 @@
 					</Wrapper>
 				{/if}
 				<!-- <Wrapper> -->
-				<!-- 	<IconButton class="material-icons" aria-label="Share" on:click={() => share()} -->
+				<!-- 	<IconButton class="material-icons" aria-label="Share" onclick={() => share()} -->
 				<!-- 		>qr_code_scanner</IconButton -->
 				<!-- 	> -->
 				<!-- 	<Tooltip>Share</Tooltip> -->
@@ -406,7 +406,7 @@
 				<LText>{msg('user.preferences.title')}</LText>
 			</LItem>
 			<LItem
-				on:click={() => {
+				onclick={() => {
 					menuOpen = false;
 					languagePicker.open();
 				}}>

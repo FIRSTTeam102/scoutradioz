@@ -14,21 +14,20 @@
 	let snackbar = getContext('snackbar') as SnackbarContext;
 	const logger = getLogger('LeadQRCode');
 
-	$: event_key = $page.data.event_key as string;
-	$: org_key = $page.data.org_key as string;
+	let event_key = $derived($page.data.event_key as string);
+	let org_key = $derived($page.data.org_key as string);
 
-	let numMatchesToGrab: number;
-	let whichUsersToInclude: 'assigned' | 'everyone' = 'assigned';
+	let numMatchesToGrab = $state(0);
+	let whichUsersToInclude: 'assigned' | 'everyone' =$state( 'assigned');
 
-	let qrCodeType: 'matchscouting' | 'pitscouting' | 'metadata' = 'matchscouting';
+	let qrCodeType: 'matchscouting' | 'pitscouting' | 'metadata' = $state('matchscouting');
 
 	const NUM_MATCHES_GROUP = 3;
 
-	let base64Data: string = '';
+	let base64Data: string = $state('');
 
 	// Todo: instead of depending on lightmatches, create a picker based on the empty matchscouting entries, with a start # and end #
-	let numMatchesAtEvent: Observable<number>;
-	$: numMatchesAtEvent = liveQuery(async () => {
+	let numMatchesAtEvent: Observable<number> = $derived(liveQuery(async () => {
 		let number = await db.lightmatches
 			.where({
 				event_key: event_key,
@@ -40,17 +39,18 @@
 		numMatchesToGrab = Math.min(number, NUM_MATCHES_GROUP * 2);
 
 		return number;
-	});
+	}));
 
 	function getHackyCurrentMatchNumber() {
 		return parseInt(localStorage.getItem(`match_number_${event_key}`) || '1');
 	}
 
-	let firstMatchNumber = 0;
-	let lastMatchNumber = 0;
+	let firstMatchNumber = $state(0);
+	let lastMatchNumber = $state(0);
 	
-	async function handleChange () {
-		console.log('func running');
+	$effect(() => { handleChange(qrCodeType, numMatchesToGrab, whichUsersToInclude) });
+	
+	async function handleChange (qrCodeType: string, numMatchesToGrab: number, whichUsersToInclude: string) {
 		try {
 			if (qrCodeType === 'matchscouting' && numMatchesToGrab > 0) {
 				logger.debug('Match number:', getHackyCurrentMatchNumber());
@@ -143,7 +143,7 @@
 <section class="pad grid grid-cols-1 place-items-center gap-4">
 	<div class="grid grid-cols-2 gap-4">
 		<div>
-			<Select variant="filled" bind:value={qrCodeType} on:MDCSelect:change={handleChange}>
+			<Select variant="filled" bind:value={qrCodeType}>
 				<Option value="matchscouting">{msg('scouting.match')}</Option>
 				<Option value="pitscouting">{msg('scouting.pit')}</Option>
 				<Option value="metadata">{msg('qrsync.usersAndTeams')}</Option>
@@ -151,7 +151,7 @@
 		</div>
 		<!-- JL note: not using an if block because numMatchesToGrab becomes undefined when the select is unmounted -->
 		<div class:hidden={qrCodeType !== 'matchscouting'}>
-			<Select variant="filled" bind:value={numMatchesToGrab} label="Matches" key={numMatchesGetKey} on:MDCSelect:change={handleChange}>
+			<Select variant="filled" bind:value={numMatchesToGrab} label="Matches" key={numMatchesGetKey}>
 				<!-- JL note: the " || 50" is to guarantee that there are some options in the select to avoid numMatchesToGrab becoming undefined -->
 				{#each Array($numMatchesAtEvent || 50) as _, index}
 					<!-- Blocks of 5 OR total # of matches -->
@@ -159,15 +159,21 @@
 						<Option value={index + 1}>{index + 1}</Option>
 					{/if}
 				{/each}
+				{#snippet helperText()}
+					{msg('qrsync.numMatchesToDisplay')}
+				{/snippet}
 
-				<svelte:fragment slot="helperText">{msg('qrsync.numMatchesToDisplay')}</svelte:fragment>
+				<!-- <svelte:fragment slot="helperText">{msg('qrsync.numMatchesToDisplay')}</svelte:fragment> -->
 			</Select>
 		</div>
 		<div class:hidden={qrCodeType !== 'metadata'}>
 			<Select variant="filled" bind:value={whichUsersToInclude}>
 				<Option value="everyone">{msg('qrsync.everyone')}</Option>
 				<Option value="assigned">{msg('qrsync.onlyAssignedAndPresent')}</Option>
-				<svelte:fragment slot="helperText">{msg('qrsync.whomToInclude')}</svelte:fragment>
+				{#snippet helperText()}
+					{msg('qrsync.whomToInclude')}
+				{/snippet}
+				<!-- <svelte:fragment slot="helperText">{msg('qrsync.whomToInclude')}</svelte:fragment> -->
 			</Select>
 		</div>
 	</div>

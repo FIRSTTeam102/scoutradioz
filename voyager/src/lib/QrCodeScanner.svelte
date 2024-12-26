@@ -3,7 +3,7 @@
 	import { getAvailableWindowSize } from './utils';
 	import { getLogger } from './logger';
 	import type { SnackbarContext } from './types';
-	import UAParser from 'ua-parser-js';
+	import { UAParser } from 'ua-parser-js';
 
 	const logger = getLogger('lib/QrCodeScanner');
 
@@ -11,8 +11,7 @@
 	let shouldFlipDimensionsInPortrait = false;
 	let shouldRequestBiggerResolutionAndCrop = false;
 	if ('navigator' in globalThis && 'userAgent' in navigator) {
-		const parser = new UAParser(navigator.userAgent);
-		useragent = parser.getResult();
+		useragent = UAParser(navigator.userAgent);
 		// Known devices that flip horizontal/vertical dimensions:
 		// 	- iOS: all browsers, including firefox, only in portrait mode
 		//  - Android: All browsers except firefox, only in portrait mode
@@ -416,7 +415,7 @@
 <div bind:this={parent} class="parent">
 	<!-- <input type="number" bind:value={MIN_SCAN_INTERVAL} /> -->
 	<!-- <div class="debug-info">{@html debugInfo}</div> -->
-	<canvas id="canvas" bind:this={canvas} />
+	<canvas id="canvas" bind:this={canvas} ></canvas>
 	{#if scanning}
 		<div id="wrongResolutionMsg">
 			If you can see this, it means we predicted the resolution of the video stream wrong (or you're

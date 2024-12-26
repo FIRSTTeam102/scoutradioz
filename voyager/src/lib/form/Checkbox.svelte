@@ -2,14 +2,20 @@
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
 	import type { LayoutField } from '$lib/types';
+	import { createEventDispatcher } from 'svelte';
 
-	export let checked: any = false; // any because of weird casting to generic data
-	export let field: LayoutField;
-	export let isDefaultValue: boolean;
-	$: isDefaultValue = (checked === false);
+	interface Props {
+		checked?: any; // any because of weird casting to generic data
+		field: LayoutField;
+		onchange: () => void;
+	}
+
+	let { checked = $bindable(false), field, onchange }: Props = $props();
 </script>
 
 <FormField>
-	<Checkbox bind:checked on:change/>
-	<span slot="label">{field.label}</span>
+	<Checkbox bind:checked {onchange} />
+	{#snippet label()}
+		<span>{field.label}</span>
+	{/snippet}
 </FormField>

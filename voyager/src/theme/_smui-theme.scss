@@ -12,6 +12,8 @@
 	$error: color-palette.$red-700
 );
 
+@import './cards.scss';
+
 html,
 body {
 	background-color: #000;

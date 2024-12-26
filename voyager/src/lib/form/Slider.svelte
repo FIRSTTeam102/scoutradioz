@@ -3,12 +3,20 @@
 	import type { LayoutField } from '$lib/types';
 	import type { FormSliderOptions } from 'scoutradioz-types';
 
-	export let isTime = false;
-	export let field: LayoutField;
+	interface Props {
+		isTime?: boolean;
+		field: LayoutField;
+		value?: any; // any because of weird casting to generic data
+		onchange: () => void;
+	}
+
+	let {
+		isTime = false,
+		field,
+		value = $bindable((field.options as FormSliderOptions).min),
+		onchange,
+	}: Props = $props();
 	let options = field.options as FormSliderOptions;
-	export let value: any = options.min; // any because of weird casting to generic data
-	export let isDefaultValue: boolean;
-	$: isDefaultValue = (value === options.min);
 
 	const reversed = options.step < 0;
 </script>
@@ -23,7 +31,7 @@
 	max={options.max}
 	step={Math.abs(options.step)}
 	discrete
-	on:change
+	onSMUISliderChange={onchange}
 />
 </div>
 <div class="below" class:reversed>
@@ -43,7 +51,7 @@
 </div>
 
 <style lang="scss">
-	@use '@material/theme/color-palette';
+	@use '../../../node_modules/@material/theme/color-palette';
 	.below {
 		display: flex;
 		flex-direction: row;

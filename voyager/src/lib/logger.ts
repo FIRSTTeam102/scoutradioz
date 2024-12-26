@@ -57,6 +57,7 @@ class Logger {
 		let str = messages.map(message => {
 			if (this.funcName) message = `[${this.funcName}] `;
 			if (typeof message === 'string') return message;
+			if (typeof message === 'undefined') return 'undefined';
 			if (message instanceof Error) return message.stack || String(message)
 			else return JSON.stringify(message).replace(/,/g, ', ');
 		}).join(' ');
@@ -145,6 +146,8 @@ if ('localStorage' in globalThis) {
 		globalLogLevel = level;
 	}
 }
+
+console.log('globalLogLevel=', globalLogLevel);
 
 
 /**

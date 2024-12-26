@@ -30,8 +30,12 @@
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import assert from './assert';
 
-	export let tabs: SlidingTab[];
+	// export let tabs: SlidingTab[];
+	// export let initialActiveIndex = 0;
+
+	let { tabs, initialActiveIndex = 0 }: {tabs: SlidingTab[], initialActiveIndex?: number} = $props();
 
 	interface SlidingTab {
 		id: string;
@@ -40,9 +44,7 @@
 		disabled?: boolean;
 	}
 
-	let activeTab: SlidingTab;
-
-	export let initialActiveIndex = 0;
+	let activeTab: SlidingTab|undefined = $state();
 
 	onMount(() => {
 		// Default to first tab; otherwise, retrieve the tab from location.hash or use the initialActiveIndex if provided
@@ -57,20 +59,58 @@
 		}
 	});
 
-	let sliding = false;
+	let sliding = $state(false);
 
 	let prevTabIndex = 0;
 
 	let movingRight = true;
-
-	function handleTabChange(e: { detail: { index: number } }) {
-		console.log('tabChange', e.detail.index);
-		// location.hash = String(e.detail.index);
-		goto('#' + e.detail.index, {
+	
+	// let activeIndex = $derived.by(() => {
+	// 	if (!activeTab) return;
+	// 	// Find current tab index
+	// 	let index = -1;
+	// 	for (let i in tabs) {
+	// 		if (activeTab.id === tabs[i].id) {
+	// 			index = Number(i);
+	// 			break;
+	// 		}
+	// 	}
+	// 	assert(index >= 0, 'Could not find index in tabs');
+	// 	return index;
+	// });
+	
+	function getTabIndex(tabId: string) {
+		for (let i in tabs) {
+			if (tabId === tabs[i].id) {
+				return Number(i);
+			}
+		}
+		throw new Error('could not find index in tabs');
+	}
+	
+	$effect(() => {
+		if (!activeTab) return; // no assert necessary
+		let activeTabIndex = getTabIndex(activeTab.id);
+		goto('#' + activeTabIndex, {
 			replaceState: true // Don't want the tab navigation to create a new history entry
-		});
-		movingRight = e.detail.index > prevTabIndex;
-		prevTabIndex = e.detail.index;
+		})
+	});
+	// function handleTabChange(e: { detail: { index: number } }) {
+	// 	console.log('tabChange', e.detail.index);
+	// 	// location.hash = String(e.detail.index);
+	// 	goto('#' + e.detail.index, {
+	// 	});
+	// 	movingRight = e.detail.index > prevTabIndex;
+	// 	prevTabIndex = e.detail.index;
+	// }
+	
+	// JL note: this has to be handled on click instead of on a magic effect/derived handler 
+	// 	because movingRight has to be identified before flyIn/flyOutTransition
+	function handleTabClick(tabId: string) {
+		assert(activeTab, 'activeTab not defined');
+		let activeTabIndex = getTabIndex(activeTab.id);
+		let newTabIndex = getTabIndex(tabId);
+		movingRight = newTabIndex > activeTabIndex;
 	}
 
 	const animationDuration = 300;
@@ -103,13 +143,15 @@
 	}
 </script>
 
-<TabBar {tabs} let:tab bind:active={activeTab} on:SMUITabBar:activated={handleTabChange}>
-	<Tab {tab} disabled={tab.disabled}>
-		{#if tab.icon}
-			<Icon class="material-icons">{tab.icon}</Icon>
-		{/if}
-		<Label>{tab.label}</Label>
-	</Tab>
+<TabBar {tabs} key={(tab) => tab.id} bind:active={activeTab}>
+	{#snippet tab(tab)}
+		<Tab {tab} disabled={tab.disabled} onclick={() => handleTabClick(tab.id)}>
+			{#if tab.icon}
+				<Icon class="material-icons">{tab.icon}</Icon>
+			{/if}
+			<Label>{tab.label}</Label>
+		</Tab>
+	{/snippet}
 </TabBar>
 <div class="container" class:sliding>
 	<!-- {#each tabs as tab}
@@ -128,42 +170,42 @@
 			</div>
 		{/if}
 	{/each} -->
-	{#if $$slots['1'] && activeTab == tabs[0]}
+	{#if $$slots['1'] && activeTab?.id == tabs[0].id}
 		<div
 			in:flyInTransition|local
 			out:flyOutTransition|local
-			on:introstart={slideOn}
-			on:introend={slideOff}
-			on:outrostart={slideOff}
-			on:outroend={slideOff}
+			onintrostart={slideOn}
+			onintroend={slideOff}
+			onoutrostart={slideOff}
+			onoutroend={slideOff}
 			class="child"
 			class:sliding
 		>
 			<slot name="1" />
 		</div>
 	{/if}
-	{#if $$slots['2'] && activeTab == tabs[1]}
+	{#if $$slots['2'] && activeTab?.id == tabs[1].id}
 		<div
 			in:flyInTransition|local
 			out:flyOutTransition|local
-			on:introstart={slideOn}
-			on:introend={slideOff}
-			on:outrostart={slideOff}
-			on:outroend={slideOff}
+			onintrostart={slideOn}
+			onintroend={slideOff}
+			onoutrostart={slideOff}
+			onoutroend={slideOff}
 			class="child"
 			class:sliding
 		>
 			<slot name="2" />
 		</div>
 	{/if}
-	{#if $$slots['3'] && activeTab == tabs[2]}
+	{#if $$slots['3'] && activeTab?.id == tabs[2].id}
 		<div
 			in:flyInTransition|local
 			out:flyOutTransition|local
-			on:introstart={slideOn}
-			on:introend={slideOff}
-			on:outrostart={slideOff}
-			on:outroend={slideOff}
+			onintrostart={slideOn}
+			onintroend={slideOff}
+			onoutrostart={slideOff}
+			onoutroend={slideOff}
 			class="child"
 			class:sliding
 		>

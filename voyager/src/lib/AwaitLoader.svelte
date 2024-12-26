@@ -8,7 +8,12 @@
 	import DataTable, { Head, Body, Row, Cell } from '@smui/data-table';
 	import LinearProgress from '@smui/linear-progress';
 	
-	export let dataToAwait: Promise<D>;
+	interface Props {
+		dataToAwait: Promise<D>;
+		children?: import('svelte').Snippet<[any]>;
+	}
+
+	let { dataToAwait, children }: Props = $props();
 </script>
 
 {#await dataToAwait}
@@ -16,7 +21,7 @@
 	<LinearProgress indeterminate />
 </Paper>
 {:then data}
-	<slot data={data}></slot>
+	{@render children?.({ data, })}
 {:catch error}
 <Paper>
 	<Title>Error {error.status}</Title>
