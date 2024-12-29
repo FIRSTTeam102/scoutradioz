@@ -23,5 +23,42 @@ for dbsfile in "${dbsfiles[@]}"; do
 fi
 done
 
+# Detect OS version
+detect_os_version() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS_VERSION=$VERSION_CODENAME
+    else
+        echo "Unsupported OS: /etc/os-release not found"
+        exit 1
+    fi
+}
+
+# Set NODE_VARIANT based on OS version
+set_node_variant() {
+    case $OS_VERSION in
+        "bullseye")
+            export VARIANT="18-bullseye"
+            ;;
+        "buster")
+            export VARIANT="18-buster"
+            ;;
+        *)
+            echo "Unsupported OS version: $OS_VERSION"
+            exit 1
+            ;;
+    esac
+}
+
 # Install node modules
 yarn setup
+
+# Main script execution
+detect_os_version
+set_node_variant
+
+# Make setup.sh executable if not already
+chmod +x setup.sh
+
+# Execute docker-compose with the appropriate VARIANT
+docker-compose up --build
