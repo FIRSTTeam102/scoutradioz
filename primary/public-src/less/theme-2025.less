@@ -2,44 +2,42 @@
 
 /* FRC's season colors */
 // in branding pdf, colors picked from the preview, not from the hex below
-@frc-green: #00D586; // color from the logo
-@frc-green-dark: #009C4E;
-@frc-brown: #95775D;
-@frc-blue: #39C0E0;
-@frc-beige: #FAE4A4;
+@frc-cyan: #9CD9E8; // color from the logo
+@frc-blue: #0083AE;
+@frc-yellow: #F5E447;
 
 @frc-white: #fff;
 @frc-black: #000;
 
-/* FIRST IN SHOW colors */
-@fs-pink: #E71294;
-@fs-cream: #FFDFA6;
-@fs-gray: #54555A;
-@fs-black: #0D1720;
+/* FIRST DIVE colors */
+@fd-orange: #FF9119;
+@fd-red: #ED1C24;
+@fd-gray: #666666;
+@fd-black: #000000;
 
 // @ftc-yellow: #FFAB00;
 
 /* custom combinations */
-@darkened-green: darken(@frc-green-dark, 15%);
+@darkened-green: darken(@frc-blue, 15%);
 
-@button-primary: shade(@frc-green-dark, 20%);
-@button-secondary: shade(@frc-green-dark, 40%);
+@button-primary: shade(@frc-blue, 20%);
+@button-secondary: shade(@frc-blue, 40%);
 
 @primary: @button-primary; // unused
-@secondary: shade(@frc-green-dark, 50%); // input
+@secondary: shade(@frc-blue, 50%); // input
 @highlight: lighten(@button-primary, 10%); // slider
 
-@background: @fs-black;
+@background: @fd-black;
 // @header: shade(desaturate(@fs-pink, 15%), 20%);
-@header: saturate(mix(@fs-black, @frc-blue, 60%), 15%);
-@footer: @fs-gray;
+@header: saturate(mix(@fd-black, @frc-cyan, 60%), 15%);
+@footer: @fd-gray;
 
-@header-tier-qa: shade(@frc-green, 40%);
-@header-tier-test: shade(@fs-cream, 50%);
-@header-tier-dev: shade(@fs-pink, 20%);
+@header-tier-qa: shade(@frc-yellow, 30%);
+@header-tier-test: shade(@fd-orange, 50%);
+@header-tier-dev: shade(@fd-red, 40%);
 
 // @prompt-color: desaturate(darken(mix(@fs-gray, mix(@fs-black, @frc-green, 50%), 70%), 17%), 10%);
-@prompt-color: desaturate(darken(mix(@fs-gray, mix(@fs-black, @frc-blue, 50%), 60%), 20%), 10%);
+@prompt-color: desaturate(darken(mix(@fd-gray, mix(@fd-black, @frc-blue, 50%), 60%), 20%), 10%);  // originally was 'blue' where other blue items above were 'green'
 :root {	
 	/* MMenu customization */
 	--mm-color-background: @prompt-color;
