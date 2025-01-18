@@ -73,17 +73,6 @@ console.log(`alias=${alias} functionName=${functionName} folder=${folder}`);
 //	file_system.mkdirSync(folderPath);
 //}
 
-// lambda.getFunctionConfiguration({FunctionName: functionName}).promise()
-// 	.then(result => {	
-// 		console.log(result);
-// 		if (result.state === 'Failed') {
-// 			throw 'Lambda resource update failed';
-// 		}
-// 		if (result.state === 'Pending') {
-// 			throw 'Pending';
-// 		}
-// 	});
-
 makeZip(folder, (err, zipBuffer) => {
 	if (err) {
 		throw err;
