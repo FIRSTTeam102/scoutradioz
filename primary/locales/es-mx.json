@@ -22,13 +22,16 @@
 				"management": "Herramientas de gestión de eventos como la auditoría de asignaciones de partidos, el intercambio de scouters y la gestión de una lista de miembros",
 				"free": "¡Y por supuesto, es completamente gratis!"
 			},
-			"github": "Vea nuestro código y documentación en el sitio de GitHub",
+			"github": "Vea nuestro código en GitHub",
 			"discord": "Únete a nuestro Discord",
 			"partner": "Solicitar ser socio de acceso anticipado",
 			"first": "Más sobre *FIRST* y FRC"
 		},
 		"view": "Ver",
-		"login": "Iniciar sesión"
+		"login": "Iniciar sesión",
+		"browse": {
+			"pastEvents": "Para ver datos más viejos tal vez necesitarás usar la opción de menú debajo de Info y Reportes, ‘Buscar datos de eventos previos’"
+		}
 	},
 	"hello": {
 		"world": "¡Hola mundo!",
@@ -414,5 +417,10 @@
 	"tryAgainLater": "Inténtalo de nuevo más tarde.",
 	"yes": "Sí",
 	"no": "No",
-	"matches": "coincidencias"
+	"matches": "coincidencias",
+	"thankyou": {
+		"threestarters": "Los Tres Iniciadores",
+		"thanks": "Gracias a nuestros patrones de acceso temprano!",
+		"2023inseason": "2023 En Temporada"
+	}
 }
