@@ -6,7 +6,7 @@
 			title		[String] Title of page; if doesn't exist, will be replaced by "Untitled Page"
 			alert		[String] (Optional) When page loads, create JS alert with message.
 	//
-- const themeYear = 2024 // backwards compatibility for various theme-specific elements, todo: sync this with the theme used in base.less
+- const themeYear = 2025 // backwards compatibility for various theme-specific elements, todo: sync this with the theme used in base.less
 - function resolveToValue(prop, params) { if (typeof prop == 'function') return property(params); return prop; } // For nav, but may be useful in other places
 - function resolveLabelTemplate(str, teamKey) { if (!str) return ''; if (teamKey) str = str.replace(/\{\{team_number\}\}/g, teamKey.substring(3)); return str; } // for scouting, currently only supports {{team_number}}
 - function displayReportMetric(num, displayType) { 
@@ -44,7 +44,9 @@ html(lang=locale dir=getLocaleDirection(locale))
 				2022: '2022-grid.svg',
 				2023: '2023-halftone.svg',
 				//2024: '2024-film-texture.webp'
-				2024: '2024-crescendo-wallpaper-dark.jpg'
+				2024: '2024-crescendo-wallpaper-dark.jpg',
+				2025: '2025_fd_frc_reefscape_wallpaper_cropped.jpg'
+				//2025: '2025_fd_frc_reefscape_socialgraphics_igstory_cropped.jpg'
 			};
 		style.
 			#page{ --background-image: url('#{fileRoot}/images/backgrounds/#{backgrounds[themeYear]}');}
@@ -188,6 +190,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 								2022: ['rapid-react/horizontal-color.svg', 'Rapid React'],
 								2023: ['charged-up/horizontal-color.svg', 'Charged Up'],
 								2024: ['crescendo/horizontal-color.svg', 'CRESCENDO'],
+								2025: ['reefscape/horizontal-color.svg', 'Reefscape']
 							}
 						if (headerlogos[themeYear])
 							img(src=`${fileRoot}/images/${headerlogos[themeYear][0]}` alt=headerlogos[themeYear][1] class="w3-image w3-center" style="max-height: 160px;")
