@@ -73,6 +73,17 @@ console.log(`alias=${alias} functionName=${functionName} folder=${folder}`);
 //	file_system.mkdirSync(folderPath);
 //}
 
+// lambda.getFunctionConfiguration({FunctionName: functionName}).promise()
+// 	.then(result => {	
+// 		console.log(result);
+// 		if (result.state === 'Failed') {
+// 			throw 'Lambda resource update failed';
+// 		}
+// 		if (result.state === 'Pending') {
+// 			throw 'Pending';
+// 		}
+// 	});
+
 makeZip(folder, (err, zipBuffer) => {
 	if (err) {
 		throw err;
@@ -144,7 +155,7 @@ function updateCode(zipBuffer, cb) {
 		else {
 			console.log(`Uploaded function code:\n\t FunctionName=${data.FunctionName}\n\t Role=${data.Role}\n\t CodeSha256=${data.CodeSha256}`);
 			
-			publishVersion(data, time, cb);
+			publishVersion(data, time, cb).catch(function (err) { console.log(err); });
 		}
 	});
 }
@@ -156,7 +167,7 @@ async function publishVersion(data, time, cb) {
 	
 	console.log('Waiting for function update to be complete...');
 	
-	await waitUntilNotPending(lambda, functionName, 1000, 5);
+	await waitUntilNotPending(lambda, functionName, 2000, 10);
 	
 	console.log('Publishing new version...');
 	var params = {
@@ -214,19 +225,20 @@ async function waitUntilNotPending(lambda, functionName, timeout, retries) {
 	return retry(
 		() => {
 			return lambda.getFunctionConfiguration({FunctionName: functionName}).promise()
-				.then(result => {					
-					if (result.state === 'Failed') {
+				.then(result => {	
+					//console.log(result);
+					if (result.LastUpdateStatus === 'Failed') {
 						throw 'Lambda resource update failed';
 					}
-					if (result.state === 'Pending') {
-						throw 'Pending';
+					if (result.LastUpdateStatus === 'InProgress') {
+						throw 'InProgress';
 					}
 				});
 		},
 		timeout,
 		retries,
-		failure => failure === 'Pending',
-		() => console.log('Lambda function is in Pending state, waiting...'),
+		failure => failure === 'InProgress',
+		() => console.log('Lambda function is in InProgress state, waiting...'),
 	);
 }
 
