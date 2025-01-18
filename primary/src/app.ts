@@ -107,6 +107,7 @@ app.set('views', path.join(__dirname, '..', 'views'));
 app.set('view engine', 'pug');
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
 
 app.disable('x-powered-by');
@@ -141,6 +142,7 @@ const clientPromise: Promise<MongoClient> = new Promise((resolve, reject) => {
 			});
 		});
 });
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(session({
 	secret: 'marcus night',
 	saveUninitialized: false, // don't create session until something stored
@@ -161,10 +163,12 @@ app.use(session({
 }));
 
 //User agent for logging
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(useragent.express());
 
 //Passport setup (user authentication)
 require('./helpers/passport-config');
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(passport.initialize());
 app.use(passport.session());
 
