@@ -1,5 +1,5 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput } from 'scoutradioz-types';
+import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedLayoutLegacy } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -26,6 +26,7 @@ export declare class MatchDataHelper {
      * @return {boolean} isMetric
      */
     static isMetric(type: string): boolean;
+    static calculateDerivedLegacy(thisItem: DerivedLayoutLegacy, matchData: MatchFormData): number | null;
     /**
      * Calculate derived metrics for a provided array of match data items.
      * @param {string} org_key Org key

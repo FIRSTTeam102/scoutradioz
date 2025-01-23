@@ -131,9 +131,16 @@ export declare interface LayoutEdit extends Omit<Layout, 'form_type' | 'org_key'
  * @collection layout
  * @interface DerivedLayout
  */
-export declare interface DerivedLayout extends Layout{
+export declare interface DerivedLayoutLegacy extends Layout{
 	type: 'derived';
 	operations: DerivedOperation[];
+	id: string;
+	display_as?: string;
+}
+
+export declare interface DerivedLayout extends Layout {
+	type: 'derived';
+	formula: string;
 	id: string;
 	display_as?: string;
 }
@@ -618,7 +625,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'aggranges' ? AggRange :
 	colName extends 'events' ? Event :
 	// colName extends 'i18n' ?  :
-	colName extends 'layout' ? (DerivedLayout|Layout) :
+	colName extends 'layout' ? (DerivedLayoutLegacy|Layout) :
 	colName extends 'matches' ? Match :
 	colName extends 'matchscouting' ? MatchScouting :
 	colName extends 'orgs' ? Org :
