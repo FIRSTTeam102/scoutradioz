@@ -1,14 +1,13 @@
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../../helpers/express-async-handler';
+import e, { HttpError, assert } from 'scoutradioz-http-errors';
+import type { Layout, MatchFormData, MatchScouting, SchemaItem } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
-import Permissions from '../../helpers/permissions';
-import e, { HttpError, assert } from 'scoutradioz-http-errors';
-import type { Layout, LayoutEdit, MatchScouting, MatchFormData } from 'scoutradioz-types';
-import type { DeleteResult, InsertManyResult } from 'mongodb';
+import wrap from '../../helpers/express-async-handler';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
+import Permissions from '../../helpers/permissions';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -25,7 +24,7 @@ router.all('/*', wrap(async (req, res, next) => {
 router.get('/', wrap(async (req, res) => {
 
 	const org = req._user.org;
-	
+
 	// Get a list of the team numbers at this org
 	let team_numbers: string[] = [];
 	if (org.team_key) team_numbers.push(org.team_key.substring(3));
@@ -33,7 +32,7 @@ router.get('/', wrap(async (req, res) => {
 
 
 	res.render('./manage/config/index', {
-		title: req.msg('manage.config.title', {org: org.nickname}),
+		title: req.msg('manage.config.title', { org: org.nickname }),
 		org,
 		team_numbers,
 	});
@@ -57,7 +56,7 @@ router.post('/', wrap(async (req, res) => {
 		// Get the list of team numbers provided
 		let teamNumbersStr = req.body.team_numbers;
 		assert(typeof teamNumbersStr === 'string', new e.UserError('Team numbers not provided'));
-		
+
 		// Parse the team numbers provided. If an empty string is provided, then assume that means no teams on the org.
 		let teamNumbers: number[] = [];
 		if (teamNumbersStr.trim() !== '') {
@@ -66,8 +65,8 @@ router.post('/', wrap(async (req, res) => {
 			assert(!teamNumbers.some(number => isNaN(number)), new e.UserError('Please enter a comma-separated list of FRC team numbers.'));
 			assert(teamNumbers.length < 20, new e.UserError('Too many team numbers provided! (Max = 20)'));
 			for (let team_number of teamNumbers) {
-				let team = await utilities.findOne('teams', {team_number});
-				assert(team, new e.UserError(req.msg('manage.config.invalidTeams', {number: team_number})));
+				let team = await utilities.findOne('teams', { team_number });
+				assert(team, new e.UserError(req.msg('manage.config.invalidTeams', { number: team_number })));
 			}
 		}
 
@@ -89,11 +88,11 @@ router.post('/', wrap(async (req, res) => {
 				'config.members.classes': classes,
 			},
 		};
-		
+
 		// 1 team key and team number
 		if (teamNumbers.length === 1) {
 			updateQuery.$set.team_number = teamNumbers[0];
-			updateQuery.$set.team_key = 'frc'+teamNumbers[0];
+			updateQuery.$set.team_key = 'frc' + teamNumbers[0];
 			// Remove the team_numbers/team_keys field
 			updateQuery.$unset = {
 				team_numbers: true,
@@ -112,7 +111,7 @@ router.post('/', wrap(async (req, res) => {
 		// Multiple team keys and team numbers
 		else {
 			updateQuery.$set.team_numbers = teamNumbers;
-			updateQuery.$set.team_keys = teamNumbers.map(number => 'frc'+number);
+			updateQuery.$set.team_keys = teamNumbers.map(number => 'frc' + number);
 			updateQuery.$unset = {
 				team_number: true,
 				team_key: true,
@@ -167,26 +166,22 @@ router.get('/editform', wrap(async (req, res) => {
 	assert(form_type === 'matchscouting' || form_type === 'pitscouting', new e.UserError('Invalid form type'));
 
 	let org_key = req._user.org_key;
-
-	let yearStr = req.query.year || req.event.key;
-	let year: number;
-	if (typeof yearStr === 'string') year = parseInt(yearStr);
-	else throw new e.UserError('Either "year" or "key" must be set.');
+	
+	let year = parseInt(String(req.query.year)) || req.event.year;
+	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
 
 	// load form definition data from the database
-	let layoutArray: Layout[] = await utilities.find('layout', { org_key: org_key, year: year, form_type: form_type }, { sort: { 'order': 1 } });
-	// strip out _id, form_type, org_key, year, order
-	let updatedArray = layoutArray.map((element) => {
-		let newElement: LayoutEdit = element;
-		delete newElement['_id'];
-		delete newElement['form_type'];
-		delete newElement['org_key'];
-		delete newElement['year'];
-		delete newElement['order'];
-		return newElement;
-	});
+	const orgschema = await utilities.findOne('orgschemas',
+		{ org_key, year, form_type },
+	);
+	assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
+	const schema = await utilities.findOne('schemas',
+		{ _id: orgschema.schema_id, owners: org_key },
+	);
+	assert(schema, `Schema not found for ${org_key} and ${year}!`);
+
 	// create a string representation
-	let layout = JSON.stringify(updatedArray, null, 2);
+	let layout = JSON.stringify(schema.items, null, 2);
 	//logger.debug(thisFuncName + 'layout=\n' + layout);
 
 	let existingFormData = new Map<string, string>();
@@ -200,7 +195,7 @@ router.get('/editform', wrap(async (req, res) => {
 			let thisData: MatchFormData = thisMatch['data'];
 			let dataKeys = Object.keys(thisData);
 			//logger.debug(`dataKeys=${JSON.stringify(dataKeys)}`);
-			dataKeys.forEach(function(value) {
+			dataKeys.forEach(function (value) {
 				//logger.debug(`value=${value}`);
 				existingFormData.set(value, value);
 			});
@@ -247,37 +242,45 @@ router.post('/submitform', wrap(async (req, res) => {
 	logger.debug('org_key=' + org_key);
 
 	let jsonString = req.body.jsonData;
-	//logger.debug('jsonString=' + jsonString);
+	logger.debug('jsonString=' + jsonString);
 	let year = parseInt(req.body.year);
 	logger.debug('year=' + year);
 	let form_type = req.body.form_type;
 	logger.debug('form_type=' + form_type);
 
-	let formdata: Layout[] = JSON.parse(jsonString);
-	formdata.forEach((element, i) => {
-		// just in case the submission has '_id' attributes, remove them
-		delete element['_id'];
-		// write (or override existing) attributes
-		element.form_type = form_type;
-		element.org_key = org_key;
-		element.year = year;
-		// add order key to each object
-		element.order = i;
-	});
-	let updatedString = JSON.stringify(formdata);
-	logger.debug('updatedString=' + updatedString);
+	let formdata: SchemaItem[] = JSON.parse(jsonString);
 
-	// 1. delete existing data {if any} matching form_type, org_key, year
-	let removeResult: DeleteResult = await utilities.remove('layout', { org_key: org_key, year: year, form_type: form_type });
-	logger.info(`Removed ${removeResult.deletedCount} prior form records`);
+	// Get existing schema metadata from db
+	const orgschema = await utilities.findOne('orgschemas',
+		{ org_key, year, form_type },
+	);
+	assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
+	const schema = await utilities.findOne('schemas',
+		{ _id: orgschema.schema_id, owners: org_key },
+	);
+	assert(schema, `Schema not found for ${org_key} and ${year}!`);
+	
+	/**
+	 * TODO:
+	 * 	1. Server-side validation of schema being ok
+	 * 	2. Take schema ID as user input, rather than just current schema set by org?
+	 * 	3. If IDs do not change, then update the existing schema; if IDs do change, create new schema
+	 * 	4. Publishing shiz
+	 */
 
-	// 2. write in new/updated data
-	let writeResult: InsertManyResult<MongoDocument> | undefined = await utilities.insert('layout', formdata);
-	if (writeResult)
-		logger.info(`Inserted ${writeResult.insertedCount} new form records`);
-	else
-		logger.warn('Inserted 0 new form records!');
-
+	let writeResult = await utilities.update('schemas',
+		{ _id: schema._id, },
+		{
+			$set: {
+				items: formdata,
+				last_modified: new Date(),
+			}
+		}
+	);
+	logger.info('writeResult=', writeResult);
+	if (writeResult.modifiedCount !== 1) {
+		throw new e.InternalServerError(`modifiedCount !== 1! ${JSON.stringify(writeResult)}`);
+	}
 	res.redirect('/manage');
 }));
 

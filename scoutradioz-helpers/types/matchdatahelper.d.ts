@@ -1,5 +1,5 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedLayoutLegacy } from 'scoutradioz-types';
+import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, SpacerItem } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -13,6 +13,11 @@ export declare class MatchDataHelper {
      */
     static isQuantifiableType(type: string): boolean;
     /**
+     * Wrapper of {@link isQuantifiableType} for better TypeScript hinting
+     * Reason: after calling isQuantifiable(), you can access item.id without being yelled at
+     */
+    static isQuantifiable(item: SchemaItem): item is CheckBoxItem | CounterItem | DerivedItem | DerivedItemLegacy | SliderItem;
+    /**
      * Adjusts the data type of a given datum based on its layout type. Numerical elements are transformed into numbers, checkboxes are transformed into 0/1, and others are kept as strings.
      * Use to "sanitize" the input from HTML forms into the database.
      * @param {string|number} value The metric/datum to fix
@@ -22,10 +27,10 @@ export declare class MatchDataHelper {
     static fixDatumType(value: formDataOutput, type: string): formDataOutput;
     /**
      * Returns whether a layout element type is a metric.
-     * @param {string} type Type of layout element
-     * @return {boolean} isMetric
+     * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
+     * @param item layout element
      */
-    static isMetric(type: string): boolean;
+    static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | SpacerItem>;
     static calculateDerivedLegacy(thisItem: DerivedLayoutLegacy, matchData: MatchFormData): number | null;
     /**
      * Calculate derived metrics for a provided array of match data items.
@@ -66,6 +71,13 @@ export declare class MatchDataHelper {
      * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
      */
     static getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any): Promise<AllianceStatsData>;
+    /**
+     * Get the form layout / schema for a given event and org.
+     * TODO: this function doesn't exactly belong in this function cuz it's not directly related to matchdata
+     * @param org_key
+     * @param event_key
+     */
+    static getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<Schema>;
 }
 export default MatchDataHelper;
 export declare interface AllianceStatsData {

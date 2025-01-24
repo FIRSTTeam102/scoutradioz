@@ -1,5 +1,5 @@
 import type { AnyDict } from 'scoutradioz-types';
-type ValueDict = {
+export type ValueDict = {
     [key: string]: value;
 };
 export type value = string | number;
@@ -26,4 +26,3 @@ export declare class DerivedCalculator {
     runFormula(formula: string, id: string): number;
 }
 export declare function convertValuesDict(dict: AnyDict): ValueDict;
-export {};

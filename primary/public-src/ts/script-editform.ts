@@ -1,8 +1,4 @@
-import type { AbsoluteValueOperation, CompareOperation, DerivedLayoutLegacy, DivideOperation, LogOperation, MinMaxOperation, MultiplyOperation, MultiselectOperation, operand, SumOperation } from 'scoutradioz-types';
-
-type LayoutEdit = import('scoutradioz-types').LayoutEdit;
-type StringDict = import('scoutradioz-types').StringDict;
-type DerivedLayout = import('scoutradioz-types').DerivedLayout;
+import type { AbsoluteValueOperation, CompareOperation, DerivedLayout, DerivedLayoutLegacy, DivideOperation, LayoutEdit, LogOperation, MinMaxOperation, MultiplyOperation, MultiselectItem, MultiselectOperation, operand, SumOperation } from 'scoutradioz-types';
 
 async function validate() {
 	// get the JSON from the form
@@ -36,28 +32,30 @@ async function validate() {
 	// 20234-01-26 JL: Changed idDict to a Set
 	let ids = new Set<string>();
 	for (let i = 0; i < jsonData.length; i++) {
-		let thisType = jsonData[i]['type'];
-		if (thisType == null) {
-			console.log('Missing type:', jsonData[i]);
+		const item = jsonData[i];
+		if (item.type == null) {
+			console.log('Missing type:', item);
 			NotificationCard.error('Missing at least one \'type\' attribute! Please correct.');
 			return null;
 		}
 
-		if (thisType != 'spacer') {
-			let thisId = jsonData[i]['id'];
-			if (!thisId && (thisType == 'h3' || thisType == 'h2')) {
-				let thisLabel = jsonData[i]['label'];
+		if (item.type != 'spacer') {
+			// @ts-ignore - JL note: this will be refactored later
+			let thisId = item['id'];
+			if ((item.type == 'header' || item.type == 'subheader')) {
+				let thisLabel = item['label'];
 				if (!thisLabel) {
-					console.log(`${thisType} missing both id and label:`, jsonData[i]);
+					console.log(`${item.type} missing both id and label:`, item);
 					NotificationCard.error('Missing at least one \'label\' attribute on h2/h3! Please correct.');
 					return null;
 				}
-				thisId = thisType + '_' + thisLabel.replace(/\s+/g, '_');
-				jsonData[i]['id'] = thisId;
+				// 2025-01-23 JL: Disabled automatic id generation for h2/h3
+				// thisId = item.type + '_' + thisLabel.replace(/\s+/g, '_');
+				// item['id'] = thisId;
 			}
 			// 2024-01-26 JL: changed `== null` comparison to truthiness check, because I think empty strings should not be a valid id ('' is falsy)
 			if (!thisId) {
-				console.log('Missing id:', jsonData[i]);
+				console.log('Missing id:', item);
 				NotificationCard.error('Missing at least one \'id\' attribute! Please correct.');
 				return null;
 			}
@@ -90,6 +88,7 @@ async function validate() {
 	for (let derived of derivedLayouts) {
 		// Legacy derived metric
 		if ('operations' in derived) {
+			derived = derived as DerivedLayoutLegacy; // for typescript
 			// For error messages
 			let derivedDescription = ` - for Derived Metric with id=${derived.id} and label=${derived.label}`;
 			lightAssert(Array.isArray(derived.operations), `Derived metric does not have an array of operations ${derivedDescription}`);
@@ -114,7 +113,8 @@ async function validate() {
 				}
 			};
 
-			derived.operations.forEach((thisOp, i) => {
+			let operations = derived.operations;
+			operations.forEach((thisOp, i) => {
 				// JL: I don't like copy-pasted strings, so using a function for the different cases to validate whatever # of operands need to be validated
 				const validateOperands = (operandList: operand[]) => {
 					operandList.forEach(operand => {
@@ -127,7 +127,7 @@ async function validate() {
 					case 'multiselect': {
 						let op = thisOp as MultiselectOperation;
 						// Ensure the variable reference is valid
-						let thisMultiselectLayout = jsonData.find(item => item.id === op.id && item.type === 'multiselect');
+						let thisMultiselectLayout = jsonData.find(item => item.type === 'multiselect' && item.id === op.id) as MultiselectItem;
 						lightAssert(thisMultiselectLayout, `Multiselect derived operation has an invalid id. Make sure it references either a variable earlier in the operand chain or the id of a non-derived metric. Invalid value=${op.id}, derived ${derivedDescription}`);
 						let thisMultiselectOpts = thisMultiselectLayout?.options;
 						lightAssert(Array.isArray(thisMultiselectOpts), `Multiselect with id ${thisMultiselectLayout.id} options is not an array`);
@@ -171,7 +171,7 @@ async function validate() {
 					}
 				}
 				// Add the output of this operation to the list of intermediate variables
-				if (i < derived.operations.length - 1) {
+				if (i < operations.length - 1) {
 					let thisOpAs = thisOp.as;
 					lightAssert(thisOpAs, `Operation #${i}, ${thisOp.operator} does not have an 'as' keyword ${derivedDescription}`);
 					intermediateVariables.push('$' + thisOpAs);

@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { AnyDict } from 'scoutradioz-types';
+import type { AnyDict, EventKey, OrgKey } from 'scoutradioz-types';
 
 export type ValueDict = { [key: string]: value };
 
@@ -11,7 +11,7 @@ export const validFuncs = ['min', 'max', 'log', 'abs', 'if', 'multiselect'];
 // groups 1/2: operators, group 3: funcs & keywords, group 4: strings (for multiselect)
 const regex = /(==|<=|>=|!=|\|\|)|([\-*+\^/()><,])|([\w.]+)|('.+?')/g;
 
-export  class DerivedCalculator {
+export class DerivedCalculator {
 	values: ValueDict;
 	constructor(values: ValueDict) {
 		this.values = values;

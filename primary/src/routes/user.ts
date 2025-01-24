@@ -1,13 +1,13 @@
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
+import wrap from '../helpers/express-async-handler';
 // import utilities from '../../../scoutradioz-utilities/src/utilities';
-import Permissions from '../helpers/permissions';
-import e, { assert } from 'scoutradioz-http-errors';
 import { matchData as matchDataHelper } from 'scoutradioz-helpers';
-import type { Role, Org, User, Layout } from 'scoutradioz-types';
+import e, { assert } from 'scoutradioz-http-errors';
+import type { Org, Role, User } from 'scoutradioz-types';
+import Permissions from '../helpers/permissions';
 
 const router = express.Router();
 const logger = getLogger('user');
@@ -636,17 +636,14 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	logger.info('ENTER');
 	
 	let eventYear = req.event.year;
+	let eventKey = req.event.key;
 	let orgKey = req._user.org_key;
 	let thisOrg = req._user.org;
 	let thisOrgConfig = thisOrg.config;
 	let redirectURL = req.getFixedRedirectURL(); //////////////////////////////
 	
 	// read in the list of form options
-	let matchlayout: Layout[] = await utilities.find('layout', 
-		{org_key: orgKey, year: eventYear, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	const { items: matchlayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 	//logger.debug("matchlayout=" + JSON.stringify(matchlayout))
 	
 	let orgColumnDefaults;

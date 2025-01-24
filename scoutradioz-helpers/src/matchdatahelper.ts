@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, SpacerItem } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper';
 
@@ -35,11 +35,8 @@ export class MatchDataHelper {
 		switch (type) {
 			case 'checkbox':
 			case 'counter':
-			case 'counterallownegative':
-			case 'badcounter':
 			case 'derived':
 			case 'slider':
-			case 'timeslider':
 				isQuantifiable = true;
 				break;
 			default:
@@ -47,6 +44,14 @@ export class MatchDataHelper {
 		}
 
 		return isQuantifiable;
+	}
+	
+	/** 
+	 * Wrapper of {@link isQuantifiableType} for better TypeScript hinting
+	 * Reason: after calling isQuantifiable(), you can access item.id without being yelled at
+	 */
+	static isQuantifiable(item: SchemaItem): item is CheckBoxItem|CounterItem|DerivedItem|DerivedItemLegacy|SliderItem {
+		return MatchDataHelper.isQuantifiableType(item.type);
 	}
 
 	/**
@@ -86,27 +91,22 @@ export class MatchDataHelper {
 
 	/**
 	 * Returns whether a layout element type is a metric.
-	 * @param {string} type Type of layout element
-	 * @return {boolean} isMetric
+	 * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
+	 * @param item layout element
 	 */
-	static isMetric(type: string) {
+	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem|SubheaderItem|SpacerItem> {
 
-		let isMetric;
-
-		switch (type) {
+		switch (item.type) {
 			case 'spacer':
-			case 'h2':
-			case 'h3':
-				isMetric = false;
-				break;
+			case 'header':
+			case 'subheader':
+				return false;
 			default:
-				isMetric = true;
+				return true;
 		}
-
-		return isMetric;
 	}
 
-	static calculateDerivedLegacy(thisItem: DerivedLayoutLegacy, matchData: MatchFormData) {
+	static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData) {
 		let derivedMetric: number | null = NaN;
 		// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
 		//	Error checking should be done at the time of creating the layout. (TODO: error checking :] )
@@ -363,7 +363,7 @@ export class MatchDataHelper {
 				}
 			}
 		}
-		logger.trace(`Final metric: ${derivedMetric} - Label: ${thisItem.label} / ${thisItem.id}`);
+		logger.trace(`Final metric: ${derivedMetric} - id: ${thisItem.id}`);
 		return derivedMetric;
 
 		function parseBoolean(item: formDataOutput): boolean {
@@ -389,11 +389,23 @@ export class MatchDataHelper {
 	static async calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData) {
 		// let st = performance.now();
 		// Just derived fields from the org's match scouting layout for this year
-		let derivedLayout = await utilities.find('layout',
-			{ org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived' },
-			{ sort: { 'order': 1 } },
-			{ allowCache: true }
-		) as ( DerivedLayoutLegacy|DerivedLayout )[];
+		// let derivedLayout = await utilities.find('layout',
+		// 	{ org_key: org_key, year: event_year, form_type: 'matchscouting', type: 'derived' },
+		// 	{ sort: { 'order': 1 } },
+		// 	{ allowCache: true }
+		// ) as ( DerivedLayoutLegacy|DerivedLayout )[];
+		
+		const orgschema = await utilities.findOne('orgschemas', 
+			{org_key, year: event_year, form_type: 'matchscouting'},
+		);
+		assert(orgschema);
+		const schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, },
+			{},
+			{allowCache: true, maxCacheAge: 180}
+		);
+		assert(schema);
+		const derivedLayout = schema.items.filter(item => item.type === 'derived');
 		
 		const derivedCalculator = new DerivedCalculator(convertValuesDict(matchData));
 
@@ -1118,6 +1130,42 @@ export class MatchDataHelper {
 		};
 		logger.removeContext('funcName');
 		return returnData;
+	}
+
+	/**
+	 * Get the form layout / schema for a given event and org.
+	 * TODO: this function doesn't exactly belong in this function cuz it's not directly related to matchdata
+	 * @param org_key 
+	 * @param event_key 
+	 */
+	static async getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<Schema> {
+		// later, this lookup won't be needed because orgschemas will be org+event rather than org+year
+		const { year } = await utilities.findOne('events', 
+			{key: event_key},
+			{},
+			{allowCache: true, maxCacheAge: 180}
+		);
+		
+		const orgschema = await utilities.findOne('orgschemas', 
+			{org_key, year, form_type},
+		);
+		assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
+		
+		const schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, },
+			{},
+			{allowCache: true, maxCacheAge: 180}
+		);
+		
+		// sanity check DB 
+		assert(schema.form_type === form_type, `form_type does not match in DB! Expected ${form_type} but found ${schema.form_type}`);
+
+		// make sure org has permission to use this schema (either an owner of unpublished schema, OR it is published)
+		assert(schema.owners.includes(org_key) || schema.published, `Org ${org_key} does not have permission to use un-published schema "${schema.name}"!`);
+		// todo: maybe we don't need this match? maybe we can remove the "year" field from Schema?
+		assert(schema.year === year, `Schema year ${schema.year} and event year ${year} do not match!`);
+		
+		return schema;
 	}
 }
 

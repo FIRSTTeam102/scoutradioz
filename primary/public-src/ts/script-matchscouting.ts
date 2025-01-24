@@ -2,7 +2,7 @@
 declare let stickyBarEnabled: boolean;
 declare let groupedLayout: Array<{
 	label: string;
-	items: import('scoutradioz-types').Layout[];
+	items: import('scoutradioz-types').SchemaItem[];
 }>;
 
 let sections = [] as Array<{
