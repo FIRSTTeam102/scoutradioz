@@ -80,6 +80,7 @@ utilities.refreshTier();
 			// @ts-ignore
 			if (item.type === 'counter') {
 				item.variant = 'standard';
+				item.allow_negative = false;
 			}
 			// @ts-ignore
 			if (item.type === 'badcounter') { item.type = 'counter'; item.variant = 'bad'; item.allow_negative = false; }
