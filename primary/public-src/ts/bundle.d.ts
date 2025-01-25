@@ -186,6 +186,7 @@ declare class NotificationCard {
     remove(time?: number): this;
     _filterOptions(options: any): NotificationCardOptions;
     _enrichText(): JQuery;
+    static _enrichHyperlinkTags(html: string): JQuery<HTMLSpanElement>;
     static _enrichWithClosingTags(html: string, key: string, openTag: string, closeTag: string): JQuery<HTMLSpanElement>;
     static _enrichWithSelfClosingTags(html: string, key: string, tag: string): JQuery<HTMLSpanElement>;
 }
