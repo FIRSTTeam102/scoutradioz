@@ -312,19 +312,20 @@ class NotificationCard{
 		enrichedText = NotificationCard._enrichWithSelfClosingTags(enrichedText.html(), '\n', '</br>');
 		enrichedText = NotificationCard._enrichWithSelfClosingTags(enrichedText.html(), '/n', '</br>');
 		// 2025-01-24, M.O'C: Added hyperlink enrichment ~ reverse Markdown order i.e., (http://www.example.com)[link text]
-		// ONLY do the replacement IF the string ')[' is found in the text
-		if (enrichedText.html().includes(')['))
-			enrichedText = NotificationCard._enrichHyperlinkTags(enrichedText.html());
+		enrichedText = NotificationCard._enrichHyperlinkTags(enrichedText.html());
 
 		return enrichedText;
 	}
 	
 	static _enrichHyperlinkTags(html: string) {
 
-		html = html.replace(/\(/g, '<a href="');
-		html = html.replace(/\)/g, '" target="_blank">');
-		html = html.replace(/\[/g, '');
-		html = html.replace(/\]/g, '</a>');
+		// ONLY do the replacement IF the string ')[' is found in the text
+		if (html.includes(')[')) {
+			html = html.replace(/\(/g, '<a href="');
+			html = html.replace(/\)/g, '" target="_blank">');
+			html = html.replace(/\[/g, '');
+			html = html.replace(/\]/g, '</a>');
+		}
 		
 		//Create new span with the enriched html.
 		let enrichedText = $(document.createElement('span'))
