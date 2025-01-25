@@ -318,14 +318,8 @@ class NotificationCard{
 	}
 	
 	static _enrichHyperlinkTags(html: string) {
-
-		// ONLY do the replacement IF the string ')[' is found in the text
-		if (html.includes(')[')) {
-			html = html.replace(/\(/g, '<a href="');
-			html = html.replace(/\)/g, '" target="_blank">');
-			html = html.replace(/\[/g, '');
-			html = html.replace(/\]/g, '</a>');
-		}
+		
+		html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="link" target="_blank">$1</a>');
 		
 		//Create new span with the enriched html.
 		let enrichedText = $(document.createElement('span'))
