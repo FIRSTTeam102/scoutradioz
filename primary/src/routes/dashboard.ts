@@ -480,9 +480,14 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, { sort: {'rank': 1} });
-		if(!rankings[0])
-			throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
-		
+		if(!rankings[0]) {
+			// throw new e.InternalServerError('Couldn\'t find rankings in allianceselection');
+			res.render('./message',{
+				title: res.msg('allianceselection.title'),
+				message: res.msg('allianceselection.noRankings'),
+			});
+			return;
+		}
 		// 2023-03-27, M.O'C: Scan the rankings to make sure all the data has come in
 		let firstCount = rankings[0].matches_played;
 		let matchcountConsistent = true;
