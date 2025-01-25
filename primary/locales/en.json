@@ -460,6 +460,7 @@
 			"matches": "Matches (FIRST data)",
 			"noEvent": "No event has been set",
 			"recalcDerived": "Recalculate derived metrics",
+			"recalcDerivedSuccess": "Derived metrics succesfully recalculated!",
 			"setCurrentEvent": "Set current event",
 			"setCurrentEventKey": "Set current event key",
 			"successClear": "Cleared current event successfully.",

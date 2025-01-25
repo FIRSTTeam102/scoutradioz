@@ -328,7 +328,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	
 	// 2022-03-04 JL: fixed bug & put the update stuff into a bulkWrite
 	let writeResult = await utilities.bulkWrite('matchscouting', writeQueries);
-	res.send(`SUCCESS - done in ${Date.now() - startTime} ms - writeResult = ${JSON.stringify(writeResult)}`);
+	// res.send(`SUCCESS - done in ${Date.now() - startTime} ms - writeResult = ${JSON.stringify(writeResult)}`);
 	
 	// 2023-03-19 JL: Recalculate agg ranges when recalculating derived
 	matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
@@ -341,6 +341,10 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	
 	//2020-03-27 (security hole) removed res.render(admin) and switched with res.send
 	// res.send('SUCCESS');
+	res.render('./message',{
+		title: res.msg('manage.event.recalcDerived'),
+		message: res.msg('manage.event.recalcDerivedSuccess'),
+	});
 }));
 
 
