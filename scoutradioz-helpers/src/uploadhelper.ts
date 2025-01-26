@@ -214,7 +214,6 @@ export class UploadHelper {
 	}
 }
 
-module.exports = UploadHelper;
 export default UploadHelper;
 
 export interface ImageLinks {

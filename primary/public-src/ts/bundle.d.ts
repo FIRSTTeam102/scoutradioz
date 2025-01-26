@@ -1,6 +1,3 @@
-/// <reference types="jquery" />
-/// <reference types="jquery" />
-/// <reference types="jquery" />
 /**
  * Modal dialog element with a close button.
  */
