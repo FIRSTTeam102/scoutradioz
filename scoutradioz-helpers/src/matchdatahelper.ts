@@ -4,12 +4,11 @@ import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
 import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, SpacerItem } from 'scoutradioz-types';
 import assert from 'assert';
-import { DerivedCalculator, convertValuesDict } from './derivedhelper';
+import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
+import ztable from 'ztable';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
-
-let ztable = require('ztable');
 
 let utilities: Utilities;
 
@@ -1155,7 +1154,7 @@ export class MatchDataHelper {
 			{ _id: orgschema.schema_id, },
 			{},
 			{allowCache: true, maxCacheAge: 180}
-		);
+		) as Schema;
 		
 		// sanity check DB 
 		assert(schema.form_type === form_type, `form_type does not match in DB! Expected ${form_type} but found ${schema.form_type}`);
@@ -1169,7 +1168,6 @@ export class MatchDataHelper {
 	}
 }
 
-module.exports = MatchDataHelper;
 export default MatchDataHelper;
 
 // parseInt in reality can accept any type.

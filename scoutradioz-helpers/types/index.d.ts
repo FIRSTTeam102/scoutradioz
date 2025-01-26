@@ -5,4 +5,5 @@
 export declare function config(utilities: any): void;
 export { default as upload } from './uploadhelper.js';
 export { default as matchData } from './matchdatahelper.js';
+export * from './jsonlayout.js';
 export * from './derivedhelper.js';

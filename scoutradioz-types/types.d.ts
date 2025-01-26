@@ -121,6 +121,10 @@ export interface FormInputItem extends SchemaItemBase {
 	id: string;
 }
 
+export interface TextBlockItem extends FormInputItem {
+	type: 'textblock';
+}
+
 export interface CheckBoxItem extends FormInputItem {
 	type: 'checkbox';
 }
@@ -156,25 +160,27 @@ export interface SpacerItem extends SchemaItemBase {
 	type: 'spacer';
 }
 
+export type DerivedDisplayType = 'number'|'percentage';
+
 export interface DerivedItemLegacy extends SchemaItemBase {
 	type: 'derived';
 	operations: DerivedOperation[];
 	id: string;
-	display_as?: string;	
+	display_as?: DerivedDisplayType;	
 }
 
 export interface DerivedItem extends SchemaItemBase {
 	type: 'derived';
 	formula: string;
 	id: string;
-	display_as?: string;
+	display_as?: DerivedDisplayType;
 }
 
 /**
  * Note: Since some types don't need an id, you may get typescript errors when trying to access the id property.
  * Use e.g. `if ('id' in item)` to check if the item has an id, as that "in" syntax is preferred by TS
  */
-export type SchemaItem = CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | SpacerItem | DerivedItem | DerivedItemLegacy;
+export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | SpacerItem | DerivedItem | DerivedItemLegacy;
 
 /**
  * A pit/match scouting form.
@@ -211,18 +217,6 @@ export declare interface OrgSchema extends DbDocument {
  * @deprecated - now identical to SchemaItem
  */
 export declare type LayoutEdit = SchemaItem;
-// /**
-//  * Identical to pit/match scouting BUT sets year, order, and form_type to optional
-//  * so that during form editing we can create objects without these attributes
-//  * @collection layoutedit
-//  * @interface LayoutEdit
-//  */
-// export declare interface LayoutEdit extends Omit<SchemaItem, 'form_type' | 'org_key' | 'year' | 'order'> {
-// 	year?: number;
-// 	form_type?: 'matchscouting'|'pitscouting';
-// 	org_key?: OrgKey;
-// 	order?: number|string;
-// }
 
 /**
  * A derived metric in the match scouting form.

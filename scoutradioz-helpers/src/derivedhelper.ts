@@ -28,7 +28,9 @@ export class DerivedCalculator {
 		if (typeof fromDict === 'string' || typeof fromDict === 'number') return fromDict;
 		// strings only allowed as args to multiselect and are surrounded by singlequotes
 		if (allowString && typeof val === 'string' && val.startsWith('\'') && val.endsWith('\'')) return val.substring(1, val.length - 1);
-		throw new TypeError('Could not parse value: ' + val);
+		
+		// Return a TypeError with the unparsable variable name, for error checking in calling script
+		throw new TypeError('Unexpected token: -' + val, { cause: val });
 	}
 	evaluatePEMDASOp(arr: ValueStructure, ops: string[]) {
 		let idx: number;

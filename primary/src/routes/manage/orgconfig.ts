@@ -8,6 +8,7 @@ import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 import Permissions from '../../helpers/permissions';
+import { validateJSONLayout } from 'scoutradioz-helpers';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -181,7 +182,7 @@ router.get('/editform', wrap(async (req, res) => {
 	assert(schema, `Schema not found for ${org_key} and ${year}!`);
 
 	// create a string representation
-	let layout = JSON.stringify(schema.items, null, 2);
+	let layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
 	//logger.debug(thisFuncName + 'layout=\n' + layout);
 
 	let existingFormData = new Map<string, string>();
@@ -241,47 +242,62 @@ router.post('/submitform', wrap(async (req, res) => {
 	let org_key = thisUser.org_key;
 	logger.debug('org_key=' + org_key);
 
-	let jsonString = req.body.jsonData;
+	const jsonString = req.body.jsonString;
 	logger.debug('jsonString=' + jsonString);
-	let year = parseInt(req.body.year);
+	const year = parseInt(req.body.year);
 	logger.debug('year=' + year);
-	let form_type = req.body.form_type;
+	const form_type = req.body.form_type;
 	logger.debug('form_type=' + form_type);
-
-	let formdata: SchemaItem[] = JSON.parse(jsonString);
+	const save = (req.body.save === 'true');
+	
+	assert(!isNaN(year), 'invalid year!');
+	assert(['matchscouting', 'pitscouting'].includes(form_type), 'invalid form_type!');
 
 	// Get existing schema metadata from db
 	const orgschema = await utilities.findOne('orgschemas',
 		{ org_key, year, form_type },
 	);
-	assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
+	assert(orgschema, `orgschema entry not found for ${org_key} and ${year}!`);
 	const schema = await utilities.findOne('schemas',
 		{ _id: orgschema.schema_id, owners: org_key },
 	);
-	assert(schema, `Schema not found for ${org_key} and ${year}!`);
+	assert(schema, `schema not found for ${org_key} and ${year}!`);
+	
+	// Validate json layout
+	const jsonParsed = JSON.parse(jsonString);
+	const { warnings, layout } = validateJSONLayout(jsonParsed);
 	
 	/**
 	 * TODO:
-	 * 	1. Server-side validation of schema being ok
+	 * 	1. [DONE] Server-side validation of schema being ok
 	 * 	2. Take schema ID as user input, rather than just current schema set by org?
 	 * 	3. If IDs do not change, then update the existing schema; if IDs do change, create new schema
 	 * 	4. Publishing shiz
 	 */
 
-	let writeResult = await utilities.update('schemas',
-		{ _id: schema._id, },
-		{
-			$set: {
-				items: formdata,
-				last_modified: new Date(),
+	if (save) {
+		logger.info('save=true; saving schema that was uploaded');
+		// Insert validated & updated layout 
+		let writeResult = await utilities.update('schemas',
+			{ _id: schema._id, },
+			{
+				$set: {
+					layout,
+					last_modified: new Date(),
+				}
 			}
+		);
+		logger.info('writeResult=', writeResult);
+		if (writeResult.modifiedCount !== 1) {
+			throw new e.InternalServerError(`modifiedCount !== 1! ${JSON.stringify(writeResult)}`);
 		}
-	);
-	logger.info('writeResult=', writeResult);
-	if (writeResult.modifiedCount !== 1) {
-		throw new e.InternalServerError(`modifiedCount !== 1! ${JSON.stringify(writeResult)}`);
 	}
-	res.redirect('/manage');
+	
+	return res.send({
+		warnings,
+		layout,
+		saved: save
+	});
 }));
 
 router.get('/pitsurvey', wrap(async (req, res) => {
