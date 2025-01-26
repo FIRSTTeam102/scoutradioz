@@ -405,7 +405,7 @@ export class MatchDataHelper {
 			{allowCache: true, maxCacheAge: 180}
 		);
 		assert(schema);
-		const derivedLayout = schema.items.filter(item => item.type === 'derived');
+		const derivedLayout = schema.layout.filter(item => item.type === 'derived');
 		
 		const derivedCalculator = new DerivedCalculator(convertValuesDict(matchData));
 

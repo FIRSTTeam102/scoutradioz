@@ -68,7 +68,7 @@ router.get('/match*', wrap(async (req, res) => {
 	//load layout/schema
 	let schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
-	let groupedLayout = splitLayoutIntoGroups(schema.items);
+	let groupedLayout = splitLayoutIntoGroups(schema.layout);
 	
 	const images = await uploadHelper.findTeamImages(org_key, year, teamKey);
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
@@ -234,8 +234,8 @@ router.post('/match/submit', wrap(async (req, res) => {
 	let schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
 	let layoutTypeById: StringDict = {};
-	logger.trace('layout=', schema.items);
-	for (let item of schema.items) {
+	logger.trace('layout=', schema.layout);
+	for (let item of schema.layout) {
 		// filter for layout items with an id
 		if ('id' in item) {
 			logger.trace(item.id + ' is a ' + item.type);
@@ -334,7 +334,7 @@ router.get('/pit*', wrap(async (req, res) => {
 	
 	res.render('./scouting/pit', {
 		title: req.msg('scouting.pit'),
-		layout: schema.items,
+		layout: schema.layout,
 		pitData: pitData, 
 		key: teamKey,
 		uploadURL: uploadURL,

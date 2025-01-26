@@ -31,7 +31,7 @@ utilities.refreshTier();
 					'form_type': '$form_type',
 					'year': '$year'
 				},
-				'items': {
+				'layout': {
 					'$push': {
 						'type': '$type',
 						'id': '$id',
@@ -47,7 +47,7 @@ utilities.refreshTier();
 				'last_modified': '$$NOW',
 				'created': '$$NOW',
 				'form_type': '$_id.form_type',
-				'items': 1,
+				'layout': 1,
 				'name': '',
 				'description': '',
 				'published': {
@@ -72,7 +72,7 @@ utilities.refreshTier();
 
 	for (let schema of schemaArr) {
 		
-		for (let item of schema.items) {
+		for (let item of schema.layout) {
 			// @ts-ignore
 			if (item.type === 'h2') item.type = 'header';
 			// @ts-ignore

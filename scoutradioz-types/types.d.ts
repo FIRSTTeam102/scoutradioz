@@ -184,7 +184,7 @@ export declare interface Schema extends DbDocument {
 	last_modified: Date,
 	created: Date,
 	form_type: 'matchscouting'|'pitscouting';
-	items: SchemaItem[];
+	layout: SchemaItem[];
 	/** Name of the layout, for future purposes related to sharing schemas */
 	name: string;
 	/** Long description, for future purposes related to sharing schemas */

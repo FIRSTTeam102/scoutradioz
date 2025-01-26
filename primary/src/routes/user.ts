@@ -643,7 +643,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	let redirectURL = req.getFixedRedirectURL(); //////////////////////////////
 	
 	// read in the list of form options
-	const { items: matchlayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+	const { layout: matchlayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 	//logger.debug("matchlayout=" + JSON.stringify(matchlayout))
 	
 	let orgColumnDefaults;

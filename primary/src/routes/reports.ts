@@ -251,10 +251,10 @@ router.get('/teamintel', wrap(async (req, res) => {
 	
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
-	const { items: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 
 	// Pit data layout
-	const { items: layout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'pitscouting');
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'pitscouting');
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey, 'team_key': teamKey } });
@@ -595,7 +595,7 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 	const event_key = req.event.key;
 	
 	// Match data layout
-	const { items: layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2020-03-06 JL: utilities.find -> utilities.findOne
@@ -946,7 +946,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	// var colCookie = req.cookies[cookie_key];
 	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
-	const { items: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey } });
@@ -1081,7 +1081,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	// var colCookie = req.cookies[cookie_key];
 	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
-	const { items: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
+	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': org_key, event_key } });
@@ -1404,7 +1404,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',dataSpan=' + dataSpan + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
-	const { items: matchLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+	const { layout: matchLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 
 	// sanity check
 	//logger.debug("layout=" + JSON.stringify(matchLayout));
