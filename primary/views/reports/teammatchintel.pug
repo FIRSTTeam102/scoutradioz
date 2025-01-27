@@ -21,9 +21,9 @@ block content
 						- var boolVal = msg('yes');
 						- if (data[element.id] == 0) boolVal = msg('no');
 						h4(class="theme-text") #{element.label} <strong>#{boolVal}</strong>
-					when "h2"
+					when "header"
 						h2=element.label
-					when "h3"
+					when "subheader"
 						h3=element.label
 					when "spacer"
 						br

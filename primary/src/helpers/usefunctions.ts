@@ -529,6 +529,10 @@ class UseFunctions {
 			disableStackTrace: err.disableStackTrace
 		};
 		
+		if (err.message) {
+			res.setHeader('Error-Message', err.message.replace(/\n|\r/g, ' ')); // for JS AJAX calls
+		}
+		
 		// render the error page
 		res.status(err.status || 500);
 		res.render('error', {

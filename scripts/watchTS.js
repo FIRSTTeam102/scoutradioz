@@ -58,7 +58,7 @@ function watchPath(path, name, afterProgramCreate) {
 	return watchProgram;
   
 	function reportDiagnostic(diagnostic) {
-		console.error(`${name.brightYellow}: ${errorName}: ${ts.flattenDiagnosticMessageText( diagnostic.messageText, formatHost.getNewLine())}`);
+		console.error(`${name.brightYellow}: ${errorName}: ${ts.flattenDiagnosticMessageText( diagnostic.messageText, formatHost.getNewLine())}\n\t${diagnostic.file.fileName}`);
 	}
 	
 	/**

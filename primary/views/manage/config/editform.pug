@@ -4,28 +4,51 @@
 		'/manage/config/pitform' or '/manage/config/matchform'
 extends ../../layout
 block content
+	link(rel="stylesheet" data-name="vs/editor/editor.main" href=`${fileRoot}/lib/monaco-editor/vs/editor/editor.main.css`)
+	script.
+		var require = { paths: { vs: `#{fileRoot || 'http://localhost:3000'}/lib/monaco-editor/vs` } };
+		const loadedJSONLayoutRaw = `!{layout}`;
+		const loadedJSONLayout = JSON.stringify(JSON.parse(loadedJSONLayoutRaw), null, 2);
+		const year = '#{year}';
+		const form_type = '#{form_type}';
+	script(src=`${fileRoot}/lib/monaco-editor/vs/loader.js`)
+	script(src=`${fileRoot}/lib/monaco-editor/vs/editor/editor.main.js`)
+	style.
+		#jsonfield {
+			width: 100%;
+			min-height: 500px;
+			/* Unset w3-center */
+			text-align: initial!important;
+			resize: vertical;
+			overflow: auto;
+			border: 1px solid black;
+		}
+	
 	h2=title
 	p 
 		br 
 		i Modify, copy, paste from elsewhere, etc. the JSON defining your form
 		br
-		i Recommendation: Use a text editor like <a href="https://vscode.dev" class="link" target="_blank">Visual Studio Code</a> to edit the JSON, then paste it here
+		i <a href="https://wiki.team102.org/scoutradioz/forms/overview" class="link" target="_blank">Create your own</a> or browse other orgs' forms shared on the <a class="link" target="_blank" href="https://discord.gg/hUsbWTeEVz">Scoutradioz Discord</a>
 	div(class="w3-container w3-section w3-auto")
-		textarea(class="w3-input w3-border" id="jsonfield" name="jsonfield" rows="40" cols="80")=layout
+		//- textarea(class="w3-input w3-border" id="jsonfield" name="jsonfield" rows="40" cols="80")=layout
+		div(id="jsonfield" rows="40" cols="80")
+		
 		div(class="gear-btn theme-link w3-btn w3-section" id="testBtn")
 			span Test form (Opens in a dialog window)
 		div(class="gear-btn theme-link w3-btn w3-section" id="submitBtn")
 			span Validate and submit
 	textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
 	
-	form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
-		input(name="jsonData" id="jsonData" type="hidden")
-		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`)
-		input(name="year" id="year" type="hidden" value=`${year}`)
-	form(id="testForm" style="visibility:hidden" action="/scouting/testform" method="post")
-		input(name="testData" id="testData" type="hidden")
-		input(name="form_type" id="form_type" type="hidden" value=`${form_type}`)
-		input(name="year" id="year" type="hidden" value=`${year}`)
+	
+	//- form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
+	//- 	input(name="jsonData" id="jsonData" type="hidden")
+	//- 	input(name="form_type" id="form_type" type="hidden" value=`${form_type}`)
+	//- 	input(name="year" id="year" type="hidden" value=`${year}`)
+	//- form(id="testForm" style="visibility:hidden" action="/scouting/testform" method="post")
+	//- 	input(name="testData" id="testData" type="hidden")
+	//- 	input(name="form_type" id="form_type" type="hidden" value=`${form_type}`)
+	//- 	input(name="year" id="year" type="hidden" value=`${year}`)
 
 	//- 2023-10-06 JL: Changed script to module so I can import types ESM-style
 	script(src=`${fileRoot}/js/script-editform.js` type="module")

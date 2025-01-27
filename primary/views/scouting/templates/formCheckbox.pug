@@ -1,7 +1,0 @@
-div(class="w3-padding-large")
-	if ("true" == answer || 1 == answer)
-		input(type="checkbox" checked class="w3-check" onclick=`updateCheck_${element.id}()` id=element.id)
-	else
-		input(type="checkbox" class="w3-check" onclick=`updateCheck_${element.id}()` id=element.id)
-	label(for=element.id class="w3-margin-left")=element.label
-	input(type="hidden" id=`${element.id}FormInput` name=`${element.id}` value=answer)

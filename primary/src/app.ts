@@ -10,6 +10,7 @@ import log4js from 'log4js';									// Extensive logging functionality
 import utilities from 'scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
+import helpers, { config as configHelpers } from 'scoutradioz-helpers';
 
 const appStartupTime = Date.now();
 
@@ -63,10 +64,8 @@ utilities.config(require('../databases.json'), {
 	debug: (process.env.UTILITIES_DEBUG === 'true'),
 	schemasWithNumberIds: ['users'],
 });
-//Load helper functions
-const helpers = require('scoutradioz-helpers');
 //Configure helper functions by passing our already-configured utilities module
-helpers.config(utilities);
+configHelpers(utilities);
 
 //PUG CACHING (if production IS enabled)
 if(process.env.NODE_ENV == 'production') logger.info('Pug caching will be enabled.');
@@ -245,4 +244,5 @@ app.use(usefunctions.errorHandler);
 logger.info(`app.js READY: ${Date.now() - appStartupTime} ms`);
 
 // Export your express server so you can import it in the lambda function.
-module.exports = app;
+// module.exports = app;
+export default app;

@@ -1,13 +1,13 @@
 import express from 'express';
 import { getLogger } from 'log4js';
-import wrap from '../helpers/express-async-handler';
-import utilities from 'scoutradioz-utilities';
-import Permissions from '../helpers/permissions';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
-import e, { assert } from 'scoutradioz-http-errors';
-import type { MongoDocument } from 'scoutradioz-utilities';
-import type { AggRange, Event, Layout, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, Team, Upload } from 'scoutradioz-types';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
+import e, { assert } from 'scoutradioz-http-errors';
+import type { AggRange, Event, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, SchemaItem, Team, Upload } from 'scoutradioz-types';
+import type { MongoDocument } from 'scoutradioz-utilities';
+import utilities from 'scoutradioz-utilities';
+import wrap from '../helpers/express-async-handler';
+import Permissions from '../helpers/permissions';
 
 const router = express.Router();
 const logger = getLogger('reports');
@@ -185,16 +185,8 @@ router.get('/teamintel', wrap(async (req, res) => {
 		pitData = pitFind.data;
 		superData = pitFind.super_data;
 	}
-
-	// Pit data layout
-	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
-	let layout: Layout[] = await utilities.find('layout', 
-		{org_key: orgKey, year: eventYear, form_type: 'pitscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
 	
-	logger.trace('layout=' + JSON.stringify(layout));
+	// logger.trace('layout=' + JSON.stringify(layout));
 	
 	// Pull in individual scouting data for this team, for this event, to enhance the match data
 	logger.debug('Pulling scoring data for teamKey=' + teamKey + ',event_key=' + eventKey);
@@ -258,15 +250,11 @@ router.get('/teamintel', wrap(async (req, res) => {
 	// ] );	
 	
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	//var cookie_key = org_key + "_" + event_year + "_cols";
-	//var colCookie = req.cookies[cookie_key];
-	//var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
-	let scorelayout: Layout[] = await utilities.find('layout', 
-		{org_key: orgKey, year: eventYear, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+
+	// Pit data layout
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'pitscouting');
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey, 'team_key': teamKey } });
@@ -289,7 +277,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 		// thisLayout.key = thisLayout.id; 2023-01-09 JL - removing unnecessary line
 		scorelayout[scoreIdx] = thisLayout;
 		//if it is a valid data type, add this layout's ID to groupClause
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			let thisEMAclause: MongoDocument = {};
 			let thisEMAinner: MongoDocument = {};
 			thisEMAinner['alpha'] = emaAlpha;
@@ -308,7 +296,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
@@ -333,7 +321,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			let aggRow: MongoDocument = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -597,30 +585,27 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 	logger.addContext('funcName', 'teammatchintel[get]');
 	logger.info('ENTER');
 	
-	let matchTeamKey = req.query.key;
-	if (typeof matchTeamKey !== 'string') throw new e.UserError(res.msg('errors.specifyTeamMatchKey'));
+	let match_team_key = req.query.key;
+	if (typeof match_team_key !== 'string') throw new e.UserError(res.msg('errors.specifyTeamMatchKey'));
 	
-	logger.debug('teamMatchKey=' + matchTeamKey);
+	logger.debug('teamMatchKey=' + match_team_key);
 	
 	let eventYear = req.event.year;
-	let orgKey = req._user.org_key;
+	let org_key = req._user.org_key;
+	const event_key = req.event.key;
 	
 	// Match data layout
-	let layout: Layout[] = await utilities.find('layout', 
-		{org_key: orgKey, year: eventYear, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 	// 2020-03-06 JL: utilities.find -> utilities.findOne
-	let teammatch: MatchScouting = await utilities.findOne('matchscouting', {'org_key': orgKey, 'match_team_key': matchTeamKey}, {});
+	let teammatch: MatchScouting = await utilities.findOne('matchscouting', {org_key, match_team_key}, {});
 	let data = null;
 	if (teammatch) {
 		data = teammatch.data;
 	}
 	
-	let x = matchTeamKey;
+	let x = match_team_key;
 	let matchType, matchNum;
 	let teamNum = x.substring(x.lastIndexOf('_')+4);
 	
@@ -648,7 +633,7 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 		layout,
 		data,
 		teammatch,
-		teamKey: matchTeamKey.split('_')[2],
+		teamKey: match_team_key.split('_')[2],
 		matchDataHelper,
 	});
 }));
@@ -961,11 +946,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	// var colCookie = req.cookies[cookie_key];
 	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
-	let scorelayout: Layout[] = await utilities.find('layout', 
-		{org_key: orgKey, year: eventYear, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey } });
@@ -988,7 +969,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 		// thisLayout.key = thisLayout.id; 2023-01-09 JL - removing unnecessary code
 		scorelayout[scoreIdx] = thisLayout;
 		//if it is a valid data type, add this layout's ID to groupClause
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			let thisEMAclause: MongoDocument = {};
 			let thisEMAinner: MongoDocument = {};
 			thisEMAinner['alpha'] = emaAlpha;
@@ -1007,7 +988,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
@@ -1031,7 +1012,7 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			let aggRow: MongoDocument = {};
 			aggRow['key'] = thisLayout.id;
 			aggRow['team'] = 'frcNone';
@@ -1079,10 +1060,10 @@ router.get('/metrics', wrap(async (req, res) => {
 	logger.info('ENTER');
 	
 	let eventYear = req.event.year;
-	let orgKey = req._user.org_key;
+	const org_key = req._user.org_key;
 	
 	// for later querying by event_key
-	let event_key = req.event.key;
+	const event_key = req.event.key;
 	logger.debug('event_key=' + event_key);
 
 	// Match data layout - use to build dynamic Mongo aggregation query  --- No team key specified! Will combo ALL teams
@@ -1100,14 +1081,10 @@ router.get('/metrics', wrap(async (req, res) => {
 	// var colCookie = req.cookies[cookie_key];
 	// var scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
 	// 2020-03-07, M.O'C: Disabled filtered columns for this report
-	let scorelayout: Layout[] = await utilities.find('layout', 
-		{org_key: orgKey, year: eventYear, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
 	let aggQuery = [];
-	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': event_key } });
+	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': org_key, event_key } });
 	let groupClause: MongoDocument = {};
 	// group on event for single row
 	groupClause['_id'] = '$event_key';
@@ -1115,7 +1092,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
 			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
 			// 2022-03-28, M.O'C: Leave this as flat $avg (and not exponential moving average) because the data is '2-dimensional' (not just 1D time)
@@ -1139,7 +1116,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
 		let thisLayout = scorelayout[scoreIdx];
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			let aggRow: MongoDocument = {};
 			aggRow['key'] = thisLayout.id;
 			
@@ -1157,7 +1134,7 @@ router.get('/metrics', wrap(async (req, res) => {
 	
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
-	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': event_key});
+	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
 	
 	res.render('./reports/metrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
@@ -1427,11 +1404,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',dataSpan=' + dataSpan + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
-	let matchLayout: Layout[] = await utilities.find('layout', 
-		{org_key: orgKey, year: eventYear, form_type: dataType}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	const { layout: matchLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 
 	// sanity check
 	//logger.debug("layout=" + JSON.stringify(matchLayout));
@@ -1507,7 +1480,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 				// add on metric IDs
 				for (let thisItem of matchLayout) {
 					// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
-					if (matchDataHelper.isMetric(thisItem.type) && !isOtherNotesAndUnauthorized(thisItem)) 
+					if (matchDataHelper.isMetric(thisItem) && !isOtherNotesAndUnauthorized(thisItem)) 
 						headerRow += ',' + thisItem.id;
 				}
 				//logger.debug("headerRow=" + headerRow);
@@ -1543,9 +1516,9 @@ router.get('/exportdata', wrap(async (req, res) => {
 			// cycle through the metrics
 			for (let thisItem of matchLayout) {
 				// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
-				if (matchDataHelper.isMetric(thisItem.type) && !isOtherNotesAndUnauthorized(thisItem)) {
+				if (matchDataHelper.isMetric(thisItem) && !isOtherNotesAndUnauthorized(thisItem)) {
 					dataRow += ',';
-					if (!thisItem.id) throw new e.InternalDatabaseError(`Layout item does not have a layout ID! (label=${thisItem.label}, _id=${thisItem._id})`);
+					if (!thisItem.id) throw new e.InternalDatabaseError(`Layout item does not have a layout ID! (label=${'label' in thisItem ? thisItem.label : ''}, _id=${thisItem._id})`);
 					if (thisData[thisItem.id] || thisData[thisItem.id] == 0) {
 						let thisVal = '' + thisData[thisItem.id];
 						dataRow += '"' + thisVal.replace(/(\r\n|\n|\r)/gm,'') + '"';
@@ -1558,8 +1531,8 @@ router.get('/exportdata', wrap(async (req, res) => {
 	}
 	
 	// If the layout item is otherNotes and the user is unauthorized to view it, return false.
-	function isOtherNotesAndUnauthorized(thisItem: Layout) {
-		return (thisItem.id === 'otherNotes' && req._user.role.access_level < Permissions.ACCESS_SCOUTER);
+	function isOtherNotesAndUnauthorized(thisItem: SchemaItem) {
+		return ('id' in thisItem && thisItem.id === 'otherNotes' && req._user.role.access_level < Permissions.ACCESS_SCOUTER);
 	}
 
 	logger.info('EXIT returning ' + scored.length + ' rows of CSV');

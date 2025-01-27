@@ -74,7 +74,7 @@ export type FilterQueryTyped<T extends MongoDocument> = {
     $and?: FilterQueryTyped<T>[];
     $expr?: FilterQueryTyped<T>;
 } & {
-    [key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]> | T[key];
+    [key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]> | (T[key] extends Array<any> ? (T[key][number] | T[key]) : T[key]);
 } & {
     [key: `${string}.${string}`]: QueryItem | ValidQueryPrimitive;
 };

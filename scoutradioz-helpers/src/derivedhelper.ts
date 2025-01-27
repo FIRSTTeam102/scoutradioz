@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { AnyDict } from 'scoutradioz-types';
+import type { AnyDict, EventKey, OrgKey } from 'scoutradioz-types';
 
 export type ValueDict = { [key: string]: value };
 
@@ -11,7 +11,7 @@ export const validFuncs = ['min', 'max', 'log', 'abs', 'if', 'multiselect'];
 // groups 1/2: operators, group 3: funcs & keywords, group 4: strings (for multiselect)
 const regex = /(==|<=|>=|!=|\|\|)|([\-*+\^/()><,])|([\w.]+)|('.+?')/g;
 
-export  class DerivedCalculator {
+export class DerivedCalculator {
 	values: ValueDict;
 	constructor(values: ValueDict) {
 		this.values = values;
@@ -28,7 +28,9 @@ export  class DerivedCalculator {
 		if (typeof fromDict === 'string' || typeof fromDict === 'number') return fromDict;
 		// strings only allowed as args to multiselect and are surrounded by singlequotes
 		if (allowString && typeof val === 'string' && val.startsWith('\'') && val.endsWith('\'')) return val.substring(1, val.length - 1);
-		throw new TypeError('Could not parse value: ' + val);
+		
+		// Return a TypeError with the unparsable variable name, for error checking in calling script
+		throw new TypeError('Unexpected token: -' + val, { cause: val });
 	}
 	evaluatePEMDASOp(arr: ValueStructure, ops: string[]) {
 		let idx: number;

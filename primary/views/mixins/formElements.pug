@@ -1,0 +1,102 @@
+mixin Counter(item, answer)
+	//- button colors
+	- var leftButton = item.variant === 'standard' ? 'sc-bad' : 'sc-good';
+	- var rightButton = item.variant === 'standard' ? 'sc-good' : 'sc-bad';
+	div(class="w3-auto w3-row w3-padding-small")
+		div(class="w3-col s2 m4")
+			button(class=`w3-btn scouting-counter ${leftButton}` onclick=`updateCounter('${item.id}', -1, ${item.allow_negative})` type="button") 
+				div(class="minus") -
+		div(class="w3-col s8 m4")
+			label
+				center #{item.label}: 
+					span(id=`${item.id}_number`) #{answer || 0}
+		div(class="w3-col s2 m4")
+			button(class=`w3-btn scouting-counter ${rightButton}` onclick=`updateCounter('${item.id}', 1, ${item.allow_negative})` type="button") +
+	input(id=`${item.id}_formInput` type="hidden" name=`${item.id}` value=(answer || 0))
+	p
+
+mixin Header(item)
+	//- The dynamicscroll-header is used for match scouting; it has an offset -32px, letting the autoscroll provide some padding above the header object
+	div(class="dynamicscroll-header" id='dynamicscroll_'+item.id)
+	h2(class="theme-text w3-padding-16 theme-header" id=item.id)=item.label
+
+mixin Subheader(item)
+	h3(class="theme-text w3-padding-16 theme-subheader" id=item.id)=item.label
+
+mixin Spacer
+	p(class="w3-tiny theme-spacer")
+	
+mixin Checkbox(item, answer)
+	- console.log(answer)
+	div(class="w3-padding-large")
+		//- JL note: double equals 1 is on purpose
+		input(type="checkbox" class="w3-check" checked=(answer === 'true' || answer == 1) id=item.id onclick=`updateCheckbox('${item.id}')`)
+		//- if ("true" == answer || 1 == answer)
+		//- 	input(type="checkbox" checked class="w3-check" onclick=`updateCheck_${item.id}()` id=item.id)
+		//- else
+		//- 	input(type="checkbox" class="w3-check" onclick=`updateCheck_${item.id}()` id=item.id)
+		label(for=item.id class="w3-margin-left")=item.label
+		input(type="hidden" id=`${item.id}FormInput` name=`${item.id}` value=answer)
+
+mixin Slider(item, answer)
+	h5=item.label
+	div(class="w3-half" style="float: none; margin: auto;")
+		- var reversed = (item.options.step < 0); // If the step is negative, we reverse the direction of the slider
+		- item.options.step = Math.abs(item.options.step); // however, negative steps break slider items so we must reset it to positive
+		div(class="slider-container no-select")
+			input(type="range" class=("slider no-outline"+(reversed?' reversed':'')) time-slider=(item.variant === 'time') /* if reversed is false, it won't given the "time-slider" attribute */
+				name=item.id min=item.options.min max=item.options.max step=item.options.step value=(answer || item.options.min))
+			div(class="slider-before" style=(reversed ? 'right:0px' : '') /* This puts the pretty visual part of the slider on the right */
+				before slider-name=item.id)
+		div(class="slider-labels")
+			label(class="slider-label-left")= reversed ? item.options.max : item.options.min
+			label(class="slider-label-center" slider-name=item.id)=item.options.min
+			label(class="slider-label-right")= reversed ? item.options.min : item.options.max
+		br 
+		br 
+
+script.
+	function updateCounter(elementId, delta, allowNegative) {
+		let formInput = $(`#${elementId}_formInput`);
+		let visibleNumber = $(`#${elementId}_number`);
+		//- increment value
+		let value = Number(formInput.val());
+		value += delta;
+		//- for non allow_negative counters
+		if (!allowNegative && value < 0) value = 0;
+		//- update contents
+		formInput.val(value);
+		visibleNumber.text(value);
+	}
+	
+	function updateCheckbox(elementId) {
+		let isChecked = $(`#${elementId}`).prop('checked');
+		$(`input[name=${elementId}]`).val(isChecked); // on server side, "true"/"false" gets translated to 1/0
+	}
+
+	$(() => {
+		var sliders = $('input[type=range].slider');
+		sliders.on('input', sliderOnChange);
+		// Run the handler once on start to update the slider's appearance to the appropriate starting value
+		sliders.trigger('input'); 
+	})
+	
+	function sliderOnChange() {
+		const _this = $(this);
+		let val = parseFloat(_this.val());
+		let min = parseFloat(_this.attr('min'));
+		let max = parseFloat(_this.attr('max'));
+		let percentage = (val - min) / (max - min) * 100;
+		let name = _this.attr('name');
+		$(`[before][slider-name=${name}]`).css({
+			width: `${percentage}%`
+		});
+		if (typeof _this.attr('time-slider') !== 'undefined') {
+			let minutes = Math.floor(val / 60);
+			let seconds = String(val % 60).padStart(2, '0');
+			$(`label[slider-name=${name}]`).html(`${minutes}:${seconds}<br><span class="theme-text-secondary w3-small">${val} s</span>`);
+		}
+		else {
+			$(`label[slider-name=${name}]`).text(val);
+		}
+	}
