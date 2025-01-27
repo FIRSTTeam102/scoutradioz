@@ -311,10 +311,23 @@ class NotificationCard{
 		enrichedText = NotificationCard._enrichWithClosingTags(enrichedText.html(), '_', '<i>', '</i>');
 		enrichedText = NotificationCard._enrichWithSelfClosingTags(enrichedText.html(), '\n', '</br>');
 		enrichedText = NotificationCard._enrichWithSelfClosingTags(enrichedText.html(), '/n', '</br>');
-		
+		// 2025-01-24, M.O'C: Added hyperlink enrichment ~ reverse Markdown order i.e., (http://www.example.com)[link text]
+		enrichedText = NotificationCard._enrichHyperlinkTags(enrichedText.html());
+
 		return enrichedText;
 	}
 	
+	static _enrichHyperlinkTags(html: string) {
+		
+		html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="link" target="_blank">$1</a>');
+		
+		//Create new span with the enriched html.
+		let enrichedText = $(document.createElement('span'))
+			.html(html);
+		
+		return enrichedText;
+	}
+
 	static _enrichWithClosingTags(html: string, key: string, openTag: string, closeTag: string) {
 		
 		//Get all locations of the key
