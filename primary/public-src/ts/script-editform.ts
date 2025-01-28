@@ -48,7 +48,8 @@ async function test() {
 
 		if (Array.isArray(warnings) && Array.isArray(layout)) {
 			if (warnings.length > 0) {
-				NotificationCard.warn(`Passed validation with warnings:\n${warnings.join('\n')}`, { ttl: 0, exitable: true });
+				let warningsStr = warnings.join('\n').replace(/\*/g, '\\*'); // JL note: asterisks are in the derived metric suggestion, escaping the asterisks to avoid NotificationCard showing it as bold
+				NotificationCard.warn(`Passed validation with warnings:\n${warningsStr}`, { ttl: 0, exitable: true });
 			}
 			// Set editor to modified json layout
 			editor.setValue(JSON.stringify(layout, null, 2));
@@ -103,7 +104,8 @@ async function submit() {
 		}
 		if (Array.isArray(warnings) && Array.isArray(layout)) {
 			if (warnings.length > 0) {
-				NotificationCard.warn(`Submitted successfully with warnings:\n${warnings.join('\n')}`, { ttl: 0, exitable: true });
+				let warningsStr = warnings.join('\n').replace(/\*/g, '\\*'); // JL note: asterisks are in the derived metric suggestion, escaping the asterisks to avoid NotificationCard showing it as bold
+				NotificationCard.warn(`Submitted successfully with warnings:\n${warningsStr}`, { ttl: 0, exitable: true });
 			}
 			else {
 				NotificationCard.good('Validated and submitted successfully');
