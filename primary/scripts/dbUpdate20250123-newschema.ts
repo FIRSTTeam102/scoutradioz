@@ -37,7 +37,8 @@ utilities.refreshTier();
 						'id': '$id',
 						'label': '$label',
 						'operations': '$operations',
-						'options': '$options'
+						'options': '$options',
+						'formula': '$formula',
 					}
 				}
 			}
