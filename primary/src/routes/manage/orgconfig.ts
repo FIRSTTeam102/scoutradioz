@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, SchemaItem } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
@@ -167,22 +167,31 @@ router.get('/editform', wrap(async (req, res) => {
 	assert(form_type === 'matchscouting' || form_type === 'pitscouting', new e.UserError('Invalid form type'));
 
 	let org_key = req._user.org_key;
-	
+
 	let year = parseInt(String(req.query.year)) || req.event.year;
 	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
 
 	// load form definition data from the database
+	let schema: Schema,
+		// default "blank" layout, with sample data
+		layout = `[
+			{ "type": "header", "label": "Sample" },
+			{ "type": "subheader", "label": "Replace this JSON with the code that defines your scouting form" },
+			{ "type": "spacer" },
+			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" }
+		]`;
+
 	const orgschema = await utilities.findOne('orgschemas',
 		{ org_key, year, form_type },
 	);
-	assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
-	const schema = await utilities.findOne('schemas',
-		{ _id: orgschema.schema_id, owners: org_key },
-	);
-	assert(schema, `Schema not found for ${org_key} and ${year}!`);
-
-	// create a string representation
-	let layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
+	if (orgschema) {
+		schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, owners: org_key },
+		);
+		assert(schema, `For ${org_key} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`);
+		// Create string representation of layout
+		layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
+	}
 	//logger.debug(thisFuncName + 'layout=\n' + layout);
 
 	let existingFormData = new Map<string, string>();
@@ -249,24 +258,14 @@ router.post('/submitform', wrap(async (req, res) => {
 	const form_type = req.body.form_type;
 	logger.debug('form_type=' + form_type);
 	const save = (req.body.save === 'true');
-	
+
 	assert(!isNaN(year), 'invalid year!');
 	assert(['matchscouting', 'pitscouting'].includes(form_type), 'invalid form_type!');
 
-	// Get existing schema metadata from db
-	const orgschema = await utilities.findOne('orgschemas',
-		{ org_key, year, form_type },
-	);
-	assert(orgschema, `orgschema entry not found for ${org_key} and ${year}!`);
-	const schema = await utilities.findOne('schemas',
-		{ _id: orgschema.schema_id, owners: org_key },
-	);
-	assert(schema, `schema not found for ${org_key} and ${year}!`);
-	
 	// Validate json layout
 	const jsonParsed = JSON.parse(jsonString);
 	const { warnings, layout } = validateJSONLayout(jsonParsed);
-	
+
 	/**
 	 * TODO:
 	 * 	1. [DONE] Server-side validation of schema being ok
@@ -277,22 +276,62 @@ router.post('/submitform', wrap(async (req, res) => {
 
 	if (save) {
 		logger.info('save=true; saving schema that was uploaded');
-		// Insert validated & updated layout 
-		let writeResult = await utilities.update('schemas',
-			{ _id: schema._id, },
-			{
-				$set: {
-					layout,
-					last_modified: new Date(),
-				}
-			}
+
+		// Get existing schema metadata from db
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year, form_type },
 		);
-		logger.info('writeResult=', writeResult);
-		if (writeResult.modifiedCount !== 1) {
-			throw new e.InternalServerError(`modifiedCount !== 1! ${JSON.stringify(writeResult)}`);
+		// schema did exist in db; update it now
+		if (orgschema) {
+			const schema = await utilities.findOne('schemas',
+				{ _id: orgschema.schema_id, owners: org_key },
+			);
+			assert(schema, new e.InternalServerError(`For ${org_key} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`));
+			// Insert validated & updated layout 
+			let writeResult = await utilities.update('schemas',
+				{ _id: schema._id, },
+				{
+					$set: {
+						layout,
+						last_modified: new Date(),
+					}
+				}
+			);
+			logger.info('writeResult=', writeResult);
+			if (writeResult.modifiedCount !== 1) {
+				throw new e.InternalServerError(`modifiedCount !== 1! ${JSON.stringify(writeResult)}`);
+			}
+		}
+		// schema didn't exist in db; create it now
+		else {
+			let newSchema: Schema = {
+				year,
+				last_modified: new Date(),
+				created: new Date(),
+				form_type,
+				layout,
+				name: `${org_key}'s ${year} ${form_type} Form`,
+				description: '',
+				published: false,
+				owners: [org_key],
+			};
+			let insertResult = await utilities.insert('schemas', newSchema);
+
+			logger.debug(`insertResult for inserting schema=${JSON.stringify(insertResult)}`);
+			assert(insertResult.insertedId, new e.InternalServerError('insertResult did not result in an insertedId!'));
+
+			let newOrgSchema: OrgSchema = {
+				org_key,
+				year,
+				form_type,
+				schema_id: insertResult.insertedId,
+			};
+
+			insertResult = await utilities.insert('orgschemas', newOrgSchema);
+			logger.debug(`insertResult for inserting orgschema=${JSON.stringify(insertResult)}`);
 		}
 	}
-	
+
 	return res.send({
 		warnings,
 		layout,

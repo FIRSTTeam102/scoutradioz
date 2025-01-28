@@ -26,7 +26,7 @@ export function validateJSONLayout(layout: SchemaItem[]) {
 		let item = layout[i];
 		if (item.type === 'derived' && 'formula' in item) {
 			try {
-				let calculatedValue = calculator.runFormula(item.formula, item.id);
+				let { answer: calculatedValue } = calculator.runFormula(item.formula, item.id);
 				if (isNaN(calculatedValue)) {
 					throw new Error('Resulting value is NaN!');
 				}
