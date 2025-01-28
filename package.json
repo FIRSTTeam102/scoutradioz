@@ -36,7 +36,8 @@
 		"eslint": "^8.8.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-import": "^2.25.4",
-		"eslint-plugin-scoutradioz-eslint": "file:scoutradioz-eslint"
+		"eslint-plugin-scoutradioz-eslint": "file:scoutradioz-eslint",
+		"monaco-editor": "^0.52.2"
 	},
 	"dependencies": {
 		"archiver": "^5.3.0",
