@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
-		"module": "ESNext",
+		"module": "CommonJS",
 		"moduleResolution": "node",
 		// note: DOM is included because of PushSubscription
 		"lib": ["ESNext", "ESNext.Symbol", "DOM"],
