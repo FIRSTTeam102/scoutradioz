@@ -254,7 +254,8 @@ router.post('/match/submit', wrap(async (req, res) => {
 	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(matchData));
 
 	// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-	matchData = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
+	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
+	matchData = matchDataNew; // JL: this is temporary while we have debugging info
 	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(matchData));
 
 	// Post modified data to DB

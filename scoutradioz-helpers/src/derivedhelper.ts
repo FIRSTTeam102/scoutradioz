@@ -28,7 +28,7 @@ export class DerivedCalculator {
 		if (typeof fromDict === 'string' || typeof fromDict === 'number') return fromDict;
 		// strings only allowed as args to multiselect and are surrounded by singlequotes
 		if (allowString && typeof val === 'string' && val.startsWith('\'') && val.endsWith('\'')) return val.substring(1, val.length - 1);
-		
+
 		// Return a TypeError with the unparsable variable name, for error checking in calling script
 		throw new TypeError('Unexpected token: -' + val, { cause: val });
 	}
@@ -276,16 +276,25 @@ export class DerivedCalculator {
 	 * @returns calculated value
 	 */
 	runFormula(formula: string, id: string) {
+		let t1 = performance.now();
 		let arr = this.tokenizeFormula(formula);
+		let t2 = performance.now();
 		let parsed = this.parseFormulaStructure(arr);
+		let t3 = performance.now();
 		let answer = this.resolve(parsed);
+		let t4 = performance.now();
 		this.values[id] = answer; // update values for future metrics that rely on this one
-		return answer;
+		return {
+			answer,
+			tokenize: t2 - t1,
+			parse: t3 - t2,
+			resolve: t4 - t3,
+		};
 	}
 }
 
 export function convertValuesDict(dict: AnyDict) {
-	let ret = {...dict} as ValueDict; // create copy
+	let ret = { ...dict } as ValueDict; // create copy
 	for (let key in ret) {
 		let val = ret[key];
 		switch (typeof val) {

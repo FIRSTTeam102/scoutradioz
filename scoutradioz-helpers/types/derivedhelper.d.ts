@@ -23,6 +23,11 @@ export declare class DerivedCalculator {
      * @param id
      * @returns calculated value
      */
-    runFormula(formula: string, id: string): number;
+    runFormula(formula: string, id: string): {
+        answer: number;
+        tokenize: number;
+        parse: number;
+        resolve: number;
+    };
 }
 export declare function convertValuesDict(dict: AnyDict): ValueDict;

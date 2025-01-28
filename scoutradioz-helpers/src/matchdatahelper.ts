@@ -44,12 +44,12 @@ export class MatchDataHelper {
 
 		return isQuantifiable;
 	}
-	
+
 	/** 
 	 * Wrapper of {@link isQuantifiableType} for better TypeScript hinting
 	 * Reason: after calling isQuantifiable(), you can access item.id without being yelled at
 	 */
-	static isQuantifiable(item: SchemaItem): item is CheckBoxItem|CounterItem|DerivedItem|DerivedItemLegacy|SliderItem {
+	static isQuantifiable(item: SchemaItem): item is CheckBoxItem | CounterItem | DerivedItem | DerivedItemLegacy | SliderItem {
 		return MatchDataHelper.isQuantifiableType(item.type);
 	}
 
@@ -93,7 +93,7 @@ export class MatchDataHelper {
 	 * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
 	 * @param item layout element
 	 */
-	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem|SubheaderItem|SpacerItem> {
+	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | SpacerItem> {
 
 		switch (item.type) {
 			case 'spacer':
@@ -377,7 +377,7 @@ export class MatchDataHelper {
 			else return parseFloat(item);
 		}
 	}
-	
+
 	/**
 	 * Calculate derived metrics for a provided array of match data items.
 	 * @param {string} org_key Org key
@@ -393,28 +393,41 @@ export class MatchDataHelper {
 		// 	{ sort: { 'order': 1 } },
 		// 	{ allowCache: true }
 		// ) as ( DerivedLayoutLegacy|DerivedLayout )[];
-		
-		const orgschema = await utilities.findOne('orgschemas', 
-			{org_key, year: event_year, form_type: 'matchscouting'},
+
+		let t_dbStart = performance.now();
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year: event_year, form_type: 'matchscouting' },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(orgschema);
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
-			{allowCache: true, maxCacheAge: 180}
+			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
 		const derivedLayout = schema.layout.filter(item => item.type === 'derived');
-		
+		let t_dbEnd = performance.now();
+
 		const derivedCalculator = new DerivedCalculator(convertValuesDict(matchData));
 
+		let t_derivedStart = performance.now();
+		let ttokenize = 0, tparse = 0, tresolve = 0;
 		for (let i in derivedLayout) {
 			const thisItem = derivedLayout[i];
 			// New format
 			if ('formula' in thisItem) {
 				// thisItem
 				try {
-					matchData[thisItem.id] = derivedCalculator.runFormula(thisItem.formula, thisItem.id);
+					let {
+						answer, tokenize, parse, resolve
+					} = derivedCalculator.runFormula(thisItem.formula, thisItem.id);
+					logger.debug(tokenize, parse, resolve);
+					matchData[thisItem.id] = answer;
+					ttokenize += tokenize;
+					tparse += parse;
+					tresolve += resolve;
 				}
 				catch {
 					matchData[thisItem.id] = NaN;
@@ -425,10 +438,20 @@ export class MatchDataHelper {
 				matchData[thisItem.id] = MatchDataHelper.calculateDerivedLegacy(thisItem, matchData);
 			}
 		}
+		let t_derivedEnd = performance.now();
 
 		// logger.trace(`${dt - st}, ${performance.now() - dt}`);
+		logger.debug('total', ttokenize, tparse, tresolve);
 
-		return matchData;
+		return {
+			matchData,
+			db: t_dbEnd - t_dbStart,
+			constructor: t_derivedStart - t_dbEnd,
+			derived: t_derivedEnd - t_derivedStart,
+			ttokenize,
+			tparse,
+			tresolve,
+		};
 	}
 
 	/**
@@ -1139,23 +1162,23 @@ export class MatchDataHelper {
 	 */
 	static async getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<Schema> {
 		// later, this lookup won't be needed because orgschemas will be org+event rather than org+year
-		const { year } = await utilities.findOne('events', 
-			{key: event_key},
+		const { year } = await utilities.findOne('events',
+			{ key: event_key },
 			{},
-			{allowCache: true, maxCacheAge: 180}
+			{ allowCache: true, maxCacheAge: 180 }
 		);
-		
-		const orgschema = await utilities.findOne('orgschemas', 
-			{org_key, year, form_type},
+
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year, form_type },
 		);
 		assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
-		
+
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
-			{allowCache: true, maxCacheAge: 180}
+			{ allowCache: true, maxCacheAge: 180 }
 		) as Schema;
-		
+
 		// sanity check DB 
 		assert(schema.form_type === form_type, `form_type does not match in DB! Expected ${form_type} but found ${schema.form_type}`);
 
@@ -1163,7 +1186,7 @@ export class MatchDataHelper {
 		assert(schema.owners.includes(org_key) || schema.published, `Org ${org_key} does not have permission to use un-published schema "${schema.name}"!`);
 		// todo: maybe we don't need this match? maybe we can remove the "year" field from Schema?
 		assert(schema.year === year, `Schema year ${schema.year} and event year ${year} do not match!`);
-		
+
 		return schema;
 	}
 }

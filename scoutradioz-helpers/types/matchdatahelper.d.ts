@@ -39,7 +39,15 @@ export declare class MatchDataHelper {
      * @param {Object} matchData Scouting data ("data" field in the db)
      * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
      */
-    static calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData): Promise<MatchFormData>;
+    static calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData): Promise<{
+        matchData: MatchFormData;
+        db: number;
+        constructor: number;
+        derived: number;
+        ttokenize: number;
+        tparse: number;
+        tresolve: number;
+    }>;
     /**
      * @param {string} org_key Org key
      * @param {number} event_year Year of event
