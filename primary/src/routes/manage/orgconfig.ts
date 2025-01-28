@@ -174,7 +174,12 @@ router.get('/editform', wrap(async (req, res) => {
 	// load form definition data from the database
 	let schema: Schema,
 		// default "blank" layout, with sample data
-		layout = '[{"type": "header", "label": "Sample"}, {"type": "subheader", "label": "Replace this JSON with the code that defines your scouting form"}]';
+		layout = `[
+			{ "type": "header", "label": "Sample" },
+			{ "type": "subheader", "label": "Replace this JSON with the code that defines your scouting form" },
+			{ "type": "spacer" },
+			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" }
+		]`;
 
 	const orgschema = await utilities.findOne('orgschemas',
 		{ org_key, year, form_type },
