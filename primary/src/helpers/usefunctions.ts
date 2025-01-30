@@ -19,6 +19,22 @@ class DateTimeExtras {
 DateTimeExtras.DATETIME_SHORTER = { month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
 
 class UseFunctions {
+	static async loadPlatformSettings(req: express.Request, res: express.Response, next: express.NextFunction) {
+		const platformSettings = await utilities.findOne('platformsettings', {}, {}, {allowCache: false});
+		if (!platformSettings) return next(); // Just in case the db doesn't have this entry, just proceed so we don't break anything
+		
+		if (platformSettings.maintenance_mode) {
+			return res.status(503).send('Scoutradioz is temporarily down for maintenance. Please come back in a few minutes.');
+		}
+		
+		// If the user has not viewed this news item yet, AND it hasn't yet expired, send the summary to the client for it to display
+		if (req.cookies['last_news_update_read'] !== platformSettings.news.cookie_value && new Date() < platformSettings.news.expires) {
+			res.cookie('news_update_to_display', platformSettings.news.summary); // string for client to display
+			res.cookie('news_update_id', platformSettings.news.cookie_value); // cookie value for client to set to last_news_update_read after they dismiss it
+		}
+		
+		next();
+	}
 	
 	//Go-to one-stop-shop for tidbits and bipbops that we wanna add in every method
 	static async initialMiddleware(req: express.Request, res: express.Response, next: express.NextFunction){
@@ -541,18 +557,6 @@ class UseFunctions {
 		});
 		
 		logger.removeContext('funcName');
-	}
-	
-	/**
-	 * Checks process.env.MAINTENANCE to see if the site should be in maintenance mode and if so, renders some plain text
-	 */
-	static maintenanceMode(req: express.Request, res: express.Response, next: express.NextFunction) {
-		if (process.env.MAINTENANCE === 'true') {
-			return res.status(503).send('The site is currently undergoing some maintenance. Check back in a few minutes.');
-		}
-		else {
-			return next();
-		}
 	}
 }
 
