@@ -20,7 +20,7 @@ DateTimeExtras.DATETIME_SHORTER = { month: 'numeric', day: 'numeric', hour: 'num
 
 class UseFunctions {
 	static async loadPlatformSettings(req: express.Request, res: express.Response, next: express.NextFunction) {
-		const platformSettings = await utilities.findOne('platformsettings', {}, {}, {allowCache: false});
+		const platformSettings = await utilities.findOne('platformsettings', {}, {}, {allowCache: true});
 		if (!platformSettings) return next(); // Just in case the db doesn't have this entry, just proceed so we don't break anything
 		
 		if (platformSettings.maintenance_mode) {
