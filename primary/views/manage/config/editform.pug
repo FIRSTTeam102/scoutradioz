@@ -31,6 +31,9 @@ block content
 			overflow: unset;
 			border: 1px solid black;
 			height: 700px;
+			/* so minimap doesn't layer over notification cards */
+			position: relative;
+			z-index: 0;
 		}
 		#jsonfield-mobile {
 			width: 100%;
