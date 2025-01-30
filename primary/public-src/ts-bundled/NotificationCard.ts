@@ -41,7 +41,7 @@ class NotificationCard{
 	 * @param {boolean} [options.exitable=false] Whether card has an exit button.
 	 * @param {function} [options.onexit=undefined] Callback for when a user clicks the exit button.
 	 */
-	constructor(text: string, options?: object){
+	constructor(text: string, options?: NotificationCardOptions){
 		
 		if (!options) options = {};
 		
@@ -234,41 +234,51 @@ class NotificationCard{
 		return this;
 	}
 	
-	_filterOptions(options: any){
+	_filterOptions(options: NotificationCardOptions){
 		
 		let defaultOpts = new NotificationCardOptions();
 		
-		let opts = defaultOpts;
-		
-		for (let option in opts) {
-			
-			if (options.hasOwnProperty(option)) {	
-				switch(option){
-					case 'type':
-						if (typeof options[option] == 'string') opts[option] = options[option];
-						else throw new TypeError('NotificationCard.opts.type must be string.');
-						break;
-					case 'ttl':
-						if (typeof options[option] == 'number') opts[option] = options[option];
-						else throw new TypeError('NotificationCard.opts.ttl must be a number.');
-						break;
-					case 'exitable':
-						if (typeof options[option] == 'boolean') opts[option] = options[option];
-						else throw new TypeError('NotificationCard.opts.exitable must be a boolean.');
-						break;
-					case 'darken':
-						if (typeof options[option] == 'boolean') opts[option] = options[option];
-						else throw new TypeError('NotificationCard.opts.darken must be a boolean.');
-						break;
-					case 'onexit':
-						if (typeof options[option] == 'function') opts[option] = options[option];
-						else throw new TypeError('NotificationCard.opts.onexit must be a function.');
-						break;
-					default:
-						throw new ReferenceError('NotificationCard.opts: Unknown option ' + option);
-				}
+		// remove optional arguments that were explicitly stated as undefined or null, to allow for the spreading defaults to work
+		for (let key in options) {
+			if (key in options && options[key as keyof NotificationCardOptions] == undefined) {
+				delete options[key as keyof NotificationCardOptions];
 			}
 		}
+		
+		let opts: NotificationCardOptions = {
+			...defaultOpts,
+			...options,
+		};
+		
+		// for (let option in opts) {
+			
+		// 	if (options.hasOwnProperty(option)) {	
+		// 		switch(option){
+		// 			case 'type':
+		// 				if (typeof options[option] == 'string') opts[option] = options[option];
+		// 				else throw new TypeError('NotificationCard.opts.type must be string.');
+		// 				break;
+		// 			case 'ttl':
+		// 				if (typeof options[option] == 'number') opts[option] = options[option];
+		// 				else throw new TypeError('NotificationCard.opts.ttl must be a number.');
+		// 				break;
+		// 			case 'exitable':
+		// 				if (typeof options[option] == 'boolean') opts[option] = options[option];
+		// 				else throw new TypeError('NotificationCard.opts.exitable must be a boolean.');
+		// 				break;
+		// 			case 'darken':
+		// 				if (typeof options[option] == 'boolean') opts[option] = options[option];
+		// 				else throw new TypeError('NotificationCard.opts.darken must be a boolean.');
+		// 				break;
+		// 			case 'onexit':
+		// 				if (typeof options[option] == 'function') opts[option] = options[option];
+		// 				else throw new TypeError('NotificationCard.opts.onexit must be a function.');
+		// 				break;
+		// 			default:
+		// 				throw new ReferenceError('NotificationCard.opts: Unknown option ' + option);
+		// 		}
+		// 	}
+		// }
 		
 		//sort through type and set opts.color and opts.textColor
 		switch (opts.type) {
@@ -289,10 +299,10 @@ class NotificationCard{
 				opts.borderColor = 'rgb(84,0,0)';
 				opts.textColor = 'rgb(255,255,255)';
 				break;
-			default: 
-				opts.color = 'rgb(240,245,255)';
-				opts.borderColor = 'rgb(80,80,84)';
-				opts.textColor = 'rgb(0,0,0)';
+			default:
+				opts.color ||= 'rgb(240,245,255)';
+				opts.borderColor ||= 'rgb(80,80,84)';
+				opts.textColor ||= 'rgb(0,0,0)';
 		}
 		
 		return opts;
@@ -313,6 +323,14 @@ class NotificationCard{
 		enrichedText = NotificationCard._enrichWithSelfClosingTags(enrichedText.html(), '/n', '</br>');
 		// 2025-01-24, M.O'C: Added hyperlink enrichment ~ reverse Markdown order i.e., (http://www.example.com)[link text]
 		enrichedText = NotificationCard._enrichHyperlinkTags(enrichedText.html());
+		
+		if (this.opts.sprite) {
+			enrichedText = 
+			enrichedText.prepend(
+				$(document.createElement('span'))
+					.addClass('sprite sp-20 sp-inline sp-black sp-' + this.opts.sprite)
+			);
+		}
 
 		return enrichedText;
 	}
@@ -406,6 +424,7 @@ class NotificationCard{
 }
 
 class NotificationCardOptions {
+	sprite?: string;
 	type?: string|undefined|null;
 	ttl?: number|undefined|null;
 	exitable?: boolean|undefined|null;

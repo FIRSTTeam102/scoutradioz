@@ -99,8 +99,6 @@ app.get('/*', (req, res, next) => {
 //Must be the very first app.use
 app.use(utilities.refreshTier);
 
-app.use(usefunctions.maintenanceMode);
-
 //Boilerplate setup
 app.set('views', path.join(__dirname, '..', 'views'));
 app.set('view engine', 'pug');
@@ -114,6 +112,9 @@ app.disable('x-powered-by');
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// load platform settings, including maintenance mode and news, after cookie parsing
+app.use(usefunctions.loadPlatformSettings);
 
 //Internationalization
 //Must be before any other custom code

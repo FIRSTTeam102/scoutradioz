@@ -476,6 +476,23 @@ export declare interface WebPushKeys extends DbDocument {
 declare type PasswordItem = TBAApiHeaders | FIRSTApiHeaders | TBAWebhookSecret | WebPushKeys;
 
 /**
+ * Intended to be a single-entry collection
+ */
+export declare interface PlatformSettings {
+	/** Quick way to enable/disable maintenance mode on the whole site */
+	maintenance_mode: boolean;
+	/** Most recent update to display, to any user who hasn't seen it yet */
+	news: {
+		/** unique marker for a device to signify that it already got the message */
+		cookie_value: string;
+		/** string to display */
+		summary: string;
+		/** Don't display the news after this date */
+		expires: Date;
+	}
+}
+
+/**
  * Set of scouters for a pit scouting assignment. NOTE: primary/secondary are REQUIRED
  * @collection pitscouting
  * @interface PitScoutingSet
@@ -713,7 +730,7 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'passwords'|'pitscouting'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
@@ -729,6 +746,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'orgteamvalues' ? OrgTeamValue :
 	colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
 	colName extends 'pitscouting' ? PitScouting :
+	colName extends 'platformsettings' ? PlatformSettings :
 	colName extends 'rankingpoints' ? RankingPoints :
 	colName extends 'rankings' ? Ranking :
 	colName extends 'roles' ? Role :
