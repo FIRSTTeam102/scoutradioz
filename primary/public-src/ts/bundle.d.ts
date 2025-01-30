@@ -131,7 +131,7 @@ declare class NotificationCard {
      * @param {boolean} [options.exitable=false] Whether card has an exit button.
      * @param {function} [options.onexit=undefined] Callback for when a user clicks the exit button.
      */
-    constructor(text: string, options?: object);
+    constructor(text: string, options?: NotificationCardOptions);
     /**
      * Static method to create and return a new NotificationCard with specified options.
      * @param {String} text Text to display on notification card
@@ -181,13 +181,14 @@ declare class NotificationCard {
      * @param {Number} time (Optional) Fade-out card with given time interval. (Default: 0ms, no fade)
      */
     remove(time?: number): this;
-    _filterOptions(options: any): NotificationCardOptions;
+    _filterOptions(options: NotificationCardOptions): NotificationCardOptions;
     _enrichText(): JQuery;
     static _enrichHyperlinkTags(html: string): JQuery<HTMLSpanElement>;
     static _enrichWithClosingTags(html: string, key: string, openTag: string, closeTag: string): JQuery<HTMLSpanElement>;
     static _enrichWithSelfClosingTags(html: string, key: string, tag: string): JQuery<HTMLSpanElement>;
 }
 declare class NotificationCardOptions {
+    sprite?: string;
     type?: string | undefined | null;
     ttl?: number | undefined | null;
     exitable?: boolean | undefined | null;
@@ -306,7 +307,7 @@ declare function copyClipboardDom(text: string): void;
  */
 declare function measureTime(cb: () => void): number;
 declare class Cookies {
-    static get(key: string): any;
-    static set(key: string, value: any, value2?: any): any;
+    static get(key: string): string;
+    static set(key: string, value: string, value2?: any): string;
     static remove(key: string): void;
 }
