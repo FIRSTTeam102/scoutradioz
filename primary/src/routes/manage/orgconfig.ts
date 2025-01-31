@@ -170,7 +170,7 @@ router.get('/editform', wrap(async (req, res) => {
 
 	let year = parseInt(String(req.query.year)) || req.event.year;
 	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
-
+	
 	if (year === -1) {
 		let currentYear = new Date().getFullYear();
 		logger.debug(`Year is -1, aka, event not set. Setting year to current year: ${currentYear}`);
@@ -178,7 +178,7 @@ router.get('/editform', wrap(async (req, res) => {
 	}
 
 	// load form definition data from the database
-	let schema: Schema,
+	let schema: Schema|undefined,
 		// default "blank" layout, with sample data
 		layout = `[
 			{ "type": "header", "label": "Sample" },
@@ -198,6 +198,13 @@ router.get('/editform', wrap(async (req, res) => {
 		// Create string representation of layout
 		layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
 	}
+	
+	// Get name, description, and whether it's published from the schema (or assign defaults)
+	let { name, description, published} = schema || {
+		name: `${org_key}'s ${year} ${form_type} Form`,
+		description: '',
+		published: false
+	};
 	//logger.debug(thisFuncName + 'layout=\n' + layout);
 
 	let existingFormData = new Map<string, string>();
@@ -237,12 +244,15 @@ router.get('/editform', wrap(async (req, res) => {
 
 	res.render('./manage/config/editform', {
 		title: title,
-		layout: layout,
-		form_type: form_type,
-		org_key: org_key,
-		year: year,
-		previousDataExists: previousDataExists,
-		previousKeys: previousKeys
+		layout,
+		name,
+		description,
+		published,
+		form_type,
+		org_key,
+		year,
+		previousDataExists,
+		previousKeys
 	});
 }));
 
@@ -316,7 +326,7 @@ router.post('/submitform', wrap(async (req, res) => {
 				created: new Date(),
 				form_type,
 				layout,
-				name: `${org_key}'s ${year} ${form_type} Form`,
+				name: `${org_key}'s ${year} ${form_type} form`,
 				description: '',
 				published: false,
 				owners: [org_key],
