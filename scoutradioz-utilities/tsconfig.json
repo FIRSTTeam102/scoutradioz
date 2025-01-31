@@ -1,14 +1,14 @@
 {
 	"compilerOptions": {
 		"target": "es2020",
-		"module": "CommonJS",
+		"module": "NodeNext",
 		"rootDir": "./src",
 		"outDir": "./build",
 		"esModuleInterop": true,
 		"strict": true,
 		"declaration": true,
 		"declarationDir": "./types",
-		"moduleResolution": "node",
+		"moduleResolution": "nodenext",
 		"newLine": "crlf",
 		//   "removeComments": true,
 	},

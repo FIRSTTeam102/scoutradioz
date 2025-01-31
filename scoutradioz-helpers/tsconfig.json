@@ -1,7 +1,10 @@
 {
 	"compilerOptions": {
-		"target": "es2020",
-		"module": "commonjs",
+		"target": "ESNext",
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		// note: DOM is included because of PushSubscription
+		"lib": ["ESNext", "ESNext.Symbol", "DOM"],
 		"rootDir": "./src",
 		"outDir": "./build",
 		"esModuleInterop": true,
@@ -9,7 +12,7 @@
 		"declaration": true,
 		"declarationDir": "./types",
 		"noImplicitAny": true,
-		"skipLibCheck": true,
+		"skipLibCheck": false,
 		"newLine": "crlf",
 		//   "removeComments": true,
 	},

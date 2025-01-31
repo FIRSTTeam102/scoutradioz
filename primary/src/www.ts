@@ -63,7 +63,7 @@ function launchChildProcess(command: string, onlyErrors = false, logName?: strin
  * Module dependencies.
  */
 
-const app = require('./app');
+import app from './app';
 
 let port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);

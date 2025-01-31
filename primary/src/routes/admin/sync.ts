@@ -18,13 +18,13 @@ router.all('/*', wrap(async (req, res, next) => {
 // Gets the list of events without enriching 
 router.post('/resynceventlist', wrap(async (req, res) => {
 	logger.addContext('funcName', 'resynceventlist[post]');
-	logger.info('ENTER');	
-	
+	logger.info('ENTER');
+
 	// Get the year from the URL (or default to the current year)
 	const year = parseInt(req.query.year || req.body.year || new Date().getFullYear());
-	
+
 	logger.debug(`Getting event list, year=${year}`);
-	
+
 	// Events with simple data
 	let url = `events/${year}/simple`;
 	let events = await utilities.requestTheBlueAlliance(url);
@@ -33,15 +33,15 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 	let eventsFull = await utilities.requestTheBlueAlliance(url);
 	// Properties of the full event list to add to the simple event list
 	let keysToAdd = ['timezone'];
-	
+
 	// For re-adding team keys that are already in db
-	let eventsInDb = await utilities.find('events', {year});
+	let eventsInDb = await utilities.find('events', { year });
 	// Build a quick map of events per key
 	let eventsInDbMap: Dict<Event> = {};
 	eventsInDb.forEach(event => eventsInDbMap[event.key] = event);
 	let numWithTeamKeysReAdded = 0;
 	logger.debug(`Built event map from db, # in db = ${eventsInDb.length} and # from TBA = ${events.length}`);
-	
+
 	for (let i in events) {
 		let thisEvent = events[i];
 		let thisEventFull;
@@ -52,7 +52,7 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 		else {
 			// search for the appropriate event
 			logger.debug('Need to search for an event in the whole list');
-			for (let event of eventsFull) 
+			for (let event of eventsFull)
 				if (event.key === thisEvent.key) {
 					thisEventFull = event;
 					break;
@@ -70,17 +70,17 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 			numWithTeamKeysReAdded++;
 		}
 	}
-	
+
 	logger.info(`Enriched ${events.length} events with the following keys: ${keysToAdd.join(', ')}`);
-	
+
 	//Remove matching existing events
 	let removeResult = await utilities.remove('events', { year });
 	//Now insert new events list
 	let insertResult = await utilities.insert('events', events);
-	
+
 	logger.info(`${removeResult.deletedCount} removed, ${insertResult ? insertResult.insertedCount : 0} inserted`);
-	
-	res.send({message: `Found ${events.length} events. ${numWithTeamKeysReAdded} events already had its team list in the database.`, length: events.length});
+
+	res.send({ message: `Found ${events.length} events. ${numWithTeamKeysReAdded} events already had its team list in the database.`, length: events.length });
 }));
 
 // Function to refresh the teams of specific events of the given year, with a start and end number, with events being pulled from the DB
@@ -88,8 +88,8 @@ router.post('/resynceventlist', wrap(async (req, res) => {
 router.get('/resynceventteams', wrap(async (req, res) => {
 	logger.addContext('funcName', 'resynceventteams[get]');
 	logger.info('ENTER');
-	
-	
+
+
 	if (typeof req.query.year !== 'string' || typeof req.query.start !== 'string' || typeof req.query.end !== 'string') {
 		return res.send({
 			success: false,
@@ -99,29 +99,29 @@ router.get('/resynceventteams', wrap(async (req, res) => {
 	const year = parseInt(req.query.year);
 	const start = parseInt(req.query.start);
 	const end = parseInt(req.query.end); // note: splice() treats end as EXCLUSIVE, so do start=0 end=10, then start=10 end=20, etc.
-	
+
 	if (isNaN(year) || isNaN(start) || isNaN(end)) {
 		return res.send({
 			success: false,
 			message: `start and/or year and/or end are NaN! start=${start}, year=${year}, end=${end}`
 		});
 	}
-	
+
 	logger.debug(`Year=${year}, start=${start}, end=${end}`);
-	
+
 	// Grab event keys from the db, and sort them by string
-	const eventKeys = await utilities.distinct('events', 'key', {year});
+	const eventKeys = await utilities.distinct('events', 'key', { year });
 	eventKeys.sort();
-	
+
 	let keysToRequest = eventKeys.slice(start, end);
 	logger.debug(`Going to request teams from these event keys: ${keysToRequest}`);
-	
+
 	let updatedNum = 0;
 	for (let thisEventKey of keysToRequest) {
-		
+
 		let eventTeamsUrl = `event/${thisEventKey}/teams/keys`;
 		let thisTeamKeys = [];
-		
+
 		let retries = 3;
 		while (retries > 0) {
 			let readSuccess = false;
@@ -133,19 +133,19 @@ router.get('/resynceventteams', wrap(async (req, res) => {
 				logger.warn('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
 				retries -= 1;
 			}
-			
+
 			if (readSuccess) {
 				break;
 			}
 		}
-		
-		let writeResult = await utilities.update('events', {key: thisEventKey}, {$set: {team_keys: thisTeamKeys}});
+
+		let writeResult = await utilities.update('events', { key: thisEventKey }, { $set: { team_keys: thisTeamKeys } });
 		logger.debug(`Updated for ${thisEventKey}, writeResult=${JSON.stringify(writeResult)}`);
 		updatedNum += 1;
-		
+
 		await promiseTimeout(200); // Wait a short bit
 	}
-	
+
 	//return a simple SUCCESS message if it works
 	return res.send({
 		success: true,
@@ -156,7 +156,7 @@ router.get('/resynceventteams', wrap(async (req, res) => {
 // Function to refresh the list of events for the current year (and) to refresh all teams data
 router.get('/resyncevents', wrap(async (req, res) => {
 	logger.addContext('funcName', 'resyncevents[get]');
-	logger.info('ENTER');	
+	logger.info('ENTER');
 
 	// Get the year from the URL (or default to the current year)
 	let year: number;
@@ -189,27 +189,27 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	//Set up TBA url
 	let url = `events/${year}/simple`;
 	logger.debug('url=' + url);
-	
-	const keyFilter = { $and: [{'key': {$gt: queryStart}}, {'key': {$lt: queryEnd}}] };
-	
+
+	const keyFilter = { $and: [{ 'key': { $gt: queryStart } }, { 'key': { $lt: queryEnd } }] };
+
 	// 2022-02-19 JL: Events now retrieved from TBA in /resynceventlist
-	let events: Event[] = await utilities.find('events', keyFilter, {sort: {key: 1}});
-	
+	let events: Event[] = await utilities.find('events', keyFilter, { sort: { key: 1 } });
+
 	// if no events were found in db, that just means there are none starting with that letter
-	if(events.length == 0) {
+	if (events.length == 0) {
 		return res.send(`SUCCESS ${year} updated 0`);
 	}
-	
+
 	let updatedNum = 0;
-	
+
 	// 2020-02-08, M.O'C: Need to track which teams are at each event, by event key - pull team keys for each event & store in the event
 	// 2022-02-19 JL: Cleaned up event resync, switched to update statement instead of delete/insert
 	for (let event of events) {
 		let thisEventKey = event.key;
-		
+
 		let eventTeamsUrl = `event/${thisEventKey}/teams/keys`;
 		let thisTeamKeys = [];
-		
+
 		let retries = 3;
 		while (retries > 0) {
 			let readSuccess = false;
@@ -221,19 +221,19 @@ router.get('/resyncevents', wrap(async (req, res) => {
 				logger.warn('Problem reading team keys for ' + thisEventKey + ' - ' + JSON.stringify(err));
 				retries -= 1;
 			}
-			
+
 			if (readSuccess) {
 				break;
 			}
 		}
-		
-		let writeResult = await utilities.update('events', {key: thisEventKey}, {$set: {team_keys: thisTeamKeys}});
+
+		let writeResult = await utilities.update('events', { key: thisEventKey }, { $set: { team_keys: thisTeamKeys } });
 		logger.debug(`Updated for ${thisEventKey}, writeResult=${writeResult}`);
 		updatedNum += 1;
-		
+
 		await promiseTimeout(200); // Wait a short bit
 	}
-	
+
 	//return a simple SUCCESS message if it works
 	return res.send('SUCCESS ' + year + ' updated ' + updatedNum);
 }));
@@ -242,7 +242,7 @@ router.get('/resyncevents', wrap(async (req, res) => {
 router.get('/resyncteams', wrap(async (req, res) => {
 	logger.addContext('funcName', 'resyncteams[get]');
 	logger.info('ENTER');
-		
+
 	////// Teams sync
 
 	let teamPageIdx = 0;
@@ -252,12 +252,12 @@ router.get('/resyncteams', wrap(async (req, res) => {
 		//Set up TBA url
 		let url = `teams/${teamPageIdx}`;
 		logger.debug('url=' + url);
-		
+
 		//Submit request to TBA
 		let teams = await utilities.requestTheBlueAlliance(url);
-		
+
 		//if request was invalid, redirect to admin page with alert message
-		if(teams.length == undefined || teams.length == 0) {
+		if (teams.length == undefined || teams.length == 0) {
 			// presumably we've reached the end of the data
 			logger.debug('finished pulling teams');
 			keepLooping = false;
@@ -278,9 +278,9 @@ router.get('/resyncteams', wrap(async (req, res) => {
 
 		// increment the index counter
 		teamPageIdx += 1;
-	}	
+	}
 	logger.debug('total teams=' + teamsArray.length);
-	
+
 	//Remove existing events list for year
 	await utilities.remove('teams', {});
 	//Now insert new events list for year
@@ -294,7 +294,7 @@ router.get('/resyncteams', wrap(async (req, res) => {
 router.get('/recalcderived', wrap(async (req, res) => {
 	logger.addContext('funcName', 'recalcderived[get]');
 	logger.info('ENTER');
-	
+
 	let event_year = req.event.year;
 	let event_key = req.event.key;
 	let org_key = req._user.org_key;
@@ -302,9 +302,18 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	logger.info('ENTER org_key=' + org_key + ',event_key=' + event_key);
 
 	// read in existing match scouting data
-	let scored: MatchScouting[] = await utilities.find('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} }, { sort: {'time': 1} });
+	let scored: MatchScouting[] = await utilities.find('matchscouting', { 'org_key': org_key, 'event_key': event_key, 'data': { $exists: true } }, { sort: { 'time': 1 } });
 	// logger.debug("scored[0].data=" + JSON.stringify(scored[0].data));
 	// logger.debug("scored[0].data[matchLayout[0].operands[2]]=" + JSON.stringify(scored[0].data[matchLayout[0].operands[2]]));
+	
+	let times = {
+		db: 0,
+		constructor: 0,
+		derived: 0,
+		ttokenize: 0,
+		tparse: 0,
+		tresolve: 0,
+	};
 
 	// cycle through each scored match & [re]calculate derived metrics - push into new array 'updatedScored'
 	let writeQueries = [];
@@ -314,33 +323,54 @@ router.get('/recalcderived', wrap(async (req, res) => {
 		let thisScored = scored[i];
 		if (thisScored.data) {
 			// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-			let thisScoredUpdated = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, thisScored.data);
+			let { matchData: thisScoredUpdated,
+				db,
+				constructor,
+				derived,
+				ttokenize,
+				tparse,
+				tresolve,
+			} = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, thisScored.data);
+			
+			times.db += db;
+			times.constructor += constructor;
+			times.derived += derived;
+			times.ttokenize += ttokenize;
+			times.tparse += tparse;
+			times.tresolve += tresolve;
+			
 			writeQueries.push({
 				updateOne: {
-					filter: {_id: scored[i]._id},
-					update: {$set: {data: thisScoredUpdated}}
+					filter: { _id: scored[i]._id },
+					update: { $set: { data: thisScoredUpdated } }
 				}
 			});
 		}
 	}
-	
-	// 2023-03-19 JL: Recalculate agg ranges when recalculating derived
-	matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
-	
+
 	if (writeQueries.length === 0) return res.send('No match data to calculate!'); // 2023-02-21 JL: avoid empty bulkWrite call
 	
+	let beforebulkWrite = Date.now();
+
 	// 2022-03-04 JL: fixed bug & put the update stuff into a bulkWrite
 	let writeResult = await utilities.bulkWrite('matchscouting', writeQueries);
-	res.send(`SUCCESS - done in ${Date.now() - startTime} ms - writeResult = ${JSON.stringify(writeResult)}`);
+	logger.info(`SUCCESS - done in ${beforebulkWrite - startTime} ms, bulkwrite time: ${Date.now() - beforebulkWrite} - writeResult = ${JSON.stringify(writeResult)}, Times: ${JSON.stringify(times)}`);
+
+	// 2023-03-19 JL: Recalculate agg ranges when recalculating derived
+	matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
 
 	// Delete the old scored data
 	// await utilities.remove('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} });
 
 	// // Insert the revised scored data
 	// await utilities.insert('matchscouting', updatedScored);
-	
+
 	//2020-03-27 (security hole) removed res.render(admin) and switched with res.send
 	// res.send('SUCCESS');
+	res.render('./message',{
+		title: res.msg('manage.event.recalcDerived'),
+		message: res.msg('manage.event.recalcDerivedSuccess'),
+	});
 }));
 
 

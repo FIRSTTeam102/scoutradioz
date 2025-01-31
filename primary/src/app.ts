@@ -10,6 +10,7 @@ import log4js from 'log4js';									// Extensive logging functionality
 import utilities from 'scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
+import helpers, { config as configHelpers } from 'scoutradioz-helpers';
 
 const appStartupTime = Date.now();
 
@@ -63,10 +64,8 @@ utilities.config(require('../databases.json'), {
 	debug: (process.env.UTILITIES_DEBUG === 'true'),
 	schemasWithNumberIds: ['users'],
 });
-//Load helper functions
-const helpers = require('scoutradioz-helpers');
 //Configure helper functions by passing our already-configured utilities module
-helpers.config(utilities);
+configHelpers(utilities);
 
 //PUG CACHING (if production IS enabled)
 if(process.env.NODE_ENV == 'production') logger.info('Pug caching will be enabled.');
@@ -100,13 +99,12 @@ app.get('/*', (req, res, next) => {
 //Must be the very first app.use
 app.use(utilities.refreshTier);
 
-app.use(usefunctions.maintenanceMode);
-
 //Boilerplate setup
 app.set('views', path.join(__dirname, '..', 'views'));
 app.set('view engine', 'pug');
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
 
 app.disable('x-powered-by');
@@ -114,6 +112,9 @@ app.disable('x-powered-by');
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// load platform settings, including maintenance mode and news, after cookie parsing
+app.use(usefunctions.loadPlatformSettings);
 
 //Internationalization
 //Must be before any other custom code
@@ -141,6 +142,7 @@ const clientPromise: Promise<MongoClient> = new Promise((resolve, reject) => {
 			});
 		});
 });
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(session({
 	secret: 'marcus night',
 	saveUninitialized: false, // don't create session until something stored
@@ -161,10 +163,12 @@ app.use(session({
 }));
 
 //User agent for logging
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(useragent.express());
 
 //Passport setup (user authentication)
 require('./helpers/passport-config');
+// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -241,4 +245,5 @@ app.use(usefunctions.errorHandler);
 logger.info(`app.js READY: ${Date.now() - appStartupTime} ms`);
 
 // Export your express server so you can import it in the lambda function.
-module.exports = app;
+// module.exports = app;
+export default app;

@@ -8,6 +8,7 @@
 	//
 extends ../layout
 block content
+	include ../mixins/formElements
 	label(class="switch theme-inline-padding")
 		input(type="checkbox" id="toggleSticky")
 		span(class="toggle" id="toggleStickyToggle")
@@ -49,26 +50,21 @@ block content
 					
 					case element.type
 						when "checkbox"
-							include templates/formCheckbox
+							+Checkbox(element, answer)
 						when "counter"
-							include templates/formCounter
-						when "counterallownegative"
-							include templates/formCounterAllowNegative
-						when "badcounter"
-							include templates/formBadCounter
+							+Counter(element, answer)
 						when "slider"
-						when "timeslider"
-							include templates/formSlider
+							+Slider(element, answer)
 						when "multiselect"
 							include templates/formMultiselect
 						when "textblock"
 							include templates/formTextBlock
-						when "h2"
-							include templates/formHeader
-						when "h3"
-							include templates/formSubHeader
+						when "header"
+							+Header(element)
+						when "subheader"
+							+Subheader(element)
 						when "spacer"
-							include templates/formSpacer
+							+Spacer
 	br 
 	//- 2024-10-19 JL: Hide submit button if created from the test form button
 	if !inModalDialog
@@ -94,11 +90,6 @@ block content
 				});
 	br 
 	br 
-	each element in layout
-		case element.type
-			when "checkbox"
-				include templates/scriptCheckbox
-	include templates/scriptSliders
 	div.sticky-bar-padder
 	div.sticky-bar.w3-card(id="stickyBar")
 		div(id="stickyBarLeft" class="sticky-bar-left no-select") 

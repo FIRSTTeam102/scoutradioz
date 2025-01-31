@@ -3,7 +3,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema } from 'scoutradioz-types';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
 import Permissions from '../helpers/permissions';
@@ -24,13 +24,13 @@ router.get('/match*', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match[get]');
 	logger.info('ENTER');
 
-	let eventKey = req.event.key;
-	let year = req.event.year;
+	const event_key = req.event.key;
+	const year = req.event.year;
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
 	let match_team_key = req.query.key;
 	let alliance = String(req.query.alliance);
-	let org_key = thisUser.org_key;
+	const org_key = thisUser.org_key;
 	if (typeof match_team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidMatchKey')); // 2022-05-17 JL: Throw if they don't have a match key set in the url OR if they set two, making it an array
 	let teamKey = match_team_key.split('_')[2];
 	// 2024-02-29, M.O'C: special case, we're going to handle "frc999999" for form demo purposes
@@ -65,15 +65,10 @@ router.get('/match*', wrap(async (req, res) => {
 		}
 	}
 	
-	//load layout
-	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	let layout: Layout[] = await utilities.find('layout', 
-		{org_key: org_key, year: year, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	//load layout/schema
+	let schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
-	let groupedLayout = splitLayoutIntoGroups(layout);
+	let groupedLayout = splitLayoutIntoGroups(schema.layout);
 	
 	const images = await uploadHelper.findTeamImages(org_key, year, teamKey);
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
@@ -108,7 +103,7 @@ router.get('/match*', wrap(async (req, res) => {
 	let title = `#${matchNumber} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
 
 	// 2024-02-05, M.O'C: Add super-scout pit text to page
-	let pitFind = await utilities.findOne('pitscouting', { 'org_key': org_key, 'event_key' : eventKey, 'team_key' : teamKey }, {});
+	let pitFind = await utilities.findOne('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
 	let pit_super_data: StringDict|null = null;
 	if (pitFind && pitFind.super_data) pit_super_data = pitFind.super_data;
 	logger.debug(`pit_super_data=${JSON.stringify(pit_super_data)}`);
@@ -116,7 +111,6 @@ router.get('/match*', wrap(async (req, res) => {
 	//render page
 	res.render('./scouting/match', {
 		title: title,
-		layout,
 		groupedLayout,
 		key: match_team_key,
 		alliance,
@@ -177,6 +171,7 @@ router.post('/testform', wrap(async (req, res) => {
 
 	//render page
 	if (form_type == 'matchscouting') {
+		// @ts-ignore FIX BEFORE COMMITTING
 		let groupedLayout = splitLayoutIntoGroups(layout);
 		res.render('./scouting/match', {
 			title: req.msg('scouting.match'),
@@ -224,6 +219,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	if(!matchData)
 		return res.send({status: 500, message: req.msg('scouting.noDataSubmit', {url: '/scouting/match/submit'})});
 	
+	const event_key = req.event.key;
 	let event_year = req.event.year;
 	let match_team_key = matchData.match_team_key;
 	let org_key = req._user.org_key; // JL note: this probably throws an error if the user is not logged in
@@ -234,24 +230,16 @@ router.post('/match/submit', wrap(async (req, res) => {
 	//logger.debug('match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
 	//logger.debug('matchData=' + JSON.stringify(matchData));
 
-	// Get the 'layout' so we know types of data elements
-
-	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	let layout: Layout[] = await utilities.find('layout',
-		{org_key: org_key, year: event_year, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	// Get the layout so we know types of data elements
+	let schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
 	let layoutTypeById: StringDict = {};
-	logger.trace('layout=' + JSON.stringify(layout));
-	for (let property in layout) {
-		if (layout.hasOwnProperty(property)) {
-			let thisLayoutItem = layout[property];
-			if (typeof thisLayoutItem.id === 'string') {
-				logger.trace(thisLayoutItem.id + ' is a ' + thisLayoutItem.type);
-				layoutTypeById[thisLayoutItem.id] = thisLayoutItem.type;
-			}
+	logger.trace('layout=', schema.layout);
+	for (let item of schema.layout) {
+		// filter for layout items with an id
+		if ('id' in item) {
+			logger.trace(item.id + ' is a ' + item.type);
+			layoutTypeById[item.id] = item.type;
 		}
 	}
 
@@ -261,30 +249,13 @@ router.post('/match/submit', wrap(async (req, res) => {
 			let thisType = layoutTypeById[property];
 			// 2022-03-22 JL: Moving the data-type parsing into a helper function, which can easily be updated later as more form types are added
 			matchData[property] = matchDataHelper.fixDatumType(matchData[property], thisType);
-			/*
-			//logger.debug(property + " :: " + matchData[property] + " ~ is a " + thisType);
-			if ('counter' == thisType || 'badcounter' == thisType) {
-				//logger.debug("...converting " + matchData[property] + " to a number");
-				let newVal = -1;
-				if (matchData[property]) {
-					var parseVal = parseInt(matchData[property]);
-					if (!isNaN(parseVal))
-						newVal = parseVal;
-				}
-				matchData[property] = newVal;
-			}
-			if ('checkbox' == thisType) {
-				//logger.debug("...converting " + matchData[property] + " to a boolean 1/0 number");
-				let newVal = (matchData[property] == 'true' || matchData[property] == true) ? 1 : 0;
-				matchData[property] = newVal;
-			}
-			*/
 		}
 	}
 	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(matchData));
 
 	// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-	matchData = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
+	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
+	matchData = matchDataNew; // JL: this is temporary while we have debugging info
 	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(matchData));
 
 	// Post modified data to DB
@@ -326,14 +297,8 @@ router.get('/pit*', wrap(async (req, res) => {
 	const demoTeamKey = 'frc999999';
 	
 	if (typeof teamKey !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
-		
-	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
-	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
-	let layout: Layout[] = await utilities.find('layout', 
-		{org_key: org_key, year: event_year, form_type: 'pitscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	
+	const schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
 	
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
 	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
@@ -370,7 +335,7 @@ router.get('/pit*', wrap(async (req, res) => {
 	
 	res.render('./scouting/pit', {
 		title: req.msg('scouting.pit'),
-		layout: layout,
+		layout: schema.layout,
 		pitData: pitData, 
 		key: teamKey,
 		uploadURL: uploadURL,
@@ -659,10 +624,10 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 }));
 
 // Split the layout into groups, based on the header, making it easier to do the dynamic scrolling
-function splitLayoutIntoGroups(layout: Layout[]) {
+function splitLayoutIntoGroups(layout: SchemaItem[]) {
 
 	let groupedLayout = layout.reduce((list, current) => {
-		if (current.type === 'h2') {
+		if (current.type === 'header') {
 			list.push({
 				label: current.label || 'unknown',
 				items: [current]
@@ -673,7 +638,7 @@ function splitLayoutIntoGroups(layout: Layout[]) {
 			list[idx].items.push(current);
 		}
 		return list;
-	}, [{label: 'Unknown', items: []}] as Array<{label: string, items: Layout[]}>);
+	}, [{label: 'Unknown', items: []}] as Array<{label: string, items: SchemaItem[]}>);
 	return groupedLayout;
 }
 

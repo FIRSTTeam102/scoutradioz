@@ -7,7 +7,7 @@
 	"scripts": {
 		"test": "tsc && node test.js",
 		"update": "yarn upgrade --pattern 'scoutradioz*'",
-		"build": "tsc"
+		"build": "npx tsc"
 	},
 	"engines": {
 		"node": ">=18.0.0"
@@ -23,8 +23,7 @@
 	},
 	"homepage": "https://github.com/firstteam102/scoutradioz#readme",
 	"devDependencies": {
-		"@types/express": "^4.17.13",
-		"@types/node": "^18.13.0",
+		"@types/node": "22.9.0",
 		"log4js": "^6.1.2",
 		"mongodb": "^4.5.0"
 	},
