@@ -118,7 +118,7 @@ const pigrammerSchema = {
 						items: {}
 					}
 				},
-				required: ['type', 'label', 'id', 'operations'],
+				required: ['type', 'id', 'operations'],
 				additionalProperties: false
 			},
 			{
@@ -126,9 +126,6 @@ const pigrammerSchema = {
 				properties: {
 					type: {
 						const: 'derived'
-					},
-					label: {
-						type: 'string'
 					},
 					id: {
 						type: 'string'
@@ -140,7 +137,7 @@ const pigrammerSchema = {
 						type: 'string'
 					}
 				},
-				required: ['type', 'id', 'label', 'formula'],
+				required: ['type', 'id', 'formula'],
 				additionalProperties: false
 			},
 			{
