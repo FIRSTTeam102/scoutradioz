@@ -158,7 +158,7 @@ router.post('/setdefaultpassword', wrap(async (req, res) => {
 }));
 
 router.get('/editform', wrap(async (req, res) => {
-	let thisFuncName = 'orgconfig.editform(root): ';
+	logger.addContext('funcName', 'orgconfig.editform[GET]');
 
 	if (!await req.authenticate(Permissions.ACCESS_TEAM_ADMIN)) return;
 
@@ -170,6 +170,12 @@ router.get('/editform', wrap(async (req, res) => {
 
 	let year = parseInt(String(req.query.year)) || req.event.year;
 	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
+
+	if (year === -1) {
+		let currentYear = new Date().getFullYear();
+		logger.debug(`Year is -1, aka, event not set. Setting year to current year: ${currentYear}`);
+		year = currentYear;
+	}
 
 	// load form definition data from the database
 	let schema: Schema,
