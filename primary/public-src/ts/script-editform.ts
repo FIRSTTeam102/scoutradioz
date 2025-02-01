@@ -4,11 +4,14 @@ import type { editor, MonacoEditor } from 'monaco-types';
 
 declare const monaco: MonacoEditor;
 declare const loadedJSONLayout: string; // from pug
+declare const loadedSPRLayout: string; // from pug
 declare const year: string;
 declare const form_type: string;
 
 const jsonfield = document.getElementById('jsonfield') as HTMLDivElement | undefined;
 const jsonfieldMobile = document.getElementById('jsonfield-mobile') as HTMLTextAreaElement | undefined;
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+const sprfieldMobile = document.getElementById('sprfield-mobile') as HTMLTextAreaElement | undefined;
 let monacoEditor: editor.IStandaloneCodeEditor;
 
 const pigrammerSchema = {
@@ -211,6 +214,11 @@ if (jsonfieldMobile) {
 	jsonfieldMobile.value = loadedJSONLayout;
 }
 
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+if (sprfieldMobile) {
+	sprfieldMobile.value = loadedSPRLayout;
+}
+
 // Get and set editor text, depending on whether we are on mobile or desktop
 function getEditorText() {
 	if (monacoEditor) return monacoEditor.getValue();
@@ -224,11 +232,35 @@ function setEditorText(text: string) {
 	throw new Error('neither monacoEditor or jsonFieldMobile defined');
 }
 
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+function getSPRText() {
+	if (sprfieldMobile) return sprfieldMobile.value;
+	throw new Error('sprfieldMobile not defined');
+}
+function setSPRText(text: string) {
+	if (sprfieldMobile) return sprfieldMobile.value = text;
+	throw new Error('sprfieldMobile not defined');
+}
+
 function getJSON() {
 	const jsonString = getEditorText();
 	try {
 		// validate it's valid json
 		let parsed = JSON.parse(jsonString);
+		// return version of json without spaces and newlines
+		return JSON.stringify(parsed);
+	}
+	catch (err) {
+		throw onError('Invalid JSON');
+	}
+}
+
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+function getSPR() {
+	const sprString = getSPRText();
+	try {
+		// validate it's valid json
+		let parsed = JSON.parse(sprString);
 		// return version of json without spaces and newlines
 		return JSON.stringify(parsed);
 	}
