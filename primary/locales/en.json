@@ -519,6 +519,9 @@
 			"updatedButFixSubteams": "Org config has updated, but one or more users will need to be updated due to subteam / class keys changing.\n- *Go through the list of users and make sure everyone has a subteam and class.\n- Click 'Update' for each user that has been updated.*",
 			"id": "ID",
 			"teams": "Team(s)"
+		},
+		"forms": {
+			"sprCalculation": "SPR calculation"
 		}
 	},
 	"date": "Date",

@@ -186,6 +186,15 @@ router.get('/editform', wrap(async (req, res) => {
 			{ "type": "spacer" },
 			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" }
 		]`;
+	// 2025-02-01, M.O'C: Adding SPR calculations
+	let sprSchema: Schema|undefined,
+		// default "blank" sprLayout, with default data
+		sprLayout = `{
+			"points_per_robot_metric": "contributedPoints",
+			"subtract_points_from_FRC": [
+				{ "foulPoints": 1 }
+			]
+		}`;
 
 	const orgschema = await utilities.findOne('orgschemas',
 		{ org_key, year, form_type },
@@ -197,6 +206,11 @@ router.get('/editform', wrap(async (req, res) => {
 		assert(schema, `For ${org_key} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`);
 		// Create string representation of layout
 		layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
+		// 2025-02-01, M.O'C: Only do if SPR calculation exists
+		if(schema.spr_calculation)
+			sprLayout = JSON.stringify(schema.spr_calculation).replace(/`/g, '\\`');
+		else
+			logger.info(`For ${org_key} and ${year}, orgschema existed in the database but had no SPR calculation - using default`);
 	}
 	
 	// Get name, description, and whether it's published from the schema (or assign defaults)
@@ -245,6 +259,7 @@ router.get('/editform', wrap(async (req, res) => {
 	res.render('./manage/config/editform', {
 		title: title,
 		layout,
+		sprLayout,
 		name,
 		description,
 		published,
@@ -269,6 +284,8 @@ router.post('/submitform', wrap(async (req, res) => {
 
 	const jsonString = req.body.jsonString;
 	logger.debug('jsonString=' + jsonString);
+	const sprString = req.body.sprString;
+	logger.debug('sprString=' + sprString);
 	const year = parseInt(req.body.year);
 	logger.debug('year=' + year);
 	const form_type = req.body.form_type;
@@ -281,6 +298,13 @@ router.post('/submitform', wrap(async (req, res) => {
 	// Validate json layout
 	const jsonParsed = JSON.parse(jsonString);
 	const { warnings, layout } = validateJSONLayout(jsonParsed);
+
+	// 2025-02-01, M.O'C: Adding in SPR calcs for match scouting
+	let sprLayout = null;
+	if (form_type === 'matchscouting') {
+		const sprParsed = JSON.parse(sprString);
+		sprLayout = sprParsed;
+	}
 
 	/**
 	 * TODO:
@@ -309,6 +333,7 @@ router.post('/submitform', wrap(async (req, res) => {
 				{
 					$set: {
 						layout,
+						spr_calculation: sprLayout,
 						last_modified: new Date(),
 					}
 				}
@@ -326,6 +351,7 @@ router.post('/submitform', wrap(async (req, res) => {
 				created: new Date(),
 				form_type,
 				layout,
+				spr_calculation: sprLayout,
 				name: `${org_key}'s ${year} ${form_type} form`,
 				description: '',
 				published: false,
@@ -351,6 +377,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	return res.send({
 		warnings,
 		layout,
+		sprLayout,
 		saved: save
 	});
 }));

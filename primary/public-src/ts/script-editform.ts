@@ -4,7 +4,7 @@ import type { editor, MonacoEditor } from 'monaco-types';
 
 declare const monaco: MonacoEditor;
 declare const loadedJSONLayout: string; // from pug
-declare const loadedSPRLayout: string; // from pug
+declare const loadedSprLayout: string; // from pug
 declare const year: string;
 declare const form_type: string;
 
@@ -216,7 +216,7 @@ if (jsonfieldMobile) {
 
 // 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
 if (sprfieldMobile) {
-	sprfieldMobile.value = loadedSPRLayout;
+	sprfieldMobile.value = loadedSprLayout;
 }
 
 // Get and set editor text, depending on whether we are on mobile or desktop
@@ -233,13 +233,19 @@ function setEditorText(text: string) {
 }
 
 // 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
-function getSPRText() {
-	if (sprfieldMobile) return sprfieldMobile.value;
-	throw new Error('sprfieldMobile not defined');
+function getSprText() {
+	if (form_type == 'matchscouting') {
+		if (sprfieldMobile) return sprfieldMobile.value;
+		throw new Error('sprfieldMobile not defined');
+	}
+	return '';
 }
-function setSPRText(text: string) {
-	if (sprfieldMobile) return sprfieldMobile.value = text;
-	throw new Error('sprfieldMobile not defined');
+function setSprText(text: string) {
+	if (sprfieldMobile)
+		return sprfieldMobile.value = text;
+	else
+		return '{}';
+	// throw new Error('sprfieldMobile not defined');
 }
 
 function getJSON() {
@@ -256,17 +262,20 @@ function getJSON() {
 }
 
 // 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
-function getSPR() {
-	const sprString = getSPRText();
-	try {
-		// validate it's valid json
-		let parsed = JSON.parse(sprString);
-		// return version of json without spaces and newlines
-		return JSON.stringify(parsed);
+function getSprJSON() {
+	if (form_type == 'matchscouting') {
+		const sprString = getSprText();
+		try {
+			// validate it's valid json
+			let parsed = JSON.parse(sprString);
+			// return version of json without spaces and newlines
+			return JSON.stringify(parsed);
+		}
+		catch (err) {
+			throw onError('Invalid SPR JSON');
+		}
 	}
-	catch (err) {
-		throw onError('Invalid JSON');
-	}
+	else return {};
 }
 
 function onError(err: string | Error) {
@@ -275,9 +284,11 @@ function onError(err: string | Error) {
 
 async function test() {
 	let jsonString = getJSON();
+	let sprString = getSprJSON();
 	// Submit for server-side validation (temporary, until [if] we can get client side validation for this)
 	$.post('/manage/config/submitform', {
 		jsonString,
+		sprString,
 		year,
 		form_type,
 		save: 'false',
@@ -285,7 +296,7 @@ async function test() {
 		console.log('success');
 
 		// Success; update editor content with processed layout and display warnings
-		let { warnings, layout, } = response;
+		let { warnings, layout, sprLayout, } = response;
 
 		if (Array.isArray(warnings) && Array.isArray(layout)) {
 			if (warnings.length > 0) {
@@ -294,6 +305,8 @@ async function test() {
 			}
 			// Set editor to modified json layout
 			setEditorText(JSON.stringify(layout, null, 2));
+			// 2025-02-01, M.O'C: Adding in SPR field
+			setSprText(JSON.stringify(sprLayout, null, 2));
 
 			// Finally, submit to testform
 			fetch('/scouting/testform', {
@@ -328,9 +341,11 @@ async function test() {
 
 async function submit() {
 	let jsonString = getJSON();
+	let sprString = getSprJSON();
 
 	$.post('/manage/config/submitform', {
 		jsonString,
+		sprString,
 		year,
 		form_type,
 		save: 'true',
@@ -338,7 +353,7 @@ async function submit() {
 		console.log('success');
 
 		// Success; update editor content with processed layout and display warnings
-		let { warnings, layout, saved } = response;
+		let { warnings, layout, sprLayout, saved } = response;
 		// sanity check
 		if (!saved) {
 			throw NotificationCard.error('Server failed to save layout!');
@@ -352,6 +367,8 @@ async function submit() {
 				NotificationCard.good('Validated and submitted successfully');
 			}
 			setEditorText(JSON.stringify(layout, null, 2));
+			// 2025-02-01, M.O'C: Adding in SPR field
+			setSprText(JSON.stringify(sprLayout, null, 2));
 		}
 	}).fail((xhr, status, message) => {
 		let errorHeader = xhr.getResponseHeader('Error-Message');

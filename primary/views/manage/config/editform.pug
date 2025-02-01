@@ -10,6 +10,8 @@ block content
 		var require = { paths: { vs: `#{fileRoot || 'http://localhost:3000'}/lib/monaco-editor/vs` } };
 		const loadedJSONLayoutRaw = `!{layout}`;
 		const loadedJSONLayout = JSON.stringify(JSON.parse(loadedJSONLayoutRaw), null, 2);
+		const loadedSprLayoutRaw = `!{sprLayout}`;
+		const loadedSprLayout = JSON.stringify(JSON.parse(loadedSprLayoutRaw), null, 2);
 		const year = '#{year}';
 		const form_type = '#{form_type}';
 	
@@ -74,19 +76,23 @@ block content
 			span Test form (Opens in a dialog window)
 		div(class="gear-btn theme-link w3-btn w3-section" id="submitBtn")
 			span Validate and submit
-		
-	//- 2025-01-31, M.O'C: Adding SPR definition box
-	+intelTogglerSectionHeader('reports.teamIntel.pitScouting')
-	div#sprCalcSection(class="w3-container w3-show")
-		p 
-			br 
-			i Use this to customize Scouter Performance Rating (scouter accuracy checks) if desired/needed
-			br
-			i <a href="https://wiki.team102.org/scoutradioz/forms/overview" class="link" target="_blank">Details on SPR calculations here</a> if you need assistance or have questions ask on the <a class="link" target="_blank" href="https://discord.gg/hUsbWTeEVz">Scoutradioz Discord</a>
-		div(class="w3-container w3-section w3-auto")
-			textarea(class="w3-input w3-border" id="sprfield-mobile" rows="10" cols="80")
 
-	textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
+	//- 2025-01-31, M.O'C: Adding SPR definition box
+	if form_type == 'matchscouting'
+		div(class="w3-auto")
+			div(class="w3-padding-small")
+				+intelTogglerSectionHeader('manage.forms.sprCalculation')
+				div#sprCalculationSection(class="w3-container w3-hide")
+					p 
+						br 
+						i Use this to customize Scouter Performance Rating (scouter accuracy checks) if desired/needed
+						br
+						br
+						i <a href="https://wiki.team102.org/scoutradioz/forms/overview" class="link" target="_blank">Details on SPR calculations here TODO</a> if you need assistance, or ask on the <a class="link" target="_blank" href="https://discord.gg/hUsbWTeEVz">Scoutradioz Discord</a>
+					div(class="w3-container w3-section w3-auto")
+						textarea(class="w3-input w3-border" id="sprfield-mobile" rows="10" cols="80")
+
+				textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
 	
 	
 	//- form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
