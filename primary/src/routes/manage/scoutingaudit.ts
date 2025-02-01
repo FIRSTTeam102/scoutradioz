@@ -4,10 +4,11 @@ import type Mathjs from 'mathjs';
 import { upload as uploadHelper } from 'scoutradioz-helpers';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { AnyDict, Match, MatchFormData, MatchScouting, MatchTeamKey, Upload } from 'scoutradioz-types';
+import type { AnyDict, Match, MatchFormData, MatchScouting, MatchTeamKey, Upload, Schema, SprCalculation } from 'scoutradioz-types';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import Permissions from '../../helpers/permissions';
+import { Schemas } from 'aws-sdk';
 const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
 const router = express.Router();
@@ -452,6 +453,45 @@ router.get('/spr', wrap(async (req, res) => {
 	let matrix:number[][] = [];
 	let vector:number[][] = [];
 
+	//
+	// 2025-02-01, M.O'C: Utilizing potentially customizable SPR calculations
+	//
+	// Need to load the schema object, use default SPR calc if undefined in DB
+	// load form definition data from the database
+	let year = parseInt(String(req.query.year)) || req.event.year;
+	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
+	
+	if (year === -1) {
+		let currentYear = new Date().getFullYear();
+		logger.debug(`Year is -1, aka, event not set. Setting year to current year: ${currentYear}`);
+		year = currentYear;
+	}
+
+	let schema: Schema|undefined,
+		// default "blank" sprLayout, with default data
+		sprLayout = JSON.parse(`{
+			"points_per_robot_metric": "contributedPoints",
+			"subtract_points_from_FRC": [
+				{ "foulPoints": 1 }
+			]
+		}`);
+
+	const orgschema = await utilities.findOne('orgschemas',
+		{ org_key: orgKey, year, form_type: 'matchscouting' },
+	);
+	if (orgschema) {
+		schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, owners: orgKey },
+		);
+		assert(schema, `For ${orgKey} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`);
+		// get the spr_calculation if it exists
+		if(schema.spr_calculation)
+			sprLayout = schema.spr_calculation;
+		else
+			logger.info(`For ${orgKey} and ${year}, orgschema existed in the database but had no SPR calculation - using default`);
+	}
+	logger.debug('sprLayout=' + JSON.stringify(sprLayout));
+
 	// cycle through match objects; for each one, cycle through 'red' and 'blue' array
 	// for each alliance, pull scouting data - if less than 3 found, can't compare
 	let allianceArray: Array<'red'|'blue'> = ['red', 'blue'];
@@ -478,13 +518,21 @@ router.get('/spr', wrap(async (req, res) => {
 
 				// 2023-02-13, M.O'C: Revising to only use 'totalPoints' minus 'foulPoints'
 				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
-				let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
-				let frcTot = totalPoints - foulPoints;
+				let totalSubtractPoints = 0;
+				let subtractPoints = sprLayout.subtract_points_from_FRC[0];
+				for (let thisKey of Object.keys(subtractPoints)) {
+					let thisMultiplier = subtractPoints[thisKey];
+					let thisSubtractPoints = getNumberFrom(thisScoreBreakdown, thisKey) * thisMultiplier;
+					totalSubtractPoints += thisSubtractPoints;
+					logger.debug('thisKey=' + thisKey + ',thisMultiplier=' + thisMultiplier + ',thisSubtractPoints=' + thisSubtractPoints);
+				}
+				logger.debug('totalSubtractPoints=' + totalSubtractPoints);
+				let frcTot = totalPoints - totalSubtractPoints;
 
 				let orgTot = 0;
 				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
 					let thisScoutReport = matchScoutReports[scoutIdx].data;
-					orgTot += getNumberFrom(thisScoutReport, 'contributedPoints');
+					orgTot += getNumberFrom(thisScoutReport, sprLayout.points_per_robot_metric);
 				}
 
 				// score
