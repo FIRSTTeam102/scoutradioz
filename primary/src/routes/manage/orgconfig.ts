@@ -302,7 +302,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	let sprLayout = null;
 	if (form_type === 'matchscouting') {
 		const sprParsed = JSON.parse(sprString);
-		sprLayout = validateSprLayout(sprParsed);
+		sprLayout = validateSprLayout(sprParsed, jsonParsed);
 	}
 
 	/**
