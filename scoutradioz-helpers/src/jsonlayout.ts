@@ -1,8 +1,22 @@
 import assert from 'assert';
-import type { CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
+import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
 const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived'];
+
+export function validateSprLayout(sprLayout: SprCalculation ) {
+	assert(sprLayout.points_per_robot_metric, 'SPR calculation must have "points_per_robot_metric" which refers to the ID of a field in your match form schema');
+	assert(sprLayout.subtract_points_from_FRC, 'SPR calculation must have "subtract_points_from_FRC" object which refers to fields in the FRC alliance score schema');
+	//assert(typeof sprLayout.subtract_points_from_FRC === 'object' && !Array.isArray(sprLayout.subtract_points_from_FRC) && sprLayout.subtract_points_from_FRC !== null, 'SPR calculation "subtract_points_from_FRC" must be an object of {string}: {number} pairs, where the strings refer to fields in the FRC alliance score schema');
+
+	let subtractPoints = sprLayout.subtract_points_from_FRC;
+	for (let thisKey of Object.keys(subtractPoints)) {
+		let thisMultiplier = subtractPoints[thisKey];
+		let testMath = 2.5 * thisMultiplier;
+	}
+
+	return sprLayout;
+}
 
 export function validateJSONLayout(layout: SchemaItem[]) {
 	assert(Array.isArray(layout), 'Expected JSON input to be an array');

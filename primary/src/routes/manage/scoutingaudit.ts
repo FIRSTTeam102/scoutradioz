@@ -471,9 +471,9 @@ router.get('/spr', wrap(async (req, res) => {
 		// default "blank" sprLayout, with default data
 		sprLayout = JSON.parse(`{
 			"points_per_robot_metric": "contributedPoints",
-			"subtract_points_from_FRC": [
-				{ "foulPoints": 1 }
-			]
+			"subtract_points_from_FRC": {
+				"foulPoints": 1
+			}
 		}`);
 
 	const orgschema = await utilities.findOne('orgschemas',
@@ -519,7 +519,7 @@ router.get('/spr', wrap(async (req, res) => {
 				// 2023-02-13, M.O'C: Revising to only use 'totalPoints' minus 'foulPoints'
 				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
 				let totalSubtractPoints = 0;
-				let subtractPoints = sprLayout.subtract_points_from_FRC[0];
+				let subtractPoints = sprLayout.subtract_points_from_FRC;
 				for (let thisKey of Object.keys(subtractPoints)) {
 					let thisMultiplier = subtractPoints[thisKey];
 					let thisSubtractPoints = getNumberFrom(thisScoreBreakdown, thisKey) * thisMultiplier;

@@ -8,7 +8,7 @@ import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 import Permissions from '../../helpers/permissions';
-import { validateJSONLayout } from 'scoutradioz-helpers';
+import { validateJSONLayout, validateSprLayout } from 'scoutradioz-helpers';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -190,9 +190,9 @@ router.get('/editform', wrap(async (req, res) => {
 		// default "blank" sprLayout, with default data
 		sprLayout = `{
 			"points_per_robot_metric": "contributedPoints",
-			"subtract_points_from_FRC": [
-				{ "foulPoints": 1 }
-			]
+			"subtract_points_from_FRC": {
+				"foulPoints": 1
+			}
 		}`;
 
 	const orgschema = await utilities.findOne('orgschemas',
@@ -302,7 +302,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	let sprLayout = null;
 	if (form_type === 'matchscouting') {
 		const sprParsed = JSON.parse(sprString);
-		sprLayout = sprParsed;
+		sprLayout = validateSprLayout(sprParsed);
 	}
 
 	/**

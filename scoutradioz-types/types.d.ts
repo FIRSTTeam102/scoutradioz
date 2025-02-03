@@ -187,7 +187,7 @@ export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem
  */
 export declare interface SprCalculation {
 	points_per_robot_metric: string;
-	subtract_points_from_frc: {[key: string]: number};
+	subtract_points_from_FRC: {[key: string]: number};
 }
 /**
  * A pit/match scouting form.
