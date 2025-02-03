@@ -12,7 +12,7 @@ export function validateSprLayout(sprLayout: SprCalculation ) {
 	let subtractPoints = sprLayout.subtract_points_from_FRC;
 	for (let thisKey of Object.keys(subtractPoints)) {
 		let thisMultiplier = subtractPoints[thisKey];
-		let testMath = 2.5 * thisMultiplier;
+		assert(typeof thisMultiplier === 'number', `SPR subtract-from field ${thisKey} should be a number`);
 	}
 
 	return sprLayout;
