@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
@@ -170,7 +170,7 @@ router.get('/editform', wrap(async (req, res) => {
 
 	let year = parseInt(String(req.query.year)) || req.event.year;
 	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
-	
+
 	if (year === -1) {
 		let currentYear = new Date().getFullYear();
 		logger.debug(`Year is -1, aka, event not set. Setting year to current year: ${currentYear}`);
@@ -178,7 +178,7 @@ router.get('/editform', wrap(async (req, res) => {
 	}
 
 	// load form definition data from the database
-	let schema: Schema|undefined,
+	let schema: Schema | undefined,
 		// default "blank" layout, with sample data
 		layout = `[
 			{ "type": "header", "label": "Sample" },
@@ -206,14 +206,14 @@ router.get('/editform', wrap(async (req, res) => {
 		// Create string representation of layout
 		layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
 		// 2025-02-01, M.O'C: Only do if SPR calculation exists
-		if(schema.spr_calculation)
+		if (schema.spr_calculation)
 			sprLayout = JSON.stringify(schema.spr_calculation).replace(/`/g, '\\`');
 		else
 			logger.info(`For ${org_key} and ${year}, orgschema existed in the database but had no SPR calculation - using default`);
 	}
-	
+
 	// Get name, description, and whether it's published from the schema (or assign defaults)
-	let { name, description, published} = schema || {
+	let { name, description, published } = schema || {
 		name: `${org_key}'s ${year} ${form_type} Form`,
 		description: '',
 		published: false
@@ -299,7 +299,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	const { warnings, layout } = validateJSONLayout(jsonParsed);
 
 	// 2025-02-01, M.O'C: Adding in SPR calcs for match scouting
-	let sprLayout = null;
+	let sprLayout: SprCalculation | undefined;
 	if (form_type === 'matchscouting') {
 		const sprParsed = JSON.parse(sprString);
 		sprLayout = validateSprLayout(sprParsed, jsonParsed);
