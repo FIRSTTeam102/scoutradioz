@@ -9,10 +9,12 @@ declare const year: string;
 declare const form_type: string;
 
 const jsonfield = document.getElementById('jsonfield') as HTMLDivElement | undefined;
+const sprfield = document.getElementById('sprfield') as HTMLDivElement | undefined;
 const jsonfieldMobile = document.getElementById('jsonfield-mobile') as HTMLTextAreaElement | undefined;
 // 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
 const sprfieldMobile = document.getElementById('sprfield-mobile') as HTMLTextAreaElement | undefined;
-let monacoEditor: editor.IStandaloneCodeEditor;
+let monacoEditorLayout: editor.IStandaloneCodeEditor;
+let monacoEditorSPR: editor.IStandaloneCodeEditor;
 
 const pigrammerSchema = {
 	'$schema': 'https://json-schema.org/draft/2020-12/schema',
@@ -186,24 +188,34 @@ const pigrammerSchema = {
 };
 
 // if not on mobile, create monaco editor
-if (jsonfield && monaco) {
-	let modelUri = monaco.Uri.parse('a://b/foo.json'); // a made up unique URI for our model
-	let model = monaco.editor.createModel(loadedJSONLayout, 'json', modelUri);
+if (jsonfield && 'monaco' in globalThis) {
+	if (jsonfield) {
+		let modelUri = monaco.Uri.parse('a://b/foo.json'); // a made up unique URI for our model
+		let model = monaco.editor.createModel(loadedJSONLayout, 'json', modelUri);
 
-	monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-		validate: true,
-		schemas: [
-			{
-				uri: 'https://scoutradioz.com/public/form.schema.json',
-				fileMatch: [modelUri.toString()],
-				schema: pigrammerSchema,
-			}
-		]
-	});
+		monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+			validate: true,
+			schemas: [
+				{
+					uri: 'https://scoutradioz.com/public/form.schema.json',
+					fileMatch: [modelUri.toString()],
+					schema: pigrammerSchema,
+				}
+			]
+		});
 
-	monacoEditor = monaco.editor.create(jsonfield, {
+		monacoEditorLayout = monaco.editor.create(jsonfield, {
 		// value: loadedJSONLayout,
-		model,
+			model,
+			language: 'json',
+			theme: 'vs-dark',
+			automaticLayout: true,
+		});
+	}
+}
+if (sprfield && 'monaco' in globalThis) {
+	monacoEditorSPR = monaco.editor.create(sprfield, {
+		value: loadedSprLayout,
 		language: 'json',
 		theme: 'vs-dark',
 		automaticLayout: true,
@@ -221,13 +233,13 @@ if (sprfieldMobile) {
 
 // Get and set editor text, depending on whether we are on mobile or desktop
 function getEditorText() {
-	if (monacoEditor) return monacoEditor.getValue();
+	if (monacoEditorLayout) return monacoEditorLayout.getValue();
 	if (jsonfieldMobile) return jsonfieldMobile.value;
 	throw new Error('neither monacoEditor or jsonFieldMobile defined');
 }
 
 function setEditorText(text: string) {
-	if (monacoEditor) return monacoEditor.setValue(text);
+	if (monacoEditorLayout) return monacoEditorLayout.setValue(text);
 	if (jsonfieldMobile) return jsonfieldMobile.value = text;
 	throw new Error('neither monacoEditor or jsonFieldMobile defined');
 }
@@ -235,17 +247,16 @@ function setEditorText(text: string) {
 // 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
 function getSprText() {
 	if (form_type == 'matchscouting') {
+		if (monacoEditorSPR) return monacoEditorSPR.getValue();
 		if (sprfieldMobile) return sprfieldMobile.value;
 		throw new Error('sprfieldMobile not defined');
 	}
 	return '';
 }
 function setSprText(text: string) {
-	if (sprfieldMobile)
-		return sprfieldMobile.value = text;
-	else
-		return '{}';
-	// throw new Error('sprfieldMobile not defined');
+	if (monacoEditorSPR) return monacoEditorSPR.setValue(text);
+	if (sprfieldMobile) return sprfieldMobile.value = text;
+	// error not thrown because sprfield/monacoEditorSPR won't be defined if form type is pitscouting
 }
 
 function getJSON() {
