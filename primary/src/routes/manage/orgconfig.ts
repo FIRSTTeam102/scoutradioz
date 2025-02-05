@@ -361,6 +361,8 @@ router.get('/uploads', wrap(async (req, res) => {
 	
 	const org_key = req._user.org_key;
 	
+	let uploadURL = process.env.UPLOAD_URL + '/' + process.env.TIER + '/image';
+
 	// Get the year from either the HTTP query or the current event
 	let year;
 	if (typeof req.query.year === 'string') year = parseInt(req.query.year);
@@ -409,6 +411,7 @@ router.get('/uploads', wrap(async (req, res) => {
 		uploadsByPhotoId: uploadsByPhotoId,
 		years: years,
 		thisYear: year,
+		uploadURL: uploadURL,
 	});
 }));
 
