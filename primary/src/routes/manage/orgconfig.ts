@@ -441,6 +441,40 @@ router.get('/uploads', wrap(async (req, res) => {
 	});
 }));
 
+router.post('/uploads/delete', wrap(async (req, res) => {
+	let thisFuncName = 'config.uploads.delete: ';
+	
+	try {
+		logger.debug(`${thisFuncName} ENTER`);
+		
+		let uploadId = req.body.id;
+		let orgKey = req._user.org_key;
+	
+		let upload: Upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
+		
+		if (upload) {
+			
+			logger.info(`${req._user} has deleted: ${JSON.stringify(upload)}`);
+			
+			let writeResult = await utilities.update('uploads',
+				{_id: uploadId, org_key: orgKey},
+				{$set: {removed: true}}
+			);
+			
+			logger.debug(`${thisFuncName} writeResult=${writeResult}`);
+			res.status(200).send(writeResult);
+		}
+		else {
+			logger.error(`${thisFuncName} Could not find upload in db, id=${uploadId}`);
+			res.status(400).send('Could not find upload in database.');
+		}
+	}
+	catch (err) {
+		logger.error(err);
+		res.status(500).send(JSON.stringify(err));
+	}
+}));
+
 router.get('/pitsurvey', wrap(async (req, res) => {
 	if (!await req.authenticate(Permissions.ACCESS_TEAM_ADMIN)) return;
 

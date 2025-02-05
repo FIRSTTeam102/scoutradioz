@@ -7,11 +7,15 @@
 extends ../../layout
 block content
 	style.
-		.index-counter{
-			display: inline-block;
-			margin-top: 0px;
-			width: 26px;
-			height: 26px;
+		.w3-check{
+			top: 7.7px!important;
+		}
+		.image-input{
+			opacity: 0;
+			position: absolute;
+			z-index: -1;
+			width: 1px; /* So the page doesn't display too wide on some mobile browsers */
+			height: 1px;
 		}
 	script(src=`${fileRoot}/lib/jimp.min.js`)
 	script(src=`${fileRoot}/js/script-pitscouting.js?v=10`)
@@ -48,7 +52,7 @@ block content
 								p
 									div(class="w3-col m4 w3-padding" onclick=`deleteUpload('${upload._id}')`)
 										button(class="w3-btn w3-block theme-red") Delete
-
+	img#imgMain(alt="" class="w3-image team-image-lg")
 	form#imageform(action="javascript:void(0)" method="post")
 		//-Image inputs
 		input#imageMain(type="file" class="image-input" index="0" name="imageMain")
