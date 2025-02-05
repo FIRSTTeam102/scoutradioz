@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
+import { upload as uploadHelper } from 'scoutradioz-helpers';
 import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
@@ -378,6 +379,65 @@ router.post('/submitform', wrap(async (req, res) => {
 		layout,
 		sprLayout,
 		saved: save
+	});
+}));
+
+// 2025-02-0, M.O'C: Added 'org specific' photo uploads
+router.get('/uploads', wrap(async (req, res) => {
+	
+	const org_key = req._user.org_key;
+	
+	let uploadURL = process.env.UPLOAD_URL + '/' + process.env.TIER + '/image';
+
+	// Get the year from either the HTTP query or the current event
+	let year;
+	if (typeof req.query.year === 'string') year = parseInt(req.query.year);
+	if (!year || isNaN(year)) year = req.event.year;
+	
+	let uploads: Upload[] = await utilities.find('uploads', 
+		{org_key: org_key, photo_id: { $exists: true }, removed: false, year: year},
+		{},
+	);
+	
+	// Years that contain any non-removed uploads
+	// Look specifically for records which have 'team_key' (i.e., uploaded during pit scouting)
+	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, photo_id: { $exists: true }, removed: false});
+	
+	uploads.sort((a, b) => {
+		if ( a.photo_id < b.photo_id ){
+			return -1;
+		}
+		if ( a.photo_id > b.photo_id ){
+			return 1;
+		}
+		return 0;
+	});
+	//logger.debug(`uploads=${JSON.stringify(uploads)}`);
+	
+	// 2022-03-08 JL: Previous logic didn't work, it always left out at least one document
+	let uploadsByPhotoId: Dict<(Upload & {links: ImageLinks})[]> = {};
+	for (let upload of uploads) {
+		//logger.debug(`upload=${JSON.stringify(upload)}`);
+		if (upload.hasOwnProperty('photo_id')) {
+			let key = upload.photo_id;
+			if (!uploadsByPhotoId[key]) uploadsByPhotoId[key] = [];
+			// Clone of the upload but with links added
+			let uploadWithLinks = {
+				...upload,
+				links: uploadHelper.getLinks(upload)
+			};
+			//logger.debug(`uploadWithLinks=${JSON.stringify(uploadWithLinks)}`);
+			uploadsByPhotoId[key].push(uploadWithLinks);
+		}
+	}
+	//logger.debug(`uploadsByPhotoId=${JSON.stringify(uploadsByPhotoId)}`);
+	
+	res.render('./manage/config/uploads', {
+		title: 'Organization Uploads',
+		uploadsByPhotoId: uploadsByPhotoId,
+		years: years,
+		thisYear: year,
+		uploadURL: uploadURL,
 	});
 }));
 
