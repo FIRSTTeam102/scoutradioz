@@ -9,6 +9,7 @@ import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import Permissions from '../../helpers/permissions';
 import { Schemas } from 'aws-sdk';
+import { matchData as MatchDataHelper } from 'scoutradioz-helpers';
 const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
 const router = express.Router();
@@ -467,30 +468,17 @@ router.get('/spr', wrap(async (req, res) => {
 		year = currentYear;
 	}
 
-	let schema: Schema|undefined,
+	let { spr_calculation } = await MatchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+	if (!spr_calculation) {
 		// default "blank" sprLayout, with default data
-		sprLayout = JSON.parse(`{
-			"points_per_robot_metric": "contributedPoints",
-			"subtract_points_from_FRC": {
-				"foulPoints": 1
+		spr_calculation = {
+			points_per_robot_metric: 'contributedPoints',
+			subtract_points_from_FRC: {
+				foulPoints: 1,
 			}
-		}`);
-
-	const orgschema = await utilities.findOne('orgschemas',
-		{ org_key: orgKey, year, form_type: 'matchscouting' },
-	);
-	if (orgschema) {
-		schema = await utilities.findOne('schemas',
-			{ _id: orgschema.schema_id, owners: orgKey },
-		);
-		assert(schema, `For ${orgKey} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`);
-		// get the spr_calculation if it exists
-		if(schema.spr_calculation)
-			sprLayout = schema.spr_calculation;
-		else
-			logger.info(`For ${orgKey} and ${year}, orgschema existed in the database but had no SPR calculation - using default`);
+		};
 	}
-	logger.debug('sprLayout=' + JSON.stringify(sprLayout));
+	logger.debug('sprLayout=' + JSON.stringify(spr_calculation));
 
 	// cycle through match objects; for each one, cycle through 'red' and 'blue' array
 	// for each alliance, pull scouting data - if less than 3 found, can't compare
@@ -519,7 +507,7 @@ router.get('/spr', wrap(async (req, res) => {
 				// 2023-02-13, M.O'C: Revising to only use 'totalPoints' minus 'foulPoints'
 				let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
 				let totalSubtractPoints = 0;
-				let subtractPoints = sprLayout.subtract_points_from_FRC;
+				let subtractPoints = spr_calculation.subtract_points_from_FRC;
 				for (let thisKey of Object.keys(subtractPoints)) {
 					let thisMultiplier = subtractPoints[thisKey];
 					let thisSubtractPoints = getNumberFrom(thisScoreBreakdown, thisKey) * thisMultiplier;
@@ -532,7 +520,7 @@ router.get('/spr', wrap(async (req, res) => {
 				let orgTot = 0;
 				for (let scoutIdx = 0; scoutIdx < matchScoutReports.length; scoutIdx++) {
 					let thisScoutReport = matchScoutReports[scoutIdx].data;
-					orgTot += getNumberFrom(thisScoutReport, sprLayout.points_per_robot_metric);
+					orgTot += getNumberFrom(thisScoutReport, spr_calculation.points_per_robot_metric);
 				}
 
 				// score
