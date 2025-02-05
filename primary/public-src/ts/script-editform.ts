@@ -4,12 +4,17 @@ import type { editor, MonacoEditor } from 'monaco-types';
 
 declare const monaco: MonacoEditor;
 declare const loadedJSONLayout: string; // from pug
+declare const loadedSprLayout: string; // from pug
 declare const year: string;
 declare const form_type: string;
 
 const jsonfield = document.getElementById('jsonfield') as HTMLDivElement | undefined;
+const sprfield = document.getElementById('sprfield') as HTMLDivElement | undefined;
 const jsonfieldMobile = document.getElementById('jsonfield-mobile') as HTMLTextAreaElement | undefined;
-let monacoEditor: editor.IStandaloneCodeEditor;
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+const sprfieldMobile = document.getElementById('sprfield-mobile') as HTMLTextAreaElement | undefined;
+let monacoEditorLayout: editor.IStandaloneCodeEditor;
+let monacoEditorSPR: editor.IStandaloneCodeEditor;
 
 const pigrammerSchema = {
 	'$schema': 'https://json-schema.org/draft/2020-12/schema',
@@ -183,24 +188,34 @@ const pigrammerSchema = {
 };
 
 // if not on mobile, create monaco editor
-if (jsonfield && monaco) {
-	let modelUri = monaco.Uri.parse('a://b/foo.json'); // a made up unique URI for our model
-	let model = monaco.editor.createModel(loadedJSONLayout, 'json', modelUri);
+if (jsonfield && 'monaco' in globalThis) {
+	if (jsonfield) {
+		let modelUri = monaco.Uri.parse('a://b/foo.json'); // a made up unique URI for our model
+		let model = monaco.editor.createModel(loadedJSONLayout, 'json', modelUri);
 
-	monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-		validate: true,
-		schemas: [
-			{
-				uri: 'https://scoutradioz.com/public/form.schema.json',
-				fileMatch: [modelUri.toString()],
-				schema: pigrammerSchema,
-			}
-		]
-	});
+		monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+			validate: true,
+			schemas: [
+				{
+					uri: 'https://scoutradioz.com/public/form.schema.json',
+					fileMatch: [modelUri.toString()],
+					schema: pigrammerSchema,
+				}
+			]
+		});
 
-	monacoEditor = monaco.editor.create(jsonfield, {
+		monacoEditorLayout = monaco.editor.create(jsonfield, {
 		// value: loadedJSONLayout,
-		model,
+			model,
+			language: 'json',
+			theme: 'vs-dark',
+			automaticLayout: true,
+		});
+	}
+}
+if (sprfield && 'monaco' in globalThis) {
+	monacoEditorSPR = monaco.editor.create(sprfield, {
+		value: loadedSprLayout,
 		language: 'json',
 		theme: 'vs-dark',
 		automaticLayout: true,
@@ -211,17 +226,37 @@ if (jsonfieldMobile) {
 	jsonfieldMobile.value = loadedJSONLayout;
 }
 
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+if (sprfieldMobile) {
+	sprfieldMobile.value = loadedSprLayout;
+}
+
 // Get and set editor text, depending on whether we are on mobile or desktop
 function getEditorText() {
-	if (monacoEditor) return monacoEditor.getValue();
+	if (monacoEditorLayout) return monacoEditorLayout.getValue();
 	if (jsonfieldMobile) return jsonfieldMobile.value;
 	throw new Error('neither monacoEditor or jsonFieldMobile defined');
 }
 
 function setEditorText(text: string) {
-	if (monacoEditor) return monacoEditor.setValue(text);
+	if (monacoEditorLayout) return monacoEditorLayout.setValue(text);
 	if (jsonfieldMobile) return jsonfieldMobile.value = text;
 	throw new Error('neither monacoEditor or jsonFieldMobile defined');
+}
+
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+function getSprText() {
+	if (form_type == 'matchscouting') {
+		if (monacoEditorSPR) return monacoEditorSPR.getValue();
+		if (sprfieldMobile) return sprfieldMobile.value;
+		throw new Error('sprfieldMobile not defined');
+	}
+	return '';
+}
+function setSprText(text: string) {
+	if (monacoEditorSPR) return monacoEditorSPR.setValue(text);
+	if (sprfieldMobile) return sprfieldMobile.value = text;
+	// error not thrown because sprfield/monacoEditorSPR won't be defined if form type is pitscouting
 }
 
 function getJSON() {
@@ -237,15 +272,34 @@ function getJSON() {
 	}
 }
 
+// 2025-01-31, M.O'C: Adding in "mobile-only" SPR field
+function getSprJSON() {
+	if (form_type == 'matchscouting') {
+		const sprString = getSprText();
+		try {
+			// validate it's valid json
+			let parsed = JSON.parse(sprString);
+			// return version of json without spaces and newlines
+			return JSON.stringify(parsed);
+		}
+		catch (err) {
+			throw onError('Invalid SPR JSON');
+		}
+	}
+	else return {};
+}
+
 function onError(err: string | Error) {
 	NotificationCard.error(String(err), { ttl: 0, exitable: true });
 }
 
 async function test() {
 	let jsonString = getJSON();
+	let sprString = getSprJSON();
 	// Submit for server-side validation (temporary, until [if] we can get client side validation for this)
 	$.post('/manage/config/submitform', {
 		jsonString,
+		sprString,
 		year,
 		form_type,
 		save: 'false',
@@ -253,7 +307,7 @@ async function test() {
 		console.log('success');
 
 		// Success; update editor content with processed layout and display warnings
-		let { warnings, layout, } = response;
+		let { warnings, layout, sprLayout, } = response;
 
 		if (Array.isArray(warnings) && Array.isArray(layout)) {
 			if (warnings.length > 0) {
@@ -262,6 +316,8 @@ async function test() {
 			}
 			// Set editor to modified json layout
 			setEditorText(JSON.stringify(layout, null, 2));
+			// 2025-02-01, M.O'C: Adding in SPR field
+			setSprText(JSON.stringify(sprLayout, null, 2));
 
 			// Finally, submit to testform
 			fetch('/scouting/testform', {
@@ -296,9 +352,11 @@ async function test() {
 
 async function submit() {
 	let jsonString = getJSON();
+	let sprString = getSprJSON();
 
 	$.post('/manage/config/submitform', {
 		jsonString,
+		sprString,
 		year,
 		form_type,
 		save: 'true',
@@ -306,7 +364,7 @@ async function submit() {
 		console.log('success');
 
 		// Success; update editor content with processed layout and display warnings
-		let { warnings, layout, saved } = response;
+		let { warnings, layout, sprLayout, saved } = response;
 		// sanity check
 		if (!saved) {
 			throw NotificationCard.error('Server failed to save layout!');
@@ -320,6 +378,8 @@ async function submit() {
 				NotificationCard.good('Validated and submitted successfully');
 			}
 			setEditorText(JSON.stringify(layout, null, 2));
+			// 2025-02-01, M.O'C: Adding in SPR field
+			setSprText(JSON.stringify(sprLayout, null, 2));
 		}
 	}).fail((xhr, status, message) => {
 		let errorHeader = xhr.getResponseHeader('Error-Message');

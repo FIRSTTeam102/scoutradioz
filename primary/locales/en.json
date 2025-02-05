@@ -520,6 +520,9 @@
 			"uploadPhoto": "Upload photo",
 			"id": "ID",
 			"teams": "Team(s)"
+		},
+		"forms": {
+			"sprCalculation": "SPR calculation"
 		}
 	},
 	"date": "Date",

@@ -471,12 +471,26 @@ export class MatchDataHelper {
 		// create the return array
 		let scorelayout: MongoDocument[] = [];
 
+		// 2025-02-01, M.O'C: Catching up missed 'layout' changes
 		// read in the layout as stored in the DB
-		let scorelayoutDB = await utilities.find('layout',
-			{ org_key: org_key, year: event_year, form_type: 'matchscouting' },
-			{ sort: { 'order': 1 } },
-			{ allowCache: true }
+		// let scorelayoutDB = await utilities.find('layout',
+		// 	{ org_key: org_key, year: event_year, form_type: 'matchscouting' },
+		// 	{ sort: { 'order': 1 } },
+		// 	{ allowCache: true }
+		// );
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year: event_year, form_type: 'matchscouting' },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
 		);
+		assert(orgschema);
+		const schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		assert(schema);
+		const scorelayoutDB = schema.layout.filter(item => item.type === 'derived');
 
 		// Process the cookies & (if selections defined) prepare to reduce
 		let savedCols: StringDict = {};
@@ -555,11 +569,26 @@ export class MatchDataHelper {
 		logger.addContext('funcName', 'calculateAndStoreAggRanges');
 		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',event_key=' + event_key);
 
-		let scorelayout = await utilities.find('layout',
-			{ org_key: org_key, year: event_year, form_type: 'matchscouting' },
-			{ sort: { 'order': 1 } },
-			{ allowCache: true }
+		// 2025-02-01, M.O'C: Catching up missed 'layout' changes
+		// let scorelayout = await utilities.find('layout',
+		// 	{ org_key: org_key, year: event_year, form_type: 'matchscouting' },
+		// 	{ sort: { 'order': 1 } },
+		// 	{ allowCache: true }
+		// );
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year: event_year, form_type: 'matchscouting' },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
 		);
+		assert(orgschema);
+		const schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		assert(schema);
+		const scorelayout = schema.layout.filter(item => item.type === 'derived');
+		
 		logger.trace('scorelayout=' + JSON.stringify(scorelayout));
 
 		let aggQuery: MongoDocument[] = [];
