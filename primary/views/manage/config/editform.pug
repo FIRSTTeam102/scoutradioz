@@ -4,10 +4,14 @@
 		'/manage/config/pitform' or '/manage/config/matchform'
 extends ../../layout
 block content
+	//- 2025-01-31, M.O'C: Adding SPR definition box in twisty box
+	include ../../reports/mixins/intelToggler
 	script.
 		var require = { paths: { vs: `#{fileRoot || 'http://localhost:3000'}/lib/monaco-editor/vs` } };
 		const loadedJSONLayoutRaw = `!{layout}`;
 		const loadedJSONLayout = JSON.stringify(JSON.parse(loadedJSONLayoutRaw), null, 2);
+		const loadedSprLayoutRaw = `!{sprLayout}`;
+		const loadedSprLayout = JSON.stringify(JSON.parse(loadedSprLayoutRaw), null, 2);
 		const year = '#{year}';
 		const form_type = '#{form_type}';
 	
@@ -17,12 +21,16 @@ block content
 		script(src=`${fileRoot}/lib/monaco-editor/vs/loader.js`)
 		script(src=`${fileRoot}/lib/monaco-editor/vs/editor/editor.main.js`)
 	style.
-		#jsonfield {
+		.textarea-mobile {
 			width: 100%;
-			height: 100%;
-			overflow: unset;
+			/* Unset w3-center */
+			text-align: initial!important;
+			resize: vertical;
+			overflow: auto;
+			border: 1px solid black;
+			font-family: monospace;
 		}
-		#jsonfieldParent {
+		.monaco-parent {
 			width: 100%;
 			min-height: 450px;
 			/* Unset w3-center */
@@ -35,15 +43,18 @@ block content
 			position: relative;
 			z-index: 0;
 		}
-		#jsonfield-mobile {
+		.main-json {
+			min-height: 450px;
+			height: 700px;
+		}
+		.spr-json {
+			min-height: 200px;
+			height: 200px;
+		}
+		.monaco {
 			width: 100%;
-			min-height: 500px;
-			/* Unset w3-center */
-			text-align: initial!important;
-			resize: vertical;
-			overflow: auto;
-			border: 1px solid black;
-			font-family: monospace;
+			height: 100%;
+			overflow: unset;
 		}
 	
 	h2=title
@@ -61,18 +72,37 @@ block content
 	div(class="w3-container w3-section w3-auto")
 		//- Monaco editor - default
 		if !isMobile
-			div(id="jsonfieldParent")
-				div(id="jsonfield" rows="40" cols="80")
+			div(class="monaco-parent main-json")
+				div(id="jsonfield" class="monaco" rows="40" cols="80")
 		//- plain text input - mobile
 		else
 			b You are on mobile, so we are showing a simplified text editor for you to copy-paste JSON. We highly recommend that you switch to desktop for an advanced code editor built into the page.
-			textarea(class="w3-input w3-border" id="jsonfield-mobile" rows="40" cols="80")
+			textarea(class="w3-input w3-border" class="textarea-mobile" id="jsonfield-mobile" rows="40" cols="80")
 		
 		div(class="gear-btn theme-link w3-btn w3-section" id="testBtn")
 			span Test form (Opens in a dialog window)
 		div(class="gear-btn theme-link w3-btn w3-section" id="submitBtn")
 			span Validate and submit
-	textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
+
+	//- 2025-01-31, M.O'C: Adding SPR definition box
+	if form_type == 'matchscouting'
+		div(class="w3-auto")
+			div(class="w3-padding-small")
+				+intelTogglerSectionHeader('manage.forms.sprCalculation')
+				div#sprCalculationSection(class="w3-container w3-hide")
+					p 
+						br 
+						i Use this to customize Scouter Performance Rating (scouter accuracy checks) if desired/needed
+						br
+						br
+						i <a href="https://wiki.team102.org/scoutradioz/what_is_spr" class="link" target="_blank">Details on SPR calculations here TODO</a> if you need assistance, or ask on the <a class="link" target="_blank" href="https://discord.gg/hUsbWTeEVz">Scoutradioz Discord</a>
+					if !isMobile 
+						div(class="monaco-parent spr-json")
+							div(class="monaco" id="sprfield" rows="20" cols="80")
+					else
+						textarea(class="w3-input w3-border" class="textarea-mobile" id="sprfield-mobile" rows="10" cols="80")
+
+				textarea(style="visibility:hidden" id="previousKeys" name="previousKeys")=JSON.stringify(previousKeys)
 	
 	
 	//- form(id="submitForm" style="visibility:hidden" action="/manage/config/submitform" method="post")
@@ -86,3 +116,4 @@ block content
 
 	//- 2023-10-06 JL: Changed script to module so I can import types ESM-style
 	script(src=`${fileRoot}/js/script-editform.js` type="module")
+	+intelTogglerJS()

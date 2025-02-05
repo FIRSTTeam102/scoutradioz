@@ -1,8 +1,31 @@
 import assert from 'assert';
-import type { CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
+import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
 const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived'];
+
+export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[]) {
+	assert(sprLayout.points_per_robot_metric, 'SPR calculation must have "points\\_per\\_robot\\_metric" which refers to the ID of a field in your match form schema');
+	let foundMatchingMetric = false;
+	for (let item of layout) {
+		// @ts-ignore
+		if (item.id && item.id === sprLayout.points_per_robot_metric) {
+			foundMatchingMetric = true;
+			break;
+		}
+	}
+	assert(foundMatchingMetric, `SPR calculation points\\_per\\_robot\\_metric '${sprLayout.points_per_robot_metric}' does not match any field in your match form schema`);
+	
+	assert(sprLayout.subtract_points_from_FRC, 'SPR calculation must have "subtract\\_points\\_from\\_FRC" object which refers to fields in the FRC alliance score schema');
+	//assert(typeof sprLayout.subtract_points_from_FRC === 'object' && !Array.isArray(sprLayout.subtract_points_from_FRC) && sprLayout.subtract_points_from_FRC !== null, 'SPR calculation "subtract_points_from_FRC" must be an object of {string}: {number} pairs, where the strings refer to fields in the FRC alliance score schema');
+	let subtractPoints = sprLayout.subtract_points_from_FRC;
+	for (let thisKey of Object.keys(subtractPoints)) {
+		let thisMultiplier = subtractPoints[thisKey];
+		assert(typeof thisMultiplier === 'number', `SPR subtract-from field '${thisKey}' should be a number`);
+	}
+
+	return sprLayout;
+}
 
 export function validateJSONLayout(layout: SchemaItem[]) {
 	assert(Array.isArray(layout), 'Expected JSON input to be an array');

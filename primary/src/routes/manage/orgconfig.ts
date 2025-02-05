@@ -2,13 +2,13 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 import Permissions from '../../helpers/permissions';
-import { validateJSONLayout } from 'scoutradioz-helpers';
+import { validateJSONLayout, validateSprLayout } from 'scoutradioz-helpers';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -170,7 +170,7 @@ router.get('/editform', wrap(async (req, res) => {
 
 	let year = parseInt(String(req.query.year)) || req.event.year;
 	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
-	
+
 	if (year === -1) {
 		let currentYear = new Date().getFullYear();
 		logger.debug(`Year is -1, aka, event not set. Setting year to current year: ${currentYear}`);
@@ -178,14 +178,22 @@ router.get('/editform', wrap(async (req, res) => {
 	}
 
 	// load form definition data from the database
-	let schema: Schema|undefined,
+	let schema: Schema | undefined,
 		// default "blank" layout, with sample data
 		layout = `[
 			{ "type": "header", "label": "Sample" },
 			{ "type": "subheader", "label": "Replace this JSON with the code that defines your scouting form" },
 			{ "type": "spacer" },
 			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" }
-		]`;
+		]`,
+		// 2025-02-01, M.O'C: Adding SPR calculations
+		// default "blank" sprLayout, with default data
+		sprLayout = `{
+			"points_per_robot_metric": "contributedPoints",
+			"subtract_points_from_FRC": {
+				"foulPoints": 1
+			}
+		}`;
 
 	const orgschema = await utilities.findOne('orgschemas',
 		{ org_key, year, form_type },
@@ -197,10 +205,15 @@ router.get('/editform', wrap(async (req, res) => {
 		assert(schema, `For ${org_key} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`);
 		// Create string representation of layout
 		layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
+		// 2025-02-01, M.O'C: Only do if SPR calculation exists
+		if (schema.spr_calculation)
+			sprLayout = JSON.stringify(schema.spr_calculation).replace(/`/g, '\\`');
+		else
+			logger.info(`For ${org_key} and ${year}, orgschema existed in the database but had no SPR calculation - using default`);
 	}
-	
+
 	// Get name, description, and whether it's published from the schema (or assign defaults)
-	let { name, description, published} = schema || {
+	let { name, description, published } = schema || {
 		name: `${org_key}'s ${year} ${form_type} Form`,
 		description: '',
 		published: false
@@ -245,6 +258,7 @@ router.get('/editform', wrap(async (req, res) => {
 	res.render('./manage/config/editform', {
 		title: title,
 		layout,
+		sprLayout,
 		name,
 		description,
 		published,
@@ -269,6 +283,8 @@ router.post('/submitform', wrap(async (req, res) => {
 
 	const jsonString = req.body.jsonString;
 	logger.debug('jsonString=' + jsonString);
+	const sprString = req.body.sprString;
+	logger.debug('sprString=' + sprString);
 	const year = parseInt(req.body.year);
 	logger.debug('year=' + year);
 	const form_type = req.body.form_type;
@@ -281,6 +297,13 @@ router.post('/submitform', wrap(async (req, res) => {
 	// Validate json layout
 	const jsonParsed = JSON.parse(jsonString);
 	const { warnings, layout } = validateJSONLayout(jsonParsed);
+
+	// 2025-02-01, M.O'C: Adding in SPR calcs for match scouting
+	let sprLayout: SprCalculation | undefined;
+	if (form_type === 'matchscouting') {
+		const sprParsed = JSON.parse(sprString);
+		sprLayout = validateSprLayout(sprParsed, jsonParsed);
+	}
 
 	/**
 	 * TODO:
@@ -309,6 +332,7 @@ router.post('/submitform', wrap(async (req, res) => {
 				{
 					$set: {
 						layout,
+						spr_calculation: sprLayout,
 						last_modified: new Date(),
 					}
 				}
@@ -326,6 +350,7 @@ router.post('/submitform', wrap(async (req, res) => {
 				created: new Date(),
 				form_type,
 				layout,
+				spr_calculation: sprLayout,
 				name: `${org_key}'s ${year} ${form_type} form`,
 				description: '',
 				published: false,
@@ -351,6 +376,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	return res.send({
 		warnings,
 		layout,
+		sprLayout,
 		saved: save
 	});
 }));
