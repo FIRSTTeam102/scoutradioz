@@ -173,12 +173,13 @@ router.get('/uploads', wrap(async (req, res) => {
 	if (!year || isNaN(year)) year = req.event.year;
 	
 	let uploads: Upload[] = await utilities.find('uploads', 
-		{org_key: org_key, removed: false, year: year},
+		{org_key: org_key, team_key: { $exists: true }, removed: false, year: year},
 		{},
 	);
 	
 	// Years that contain any non-removed uploads
-	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, removed: false});
+	// Look specifically for records which have 'team_key' (i.e., uploaded during pit scouting)
+	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, team_key: { $exists: true }, removed: false});
 	
 	uploads.sort((a, b) => {
 		let aNum = parseInt(a.team_key.substring(3));
