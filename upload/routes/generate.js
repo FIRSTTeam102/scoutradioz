@@ -150,4 +150,4 @@ async function getJimpResources(){
 	return;
 }
 
-module.exports = router;
+export default router;

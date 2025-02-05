@@ -7,10 +7,9 @@ import Permissions from './permissions';
 import 'colors';
 import type express from 'express';
 import type { Org, Role, Team } from 'scoutradioz-types';
-
+import navHelpers from '../helpers/nav';
 
 const logger = getLogger('usefunctions');
-const navHelpers = require('../helpers/nav');
 
 // There are some pages where we don't want the year, but the rest of the string is good
 class DateTimeExtras {

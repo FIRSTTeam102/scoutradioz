@@ -642,4 +642,4 @@ function splitLayoutIntoGroups(layout: SchemaItem[]) {
 	return groupedLayout;
 }
 
-module.exports = router;
+export default router;

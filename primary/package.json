@@ -43,6 +43,7 @@
 	},
 	"license": "Apache-2.0",
 	"dependencies": {
+		"@codegenie/serverless-express": "^4.16.0",
 		"@firstteam102/connect-mongo": "~4.6.1-test1",
 		"aws-serverless-express": "^3.4.0",
 		"bcryptjs": "^2.4.3",
@@ -66,6 +67,7 @@
 		"scoutradioz-http-errors": "file:../scoutradioz-http-errors",
 		"scoutradioz-utilities": "file:../scoutradioz-utilities",
 		"serve-favicon": "^2.5.0",
+		"sst": "^3.7.9",
 		"web-push": "^3.4.5"
 	},
 	"nodemonConfig": {

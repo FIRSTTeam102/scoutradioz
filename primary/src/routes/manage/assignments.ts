@@ -1257,4 +1257,4 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	res.redirect('./?alert=Generated pit scouting assignments successfully.');
 }
 
-module.exports = router;
+export default router;

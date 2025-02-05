@@ -678,4 +678,4 @@ router.post('/matchresults', wrap(async (req, res) => {
 	res.redirect('/manage/manualdata/matchresults?alert=Updated match data successfully.');
 }));
 
-module.exports = router;
+export default router;

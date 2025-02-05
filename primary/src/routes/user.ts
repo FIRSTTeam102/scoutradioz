@@ -817,4 +817,4 @@ router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, r
 	res.redirect('/user/preferences/reportcolumns?alert=' + req.msgUrl('user.reportcolumns.clearedorgdefaults') + '&type=success&autofade=true');
 }));
 
-module.exports = router;
+export default router;

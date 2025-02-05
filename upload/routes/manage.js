@@ -127,4 +127,4 @@ router.all('/update-recycle-bin', wrap(async (req, res) => {
 	res.send({deletedCount: deletedCount});
 }));
 
-module.exports = router;
+export default router;

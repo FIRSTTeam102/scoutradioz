@@ -842,7 +842,7 @@ router.get('/matchscores', wrap(async (req, res) => {
 	});
 }));
 
-module.exports = router;
+export default router;
 
 /**
  * Get a number from an AnyDict, defaulting to 0. Easier than doing an inline ternary for each variable.

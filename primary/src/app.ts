@@ -100,12 +100,12 @@ app.get('/*', (req, res, next) => {
 app.use(utilities.refreshTier);
 
 //Boilerplate setup
-app.set('views', path.join(__dirname, '..', 'views'));
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 // @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
-app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
+// app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
 
 app.disable('x-powered-by');
 
@@ -120,7 +120,7 @@ app.use(usefunctions.loadPlatformSettings);
 //Must be before any other custom code
 import { I18n } from './helpers/i18n';
 const i18n = new I18n({
-	directory: path.join(__dirname, '../locales')
+	directory: path.join(__dirname, './locales')
 });
 app.use(i18n.middleware());
 
@@ -187,31 +187,31 @@ app.use(usefunctions.authenticate);
 app.use(usefunctions.setViewVariables);
 
 //SCOUTRADIOZ ADMIN ROUTE FOR SYNCING - PLACED FIRST TO ENABLE UNAUTHENTICATED AUTOMATED CALLS
-let sync = require('./routes/admin/sync');
+let sync = require('./routes/admin/sync').default;
 app.use('/admin/sync', sync);
 
 //USER ROUTES
-let index = require('./routes/index');
-let user = require('./routes/user');
-let dashboard = require('./routes/dashboard');
-let scouting = require('./routes/scouting');
-let reports = require('./routes/reports');
-let notifications = require('./routes/notifications');
-let share = require('./routes/share');
+let index = require('./routes/index').default;
+let user = require('./routes/user').default;
+let dashboard = require('./routes/dashboard').default;
+let scouting = require('./routes/scouting').default;
+let reports = require('./routes/reports').default;
+let notifications = require('./routes/notifications').default;
+let share = require('./routes/share').default;
 //ORG MANAGEMENT ROUTES
-let manageindex = require('./routes/manage/indexmgmt');
-let allianceselection = require('./routes/manage/allianceselection');
-let currentevent = require('./routes/manage/currentevent');
-let config = require('./routes/manage/orgconfig');
-let manualdata = require('./routes/manage/manualdata');
-let orgmembers = require('./routes/manage/members');
-let scoutingaudit = require('./routes/manage/scoutingaudit');
-let assignments = require('./routes/manage/assignments');
+let manageindex = require('./routes/manage/indexmgmt').default;
+let allianceselection = require('./routes/manage/allianceselection').default;
+let currentevent = require('./routes/manage/currentevent').default;
+let config = require('./routes/manage/orgconfig').default;
+let manualdata = require('./routes/manage/manualdata').default;
+let orgmembers = require('./routes/manage/members').default;
+let scoutingaudit = require('./routes/manage/scoutingaudit').default;
+let assignments = require('./routes/manage/assignments').default;
 //SCOUTRADIOZ ADMIN ROUTES
-let adminindex = require('./routes/admin/indexadmin');
-let tests = require('./routes/admin/tests');
-let externaldata = require('./routes/admin/externaldata');
-let orgs = require('./routes/admin/orgs');
+let adminindex = require('./routes/admin/indexadmin').default;
+let tests = require('./routes/admin/tests').default;
+let externaldata = require('./routes/admin/externaldata').default;
+let orgs = require('./routes/admin/orgs').default;
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);

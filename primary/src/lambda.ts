@@ -1,6 +1,6 @@
 'use strict';
-const awsServerlessExpress = require(process.env.NODE_ENV === 'test' ? '../../index' : 'aws-serverless-express');
-const app = require('./build/app').default;
+import serverlessExpress from '@codegenie/serverless-express';
+import app from './app';
 
 // NOTE: If you get ERR_CONTENT_DECODING_FAILED in your browser, this is likely
 // due to a compressed response (e.g. gzip) which has not been handled correctly
@@ -25,19 +25,22 @@ const binaryMimeTypes = [
 	'text/text',
 	'text/xml'
 ];
-const server = awsServerlessExpress.createServer(app, null, binaryMimeTypes);
+const server = serverlessExpress({
+	app,
+	binaryMimeTypes,
+});
 
-exports.handler = (event, context) => {
+export const handler = (event: any, context: any, callback: any) => {
 
-	var alias = context.invokedFunctionArn.replace(/.*:/g,'');
-	//console.log('ALIAS: '+ alias);
+	// let alias = context.invokedFunctionArn.replace(/.*:/g,'');
+	// //console.log('ALIAS: '+ alias);
 	
-	process.env.ALIAS = alias;
-	//process.env.TIER is overridden here during every request.
-	process.env.TIER = alias.toLowerCase();
+	// process.env.ALIAS = alias;
+	// //process.env.TIER is overridden here during every request.
+	// process.env.TIER = alias.toLowerCase();
 	
 	// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
 	process.env.LAMBDA_FUNCTION_VERSION = context.functionVersion;
 
-	return awsServerlessExpress.proxy(server, event, context);
+	return server(event, context, callback);
 }; 

@@ -379,5 +379,4 @@ class NavHelpers {
 	}
 }
 
-const navHelpers = module.exports = new NavHelpers();
-export default navHelpers;
+export default new NavHelpers();
