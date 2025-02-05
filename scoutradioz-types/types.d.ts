@@ -183,6 +183,13 @@ export interface DerivedItem extends SchemaItemBase {
 export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | SpacerItem | DerivedItem | DerivedItemLegacy;
 
 /**
+ * Sub-object SPR calculation
+ */
+export declare interface SprCalculation {
+	points_per_robot_metric: string;
+	subtract_points_from_FRC: {[key: string]: number};
+}
+/**
  * A pit/match scouting form.
  */
 export declare interface Schema extends DbDocument {
@@ -199,6 +206,8 @@ export declare interface Schema extends DbDocument {
 	published: boolean;
 	/** Org that created the schema, and orgs that are allowed to edit the schema if it's published. */
 	owners: OrgKey[];
+	/** 2025-02-01, M.O'C: Which SPR calculations to use for the given schema */
+	spr_calculation?: SprCalculation;
 }
 
 /**

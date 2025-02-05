@@ -3,7 +3,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
 import { upload as uploadHelper } from 'scoutradioz-helpers';
-import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
