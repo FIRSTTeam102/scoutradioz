@@ -1,5 +1,5 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -30,7 +30,7 @@ export declare class MatchDataHelper {
      * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
      * @param item layout element
      */
-    static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | SpacerItem>;
+    static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem>;
     static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData): number | null;
     /**
      * Calculate derived metrics for a provided array of match data items.

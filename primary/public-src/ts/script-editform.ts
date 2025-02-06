@@ -55,6 +55,19 @@ const pigrammerSchema = {
 				type: 'object',
 				properties: {
 					type: {
+						const: 'image'
+					},
+					image_id: {
+						type: 'string'
+					}
+				},
+				required: ['type', 'image_id'],
+				additionalProperties: false
+			},
+			{
+				type: 'object',
+				properties: {
+					type: {
 						const: 'slider'
 					},
 					variant: {

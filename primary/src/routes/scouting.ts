@@ -71,6 +71,8 @@ router.get('/match*', wrap(async (req, res) => {
 	let groupedLayout = splitLayoutIntoGroups(schema.layout);
 	
 	const images = await uploadHelper.findTeamImages(org_key, year, teamKey);
+	const orgImages = await uploadHelper.findOrgImages(org_key, year);
+
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	
 	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
@@ -117,6 +119,7 @@ router.get('/match*', wrap(async (req, res) => {
 		answers,
 		teamKey,
 		images,
+		orgImages,
 		team: team,
 		pit_super_data,
 	});
@@ -169,6 +172,9 @@ router.post('/testform', wrap(async (req, res) => {
 		website: null
 	};
 
+	const image_year = req.event.year;
+	const orgImages = await uploadHelper.findOrgImages(org_key, image_year);
+
 	//render page
 	if (form_type == 'matchscouting') {
 		// @ts-ignore FIX BEFORE COMMITTING
@@ -183,6 +189,7 @@ router.post('/testform', wrap(async (req, res) => {
 			teamKey: 'frc999999',
 			images: null,
 			team: team,
+			orgImages: orgImages
 		});
 	}
 	else
@@ -195,6 +202,7 @@ router.post('/testform', wrap(async (req, res) => {
 			teamKey: 'frc999999',
 			images: null,
 			team: team,
+			orgImages: orgImages
 		});
 }));
 
@@ -308,6 +316,7 @@ router.get('/pit*', wrap(async (req, res) => {
 			pitData = pitFind[0].data;
 			
 	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
+	const orgImages = await uploadHelper.findOrgImages(org_key, year);
 	
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
@@ -341,6 +350,7 @@ router.get('/pit*', wrap(async (req, res) => {
 		uploadURL: uploadURL,
 		teamKey: teamKey,
 		images: images,
+		orgImages: orgImages,
 		team: team,
 	});
 }));

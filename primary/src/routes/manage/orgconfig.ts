@@ -382,7 +382,7 @@ router.post('/submitform', wrap(async (req, res) => {
 	});
 }));
 
-// 2025-02-0, M.O'C: Added 'org specific' photo uploads
+// 2025-02-0, M.O'C: Added 'org specific' image uploads
 router.get('/uploads', wrap(async (req, res) => {
 	
 	const org_key = req._user.org_key;
@@ -395,19 +395,19 @@ router.get('/uploads', wrap(async (req, res) => {
 	if (!year || isNaN(year)) year = req.event.year;
 	
 	let uploads: Upload[] = await utilities.find('uploads', 
-		{org_key: org_key, photo_id: { $exists: true }, removed: false, year: year},
+		{org_key: org_key, image_id: { $exists: true }, removed: false, year: year},
 		{},
 	);
 	
 	// Years that contain any non-removed uploads
 	// Look specifically for records which have 'team_key' (i.e., uploaded during pit scouting)
-	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, photo_id: { $exists: true }, removed: false});
+	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, image_id: { $exists: true }, removed: false});
 	
 	uploads.sort((a, b) => {
-		if ( a.photo_id < b.photo_id ){
+		if ( a.image_id < b.image_id ){
 			return -1;
 		}
-		if ( a.photo_id > b.photo_id ){
+		if ( a.image_id > b.image_id ){
 			return 1;
 		}
 		return 0;
@@ -415,26 +415,26 @@ router.get('/uploads', wrap(async (req, res) => {
 	//logger.debug(`uploads=${JSON.stringify(uploads)}`);
 	
 	// 2022-03-08 JL: Previous logic didn't work, it always left out at least one document
-	let uploadsByPhotoId: Dict<(Upload & {links: ImageLinks})[]> = {};
+	let uploadsByImageId: Dict<(Upload & {links: ImageLinks})[]> = {};
 	for (let upload of uploads) {
 		//logger.debug(`upload=${JSON.stringify(upload)}`);
-		if (upload.hasOwnProperty('photo_id')) {
-			let key = upload.photo_id;
-			if (!uploadsByPhotoId[key]) uploadsByPhotoId[key] = [];
+		if (upload.hasOwnProperty('image_id')) {
+			let key = upload.image_id;
+			if (!uploadsByImageId[key]) uploadsByImageId[key] = [];
 			// Clone of the upload but with links added
 			let uploadWithLinks = {
 				...upload,
 				links: uploadHelper.getLinks(upload)
 			};
 			//logger.debug(`uploadWithLinks=${JSON.stringify(uploadWithLinks)}`);
-			uploadsByPhotoId[key].push(uploadWithLinks);
+			uploadsByImageId[key].push(uploadWithLinks);
 		}
 	}
-	//logger.debug(`uploadsByPhotoId=${JSON.stringify(uploadsByPhotoId)}`);
+	//logger.debug(`uploadsByImageId=${JSON.stringify(uploadsByImageId)}`);
 	
 	res.render('./manage/config/uploads', {
 		title: 'Organization Uploads',
-		uploadsByPhotoId: uploadsByPhotoId,
+		uploadsByImageId: uploadsByImageId,
 		years: years,
 		thisYear: year,
 		uploadURL: uploadURL,

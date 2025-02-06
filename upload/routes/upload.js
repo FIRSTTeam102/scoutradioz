@@ -164,8 +164,8 @@ router.post('/image', upload.single('image'), wrap(async (req, res, next) => {
 		const index = req.query.index;
 		const year = req.query.year;
 		const teamKey = req.query.team_key;
-		// 2025-02-04, M.O'C: Adding 'photo_id'
-		const photoId = req.query.photo_id;
+		// 2025-02-04, M.O'C: Adding 'image_id'
+		const imageId = req.query.image_id;
 		const userId = req.query.user;
 		const useragent = req.shortagent;
 		const uploadTime = Date.now();
@@ -196,9 +196,9 @@ router.post('/image', upload.single('image'), wrap(async (req, res, next) => {
 			index: parseInt(index),
 			removed: false,
 		};
-		// 2025-02-04, M.O'C: Could be team_key, could be photo_id? set appropriately
+		// 2025-02-04, M.O'C: Could be team_key, could be image_id? set appropriately
 		if (teamKey) data.team_key = teamKey;
-		if (photoId) data.photo_id = photoId;
+		if (imageId) data.image_id = imageId;
 		
 		logger.info(`Upload complete; data=${JSON.stringify(data)}`);
 		

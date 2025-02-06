@@ -29,17 +29,17 @@ block content
 				each year in years
 					option(selected=(thisYear===year) value=year)= year
 	div(class="w3-auto")
-		if !uploadsByPhotoId || Object.keys(uploadsByPhotoId).length === 0
+		if !uploadsByImageId || Object.keys(uploadsByImageId).length === 0
 			+noDataFound('No uploads were found for the year ' + thisYear)
-		each photoUploads, photoId in uploadsByPhotoId
-			//- - console.log(`photoUploads: ${JSON.stringify(photoUploads)}, photoId: ${photoId}`);
-			if photoUploads[0]
+		each imageUploads, imageId in uploadsByImageId
+			//- - console.log(`imageUploads: ${JSON.stringify(imageUploads)}, imageId: ${imageId}`);
+			if imageUploads[0]
 				div(class="w3-row")
 					hr
 					h4
-						a(href=photoUploads[0].links.lg class="link")
-							span=photoId
-					each upload in photoUploads
+						a(href=imageUploads[0].links.lg class="link")
+							span=imageId
+					each upload in imageUploads
 						//- - console.log(`upload: ${upload}`);
 						div(class="w3-row w3-padding-large" id=`row_${upload._id}`) 
 							div(class="w3-half")
@@ -60,11 +60,11 @@ block content
 		input(type="hidden" name="uploadURL" value=uploadURL)
 		input(type="hidden" name="year" value=event_year)
 		input(type="hidden" name="org_key" value=user.org_key)
-		input(type="text" name="photo_id")
+		input(type="text" name="image_id")
 		input(type="hidden" name="user" value=user._id)
 		//-The buttons are actually labels for each image input
 		div(class="w3-container w3-padding")
-			label#uploadMain(for="imageMain" class="w3-btn theme-submit")!=msg('manage.config.uploadPhoto')
+			label#uploadMain(for="imageMain" class="w3-btn theme-submit")!=msg('manage.config.uploadImage')
 
 	script.
 		$('select[name=year]').on('change', () => {

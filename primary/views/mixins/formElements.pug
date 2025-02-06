@@ -25,7 +25,14 @@ mixin Subheader(item)
 
 mixin Spacer
 	p(class="w3-tiny theme-spacer")
-	
+
+mixin Image(item, orgImages)
+	- console.log(`Image mix-in: item: ${JSON.stringify(item)}`)
+	- console.log(`Image mix-in: orgImages: ${JSON.stringify(orgImages)}`)
+	div(style="width:100%; margin-left:auto; margin-right:auto; display:block;")
+		img(src=orgImages[item.image_id].lg alt="" class="w3-image team-image-lg")
+
+
 mixin Checkbox(item, answer)
 	- console.log(answer)
 	div(class="w3-padding-large")

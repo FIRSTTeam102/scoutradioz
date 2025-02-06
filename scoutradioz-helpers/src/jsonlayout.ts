@@ -1,8 +1,8 @@
 import assert from 'assert';
-import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
+import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
-const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived'];
+const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image'];
 
 export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[]) {
 	assert(sprLayout.points_per_robot_metric, 'SPR calculation must have "points\\_per\\_robot\\_metric" which refers to the ID of a field in your match form schema');
@@ -118,6 +118,9 @@ export function validateJSONLayout(layout: SchemaItem[]) {
 			case 'derived':
 				validateDerived(item);
 				break;
+			case 'image':
+				validateImage(item);
+				break;
 			default:
 				// @ts-ignore
 				throw new TypeError(`Unexpected item.type ${item.type} - must be one of ${validTypes.join(', ')}`);
@@ -223,6 +226,10 @@ export function validateJSONLayout(layout: SchemaItem[]) {
 			delete item.id;
 		}
 		checkExpectedKeys(item, ['type', 'label'], true);
+	}
+
+	function validateImage(item: ImageItem) {
+		checkExpectedKeys(item, ['type', 'image_id'], true);
 	}
 
 	function checkId(item: { id: string }) {
