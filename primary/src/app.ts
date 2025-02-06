@@ -116,6 +116,18 @@ app.use(express.urlencoded({ extended: false }));
 // load platform settings, including maintenance mode and news, after cookie parsing
 app.use(usefunctions.loadPlatformSettings);
 
+//User agent for logging
+app.use(useragent.express());
+
+// Block bots (make sure this is below express.static so they can still access robots.txt)
+app.use((req, res, next) => {
+	if (req.useragent?.isBot && req.originalUrl !== '/') {
+		logger.debug(`Blocked ${req.method} request from bot to ${req.originalUrl}`);
+		return res.status(403).send();
+	}
+	next();
+});
+
 //Internationalization
 //Must be before any other custom code
 import { I18n } from './helpers/i18n';
@@ -161,10 +173,6 @@ app.use(session({
 		}
 	}),
 }));
-
-//User agent for logging
-// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
-app.use(useragent.express());
 
 //Passport setup (user authentication)
 require('./helpers/passport-config');
