@@ -120,7 +120,7 @@ router.get('/match*', wrap(async (req, res) => {
 		teamKey,
 		images,
 		orgImages,
-		team: team,
+		team,
 		pit_super_data,
 	});
 }));
@@ -181,28 +181,28 @@ router.post('/testform', wrap(async (req, res) => {
 		let groupedLayout = splitLayoutIntoGroups(layout);
 		res.render('./scouting/match', {
 			title: req.msg('scouting.match'),
-			layout: layout,
+			layout,
 			groupedLayout,
 			key: match_team_key,
-			alliance: alliance,
+			alliance,
 			answers: null,
 			teamKey: 'frc999999',
 			images: null,
-			team: team,
-			orgImages: orgImages
+			team,
+			orgImages
 		});
 	}
 	else
 		res.render('./scouting/pit', {
 			title: req.msg('scouting.pit'),
-			layout: layout,
+			layout,
 			pitData: null, 
 			key: 'frc999999',
 			uploadURL: null,
 			teamKey: 'frc999999',
 			images: null,
-			team: team,
-			orgImages: orgImages
+			team,
+			orgImages
 		});
 }));
 
@@ -280,13 +280,13 @@ router.post('/match/submit', wrap(async (req, res) => {
 
 	// Simply to check if the user is assigned (2022-03-24 JL)
 	const oneAssignedMatch: MatchScouting = await utilities.findOne('matchscouting', {
-		org_key: org_key, 
+		org_key, 
 		event_key: req.event.key, 
 		'assigned_scorer.id': thisScouterRecord.id
 	});
 	let assigned = !!oneAssignedMatch;
 	
-	return res.send({message: req.msg('scouting.submitSuccess'), status: 200, assigned: assigned});
+	return res.send({message: req.msg('scouting.submitSuccess'), status: 200, assigned});
 }));
 
 router.get('/pit*', wrap(async (req, res) => {
@@ -345,13 +345,13 @@ router.get('/pit*', wrap(async (req, res) => {
 	res.render('./scouting/pit', {
 		title: req.msg('scouting.pit'),
 		layout: schema.layout,
-		pitData: pitData, 
+		pitData, 
 		key: teamKey,
-		uploadURL: uploadURL,
-		teamKey: teamKey,
-		images: images,
-		orgImages: orgImages,
-		team: team,
+		uploadURL,
+		teamKey,
+		images,
+		orgImages,
+		team,
 	});
 }));
 
@@ -376,7 +376,7 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key,
 	await utilities.update(
 		'pitscouting',
-		{ org_key: org_key, event_key: event_key, team_key: teamKey },
+		{ org_key, event_key, team_key: teamKey },
 		{
 			$set: {
 				data: pitData,
@@ -439,10 +439,10 @@ router.get('/supermatch*', wrap(async (req, res) => {
 	//render page
 	res.render('./scouting/supermatch', {
 		title: title,
-		layout: layout,
+		layout,
 		key: match_key,
-		answers_map: answers_map,
-		superdata: superdata
+		answers_map,
+		superdata,
 	});
 }));
 
@@ -536,12 +536,12 @@ router.get('/superpit*', wrap(async (req, res) => {
 
 	//render page
 	res.render('./scouting/superpit', {
-		team: team,
-		event_year: event_year,
+		team,
+		event_year,
 		title: title,
-		layout: layout,
+		layout,
 		key: team_key,
-		pitData: pitData
+		pitData
 	});
 }));
 
@@ -565,7 +565,7 @@ router.post('/pit/supersubmit', wrap(async (req, res) => {
 
 	await utilities.update(
 		'pitscouting',
-		{ org_key: org_key, event_key: event_key, team_key: teamKey },
+		{ org_key, event_key, team_key: teamKey },
 		{
 			$set: {
 				super_data: pitData
@@ -598,7 +598,7 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 	
 	if (comparison === true) {
 		
-		let entry: MatchScouting = await utilities.findOne('matchscouting', {org_key: org_key, match_team_key: match_team_key});
+		let entry: MatchScouting = await utilities.findOne('matchscouting', {org_key, match_team_key});
 		if (entry) {
 			if (entry.data)
 				logger.info(`Previous data: ${JSON.stringify(entry.data)}`);
@@ -606,7 +606,7 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 				logger.info('Data not present in DB anyways.');
 			
 			let writeResult = await utilities.update('matchscouting', 
-				{org_key: org_key, match_team_key: match_team_key},
+				{org_key, match_team_key},
 				{$set: {data: undefined}}
 			);
 			
