@@ -1200,7 +1200,7 @@ export class MatchDataHelper {
 		const orgschema = await utilities.findOne('orgschemas',
 			{ org_key, year, form_type },
 		);
-		assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}!`);
 
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
