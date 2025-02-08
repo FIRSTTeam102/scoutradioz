@@ -439,7 +439,7 @@ router.get('/uploads', wrap(async (req, res) => {
 	//logger.debug(`uploadsByImageId=${JSON.stringify(uploadsByImageId)}`);
 	
 	res.render('./manage/config/uploads', {
-		title: 'Organization Uploads',
+		title: req.msg('manage.config.manageFormImages'),
 		uploadsByImageId,
 		years,
 		thisYear: year,
