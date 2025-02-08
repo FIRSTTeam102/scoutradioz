@@ -67,12 +67,10 @@ async function submitImage(this: HTMLInputElement){
 	let year = $('input[name=year]').val();
 	let orgKey = $('input[name=org_key]').val();
 	let teamKey = $('input[name=team_key]').val();
-	// 2025-02-04, M.O'C: Adding alternate 'image id' option
-	let imageId = $('input[name=image_id]').val();
 	let userId = $('input[name=user]').val();
 	let uploadURLBase = $('input[name=uploadURL]').val();
 	
-	let uploadURL = `${uploadURLBase}?index=${index}&year=${year}&org_key=${orgKey}&team_key=${teamKey}&image_id=${imageId}&user=${userId}`;
+	let uploadURL = `${uploadURLBase}?index=${index}&year=${year}&org_key=${orgKey}&team_key=${teamKey}&user=${userId}`;
 	
 	//create FormData object to submit
 	let data = new FormData();
