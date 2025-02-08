@@ -24,7 +24,6 @@
 //		exitable (boolean): If true, the card will contain an X button, allowing the user to close the notification card. Default: false.
 //		darken (boolean): If true, a semitransparent filter will appear over the document, blocking user input, 
 //			until the card is removed. Default: false.
-//  poke
 class NotificationCard{
 	
 	text: string;
