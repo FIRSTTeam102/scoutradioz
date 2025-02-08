@@ -316,7 +316,7 @@ router.get('/pit*', wrap(async (req, res) => {
 			pitData = pitFind[0].data;
 			
 	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
-	const orgImages = await uploadHelper.findOrgImages(org_key, year);
+	const orgImages = await uploadHelper.findOrgImages(org_key, event_year);
 	
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 

@@ -296,9 +296,14 @@ router.post('/submitform', wrap(async (req, res) => {
 	assert(!isNaN(year), 'invalid year!');
 	assert(['matchscouting', 'pitscouting'].includes(form_type), 'invalid form_type!');
 
+	// Get the list of org images (for checking image IDs in form)
+	const orgImages = await uploadHelper.findOrgImages(org_key, year);
+	const orgImageKeys = Object.keys(orgImages);
+	logger.debug(`orgImageKeys=${JSON.stringify(orgImageKeys)}`);
+
 	// Validate json layout
 	const jsonParsed = JSON.parse(jsonString);
-	const { warnings, layout } = validateJSONLayout(jsonParsed);
+	const { warnings, layout } = validateJSONLayout(jsonParsed, orgImageKeys);
 
 	// 2025-02-01, M.O'C: Adding in SPR calcs for match scouting
 	let sprLayout: SprCalculation | undefined;

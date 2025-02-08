@@ -27,7 +27,7 @@ export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[
 	return sprLayout;
 }
 
-export function validateJSONLayout(layout: SchemaItem[]) {
+export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[]) {
 	assert(Array.isArray(layout), 'Expected JSON input to be an array');
 
 	let existingIds = new Set<string>();
@@ -119,7 +119,7 @@ export function validateJSONLayout(layout: SchemaItem[]) {
 				validateDerived(item);
 				break;
 			case 'image':
-				validateImage(item);
+				validateImage(item, orgImageKeys);
 				break;
 			default:
 				// @ts-ignore
@@ -228,8 +228,9 @@ export function validateJSONLayout(layout: SchemaItem[]) {
 		checkExpectedKeys(item, ['type', 'label'], true);
 	}
 
-	function validateImage(item: ImageItem) {
+	function validateImage(item: ImageItem, orgImageKeys: string[]) {
 		checkExpectedKeys(item, ['type', 'image_id'], true);
+		assert(orgImageKeys.includes(item.image_id), `Image ID ${item.image_id} not found in organization images`);
 	}
 
 	function checkId(item: { id: string }) {

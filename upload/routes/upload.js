@@ -163,9 +163,14 @@ router.post('/image', upload.single('image'), wrap(async (req, res, next) => {
 		const orgKey = req.query.org_key;
 		const index = req.query.index;
 		const year = req.query.year;
-		const teamKey = req.query.team_key;
+
 		// 2025-02-04, M.O'C: Adding 'image_id'
-		const imageId = req.query.image_id;
+		// 2025-02-08, M.O'C: Fixing for "undefined"
+		let teamKey = null;
+		if (req.query.team_key && req.query.team_key !== 'undefined') teamKey = req.query.team_key;
+		let imageId = null;
+		if (req.query.image_id && req.query.image_id !== 'undefined') imageId = req.query.image_id;
+
 		const userId = req.query.user;
 		const useragent = req.shortagent;
 		const uploadTime = Date.now();
