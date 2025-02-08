@@ -3,13 +3,14 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
 import { upload as uploadHelper } from 'scoutradioz-helpers';
-import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation, Upload } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 import Permissions from '../../helpers/permissions';
 import { validateJSONLayout, validateSprLayout } from 'scoutradioz-helpers';
+import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -394,7 +395,7 @@ router.get('/uploads', wrap(async (req, res) => {
 	if (typeof req.query.year === 'string') year = parseInt(req.query.year);
 	if (!year || isNaN(year)) year = req.event.year;
 	
-	let uploads: Upload[] = await utilities.find('uploads', 
+	let uploads = await utilities.find('uploads', 
 		{org_key: org_key, image_id: { $exists: true }, removed: false, year: year},
 		{},
 	);
@@ -434,10 +435,10 @@ router.get('/uploads', wrap(async (req, res) => {
 	
 	res.render('./manage/config/uploads', {
 		title: 'Organization Uploads',
-		uploadsByImageId: uploadsByImageId,
-		years: years,
+		uploadsByImageId,
+		years,
 		thisYear: year,
-		uploadURL: uploadURL,
+		uploadURL,
 	});
 }));
 

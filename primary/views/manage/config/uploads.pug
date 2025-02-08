@@ -18,7 +18,7 @@ block content
 			height: 1px;
 		}
 	script(src=`${fileRoot}/lib/jimp.min.js`)
-	script(src=`${fileRoot}/js/script-pitscouting.js?v=10`)
+	script(src=`${fileRoot}/js/script-orgimageupload.js?v=10`)
 	h2 Organization image uploads
 	i Upload images here to use in other places (such as including in scouting forms)
 	p 
@@ -52,6 +52,7 @@ block content
 								p
 									div(class="w3-col m4 w3-padding" onclick=`deleteUpload('${upload._id}')`)
 										button(class="w3-btn w3-block theme-red") Delete
+	hr
 	img#imgMain(alt="" class="w3-image team-image-lg")
 	form#imageform(action="javascript:void(0)" method="post")
 		//-Image inputs
@@ -60,11 +61,13 @@ block content
 		input(type="hidden" name="uploadURL" value=uploadURL)
 		input(type="hidden" name="year" value=event_year)
 		input(type="hidden" name="org_key" value=user.org_key)
-		input(type="text" name="image_id")
+		input(class="theme-input w3-margin-right w3-no-border" style="width:350px" placeholder="Enter a unique ID for referencing this image" type="text" name="image_id")
+		label(for="imageMain" class="w3-btn theme-submit w3-margin-right") Pick image
+		span#fileName
 		input(type="hidden" name="user" value=user._id)
 		//-The buttons are actually labels for each image input
 		div(class="w3-container w3-padding")
-			label#uploadMain(for="imageMain" class="w3-btn theme-submit")!=msg('manage.config.uploadImage')
+			label#uploadMain(class="w3-btn theme-submit")!=msg('manage.config.uploadImage')
 
 	script.
 		$('select[name=year]').on('change', () => {
