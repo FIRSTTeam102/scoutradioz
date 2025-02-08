@@ -186,7 +186,8 @@ router.get('/editform', wrap(async (req, res) => {
 			{ "type": "header", "label": "Sample" },
 			{ "type": "subheader", "label": "Replace this JSON with the code that defines your scouting form" },
 			{ "type": "spacer" },
-			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" }
+			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" },
+			{ "type": "derived", "id": "contributedPoints", "formula": "1 + min(2 * 3, 1/4) - log(32, 2)"}
 		]`,
 		// 2025-02-01, M.O'C: Adding SPR calculations
 		// default "blank" sprLayout, with default data
@@ -309,7 +310,18 @@ router.post('/submitform', wrap(async (req, res) => {
 	let sprLayout: SprCalculation | undefined;
 	if (form_type === 'matchscouting') {
 		const sprParsed = JSON.parse(sprString);
-		sprLayout = validateSprLayout(sprParsed, jsonParsed);
+		try {
+			sprLayout = validateSprLayout(sprParsed, jsonParsed);
+		}
+		catch (err) {
+			// If the error is points_per_robot_metric, then display warning instead of throwing error
+			if (err instanceof Error && 'cause' in err && err.cause === 'points_per_robot_metric_no_match') {
+				warnings.push(err.message);
+			}
+			else {
+				throw err;
+			}
+		}
 	}
 
 	/**

@@ -14,8 +14,12 @@ export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[
 			break;
 		}
 	}
-	assert(foundMatchingMetric, `SPR calculation points\\_per\\_robot\\_metric '${sprLayout.points_per_robot_metric}' does not match any field in your match form schema`);
-	
+	assert(foundMatchingMetric, 
+		new Error(`SPR calculation points\\_per\\_robot\\_metric '${sprLayout.points_per_robot_metric}' does not match any field in your match form schema. SPR calculations will be disabled.`,
+			{cause: 'points_per_robot_metric_no_match'} // to track this specific error
+		)
+	);
+
 	assert(sprLayout.subtract_points_from_FRC, 'SPR calculation must have "subtract\\_points\\_from\\_FRC" object which refers to fields in the FRC alliance score schema');
 	//assert(typeof sprLayout.subtract_points_from_FRC === 'object' && !Array.isArray(sprLayout.subtract_points_from_FRC) && sprLayout.subtract_points_from_FRC !== null, 'SPR calculation "subtract_points_from_FRC" must be an object of {string}: {number} pairs, where the strings refer to fields in the FRC alliance score schema');
 	let subtractPoints = sprLayout.subtract_points_from_FRC;
