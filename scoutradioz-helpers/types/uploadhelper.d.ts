@@ -10,6 +10,13 @@ export declare class UploadHelper {
      * Find upload links for a given team.
      * @param {string} orgKey org_key
      * @param {number} year year
+     * @returns {ImageLinks} Links to images
+     */
+    static findOrgImages(orgKey: OrgKey, year: number): Promise<ObjectDict>;
+    /**
+     * Find upload links for a given team.
+     * @param {string} orgKey org_key
+     * @param {number} year year
      * @param {string} teamKey team_key
      * @returns {ImageLinks} Links to images
      */
@@ -37,4 +44,7 @@ export interface ImageLinks {
 }
 export interface TeamImages {
     [key: string]: ImageLinks;
+}
+declare interface ObjectDict {
+    [key: string]: object;
 }

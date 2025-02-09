@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -93,7 +93,7 @@ export class MatchDataHelper {
 	 * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
 	 * @param item layout element
 	 */
-	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | SpacerItem> {
+	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem> {
 
 		switch (item.type) {
 			case 'spacer':
@@ -1200,7 +1200,7 @@ export class MatchDataHelper {
 		const orgschema = await utilities.findOne('orgschemas',
 			{ org_key, year, form_type },
 		);
-		assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}!`);
 
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },

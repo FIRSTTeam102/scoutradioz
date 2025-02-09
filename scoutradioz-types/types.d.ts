@@ -106,7 +106,7 @@ declare interface FormSliderOptions {
 export declare interface Layout extends DbDocument {
 	year: number;
 	order: number|string;
-	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
+	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived'|'image';
 	form_type: 'matchscouting'|'pitscouting';
 	org_key: OrgKey;
 	label?: string;
@@ -156,6 +156,11 @@ export interface SubheaderItem extends SchemaItemBase {
 	label: string;
 }
 
+export interface ImageItem extends SchemaItemBase {
+	type: 'image';
+	image_id: string;
+}
+
 export interface SpacerItem extends SchemaItemBase { 
 	type: 'spacer';
 }
@@ -180,7 +185,7 @@ export interface DerivedItem extends SchemaItemBase {
  * Note: Since some types don't need an id, you may get typescript errors when trying to access the id property.
  * Use e.g. `if ('id' in item)` to check if the item has an id, as that "in" syntax is preferred by TS
  */
-export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | SpacerItem | DerivedItem | DerivedItemLegacy;
+export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | ImageItem | SpacerItem | DerivedItem | DerivedItemLegacy;
 
 /**
  * Sub-object SPR calculation
@@ -678,6 +683,7 @@ export declare interface Upload extends DbDocument {
 	org_key: OrgKey;
 	year: number;
 	team_key: TeamKey;
+	image_id: string;
 	uploader: {
 		name: string;
 		id: string;

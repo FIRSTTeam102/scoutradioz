@@ -18,7 +18,53 @@ export class UploadHelper {
 		utilities = utilitiesModule;
 	}
 	
-
+	/**
+	 * Find upload links for a given team.
+	 * @param {string} orgKey org_key
+	 * @param {number} year year
+	 * @returns {ImageLinks} Links to images
+	 */
+	static async findOrgImages (orgKey: OrgKey, year: number) {
+		logger.addContext('funcName', 'findOrgImages');
+		
+		if (!(typeof orgKey == 'string')) throw new TypeError('orgKey must be string');
+		if (!(typeof year == 'number')) throw new TypeError('year must be number');
+		
+		logger.debug('Finding list of org images');
+		//Sorted by inverse of upload time
+		let uploads = await utilities.find('uploads', 
+			{org_key: orgKey, year: year, image_id: { $exists: true }, removed: false}, 
+			{sort: {'uploader.upload_time': -1}},
+			{allowCache: true}
+		);
+		let imageKeys: StringDict = {};
+		let orgImages: ObjectDict = {};
+		
+		logger.debug(`uploads=${JSON.stringify(uploads)}`);
+		
+		if (uploads[0]) {
+			for (let upload of uploads) {
+				const key = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${upload.s3_key}`;
+				//Assign FIRST MATCHING s3 key to corresponding image type
+				if (!imageKeys[upload.image_id]) imageKeys[upload.image_id] = key;
+			}
+		}
+		logger.info(`imageKeys=${JSON.stringify(imageKeys)}`);
+		
+		//For main, a, b, and c, set links to _sm, _md, and _lg respectively
+		for (let id in imageKeys) {
+			orgImages[id] = {
+				sm: imageKeys[id] + '_sm.jpg',
+				md: imageKeys[id] + '_md.jpg',
+				lg: imageKeys[id] + '_lg.jpg',
+			};
+		}
+		logger.debug(`imageLinks=${JSON.stringify(orgImages)}`);
+		
+		logger.removeContext('funcName');
+		return orgImages;
+	}
+	
 	/**
 	 * Find upload links for a given team.
 	 * @param {string} orgKey org_key
@@ -33,7 +79,7 @@ export class UploadHelper {
 		if (!(typeof year == 'number')) throw new TypeError('year must be number');
 		if (!(typeof teamKey == 'string')) throw new TypeError('teamKey must be string');
 		
-		logger.debug('Finding list of images');
+		logger.debug('Finding list of team images');
 		//Sorted by inverse of upload time
 		let uploads = await utilities.find('uploads', 
 			{org_key: orgKey, year: year, team_key: teamKey, removed: false}, 
@@ -230,4 +276,9 @@ export interface TeamImages {
 
 declare interface StringDict {
 	[key: string]: string;
+}
+
+declare interface ObjectDict {
+	// @ts-ignore
+	[key: string]: object;
 }
