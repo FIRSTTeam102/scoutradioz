@@ -1302,7 +1302,9 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
 		//if it is a valid data type, add this layout's ID to groupClause
+		logger.debug('thisLayout.type=' + thisLayout.type);
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			logger.debug('thisLayout.type is quantifiable');
 			let thisEMAclause: MongoDocument = {};
 			let thisEMAinner: MongoDocument = {};
 			thisEMAinner['alpha'] = emaAlpha;

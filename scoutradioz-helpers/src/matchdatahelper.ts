@@ -423,7 +423,7 @@ export class MatchDataHelper {
 					let {
 						answer, tokenize, parse, resolve
 					} = derivedCalculator.runFormula(thisItem.formula, thisItem.id);
-					logger.debug(tokenize, parse, resolve);
+					// logger.debug(tokenize, parse, resolve);
 					matchData[thisItem.id] = answer;
 					ttokenize += tokenize;
 					tparse += parse;
@@ -491,6 +491,8 @@ export class MatchDataHelper {
 		);
 		assert(schema);
 		const scorelayoutDB = schema.layout.filter(item => item.type === 'derived');
+		//const scorelayoutDB = schema.layout.filter(item => item.id);
+		logger.trace(`scoreLayoutDB=${JSON.stringify(scorelayoutDB)}`);
 
 		// Process the cookies & (if selections defined) prepare to reduce
 		let savedCols: StringDict = {};
