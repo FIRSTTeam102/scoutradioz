@@ -65,6 +65,7 @@ block content
 									p #{element.label} <strong>!{msg('yes')}</strong>
 								- else
 									p #{element.label} <strong>!{msg('no')}</strong>
+							when "header"
 							when "h2"
 								//- if (changeCount == 0)
 									h4(class="") <i>(no change)</i>
@@ -72,12 +73,13 @@ block content
 								br 
 								div(class="theme-spacer")
 								h4=element.label
+							when "subheader"
 							when "h3"
 								//- if (changeCount == 0)
 									h4(class="") <i>(no change)</i>
 								- changeCount = 0;
 								br 
-								div(class="theme-spacer")
+								div(class="theme-label")
 								h5=element.label
 							when "spacer"
 								br

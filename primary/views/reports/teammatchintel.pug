@@ -28,6 +28,8 @@ block content
 					when "spacer"
 						br
 					//- 2023-03-19 JL: Switched hardcoded counter/badcounter/derived/etc. to "default" to allow for new numerical types to be displayed
+					when "derived"
+						pass
 					default
 						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{typeof data[element.id] === "number" ? data[element.id].toFixed(2).replace(/\.?0*$/,'') : data[element.id]}</strong>
 		else
