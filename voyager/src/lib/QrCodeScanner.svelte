@@ -428,10 +428,8 @@
 
 <svelte:window on:resize={onResize} />
 
-<svelte:body style="overflow: hidden;" />
-
 <style lang="scss">
-	body {
+	:global(body) {
 		overflow: hidden;
 	}
 	#canvas {

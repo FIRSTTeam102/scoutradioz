@@ -13,7 +13,9 @@ import type {
 	ScouterRecord,
 	AnyDict,
 	OrgKey,
+	Schema,
 	EventKey,
+	OrgSchema,
 } from 'scoutradioz-types';
 
 /**
@@ -188,9 +190,14 @@ export class LocalDB extends Dexie {
 	layout!: Table<str<Layout>>;
 	matchscouting!: Table<MatchScoutingLocal>;
 	pitscouting!: Table<PitScoutingLocal>;
+	
+	schemas!: Table<str<Schema>>;
+	
 	teams!: Table<TeamLocal>;
 	/** Includes org config info that can only be viewed after authenticating */
 	orgs!: Table<OrgLocal>;
+	orgschemas!: Table<str<OrgSchema>>;
+	
 
 	logs!: Table<Log>;
 	syncstatus!: Table<SyncStatus>;
@@ -198,7 +205,7 @@ export class LocalDB extends Dexie {
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(50).stores({
+		this.version(51).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches:
 				'&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
@@ -214,8 +221,10 @@ export class LocalDB extends Dexie {
 			matchscouting: '&match_team_key, [org_key+event_key], team_key, year, time, match_number',
 			// 2024-02-19 JL: Removed primary/secondary/tertiary indexes from collection b/c it can't handle when they are undefined
 			pitscouting: '&[org_key+event_key+team_key], [org_key+event_key]',
+			schemas: '&_id',
 			teams: '&key, team_number',
 			orgs: '&org_key',
+			orgschemas: '&[org_key+event_year+form_type]',
 
 			logs: '++id, group, time',
 			syncstatus: '&[table+filter], date',

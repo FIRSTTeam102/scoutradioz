@@ -2,7 +2,7 @@ import { get as getStore } from 'svelte/store';
 import { page } from '$app/stores';
 import { base32Hash, fetchJSON } from './utils';
 import { getLogger } from './logger';
-import type { Layout, Event } from 'scoutradioz-types';
+import type { Layout, Event, OrgSchema, Schema, OrgKey, EventKey } from 'scoutradioz-types';
 import type {
 	MatchScoutingLocal,
 	TeamLocal,
@@ -371,8 +371,114 @@ export class PitScoutingOperations extends TableOperations {
 	}
 }
 
+export class SchemaOperations extends TableOperations {
+	@setFuncName('SchemaOperations.download')
+	static async download(type: 'match' | 'pit' | 'both' = 'both') {
+		const { event_key, org_key } = getKeys();
+
+		const doPit = type === 'pit' || type === 'both';
+		const doMatch = type === 'match' || type === 'both';
+		logger.info(`ENTER, downloading ${type}`);
+
+		// grab year from event key
+		const year = Number(event_key.substring(0, 4));
+		assert(!isNaN(year), `Failed to pull year from event_key: ${event_key}, got a NaN!`);
+
+		let matchChanged = false,
+			pitChanged = false;
+			
+		async function doDownload(form_type: 'matchscouting'|'pitscouting') {
+			const filter = `org=${org_key},year=${year},type=${form_type}`;
+			const syncstatus = await db.syncstatus
+				.where({
+					table: 'orgschema+schema',
+					filter
+				})
+				.first();
+			// Fetch list of match scouting form elements for the associated year
+			// JL TODO: since schemas now have a timestamp, implement something similar to TBA's last-modified header
+			const { orgschema, schema } = await fetchJSON<{orgschema: str<OrgSchema>, schema: str<Schema>}>(
+				`/api/orgs/${org_key}/${year}/layout/match`
+			);
+			logger.debug(`Retrieved ${schema.layout.length} match items`);
+			const { layout } = schema;
+			const checksum = await SchemaOperations.getChecksum(layout);
+			
+			assert(orgschema.org_key === org_key && orgschema.form_type === form_type && orgschema.year === year, 'OrgSchema returned from API does not match request!');
+			assert(schema.year === year && schema.form_type === form_type, 'Schema returned from API does not match what was requested!');
+
+			await db.transaction('rw', db.orgschemas, db.schemas, db.syncstatus, async () => {
+				logger.trace('Placing orgschema into db...');
+				await db.orgschemas.put(orgschema);
+				logger.trace('Placing schema into db...');
+				await db.schemas.put(schema);
+				logger.trace(`Saving sync status for ${form_type}...`);
+				await db.syncstatus.put({
+					table: 'orgschema+schema',
+					filter,
+					time: new Date(),
+					data: {
+						checksum,
+						source: 'download',
+					}
+				});
+			});
+
+			// Default to true if syncstatus was not found
+			let changed = true;
+			if (typeof syncstatus?.data?.checksum === 'string') {
+				logger.debug(`Existing checksum: ${syncstatus.data.checksum}`);
+				changed = checksum.substring(0, 3) !== syncstatus.data.checksum.substring(0, 3);
+			}
+			return changed;
+		}
+
+		if (doMatch) {
+			matchChanged = await doDownload('matchscouting');
+		}
+		if (doPit) {
+			pitChanged = await doDownload('pitscouting');
+		}
+
+		logger.trace('Done');
+		// Return true if EITHER the pit checksum or match checksum changed
+		return pitChanged || matchChanged;
+	}
+
+	@setFuncName('SchemaOperations.getChecksum')
+	static async getChecksum(items: Schema['layout']) {
+		logger.debug('Items to hash:', items);
+		const checksum = await base32Hash(JSON.stringify(items));
+		logger.debug(`Checksum: ${checksum}`);
+		return checksum;
+	}
+	
+	static async getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<str<Schema>> {
+		const event = await db.events.where({key: event_key}).first();
+		assert(event);
+		const event_year = event.year;
+		
+		const orgschema = await db.orgschemas.where({
+			org_key,
+			event_year,
+			form_type
+		}).first();
+		assert(orgschema);
+		
+		const schema = await db.schemas.where({
+			_id: orgschema.schema_id
+		}).first();
+		assert(schema);
+		assert(schema.form_type === form_type, `form_type does not match in DB! Expected ${form_type} but found ${schema.form_type}`);
+		assert(schema.year === event_year, `Schema year ${schema.year} and event year ${event_year} do not match!`);
+		return schema;
+	}
+}
+
+/** @deprecated */
 export class FormLayoutOperations extends TableOperations {
 	@setFuncName('FormLayoutOperations.download')
+	/** @deprecated */
 	static async download(type: 'match' | 'pit' | 'both' = 'both') {
 		const { event_key, org_key } = getKeys();
 
@@ -476,6 +582,7 @@ export class FormLayoutOperations extends TableOperations {
 	}
 
 	@setFuncName('FormLayoutOperations.getChecksum')
+	/** @deprecated */
 	static async getChecksum(items: str<Layout>[]) {
 		logger.debug('Items to hash:', items);
 		const checksum = await base32Hash(JSON.stringify(items));
@@ -487,7 +594,7 @@ export class FormLayoutOperations extends TableOperations {
 export class LightOrgOperations extends TableOperations {
 	@setFuncName('LightOrgOperations.download')
 	static async download() {
-		const orgs = await fetchJSON<LightOrg[]>(`/api/orgs`);
+		const orgs = await fetchJSON<LightOrg[]>('/api/orgs');
 		logger.debug(`Fetched ${orgs.length} orgs`);
 
 		await db.transaction('rw', db.lightorgs, db.syncstatus, async () => {

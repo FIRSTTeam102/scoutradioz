@@ -6,6 +6,7 @@
 		MatchOperations,
 		MatchScoutingOperations,
 		PitScoutingOperations,
+		SchemaOperations,
 		TeamOperations
 	} from '$lib/DBOperations';
 	import db, {
@@ -44,6 +45,13 @@
 	// Retrieve the # of matchscouting and pitscouting layout elements in the DB
 	$: matchscoutingFormElements = liveQuery(async () => {
 		assert(event_key);
+		try {
+			const schema = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
+			return schema.layout.length;
+		}
+		catch (err) {
+			return 0;
+		}
 
 		return await db.layout
 			.where({
@@ -57,7 +65,7 @@
 	$: matchChecksum = liveQuery(async () => {
 		const syncStatus = await db.syncstatus
 			.where({
-				table: 'layout',
+				table: 'orgschema+schema',
 				filter: `org=${org_key},year=${event_year},type=matchscouting`
 			})
 			.first();
@@ -80,7 +88,7 @@
 	$: pitChecksum = liveQuery(async () => {
 		const syncStatus = await db.syncstatus
 			.where({
-				table: 'layout',
+				table: 'orgschema+schema',
 				filter: `org=${org_key},year=${event_year},type=pitscouting`
 			})
 			.first();
@@ -286,7 +294,7 @@
 		await db.orgs.put(org);
 
 		// Include the form layout download in this action
-		await FormLayoutOperations.download();
+		await SchemaOperations.download();
 
 		// since event_key can be updated after org is downloaded, force a reload
 		await invalidateAll();
@@ -301,7 +309,7 @@
 		snackbar.error(errorMessage);
 	}
 
-	async function wrap(func: () => void | Promise<void>) {
+	async function wrap(func: () => unknown | Promise<unknown>) {
 		try {
 			console.log('autoplay begin');
 			await refreshButtonAnimation.autoplay(func);
