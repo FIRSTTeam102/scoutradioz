@@ -83,6 +83,14 @@ block content
 								h5=element.label
 							when "spacer"
 								br
+							when "image"
+								div(style="width:100%; margin-left:auto; margin-right:auto; display:block;")
+									if orgImages[element.image_id]
+										img(src=orgImages[element.image_id].md alt="" class="w3-image team-image-md")
+									else
+										h2(class="theme-text w3-padding-16 theme-header" id=element.id)
+											b
+												i=`MISSING IMAGE ID '${element.image_id}'`
 							//- 2023-03-19 JL: Switched hardcoded counter/badcounter/derived/etc. to "default" to allow for new numerical types to be displayed
 							default
 								- if (data[element.id] != 0 && data[element.id] != '' && data[element.id] != null)

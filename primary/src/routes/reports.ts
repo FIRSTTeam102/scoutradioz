@@ -343,6 +343,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	const images = await uploadHelper.findTeamImages(orgKey, eventYear, teamKey);
+	const orgImages = await uploadHelper.findOrgImages(orgKey, eventYear);
 	
 	res.render('./reports/teamintel', {
 		title: res.msg('reports.teamIntel.title', {team: teamKey.substring(3)}),
@@ -357,6 +358,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 		matches,
 		matchDataHelper,
 		images,
+		orgImages,
 		rankingPoints,
 		expandSection,
 	});
@@ -594,6 +596,8 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 	const event_key = req.event.key;
 	
+	const orgImages = await uploadHelper.findOrgImages(org_key, eventYear);
+
 	// Match data layout
 	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
@@ -635,6 +639,7 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 		teammatch,
 		teamKey: match_team_key.split('_')[2],
 		matchDataHelper,
+		orgImages,
 	});
 }));
 
