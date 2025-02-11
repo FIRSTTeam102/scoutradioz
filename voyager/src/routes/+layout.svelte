@@ -39,6 +39,7 @@
 	import { getLogger } from '$lib/logger';
 	import SvelteMarkdown from 'svelte-markdown';
 	import '../theme/extras.scss';
+	import '../theme/tailwind.css';
 	import type { LayoutData } from './$types';
 
 	afterNavigate(() => (menuOpen = false));

@@ -1,3 +1,4 @@
+<!-- @migration-task Error while migrating Svelte code: This migration would change the name of a slot making the component unusable -->
 <!--
 	@component 
 	Tab bar that slickly slides between tabs. Each tab id must be unique, and each tab attaches a component that is imported.
@@ -153,7 +154,7 @@
 		</Tab>
 	{/snippet}
 </TabBar>
-<div class="container" class:sliding>
+<div class="tab-container" class:sliding>
 	<!-- {#each tabs as tab}
 		{#if activeTab === tab.label}
 			<div
@@ -223,7 +224,7 @@
 		right: 0px;
 		bottom: 0px;
 	}
-	.container {
+	.tab-container {
 		position: relative;
 		min-height: 100%;
 		flex-grow: 10;
