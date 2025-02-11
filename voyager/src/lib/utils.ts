@@ -1,9 +1,9 @@
-import { getContext, onDestroy, onMount } from "svelte";
-import { type SnackbarContext, type RefreshContext, type RefreshButtonAnimationContext, type DialogContext, type TitleContext } from "./types";
+import { redirect } from '@sveltejs/kit';
+import { sha1 } from 'oslo/crypto';
 import type { ScouterHistoryRecord } from 'scoutradioz-types';
-import { sha1 } from "oslo/crypto";
-import { alertStore } from "./stores";
-import { redirect } from "@sveltejs/kit";
+import { getContext, onDestroy, onMount } from 'svelte';
+import { alertStore } from './stores';
+import { type DialogContext, type RefreshButtonAnimationContext, type RefreshContext, type SnackbarContext, type TitleContext } from './types';
 
 export class HttpError extends Error {
 	status: number;
@@ -88,7 +88,7 @@ export function getAvailableWindowSize(parentElem: HTMLElement) {
 	let el: HTMLElement | null | undefined = parentElem;
 	do {
 		offsetTop += el.offsetTop;
-		el = el?.parentElement
+		el = el?.parentElement;
 	} while (el);
 
 	let bottomNavBar = document.getElementById('bottom-nav-bar');
@@ -158,6 +158,8 @@ export function updateSimpleHash(hash: number, nextValue: number) {
 	return h2;
 }
 
+// CLONED IN PRIMARY/SRC/ROUTES/SCOUTING.TS
+// IF THIS FUNCTION CHANGES, CHANGE IT IN THAT PLACE TOO
 export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecord[]}>(assignment: T, user_id: number, user_name: string) {
 	let newRecord: ScouterHistoryRecord = {
 		id: user_id,
@@ -212,7 +214,7 @@ export function addRefreshButtonFunctionality(clickHandler?: () => any, tooltip?
 	});
 	onDestroy(() => {
 		refreshButton.set({supported: false});
-	})
+	});
 }
 
 /**
@@ -221,25 +223,25 @@ export function addRefreshButtonFunctionality(clickHandler?: () => any, tooltip?
 export function setPageTitle(title: string, subtitle?: string) {
 	const titleContext = getContext<TitleContext>('title');
 	const subtitleContext = getContext<TitleContext>('subtitle');
-		titleContext.set(title);
-		subtitleContext.set(subtitle || '')
+	titleContext.set(title);
+	subtitleContext.set(subtitle || '');
 	onMount(() => {
 	});
 	onDestroy(() => {
 		titleContext.set('');
 		subtitleContext.set('');
-	})
+	});
 }
 
 // Taken from oslo (These functions are not exported in the node package)
 function byteToBinary(byte: number) {
-    return byte.toString(2).padStart(8, "0");
+	return byte.toString(2).padStart(8, '0');
 }
 function bytesToBinary(bytes: Uint8Array) {
-    return [...bytes].map((val) => byteToBinary(val)).join("");
+	return [...bytes].map((val) => byteToBinary(val)).join('');
 }
 function binaryToInteger(bits: string) {
-    return parseInt(bits, 2);
+	return parseInt(bits, 2);
 }
 
 /** Encode a string with a custom base-32 alphabet, omitting I, 1, O, and 0 for readability */
