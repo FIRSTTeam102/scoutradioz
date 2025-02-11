@@ -12,7 +12,8 @@ block content
 			a(href=`/reports/teamintel?team_key=${teammatch.team_key}`)!=msg('reports.teamNumber', {team: teammatch.team_key.substring(3)})
 		p
 		h3!=msg('reports.teamMatchIntel.header', {match: teammatch.match_number, alliance: msg(`alliance.${teammatch.alliance}Short`)})
-		hr
+		//- 2025-02-10, M.O'C: Probably an unneeded line (since we added 'theme-spacer' above "header" elements below)
+		//- hr
 		if (data)
 			each element in layout
 				- element.label = resolveLabelTemplate(element.label, teamKey)
@@ -22,12 +23,26 @@ block content
 						- if (data[element.id] == 0) boolVal = msg('no');
 						h4(class="theme-text") #{element.label} <strong>#{boolVal}</strong>
 					when "header"
+						br 
+						div(class="theme-spacer")
 						h2=element.label
 					when "subheader"
+						br 
+						div(class="theme-label")
 						h3=element.label
 					when "spacer"
 						br
+					when "image"
+						div(style="width:100%; margin-left:auto; margin-right:auto; display:block;")
+							if orgImages[element.image_id]
+								img(src=orgImages[element.image_id].md alt="" class="w3-image team-image-md")
+							else
+								h2(class="theme-text w3-padding-16 theme-header" id=element.id)
+									b
+										i=`MISSING IMAGE ID '${element.image_id}'`
 					//- 2023-03-19 JL: Switched hardcoded counter/badcounter/derived/etc. to "default" to allow for new numerical types to be displayed
+					when "derived"
+						pass
 					default
 						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{typeof data[element.id] === "number" ? data[element.id].toFixed(2).replace(/\.?0*$/,'') : data[element.id]}</strong>
 		else
