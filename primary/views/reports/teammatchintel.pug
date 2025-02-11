@@ -21,15 +21,15 @@ block content
 					when "checkbox"
 						- var boolVal = msg('yes');
 						- if (data[element.id] == 0) boolVal = msg('no');
-						h4(class="theme-text") #{element.label} <strong>#{boolVal}</strong>
+						p(class="theme-text") #{element.label} <strong>#{boolVal}</strong>
 					when "header"
 						br 
 						div(class="theme-spacer")
-						h2=element.label
+						h4=element.label
 					when "subheader"
 						br 
 						div(class="theme-label")
-						h3=element.label
+						h5=element.label
 					when "spacer"
 						br
 					when "image"
@@ -44,7 +44,7 @@ block content
 					when "derived"
 						pass
 					default
-						h4(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{typeof data[element.id] === "number" ? data[element.id].toFixed(2).replace(/\.?0*$/,'') : data[element.id]}</strong>
+						p(class="theme-text") #{element.label}#{element.label.endsWith(':')?'':':'} <strong>#{typeof data[element.id] === "number" ? data[element.id].toFixed(2).replace(/\.?0*$/,'') : data[element.id]}</strong>
 		else
 			+noDataFound(msg('reports.noMatchScoutData', {team: teamKey.substring(3), match: teammatch.match_number}))
 	else
