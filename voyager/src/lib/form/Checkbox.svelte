@@ -1,12 +1,11 @@
 <script lang="ts">
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
-	import type { LayoutField } from '$lib/types';
-	import { createEventDispatcher } from 'svelte';
+	import type { CheckBoxItem } from 'scoutradioz-types';
 
 	interface Props {
 		checked?: any; // any because of weird casting to generic data
-		field: LayoutField;
+		field: CheckBoxItem;
 		onchange: () => void;
 	}
 

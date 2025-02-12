@@ -428,9 +428,9 @@
 <svelte:window on:resize={onResize} />
 
 <style lang="scss">
-	:global(body) {
-		overflow: hidden;
-	}
+	// :global(body) {
+	// 	overflow: hidden;
+	// }
 	#canvas {
 		width: 100%;
 		position: absolute; // to prevent scrollbar from appearing

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Fab, { Icon } from '@smui/fab';
-	import type { LayoutField } from '$lib/types';
+	import type { CounterItem } from 'scoutradioz-types';
 
 	interface Props {
 		value?: any; // any because of weird casting to generic data
-		field: LayoutField;
-		allowNegative?: boolean;
+		field: CounterItem;
+		allow_negative?: boolean;
 		isBad?: boolean;
 		onchange: () => void;
 	}
@@ -13,12 +13,12 @@
 	let {
 		value = $bindable(0),
 		field,
-		allowNegative = false,
+		allow_negative = false,
 		isBad = false,
 		onchange
 	}: Props = $props();
 	const changeByValue = (change: number) => {
-		value = (allowNegative ? value + change : Math.max(0, value + change));
+		value = (allow_negative ? value + change : Math.max(0, value + change));
 		onchange();
 	};
 </script>

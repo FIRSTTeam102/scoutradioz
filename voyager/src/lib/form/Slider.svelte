@@ -1,23 +1,21 @@
 <script lang="ts">
 	import Slider from '@smui/slider';
-	import type { LayoutField } from '$lib/types';
-	import type { FormSliderOptions } from 'scoutradioz-types';
+	import type { FormSliderOptions, SliderItem } from 'scoutradioz-types';
 
 	interface Props {
-		isTime?: boolean;
-		field: LayoutField;
+		field: SliderItem;
 		value?: any; // any because of weird casting to generic data
 		onchange: () => void;
 	}
 
 	let {
-		isTime = false,
 		field,
-		value = $bindable((field.options as FormSliderOptions).min),
+		value = $bindable(),
 		onchange,
 	}: Props = $props();
 	let options = field.options as FormSliderOptions;
-
+	
+	const isTime = $derived(field.variant === 'time');
 	const reversed = options.step < 0;
 </script>
 

@@ -2,6 +2,7 @@ import type { PageLoad } from './$types';
 import type { LayoutField } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import db from '$lib/localDB';
+import { SchemaOperations } from '$lib/DBOperations';
 
 export const load: PageLoad = async ({ url, fetch, parent }) => {
 	const { event_key, org_key, event } = await parent();
@@ -12,13 +13,7 @@ export const load: PageLoad = async ({ url, fetch, parent }) => {
 	if (!team_key || !teamNumber) throw error(404, new Error('Team key is either not defined or invalid'));
 	if (!event) throw error(404, new Error('Event not found'));
 
-	const layout = await db.layout
-		.where({
-			org_key,
-			year: event.year,
-			form_type: 'pitscouting'
-		})
-		.toArray();
+	const { layout } = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting')
 
 	const pitScoutingEntry = await db.pitscouting
 		.where({

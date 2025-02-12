@@ -44,14 +44,19 @@
 
 	afterNavigate(() => (menuOpen = false));
 
-	export let data: LayoutData;
+	interface Props {
+		data: LayoutData;
+		children?: import('svelte').Snippet;
+	}
+
+	let { data, children }: Props = $props();
 
 	const logger = getLogger('layout');
 
 	let topAppBar: TopAppBar;
 	let headerBar: HTMLDivElement;
-	let menuOpen = false;
-	let headerBarHeight = NaN;
+	let menuOpen = $state(false);
+	let headerBarHeight = $state(NaN);
 
 	let snackbar: SimpleSnackbar;
 	let dialog: SimpleDialog;
@@ -92,7 +97,7 @@
 
 	setContext('refreshButton', refreshContext);
 
-	let refreshButtonSpinning = false;
+	let refreshButtonSpinning = $state(false);
 	let timeRefreshButtonWasPressed = 0; // For smooth stopping
 	const ANIMATION_TIME = 1000;
 
@@ -131,7 +136,7 @@
 	// 2023-11-11 JL: SMUI's AutoAdjust behavior led to the header bar not
 	//  fully appearing when the page is *just barely* taller than 1vh
 	let lastScrollTop = 0;
-	let headerBarHidden = false;
+	let headerBarHidden = $state(false);
 
 	const onScroll = () => {
 		// we want to keep as little code as possible in here for performance reasons
@@ -154,8 +159,8 @@
 		lastScrollTop = scrollTop;
 	};
 
-	let updateAvailable = false;
-	let updateInstalling = false;
+	let updateAvailable = $state(false);
+	let updateInstalling = $state(false);
 	let waitingWorker: ServiceWorker | null = null;
 
 	onMount(async () => {
@@ -270,7 +275,7 @@
 	}
 </script>
 
-<svelte:window on:scroll={onScroll} />
+<svelte:window onscroll={onScroll} />
 
 <div class="header-bar" bind:this={headerBar} class:slidAway={headerBarHidden} bind:clientHeight={headerBarHeight}>
 	<TopAppBar bind:this={topAppBar} variant="static" dense style="z-index: 5">
@@ -298,19 +303,19 @@
 			</Section>
 			<Section align="end" toolbar>
 				{#if updateAvailable}
-					<Wrapper>
+					<Wrapper class='header-tooltip-wrapper' rich>
 						<IconButton class="material-icons" onclick={handleInstallButtonClick}>system_update</IconButton>
-						<Tooltip>{msg('pwa.updateAvailable')}</Tooltip>
+						<Tooltip surface$class='header-tooltip' xPos='start'>{msg('pwa.updateAvailable')}</Tooltip>
 					</Wrapper>
 				{/if}
 				{#if updateInstalling}
-					<Wrapper>
+					<Wrapper class='header-tooltip-wrapper' rich>
 						<IconButton class="material-icons hourglass">hourglass_empty</IconButton>
-						<Tooltip>{msg('pwa.updateDownloading')}</Tooltip>
+						<Tooltip surface$class='header-tooltip' xPos='start'>{msg('pwa.updateDownloading')}</Tooltip>
 					</Wrapper>
 				{/if}
 				{#if $refreshContext.supported}
-					<Wrapper>
+					<Wrapper class='header-tooltip-wrapper' rich>
 						<IconButton
 							class={classMap({
 								'material-icons': true,
@@ -331,7 +336,7 @@
 								sync_disabled
 							{/if}
 						</IconButton>
-						<Tooltip>{$refreshContext.tooltip || ''}</Tooltip>
+						<Tooltip surface$class='header-tooltip' xPos='start'>{$refreshContext.tooltip || ''}</Tooltip>
 					</Wrapper>
 				{/if}
 				<!-- <Wrapper> -->
@@ -346,7 +351,7 @@
 </div>
 
 <div id="page">
-	<slot />
+	{@render children?.()}
 </div>
 
 <SimpleSnackbar bind:this={snackbar} />
@@ -446,6 +451,10 @@
 			</LItem>
 
 			<LSeparator />
+			<LItem href="https://scoutradioz.com" target="_blank">
+				<LGraphic class="material-icons" aria-hidden="true" style="transform: rotate(-90deg)">rss_feed</LGraphic>
+				<LText>Switch to main site</LText>
+			</LItem>
 			<LItem href="/debug">
 				<LGraphic class="material-icons" aria-hidden="true">bug_report</LGraphic>
 				<LText>Debug</LText>
@@ -457,6 +466,11 @@
 <Scrim />
 
 <style lang="scss">
+	:global(.header-tooltip) {
+		position: relative;
+		left: -48px;
+		width: calc(100% + 48px);
+	}
 	/* Hide everything above this component. */
 	$header-height: 48px;
 	.header-bar {

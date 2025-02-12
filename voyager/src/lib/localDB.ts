@@ -205,7 +205,7 @@ export class LocalDB extends Dexie {
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(51).stores({
+		this.version(52).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches:
 				'&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
@@ -224,7 +224,7 @@ export class LocalDB extends Dexie {
 			schemas: '&_id',
 			teams: '&key, team_number',
 			orgs: '&org_key',
-			orgschemas: '&[org_key+event_year+form_type]',
+			orgschemas: '&[org_key+year+form_type]',
 
 			logs: '++id, group, time',
 			syncstatus: '&[table+filter], date',
@@ -244,7 +244,8 @@ if ('addEventListener' in globalThis)
 		if (e.reason && e.reason.name === 'AbortError') {
 			try {
 				let user = await db.user.get(1);
-			} catch (err) {
+			}
+			catch (err) {
 				if (err instanceof Error) {
 					if (
 						err.name === 'DatabaseClosedError' &&

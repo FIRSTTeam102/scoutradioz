@@ -1,16 +1,16 @@
 import { getLogger } from "$lib/logger";
 import type { LayoutField } from "$lib/types";
-import type { FormSliderOptions } from 'scoutradioz-types';
+import type { FormSliderOptions, SchemaItem } from 'scoutradioz-types';
 
 const logger = getLogger('ScoutingFormUtils');
 
 export type FormData = {[key: string]: unknown};
 
 // Svelte 5 is requiring defaults to be set in parents and not children, so this func is to create those defaults
-export function initializeFormData(layout: LayoutField[], formData: FormData = {}) {
+export function initializeFormData(layout: SchemaItem[], formData: FormData = {}) {
 	logger.debug('formData=', formData);
 	for (let field of layout) {
-		if (field.id) {
+		if ('id' in field) {
 			switch(field.type) {
 				case 'checkbox': {
 					if (typeof formData[field.id] !== 'boolean') {
@@ -19,17 +19,14 @@ export function initializeFormData(layout: LayoutField[], formData: FormData = {
 					}
 					break;
 				}
-				case 'counter':
-				case 'badcounter':
-				case 'counterallownegative': {
+				case 'counter': {
 					if (typeof formData[field.id] !== 'number') {
 						logger.trace(`Setting ${field.id} default = 0`);
 						formData[field.id] = 0;
 					}
 					break;
 				}
-				case 'slider':
-				case 'timeslider': {
+				case 'slider': {
 					if (typeof formData[field.id] !== 'number') {
 						let defaultValue = (field.options as FormSliderOptions).min
 						logger.trace(`Setting ${field.id} default = ${defaultValue}`);

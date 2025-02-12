@@ -1,16 +1,14 @@
 <script lang="ts">
+	import type { SchemaItem } from 'scoutradioz-types';
 	import Checkbox from './Checkbox.svelte';
 	import Counter from './Counter.svelte';
 	import Multiselect from './Multiselect.svelte';
+	import type { FormData } from './ScoutingFormUtils';
 	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
-	import type { FormData } from './ScoutingFormUtils'
-
-	import type { LayoutField } from '$lib/types';
-	import { onMount } from 'svelte';
 	
 	interface Props {
-		layout: LayoutField[];
+		layout: SchemaItem[];
 		teamNumber: number;
 		formData: FormData;
 		onchange: () => void;
@@ -29,42 +27,41 @@
 		<h3>Form layout not found</h3>
 	{/if}
 	{#each layout as field}
-		{#if field.id && field.type === 'checkbox'}
+		{#if field.type === 'checkbox'}
 			<Checkbox
 				bind:checked={formData[field.id]}
 				{field}
 				{onchange}
 			/>
-		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
+		{:else if field.type === 'counter'}
 			<Counter
 				bind:value={formData[field.id]}
 				{field}
 				{onchange}
-				isBad={field.type === 'badcounter'}
-				allowNegative={field.type === 'counterallownegative'}
+				isBad={field.variant === 'bad'}
+				allow_negative={field.allow_negative}
 			/>
-		{:else if field.id && (field.type === 'slider' || field.type === 'timeslider')}
+		{:else if field.type === 'slider'}
 			<Slider
 				bind:value={formData[field.id]}
 				{field}
 				{onchange}
-				isTime={field.type === 'timeslider'}
 			/>
-		{:else if field.id && field.type === 'multiselect'}
+		{:else if field.type === 'multiselect'}
 			<Multiselect
 				bind:value={formData[field.id]}
 				{field}
 				{onchange}
 			/>
-		{:else if field.id && field.type === 'textblock'}
+		{:else if field.type === 'textblock'}
 			<Textblock
 				bind:value={formData[field.id]}
 				{field}
 				{onchange}
 			/>
-		{:else if field.type === 'h2'}
-			<h2 id={field.id}>{field.label}</h2>
-		{:else if field.type === 'h3'}
+		{:else if field.type === 'header'}
+			<h2 id={`header_${field.label}`}>{field.label}</h2>
+		{:else if field.type === 'subheader'}
 			<h3>{field.label}</h3>
 		{:else if field.type === 'spacer'}
 			<hr />

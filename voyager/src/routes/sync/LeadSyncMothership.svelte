@@ -52,14 +52,6 @@
 		catch (err) {
 			return 0;
 		}
-
-		return await db.layout
-			.where({
-				org_key: org_key,
-				year: Number(event_key?.substring(0, 4)),
-				form_type: 'matchscouting'
-			})
-			.count();
 	});
 
 	$: matchChecksum = liveQuery(async () => {
@@ -75,14 +67,13 @@
 
 	$: pitscoutingFormElements = liveQuery(async () => {
 		assert(event_key);
-
-		return await db.layout
-			.where({
-				org_key: org_key,
-				year: Number(event_key?.substring(0, 4)),
-				form_type: 'pitscouting'
-			})
-			.count();
+		try {
+			const schema = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
+			return schema.layout.length;
+		}
+		catch (err) {
+			return 0;
+		}
 	});
 
 	$: pitChecksum = liveQuery(async () => {

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { goto } from '$app/navigation';
 	import { encodeOneMatchScoutingResult } from '$lib/compression';
 	import ScoutingForm from '$lib/form/ScoutingForm.svelte';

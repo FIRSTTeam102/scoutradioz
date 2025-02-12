@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Textfield from '@smui/textfield';
-	import type { LayoutField } from '$lib/types';
+	import type { TextBlockItem } from 'scoutradioz-types';
 
 	interface Props {
 		value?: any; // any because of weird casting to generic data
-		field: LayoutField;
+		field: TextBlockItem;
 		onchange: () => void;
 	}
 
