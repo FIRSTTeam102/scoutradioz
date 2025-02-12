@@ -1,7 +1,7 @@
 # [Choice] Node.js version (use -bullseye variants on local arm64/Apple Silicon): 18, 16, 14, 18-bullseye, 16-bullseye, 14-bullseye, 18-buster, 16-buster, 14-buster
 # set in docker-compose.yml
 ARG VARIANT
-FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
+FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:22
 
 # Install MongoDB command line tools if on buster and x86_64 (arm64 not supported)
 ARG MONGO_TOOLS_VERSION=5.0
