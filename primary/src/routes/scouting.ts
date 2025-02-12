@@ -3,7 +3,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema, ScouterHistoryRecord } from 'scoutradioz-types';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
 import Permissions from '../helpers/permissions';
@@ -363,33 +363,53 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	let thisUserName = thisUser.name;
 
 	let pitData = req.body;
-	let teamKey = pitData.teamkey;
+	let team_key = pitData.teamkey;
 	delete pitData.teamkey;
-	logger.debug('teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
+	logger.debug('teamKey=' + team_key + ' ~ thisUserName=' + thisUserName);
 	logger.debug('pitData=' + JSON.stringify(pitData));
 
 	let event_key = req.event.key;
 	let org_key = thisUser.org_key;
+	
+	let existingPitEntry = await utilities.findOne('pitscouting', {org_key, event_key, team_key});
+	// Ensure pit scouting entry exists in db
+	if (!existingPitEntry) return res.status(404).send({ message: `A pit scouting assignment was not found for ${org_key}, ${event_key}, ${team_key}` });
 
-	// TODO: Verify pit data against layout, to avoid malicious/bogus data inserted into db?
+	// Correct data based on the type in the layout
+	let correctedData: MatchFormData = {}; // JL todo: add PitFormData type?
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
+	for (let item of layout) {
+		switch (item.type) {
+			case 'checkbox':
+			case 'counter':
+			case 'slider':
+				correctedData[item.id] = matchDataHelper.fixDatumType(pitData[item.id], item.type);
+				break;
+			case 'textblock':
+			case 'multiselect':
+				correctedData[item.id] = pitData[item.id];
+				break;
+		}
+	}
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key,
 	await utilities.update(
 		'pitscouting',
-		{ org_key, event_key, team_key: teamKey },
+		{ org_key, event_key, team_key },
 		{
 			$set: {
-				data: pitData,
+				data: correctedData,
 				actual_scouter: {
 					id: thisUser._id,
 					name: thisUserName
 				},
 				useragent: req.shortagent,
+				history: getNewSubmissionHistory(existingPitEntry, thisUser._id, thisUserName)
 			},
 		}
 	);
 
-	return res.send({ message: req.msg('scouting.submitSuccess'), status: 200 });
+	return res.status(200).send({ message: req.msg('scouting.submitSuccess')});
 }));
 
 router.get('/', wrap(async (req, res) => {
@@ -650,6 +670,30 @@ function splitLayoutIntoGroups(layout: SchemaItem[]) {
 		return list;
 	}, [{label: 'Unknown', items: []}] as Array<{label: string, items: SchemaItem[]}>);
 	return groupedLayout;
+}
+
+// TAKEN FROM VOYAGER/SRC/LIB/UTILS.TS
+// IF THIS FUNCTION CHANGES, CHANGE IT IN THAT PLACE TOO
+export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecord[]}>(assignment: T, user_id: number, user_name: string) {
+	let newRecord: ScouterHistoryRecord = {
+		id: user_id,
+		name: user_name,
+		time: new Date(),
+	};
+
+	if (!assignment.history) return [newRecord]; // If there's no history, we don't need to do any shenanigans
+
+	let history = [...assignment.history]; // Create a clone of the original history object
+	let lastEntry = history[history.length - 1];
+	// If this is an edit by the same person who made the last change, then replace the record
+	if (lastEntry.id === user_id) {
+		history[history.length - 1] = newRecord;
+	}
+	// if the last edit was done by someone else, then add a new entry to the stack
+	else {
+		history.push(newRecord);
+	}
+	return history;
 }
 
 module.exports = router;

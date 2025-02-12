@@ -77,7 +77,10 @@ class FormSubmission{
 					cb(null, response);
 				})
 				.fail((response) => {
-					console.warn('failed');
+					// JL: Forward server-side errors with messages
+					if (response.responseJSON && response.responseJSON.message) {
+						return cb(response.responseJSON.message);
+					}
 					
 					if (this.options.autoRetry) {
 						NotificationCard.show('Failed to send data. Attempting to re-submit...', {type: 'warn', ttl: 1000});
