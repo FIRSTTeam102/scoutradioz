@@ -285,6 +285,8 @@
 		"preferred": "Before alliance selection, you and your team lead(s) can mark your preferred teams on <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">this page</a>.",
 		"tapForPopup": "Tap a team number to view that team's intel, including scouter notes.",
 		"undo": "Undo",
+		"skip": "Skip",
+		"revisit": "Revisit",
 		"allianceNumber": "Alliance {number}",
 		"showData": "Show team data",
 		"wontSave": "This page won't be saved.",
