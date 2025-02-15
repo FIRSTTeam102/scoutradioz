@@ -1372,13 +1372,37 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
-	
+	// grayscale min(0,0,0), max(200,200,200)
+	// blue to yellow min(2,81,150), max(253,179,56)
+	// purple to orange min(81,40,136), max(235,97,35)
+	// green to purple min(41,94,17), max(176,18,158)
+	// brown to blue min(106,74,60), max(15,101,161)
+	// brick to yellow min(110,8,36), max(244,179,1)
+	// tan to turquoise min(255,190,106), max(64,176,166)
+	// purple to sky min(126,41,84), max(148,203,236)
+	//brown to teal min(73,41,10), max(40,203,236)
+	// purple to yellow min(41,10,73), max(203,236,40)
+	//102 min(0,0,0), max(255,144,0)
+	let heatMapColors={
+		min:{
+			r:0,
+			g:0,
+			b:0
+		},
+		max:{
+			r:255,
+			g:114,
+			b:0
+		}
+	};
+
 	res.render('./reports/allteammetrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
 		aggdata: aggArray,
 		currentAggRanges,
 		layout: scorelayout,
 		matchDataHelper,
+		heatMapColors,
 	});
 }));
 
