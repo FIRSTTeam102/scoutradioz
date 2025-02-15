@@ -482,6 +482,7 @@
 		},
 		"assignments": {
 			"pit": "Pit scouting assignments",
+			"noTeams": "List of teams not defined! Make sure to click 'Update current teams'",
 			"match": "Match scouting assignments",
 			"assignPitTeams": "Assign teams to pit scouting groups",
 			"assignMatchTeams": "Assign matches to selected scouters",

@@ -1169,7 +1169,14 @@ async function generateTeamAllocations(req: express.Request, res: express.Respon
 	
 	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
 	// 2023-02-12 JL: Switching to req.teams
-	assert(req.teams, 'List of teams not defined! Make sure to click "Update current teams"');
+	//assert(req.teams, 'List of teams not defined! Make sure to click "Update current teams"');
+	if(!req.teams) {
+		res.render('./message',{
+			title: res.msg('manage.assignments.pit'),
+			message: res.msg('manage.assignments.noTeams'),
+		});
+		return;
+	}
 	const teamArray = req.teams;
 	
 	// 2023-02-12 JL: Added a query to get existing scouting data on a per-team basis
