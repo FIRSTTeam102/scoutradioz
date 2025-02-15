@@ -9,7 +9,15 @@
 		onchange: () => void;
 	}
 
-	let { checked = $bindable(false), field, onchange }: Props = $props();
+	let { checked: checkedNumber = $bindable(0), field, onchange: onchangeProp }: Props = $props();
+
+	// JL note: SMUI Checkbox requires 'checked' attribute to be boolean, but we store checkboxes as numbers.
+	// 	It's simplest to translate on the fly between boolean and number inside here.
+	let checked = $state(!!checkedNumber);
+	function onchange() {
+		checkedNumber = checked ? 1 : 0;
+		onchangeProp();
+	}
 </script>
 
 <FormField>

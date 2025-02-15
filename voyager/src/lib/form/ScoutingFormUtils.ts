@@ -13,9 +13,9 @@ export function initializeFormData(layout: SchemaItem[], formData: FormData = {}
 		if ('id' in field) {
 			switch(field.type) {
 				case 'checkbox': {
-					if (typeof formData[field.id] !== 'boolean') {
+					if (typeof formData[field.id] !== 'number') {
 						logger.trace(`Setting ${field.id} default = false`);
-						formData[field.id] = false;
+						formData[field.id] = 0;
 					}
 					break;
 				}

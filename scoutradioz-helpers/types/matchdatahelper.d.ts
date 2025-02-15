@@ -24,14 +24,14 @@ export declare class MatchDataHelper {
      * @param {string} type The type of the element, e.g. checkbox/counter/slider.
      * @return {string|number}
      */
-    static fixDatumType(value: formDataOutput, type: string): formDataOutput;
+    static fixDatumType(value: formDataOutput | boolean, type: SchemaItem['type']): formDataOutput;
     /**
      * Returns whether a layout element type is a metric.
      * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
      * @param item layout element
      */
     static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem>;
-    static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData): number | null;
+    static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData): number;
     /**
      * Calculate derived metrics for a provided array of match data items.
      * @param {string} org_key Org key

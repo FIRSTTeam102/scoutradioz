@@ -14,9 +14,13 @@ declare interface StringDict {
 }
 
 declare type integer = number;
-export declare type formDataOutput = number|boolean|string|null;
+export declare type formDataOutput = number|string;
 
 export declare interface MatchFormData {
+	[key: string]: formDataOutput;
+}
+
+export declare interface PitFormData {
 	[key: string]: formDataOutput;
 }
 
@@ -531,7 +535,7 @@ export declare interface PitScouting extends DbDocument {
 	secondary?: ScouterRecord;
 	tertiary?: ScouterRecord;
 	actual_scouter?: ScouterRecord;
-	data?: StringDict;
+	data?: PitFormData;
 	super_data?: StringDict;
 	useragent?: UserAgent;
 	date_completed?: Date;
