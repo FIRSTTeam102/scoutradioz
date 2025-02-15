@@ -336,7 +336,9 @@
 								sync_disabled
 							{/if}
 						</IconButton>
-						<Tooltip surface$class='header-tooltip' xPos='start'>{$refreshContext.tooltip || ''}</Tooltip>
+						{#if $refreshContext.tooltip}
+							<Tooltip surface$class='header-tooltip' xPos='start'>{$refreshContext.tooltip}</Tooltip>
+						{/if}
 					</Wrapper>
 				{/if}
 				<!-- <Wrapper> -->
