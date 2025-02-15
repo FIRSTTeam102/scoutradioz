@@ -181,11 +181,10 @@ export class MatchScoutingOperations extends TableOperations {
 			if (localMatch.data) {
 				let this_match_team_key = localMatch.match_team_key;
 				let index = keyToIndex[this_match_team_key];
+				// If there exists entries in both, then perform a merge
 				if (index && newItems[index]) {
-					newItems[index].data = localMatch.data;
-					newItems[index].synced = localMatch.synced;
-					newItems[index].completed = localMatch.completed;
-					newItems[index].history = localMatch.history;
+					console.log(newItems[index], localMatch);
+					newItems[index] = await mergeScoutingEntry(newItems[index], localMatch);
 				}
 			}
 		}
@@ -260,12 +259,18 @@ export class PitScoutingOperations extends TableOperations {
 				filter: `org=${org_key},event=${event_key}`
 			})
 			.first();
+		
+		// we must convert strings to numbers since pit scouting are stored as strings, unfortunately
+		const { layout } = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
+		assert(layout, 'Schema must be downloaded before downloading pit scouting assignments');
 
 		// Fetch list of pit scouting assignments for this event
 		const pitScouting = await fetchJSON<PitScoutingLocal[]>(`/api/orgs/${org_key}/${event_key}/assignments/pit`);
 
 		// Timestamps will get stringified, so make sure to convert them back into dates
 		pitScouting.forEach(item => item.history?.forEach(entry => entry.time = new Date(entry.time)));
+		
+		// let numericalFields = 
 
 		console.log(pitScouting.find(item => item.team_key === 'frc11'));
 
@@ -326,8 +331,6 @@ export class PitScoutingOperations extends TableOperations {
 				}
 			}
 		}
-		logger.info('Hello world');
-		logger.warn('Hello world');
 
 		return [...newItems];
 	}
@@ -418,15 +421,16 @@ async function mergeScoutingEntry<T extends PitScoutingLocal | MatchScoutingLoca
 		if (thisIncoming && !thisCurrent) return preferIncoming(); // If we get to this step, then history matches all the way up to current, but incoming has one more in the stack
 		if (thisCurrent && !thisIncoming) return preferCurrent(); // If we get to this step, then history matches all the way up to incoming, but current has one more in the stack
 		// Check if they match
-		assert(thisIncoming.time instanceof Date && thisCurrent.time instanceof Date, 'Timestamps are not Date type! Did they not get re-typecast after downloading?');
-		let doDatesMatch = Math.abs(thisIncoming.time.valueOf() - thisCurrent.time.valueOf()) < 5_000; // 5 seconds apart: effectively same timestamp
+		let incomingDate = new Date(thisIncoming.time), currentDate = new Date(thisIncoming.time); // JL note: i'd prefer to assert with the line below, but in my testing i had an un-cast date string in dexie, so just to cover that possibility we can typecast here
+		// assert(thisIncoming.time instanceof Date && thisCurrent.time instanceof Date, 'Timestamps are not Date type! Did they not get re-typecast after downloading?');
+		let doDatesMatch = Math.abs(incomingDate.valueOf() - currentDate.valueOf()) < 5_000; // 5 seconds apart: effectively same timestamp
 		if (doDatesMatch && thisIncoming.id === thisCurrent.id && thisIncoming.name === thisCurrent.name) continue; // If they match, then proceed to next item in history
 		// If they don't match, prefer the one with the LATEST timestamp
-		if (thisCurrent.time > thisIncoming.time) {
+		if (currentDate > incomingDate) {
 			logger.warn('Conflicting histories. "Current" has later timestamp, so it will be prioritized. Discarded entry:', incoming);
 			return preferCurrent(); // todo: what will happen server side? when this is uploaded, it'll still think there's a conflict since we haven't spliced the old history onto the new
 		}
-		if (thisIncoming.time > thisCurrent.time) {
+		if (incomingDate > currentDate) {
 			logger.warn('Conflicting histories. "Incoming" has later timestamp, so it will be prioritized. Discarded entry:', current);
 			return preferIncoming(); // todo: what will happen server side? when this is uploaded, it'll still think there's a conflict since we haven't spliced the old history onto the new
 		}

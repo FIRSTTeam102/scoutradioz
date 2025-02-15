@@ -21,10 +21,10 @@
 	import { classMap } from '@smui/common/internal';
 	import LinearProgress from '@smui/linear-progress';
 	import type { BulkWriteResult } from 'mongodb';
-	import type { Layout } from 'scoutradioz-types';
+	import type { SchemaItem } from 'scoutradioz-types';
 	import type { PageData } from './$types';
 
-	import { FormLayoutOperations } from '$lib/DBOperations';
+	import { FormLayoutOperations, SchemaOperations } from '$lib/DBOperations';
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 	import Button, { Icon, Label } from '@smui/button';
 	import Checkbox from '@smui/checkbox';
@@ -54,7 +54,7 @@
 	let nextAssignment: MatchScoutingLocal | undefined = $state();
 	let formData: MatchScoutingLocal['data'] = $state({});
 	let team: TeamLocal|undefined = $state();
-	let layout: str<Layout>[]|undefined = $state();
+	let layout: SchemaItem[]|undefined = $state();
 	let hasUpcomingBreak: boolean|undefined = $state();
 
 
@@ -66,13 +66,7 @@
 		qrDialogOpen = false;
 		const team_key = key.split('_')[2];
 
-		const layoutDb = await db.layout
-			.where({
-				org_key: data.org_key,
-				year: data.event.year,
-				form_type: 'matchscouting'
-			})
-			.toArray();
+		const { layout: layoutDb } = await SchemaOperations.getSchemaForOrgAndEvent(data.org_key, data.event_key, 'matchscouting');
 
 		const matchScoutingEntryDb = await db.matchscouting
 			.where({ match_team_key: key })

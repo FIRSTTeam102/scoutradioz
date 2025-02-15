@@ -7,9 +7,8 @@ import type { MatchScouting, StringDict } from 'scoutradioz-types';
 import type { RequestHandler } from './$types';
 import httpAssert from '$lib/httpAssert';
 import * as helpers from 'scoutradioz-helpers';
-const matchDataHelper = helpers.matchData;
+const matchDataHelper = helpers.default.matchData;
 
-// @ts-ignore
 matchDataHelper.config(utilities);
 
 export const POST: RequestHandler = async ({

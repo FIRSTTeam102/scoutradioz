@@ -151,36 +151,6 @@
 		return await db.lightusers.where({ org_key: org_key }).count();
 	});
 
-	async function downloadMatches() {
-		try {
-			const matches = await fetchJSON<LightMatch[]>(`/api/${event_key}/matches`);
-			let numDeleted = await db.lightmatches
-				.where({
-					event_key: event_key
-				})
-				.delete();
-			logger.info(`${numDeleted} matches deleted from db`);
-
-			await db.lightmatches.bulkAdd(matches);
-
-			const event = await fetchJSON<str<Event>>(`/api/${event_key}`);
-			await db.events
-				.where({
-					key: event_key
-				})
-				.delete();
-			await db.events.add(event);
-
-			const teams = await fetchJSON<TeamLocal[]>(`/api/${event_key}/teams`);
-			// Clear teams
-			numDeleted = await db.teams.where('key').anyOf(event.team_keys).delete();
-			logger.info(`${numDeleted} teams deleted from db`);
-			await db.teams.bulkAdd(teams);
-		} catch (err) {
-			handleError(err);
-		}
-	}
-
 	let dangerouslyUploadAll = false;
 
 	// TODO: only sync ones with data, and/or only sync ones marked as not synced?

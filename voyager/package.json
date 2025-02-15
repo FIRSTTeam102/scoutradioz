@@ -8,7 +8,7 @@
     "preview": "vite preview --host",
     "smui-theme": "smui-theme compile static/smui.css -i src/theme",
     "postinstall": "yarn smui-theme",
-    "update": "yarn upgrade --pattern 'scoutradioz*' --ignore-platform",
+    "update": "yarn upgrade --pattern 'scoutradioz*' --ignore-platform --ignore-engines",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --plugin-search-dir . --check . && eslint .",
@@ -81,12 +81,12 @@
     "dexie": "^4.0.10",
     "js-cookie": "^3.0.5",
     "lucia": "^3.2.2",
-    "mongodb": "6.12.0",
+    "mongodb": "^4.5.0",
     "oslo": "^1.2.1",
     "qrcode": "^1.5.4",
     "scoutradioz-helpers": "../scoutradioz-helpers/",
+    "scoutradioz-types": "../scoutradioz-types",
     "scoutradioz-utilities": "../scoutradioz-utilities/",
-	"scoutradioz-types": "../scoutradioz-types",
     "ua-parser-js": "^2.0.0"
   }
 }
