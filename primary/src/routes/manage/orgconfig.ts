@@ -226,7 +226,7 @@ router.get('/editform', wrap(async (req, res) => {
 	let existingFormData = new Map<string, string>();
 	let previousDataExists = false;
 	// get existing data schema (if any)
-	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', { org_key, year, 'data': { $ne: null } }, {});
+	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', { org_key, year, 'data': { $exists: true } }, {});
 	matchDataFind.forEach((element) => {
 		let thisMatch: MatchScouting = element;
 		if (thisMatch['data']) {

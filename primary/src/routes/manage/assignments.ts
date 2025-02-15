@@ -158,7 +158,7 @@ router.get('/matches', wrap(async (req, res) => {
 	});
 	
 	// Find the number of match assignments WITH data
-	const matchAssignments = await utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}});
+	const matchAssignments = await utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: { $exists: true }});
 	const matchAssignmentsCount = matchAssignments.length;
 	
 	logger.trace('Awaiting all db requests');
