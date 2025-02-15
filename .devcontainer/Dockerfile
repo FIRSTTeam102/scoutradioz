@@ -24,3 +24,14 @@ RUN . /etc/os-release \
 
 # [Optional] Uncomment if you want to install more global node modules
 RUN su node -c "yarn global add less less-plugin-clean-css typescript ts-node"
+
+run curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+run unzip awscliv2.zip
+run sudo ./aws/install
+
+# Download and install Bun
+RUN curl -fsSL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip -o bun.zip \
+    && unzip bun.zip \
+    && mv bun-linux-x64/bun /usr/local/bin/ \
+    && chmod +x /usr/local/bin/bun \
+    && rm -rf bun.zip bun-linux-x64
