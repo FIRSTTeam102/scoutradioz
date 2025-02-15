@@ -3,7 +3,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema, ScouterHistoryRecord } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema, ScouterHistoryRecord, PitFormData } from 'scoutradioz-types';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
 import Permissions from '../helpers/permissions';
@@ -251,20 +251,25 @@ router.post('/match/submit', wrap(async (req, res) => {
 		}
 	}
 
-	// Process input data, convert to numeric values
-	for (let property in matchData) {
-		if (layoutTypeById.hasOwnProperty(property)) {
-			let thisType = layoutTypeById[property];
-			// 2022-03-22 JL: Moving the data-type parsing into a helper function, which can easily be updated later as more form types are added
-			matchData[property] = matchDataHelper.fixDatumType(matchData[property], thisType);
+	// Correct data based on the type in the layout, convert to numeric values
+	let correctedData: MatchFormData = {};
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
+	for (let item of layout) {
+		if ('id' in item && Object.hasOwn(matchData, item.id)) { // only process layout items that have id (i.e. input types)
+			correctedData[item.id] = matchDataHelper.fixDatumType(matchData[item.id], item.type);
 		}
 	}
+
 	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(matchData));
 
 	// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
 	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
 	matchData = matchDataNew; // JL: this is temporary while we have debugging info
 	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(matchData));
+	
+	const existingMatchEntry = await utilities.findOne('matchscouting', {org_key, match_team_key});
+	// Ensure match scouting entry exists in db
+	if (!existingMatchEntry) return res.status(404).send({ message: `A match scouting assignment was not found for ${org_key}, ${match_team_key}` });
 
 	// Post modified data to DB
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -272,9 +277,11 @@ router.post('/match/submit', wrap(async (req, res) => {
 		org_key, 
 		match_team_key 
 	}, { 
-		$set: { data: matchData, 
+		$set: {
+			data: correctedData, 
 			actual_scorer: thisScouterRecord, 
-			useragent: req.shortagent 
+			useragent: req.shortagent,
+			history: getNewSubmissionHistory(existingMatchEntry, req._user._id, req._user.name)
 		} 
 	});
 
@@ -300,27 +307,26 @@ router.get('/pit*', wrap(async (req, res) => {
 	let event_year = req.event.year;
 	let org_key = req._user.org_key;
 
-	let teamKey = req.query.team_key;
+	let team_key = req.query.team_key;
 	// 2024-02-29, M.O'C: special case, we're going to handle "frc999999" for form demo purposes
 	const demoTeamKey = 'frc999999';
 	
-	if (typeof teamKey !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
+	if (typeof team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
 	
 	const schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
 	
-	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
-	let pitData: StringDict|null = null;
-	if (pitFind && pitFind[0])
-		if (pitFind[0].data)
-			pitData = pitFind[0].data;
+	const assignment = await utilities.findOne('pitscouting', { org_key, event_key, team_key});
+	let pitData: typeof assignment.data;
+	if (assignment) {
+		pitData = assignment.data;
+	}
 			
-	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
+	const images = await uploadHelper.findTeamImages(org_key, event_year, team_key);
 	const orgImages = await uploadHelper.findOrgImages(org_key, event_year);
 	
-	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	let team: Team = await utilities.findOne('teams', {key: team_key}, {}, {allowCache: true});
 	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
-	if (teamKey == demoTeamKey)
+	if (team_key == demoTeamKey)
 		team = {
 			address: null,
 			city: 'DN', 
@@ -346,9 +352,9 @@ router.get('/pit*', wrap(async (req, res) => {
 		title: req.msg('scouting.pit'),
 		layout: schema.layout,
 		pitData, 
-		key: teamKey,
+		key: team_key,
 		uploadURL,
-		teamKey,
+		teamKey: team_key,
 		images,
 		orgImages,
 		team,
@@ -376,7 +382,7 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	if (!existingPitEntry) return res.status(404).send({ message: `A pit scouting assignment was not found for ${org_key}, ${event_key}, ${team_key}` });
 
 	// Correct data based on the type in the layout
-	let correctedData: MatchFormData = {}; // JL todo: add PitFormData type?
+	let correctedData: PitFormData = {}; // JL todo: add PitFormData type?
 	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
 	for (let item of layout) {
 		switch (item.type) {
