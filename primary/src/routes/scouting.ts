@@ -3,7 +3,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema, ScouterHistoryRecord, PitFormData } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema, ScouterHistoryRecord, PitFormData, UserAgent } from 'scoutradioz-types';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
 import Permissions from '../helpers/permissions';
@@ -233,23 +233,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	let org_key = req._user.org_key; // JL note: this probably throws an error if the user is not logged in
 
 	logger.debug('match_key=' + match_team_key + ' ~ thisUserName=' + thisScouterRecord.name);
-	delete matchData.match_key;
 	logger.debug('matchData(pre-modified)=' + JSON.stringify(matchData));
-	//logger.debug('match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
-	//logger.debug('matchData=' + JSON.stringify(matchData));
-
-	// Get the layout so we know types of data elements
-	let schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
-
-	let layoutTypeById: StringDict = {};
-	logger.trace('layout=', schema.layout);
-	for (let item of schema.layout) {
-		// filter for layout items with an id
-		if ('id' in item) {
-			logger.trace(item.id + ' is a ' + item.type);
-			layoutTypeById[item.id] = item.type;
-		}
-	}
 
 	// Correct data based on the type in the layout, convert to numeric values
 	let correctedData: MatchFormData = {};
@@ -259,13 +243,14 @@ router.post('/match/submit', wrap(async (req, res) => {
 			correctedData[item.id] = matchDataHelper.fixDatumType(matchData[item.id], item.type);
 		}
 	}
+	if (Object.keys(correctedData).length === 0) return res.status(400).send({message: 'No data submitted'});
 
-	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(matchData));
+	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(correctedData));
 
 	// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
-	matchData = matchDataNew; // JL: this is temporary while we have debugging info
-	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(matchData));
+	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, correctedData);
+	correctedData = matchDataNew; // JL: this is temporary while we have debugging info
+	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(correctedData));
 	
 	const existingMatchEntry = await utilities.findOne('matchscouting', {org_key, match_team_key});
 	// Ensure match scouting entry exists in db
@@ -281,7 +266,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 			data: correctedData, 
 			actual_scorer: thisScouterRecord, 
 			useragent: req.shortagent,
-			history: getNewSubmissionHistory(existingMatchEntry, req._user._id, req._user.name)
+			history: getNewSubmissionHistory(existingMatchEntry, req._user._id, req._user.name, req.shortagent)
 		} 
 	});
 
@@ -382,21 +367,14 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	if (!existingPitEntry) return res.status(404).send({ message: `A pit scouting assignment was not found for ${org_key}, ${event_key}, ${team_key}` });
 
 	// Correct data based on the type in the layout
-	let correctedData: PitFormData = {}; // JL todo: add PitFormData type?
+	let correctedData: PitFormData = {};
 	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
 	for (let item of layout) {
-		switch (item.type) {
-			case 'checkbox':
-			case 'counter':
-			case 'slider':
-				correctedData[item.id] = matchDataHelper.fixDatumType(pitData[item.id], item.type);
-				break;
-			case 'textblock':
-			case 'multiselect':
-				correctedData[item.id] = pitData[item.id];
-				break;
+		if ('id' in item && Object.hasOwn(pitData, item.id)) { // only process layout items that have id (i.e. input types)
+			correctedData[item.id] = matchDataHelper.fixDatumType(pitData[item.id], item.type);
 		}
 	}
+	if (Object.keys(correctedData).length === 0) return res.status(400).send({message: 'No data submitted'});
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key,
 	await utilities.update(
@@ -410,7 +388,7 @@ router.post('/pit/submit', wrap(async (req, res) => {
 					name: thisUserName
 				},
 				useragent: req.shortagent,
-				history: getNewSubmissionHistory(existingPitEntry, thisUser._id, thisUserName)
+				history: getNewSubmissionHistory(existingPitEntry, thisUser._id, thisUserName, req.shortagent)
 			},
 		}
 	);
@@ -680,12 +658,13 @@ function splitLayoutIntoGroups(layout: SchemaItem[]) {
 
 // TAKEN FROM VOYAGER/SRC/LIB/UTILS.TS
 // IF THIS FUNCTION CHANGES, CHANGE IT IN THAT PLACE TOO
-export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecord[]}>(assignment: T, user_id: number, user_name: string) {
+export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecord[]}>(assignment: T, user_id: number, user_name: string, useragent?: UserAgent) {
 	let newRecord: ScouterHistoryRecord = {
 		id: user_id,
 		name: user_name,
 		time: new Date(),
 	};
+	if (useragent) newRecord.useragent = useragent;
 
 	if (!assignment.history) return [newRecord]; // If there's no history, we don't need to do any shenanigans
 
