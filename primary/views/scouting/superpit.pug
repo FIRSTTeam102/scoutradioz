@@ -5,6 +5,7 @@
 			QUERY: team_key (Team key)
 extends ../layout
 block content
+	include ../mixins/formElements
 	style.
 		.w3-check{
 			top: 7.7px!important;
@@ -30,23 +31,23 @@ block content
 				
 				case element.type
 					when "checkbox"
-						include templates/formCheckbox
+						+Checkbox(element, answer)
 					when "counter"
-						include templates/formCounterTextInput
-					when "badcounter"
-						include templates/formBadCounter
+						+Counter(element, answer)
 					when "slider"
-						include templates/formSlider
+						+Slider(element, answer)
 					when "multiselect"
 						include templates/formMultiselect
 					when "textblock"
 						include templates/formTextBlock
-					when "h2"
-						include templates/formHeader
-					when "h3"
-						include templates/formSubHeader
+					when "header"
+						+Header(element)
+					when "subheader"
+						+Subheader(element)
+					when "image"
+						+Image(element, orgImages)
 					when "spacer"
-						include templates/formSpacer
+						+Spacer
 			br
 			button#submit( onclick="window.onbeforeunload = null;" class="w3-btn theme-submit")!=msg('scouting.submit')
 

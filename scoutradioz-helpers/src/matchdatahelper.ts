@@ -406,7 +406,7 @@ export class MatchDataHelper {
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
-		const derivedLayout = schema.layout.filter(item => item.type === 'derived');
+		const derivedLayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		let t_dbEnd = performance.now();
 
 		const derivedCalculator = new DerivedCalculator(convertValuesDict(matchData));
@@ -422,7 +422,7 @@ export class MatchDataHelper {
 					let {
 						answer, tokenize, parse, resolve
 					} = derivedCalculator.runFormula(thisItem.formula, thisItem.id);
-					logger.debug(tokenize, parse, resolve);
+					// logger.debug(tokenize, parse, resolve);
 					matchData[thisItem.id] = answer;
 					ttokenize += tokenize;
 					tparse += parse;
@@ -489,7 +489,9 @@ export class MatchDataHelper {
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
-		const scorelayoutDB = schema.layout.filter(item => item.type === 'derived');
+		const scorelayoutDB = schema.layout.filter(item => MatchDataHelper.isMetric(item));
+		//const scorelayoutDB = schema.layout.filter(item => item.id);
+		logger.trace(`scoreLayoutDB=${JSON.stringify(scorelayoutDB)}`);
 
 		// Process the cookies & (if selections defined) prepare to reduce
 		let savedCols: StringDict = {};
@@ -540,9 +542,11 @@ export class MatchDataHelper {
 			for (let thisLayout of scorelayoutDB) {
 				//var thisLayout = scorelayoutDB[i];
 				if (this.isQuantifiableType(thisLayout.type)) {
-					assert(thisLayout.id, `Layout element has no ID: ${JSON.stringify(thisLayout)}`);
-					if (savedCols[thisLayout.id])
-						scorelayout.push(thisLayout);
+					if ('id' in thisLayout) {
+						assert(thisLayout.id, `Layout element has no ID: ${JSON.stringify(thisLayout)}`);
+						if (savedCols[thisLayout.id])
+							scorelayout.push(thisLayout);
+					}
 				}
 				else
 					scorelayout.push(thisLayout);
@@ -586,7 +590,7 @@ export class MatchDataHelper {
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
-		const scorelayout = schema.layout.filter(item => item.type === 'derived');
+		const scorelayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		
 		logger.trace('scorelayout=' + JSON.stringify(scorelayout));
 
