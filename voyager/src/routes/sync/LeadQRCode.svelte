@@ -141,9 +141,9 @@
 </script>
 
 <section class="pad grid grid-cols-1 place-items-center gap-4">
-	<div class="grid grid-cols-2 gap-4">
-		<div>
-			<Select variant="filled" bind:value={qrCodeType} on:MDCSelect:change={handleChange}>
+	<div class={`grid ${qrCodeType === 'pitscouting' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+		<div style="width: 100%; display: flex; justify-content: center;">
+			<Select variant="filled" bind:value={qrCodeType} on:MDCSelect:change={handleChange} style={`width: ${qrCodeType === 'pitscouting' ? '400px' : 'auto'}; `}>
 				<Option value="matchscouting">{msg('scouting.match')}</Option>
 				<Option value="pitscouting">{msg('scouting.pit')}</Option>
 				<Option value="metadata">{msg('qrsync.usersAndTeams')}</Option>

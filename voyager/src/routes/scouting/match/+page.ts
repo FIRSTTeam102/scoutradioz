@@ -36,6 +36,10 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
 	const myMatches = grouped.filter(match =>
 		match.some(asg => asg.assigned_scorer?.id === user_id)
 	).slice(0, maxNumMatches);
+
+	const myTeams = myMatches.map(match =>
+		match.filter(asg => asg.assigned_scorer?.id === user_id)
+	);
 	
 	const allMatches = grouped.slice(0, maxNumMatches);
 	
@@ -49,5 +53,6 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
 	}
 	let checksum = syncStatus.data.checksum.substring(0, 3) as string;
 
-	return { myMatches, allMatches, firstMatchNumber, checksum };
+	return { myMatches, myTeams, allMatches, firstMatchNumber, checksum };
+
 };
