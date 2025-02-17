@@ -1,47 +1,59 @@
 {
 	"index": {
-		"fulltitle": "Scoutradioz: Bir Hizmet Olarak FRC İzcilik",
-		"welcome": "Scoutradioz'a hoş geldiniz",
-		"choice": "Sen:",
+		"fulltitle": "Scoutradioz: Hizmet Olarak FRC Scouting",
+		"welcome": "Scoutradioz'a Hoş Geldiniz",
+		"choice": "Ne yapmak istersiniz:",
 		"viewer": {
-			"choice": "Verileri görüntülemek istiyor",
-			"intro": "Scoutradioz, ekiplerin/kuruluşların yarışmalarda kendi özel istihbaratlarını toplamalarını sağlar.",
-			"action": "Hangi verileri topladıklarını görmek için aşağıdan bir kuruluş seçin!"
+			"choice": "Verileri görüntülemek",
+			"intro": "Scoutradioz, takımların/organizasyonların yarışmalarda kendi özel istihbaratlarını toplamalarını sağlar.",
+			"action": "Hangi verileri topladıklarını görmek için aşağıdan bir organizasyonu seçin!"
 		},
 		"scouter": {
-			"choice": "Scout'ta oturum açma"
+			"choice": "Scout yapmak için giriş yapmak"
 		},
 		"info": {
-			"choice": "Scoutradioz ve ekibinizin bunu nasıl kullanabileceği hakkında bilgi edinmekle ilgileniyorsunuz",
-			"intro": "Scoutradioz, The Gearheads tarafından geliştirilen ve ekiplerin ve kuruluşların **yarışmalarda kendi özelleştirilmiş istihbaratlarını toplamalarını** sağlayan bir FRC keşif uygulamasıdır.",
+			"choice": "Scoutradioz hakkında bilgi edinmek ve takımınızın nasıl kullanabileceğini öğrenmek",
+			"intro": "Scoutradioz, The Gearheads tarafından geliştirilen ve takımların ve organizasyonların **yarışmalarda kendi özelleştirilmiş istihbaratlarını toplamalarını** sağlayan bir FRC keşif uygulamasıdır.",
 			"features": {
 				"intro": "Başlangıçta 2018'de oluşturulan Scoutradioz gelişmeye devam etti ve artık Amazon Web Services üzerinde çalışıyor. Scoutradioz'un sunduğu bazı özelliklerin bir listesi:",
-				"modular": "Kuruluşunuzun tam olarak hangi bilgileri kaydetmek ve göstermek istediğinizi seçebilmesi için **modüler ve yapılandırılabilir** pit ve maç keşif anketleri",
-				"automatic": "**Otomatik**, kişiselleştirilmiş pit ve maç izleme atamaları",
+				"modular": "Organizasyonunuzun tam olarak hangi bilgileri kaydetmek ve göstermek istediğini seçebilmesi için **modüler ve ayarlanabilir** pit ve maç scout anketleri",
+				"automatic": "**Otomatik**, kişiselleştirilmiş pit ve maç scout atamaları",
 				"advanced": "**Gelişmiş** raporlar ve metrikler",
-				"management": "Maç atamalarını denetleme, gözcüleri içeri ve dışarı değiştirme ve üye listesini yönetme gibi etkinlik yönetimi araçları",
+				"management": "Maç atamalarını denetleme, scoutları değiştirme ve üye listesini yönetme gibi etkinlik yönetimi araçları",
 				"free": "Ve tabii ki tamamen ücretsiz!"
 			},
-			"github": "GitHub'daki kodumuza ve belgelerimize bakın",
+			"github": "Kodumuza Github üzerinden göz atın",
 			"discord": "Discord'umuza Katılın",
-			"partner": "Erken Erişim iş ortağı olmak için başvurun",
-			"first": "*FIRST* ve FRC hakkında daha fazla bilgi"
+			"partner": "Erken-Erişim partneri olmak için başvurun",
+			"first": "*FIRST* ve FRC hakkında daha fazla bilgi",
+			"wiki": "Detaylı dokümantasyon için wiki'mize göz atın",
+			"signup": "Scoutradioz'u kullanmak için takımınızı kaydedin"
 		},
-		"view": "görüş",
-		"login": "Giriş yapmak"
+		"view": "Görüntüle",
+		"login": "Giriş yap",
+		"browse": {
+			"title": "Etkinlik ve organizasyona göre verileri görüntüleyin",
+			"link": "Veya buraya tıklayarak etkinliğe göre veri arayın",
+			"tspsExplained": "'TSPS' **göreceli** Toplam Scout Performans Skorudur (organizasyonlar arası scout dostluk yarışmaları için yararlı) - ve 'Mdn.' ise Medyan'ın kısaltmasıdır",
+			"pastEvents": "Eski verileri görmek için Bilgi ve Raporlar menüsünden 'Geçmiş etkinliklerden veriler arayın' menüsünü kullanmanız gerekebilir",
+			"orgKeyAndNickname": "Organizasyon anahtarı - İsim",
+			"matchScoutingEntries": "Maç scout girişi sayısı",
+			"avgErrorRate": "Medyan hata oranı (ve minimum değeri)",
+			"tspsScore": "TSPS"
+		}
 	},
 	"hello": {
-		"world": "Selam Dünya!",
+		"world": "Merhaba Dünya!",
 		"name": "Merhaba, {name}!"
 	},
-	"selectOrg": "Lütfen bir kuruluş seçin.",
+	"selectOrg": "Lütfen bir organizasyon seçin.",
 	"error": {
 		"title": "Hata: {message}",
 		"report": {
 			"intro": "Bu hatayı düzeltmemize yardımcı olmak için lütfen:",
-			"screenshot": "Bu hata mesajının ekran görüntüsünü alın,",
-			"url": "Sayfanın üst kısmındaki \"Paylaş\" düğmesini tıklayarak bu sayfanın tam URL'sini kopyalayın,",
-			"send": "Bu hatayı almak için tıkladığınız bağlantı gibi alakalı bilgilerle birlikte ekran görüntüsünü Discord sunucumuzda veya {github}GitHub sayfamızda{/github} yayınlayın."
+			"screenshot": "Hata mesajının ekran görüntüsünü alın,",
+			"url": "Sayfanın üst kısmındaki \"Paylaş\" düğmesine tıklayarak bu sayfanın tam URL'sini kopyalayın,",
+			"send": "Bu hatayı almak için tıkladığınız bağlantı gibi alakalı bilgilerle birlikte ekran görüntüsünü Discord sunucumuzda veya {github}GitHub sayfamızda{/github} paylaşın."
 		},
 		"stack": "Yığın izleme:"
 	},
