@@ -67,7 +67,6 @@ block content
 				div(class="w3-left")
 					div(id="btnUndo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
 					div(id="btnSkip" class="w3-btn theme-submit w3-margin-left")!=msg('allianceselection.skip')
-					div(id="btnRevisit" class="w3-btn theme-submit w3-margin-left")!=msg('allianceselection.revisit')
 				div(class="w3-right")
 					div(id="btnOptions" class="w3-btn theme-input")!=msg('allianceselection.options', undefined, '\xa0')
 			section(class="w3-row")
@@ -150,6 +149,11 @@ block content
 			state.currentAlliance = 1;
 			//Previous states of allianceSelection
 			var previousStates = [];
+			//No T605s to start (i.e., no one has yet been skipped)
+			state.t605s = [];
+			state.t605Alliances = [];
+			state.currentT605 = 0;
+			state.doingRevisits = false;
 		
 			// i18n messages used by client script
 			window.i18n = {};
