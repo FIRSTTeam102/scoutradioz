@@ -75,7 +75,7 @@ module.exports = {
 					//Find the end punctuator for the res.render call.
 					//	It's not trivial b/c We have to keep track of 
 					//	other sets of parentheses inside the function call
-					for (var i = index; i < tokens.length; i++) {
+					for (let i = index; i < tokens.length; i++) {
 						let thisToken = tokens[i];
 						if (thisToken.type == 'Punctuator') {
 							if (thisToken.value == '(') {
@@ -106,7 +106,7 @@ module.exports = {
 						
 						var includesDescription = false;
 						
-						for (var i = leftParen; i < rightParen; i++) {
+						for (let i = leftParen; i < rightParen; i++) {
 							var thisToken = tokens[i];
 							var nextToken = tokens[i + 1];
 							if (thisToken.value == 'description') {
