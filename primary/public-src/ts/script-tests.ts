@@ -1,4 +1,4 @@
-/* eslint-disable no-constant-condition */
+ 
 /// <reference types="qunit"/>
 
 interface Window {
@@ -73,10 +73,10 @@ function waitForIframeLoad(): Promise<string> {
 // Wait for jqAjaxPromise to resolve
 function waitForAjaxPromise() {
 	console.log('waitForAjaxPromise');
-	return new Promise((resolve) => {
-		waitForMs(20)// In case the ajax request isn't fired immediately
+	return new Promise((resolve, reject) => {
+		void waitForMs(20)// In case the ajax request isn't fired immediately
 			.then(() => {
-				jqAjaxPromise.then(resolve);
+				jqAjaxPromise.then(resolve).catch(reject);
 			}); 
 	});
 }

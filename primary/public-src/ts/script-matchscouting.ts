@@ -146,6 +146,7 @@ $(function () {
 		// Check the time it takes to do the layout recalc
 		if (!sessionStorage.blurDisabled) {
 			let t2 = performance.now();
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 			document.body.offsetWidth;
 			let t3 = performance.now();
 			// if it takes a long time to do the recalc, disable blur

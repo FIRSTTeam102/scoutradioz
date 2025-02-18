@@ -555,27 +555,26 @@ router.all('/selectorg', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'selectorg[all]');
 	logger.debug('ENTER');
 	
-	doSelectOrg(req, res, () => {
-		//now, once default user is logged in, redirect to index
-		logger.debug('User is now in an org, redirecting');
+	await doSelectOrg(req, res);
+	//now, once default user is logged in, redirect to index
+	logger.debug('User is now in an org, redirecting');
 		
-		let redirectURL = req.getRedirectURL();
+	let redirectURL = req.getRedirectURL();
 		
-		if (redirectURL) {
-			logger.debug(`redirect: ${redirectURL}`);
-			if (req.query.alert) {
-				// 2022-04-05 JL: Introduced getURLWithQueryParameters so we don't have to worry about ? and & all the time
-				redirectURL = req.getURLWithQueryParameters(redirectURL, {alert: req.query.alert});
-				// 2022-02-27 JL: fixing alert not showing up on login redirects
-				// if (redirectURL.includes('?')) redirectURL += '&alert=' + req.query.alert;
-				// else redirectURL += '?alert=' + req.query.alert;
-			}
-			res.redirect(redirectURL);
+	if (redirectURL) {
+		logger.debug(`redirect: ${redirectURL}`);
+		if (req.query.alert) {
+			// 2022-04-05 JL: Introduced getURLWithQueryParameters so we don't have to worry about ? and & all the time
+			redirectURL = req.getURLWithQueryParameters(redirectURL, {alert: req.query.alert});
+			// 2022-02-27 JL: fixing alert not showing up on login redirects
+			// if (redirectURL.includes('?')) redirectURL += '&alert=' + req.query.alert;
+			// else redirectURL += '?alert=' + req.query.alert;
 		}
-		else {
-			res.redirect('/home');
-		}
-	});
+		res.redirect(redirectURL);
+	}
+	else {
+		res.redirect('/home');
+	}
 }));
 
 router.all('/selectorg-login', wrap(async (req, res) => {
@@ -584,12 +583,11 @@ router.all('/selectorg-login', wrap(async (req, res) => {
 	logger.addContext('funcName', 'selectorg[all]');
 	logger.debug('ENTER');
 	
-	doSelectOrg(req, res, () => {
-		logger.debug('User is now in an org, taking them to the login page');
+	await doSelectOrg(req, res);
+	logger.debug('User is now in an org, taking them to the login page');
 		
-		let redirect = req.getFixedRedirectURL();
-		res.redirect(`/user/login?rdr=${redirect}`);
-	});
+	const redirect = req.getFixedRedirectURL();
+	res.redirect(`/user/login?rdr=${redirect}`);
 }));
 
 /**
@@ -643,9 +641,11 @@ router.get('/usererror', wrap(async (req, res) => {
 }));
 
 // Moved the select-org process into a helper function so I can do it with the standard selectorg and & one which immediately takes you to the login screen
-async function doSelectOrg(req: express.Request, res: express.Response, cb: () => void) {
+async function doSelectOrg(req: express.Request, res: express.Response) {
 	
-	let org_key = req.body.org_key || req.query.org_key;
+	const { promise, resolve } = Promise.withResolvers(); // 2025-02-17 JL: Switch doSelectOrg to promize-based instead of callback-based
+	
+	const org_key = req.body.org_key || req.query.org_key;
 	logger.debug(`org_key=${org_key}`);
 	
 	//Make sure that form is filled
@@ -655,7 +655,7 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 	}
 	
 	//search for organization in database
-	let selectedOrg = await utilities.findOne('orgs', 
+	const selectedOrg = await utilities.findOne('orgs', 
 		{'org_key': org_key}, {},
 		{allowCache: true}
 	);
@@ -671,7 +671,7 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 	}
 	
 	//Now, sign in to organization's default user
-	let defaultUser = await utilities.findOne<any>('users', 
+	const defaultUser = await utilities.findOne<any>('users', 
 		{org_key: org_key, name: 'default_user'}, {},
 		{allowCache: true}
 	);
@@ -707,9 +707,11 @@ async function doSelectOrg(req: express.Request, res: express.Response, cb: () =
 			//If error, then log and return an error
 			if(err){ logger.error(err); return res.status(500).send({alert: err}); }
 		
-			cb();
+			resolve(undefined);
 		});
 	}
+	
+	return promise;
 }
 
 

@@ -72,7 +72,7 @@ class UseFunctions {
 			else if (str === 'undefined' || str === 'null') return undefined;
 			else {
 				if (!str.startsWith('/')) str = '/' + str; // We always want a redirect to start with a slash (unless in the future we want to redirect to external sites)
-				return str.replace(/\?/g, '%3f').replace(/\&/g, '%26');
+				return str.replace(/\?/g, '%3f').replace(/&/g, '%26');
 			}
 		};
 		
@@ -431,7 +431,7 @@ class UseFunctions {
 				let beforeRenderTime = Date.now() - req.requestTime;
 				
 				//applies render function
-				// eslint-disable-next-line prefer-rest-params
+				 
 				let result = cached_function.apply(this, [view, callback]);
 				
 				//stores post-render time

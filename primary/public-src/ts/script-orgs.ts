@@ -38,7 +38,7 @@ function confirmSetDefaultPassword(){
 	
 	let newDefaultPassword = $('#defaultPassword').val();
 	
-	Confirm.show(`Are you sure you want to change the organization password to *${newDefaultPassword}*?`)
+	void Confirm.show(`Are you sure you want to change the organization password to *${newDefaultPassword}*?`)
 		.then(data => {
 			if (data.cancelled === false) {
 				$('#setDefaultPassword').trigger('submit');

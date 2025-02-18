@@ -91,34 +91,32 @@ router.get('/', wrap(async (req, res) => {
 	let preAwaitTime = Date.now() - startTime;
 	
 	//Await every promise in parallel.
-	Promise.all(dbPromises)
-		.then(values => {
-			// Get the resulting values from the array returned by Promise.all.
-			for (let i = 0; i < pitScoutSubteams.length; i++) {
-				// the values array will be ordered the same as pitScoutSubteams & pitScoutSubteamKeys
-				// @ts-ignore TODO
-				pitScoutSubteams[i].members = values[i]; 
-			}
-			let matchScoutingCount = values[values.length - 4].length; // fourth to last
-			let pitScoutingCount = values[values.length - 3].length;	// third to last
-			let available = values[values.length - 2]; 					// second to last
-			let assigned = values[values.length - 1]; 					// last
+	let values = await Promise.all(dbPromises);
+	// Get the resulting values from the array returned by Promise.all.
+	for (let i = 0; i < pitScoutSubteams.length; i++) {
+		// the values array will be ordered the same as pitScoutSubteams & pitScoutSubteamKeys
+		// @ts-ignore TODO
+		pitScoutSubteams[i].members = values[i]; 
+	}
+	let matchScoutingCount = values[values.length - 4].length; // fourth to last
+	let pitScoutingCount = values[values.length - 3].length;	// third to last
+	let available = values[values.length - 2]; 					// second to last
+	let assigned = values[values.length - 1]; 					// last
 		
-			let postAwaitTime = Date.now() - startTime - preAwaitTime;
-			logger.trace(`preAwaitTime: ${preAwaitTime}ms, postAwaitTime: ${postAwaitTime}ms`);
+	let postAwaitTime = Date.now() - startTime - preAwaitTime;
+	logger.trace(`preAwaitTime: ${preAwaitTime}ms, postAwaitTime: ${postAwaitTime}ms`);
 		
-			logger.trace('Rendering');
+	logger.trace('Rendering');
 		
-			res.render('./manage/assignments/index', {
-				title: req.msg('manage.assignments.pit'),
-				subteams: pitScoutSubteams,
-				assigned: assigned,
-				available: available,
-				matchScoutingCount: matchScoutingCount,
-				pitScoutingCount: pitScoutingCount,
-				areTeamsListedInDB: areTeamsListedInDB
-			});
-		});
+	res.render('./manage/assignments/index', {
+		title: req.msg('manage.assignments.pit'),
+		subteams: pitScoutSubteams,
+		assigned: assigned,
+		available: available,
+		matchScoutingCount: matchScoutingCount,
+		pitScoutingCount: pitScoutingCount,
+		areTeamsListedInDB: areTeamsListedInDB
+	});
 }));
 
 router.get('/matches', wrap(async (req, res) => {
@@ -158,7 +156,7 @@ router.get('/matches', wrap(async (req, res) => {
 	});
 	
 	// Find the number of match assignments WITH data
-	const matchAssignments = await utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: { $exists: true }});
+	const matchAssignments = await utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$exists: true}});
 	const matchAssignmentsCount = matchAssignments.length;
 	
 	logger.trace('Awaiting all db requests');
@@ -825,8 +823,7 @@ router.post('/clearscoutingpairs', wrap(async (req, res) => {
 
 
 router.post('/generateteamallocations', wrap(async (req, res) => {
-	
-	generateTeamAllocations(req, res);
+	await generateTeamAllocations(req, res);
 }));
 
 

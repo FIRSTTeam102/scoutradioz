@@ -253,7 +253,7 @@ class PasswordPrompt {
 					cancelled: data.cancelled,
 					password: data.data[0].value
 				});
-			});
+			}).catch(console.error);
 		});
 	}
 }

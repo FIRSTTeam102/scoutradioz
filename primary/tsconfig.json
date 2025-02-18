@@ -6,7 +6,7 @@
 		"target": "es2020",
 		"module": "commonjs",
 		"rootDir": "./src",
-		"lib": ["ES2022"],
+		"lib": ["ES2022", "ESNext"],
 		"outDir": "./build",
 		"esModuleInterop": true,
 		"strict": true,

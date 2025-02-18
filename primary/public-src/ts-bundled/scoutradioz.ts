@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+ 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 if(!$){
@@ -189,7 +189,7 @@ async function share(orgKey: string|boolean) {
 		
 		if (navigator.canShare(shareData)) {
 			try {
-				navigator.share(shareData);
+				await navigator.share(shareData);
 				console.log('Shared data');
 				return; // exit so we don't copy the link to the clipboard later
 			}
@@ -255,7 +255,7 @@ function selectLanguage() {
 		default: true,
 	}]);
 	
-	prompt.show();
+	void prompt.show();
 }
 
 function copyClipboardDom(text: string) {

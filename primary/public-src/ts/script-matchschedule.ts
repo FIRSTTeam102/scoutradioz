@@ -86,7 +86,8 @@ $(() => {
 				if (data.cancelled === false) {
 					$('#ManualInputMatchSchedule').trigger('submit');
 				}
-			});
+			})
+			.catch(console.error);
 	});
 });
 

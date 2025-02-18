@@ -161,20 +161,15 @@ app.use(i18n.middleware());
 console.log('app.js: app.use(session({... - START');
 // const MongoClient = require('mongodb').MongoClient;
 //Get promise for MongoClient
-const clientPromise: Promise<MongoClient> = new Promise((resolve, reject) => {
+const clientPromise: Promise<MongoClient> = (async () => { // 2024-02-17 JL: Simplified function
 	logger.debug('Waiting for utilities.getDBurl');
 	//2020-03-23 JL: Made getDBurl() async to wait for TIER to be given
-	utilities.getDBurl()
-		.then((url: string) => {
-			logger.info('Got url');
-			//Connect mongoClient to dbUrl specified in utilities
-			MongoClient.connect(url, {}, function(err?: Error, client?: MongoClient){
-			//Resolve/reject with client
-				if (err) reject(err);
-				else if (client) resolve(client);
-			});
-		});
-});
+	let url = await utilities.getDBurl();
+	logger.info('Got url');
+	//Connect mongoClient to dbUrl specified in utilities
+	return MongoClient.connect(url, {});
+})();
+
 // @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(session({
 	secret: 'marcus night',

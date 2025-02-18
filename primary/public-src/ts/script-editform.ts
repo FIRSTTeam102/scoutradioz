@@ -348,7 +348,8 @@ async function test() {
 				.then(response => response.text())
 				.then(data => {
 					Dialog.show(data);
-				});
+				})
+				.catch(console.error);
 		}
 
 	}).fail((xhr, status, message) => {

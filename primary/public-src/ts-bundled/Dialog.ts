@@ -46,6 +46,7 @@ class Dialog {
 	static showURL(url: string) {
 		fetch(url, {method: 'GET', headers: {'In-Modal-Dialog': 'true'}})
 			.then(response => response.text())
-			.then(html => Dialog.show(html));
+			.then(html => Dialog.show(html))
+			.catch(console.error);
 	}
 }
