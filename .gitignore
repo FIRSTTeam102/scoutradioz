@@ -23,3 +23,5 @@ yarn-error.log
 # below: temporary
 voyager/static/*.css*
 voyager/.sst
+
+.sst

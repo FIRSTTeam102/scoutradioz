@@ -1,6 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+import tailwindcss from '@tailwindcss/vite';
 import fs from 'fs';
 import path from 'path';
 
@@ -22,12 +23,13 @@ if (process.env.NODE_ENV === 'production') {
 
 export default defineConfig({
 	plugins: [
+		tailwindcss(),
 		sveltekit(),
 		// This is to visualize the space used by each module. Pretty sure it won't be included in the SST builds
-		visualizer({
-			emitFile: true,
-			filename: 'stats.html'
-		})
+		// visualizer({
+		// 	emitFile: true,
+		// 	filename: 'stats.html'
+		// })
 	],
 	optimizeDeps: {
 		// https://github.com/sveltejs/kit/issues/11793
@@ -75,5 +77,10 @@ export default defineConfig({
 	},
 	define: {
 		'process.env.NODE_ENV': '"production"'
+	},
+	resolve: {
+		alias: {
+			$modules: path.resolve('./node_modules')
+		}
 	}
 });

@@ -64,17 +64,20 @@ export const POST: RequestHandler = async ({
 	);
 	httpAssert(event, 404, `Event ${params.event_key} not found`);
 
-	const layout = await utilities.find(
-		'layout',
-		{ org_key: params.org_key, year: event.year, form_type: 'matchscouting' },
-		{ sort: { order: 1 } },
-		{ allowCache: true }
-	);
+	// const layout = await utilities.find(
+	// 	'layout',
+	// 	{ org_key: params.org_key, year: event.year, form_type: 'matchscouting' },
+	// 	{ sort: { order: 1 } },
+	// 	{ allowCache: true }
+	// );
+	
+	const schema = await matchDataHelper.getSchemaForOrgAndEvent(params.org_key, event.key, 'matchscouting');
+	const { layout } = schema;
 
 	// Cache the type of each item in the layout for type checking/conversions
 	let layoutTypeById: StringDict = {};
 	for (let layoutItem of layout) {
-		if (typeof layoutItem.id === 'string') {
+		if ('id' in layoutItem) {
 			console.debug(`${layoutItem.id} is a ${layoutItem.type}`);
 			layoutTypeById[layoutItem.id] = layoutItem.type;
 		}
@@ -110,7 +113,8 @@ export const POST: RequestHandler = async ({
 		}
 		console.debug('data(UPDATED:1)=', JSON.stringify(data));
 		console.log(matchDataHelper.fixDatumType, matchDataHelper.calculateDerivedMetrics);
-		data = await matchDataHelper.calculateDerivedMetrics(org_key, event.year, data);
+		let { matchData } = await matchDataHelper.calculateDerivedMetrics(org_key, event.year, data);
+		data = matchData;
 		console.debug('data(UPDATED:2)=', JSON.stringify(data));
 
 		if (actual_scorer) {

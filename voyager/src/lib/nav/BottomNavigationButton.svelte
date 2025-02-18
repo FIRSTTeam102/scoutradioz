@@ -2,14 +2,24 @@
 	import { afterNavigate } from '$app/navigation';
 	import Ripple from '@smui/ripple';
 	
-	export let href = '#';
-	export let label: string;
-	export let icon: string;
-	export let style = '';
-	export let onClick: () => void = () => {};
+	interface Props {
+		href?: string;
+		label: string;
+		icon: string;
+		style?: string;
+		onClick?: () => void;
+	}
+
+	let {
+		href = '#',
+		label,
+		icon,
+		style = '',
+		onClick = () => {}
+	}: Props = $props();
 	
 	// The menu button is a bit of an oddball, since its href is "#" and we probably want to make that one visible always
-	let selected = (href.startsWith('#') || location.pathname.startsWith(href));
+	let selected = ($state(href.startsWith('#') || location.pathname.startsWith(href)));
 	afterNavigate(() => {
 		selected = (href.startsWith('#') || location.pathname.startsWith(href));
 	});
@@ -18,7 +28,7 @@
 <a
 	href={href}
 	use:Ripple={{surface: true}}
-	on:click={onClick}
+	onclick={onClick}
 	tabindex="0"
 	class="bottom-nav-button"
 	style={style}

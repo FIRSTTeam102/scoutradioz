@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals, params }) => {
 	validateUserOrg(locals, params.org_key);
-	const pitscouting: PitScouting[] = await utilities.find('pitscouting', {
+	const pitscouting = await utilities.find('pitscouting', {
 		org_key: params.org_key,
 		event_key: params.event_key,
 	}, {

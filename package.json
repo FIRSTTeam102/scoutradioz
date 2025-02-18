@@ -15,6 +15,7 @@
 		"dev": "node scripts/dev.js"
 	},
 	"devDependencies": {
+		"@material/fab": "^14.0.0",
 		"@types/archiver": "^5.3.1",
 		"@types/aws-serverless-express": "^3.3.5",
 		"@types/bcryptjs": "^2.4.2",

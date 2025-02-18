@@ -1,8 +1,8 @@
 import { get as getStore } from 'svelte/store';
 import { page } from '$app/stores';
-import { base32Hash, fetchJSON } from './utils';
+import { base32Hash, fetchJSON, getNewSubmissionHistory } from './utils';
 import { getLogger } from './logger';
-import type { Layout, Event } from 'scoutradioz-types';
+import type { Layout, Event, OrgSchema, Schema, OrgKey, EventKey } from 'scoutradioz-types';
 import type {
 	MatchScoutingLocal,
 	TeamLocal,
@@ -124,6 +124,10 @@ export class MatchScoutingOperations extends TableOperations {
 
 		// Fetch list of match scouting assignments for this event
 		const matchScouting = await fetchJSON<MatchScoutingLocal[]>(`/api/orgs/${org_key}/${event_key}/assignments/match`);
+
+		// Timestamps will get stringified, so make sure to convert them back into dates
+		matchScouting.forEach(item => item.history?.forEach(entry => entry.time = new Date(entry.time)));
+
 		// Merge with existing data
 		const localMatchScouting = await db.matchscouting.where({ org_key, event_key }).toArray();
 		const mergedMatchScouting = await MatchScoutingOperations.merge(matchScouting, localMatchScouting);
@@ -177,11 +181,10 @@ export class MatchScoutingOperations extends TableOperations {
 			if (localMatch.data) {
 				let this_match_team_key = localMatch.match_team_key;
 				let index = keyToIndex[this_match_team_key];
+				// If there exists entries in both, then perform a merge
 				if (index && newItems[index]) {
-					newItems[index].data = localMatch.data;
-					newItems[index].synced = localMatch.synced;
-					newItems[index].completed = localMatch.completed;
-					newItems[index].history = localMatch.history;
+					console.log(newItems[index], localMatch);
+					newItems[index] = await mergeScoutingEntry(newItems[index], localMatch);
 				}
 			}
 		}
@@ -256,9 +259,20 @@ export class PitScoutingOperations extends TableOperations {
 				filter: `org=${org_key},event=${event_key}`
 			})
 			.first();
+		
+		// we must convert strings to numbers since pit scouting are stored as strings, unfortunately
+		const { layout } = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
+		assert(layout, 'Schema must be downloaded before downloading pit scouting assignments');
 
 		// Fetch list of pit scouting assignments for this event
 		const pitScouting = await fetchJSON<PitScoutingLocal[]>(`/api/orgs/${org_key}/${event_key}/assignments/pit`);
+
+		// Timestamps will get stringified, so make sure to convert them back into dates
+		pitScouting.forEach(item => item.history?.forEach(entry => entry.time = new Date(entry.time)));
+		
+		// let numericalFields = 
+
+		console.log(pitScouting.find(item => item.team_key === 'frc11'));
 
 		const localPitScouting = await db.pitscouting.where({ org_key, event_key }).toArray();
 		const mergedPitScouting = await PitScoutingOperations.merge(pitScouting, localPitScouting);
@@ -266,7 +280,8 @@ export class PitScoutingOperations extends TableOperations {
 
 		logger.trace('Begin transaction');
 		await db.transaction('rw', db.pitscouting, db.syncstatus, async () => {
-			await db.pitscouting.bulkPut(pitScouting);
+			let putResult = await db.pitscouting.bulkPut(mergedPitScouting);
+			logger.debug('result frum pitscouting bulkPut:', putResult)
 			await db.syncstatus.put({
 				table: 'pitscouting',
 				filter: `org=${org_key},event=${event_key}`,
@@ -310,11 +325,9 @@ export class PitScoutingOperations extends TableOperations {
 			if (localPit.data) {
 				let thisTeamKey = localPit.team_key;
 				let index = keyToIndex[thisTeamKey];
+				// If there exists entries in both, then perform a merge
 				if (index && newItems[index]) {
-					newItems[index].data = localPit.data;
-					newItems[index].synced = localPit.synced;
-					newItems[index].completed = localPit.completed;
-					newItems[index].history = localPit.history;
+					newItems[index] = await mergeScoutingEntry(newItems[index], localPit);
 				}
 			}
 		}
@@ -371,8 +384,172 @@ export class PitScoutingOperations extends TableOperations {
 	}
 }
 
+/**
+ * When both entries have data, perform a merge based no our best inference of which data to prefer
+ * @param incoming Incoming entry, i.e. downloaded from cloud
+ * @param current Existing entry, i.e. local from Dexie
+ * @returns Merged entry
+ */
+async function mergeScoutingEntry<T extends PitScoutingLocal | MatchScoutingLocal>(incoming: T, current: T): Promise<T> {
+	function preferIncoming() {
+		return { ...incoming };
+	}
+	function preferCurrent() {
+		let merged = { ...incoming };
+		merged.data = current.data;
+		merged.synced = current.synced;
+		merged.completed = current.completed;
+		merged.history = current.history;
+		return merged;
+	}
+	if (current.history && !incoming.history) return preferCurrent(); // current has history and incoming does not: prefer current
+	if (incoming.history && !current.history) return preferIncoming(); // opposite case to above
+	if (!current.history || !incoming.history || current.history.length === 0 || incoming.history.length === 0) {
+		logger.warn('mergeScoutingEntry: Neither entry has a history attribute or has history length 0.');
+		let merged = incoming.data ? preferIncoming() : preferCurrent(); // Prefer incoming if incoming has data; current otherwise.
+		// Create a new history record for this merge
+		let user = await db.user.toCollection().first();
+		assert(user && user.name !== 'default_user', 'Not logged in!');
+		merged.history = getNewSubmissionHistory(merged, user._id, user.name);
+		return merged;
+	}
+	// Both have history? Compare histories one by one
+	let maxN = Math.max(incoming.history.length, incoming.history.length);
+	for (let i = 0; i < maxN; i++) {
+		let thisIncoming = incoming.history[i];
+		let thisCurrent = current.history[i];
+		if (thisIncoming && !thisCurrent) return preferIncoming(); // If we get to this step, then history matches all the way up to current, but incoming has one more in the stack
+		if (thisCurrent && !thisIncoming) return preferCurrent(); // If we get to this step, then history matches all the way up to incoming, but current has one more in the stack
+		// Check if they match
+		let incomingDate = new Date(thisIncoming.time), currentDate = new Date(thisIncoming.time); // JL note: i'd prefer to assert with the line below, but in my testing i had an un-cast date string in dexie, so just to cover that possibility we can typecast here
+		// assert(thisIncoming.time instanceof Date && thisCurrent.time instanceof Date, 'Timestamps are not Date type! Did they not get re-typecast after downloading?');
+		let doDatesMatch = Math.abs(incomingDate.valueOf() - currentDate.valueOf()) < 5_000; // 5 seconds apart: effectively same timestamp
+		if (doDatesMatch && thisIncoming.id === thisCurrent.id && thisIncoming.name === thisCurrent.name) continue; // If they match, then proceed to next item in history
+		// If they don't match, prefer the one with the LATEST timestamp
+		if (currentDate > incomingDate) {
+			logger.warn('Conflicting histories. "Current" has later timestamp, so it will be prioritized. Discarded entry:', incoming);
+			return preferCurrent(); // todo: what will happen server side? when this is uploaded, it'll still think there's a conflict since we haven't spliced the old history onto the new
+		}
+		if (incomingDate > currentDate) {
+			logger.warn('Conflicting histories. "Incoming" has later timestamp, so it will be prioritized. Discarded entry:', current);
+			return preferIncoming(); // todo: what will happen server side? when this is uploaded, it'll still think there's a conflict since we haven't spliced the old history onto the new
+		}
+	}
+	logger.error('Failed to identify which entry to prioritize based on history entries. Prioritizing incoming. Discarded entry:', current);
+	return preferIncoming();
+}
+
+export class SchemaOperations extends TableOperations {
+	@setFuncName('SchemaOperations.download')
+	static async download(type: 'match' | 'pit' | 'both' = 'both') {
+		const { event_key, org_key } = getKeys();
+
+		const doPit = type === 'pit' || type === 'both';
+		const doMatch = type === 'match' || type === 'both';
+		logger.info(`ENTER, downloading ${type}`);
+
+		// grab year from event key
+		const year = Number(event_key.substring(0, 4));
+		assert(!isNaN(year), `Failed to pull year from event_key: ${event_key}, got a NaN!`);
+
+		let matchChanged = false,
+			pitChanged = false;
+
+		async function doDownload(form_type: 'matchscouting' | 'pitscouting') {
+			const filter = `org=${org_key},year=${year},type=${form_type}`;
+			const syncstatus = await db.syncstatus
+				.where({
+					table: 'orgschema+schema',
+					filter
+				})
+				.first();
+			// Fetch list of match scouting form elements for the associated year
+			// JL TODO: since schemas now have a timestamp, implement something similar to TBA's last-modified header
+			let apiURL = `/api/orgs/${org_key}/${year}/layout/`;
+			if (form_type === 'matchscouting') apiURL += 'match';
+			else apiURL += 'pit';
+			const { orgschema, schema } = await fetchJSON<{ orgschema: str<OrgSchema>, schema: str<Schema> }>(apiURL);
+			logger.debug(`Retrieved ${schema.layout.length} match items`);
+			const { layout } = schema;
+			const checksum = await SchemaOperations.getChecksum(layout);
+
+			logger.trace('orgschema', orgschema, 'schema', schema, org_key, form_type, year);
+
+			assert(orgschema.org_key === org_key && orgschema.form_type === form_type && orgschema.year === year, 'OrgSchema returned from API does not match request!');
+			assert(schema.year === year && schema.form_type === form_type, 'Schema returned from API does not match what was requested!');
+
+			await db.transaction('rw', db.orgschemas, db.schemas, db.syncstatus, async () => {
+				logger.trace('Placing orgschema into db...');
+				await db.orgschemas.put(orgschema);
+				logger.trace('Placing schema into db...');
+				await db.schemas.put(schema);
+				logger.trace(`Saving sync status for ${form_type}...`);
+				await db.syncstatus.put({
+					table: 'orgschema+schema',
+					filter,
+					time: new Date(),
+					data: {
+						checksum,
+						source: 'download',
+					}
+				});
+			});
+
+			// Default to true if syncstatus was not found
+			let changed = true;
+			if (typeof syncstatus?.data?.checksum === 'string') {
+				logger.debug(`Existing checksum: ${syncstatus.data.checksum}`);
+				changed = checksum.substring(0, 3) !== syncstatus.data.checksum.substring(0, 3);
+			}
+			return changed;
+		}
+
+		if (doMatch) {
+			matchChanged = await doDownload('matchscouting');
+		}
+		if (doPit) {
+			pitChanged = await doDownload('pitscouting');
+		}
+
+		logger.trace('Done');
+		// Return true if EITHER the pit checksum or match checksum changed
+		return pitChanged || matchChanged;
+	}
+
+	@setFuncName('SchemaOperations.getChecksum')
+	static async getChecksum(items: Schema['layout']) {
+		logger.debug('Items to hash:', items);
+		const checksum = await base32Hash(JSON.stringify(items));
+		logger.debug(`Checksum: ${checksum}`);
+		return checksum;
+	}
+
+	static async getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<str<Schema>> {
+		const event = await db.events.where({ key: event_key }).first();
+		assert(event);
+		const year = event.year;
+
+		const orgschema = await db.orgschemas.where({
+			org_key,
+			year,
+			form_type
+		}).first();
+		assert(orgschema);
+
+		const schema = await db.schemas.where({
+			_id: orgschema.schema_id
+		}).first();
+		assert(schema);
+		assert(schema.form_type === form_type, `form_type does not match in DB! Expected ${form_type} but found ${schema.form_type}`);
+		assert(schema.year === year, `Schema year ${schema.year} and event year ${year} do not match!`);
+		return schema;
+	}
+}
+
+/** @deprecated */
 export class FormLayoutOperations extends TableOperations {
 	@setFuncName('FormLayoutOperations.download')
+	/** @deprecated */
 	static async download(type: 'match' | 'pit' | 'both' = 'both') {
 		const { event_key, org_key } = getKeys();
 
@@ -476,6 +653,7 @@ export class FormLayoutOperations extends TableOperations {
 	}
 
 	@setFuncName('FormLayoutOperations.getChecksum')
+	/** @deprecated */
 	static async getChecksum(items: str<Layout>[]) {
 		logger.debug('Items to hash:', items);
 		const checksum = await base32Hash(JSON.stringify(items));
@@ -487,7 +665,7 @@ export class FormLayoutOperations extends TableOperations {
 export class LightOrgOperations extends TableOperations {
 	@setFuncName('LightOrgOperations.download')
 	static async download() {
-		const orgs = await fetchJSON<LightOrg[]>(`/api/orgs`);
+		const orgs = await fetchJSON<LightOrg[]>('/api/orgs');
 		logger.debug(`Fetched ${orgs.length} orgs`);
 
 		await db.transaction('rw', db.lightorgs, db.syncstatus, async () => {

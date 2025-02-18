@@ -18,3 +18,5 @@ Scoutradioz PWA built with [SvelteKit](https://kit.svelte.dev/) and [Material UI
 - `yarn sst dev` to run the SST stuff in dev mode. It'll ask you for a stage name based on your username, just accept whatever it suggests. Make sure not to deploy with that name, though.
 - `yarn sst deploy --stage <stage>`, e.g. `yarn sst deploy --stage prod` to deploy
 - `yarn preview` to preview a production build locally
+
+- UNTIL WE CAN UPDATE TO SST V3, install with `yarn --ignore-engines`

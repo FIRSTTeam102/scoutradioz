@@ -1,24 +1,25 @@
 <script lang="ts">
+	import type { SchemaItem } from 'scoutradioz-types';
 	import Checkbox from './Checkbox.svelte';
 	import Counter from './Counter.svelte';
 	import Multiselect from './Multiselect.svelte';
+	import type { FormData } from './ScoutingFormUtils';
 	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
-
-	import type { LayoutField } from '$lib/types';
-	import { onMount } from 'svelte';
 	
-	export let layout: LayoutField[];
-	export let teamNumber: number;
-	layout.map((item) => {
-		if (item.label) item.label = item.label.replace(/\{\{team_number\}\}/g, String(teamNumber));
-		return item;
-	});
-	export let formData: {
-		[key: string]: unknown;
-	} = {};
+	interface Props {
+		layout: SchemaItem[];
+		teamNumber: number;
+		formData: FormData;
+		onchange: () => void;
+	};
 
-	let defaultValuesMap: { [key: string]: boolean } = {};
+	let { layout, teamNumber, formData = $bindable(), onchange }: Props = $props();
+	
+	// layout.map((item) => {
+	// 	if (item.label) item.label = item.label.replace(/\{\{team_number\}\}/g, String(teamNumber));
+	// 	return item;
+	// });
 </script>
 
 <div class="form">
@@ -26,47 +27,41 @@
 		<h3>Form layout not found</h3>
 	{/if}
 	{#each layout as field}
-		{#if field.id && field.type === 'checkbox'}
+		{#if field.type === 'checkbox'}
 			<Checkbox
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:checked={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 			/>
-		{:else if field.id && (field.type === 'counter' || field.type === 'badcounter' || field.type === 'counterallownegative')}
+		{:else if field.type === 'counter'}
 			<Counter
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
-				isBad={field.type === 'badcounter'}
-				allowNegative={field.type === 'counterallownegative'}
+				{onchange}
+				isBad={field.variant === 'bad'}
+				allow_negative={field.allow_negative}
 			/>
-		{:else if field.id && (field.type === 'slider' || field.type === 'timeslider')}
+		{:else if field.type === 'slider'}
 			<Slider
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
-				isTime={field.type === 'timeslider'}
+				{onchange}
 			/>
-		{:else if field.id && field.type === 'multiselect'}
+		{:else if field.type === 'multiselect'}
 			<Multiselect
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 			/>
-		{:else if field.id && field.type === 'textblock'}
+		{:else if field.type === 'textblock'}
 			<Textblock
-				bind:isDefaultValue={defaultValuesMap[field.id]}
 				bind:value={formData[field.id]}
 				{field}
-				on:change
+				{onchange}
 			/>
-		{:else if field.type === 'h2'}
-			<h2 id={field.id}>{field.label}</h2>
-		{:else if field.type === 'h3'}
+		{:else if field.type === 'header'}
+			<h2 id={`header_${field.label}`}>{field.label}</h2>
+		{:else if field.type === 'subheader'}
 			<h3>{field.label}</h3>
 		{:else if field.type === 'spacer'}
 			<hr />

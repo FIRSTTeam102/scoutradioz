@@ -1,27 +1,34 @@
 <script lang="ts">
 	import Fab, { Icon } from '@smui/fab';
-	import type { LayoutField } from '$lib/types';
-	import { createEventDispatcher } from 'svelte';
+	import type { CounterItem } from 'scoutradioz-types';
 
-	export let value: any = 0; // any because of weird casting to generic data
-	export let field: LayoutField;
-	export let allowNegative: boolean = false;
-	export let isBad = false;
-	export let isDefaultValue: boolean;
-	$: isDefaultValue = (value === 0);
-	const dispatch = createEventDispatcher();
+	interface Props {
+		value?: any; // any because of weird casting to generic data
+		field: CounterItem;
+		allow_negative?: boolean;
+		isBad?: boolean;
+		onchange: () => void;
+	}
+
+	let {
+		value = $bindable(0),
+		field,
+		allow_negative = false,
+		isBad = false,
+		onchange
+	}: Props = $props();
 	const changeByValue = (change: number) => {
-		value = (allowNegative ? value + change : Math.max(0, value + change));
-		dispatch('change');
+		value = (allow_negative ? value + change : Math.max(0, value + change));
+		onchange();
 	};
 </script>
 
 <div>
-	<Fab mini class={!isBad ? 'bad' : 'good'} on:click={() => changeByValue(-1)}>
+	<Fab mini class={!isBad ? 'bad' : 'good'} onclick={() => changeByValue(-1)}>
 		<Icon class="material-icons">remove</Icon>
 	</Fab>
 	<span>{field.label}: {value}</span>
-	<Fab mini class={!isBad ? 'good' : 'bad'} on:click={() => changeByValue(1)}>
+	<Fab mini class={!isBad ? 'good' : 'bad'} onclick={() => changeByValue(1)}>
 		<Icon class="material-icons">add</Icon>
 	</Fab>
 </div>

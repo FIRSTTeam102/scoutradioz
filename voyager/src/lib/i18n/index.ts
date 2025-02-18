@@ -105,7 +105,8 @@ export class I18n {
 						}
 					}
 				}
-			} catch (e) {
+			}
+			catch (e) {
 				logger.error('Failed to parse locale: ', _locale, 'with error:', e);
 			}
 		}
@@ -291,7 +292,8 @@ function qqxOutput(outputWrapper = (output: string) => output) {
 							: ''
 					})`
 				);
-			} else {
+			}
+			else {
 				return original.apply(this, arguments); // eslint-disable-line prefer-rest-params
 			}
 		};

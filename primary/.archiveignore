@@ -30,3 +30,4 @@ marked.min.js
 marked.umd.js
 marked.esm.js
 acorn.mjs
+**/.sst/**

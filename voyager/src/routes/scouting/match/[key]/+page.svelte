@@ -7,50 +7,58 @@
 	import { getLogger } from '$lib/logger';
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	import { canAutoSync } from '$lib/stores';
-	import { addRefreshButtonFunctionality, fetchJSON, getNewSubmissionHistory, getPageLayoutContexts, matchKeyToCompLevel, setPageTitle } from '$lib/utils';
+	import {
+		addRefreshButtonFunctionality,
+		fetchJSON,
+		getNewSubmissionHistory,
+		getPageLayoutContexts,
+		matchKeyToCompLevel,
+		setPageTitle
+	} from '$lib/utils';
 	import type BottomAppBar from '@smui-extra/bottom-app-bar';
 	import Card from '@smui/card';
 	import CircularProgress from '@smui/circular-progress';
 	import { classMap } from '@smui/common/internal';
 	import LinearProgress from '@smui/linear-progress';
 	import type { BulkWriteResult } from 'mongodb';
-	import type { Layout } from 'scoutradioz-types';
+	import type { SchemaItem } from 'scoutradioz-types';
 	import type { PageData } from './$types';
 
-	import { FormLayoutOperations } from '$lib/DBOperations';
+	import { FormLayoutOperations, SchemaOperations } from '$lib/DBOperations';
 	import QrCodeDisplay from '$lib/QrCodeDisplay.svelte';
 	import Button, { Icon, Label } from '@smui/button';
 	import Checkbox from '@smui/checkbox';
 	import Dialog, { Actions, Content, Header, Title } from '@smui/dialog';
 	import FormField from '@smui/form-field';
+	import assert from '$lib/assert';
+	import { initializeFormData } from '$lib/form/ScoutingFormUtils';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 	setPageTitle(msg('scouting.match'));
 
 	// popup for the qr code thingy, TODO: put into separate component
-	let qrDialogOpen = false;
-	let base64Data: Promise<string> | string;
-	let scannedByScoutingLead = false;
+	let qrDialogOpen = $state(false);
+	let base64Data: Promise<string> | string = $state('');
+	let scannedByScoutingLead = $state(false);
 
-	let cloudUploadPromise: Promise<BulkWriteResult> | undefined = undefined;
+	let cloudUploadPromise: Promise<BulkWriteResult> | undefined = $state(undefined);
 
 	const logger = getLogger('scouting/match/form');
 
 	let bottomAppBar: BottomAppBar;
-	let matchScoutingEntry: MatchScoutingLocal;
-	let nextAssignment: MatchScoutingLocal | undefined;
-	let formData: MatchScoutingLocal['data'];
-	let team: TeamLocal;
-	let layout: str<Layout>[];
-	let hasUpcomingBreak: boolean;
+	let matchScoutingEntry: MatchScoutingLocal|undefined = $state();
+	let nextAssignment: MatchScoutingLocal | undefined = $state();
+	let formData: MatchScoutingLocal['data'] = $state({});
+	let team: TeamLocal|undefined = $state();
+	let layout: SchemaItem[]|undefined = $state();
+	let hasUpcomingBreak: boolean|undefined = $state();
 
-	$: scouterRecord = {
-		id: data.user_id,
-		name: data.user_name
-	} as ScouterRecordLocal;
 
-	let loading = true;
-	$: if (data.key) loadData(data.key);
+	let loading = $state(true);
 
 	async function loadData(key: string) {
 		logger.info('loadData running!');
@@ -58,13 +66,7 @@
 		qrDialogOpen = false;
 		const team_key = key.split('_')[2];
 
-		const layoutDb = await db.layout
-			.where({
-				org_key: data.org_key,
-				year: data.event.year,
-				form_type: 'matchscouting'
-			})
-			.toArray();
+		const { layout: layoutDb } = await SchemaOperations.getSchemaForOrgAndEvent(data.org_key, data.event_key, 'matchscouting');
 
 		const matchScoutingEntryDb = await db.matchscouting
 			.where({ match_team_key: key })
@@ -93,9 +95,9 @@
 		hasUpcomingBreak = nextAssignmentDb?.match_number === matchScoutingEntryDb.match_number + 1;
 		matchScoutingEntry = matchScoutingEntryDb;
 		nextAssignment = nextAssignmentDb;
-		formData = matchScoutingEntry.data;
 		team = teamDb;
 		layout = layoutDb;
+		formData = initializeFormData(layout, matchScoutingEntry.data) as MatchScoutingLocal['data'];
 		logger.info('loadData done! setting loading = false');
 		loading = false;
 	}
@@ -103,7 +105,8 @@
 	// When formData changes (any time a form is edited), update the matchscouting entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
 	function onFormChange() {
-		logger.trace(`Updating formData in the database`);
+		assert(matchScoutingEntry);
+		logger.info(`Updating formData in the database`, formData);
 		db.matchscouting.update(matchScoutingEntry.match_team_key, {
 			// 2024-02-25 JL: disabled setting data to undefined - hopefully shouldn't break other logic cuz completed is marked as false
 			// data: allDefaultValues ? undefined : formData,
@@ -119,6 +122,7 @@
 			label: msg('Discard'),
 			icon: 'delete',
 			onClick: async () => {
+				assert(matchScoutingEntry);
 				// TODO: use nice dialog instead of confirm()
 				if (
 					confirm(
@@ -142,10 +146,12 @@
 			label: msg('Done'),
 			icon: 'done',
 			onClick: async () => {
+				assert(matchScoutingEntry);
 				if (!data.user_id || !data.user_name) {
 					throw logger.error('Not logged in! This should have been handled in +page.ts');
 				}
 				logger.info(`Saving actual_scorer for match acouting key ${matchScoutingEntry.match_team_key}`);
+				logger.trace('formData', formData);
 				// Intentional design decision: Write data to the local db when they hit the check/done button even if
 				// 	the data are at defaults, because in cases where a robot no-shows, some orgs might not have
 				// 	checkboxes like no-show / died during match, so some orgs might accept empty forms
@@ -154,7 +160,7 @@
 						id: data.user_id,
 						name: data.user_name
 					},
-					data: formData,
+					data: $state.snapshot(formData),
 					completed: true,
 					synced: false, // since the entry is being updated locally, we must force synced=false until it definitely is synced
 					history: getNewSubmissionHistory(matchScoutingEntry, data.user._id, data.user.name)
@@ -175,6 +181,7 @@
 						logger.info('bulkWriteResult: ', bulkWriteResult);
 						// If submitted successfully, mark this local match scouting entry as synced
 						if (bulkWriteResult.ok) {
+							assert(matchScoutingEntry);
 							await db.matchscouting.update(matchScoutingEntry.match_team_key, {
 								synced: true
 							});
@@ -200,13 +207,21 @@
 			}
 		}
 	];
-	
+
 	const { snackbar } = getPageLayoutContexts();
 	addRefreshButtonFunctionality(async () => {
 		const changed = await FormLayoutOperations.download('match');
 		if (changed) snackbar.open(msg('cloudsync.newDataDownloaded'), 4000);
-		else snackbar.open(msg('cloudsync.upToDate'), 4000)
-	}, msg('cloudsync.layoutTooltip'))
+		else snackbar.open(msg('cloudsync.upToDate'), 4000);
+	}, msg('cloudsync.layoutTooltip'));
+	let scouterRecord = $derived({
+		id: data.user_id,
+		name: data.user_name
+	} as ScouterRecordLocal);
+	
+	$effect(() => {
+		if (data.key) loadData(data.key);
+	});
 </script>
 
 <!-- We have to make sure matchScoutingEntry and team have loaded before allowing the html to load. -->
@@ -244,8 +259,8 @@
 	{#key data.key}
 		<!-- There's a few milliseconds where formData and team are not defined while the data is loading, 
 			so we need to only create the ScoutingForm when loading is set to false -->
-		{#if loading === false}
-			<ScoutingForm {layout} bind:formData teamNumber={team.team_number} on:change={onFormChange} />
+		{#if loading === false && layout && formData}
+			<ScoutingForm {layout} bind:formData teamNumber={team.team_number} onchange={onFormChange} />
 		{/if}
 	{/key}
 
@@ -291,14 +306,18 @@
 			<FormField class="pl-2 flex-row justify-center">
 				<Checkbox
 					bind:checked={scannedByScoutingLead}
-					on:change={() => {
+					onchange={() => {
+						assert(matchScoutingEntry);
 						// JL TODO: Maybe add syncedToCloud boolean as another check to determine whether to set synced=false when checkbox unchecked
 						logger.debug(`Updating db entry synced=${scannedByScoutingLead}`);
 						db.matchscouting.update(matchScoutingEntry.match_team_key, {
 							synced: scannedByScoutingLead
 						});
-					}} />
-				<span slot="label" class="py-4">{msg('scouting.scannedByScoutingLead')}</span>
+					}} 
+				/>
+				{#snippet label()}
+					<span class="py-4">{msg('scouting.scannedByScoutingLead')}</span>
+				{/snippet}
 			</FormField>
 		</Content>
 		<Actions class="grid grid-cols-2">
@@ -310,7 +329,7 @@
 			<!-- Next assignment button -->
 			{#if nextAssignment}
 				<Button
-					on:click={() => {
+					onclick={() => {
 						if (!nextAssignment) throw new Error('nextAssignment undefined on click handler!');
 						if (hasUpcomingBreak) {
 						}

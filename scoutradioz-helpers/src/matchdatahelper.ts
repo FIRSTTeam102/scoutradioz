@@ -60,29 +60,26 @@ export class MatchDataHelper {
 	 * @param {string} type The type of the element, e.g. checkbox/counter/slider.
 	 * @return {string|number} 
 	 */
-	static fixDatumType(value: formDataOutput, type: string) {
+	static fixDatumType(value: formDataOutput|boolean, type: SchemaItem['type']): formDataOutput {
 
 		let newVal;
 
 		// Note: Derived metrics are always returned as numbers (but this method should not be called for derived metrics)
 		switch (type) {
 			case 'checkbox': {
-				if (value === 'true' || value === true) newVal = 1;
+				if (value === 'true' || value == true || value == '1') newVal = 1;
 				else newVal = 0;
 				break;
 			}
 			case 'counter':
-			case 'counterallownegative':
-			case 'badcounter':
-			case 'slider':
-			case 'timeslider': {
+			case 'slider': {
 				newVal = -1;
 				let parsedVal = parseInt(value);
 				if (!isNaN(parsedVal)) newVal = parsedVal;
 				break;
 			}
 			default:
-				newVal = value;
+				newVal = String(value);
 		}
 
 		return newVal;
@@ -106,7 +103,7 @@ export class MatchDataHelper {
 	}
 
 	static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData) {
-		let derivedMetric: number | null = NaN;
+		let derivedMetric = NaN;
 		// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
 		//	Error checking should be done at the time of creating the layout. (TODO: error checking :] )
 		//	The very last operator must NOT have an "as", and every consequent operator should probably have an "as"
@@ -314,6 +311,8 @@ export class MatchDataHelper {
 						}
 						else value = ifFalseKey;
 					}
+					
+					if (value === null) value = 0; // 2025-02-15 JL: prevent null from being saved to a variable or output
 
 					// 2022-04-10 JL: Don't allow intermediate conditions to output null; only final operations
 					if (typeof thisOp.as === 'string') {
@@ -371,7 +370,7 @@ export class MatchDataHelper {
 		}
 
 		// Turns checkboxes into 0 and 1
-		function parseNumber(item: formDataOutput): number {
+		function parseNumber(item: formDataOutput|boolean): number {
 			if (item === 'true' || item === true) return 1;
 			else if (item === 'false' || item === false) return 0;
 			else return parseFloat(item);

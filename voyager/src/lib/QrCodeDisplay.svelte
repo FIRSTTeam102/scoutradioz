@@ -9,7 +9,8 @@
 
 	let canvas: HTMLCanvasElement;
 
-	export let data: string = '';
+	// export let data: string = '';
+	let { data = '' } = $props();
 
 	function clearCanvas() {
 		let ctx = canvas.getContext('2d');
@@ -17,44 +18,46 @@
 	}
 
 	// When data changes, change the QR code
-	$: if (canvas && data) {
-		logger.debug('Generating QR code...');
-		QRCode.toCanvas(
-			canvas,
-			data,
-			{
-				errorCorrectionLevel: 'medium'
-			},
-			(err) => {
-				if (err) {
-					logger.debug(String(err));
-					logger.debug('Attempting to generate QR code with lower error correction level');
-					QRCode.toCanvas(
-						canvas,
-						data,
-						{
-							errorCorrectionLevel: 'low'
-						},
-						(err) => {
-							if (err) {
-								logger.error(String(err));
-								snackbar.error(String(err));
-								clearCanvas();
+	$effect(() => {
+		if (canvas && data) {
+			logger.debug('Generating QR code...');
+			QRCode.toCanvas(
+				canvas,
+				data,
+				{
+					errorCorrectionLevel: 'medium'
+				},
+				(err) => {
+					if (err) {
+						logger.debug(String(err));
+						logger.debug('Attempting to generate QR code with lower error correction level');
+						QRCode.toCanvas(
+							canvas,
+							data,
+							{
+								errorCorrectionLevel: 'low'
+							},
+							(err) => {
+								if (err) {
+									logger.error(String(err));
+									snackbar.error(String(err));
+									clearCanvas();
+								}
 							}
-						}
-					);
+						);
+					}
 				}
-			}
-		);
-	}
-	$: if (canvas && !data) {
-		logger.debug('Data is not present or was removed; clearing canvas');
-		clearCanvas();
-	}
+			);
+		}
+		if (canvas && !data) {
+			logger.debug('Data is not present or was removed; clearing canvas');
+			clearCanvas();
+		}
+	});
 </script>
 
 <div class="canvas-parent">
-	<canvas bind:this={canvas} class:hidden={!data}/>
+	<canvas bind:this={canvas} class:hidden={!data}></canvas>
 </div>
 
 <style lang="scss">

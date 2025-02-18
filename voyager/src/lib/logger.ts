@@ -35,7 +35,7 @@ let idleCallbackID: number | undefined;
 if (!('requestIdleCallback' in globalThis)) {
 	globalThis.requestIdleCallback = function (cb, options) {
 		return setTimeout(cb, options?.timeout);
-	}
+	};
 }
 
 class Logger {
@@ -52,14 +52,20 @@ class Logger {
 	unsetFuncName() {
 		this.funcName = undefined;
 	}
-
-	async logToDexie(level: logLevel, messages: unknown[]) {
+	
+	messagesToString(messages: unknown[]) {
 		let str = messages.map(message => {
-			if (this.funcName) message = `[${this.funcName}] `;
 			if (typeof message === 'string') return message;
-			if (message instanceof Error) return message.stack || String(message)
+			if (typeof message === 'undefined') return 'undefined';
+			if (message instanceof Error) return message.stack || String(message);
 			else return JSON.stringify(message).replace(/,/g, ', ');
 		}).join(' ');
+		if (this.funcName) str = `[${this.funcName}] ${str}`;
+		return str;
+	}
+
+	async logToDexie(level: logLevel, messages: unknown[]) {
+		let str = this.messagesToString(messages);
 
 		buffer.push({
 			group: this.group,
@@ -83,40 +89,60 @@ class Logger {
 		if (this.funcName) return `[${this.group} - ${this.funcName}]`;
 		return `[${this.group}]`;
 	}
+	
+	/** Append the location of the calling function to the console messages, if dev mode is enabled */
+	getCallerLocation(): string {
+		try {
+			const stack = new Error().stack;
+			const stackLines = stack!.split('\n');
+			// The first lines are: "Error", then `getCallerLocation`, then `logMessage`, then the actual caller
+			let location = stackLines[3]?.trim();
+			// convert "at <functionname> (file)" to just "(file)" 
+			let inParentheses = location.match(/\(.*\)/g);
+			return inParentheses ? inParentheses[0] : location;
+		}
+		catch (err) {
+			return 'unknown';
+		}
+	}
 
 	async trace(...messages: unknown[]) {
 		if (globalLogLevel > 0) return;
-		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages);
+		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages, this.getCallerLocation());
 		await this.logToDexie('trace', messages);
 	}
   
 	async debug(...messages: unknown[]) {
 		if (globalLogLevel > 1) return;
-		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages);
+		if (dev) console.debug(this.getConsoleLogPrepender(), ...messages, this.getCallerLocation());
 		await this.logToDexie('debug', messages);
 	}
   
 	async info(...messages: unknown[]) {
 		if (globalLogLevel > 2) return;
-		if (dev) console.log(this.getConsoleLogPrepender(), ...messages);
+		if (dev) console.log(this.getConsoleLogPrepender(), ...messages, this.getCallerLocation());
 		await this.logToDexie('info', messages);
 	}
   
 	async warn(...messages: unknown[]) {
 		if (globalLogLevel > 3) return;
-		if (dev) console.warn(this.getConsoleLogPrepender(), ...messages);
+		// console.warn is a little special snowflake
+		if (dev) {
+			let str = this.messagesToString(messages);
+			console.warn(str);
+		}
 		await this.logToDexie('warn', messages);
 	}
   
 	async error(...messages: unknown[]) {
 		if (globalLogLevel > 4) return;
-		if (dev) console.error(this.getConsoleLogPrepender(), ...messages);
+		if (dev) console.error(this.getConsoleLogPrepender(), ...messages, this.getCallerLocation());
 		await this.logToDexie('error', messages);
 	}
   
 	async fatal(...messages: unknown[]) {
 		if (globalLogLevel > 5) return;
-		if (dev) console.error(this.getConsoleLogPrepender(), ...messages);
+		if (dev) console.error(this.getConsoleLogPrepender(), ...messages, this.getCallerLocation());
 		await this.logToDexie('fatal', messages);
 	}
 }
@@ -145,6 +171,8 @@ if ('localStorage' in globalThis) {
 		globalLogLevel = level;
 	}
 }
+
+console.log('globalLogLevel=', globalLogLevel);
 
 
 /**
