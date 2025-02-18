@@ -122,6 +122,7 @@ function doUndo(){
 
 		requestAnimationFrame(function(){
 
+			//if (TRACE) console.log(`s-a:doUndo|requestAnimationFrame - previousStates=${JSON.stringify(previousStates)}`);
 			let lastState = previousStates.pop();
 			if (!lastState) throw new Error(i18n['previousStateUndefined']);
 			
@@ -139,6 +140,7 @@ function doUndo(){
 			$('.alliance-team').click(doAllianceTeamClick);
 
 			//refresh state
+			if (TRACE) console.log(`s-a:doUndo|requestAnimationFrame - lastState.state=${JSON.stringify(lastState.state)}`);
 			state = lastState.state;
 
 			//get last team thingy
@@ -149,7 +151,7 @@ function doUndo(){
 			let lastNewCaptain = lastMove.newAllianceCaptain;
 			console.log(`s-a:doUndo - lastMove=${JSON.stringify(lastMove)}, lastNewCaptain=${JSON.stringify(lastNewCaptain)}, lastTeam=${JSON.stringify(lastTeam)}`);
 			
-			if (lastTeam)
+			if (lastTeam && lastTeam != lastMove.skippedAllianceCaptain)
 				unGrayOutRow(lastTeam);
 			if (lastNewCaptain)
 				unGrayOutRow(lastNewCaptain);
@@ -160,22 +162,42 @@ function doUndo(){
 }
 
 function doSkip(){
+	//
+	// **** WARNING WARNING DANGER WILL ROBINSON ****
+	// It's *possible* in the UI for an alliance captain to be skipped so often that selections "round the corner" and
+	// lower alliances have made a 3rd pick before the skipped alliance has made their 2nd.
+	//
+	// HOWEVER - per T605...
+	//    Violation: The ALLIANCE is skipped, and the emcee moves to the next ALLIANCE,
+	//    unless the selection is the last of a round in which case the ALLIANCE
+	//    receives the next highest-ranked unselected team to the ALLIANCE.
+	// ...And!...
+	//    The ALLIANCE CAPTAIN with the last selection of a given round may not be the ALLIANCE CAPTAIN scheduled to have the final pick.
+	//    For example, imagine in round 1 that ALLIANCES 1-6 have all made valid selections and ALLIANCE Lead 7 receives a pick clock violation.
+	//    If ALLIANCE Lead 8 makes a valid selection, then ALLIANCE Lead 7 now has the final selection of round 1.
+	//
+	// ...meaning that the alliance being "rounded on" would NOT be able to be "rounded on" after all, as they'll be automatically assigned
+	// a pick before the end of the round.
+	//
+
 	if (TRACE) console.log('s-a:doSkip - ENTER');
 
 	//Clone this state into previousStates
 	let thisMove: Move = {
 		teamKey: state.rankings[state.currentAlliance],
-		skippedAllianceCaptain: state.rankings[state.currentAlliance],
+		//teamKey: currentSelectedTeam,
+		skippedAllianceCaptain: state.rankings[state.currentAlliance]
 		//previousSpot: currentSpot,
 		//allianceSpot: state.currentRound == 0 ? 2 : 3,
 	};
 	state.moveHistory.push(thisMove);
 	let clonedState = cloneState();
 	let clonedHTML = $('#allianceSelection').clone();
-	previousStates.push({
-		state: clonedState,
-		html: clonedHTML
-	});
+	// previousStates.push({
+	// 	state: clonedState,
+	// 	html: clonedHTML
+	// });
+	//if (TRACE) console.log(`s-a:doSkip - previousStates=${JSON.stringify(previousStates)}`);
 
 	// un-highlight currentSelectedTeam row
 	if (!state.doingRevisits) {
@@ -201,7 +223,7 @@ function doSkip(){
 		if (TRACE) console.log('s-a:doSkip - state.t605s.length=', state.t605s.length);
 		if (state.t605s.length == 1) {
 			if (TRACE) console.log('s-a:doSkip - new T605 is only T605, moving to next captain');
-			moveToNextCaptain();
+			moveToNextCaptainWithClone(clonedState, clonedHTML, thisMove);
 			return;
 		}
 
@@ -211,7 +233,7 @@ function doSkip(){
 		if (TRACE) console.log('s-a:doAllianceTeamClick - resetting currentT605 to 0');
 		state.currentT605 = 0;
 
-		moveToNextRevisit();
+		moveToNextRevisitWithClone(clonedState, clonedHTML, thisMove);
 	}
 	else {
 		// we're doing revisits and we skipped a revisit
@@ -221,19 +243,32 @@ function doSkip(){
 		// ...keep moving through the revisits
 		if (state.currentT605 < state.t605s.length)	{	
 			if (TRACE) console.log('s-a:doSkip - cycling through revisits');
-			moveToNextRevisit();
+			moveToNextRevisitWithClone(clonedState, clonedHTML, thisMove);
 		}
 		else {
 			// ...if we're done with the revisits, then we're done with the T605s
 			if (TRACE) console.log('s-a:doSkip - done with revisits');
 			state.doingRevisits = false;
-			moveToNextCaptain();
+			moveToNextCaptainWithClone(clonedState, clonedHTML, thisMove);
 		}
 	}
 
 	//moveToNextCaptain();
 
 	if (TRACE) console.log('s-a:doSkip - EXIT');
+}
+
+function moveToNextRevisitWithClone(clonedState: State, clonedHTML: JQuery, thisMove: Move) {
+	let team1 = moveToNextRevisit();
+
+	// push into move history after we've identified who the new alliance captain is
+	clonedState.moveHistory.push(thisMove);
+	console.log(`s-a:doAllianceTeamClick - clonedState.moveHistory=${JSON.stringify(clonedState.moveHistory)}`);
+	
+	previousStates.push({
+		state: clonedState,
+		html: clonedHTML
+	});
 }
 
 function moveToNextRevisit() {
@@ -244,7 +279,13 @@ function moveToNextRevisit() {
 	$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-available') // highlight
 		.attr('spot-available', 'true'); // make spot able to be populated
 
-	if (TRACE) console.log('s-a:moveToNextRevisit - EXIT');
+	let team1 = undefined;
+	if (state.currentRound == 0) {
+		team1 = state.rankings[state.currentAlliance];
+	}
+	
+	if (TRACE) console.log(`s-a:moveToNextRevisit - EXIT team1=${team1}`);
+	return team1;
 }
 
 function doAllianceTeamClick(this: HTMLElement){
@@ -399,7 +440,7 @@ function doAllianceTeamClick(this: HTMLElement){
 				state.doingRevisits = true;
 				if (TRACE) console.log('s-a:doAllianceTeamClick - resetting currentT605 to 0');
 				state.currentT605 = 0;
-				moveToNextRevisit();
+				moveToNextRevisitWithClone(clonedState, clonedHTML, thisMove);
 				return;
 			}
 
@@ -482,6 +523,18 @@ function cloneState(): State{
 		moveHistory[i] = state.moveHistory[i];
 	}
 
+	//clone t605s
+	const t605s = [];
+	for(let i = 0; i < state.t605s.length; i++){
+		t605s[i] = state.t605s[i];
+	}
+
+	//clone t605Alliances
+	const t605Alliances = [];
+	for(let i = 0; i < state.t605Alliances.length; i++){
+		t605Alliances[i] = state.t605Alliances[i];
+	}
+
 	// console.log(clone);
 	
 	//clone currentSelectedTeam, currentRound, currentAlliance
@@ -491,8 +544,8 @@ function cloneState(): State{
 		currentSelectedTeam: state.currentSelectedTeam,
 		currentRound: state.currentRound,
 		currentAlliance: state.currentAlliance,
-		t605s: state.t605s,
-		t605Alliances: state.t605Alliances,
+		t605s: t605s,
+		t605Alliances: t605Alliances,
 		currentT605: state.currentT605,
 		doingRevisits: state.doingRevisits
 	};
