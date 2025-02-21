@@ -50,7 +50,7 @@ const ROW_GRAYED_TEXT_COLOR = '#8d8d8dcf';
 console.log(`s-a:global - numAlliances=${numAlliances}`);
 
 // flag for displaying tracing messages
-let TRACE = true;
+let TRACE = false;
 
 $(function(){
 	if (TRACE) console.log('s-a:$(function() - ENTER');
