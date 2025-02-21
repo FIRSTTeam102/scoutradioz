@@ -68,6 +68,7 @@ block content
 	if !orgTeamKeys || picklist_key
 		div(class="w3-mobile w3-center")
 			p.i!=msg('allianceselection.intro')
+			p.i!=msg('allianceselection.skipRevisit')
 			p.i!=msgMarked('allianceselection.preferred')
 			if !matchcountConsistent
 				a(href="/manage/currentevent/matches") 
