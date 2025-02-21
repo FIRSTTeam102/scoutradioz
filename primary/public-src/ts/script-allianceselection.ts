@@ -50,7 +50,7 @@ const ROW_GRAYED_TEXT_COLOR = '#8d8d8dcf';
 console.log(`s-a:global - numAlliances=${numAlliances}`);
 
 // flag for displaying tracing messages
-let TRACE = false;
+let TRACE = true;
 
 $(function(){
 	if (TRACE) console.log('s-a:$(function() - ENTER');
@@ -202,11 +202,15 @@ function doSkip(){
 	// un-highlight currentSelectedTeam row
 	if (!state.doingRevisits) {
 		if (TRACE) console.log(`s-a:doSkip - Skipping NOT a revisit - #all${state.currentAlliance}team${state.currentRound+2} removing team-available`);
+		$(`#all${state.currentAlliance}team${state.currentRound+2}`).removeClass('team-revisted');
 		$(`#all${state.currentAlliance}team${state.currentRound+2}`).removeClass('team-available');
+		$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-skipped');
 	}
 	else {
 		if (TRACE) console.log(`s-a:doSkip - Skipping REVISIT - #all${state.t605Alliances[state.currentT605]}team${state.currentRound+2} removing team-available`);
 		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).removeClass('team-available');
+		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).removeClass('team-revisted');
+		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-skipped');
 	}
 
 	// if we're not currently doing revisits?...
@@ -276,7 +280,8 @@ function moveToNextRevisit() {
 
 	if (TRACE) console.log('s-a:moveToNextRevisit - state.currentT605=', state.currentT605);
 	if (TRACE) console.log(`s-a:moveToNextRevisit - all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`);
-	$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-available') // highlight
+	//$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-available') // highlight
+	$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-revisted') // highlight
 		.attr('spot-available', 'true'); // make spot able to be populated
 
 	let team1 = undefined;
@@ -335,6 +340,8 @@ function doAllianceTeamClick(this: HTMLElement){
 
 			if (TRACE) console.log(`s-a:doAllianceTeamClick - <<<<<< currentSelectedTeam=${currentSelectedTeam}`);
 			$(`#${currentSelectedTeam}`).removeClass('team-highlighted');
+			$(`#${currentSelectedTeam}`).removeClass('team-revisted');
+			$(`#${currentSelectedTeam}`).removeClass('team-skipped');
 			state.currentSelectedTeam = null;
 
 			let currentSpot = 0;
@@ -416,6 +423,8 @@ function doAllianceTeamClick(this: HTMLElement){
 
 			//gray out the now-populated slot
 			_this.removeClass('team-available')	//remove highlight
+				.removeClass('team-revisted')
+				.removeClass('team-skipped')
 				.addClass('team-taken')			//make dark
 				.attr('spot-available', 'false');	//make spot no longer able to be populated
 
