@@ -6,6 +6,7 @@
 	import type { FormData } from './ScoutingFormUtils';
 	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
+	import Image from './Image.svelte';
 	
 	interface Props {
 		layout: SchemaItem[];
@@ -58,6 +59,10 @@
 				bind:value={formData[field.id]}
 				{field}
 				{onchange}
+			/>
+		{:else if field.type === 'image'}
+			<Image
+				{field}
 			/>
 		{:else if field.type === 'header'}
 			<h2 id={`header_${field.label}`}>{field.label}</h2>

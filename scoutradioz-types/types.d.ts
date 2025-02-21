@@ -28,6 +28,10 @@ declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
 }
 
+export declare interface Dict<T> {
+	[key: string]: T;
+}
+
 // 2022-12-10 JL: Removed 'extends Document' and renamed to 'DocumentWithID' to:
 // 	1. Allow our schemas to be modified via Omit (the fact that Document has [key: string]: any messes things up)
 // 	2. prevent confusion with the MongoDocument type exported from scoutradioz-utilities

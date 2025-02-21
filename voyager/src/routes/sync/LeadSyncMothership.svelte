@@ -2,6 +2,7 @@
 	import {
 		EventOperations,
 		FormLayoutOperations,
+		ImageOperations,
 		LightUserOperations,
 		MatchOperations,
 		MatchScoutingOperations,
@@ -260,6 +261,8 @@
 
 		// Include the form layout download in this action
 		await SchemaOperations.download();
+		
+		await ImageOperations.download();
 
 		// since event_key can be updated after org is downloaded, force a reload
 		await invalidateAll();

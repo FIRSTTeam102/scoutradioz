@@ -140,7 +140,9 @@
 		else snackbar.open(msg('cloudsync.upToDate'), 4000)
 	}, msg('cloudsync.layoutTooltip'))
 </script>
-
+{#if data.robotPhoto}
+<img class="m-auto block mt-2" src={data.robotPhoto} alt={`Robot photo for ${data.team.nickname}`}>
+{/if}
 {#if formData}
 	<ScoutingForm
 		layout={data.layout}

@@ -2,7 +2,7 @@ import { get as getStore } from 'svelte/store';
 import { page } from '$app/stores';
 import { base32Hash, fetchJSON, getNewSubmissionHistory } from './utils';
 import { getLogger } from './logger';
-import type { Layout, Event, OrgSchema, Schema, OrgKey, EventKey } from 'scoutradioz-types';
+import type { Layout, Event, OrgSchema, Schema, OrgKey, EventKey, Upload } from 'scoutradioz-types';
 import type {
 	MatchScoutingLocal,
 	TeamLocal,
@@ -11,10 +11,13 @@ import type {
 	str,
 	PitScoutingLocal,
 	LightOrg,
-	LightUser
+	LightUser,
+	UploadLocal,
+	SchemaLocal
 } from './localDB';
 import db from './localDB';
 import assert from './assert';
+import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 
 /** Get org_key and event_key from $page.data */
 function getKeys() {
@@ -259,7 +262,7 @@ export class PitScoutingOperations extends TableOperations {
 				filter: `org=${org_key},event=${event_key}`
 			})
 			.first();
-		
+
 		// we must convert strings to numbers since pit scouting are stored as strings, unfortunately
 		const { layout } = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
 		assert(layout, 'Schema must be downloaded before downloading pit scouting assignments');
@@ -269,7 +272,7 @@ export class PitScoutingOperations extends TableOperations {
 
 		// Timestamps will get stringified, so make sure to convert them back into dates
 		pitScouting.forEach(item => item.history?.forEach(entry => entry.time = new Date(entry.time)));
-		
+
 		// let numericalFields = 
 
 		console.log(pitScouting.find(item => item.team_key === 'frc11'));
@@ -524,7 +527,7 @@ export class SchemaOperations extends TableOperations {
 		return checksum;
 	}
 
-	static async getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<str<Schema>> {
+	static async getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<SchemaLocal> {
 		const event = await db.events.where({ key: event_key }).first();
 		assert(event);
 		const year = event.year;
@@ -741,6 +744,89 @@ export class LightUserOperations extends TableOperations {
 				time: new Date()
 			});
 		});
+	}
+}
+
+export class ImageOperations extends TableOperations {
+	// todo: needsSync
+	
+	@setFuncName('ImageOperations.download')
+	static async download() {
+		logger.debug('begin');
+		const { org_key, event_key } = getKeys();
+		const event = await db.events.where({ key: event_key }).first();
+		assert(event, 'event not found!');
+		const { year } = event;
+
+		const uploadsWithLinks = await fetchJSON<(UploadLocal & {
+			links: ImageLinks
+		})[]>(`/api/orgs/${org_key}/${year}/images`);
+		logger.debug(`Fetched ${uploadsWithLinks.length} uploads`);
+		
+		const uploadsWithoutLinks: UploadLocal[] = [];
+		const s3KeyToLinks: Dict<ImageLinks> = {};
+		uploadsWithLinks.forEach(uploadWithLinks => {
+			// save image links for downloading later
+			s3KeyToLinks[uploadWithLinks.s3_key] = uploadWithLinks.links;
+			// Remove the 'links' key from upload object
+			let upload = {...uploadWithLinks, links: undefined};
+			delete upload.links;
+			uploadsWithoutLinks.push(upload);
+		})
+		
+		logger.info('Saving uploads in db');
+		// delete and re insert uploads db
+		await db.transaction('rw', db.uploads, db.syncstatus, async () => {
+			await db.uploads.where({org_key, year}).delete();
+			await db.uploads.bulkAdd(uploadsWithoutLinks);
+			await db.syncstatus.put({
+				table: 'uploads',
+				filter: `org=${org_key},year=${year}`,
+				time: new Date(),
+			});
+		});
+		
+		let st = performance.now();
+		console.time('db-s3');
+		// Find the s3 keys that are already downloaded, so we can skip those
+		let s3KeysList = Object.keys(s3KeyToLinks);
+		let imageBlobsInDb = await db.images.where('s3_key').anyOf(s3KeysList).toArray();
+		let s3KeysInDbList = imageBlobsInDb.map(item => item.s3_key);
+		console.timeEnd('db-s3')
+		logger.info(`${s3KeysList.length} sets of images to download; ${s3KeysInDbList.length} of which are already downloaded`);
+		// Now, download any of them that aren't in the db
+		let s3KeysToDownload = s3KeysList.filter(item => !s3KeysInDbList.includes(item));
+		
+		for (let s3_key of s3KeysToDownload) {
+			let imageLinks = s3KeyToLinks[s3_key];
+			assert(imageLinks, 's3LinksToKey[key] undefined');
+			
+			logger.debug(`Requesting images for ${s3_key}`);
+			// Grab images in parallel
+			let [smResponse, mdResponse, lgResponse] = await Promise.all([
+				fetch(imageLinks.sm),
+				fetch(imageLinks.md),
+				fetch(imageLinks.lg),
+			]);
+			
+			// Get them as blobs
+			let [sm, md, lg] = await Promise.all([
+				smResponse.blob(),
+				mdResponse.blob(),
+				lgResponse.blob(),
+			]);
+			
+			logger.debug(`Inserting ${s3_key} into db`);
+			// Insert into db
+			await db.images.put({
+				s3_key,
+				sm,
+				md,
+				lg
+			});
+		}
+
+		console.log('uploads', uploadsWithLinks);
 	}
 }
 
