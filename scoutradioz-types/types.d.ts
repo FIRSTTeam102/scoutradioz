@@ -765,7 +765,7 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
