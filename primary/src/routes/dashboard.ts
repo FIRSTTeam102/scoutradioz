@@ -19,7 +19,7 @@ router.all('/*', wrap(async (req, res, next) => {
 		let cookieKey= 'scoutradiozheatmap';
 		if (req.cookies[cookieKey]) {
 			logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
-			let heatMapColors: HeatMapColors[] = await utilities.findOne('heatmapcolors',
+			let heatMapColors: HeatMapColors = await utilities.findOne('heatmapcolors',
 				{key: req.cookies[cookieKey]}, 
 				{},
 				{allowCache: true}
