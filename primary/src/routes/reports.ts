@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { AggRange, Event, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, SchemaItem, Team, Upload } from 'scoutradioz-types';
+import type { AggRange, Event, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, SchemaItem, Team, Upload, HeatMapColors, } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
@@ -17,6 +17,16 @@ router.all('/*', wrap(async (req, res, next) => {
 	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate (Permissions.ACCESS_VIEWER)) {
+		let cookieKey= 'scoutradiozheatmap';
+		if (req.cookies[cookieKey]) {
+			logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
+			let heatMapColors: HeatMapColors[] = await utilities.findOne('heatmapcolors',
+				{key: req.cookies[cookieKey]}, 
+				{},
+				{allowCache: true}
+			);
+			res.locals.heatMapColors= heatMapColors;
+		}
 		next();
 	}
 }));
@@ -1372,29 +1382,6 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
-	// grayscale min(0,0,0), max(200,200,200)
-	// blue to yellow min(2,81,150), max(253,179,56)
-	// purple to orange min(81,40,136), max(235,97,35)
-	// green to purple min(41,94,17), max(176,18,158)
-	// brown to blue min(106,74,60), max(15,101,161)
-	// brick to yellow min(110,8,36), max(244,179,1)
-	// tan to turquoise min(255,190,106), max(64,176,166)
-	// purple to sky min(126,41,84), max(148,203,236)
-	//brown to teal min(73,41,10), max(40,203,236)
-	// purple to yellow min(41,10,73), max(203,236,40)
-	//102 min(0,0,0), max(255,144,0)
-	let heatMapColors={
-		min:{
-			r:0,
-			g:0,
-			b:0
-		},
-		max:{
-			r:255,
-			g:114,
-			b:0
-		}
-	};
 
 	res.render('./reports/allteammetrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
@@ -1402,7 +1389,6 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 		currentAggRanges,
 		layout: scorelayout,
 		matchDataHelper,
-		heatMapColors,
 	});
 }));
 

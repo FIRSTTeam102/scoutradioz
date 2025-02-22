@@ -173,7 +173,13 @@ class NavHelpers {
 			label: '!user.reportcolumns.title',
 			href: (req, res) => `/user/preferences/reportcolumns?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`,
 			sprite: 'sheet',
-			visible: userLoggedIn
+			visible: userLoggedIn,
+			submenu: [
+				{
+					label:'!user.heatmapcolors.title',
+					href: (req, res) => `/user/preferences/heatmapcolors?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`
+				}
+			]
 		},
 		{
 			label: '!layout.nav.scouting',

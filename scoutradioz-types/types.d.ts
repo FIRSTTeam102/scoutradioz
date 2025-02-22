@@ -436,6 +436,26 @@ export declare interface OrgClass {
 
 /**
  * Values for each team that an org sets on their alliance selection page.
+ * @collection heatmapcolors
+ * @interface HeatMapColors
+ */
+export declare interface HeatMapColors extends DbDocument {
+	name: string;
+	key: string;
+	min: {
+		r: number;
+		g: number;
+		b: number;
+	}
+	max: {
+		r: number;
+		g: number;
+		b: number;
+	}
+}
+
+/**
+ * Values for each team that an org sets on their alliance selection page.
  * @collection orgteamvalues
  * @interface OrgTeamValue
  */
@@ -759,6 +779,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'orgs' ? Org :
 	colName extends 'orgschemas' ? OrgSchema :
 	colName extends 'orgteamvalues' ? OrgTeamValue :
+	colName extends 'heatmapcolors' ? HeatMapColors :
 	colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
 	colName extends 'pitscouting' ? PitScouting :
 	colName extends 'platformsettings' ? PlatformSettings :

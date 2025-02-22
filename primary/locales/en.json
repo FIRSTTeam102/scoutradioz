@@ -181,6 +181,12 @@
 			"save": "Save column selections",
 			"clearOrgDefaults": "Clear organization defaults",
 			"clearOrgDefaultsConfirmation": "Doing this will clear your organization's report column defaults (for EVERYONE, not just you). Are you sure?"
+		},
+		"heatmapcolors": {
+			"title":"Choose heat map colors",
+			"intro": "Choose a color scheme for the heat maps on data. This is designed to allow people who are color blind to visualize the data easyer.",
+			"name": "Name",
+			"sample":"Sample"
 		}
 	},
 	"scouting": {

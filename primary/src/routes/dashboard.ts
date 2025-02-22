@@ -6,7 +6,7 @@ import Permissions from '../helpers/permissions';
 import { upload as uploadHelper, matchData as matchDataHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
 import type { MongoDocument } from 'scoutradioz-utilities';
-import type { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from 'scoutradioz-types';
+import type { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event, HeatMapColors,} from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('dashboard');
@@ -16,6 +16,16 @@ router.all('/*', wrap(async (req, res, next) => {
 	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate(Permissions.ACCESS_VIEWER)) {
+		let cookieKey= 'scoutradiozheatmap';
+		if (req.cookies[cookieKey]) {
+			logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
+			let heatMapColors: HeatMapColors[] = await utilities.findOne('heatmapcolors',
+				{key: req.cookies[cookieKey]}, 
+				{},
+				{allowCache: true}
+			);
+			res.locals.heatMapColors= heatMapColors;
+		}
 		next();
 	} 
 }));
