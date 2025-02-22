@@ -202,16 +202,16 @@ function doSkip(){
 	// un-highlight currentSelectedTeam row
 	if (!state.doingRevisits) {
 		if (TRACE) console.log(`s-a:doSkip - Skipping NOT a revisit - #all${state.currentAlliance}team${state.currentRound+2} removing team-available`);
-		$(`#all${state.currentAlliance}team${state.currentRound+2}`).removeClass('team-revisted');
-		$(`#all${state.currentAlliance}team${state.currentRound+2}`).removeClass('team-available');
-		$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-skipped')
+		$(`#all${state.currentAlliance}team${state.currentRound+2}`).removeClass('team-revisted')
+			.removeClass('team-available')
+			.addClass('team-skipped')
 			.attr('spot-available', 'false'); // make spot NOT able to be populated
 	}
 	else {
 		if (TRACE) console.log(`s-a:doSkip - Skipping REVISIT - #all${state.t605Alliances[state.currentT605]}team${state.currentRound+2} removing team-available`);
-		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).removeClass('team-available');
-		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).removeClass('team-revisted');
-		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-skipped')
+		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).removeClass('team-available')
+			.removeClass('team-revisted')
+			.addClass('team-skipped')
 			.attr('spot-available', 'false'); // make spot NOT able to be populated
 	}
 
@@ -341,9 +341,9 @@ function doAllianceTeamClick(this: HTMLElement){
 		if (currentSelectedTeam) {
 
 			if (TRACE) console.log(`s-a:doAllianceTeamClick - <<<<<< currentSelectedTeam=${currentSelectedTeam}`);
-			$(`#${currentSelectedTeam}`).removeClass('team-highlighted');
-			$(`#${currentSelectedTeam}`).removeClass('team-revisted');
-			$(`#${currentSelectedTeam}`).removeClass('team-skipped');
+			$(`#${currentSelectedTeam}`).removeClass('team-highlighted')
+				.removeClass('team-revisted')
+				.removeClass('team-skipped');
 			state.currentSelectedTeam = null;
 
 			let currentSpot = 0;
