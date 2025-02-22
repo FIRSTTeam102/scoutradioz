@@ -204,13 +204,15 @@ function doSkip(){
 		if (TRACE) console.log(`s-a:doSkip - Skipping NOT a revisit - #all${state.currentAlliance}team${state.currentRound+2} removing team-available`);
 		$(`#all${state.currentAlliance}team${state.currentRound+2}`).removeClass('team-revisted');
 		$(`#all${state.currentAlliance}team${state.currentRound+2}`).removeClass('team-available');
-		$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-skipped');
+		$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-skipped')
+			.attr('spot-available', 'false'); // make spot NOT able to be populated
 	}
 	else {
 		if (TRACE) console.log(`s-a:doSkip - Skipping REVISIT - #all${state.t605Alliances[state.currentT605]}team${state.currentRound+2} removing team-available`);
 		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).removeClass('team-available');
 		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).removeClass('team-revisted');
-		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-skipped');
+		$(`#all${state.t605Alliances[state.currentT605]}team${state.currentRound+2}`).addClass('team-skipped')
+			.attr('spot-available', 'false'); // make spot NOT able to be populated
 	}
 
 	// if we're not currently doing revisits?...
