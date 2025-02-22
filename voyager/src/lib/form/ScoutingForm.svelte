@@ -82,7 +82,7 @@
 		grid-auto-flow: row;
 		gap: 0.75em;
 		justify-content: center;
-		margin: 1em 0;
+		margin: 1em 0.5em;
 		h2,
 		h3 {
 			margin: 0;
