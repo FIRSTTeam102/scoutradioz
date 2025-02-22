@@ -2,6 +2,7 @@
 	import {
 		EventOperations,
 		FormLayoutOperations,
+		ImageOperations,
 		LightUserOperations,
 		MatchOperations,
 		MatchScoutingOperations,
@@ -243,6 +244,14 @@
 	}
 
 	async function downloadOrgInfo() {
+		// Download the org's full info
+		const org = await fetchJSON<str<Org>>(`/api/orgs/${org_key}`);
+		await db.orgs.put(org);
+		if (org.event_key !== event_key) {
+			logger.info('Event key changed; invalidating app store');
+			await invalidateAll();
+		}
+
 		// Download current event info, including teams
 		await EventOperations.download();
 		await TeamOperations.download();
@@ -250,12 +259,10 @@
 		// Download the org's users
 		await LightUserOperations.download(org_key);
 
-		// Download the org's full info
-		const org = await fetchJSON<str<Org>>(`/api/orgs/${org_key}`);
-		await db.orgs.put(org);
-
 		// Include the form layout download in this action
 		await SchemaOperations.download();
+		
+		await ImageOperations.download();
 
 		// since event_key can be updated after org is downloaded, force a reload
 		await invalidateAll();

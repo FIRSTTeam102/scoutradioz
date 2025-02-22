@@ -1,21 +1,18 @@
 import { browser } from '$app/environment';
 import Dexie, { type Table } from 'dexie';
 import type {
-	Org,
-	User,
 	Event,
-	Layout,
-	Match,
-	TeamKey,
-	MatchScouting,
-	Team,
-	PitScouting,
-	ScouterRecord,
-	AnyDict,
-	OrgKey,
-	Schema,
 	EventKey,
+	Layout,
+	MatchScouting,
+	Org,
+	OrgKey,
 	OrgSchema,
+	PitScouting,
+	Schema,
+	ScouterRecord,
+	TeamKey,
+	Upload
 } from 'scoutradioz-types';
 
 /**
@@ -145,6 +142,15 @@ export interface Log {
 	message: string;
 }
 
+export interface S3ImageBlobs {
+	s3_key: string;
+	sm: Blob;
+	md: Blob;
+	lg: Blob;
+}
+
+export type UploadLocal = str<Upload>;
+
 export interface SyncStatus {
 	id?: number;
 	/** Table, for example orgs or matchscouting */
@@ -177,6 +183,8 @@ export type Preferences = typeof defaultPreferences & {
 	id?: number;
 };
 
+export type SchemaLocal = str<Schema>;
+
 export class LocalDB extends Dexie {
 	// Lightweight schemas that contain only the info necessary to transmit via QR code
 	// 	(or with redacted information for public downloadability)
@@ -191,13 +199,15 @@ export class LocalDB extends Dexie {
 	matchscouting!: Table<MatchScoutingLocal>;
 	pitscouting!: Table<PitScoutingLocal>;
 	
-	schemas!: Table<str<Schema>>;
+	schemas!: Table<SchemaLocal>;
 	
 	teams!: Table<TeamLocal>;
 	/** Includes org config info that can only be viewed after authenticating */
 	orgs!: Table<OrgLocal>;
 	orgschemas!: Table<str<OrgSchema>>;
 	
+	uploads!: Table<UploadLocal>;
+	images!: Table<S3ImageBlobs>;
 
 	logs!: Table<Log>;
 	syncstatus!: Table<SyncStatus>;
@@ -205,7 +215,7 @@ export class LocalDB extends Dexie {
 
 	constructor() {
 		super('scoutradioz-offline');
-		this.version(52).stores({
+		this.version(54).stores({
 			lightusers: '&_id, org_key, name, role_key',
 			lightmatches:
 				'&key, time, event_key, [event_key+comp_level], alliances.red.score, match_number',
@@ -225,6 +235,9 @@ export class LocalDB extends Dexie {
 			teams: '&key, team_number',
 			orgs: '&org_key',
 			orgschemas: '&[org_key+year+form_type]',
+			
+			uploads: '&_id, [org_key+year]',
+			images: '&s3_key',
 
 			logs: '++id, group, time',
 			syncstatus: '&[table+filter], date',

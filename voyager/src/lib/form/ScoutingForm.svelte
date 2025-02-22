@@ -6,6 +6,7 @@
 	import type { FormData } from './ScoutingFormUtils';
 	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
+	import Image from './Image.svelte';
 	
 	interface Props {
 		layout: SchemaItem[];
@@ -59,6 +60,10 @@
 				{field}
 				{onchange}
 			/>
+		{:else if field.type === 'image'}
+			<Image
+				{field}
+			/>
 		{:else if field.type === 'header'}
 			<h2 id={`header_${field.label}`}>{field.label}</h2>
 		{:else if field.type === 'subheader'}
@@ -77,7 +82,7 @@
 		grid-auto-flow: row;
 		gap: 0.75em;
 		justify-content: center;
-		margin: 1em 0;
+		margin: 1em 0.5em;
 		h2,
 		h3 {
 			margin: 0;

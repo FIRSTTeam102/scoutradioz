@@ -14,13 +14,13 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		{},
 		{ allowCache: true },
 	);
-	httpAssert(orgschema);
+	httpAssert(orgschema, 500, `Org schema not found, ${params.org_key}, ${params.event_year}`);
 	const schema = await utilities.findOne('schemas',
 		{_id: orgschema.schema_id},
 		{},
 		{allowCache: true},
 	);
-	httpAssert(schema);
+	httpAssert(schema, 500, `Schema not found, ${params.org_key}, ${params.event_year}`);
 
 	return json({orgschema, schema});
 };
