@@ -170,11 +170,14 @@ class NavHelpers {
 			visible: userLoggedIn
 		},
 		{
-			label: '!user.reportcolumns.title',
-			href: (req, res) => `/user/preferences/reportcolumns?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`,
+			label: '!user.customizereports',
 			sprite: 'sheet',
 			visible: userLoggedIn,
 			submenu: [
+				{
+					label: '!user.reportcolumns.title',
+					href: (req, res) => `/user/preferences/reportcolumns?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`,
+				},
 				{
 					label:'!user.heatmapcolors.title',
 					href: (req, res) => `/user/preferences/heatmapcolors?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`

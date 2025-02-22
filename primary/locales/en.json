@@ -169,6 +169,7 @@
 		"passwordalreadyexists": "Password already exists. Please submit your current password.",
 		"newpasswordboth": "Please fill both password forms.",
 		"newpasswordsuccess": "Set password successfully.",
+		"customizereports": "Customize reports",
 		"reportcolumns": {
 			"title": "Choose report columns",
 			"saved": "Saved column preferences successfully.",

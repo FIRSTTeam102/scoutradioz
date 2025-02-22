@@ -26,13 +26,13 @@ utilities.refreshTier();
     await utilities.insert('heatmapcolors', { name: 'Sunburst', key: 'sunburst', min: { r: 110, g: 8, b: 36 }, max: { r: 244, g: 179, b: 1 } })
     await utilities.insert('heatmapcolors', { name: 'City Night', key: 'citynight', min: { r: 41, g: 10, b: 73 }, max: { r: 203, g: 236, b: 40 } })
     await utilities.insert('heatmapcolors', { name: 'Inferno Twilight', key: 'infernotwilight', min: { r: 0, g: 0, b: 0 }, max: { r: 255, g: 144, b: 0 } })
-    await utilities.insert('heatmapcolors', { name: 'Beach', key: 'beach', min: { r: 2, g: 81, b: 150 }, max: { r: 253, g: 179, b: 56 } })
+    await utilities.insert('heatmapcolors', { name: 'Lochmara', key: 'lochmara', min: { r: 2, g: 81, b: 150 }, max: { r: 253, g: 179, b: 56 } })
     await utilities.insert('heatmapcolors', { name: 'Joker', key: 'joker', min: { r: 41, g: 94, b: 17 }, max: { r: 176, g: 18, b: 158 } })
     await utilities.insert('heatmapcolors', { name: 'Orple', key: 'orple', min: { r: 81, g: 40, b: 136 }, max: { r: 235, g: 97, b: 35 } })
     await utilities.insert('heatmapcolors', { name: 'Cotton Candy', key: 'cottoncandy', min: { r: 126, g: 41, b: 84 }, max: { r: 148, g: 203, b: 236 } })
-    await utilities.insert('heatmapcolors', { name: 'Test1', key: 'test1', min: { r: 106, g: 74, b: 60 }, max: { r: 15, g: 101, b: 161 } })
-    await utilities.insert('heatmapcolors', { name: 'test2', key: 'test2', min: { r: 255, g: 190, b: 106 }, max: { r: 64, g: 176, b: 166 } })
-    await utilities.insert('heatmapcolors', { name: 'test3', key: 'test3', min: { r: 73, g: 41, b: 10 }, max: { r: 40, g: 203, b: 236 } })
+    await utilities.insert('heatmapcolors', { name: 'Steamship', key: 'steamship', min: { r: 106, g: 74, b: 60 }, max: { r: 15, g: 101, b: 161 } })
+    await utilities.insert('heatmapcolors', { name: 'Beach', key: 'beach', min: { r: 255, g: 190, b: 106 }, max: { r: 64, g: 176, b: 166 } })
+    await utilities.insert('heatmapcolors', { name: 'Moraine', key: 'moraine', min: { r: 73, g: 41, b: 10 }, max: { r: 40, g: 203, b: 236 } })
 
     process.exit(0);
 })();
