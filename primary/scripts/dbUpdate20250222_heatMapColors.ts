@@ -21,7 +21,7 @@ utilities.refreshTier();
 (async () => {
     await utilities.remove('heatmapcolors', {});
     //insert anitial heat map colors
-    await utilities.insert('heatmapcolors', { name: 'Default Red/Green', key: 'default', min: { r: 63, g: 0, b: 0 }, max: { r: 0, g: 214, b: 0 } })
+    await utilities.insert('heatmapcolors', { name: ' Default Red/Green', key: 'default', min: { r: 63, g: 0, b: 0 }, max: { r: 0, g: 214, b: 0 } })
     await utilities.insert('heatmapcolors', { name: 'Grayscale', key: 'grayscale', min: { r: 0, g: 0, b: 0 }, max: { r: 200, g: 200, b: 200 } })
     await utilities.insert('heatmapcolors', { name: 'Sunburst', key: 'sunburst', min: { r: 110, g: 8, b: 36 }, max: { r: 244, g: 179, b: 1 } })
     await utilities.insert('heatmapcolors', { name: 'City Night', key: 'citynight', min: { r: 41, g: 10, b: 73 }, max: { r: 203, g: 236, b: 40 } })
