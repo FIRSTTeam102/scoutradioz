@@ -786,13 +786,9 @@ export class ImageOperations extends TableOperations {
 			});
 		});
 		
-		let st = performance.now();
-		console.time('db-s3');
 		// Find the s3 keys that are already downloaded, so we can skip those
 		let s3KeysList = Object.keys(s3KeyToLinks);
-		let imageBlobsInDb = await db.images.where('s3_key').anyOf(s3KeysList).toArray();
-		let s3KeysInDbList = imageBlobsInDb.map(item => item.s3_key);
-		console.timeEnd('db-s3')
+		let s3KeysInDbList = await db.images.where('s3_key').anyOf(s3KeysList).keys();
 		logger.info(`${s3KeysList.length} sets of images to download; ${s3KeysInDbList.length} of which are already downloaded`);
 		// Now, download any of them that aren't in the db
 		let s3KeysToDownload = s3KeysList.filter(item => !s3KeysInDbList.includes(item));
