@@ -254,7 +254,15 @@ router.get('/teamintel', wrap(async (req, res) => {
 	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 
 	// Pit data layout
-	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'pitscouting');
+	// 2025-02-24, M.O'C: Teams might not have defined a pit scouting layout
+	let layout: SchemaItem[] = [];
+	try {
+		const schema = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'pitscouting');
+		layout = schema.layout;
+	}
+	catch (error) {
+		logger.warn('No pit scouting schema found for org ' + orgKey + ' and event ' + eventKey);
+	}
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey, 'team_key': teamKey } });
