@@ -96,6 +96,7 @@ export class MatchDataHelper {
 			case 'spacer':
 			case 'header':
 			case 'subheader':
+			case 'image':
 				return false;
 			default:
 				return true;
