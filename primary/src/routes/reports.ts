@@ -1533,7 +1533,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 				// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
 				if (matchDataHelper.isMetric(thisItem) && !isOtherNotesAndUnauthorized(thisItem)) {
 					dataRow += ',';
-					if (!thisItem.id) throw new e.InternalDatabaseError(`Layout item does not have a layout ID! (label=${'label' in thisItem ? thisItem.label : ''}, _id=${thisItem._id})`);
+					if (!thisItem.id) throw new e.InternalDatabaseError(`Layout item does not have a layout ID! (item=${JSON.stringify(thisItem)})`);
 					if (thisData[thisItem.id] || thisData[thisItem.id] == 0) {
 						let thisVal = '' + thisData[thisItem.id];
 						dataRow += '"' + thisVal.replace(/(\r\n|\n|\r)/gm,'') + '"';
