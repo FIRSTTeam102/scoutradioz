@@ -2,6 +2,11 @@ User-agent: *
 Disallow: /user
 Disallow: /scouting
 Disallow: /dashboard
+Disallow: /*/home
+Disallow: /home
+Disallow: /selectorg-login
+Disallow: /browse
+Disallow: /reports
 
 User-agent: ia_archiver
 Disallow: /

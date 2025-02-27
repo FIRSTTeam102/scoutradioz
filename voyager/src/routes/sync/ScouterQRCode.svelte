@@ -33,7 +33,7 @@
 			.toArray();
 	});
 	$: pitscouting = liveQuery(async () => {
-		logger.debug('updating pitscouting now');
+		logger.debug('updating pitscouting now', onlyUnsynced);
 		return db.pitscouting
 			.where({
 				org_key: org_key,
@@ -125,7 +125,9 @@
 						>
 					{/each}
 				{/if}
-				<svelte:fragment slot="helperText">Match scouting with data</svelte:fragment>
+				{#snippet helperText()}
+					Match scouting with data
+				{/snippet}
 			</Select>
 		</div>
 		<div class:hidden={qrCodeType !== 'pitscouting'}>
@@ -139,7 +141,9 @@
 						>
 					{/each}
 				{/if}
-				<svelte:fragment slot="helperText">Pit scouting with data</svelte:fragment>
+				{#snippet helperText()}
+					Pit scouting with data
+				{/snippet}
 			</Select>
 		</div>
 	</div>
@@ -151,7 +155,9 @@
 	<div>
 		<FormField>
 			<Checkbox bind:checked={onlyUnsynced} />
-			<span slot="label">Only show assignments that haven't been synced?</span>
+			{#snippet label()}
+				Only show assignments that haven't been synced?
+			{/snippet}
 		</FormField>
 	</div>
 	<QrCodeDisplay data={base64Data} />
@@ -160,7 +166,7 @@
 			<Button
 				variant="unelevated"
 				disabled={selectedEntrySynced}
-				on:click={async () => {
+				onclick={async () => {
 					if (!pitToShowQr) return;
 					selectedEntrySynced = true;
 					await db.pitscouting.update(pitToShowQr, {
@@ -174,7 +180,7 @@
 			<Button
 				variant="unelevated"
 				disabled={!selectedEntrySynced}
-				on:click={async () => {
+				onclick={async () => {
 					if (!pitToShowQr) return;
 					selectedEntrySynced = false; // JL note: i think this has to be before db.matchscouting.update, otherwise the $: code that updates selectedEntrySynced higher up will be overridden if matchToShowQr changes
 					await db.pitscouting.update(pitToShowQr, {
@@ -192,7 +198,7 @@
 			<Button
 				variant="unelevated"
 				disabled={selectedEntrySynced}
-				on:click={async () => {
+				onclick={async () => {
 					if (!matchToShowQr) return;
 					selectedEntrySynced = true;
 					await db.matchscouting.update(matchToShowQr.match_team_key, {
@@ -206,7 +212,7 @@
 			<Button
 				variant="unelevated"
 				disabled={!selectedEntrySynced}
-				on:click={async () => {
+				onclick={async () => {
 					if (!matchToShowQr) return;
 					selectedEntrySynced = false; // JL note: i think this has to be before db.matchscouting.update, otherwise the $: code that updates selectedEntrySynced higher up will be overridden if matchToShowQr changes
 					await db.matchscouting.update(matchToShowQr.match_team_key, {

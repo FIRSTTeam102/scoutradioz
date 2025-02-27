@@ -3,14 +3,22 @@
 	import { FormLayoutOperations } from '$lib/DBOperations';
 	import ScoutingForm from '$lib/form/ScoutingForm.svelte';
 	import { msg } from '$lib/i18n';
-	import db from '$lib/localDB';
+	import db, { type PitScoutingLocal } from '$lib/localDB';
 	import { getLogger } from '$lib/logger';
 	import BottomNavBar, { type NavBarItem } from '$lib/nav/BottomNavBar.svelte';
 	import { addRefreshButtonFunctionality, getNewSubmissionHistory, getPageLayoutContexts, setPageTitle } from '$lib/utils';
 	import type BottomAppBar from '@smui-extra/bottom-app-bar';
 	import type { PageData } from './$types';
+	import { initializeFormData } from '$lib/form/ScoutingFormUtils';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data = $bindable() }: Props = $props();
+	
+	let formData = $state(initializeFormData(data.layout, data.pitScoutingEntry.data)) as PitScoutingLocal['data'];
+	
 	setPageTitle(
 		msg('scouting.pitHeading', { team: data.teamNumber }),
 		// Only show team nickname if we don't have their city or state/country, which is true if the metadata was scanned via QR
@@ -25,12 +33,13 @@
 
 	const logger = getLogger('scouting/pit/form');
 
+	// svelte-ignore non_reactive_update
 	let bottomAppBar: BottomAppBar;
 
-	$: scouterRecord = {
+	let scouterRecord = $derived({
 		id: data.user._id,
 		name: data.user.name
-	};
+	});
 
 	// When formData changes (any time a form is edited), update the entry in the database
 	// 	If all of the forms are at their default values, then set data undefined
@@ -42,7 +51,7 @@
 			{ ...data.pitScoutingEntry },
 			{
 				// 2024-03-24 JL: disabled setting data to undefined - hopefully shouldn't break other logic cuz completed is marked as false
-				data: data.pitScoutingEntry.data,
+				data: $state.snapshot(formData),
 				synced: false,
 				completed: false,
 				actual_scouter: scouterRecord
@@ -131,11 +140,16 @@
 		else snackbar.open(msg('cloudsync.upToDate'), 4000)
 	}, msg('cloudsync.layoutTooltip'))
 </script>
-
-<ScoutingForm
-	layout={data.layout}
-	bind:formData={data.pitScoutingEntry.data}
-	teamNumber={data.teamNumber}
-	on:change={onFormChange} />
+{#if data.robotPhoto}
+<img class="m-auto block mt-2" src={data.robotPhoto} alt={`Robot photo for ${data.team.nickname}`}>
+{/if}
+{#if formData}
+	<ScoutingForm
+		layout={data.layout}
+		bind:formData
+		teamNumber={data.teamNumber}
+		onchange={onFormChange}
+	/>
+{/if}
 
 <BottomNavBar variant="static" bind:bottomAppBar items={bottomBarActions} />

@@ -31,7 +31,14 @@ function init() {
 	}
 	
 	childMongod = spawn('mongod', mongodbOptions, {cwd: process.cwd(), stdio: ['ipc'], killSignal: 'SIGINT'});
-	childMongod.on('error', (e) => console.error(e));
+	childMongod.on('error', (e) => {
+		if (e.code === 'ENOENT') {
+			console.log(`${mongodName}: Child process failed to start. If you are running in a devcontainer, this is expected and is NOT an error.`);
+		}
+		else {
+			console.error(`${mongodName}:`, e);
+		}
+	});
 	
 	childMongod.on('close', function (status, signal) {
 		console.log(`${mongodName}: Process exited with status ${status || signal} (${interpretMongoStatusCode(status)})`);
@@ -212,6 +219,8 @@ function interpretMongoStatusCode(code) {
 			return 'Datafiles in dbpath are incompatible with the version of mongod currently running.';
 		case 100:
 			return 'Uncaught exception.';
+		case -2:
+			return 'ENOENT';
 		default:
 			return 'Unknown error code!';
 	}

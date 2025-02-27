@@ -3,7 +3,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, PitScouting, ScouterRecord, Team, User, SchemaItem, Schema, ScouterHistoryRecord, PitFormData, UserAgent } from 'scoutradioz-types';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
 import Permissions from '../helpers/permissions';
@@ -24,13 +24,13 @@ router.get('/match*', wrap(async (req, res) => {
 	logger.addContext('funcName', 'match[get]');
 	logger.info('ENTER');
 
-	let eventKey = req.event.key;
-	let year = req.event.year;
+	const event_key = req.event.key;
+	const year = req.event.year;
 	let thisUser = req._user;
 	let thisUserName = thisUser.name;
 	let match_team_key = req.query.key;
 	let alliance = String(req.query.alliance);
-	let org_key = thisUser.org_key;
+	const org_key = thisUser.org_key;
 	if (typeof match_team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidMatchKey')); // 2022-05-17 JL: Throw if they don't have a match key set in the url OR if they set two, making it an array
 	let teamKey = match_team_key.split('_')[2];
 	// 2024-02-29, M.O'C: special case, we're going to handle "frc999999" for form demo purposes
@@ -65,17 +65,14 @@ router.get('/match*', wrap(async (req, res) => {
 		}
 	}
 	
-	//load layout
-	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	let layout: Layout[] = await utilities.find('layout', 
-		{org_key: org_key, year: year, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	//load layout/schema
+	let schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
-	let groupedLayout = splitLayoutIntoGroups(layout);
+	let groupedLayout = splitLayoutIntoGroups(schema.layout);
 	
 	const images = await uploadHelper.findTeamImages(org_key, year, teamKey);
+	const orgImages = await uploadHelper.findOrgImages(org_key, year);
+
 	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
 	
 	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
@@ -108,7 +105,7 @@ router.get('/match*', wrap(async (req, res) => {
 	let title = `#${matchNumber} - ${teamKey.substring(3)} ${allianceLocale} | ${req.msg('scouting.match')}`;
 
 	// 2024-02-05, M.O'C: Add super-scout pit text to page
-	let pitFind = await utilities.findOne('pitscouting', { 'org_key': org_key, 'event_key' : eventKey, 'team_key' : teamKey }, {});
+	let pitFind = await utilities.findOne('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
 	let pit_super_data: StringDict|null = null;
 	if (pitFind && pitFind.super_data) pit_super_data = pitFind.super_data;
 	logger.debug(`pit_super_data=${JSON.stringify(pit_super_data)}`);
@@ -116,14 +113,14 @@ router.get('/match*', wrap(async (req, res) => {
 	//render page
 	res.render('./scouting/match', {
 		title: title,
-		layout,
 		groupedLayout,
 		key: match_team_key,
 		alliance,
 		answers,
 		teamKey,
 		images,
-		team: team,
+		orgImages,
+		team,
 		pit_super_data,
 	});
 }));
@@ -175,31 +172,37 @@ router.post('/testform', wrap(async (req, res) => {
 		website: null
 	};
 
+	const image_year = req.event.year;
+	const orgImages = await uploadHelper.findOrgImages(org_key, image_year);
+
 	//render page
 	if (form_type == 'matchscouting') {
+		// @ts-ignore FIX BEFORE COMMITTING
 		let groupedLayout = splitLayoutIntoGroups(layout);
 		res.render('./scouting/match', {
 			title: req.msg('scouting.match'),
-			layout: layout,
+			layout,
 			groupedLayout,
 			key: match_team_key,
-			alliance: alliance,
+			alliance,
 			answers: null,
 			teamKey: 'frc999999',
 			images: null,
-			team: team,
+			team,
+			orgImages
 		});
 	}
 	else
 		res.render('./scouting/pit', {
 			title: req.msg('scouting.pit'),
-			layout: layout,
+			layout,
 			pitData: null, 
 			key: 'frc999999',
 			uploadURL: null,
 			teamKey: 'frc999999',
 			images: null,
-			team: team,
+			team,
+			orgImages
 		});
 }));
 
@@ -224,68 +227,34 @@ router.post('/match/submit', wrap(async (req, res) => {
 	if(!matchData)
 		return res.send({status: 500, message: req.msg('scouting.noDataSubmit', {url: '/scouting/match/submit'})});
 	
+	const event_key = req.event.key;
 	let event_year = req.event.year;
 	let match_team_key = matchData.match_team_key;
 	let org_key = req._user.org_key; // JL note: this probably throws an error if the user is not logged in
 
 	logger.debug('match_key=' + match_team_key + ' ~ thisUserName=' + thisScouterRecord.name);
-	delete matchData.match_key;
 	logger.debug('matchData(pre-modified)=' + JSON.stringify(matchData));
-	//logger.debug('match_key=' + match_key + ' ~ thisUserName=' + thisUserName);
-	//logger.debug('matchData=' + JSON.stringify(matchData));
 
-	// Get the 'layout' so we know types of data elements
-
-	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-	let layout: Layout[] = await utilities.find('layout',
-		{org_key: org_key, year: event_year, form_type: 'matchscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
-
-	let layoutTypeById: StringDict = {};
-	logger.trace('layout=' + JSON.stringify(layout));
-	for (let property in layout) {
-		if (layout.hasOwnProperty(property)) {
-			let thisLayoutItem = layout[property];
-			if (typeof thisLayoutItem.id === 'string') {
-				logger.trace(thisLayoutItem.id + ' is a ' + thisLayoutItem.type);
-				layoutTypeById[thisLayoutItem.id] = thisLayoutItem.type;
-			}
+	// Correct data based on the type in the layout, convert to numeric values
+	let correctedData: MatchFormData = {};
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
+	for (let item of layout) {
+		if ('id' in item && Object.hasOwn(matchData, item.id)) { // only process layout items that have id (i.e. input types)
+			correctedData[item.id] = matchDataHelper.fixDatumType(matchData[item.id], item.type);
 		}
 	}
+	if (Object.keys(correctedData).length === 0) return res.status(400).send({message: 'No data submitted'});
 
-	// Process input data, convert to numeric values
-	for (let property in matchData) {
-		if (layoutTypeById.hasOwnProperty(property)) {
-			let thisType = layoutTypeById[property];
-			// 2022-03-22 JL: Moving the data-type parsing into a helper function, which can easily be updated later as more form types are added
-			matchData[property] = matchDataHelper.fixDatumType(matchData[property], thisType);
-			/*
-			//logger.debug(property + " :: " + matchData[property] + " ~ is a " + thisType);
-			if ('counter' == thisType || 'badcounter' == thisType) {
-				//logger.debug("...converting " + matchData[property] + " to a number");
-				let newVal = -1;
-				if (matchData[property]) {
-					var parseVal = parseInt(matchData[property]);
-					if (!isNaN(parseVal))
-						newVal = parseVal;
-				}
-				matchData[property] = newVal;
-			}
-			if ('checkbox' == thisType) {
-				//logger.debug("...converting " + matchData[property] + " to a boolean 1/0 number");
-				let newVal = (matchData[property] == 'true' || matchData[property] == true) ? 1 : 0;
-				matchData[property] = newVal;
-			}
-			*/
-		}
-	}
-	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(matchData));
+	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(correctedData));
 
 	// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-	matchData = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, matchData);
-	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(matchData));
+	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, correctedData);
+	correctedData = matchDataNew; // JL: this is temporary while we have debugging info
+	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(correctedData));
+	
+	const existingMatchEntry = await utilities.findOne('matchscouting', {org_key, match_team_key});
+	// Ensure match scouting entry exists in db
+	if (!existingMatchEntry) return res.status(404).send({ message: `A match scouting assignment was not found for ${org_key}, ${match_team_key}` });
 
 	// Post modified data to DB
 	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
@@ -293,21 +262,23 @@ router.post('/match/submit', wrap(async (req, res) => {
 		org_key, 
 		match_team_key 
 	}, { 
-		$set: { data: matchData, 
+		$set: {
+			data: correctedData, 
 			actual_scorer: thisScouterRecord, 
-			useragent: req.shortagent 
+			useragent: req.shortagent,
+			history: getNewSubmissionHistory(existingMatchEntry, req._user._id, req._user.name, req.shortagent)
 		} 
 	});
 
 	// Simply to check if the user is assigned (2022-03-24 JL)
 	const oneAssignedMatch: MatchScouting = await utilities.findOne('matchscouting', {
-		org_key: org_key, 
+		org_key, 
 		event_key: req.event.key, 
 		'assigned_scorer.id': thisScouterRecord.id
 	});
 	let assigned = !!oneAssignedMatch;
 	
-	return res.send({message: req.msg('scouting.submitSuccess'), status: 200, assigned: assigned});
+	return res.send({message: req.msg('scouting.submitSuccess'), status: 200, assigned});
 }));
 
 router.get('/pit*', wrap(async (req, res) => {
@@ -321,32 +292,26 @@ router.get('/pit*', wrap(async (req, res) => {
 	let event_year = req.event.year;
 	let org_key = req._user.org_key;
 
-	let teamKey = req.query.team_key;
+	let team_key = req.query.team_key;
 	// 2024-02-29, M.O'C: special case, we're going to handle "frc999999" for form demo purposes
 	const demoTeamKey = 'frc999999';
 	
-	if (typeof teamKey !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
-		
-	// 2020-02-11, M.O'C: Combined "scoutinglayout" into "layout" with an org_key & the type "pitscouting"
-	//var layout = await utilities.find("scoutinglayout", { "year": event_year }, {sort: {"order": 1}});
-	let layout: Layout[] = await utilities.find('layout', 
-		{org_key: org_key, year: event_year, form_type: 'pitscouting'}, 
-		{sort: {'order': 1}},
-		{allowCache: true}
-	);
+	if (typeof team_key !== 'string') throw new e.UserError(req.msg('scouting.invalidTeamKey'));
 	
-	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key, 
-	let pitFind: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key' : event_key, 'team_key' : teamKey }, {});
-	let pitData: StringDict|null = null;
-	if (pitFind && pitFind[0])
-		if (pitFind[0].data)
-			pitData = pitFind[0].data;
+	const schema = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
+	
+	const assignment = await utilities.findOne('pitscouting', { org_key, event_key, team_key});
+	let pitData: typeof assignment.data;
+	if (assignment) {
+		pitData = assignment.data;
+	}
 			
-	const images = await uploadHelper.findTeamImages(org_key, event_year, teamKey);
+	const images = await uploadHelper.findTeamImages(org_key, event_year, team_key);
+	const orgImages = await uploadHelper.findOrgImages(org_key, event_year);
 	
-	let team: Team = await utilities.findOne('teams', {key: teamKey}, {}, {allowCache: true});
+	let team: Team = await utilities.findOne('teams', {key: team_key}, {}, {allowCache: true});
 	// 2024-02-29, M.O'C: if the teamKey is the same as the demoTeamKey, set the 'team' 
-	if (teamKey == demoTeamKey)
+	if (team_key == demoTeamKey)
 		team = {
 			address: null,
 			city: 'DN', 
@@ -370,13 +335,14 @@ router.get('/pit*', wrap(async (req, res) => {
 	
 	res.render('./scouting/pit', {
 		title: req.msg('scouting.pit'),
-		layout: layout,
-		pitData: pitData, 
-		key: teamKey,
-		uploadURL: uploadURL,
-		teamKey: teamKey,
-		images: images,
-		team: team,
+		layout: schema.layout,
+		pitData, 
+		key: team_key,
+		uploadURL,
+		teamKey: team_key,
+		images,
+		orgImages,
+		team,
 	});
 }));
 
@@ -388,33 +354,46 @@ router.post('/pit/submit', wrap(async (req, res) => {
 	let thisUserName = thisUser.name;
 
 	let pitData = req.body;
-	let teamKey = pitData.teamkey;
+	let team_key = pitData.teamkey;
 	delete pitData.teamkey;
-	logger.debug('teamKey=' + teamKey + ' ~ thisUserName=' + thisUserName);
+	logger.debug('teamKey=' + team_key + ' ~ thisUserName=' + thisUserName);
 	logger.debug('pitData=' + JSON.stringify(pitData));
 
 	let event_key = req.event.key;
 	let org_key = thisUser.org_key;
+	
+	let existingPitEntry = await utilities.findOne('pitscouting', {org_key, event_key, team_key});
+	// Ensure pit scouting entry exists in db
+	if (!existingPitEntry) return res.status(404).send({ message: `A pit scouting assignment was not found for ${org_key}, ${event_key}, ${team_key}` });
 
-	// TODO: Verify pit data against layout, to avoid malicious/bogus data inserted into db?
+	// Correct data based on the type in the layout
+	let correctedData: PitFormData = {};
+	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
+	for (let item of layout) {
+		if ('id' in item && Object.hasOwn(pitData, item.id)) { // only process layout items that have id (i.e. input types)
+			correctedData[item.id] = matchDataHelper.fixDatumType(pitData[item.id], item.type);
+		}
+	}
+	if (Object.keys(correctedData).length === 0) return res.status(400).send({message: 'No data submitted'});
 
 	// 2020-02-11, M.O'C: Renaming "scoutingdata" to "pitscouting", adding "org_key": org_key,
 	await utilities.update(
 		'pitscouting',
-		{ org_key: org_key, event_key: event_key, team_key: teamKey },
+		{ org_key, event_key, team_key },
 		{
 			$set: {
-				data: pitData,
+				data: correctedData,
 				actual_scouter: {
 					id: thisUser._id,
 					name: thisUserName
 				},
 				useragent: req.shortagent,
+				history: getNewSubmissionHistory(existingPitEntry, thisUser._id, thisUserName, req.shortagent)
 			},
 		}
 	);
 
-	return res.send({ message: req.msg('scouting.submitSuccess'), status: 200 });
+	return res.status(200).send({ message: req.msg('scouting.submitSuccess')});
 }));
 
 router.get('/', wrap(async (req, res) => {
@@ -464,10 +443,10 @@ router.get('/supermatch*', wrap(async (req, res) => {
 	//render page
 	res.render('./scouting/supermatch', {
 		title: title,
-		layout: layout,
+		layout,
 		key: match_key,
-		answers_map: answers_map,
-		superdata: superdata
+		answers_map,
+		superdata,
 	});
 }));
 
@@ -561,12 +540,12 @@ router.get('/superpit*', wrap(async (req, res) => {
 
 	//render page
 	res.render('./scouting/superpit', {
-		team: team,
-		event_year: event_year,
+		team,
+		event_year,
 		title: title,
-		layout: layout,
+		layout,
 		key: team_key,
-		pitData: pitData
+		pitData
 	});
 }));
 
@@ -590,7 +569,7 @@ router.post('/pit/supersubmit', wrap(async (req, res) => {
 
 	await utilities.update(
 		'pitscouting',
-		{ org_key: org_key, event_key: event_key, team_key: teamKey },
+		{ org_key, event_key, team_key: teamKey },
 		{
 			$set: {
 				super_data: pitData
@@ -623,7 +602,7 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 	
 	if (comparison === true) {
 		
-		let entry: MatchScouting = await utilities.findOne('matchscouting', {org_key: org_key, match_team_key: match_team_key});
+		let entry: MatchScouting = await utilities.findOne('matchscouting', {org_key, match_team_key});
 		if (entry) {
 			if (entry.data)
 				logger.info(`Previous data: ${JSON.stringify(entry.data)}`);
@@ -631,7 +610,7 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 				logger.info('Data not present in DB anyways.');
 			
 			let writeResult = await utilities.update('matchscouting', 
-				{org_key: org_key, match_team_key: match_team_key},
+				{org_key, match_team_key},
 				{$set: {data: undefined}}
 			);
 			
@@ -659,10 +638,10 @@ router.post('/match/delete-data', wrap(async (req, res) => {
 }));
 
 // Split the layout into groups, based on the header, making it easier to do the dynamic scrolling
-function splitLayoutIntoGroups(layout: Layout[]) {
+function splitLayoutIntoGroups(layout: SchemaItem[]) {
 
 	let groupedLayout = layout.reduce((list, current) => {
-		if (current.type === 'h2') {
+		if (current.type === 'header') {
 			list.push({
 				label: current.label || 'unknown',
 				items: [current]
@@ -673,8 +652,33 @@ function splitLayoutIntoGroups(layout: Layout[]) {
 			list[idx].items.push(current);
 		}
 		return list;
-	}, [{label: 'Unknown', items: []}] as Array<{label: string, items: Layout[]}>);
+	}, [{label: 'Unknown', items: []}] as Array<{label: string, items: SchemaItem[]}>);
 	return groupedLayout;
+}
+
+// TAKEN FROM VOYAGER/SRC/LIB/UTILS.TS
+// IF THIS FUNCTION CHANGES, CHANGE IT IN THAT PLACE TOO
+export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecord[]}>(assignment: T, user_id: number, user_name: string, useragent?: UserAgent) {
+	let newRecord: ScouterHistoryRecord = {
+		id: user_id,
+		name: user_name,
+		time: new Date(),
+	};
+	if (useragent) newRecord.useragent = useragent;
+
+	if (!assignment.history) return [newRecord]; // If there's no history, we don't need to do any shenanigans
+
+	let history = [...assignment.history]; // Create a clone of the original history object
+	let lastEntry = history[history.length - 1];
+	// If this is an edit by the same person who made the last change, then replace the record
+	if (lastEntry.id === user_id) {
+		history[history.length - 1] = newRecord;
+	}
+	// if the last edit was done by someone else, then add a new entry to the stack
+	else {
+		history.push(newRecord);
+	}
+	return history;
 }
 
 module.exports = router;

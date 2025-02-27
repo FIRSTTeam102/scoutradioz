@@ -32,7 +32,7 @@
 	<p>
 		Current match number: {data.firstMatchNumber}
 		<Button
-			on:click={() => {
+			onclick={() => {
 				let newMatchNumber = Math.max(data.firstMatchNumber - 1, 1);
 				localStorage.setItem(`match_number_${$page.data.event_key}`, String(newMatchNumber));
 				invalidateAll();
@@ -41,7 +41,7 @@
 			<BLabel>Decrease</BLabel>
 		</Button>
 		<Button
-			on:click={async () => {
+			onclick={async () => {
 				let newMatchNumber = data.firstMatchNumber + 1;
 				localStorage.setItem(`match_number_${$page.data.event_key}`, String(newMatchNumber));
 				invalidateAll();

@@ -11,7 +11,7 @@ const config = {
 		},
 		paths: {
 			relative: false,
-		}
+		},
 	},
 	onwarn: (warning, handler) => {
 		// JL note: importing any @material things inside a svelte file results in spam with these warnings.

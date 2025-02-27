@@ -82,7 +82,7 @@
 	bind:open
 	aria-labelledby="default-focus-title"
 	aria-describedby="default-focus-content"
-	on:SMUIDialog:closed={onClose}
+	onSMUIDialogClosed={onClose}
 >
 	<Title id="default-focus-title">{dlgTitle}</Title>
 	<Content id="default-focus-content">

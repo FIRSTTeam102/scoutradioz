@@ -1,0 +1,114 @@
+//-
+	Org mgmt audit trail for all image uploads. Provides options to delete
+	and to edit images' index (which image shows up as main or a/b/c)
+		manage/scoutingaudit.js
+		'/manage/scoutingaudit/uploads'
+	//
+extends ../../layout
+block content
+	style.
+		.w3-check{
+			top: 7.7px!important;
+		}
+		.image-input{
+			opacity: 0;
+			position: absolute;
+			z-index: -1;
+			width: 1px; /* So the page doesn't display too wide on some mobile browsers */
+			height: 1px;
+		}
+	script(src=`${fileRoot}/lib/jimp.min.js`)
+	script(src=`${fileRoot}/js/script-orgimageupload.js?v=10`)
+	h2 Organization image uploads
+	i Upload images here to use in other places (such as including in scouting forms)
+	p 
+		form(name="yearSelect" method="get" action="")
+			label(class="w3-label theme-inline-padding" style="margin-right: 8px;") View uploads from:
+			select(name="year" class="theme-input")
+				option
+				each year in years
+					option(selected=(thisYear===year) value=year)= year
+	div(class="w3-auto")
+		if !uploadsByImageId || Object.keys(uploadsByImageId).length === 0
+			+noDataFound('No uploads were found for the year ' + thisYear)
+		each imageUploads, imageId in uploadsByImageId
+			//- - console.log(`imageUploads: ${JSON.stringify(imageUploads)}, imageId: ${imageId}`);
+			if imageUploads[0]
+				div(class="w3-row")
+					hr
+					h4
+						a(href=imageUploads[0].links.lg class="link")
+							span=imageId
+					each upload in imageUploads
+						//- - console.log(`upload: ${upload}`);
+						div(class="w3-row w3-padding-large" id=`row_${upload._id}`) 
+							div(class="w3-half")
+								img(src=upload.links.lg class="w3-image team-image-md")
+							div(class="w3-half w3-left-align")
+								p(class="hanging-indent") Uploaded by: #{upload.uploader.name}
+								- var useragent = upload.uploader.useragent;
+								p(class="hanging-indent") Device: #{useragent.device} | #{useragent.browser} | #{useragent.os}
+								p(class="hanging-indent") Uploaded on: #{zoneTime(upload.uploader.upload_time).toLocaleString(DateTime.DATETIME_HUGE)}
+								p
+									div(class="w3-col m4 w3-padding" onclick=`deleteUpload('${upload._id}')`)
+										button(class="w3-btn w3-block theme-red") Delete
+	hr
+	img#imgMain(alt="" class="w3-image team-image-lg")
+	form#imageform(action="javascript:void(0)" method="post")
+		//-Image inputs
+		input#imageMain(type="file" class="image-input" index="0" name="imageMain")
+		//-Hidden inputs that contain uploadURL (upload.scoutradioz.com/app/image) and event year
+		input(type="hidden" name="uploadURL" value=uploadURL)
+		input(type="hidden" name="year" value=event_year)
+		input(type="hidden" name="org_key" value=user.org_key)
+		input(class="theme-input w3-margin-right w3-no-border" style="width:350px" placeholder="Enter a unique ID for referencing this image" type="text" name="image_id")
+		label(for="imageMain" class="w3-btn theme-submit w3-margin-right") Pick image
+		span#fileName
+		input(type="hidden" name="user" value=user._id)
+		//-The buttons are actually labels for each image input
+		div(class="w3-container w3-padding")
+			label#uploadMain(class="w3-btn theme-submit")!=msg('manage.config.uploadImage')
+
+	script.
+		$('select[name=year]').on('change', () => {
+			$('form[name=yearSelect]').submit();
+		});
+		
+		async function deleteUpload(id) {
+			var deleteCard = new NotificationCard(`Deleting upload...`);
+			
+			var confirmation = await Confirm.show("Do you really want to delete this image?")
+			
+			if (confirmation.cancelled === false) {
+				deleteCard.show();
+				$.post('/manage/config/uploads/delete',
+					{'id': id}
+				)
+				.done(data => {
+					deleteCard.remove(0);
+					NotificationCard.warn("Successfully deleted image.\nChanges may take up to one minute to take effect.");
+					
+					console.log($(`#row_${id}`));
+					$(`#row_${id}`).hide();
+					
+					updateRecycleBin();
+				})
+				.fail(err => {
+					console.error(err);
+					deleteCard.remove(0);
+					NotificationCard.error("An error occurred: " + err.responseText, {ttl: 3000});
+				});
+			}
+		}
+		
+		//- Send a request to upload.scoutradioz.com to prune uploads that have been removed in db but not removed from AWS
+		function updateRecycleBin() {
+			console.log('Sending to recycle bin in the background...');
+			$.post('#{process.env.UPLOAD_URL}/#{process.env.TIER}/manage/update-recycle-bin')
+				.done(data => {
+					console.log('Response: ', data);
+				})
+				.fail(err => {
+					console.error(err);
+				});
+		}

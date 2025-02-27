@@ -2,7 +2,7 @@
 declare let stickyBarEnabled: boolean;
 declare let groupedLayout: Array<{
 	label: string;
-	items: import('scoutradioz-types').Layout[];
+	items: import('scoutradioz-types').SchemaItem[];
 }>;
 
 let sections = [] as Array<{
@@ -272,8 +272,9 @@ $(function () {
 		);
 
 		matchSubmission.submit((err, response) => {
-			if (err || !response || !response.message) {
-				NotificationCard.error('An error occurred. Please retry.');
+			if (err || !response) {
+				let message = typeof err === 'string' ? err : 'An error occurred. Please retry.';
+				NotificationCard.error(message);
 			}
 			else {
 				let message = response.message;

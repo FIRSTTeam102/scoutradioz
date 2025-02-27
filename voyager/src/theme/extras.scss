@@ -9,10 +9,6 @@
 // Import the mixins.
 @use '@material/typography/mixins' as typography;
 
-// JL: This line imports Tailwind's utility classes. VS Code's SCSS extension doesn't recognize it since it's
-// 	a PostCSS rule, but since PostCSS runs after SCSS is compiled, it still loads Tailwind's classes fine.
-@tailwind utilities;
-
 :root {
 	font-size: 15px; // JL: 16px makes the interface a little too big imo on an iphone 5/SE
 	--font-family: 'IBM Plex Sans', Verdana, Geneva, Tahoma, sans-serif;

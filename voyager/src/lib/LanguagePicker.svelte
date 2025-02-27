@@ -32,7 +32,7 @@
 		<List>
 			{#each localePickerItems as item}
 				<Item
-					on:click={() => {
+					onclick={() => {
 						dlgOpen = false;
 						Cookies.set(i18n.config.cookie, item.locale);
 						location.reload();
@@ -45,7 +45,7 @@
 	</Content>
 	<Actions>
 		<Button
-			on:click={() => {
+			onclick={() => {
 				dlgOpen = false;
 			}}
 		>

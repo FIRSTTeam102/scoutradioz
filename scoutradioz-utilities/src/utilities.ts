@@ -91,7 +91,9 @@ export type FilterQueryTyped<T extends MongoDocument> = {
 	$and?: FilterQueryTyped<T>[];
 	$expr?: FilterQueryTyped<T>;
 } & {
-	[key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]>|T[key];
+	// 2025-01-23 JL: added support for searching for a field that's an array with a single string, since mongodb supports that
+    [key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]> | (T[key] extends Array<any> ? (T[key][number]|T[key]) : T[key]);
+	// [key in Exclude<keyof T, '_id'>]?: QueryItem<T[key]>|T[key];
 } & {
 	// JL: TypeScript lets us do limited string validation by using template literals. Can't yet use regexes,
 	// 	but this serves our purpose. Essentially, any string with a . in it is allowed past the schema filter,

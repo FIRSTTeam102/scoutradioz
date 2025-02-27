@@ -1,7 +1,7 @@
 # [Choice] Node.js version (use -bullseye variants on local arm64/Apple Silicon): 18, 16, 14, 18-bullseye, 16-bullseye, 14-bullseye, 18-buster, 16-buster, 14-buster
 # set in docker-compose.yml
 ARG VARIANT
-FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
+FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:22
 
 # Install MongoDB command line tools if on buster and x86_64 (arm64 not supported)
 ARG MONGO_TOOLS_VERSION=5.0
@@ -24,3 +24,14 @@ RUN . /etc/os-release \
 
 # [Optional] Uncomment if you want to install more global node modules
 RUN su node -c "yarn global add less less-plugin-clean-css typescript ts-node"
+
+run curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+run unzip awscliv2.zip
+run sudo ./aws/install
+
+# Download and install Bun
+RUN curl -fsSL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip -o bun.zip \
+    && unzip bun.zip \
+    && mv bun-linux-x64/bun /usr/local/bin/ \
+    && chmod +x /usr/local/bin/bun \
+    && rm -rf bun.zip bun-linux-x64

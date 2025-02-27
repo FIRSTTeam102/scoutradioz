@@ -1,0 +1,56 @@
+/* 2024 THEME COLORS */
+
+/* FRC's season colors */
+// in branding pdf, colors picked from the preview, not from the hex below
+@frc-cyan: #9CD9E8; // color from the logo
+@frc-blue: #0083AE;
+@frc-yellow: #F5E447;
+
+@frc-white: #fff;
+@frc-black: #000;
+
+/* FIRST DIVE colors */
+@fd-orange: #FF9119;
+@fd-red: #ED1C24;
+@fd-gray: #666666;
+@fd-black: #000000;
+
+// @ftc-yellow: #FFAB00;
+
+/* custom combinations */
+@darkened-green: darken(@frc-blue, 15%);
+
+@button-primary: shade(@frc-blue, 20%);
+@button-secondary: shade(@frc-blue, 40%);
+
+@primary: @button-primary; // unused
+@secondary: shade(@frc-blue, 50%); // input
+@highlight: lighten(@button-primary, 10%); // slider
+
+@background: @fd-black;
+// @header: shade(desaturate(@fs-pink, 15%), 20%);
+@header: saturate(mix(@fd-black, @frc-cyan, 60%), 15%);
+@footer: @fd-gray;
+
+@header-tier-qa: shade(@frc-yellow, 30%);
+@header-tier-test: shade(@fd-orange, 50%);
+@header-tier-dev: shade(@fd-red, 40%);
+
+// @prompt-color: desaturate(darken(mix(@fs-gray, mix(@fs-black, @frc-green, 50%), 70%), 17%), 10%);
+@prompt-color: desaturate(darken(mix(@fd-gray, mix(@fd-black, @frc-blue, 50%), 60%), 20%), 10%);  // originally was 'blue' where other blue items above were 'green'
+:root {	
+	/* MMenu customization */
+	--mm-color-background: @prompt-color;
+	--mm-color-background-emphasis: lighten(@prompt-color, 3%); // selected menu item
+	--mm-color-background-highlight: darken(@prompt-color, 3%); // submenu dropdown
+}
+
+/* Background */
+#page {
+	@background-fade: fade(shade(@background, 50%), 85%); // was 70%
+	background-image: linear-gradient(@background-fade, @background-fade), var(--background-image); // from layout.pug
+	background-position: 5%;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-attachment: fixed;
+}

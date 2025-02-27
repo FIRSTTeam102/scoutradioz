@@ -93,7 +93,7 @@
 	}
 	
 </script>
-<Snackbar bind:this={snackbar} class={displayColor} timeoutMs={timeoutMs} on:close on:SMUISnackbar:closed={handleClosed}>
+<Snackbar bind:this={snackbar} class={displayColor} timeoutMs={timeoutMs}  onSMUISnackbarClosed={handleClosed}>
 	<Label>{message}</Label>
 	<Actions>
 		{#if dismissAction}

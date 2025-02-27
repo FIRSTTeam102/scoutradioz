@@ -1,7 +1,7 @@
-import type { PageLoad } from './$types';
-import type { LayoutField } from '$lib/types';
-import { error } from '@sveltejs/kit';
+import { SchemaOperations } from '$lib/DBOperations';
 import db from '$lib/localDB';
+import { error } from '@sveltejs/kit';
+import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ url, fetch, parent }) => {
 	const { event_key, org_key, event } = await parent();
@@ -12,13 +12,7 @@ export const load: PageLoad = async ({ url, fetch, parent }) => {
 	if (!team_key || !teamNumber) throw error(404, new Error('Team key is either not defined or invalid'));
 	if (!event) throw error(404, new Error('Event not found'));
 
-	const layout = await db.layout
-		.where({
-			org_key,
-			year: event.year,
-			form_type: 'pitscouting'
-		})
-		.toArray();
+	const { layout } = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting')
 
 	const pitScoutingEntry = await db.pitscouting
 		.where({
@@ -38,6 +32,13 @@ export const load: PageLoad = async ({ url, fetch, parent }) => {
 		.first();
 
 	if (!team) throw error(404, new Error(`Team ${team_key} not found`));
+	
+	const upload = await db.uploads.where({org_key, year: event.year}).filter(item => item.team_key === team_key && item.index === 0).first();
+	let robotPhoto: string|undefined;
+	if (upload) {
+		let blobs = await db.images.where({s3_key: upload.s3_key}).first();
+		if (blobs) robotPhoto = URL.createObjectURL(blobs.md);
+	}
 
-	return { layout, key: team_key, teamNumber, pitScoutingEntry, team };
+	return { layout, key: team_key, teamNumber, pitScoutingEntry, team, robotPhoto };
 };

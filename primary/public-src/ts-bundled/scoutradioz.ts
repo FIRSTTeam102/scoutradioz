@@ -6,13 +6,35 @@ if(!$){
 }
 
 $(() => {
-	if (Cookies.get('accepted') != 'true') {
-		let cookiesMessage = new NotificationCard('Scoutradioz uses some cookies in order to operate. We do not use third party cookies or tracking cookies.',
-			{ttl: 0, exitable: true, onexit: function(){
-				Cookies.set('accepted', 'true', {expires: 1000});
-			}});
-		// cookiesMessage.show();	2021-08-03 JL: Disabled cookie message because we probably don't need to show the message for the time being
+	// Check if news has been sent from the server, and if so, display it
+	let newsUpdate = Cookies.get('news_update_to_display');
+	if (newsUpdate) {
+		let newsCard = new NotificationCard(newsUpdate, {
+			color: '#ffffff',
+			borderColor: '#ff8e24',
+			textColor: '#33231d',
+			sprite: 'info',
+			exitable: true,
+			ttl: 0,
+			onexit: () => {
+				// After user dismissed...
+				// Clear the newsUpdate string so it stops getting displayed by client
+				Cookies.remove('news_update_to_display');
+				// and set cookie as acknowledgment to the server that this specific news item was read and dismissed
+				Cookies.set('last_news_update_read', Cookies.get('news_update_id'));
+			}
+		});
+		newsCard.show();
 	}
+	
+	
+	// if (Cookies.get('accepted') != 'true') {
+	// 	let cookiesMessage = new NotificationCard('Scoutradioz uses some cookies in order to operate. We do not use third party cookies or tracking cookies.',
+	// 		{ttl: 0, exitable: true, onexit: function(){
+	// 			Cookies.set('accepted', 'true', {expires: 1000});
+	// 		}});
+	// 	// cookiesMessage.show();	2021-08-03 JL: Disabled cookie message because we probably don't need to show the message for the time being
+	// }
 	// JL TODO: Override Cookies.set() method to allow for a simple global cookie enable/disable switch?
 	//		We can't disable Cookies.org_key, but we can disable non necessary ones like report columns and the selected "Are you:" button on the chooseorg page
 	//		Possible text: "Before you reject the use of non-necessary cookies, please take a look at our cookie policy, where we explain what each is used for. We do not use third party cookies or tracking cookies."
@@ -266,7 +288,7 @@ function measureTime(cb: () => void) : number {
 }
 
 declare class Cookies {
-	static get(key: string): any;
-	static set(key: string, value: any, value2?: any): any;
+	static get(key: string): string;
+	static set(key: string, value: string, value2?: any): string;
 	static remove(key: string): void;
 }

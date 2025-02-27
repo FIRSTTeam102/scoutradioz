@@ -6,7 +6,7 @@
 	"types": "types",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "tsc"
+		"build": "npx tsc"
 	},
 	"repository": {
 		"type": "git",

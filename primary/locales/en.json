@@ -282,12 +282,15 @@
 	"allianceselection": {
 		"title": "Alliance selection",
 		"intro": "Tap a team, then tap the empty slot [2] or [3] to move them up.\nAs teams are selected for alliances, they will gray out in the table below.",
+		"skipRevisit": "If a team runs out of time, hit Skip to highlight that alliance slot as skipped and go to the next slot with the option to declare a pick. Skipped alliance slots get revisited (in the order that they were skipped) after each accepted alliance invitation or new time-expired violation.",
 		"preferred": "Before alliance selection, you and your team lead(s) can mark your preferred teams on <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">this page</a>.",
 		"tapForPopup": "Tap a team number to view that team's intel, including scouter notes.",
 		"undo": "Undo",
+		"skip": "Skip",
 		"allianceNumber": "Alliance {number}",
 		"showData": "Show team data",
 		"wontSave": "This page won't be saved.",
+		"noRankings": "No rankings available currently, try again later!",
 		"noPreviousState": "Previous state undefined",
 		"noLastMove": "Last move undefined",
 		"noAllianceAttribute": "Couldn't find alliance attribute for #{team}",
@@ -459,6 +462,7 @@
 			"matches": "Matches (FIRST data)",
 			"noEvent": "No event has been set",
 			"recalcDerived": "Recalculate derived metrics",
+			"recalcDerivedSuccess": "Derived metrics succesfully recalculated!",
 			"setCurrentEvent": "Set current event",
 			"setCurrentEventKey": "Set current event key",
 			"successClear": "Cleared current event successfully.",
@@ -480,6 +484,7 @@
 		},
 		"assignments": {
 			"pit": "Pit scouting assignments",
+			"noTeams": "List of teams not defined! Make sure to click 'Update current teams'",
 			"match": "Match scouting assignments",
 			"assignPitTeams": "Assign teams to pit scouting groups",
 			"assignMatchTeams": "Assign matches to selected scouters",
@@ -515,8 +520,13 @@
 			"invalidTeams": "Could not find a team with the number \"{number}\". Please enter a comma-separated list of FRC team numbers.",
 			"updatedSuccessfully": "Updated successfully.",
 			"updatedButFixSubteams": "Org config has updated, but one or more users will need to be updated due to subteam / class keys changing.\n- *Go through the list of users and make sure everyone has a subteam and class.\n- Click 'Update' for each user that has been updated.*",
+			"uploadImage": "Upload image",
+			"manageFormImages": "Manage form images",
 			"id": "ID",
 			"teams": "Team(s)"
+		},
+		"forms": {
+			"sprCalculation": "SPR calculation"
 		}
 	},
 	"date": "Date",

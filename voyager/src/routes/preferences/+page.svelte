@@ -12,7 +12,9 @@
 	<div class="flex flex-col">
 		<FormField>
 			<Checkbox bind:checked={$preferences.enableAutoSync} touch />
-			<span slot="label">{msg('user.preferences.enableAutoSync')}</span>
+			{#snippet label()}
+				<span>{msg('user.preferences.enableAutoSync')}</span>
+			{/snippet}
 		</FormField>
 	</div>
 </section>

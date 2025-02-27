@@ -526,8 +526,14 @@ router.post('/matchresults', wrap(async (req, res) => {
 			let redRP = 0;
 			let blueRP = 0;
 			let redWin = 0; let blueWin = 0; let isTie = 0;
-			if (thisMatch.winning_alliance == 'red') { redRP = 2; redWin = 1; }
-			if (thisMatch.winning_alliance == 'blue') { blueRP = 2; blueWin = 1; }
+
+			// 2025-01-14, M.O'C: Short-term patch to handle 3 RPs for a win (2025) instead of 2 (all other years up to 2024)
+			let rpsForWin = 2;
+			if (event_year == 2025)
+				rpsForWin = 3;
+
+			if (thisMatch.winning_alliance == 'red') { redRP = rpsForWin; redWin = 1; }
+			if (thisMatch.winning_alliance == 'blue') { blueRP = rpsForWin; blueWin = 1; }
 			if (thisMatch.winning_alliance == '') { redRP = 1; blueRP = 1; isTie = 1; }
 			for (let rpName of rankingPointNames) {
 				if (thisMatch.score_breakdown.red[rpName]) redRP++;

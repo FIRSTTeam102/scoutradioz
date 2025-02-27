@@ -2,10 +2,12 @@
 	import {
 		EventOperations,
 		FormLayoutOperations,
+		ImageOperations,
 		LightUserOperations,
 		MatchOperations,
 		MatchScoutingOperations,
 		PitScoutingOperations,
+		SchemaOperations,
 		TeamOperations
 	} from '$lib/DBOperations';
 	import db, {
@@ -44,20 +46,19 @@
 	// Retrieve the # of matchscouting and pitscouting layout elements in the DB
 	$: matchscoutingFormElements = liveQuery(async () => {
 		assert(event_key);
-
-		return await db.layout
-			.where({
-				org_key: org_key,
-				year: Number(event_key?.substring(0, 4)),
-				form_type: 'matchscouting'
-			})
-			.count();
+		try {
+			const schema = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
+			return schema.layout.length;
+		}
+		catch (err) {
+			return 0;
+		}
 	});
 
 	$: matchChecksum = liveQuery(async () => {
 		const syncStatus = await db.syncstatus
 			.where({
-				table: 'layout',
+				table: 'orgschema+schema',
 				filter: `org=${org_key},year=${event_year},type=matchscouting`
 			})
 			.first();
@@ -67,20 +68,19 @@
 
 	$: pitscoutingFormElements = liveQuery(async () => {
 		assert(event_key);
-
-		return await db.layout
-			.where({
-				org_key: org_key,
-				year: Number(event_key?.substring(0, 4)),
-				form_type: 'pitscouting'
-			})
-			.count();
+		try {
+			const schema = await SchemaOperations.getSchemaForOrgAndEvent(org_key, event_key, 'pitscouting');
+			return schema.layout.length;
+		}
+		catch (err) {
+			return 0;
+		}
 	});
 
 	$: pitChecksum = liveQuery(async () => {
 		const syncStatus = await db.syncstatus
 			.where({
-				table: 'layout',
+				table: 'orgschema+schema',
 				filter: `org=${org_key},year=${event_year},type=pitscouting`
 			})
 			.first();
@@ -151,36 +151,6 @@
 	$: users = liveQuery(async () => {
 		return await db.lightusers.where({ org_key: org_key }).count();
 	});
-
-	async function downloadMatches() {
-		try {
-			const matches = await fetchJSON<LightMatch[]>(`/api/${event_key}/matches`);
-			let numDeleted = await db.lightmatches
-				.where({
-					event_key: event_key
-				})
-				.delete();
-			logger.info(`${numDeleted} matches deleted from db`);
-
-			await db.lightmatches.bulkAdd(matches);
-
-			const event = await fetchJSON<str<Event>>(`/api/${event_key}`);
-			await db.events
-				.where({
-					key: event_key
-				})
-				.delete();
-			await db.events.add(event);
-
-			const teams = await fetchJSON<TeamLocal[]>(`/api/${event_key}/teams`);
-			// Clear teams
-			numDeleted = await db.teams.where('key').anyOf(event.team_keys).delete();
-			logger.info(`${numDeleted} teams deleted from db`);
-			await db.teams.bulkAdd(teams);
-		} catch (err) {
-			handleError(err);
-		}
-	}
 
 	let dangerouslyUploadAll = false;
 
@@ -274,6 +244,14 @@
 	}
 
 	async function downloadOrgInfo() {
+		// Download the org's full info
+		const org = await fetchJSON<str<Org>>(`/api/orgs/${org_key}`);
+		await db.orgs.put(org);
+		if (org.event_key !== event_key) {
+			logger.info('Event key changed; invalidating app store');
+			await invalidateAll();
+		}
+
 		// Download current event info, including teams
 		await EventOperations.download();
 		await TeamOperations.download();
@@ -281,12 +259,10 @@
 		// Download the org's users
 		await LightUserOperations.download(org_key);
 
-		// Download the org's full info
-		const org = await fetchJSON<str<Org>>(`/api/orgs/${org_key}`);
-		await db.orgs.put(org);
-
 		// Include the form layout download in this action
-		await FormLayoutOperations.download();
+		await SchemaOperations.download();
+		
+		await ImageOperations.download();
 
 		// since event_key can be updated after org is downloaded, force a reload
 		await invalidateAll();
@@ -301,7 +277,7 @@
 		snackbar.error(errorMessage);
 	}
 
-	async function wrap(func: () => void | Promise<void>) {
+	async function wrap(func: () => unknown | Promise<unknown>) {
 		try {
 			console.log('autoplay begin');
 			await refreshButtonAnimation.autoplay(func);
@@ -333,7 +309,7 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button variant="outlined" on:click={() => wrap(downloadOrgInfo)}>
+					<Button variant="outlined" onclick={() => wrap(downloadOrgInfo)}>
 						<Icon class="material-icons">person</Icon>
 						<BLabel>Download users / org info / event info</BLabel>
 					</Button>
@@ -352,15 +328,15 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button variant="outlined" on:click={() => wrap(MatchScoutingOperations.download)}>
+					<Button variant="outlined" onclick={() => wrap(MatchScoutingOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
-					<Button variant="outlined" on:click={() => wrap(MatchOperations.download)}>
+					<Button variant="outlined" onclick={() => wrap(MatchOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download matches</BLabel>
 					</Button>
-					<Button variant="outlined" on:click={() => wrap(uploadMatchScouting)}>
+					<Button variant="outlined" onclick={() => wrap(uploadMatchScouting)}>
 						<Icon class="material-icons">upload</Icon>
 						<BLabel>Upload data</BLabel>
 					</Button>
@@ -376,11 +352,11 @@
 			</Content>
 			<CActions>
 				<Group variant="outlined">
-					<Button variant="outlined" on:click={() => wrap(PitScoutingOperations.download)}>
+					<Button variant="outlined" onclick={() => wrap(PitScoutingOperations.download)}>
 						<Icon class="material-icons">download</Icon>
 						<BLabel>Download assignments</BLabel>
 					</Button>
-					<Button variant="outlined" on:click={() => wrap(uploadPitScouting)}>
+					<Button variant="outlined" onclick={() => wrap(uploadPitScouting)}>
 						<Icon class="material-icons">upload</Icon>
 						<BLabel>Upload data</BLabel>
 					</Button>
