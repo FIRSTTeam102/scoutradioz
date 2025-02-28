@@ -30,15 +30,15 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-		"scoutradioz-helpers": "file:../scoutradioz-helpers",
-		"scoutradioz-utilities": "file:../scoutradioz-utilities",
         "aws-serverless-express": "^3.4.0",
         "dotenv": "^8.2.0",
         "express": "^4.17.3",
         "express-async-handler": "^1.2.0",
         "log4js": "^6.4.2",
         "mongodb": "^4.12.1",
-		"scoutradioz-types": "file:../scoutradioz-types",
+        "scoutradioz-helpers": "file:../scoutradioz-helpers",
+        "scoutradioz-types": "file:../scoutradioz-types",
+        "scoutradioz-utilities": "file:../scoutradioz-utilities",
         "web-push": "^3.4.5"
     },
     "devDependencies": {

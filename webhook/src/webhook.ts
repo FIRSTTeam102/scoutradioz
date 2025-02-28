@@ -1,7 +1,9 @@
-import { LoggingEvent } from 'log4js';
-import express, { RequestHandler, Request, Response } from 'express';
+import type { LoggingEvent } from 'log4js';
+import type { RequestHandler, Request, Response } from 'express';
+import express from 'express';
 import utilities from 'scoutradioz-utilities';
-import helpers, { config as configHelpers } from 'scoutradioz-helpers';
+import { config as configHelpers, matchData as matchDataHelper } from 'scoutradioz-helpers';
+import type { Match } from 'scoutradioz-types';
 
 type AsyncHandler = (cb: RequestHandler2) => RequestHandler2;
 
@@ -20,12 +22,16 @@ const _crypto = require('crypto');
 const log4js = require('log4js');
 const wrap: AsyncHandler = require('express-async-handler');
 const webpush = require('web-push');
-//const utilities = require('@firstteam102/scoutradioz-utilities');
-//const helpers = require('@firstteam102/scoutradioz-helpers');
-const matchDataHelper = helpers.matchData;
 
 //utililties config
-utilities.config(require('../databases.json'));
+utilities.config(require('../databases.json'), {
+	cache: {
+		enable: true,
+		maxAge: 30,
+	},
+	debug: (process.env.UTILITIES_DEBUG === 'true'),
+	schemasWithNumberIds: ['users'],
+});
 //helpers.config(utilities); // pass the utilities db object to helpers
 configHelpers(utilities);
 
@@ -331,10 +337,12 @@ async function handleMatchScore( data: {match: Match} ) {
 	}
 	// Renaming the 'teams' attribute
 	if (!data.match.alliances.blue.team_keys) {
+		// @ts-ignore - this is for legacy webhook stuff
 		let blue_team_keys = data.match.alliances.blue.teams;
 		data.match.alliances.blue.team_keys = blue_team_keys;
 	}
 	if (!data.match.alliances.red.team_keys) {
+		// @ts-ignore - this is for legacy webhook stuff
 		let red_team_keys = data.match.alliances.red.teams;
 		data.match.alliances.red.team_keys = red_team_keys;
 	}
