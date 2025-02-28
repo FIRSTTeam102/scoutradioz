@@ -1,5 +1,7 @@
 import { LoggingEvent } from 'log4js';
 import express, { RequestHandler, Request, Response } from 'express';
+import utilities from 'scoutradioz-utilities';
+import helpers, { config as configHelpers } from 'scoutradioz-helpers';
 
 type AsyncHandler = (cb: RequestHandler2) => RequestHandler2;
 
@@ -18,13 +20,14 @@ const _crypto = require('crypto');
 const log4js = require('log4js');
 const wrap: AsyncHandler = require('express-async-handler');
 const webpush = require('web-push');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const helpers = require('@firstteam102/scoutradioz-helpers');
+//const utilities = require('@firstteam102/scoutradioz-utilities');
+//const helpers = require('@firstteam102/scoutradioz-helpers');
 const matchDataHelper = helpers.matchData;
 
 //utililties config
 utilities.config(require('../databases.json'));
-helpers.config(utilities); // pass the utilities db object to helpers
+//helpers.config(utilities); // pass the utilities db object to helpers
+configHelpers(utilities);
 
 //log4js config
 let log4jsConfig = {

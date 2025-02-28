@@ -1,46 +1,48 @@
 {
-	"name": "scoutradioz-webhook",
-	"version": "1.0.0",
-	"description": "The primary HTTP Lambda function that serves most requests on Scoutradioz.",
-	"main": "lambda.js",
-	"config": {
-		"s3BucketName": "scoutradioz-cloudformation",
-		"region": "us-east-1",
-		"cloudFormationStackName": "ScoutradiozWebhookStack",
-		"functionName": "WebhookFunction",
-		"accountId": "243452333432",
-		"functionFullName": "ScoutradiozWebhookStack-WebhookFunction-1H6LGBTNU9BST",
-		"folder": "webhook"
-	},
-	"scripts": {
-		"start": "npx nodemon ./src/www.ts",
-		"build": "npm ci --omit=dev && tsc",
-		"archive": "node ../scripts/uploadversion.js --archive --folder $npm_package_config_folder",
-		"win-archive": "node ../scripts/uploadversion.js --archive --folder %npm_package_config_folder%",
-		"win-upload-test": "npm run build && node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
-		"win-upload-qa": "npm run build && node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
-		"win-promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
-		"win-promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name %npm_package_config_functionFullName%",
-		"win-rollback-prod": "node ../scripts/rollbackversion.js --function-name %npm_package_config_functionFullName%",
-		"upload-test": "npx tsc && node ../scripts/uploadversion.js --alias test --folder $npm_package_config_folder --function-name $npm_package_config_functionFullName",
-		"upload-qa": "npx tsc && node ../scripts/uploadversion.js --alias qa --folder $npm_package_config_folder --function-name $npm_package_config_functionFullName",
-		"promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name $npm_package_config_functionFullName",
-		"promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name $npm_package_config_functionFullName",
-		"rollback-prod": "node ../scripts/rollbackversion.js --function-name $npm_package_config_functionFullName"
-	},
-	"license": "Apache-2.0",
-	"dependencies": {
-		"@firstteam102/scoutradioz-helpers": "^1.0.26",
-		"@firstteam102/scoutradioz-utilities": "^1.1.5",
-		"aws-serverless-express": "^3.4.0",
-		"dotenv": "^8.2.0",
-		"express": "^4.17.3",
-		"express-async-handler": "^1.2.0",
-		"log4js": "^6.4.2",
-		"web-push": "^3.4.5"
-	},
-	"devDependencies": {
-		"@types/express": "^4.17.13",
-		"@types/node": "^17.0.23"
-	}
+    "name": "scoutradioz-webhook",
+    "version": "1.0.0",
+    "description": "The primary HTTP Lambda function that serves most requests on Scoutradioz.",
+    "main": "lambda.js",
+    "config": {
+        "s3BucketName": "scoutradioz-cloudformation",
+        "region": "us-east-1",
+        "cloudFormationStackName": "ScoutradiozWebhookStack",
+        "functionName": "WebhookFunction",
+        "accountId": "243452333432",
+        "functionFullName": "ScoutradiozWebhookStack-WebhookFunction-1H6LGBTNU9BST",
+        "folder": "webhook"
+    },
+    "scripts": {
+        "start": "npx nodemon ./src/www.ts",
+        "build": "tsc",
+        "archive": "node ../scripts/uploadversion.js --archive --folder $npm_package_config_folder",
+        "win-archive": "node ../scripts/uploadversion.js --archive --folder %npm_package_config_folder%",
+        "win-upload-test": "yarn build && node ../scripts/uploadversion.js --alias test --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
+        "win-upload-qa": "yarn build && node ../scripts/uploadversion.js --alias qa --folder %npm_package_config_folder% --function-name %npm_package_config_functionFullName%",
+        "win-promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name %npm_package_config_functionFullName%",
+        "win-promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name %npm_package_config_functionFullName%",
+        "win-rollback-prod": "node ../scripts/rollbackversion.js --function-name %npm_package_config_functionFullName%",
+        "upload-test": "npx tsc && node ../scripts/uploadversion.js --alias test --folder $npm_package_config_folder --function-name $npm_package_config_functionFullName",
+        "upload-qa": "npx tsc && node ../scripts/uploadversion.js --alias qa --folder $npm_package_config_folder --function-name $npm_package_config_functionFullName",
+        "promote-test-qa": "node ../scripts/promoteversion.js --promote-from test --promote-to qa --function-name $npm_package_config_functionFullName",
+        "promote-qa-prod": "node ../scripts/promoteversion.js --promote-from qa --promote-to prod --function-name $npm_package_config_functionFullName",
+        "rollback-prod": "node ../scripts/rollbackversion.js --function-name $npm_package_config_functionFullName"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+		"scoutradioz-helpers": "file:../scoutradioz-helpers",
+		"scoutradioz-utilities": "file:../scoutradioz-utilities",
+        "aws-serverless-express": "^3.4.0",
+        "dotenv": "^8.2.0",
+        "express": "^4.17.3",
+        "express-async-handler": "^1.2.0",
+        "log4js": "^6.4.2",
+        "mongodb": "^4.12.1",
+		"scoutradioz-types": "file:../scoutradioz-types",
+        "web-push": "^3.4.5"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.13",
+        "@types/node": "^17.0.23"
+    }
 }

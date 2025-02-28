@@ -1,18 +1,20 @@
 {
-	"compilerOptions": {
-		"target": "es2020",
-		"module": "commonjs",
-		"rootDir": "./src",
-		"outDir": "./build",
-		"esModuleInterop": true,
-		"strict": true,
-		"newLine": "crlf",
-		//   "removeComments": true,
-	},
-	"include": [
-		"./src/*"
-	],
-	"ts-node": {
-		"transpileOnly": true, // VS Code has type checking built in, and TSC will also do it when we want to do a proper build.
-	}
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "commonjs",
+        "rootDir": "./src",
+        "lib": ["ES2022", "DOM"],
+        "outDir": "./build",
+        "esModuleInterop": true,
+        "strict": true,
+        "newLine": "crlf",
+        "skipLibCheck": true
+        //   "removeComments": true,
+    },
+    "include": [
+        "./src/*"
+    ],
+    "ts-node": {
+        "transpileOnly": true, // VS Code has type checking built in, and TSC will also do it when we want to do a proper build.
+    }
 }
