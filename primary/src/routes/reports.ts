@@ -1419,11 +1419,11 @@ router.get('/exportdata', wrap(async (req, res) => {
 	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',dataSpan=' + dataSpan + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
-	const { layout: matchLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+	const { layout: exportLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, dataType);
 
 	// sanity check
-	//logger.debug("layout=" + JSON.stringify(matchLayout));
-	if (!matchLayout || matchLayout.length == 0) {
+	//logger.debug("layout=" + JSON.stringify(exportLayout));
+	if (!exportLayout || exportLayout.length == 0) {
 		res.redirect('/?alert=' + res.msg('reports.exportData.noData', {type: dataType}));
 		return;
 	}
@@ -1498,7 +1498,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 					headerRow += ',scouter';
 				}
 				// add on metric IDs
-				for (let thisItem of matchLayout) {
+				for (let thisItem of exportLayout) {
 					// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
 					if (matchDataHelper.isMetric(thisItem) && !isOtherNotesAndUnauthorized(thisItem)) 
 						headerRow += ',' + thisItem.id;
@@ -1550,7 +1550,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 			}
 
 			// cycle through the metrics
-			for (let thisItem of matchLayout) {
+			for (let thisItem of exportLayout) {
 				// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
 				if (matchDataHelper.isMetric(thisItem) && !isOtherNotesAndUnauthorized(thisItem)) {
 					dataRow += ',';
