@@ -129,7 +129,11 @@ export class DerivedCalculator {
 				let varValue = this.parseValue(variable, true); // get value for comparison, allowing strings
 				if (typeof varValue === 'string') varValue = varValue.toLowerCase(); // for case insensitivity
 
-				let defaultVal = NaN;
+				// 2025-02-28, M.O'C: Band-aid until the following fixes/updates are in place...
+				// -- Fix Voyager so multiselects do not default to blank & do not set a value in the 'data' object if a multiselect isn't picked
+				// -- Update form validation to check & ensure that all the options in a multiselect() formula are actually represented in the specified field
+				// -- Possible: Extend multiselect() formula so users can override "default value" behavior if they desire
+				let defaultVal = 0;
 				if (rawArgs.length % 2 == 0) {
 					let lastValue = this.parseValue(rawArgs.pop() as string);
 					assert(typeof lastValue === 'number', new TypeError(`Expected default value of multiselect to be a number, but got string (${lastValue})`));
