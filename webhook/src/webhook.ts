@@ -280,7 +280,7 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 			aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
-		Promise.all(aggRangePromises);
+		await Promise.all(aggRangePromises);
 	}
 
 	// push notifications	
@@ -362,7 +362,7 @@ async function handleMatchScore( data: {match: Match} ) {
 			aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
-		Promise.all(aggRangePromises);
+		await Promise.all(aggRangePromises);
 	}
 	console.log(data.match.time, event_key);
 	// Find the match-after-next-match, for push notifications.
