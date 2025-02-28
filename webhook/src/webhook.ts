@@ -270,14 +270,17 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 	let orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
-		//var aggRangePromises = [];
+		let aggRangePromises = [];
 		for (let i in orgsAtEvent) {
 			let thisOrg = orgsAtEvent[i];
 			// 2022-04-06 JL note: No need to await these
-			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			// 2025-02-28 M.O'C: Might need to await these after all, they're not finishing
+			//matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			let thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
-		//Promise.all(aggRangePromises);
+		Promise.all(aggRangePromises);
 	}
 
 	// push notifications	
@@ -349,16 +352,17 @@ async function handleMatchScore( data: {match: Match} ) {
 	let orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
-		//var aggRangePromises = [];
+		let aggRangePromises = [];
 		for (let i in orgsAtEvent) {
 			let thisOrg = orgsAtEvent[i];
 			// 2022-04-06 JL note: No need to await these
-			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
-			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
-			//aggRangePromises.push(thisPromise);
+			// 2025-02-28 M.O'C: Might need to await these after all, they're not finishing
+			//matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
+			let thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
-		//Promise.all(aggRangePromises);
+		Promise.all(aggRangePromises);
 	}
 	console.log(data.match.time, event_key);
 	// Find the match-after-next-match, for push notifications.
