@@ -417,10 +417,8 @@ export class Utilities {
 
 		let manuallySpecifiedTier = args[0];
 		// Grab the tier -- either the first parameter or process.env.TIER
-		logger.info(`before check, manuallySpecifiedTier=${manuallySpecifiedTier}, process.env.TIER=${process.env.TIER}`);
 		if (typeof manuallySpecifiedTier === 'string') Utilities.instance.activeTier = manuallySpecifiedTier;
 		else Utilities.instance.activeTier = process.env.TIER;
-		logger.info(`after check, Utilities.instance.activeTier=${Utilities.instance.activeTier}`);
 		//set ready to true
 		Utilities.instance.ready = true;
 
@@ -430,7 +428,6 @@ export class Utilities {
 		}
 
 		let nextFunction = args[2]; // optional next() callback is the third parameter
-		logger.info(`typeof nextFunction=${typeof nextFunction}`);
 		if (typeof nextFunction === 'function') nextFunction();
 		else logger.warn('next() callback is not a function!');
 	}
