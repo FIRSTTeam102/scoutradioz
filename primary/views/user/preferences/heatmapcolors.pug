@@ -41,25 +41,28 @@ block content
 				th!=msg('user.heatmapcolors.sample')
 			each item in heatMapOptions
 				tr 
-					td= item.name 
+					td
+						label(for=`select_${item.key}`)= item.name 
 					td 
 						input(type="radio" id=`select_${item.key}` name="heatMapSelection" value=item.key checked=(item.key==defaultKey))
 					td
-						table
-							tr 
-								- for (var i=9; i>0; i--){
-									td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
-								- }
-							tr 
-								- let iVals = [5, 2, 7, 4, 9, 1, 3, 8, 6]
-								- for (var j=0; j<9; j++){
-									- //let i= Math.ceil(Math.random()*9)
-									- let i = iVals[j]
-									td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
-								- }
-							tr 
-								- for (var i=1; i<10; i++){
-									td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
-								- }
-		input(type='submit' value!=msg('scouting.submit'))
+						label(for=`select_${item.key}`)
+							table
+							
+								tr 
+									- for (var i=9; i>0; i--){
+										td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
+									- }
+								tr 
+									- let iVals = [5, 2, 7, 4, 9, 1, 3, 8, 6]
+									- for (var j=0; j<9; j++){
+										- //let i= Math.ceil(Math.random()*9)
+										- let i = iVals[j]
+										td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
+									- }
+								tr 
+									- for (var i=1; i<10; i++){
+										td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
+									- }
+		input(class="w3-btn theme-submit" type='submit' value!=msg('scouting.submit'))
 							
