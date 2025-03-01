@@ -1340,7 +1340,8 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 2}};
+			groupClause[thisLayout.id + 'CNT'] = {$count: {}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -1362,8 +1363,22 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			let thisLayout = scorelayout[scoreIdx];
 			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+				logger.debug(`${thisLayout.id + 'CNT'}=${thisAgg[thisLayout.id + 'CNT']}, ${thisLayout.id + 'MAX'}=${thisAgg[thisLayout.id + 'MAX']}, length=${thisAgg[thisLayout.id + 'MAX'].length}`);
+				let maxVal = 0;
+				let maxValLength = thisAgg[thisLayout.id + 'MAX'].length;
+				switch (maxValLength) {
+					case 0:
+						maxVal = 0;
+						break;
+					case 1:
+						maxVal = thisAgg[thisLayout.id + 'MAX'][0];
+						break;
+					default:
+						maxVal = thisAgg[thisLayout.id + 'MAX'][maxValLength - 1];
+						break;
+				}
 				let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-				let roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+				let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
 				thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 				thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 			}
