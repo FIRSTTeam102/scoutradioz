@@ -31,6 +31,18 @@ export declare class MatchDataHelper {
      * @param item layout element
      */
     static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem>;
+    /**
+     * Takes a sorted array of numbers (high to low, or low to high) and interpolates a value at a given percentile.
+     * If the numbers are high to low, the percentile would be how far along toward the highest the result should be.
+     * For length 0: returns 0
+     * For length 1: return the only value
+     * For length 2: returns a value interpolated between the two
+     * and so forth
+     * @param sortedArray The array of numbers
+     * @param percentile The target interpolated percentile. Defaults to 10/11 (~90th percentile, means at 12 elements function will return the 11th element)
+     * @returns the interpolated value
+     */
+    static extractPercentileFromSortedArray(sortedArray: number[], percentile?: number): number;
     static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData): number;
     /**
      * Calculate derived metrics for a provided array of match data items.

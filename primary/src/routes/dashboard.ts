@@ -576,7 +576,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				//	Therefore, keeping the avg as .id and adding MAX as an "option" (to be displayed small on the table)
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
-				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+				//groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+				groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			}
 		}
 		//add $group > groupClause (Layout w/ data)
@@ -615,7 +616,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				let thisLayout = scoreLayout[scoreIdx];
 				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 					let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-					let roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+					let maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
+					let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
 					thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 					thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 				}

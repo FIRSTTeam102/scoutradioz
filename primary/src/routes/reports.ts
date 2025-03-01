@@ -306,12 +306,12 @@ router.get('/teamintel', wrap(async (req, res) => {
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
-			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MIN'] = {$minN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -336,10 +336,12 @@ router.get('/teamintel', wrap(async (req, res) => {
 			// Recompute VAR first = StdDev/Mean
 			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
+			let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+			aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
 			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
 			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			aggRow['max'] = (Math.round(aggresult[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+			let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+			aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
 			aggTable.push(aggRow);
 		}
 	}
@@ -514,12 +516,12 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
-			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MIN'] = {$minN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -544,10 +546,12 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 			// Recompute VAR first = StdDev/Mean
 			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
+			let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+			aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
 			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
 			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			aggRow['max'] = (Math.round(aggresult[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+			let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+			aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
 			aggTable.push(aggRow);
 		}
 	}
@@ -1340,8 +1344,8 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
-			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 2}};
-			groupClause[thisLayout.id + 'CNT'] = {$count: {}};
+			// 2020-03-01, M.O'C: Converting MAX to Nth (~90th) percentile
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -1363,22 +1367,11 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			let thisLayout = scorelayout[scoreIdx];
 			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-				logger.debug(`${thisLayout.id + 'CNT'}=${thisAgg[thisLayout.id + 'CNT']}, ${thisLayout.id + 'MAX'}=${thisAgg[thisLayout.id + 'MAX']}, length=${thisAgg[thisLayout.id + 'MAX'].length}`);
-				let maxVal = 0;
-				let maxValLength = thisAgg[thisLayout.id + 'MAX'].length;
-				switch (maxValLength) {
-					case 0:
-						maxVal = 0;
-						break;
-					case 1:
-						maxVal = thisAgg[thisLayout.id + 'MAX'][0];
-						break;
-					default:
-						maxVal = thisAgg[thisLayout.id + 'MAX'][maxValLength - 1];
-						break;
-				}
 				let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				// 2020-03-01, M.O'C: Converting MAX to Nth (~90th) percentile
+				let maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
 				let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
+				//logger.debug(`${thisLayout.id + 'MAX'}=${thisAgg[thisLayout.id + 'MAX']}, length=${thisAgg[thisLayout.id + 'MAX'].length}... maxVal=${maxVal}`);
 				thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 				thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 			}

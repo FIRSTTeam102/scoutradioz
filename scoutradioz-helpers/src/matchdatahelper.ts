@@ -103,6 +103,37 @@ export class MatchDataHelper {
 		}
 	}
 
+	/**
+	 * Takes a sorted array of numbers (high to low, or low to high) and interpolates a value at a given percentile.
+	 * If the numbers are high to low, the percentile would be how far along toward the highest the result should be.
+	 * For length 0: returns 0
+	 * For length 1: return the only value
+	 * For length 2: returns a value interpolated between the two
+	 * and so forth
+	 * @param sortedArray The array of numbers
+	 * @param percentile The target interpolated percentile. Defaults to 10/11 (~90th percentile, means at 12 elements function will return the 11th element)
+	 * @returns the interpolated value
+	 */
+	static extractPercentileFromSortedArray(sortedArray: number[], percentile: number = 10.0/11.0): number {
+		let maxVal = 0; let firstVal = 0; let secondVal = 0;
+		let maxValLength = sortedArray.length; let lengthPercent = 0;
+		switch (maxValLength) {
+			case 0:
+				maxVal = 0;
+				break;
+			case 1:
+				maxVal = sortedArray[0];
+				break;
+			default:
+				firstVal = sortedArray[0];
+				secondVal = sortedArray[1];
+				lengthPercent = (maxValLength - 2)/(maxValLength - 1);
+				maxVal = secondVal + (firstVal - secondVal) * ((percentile - lengthPercent) / (1 - lengthPercent));
+				break;
+		}
+		return maxVal;
+	}
+
 	static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData) {
 		let derivedMetric = NaN;
 		// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
@@ -1032,7 +1063,7 @@ export class MatchDataHelper {
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 				groupClause[thisLayout.id + 'AVG'] = { $last: '$' + thisLayout.id + 'EMA' };
-				groupClause[thisLayout.id + 'MAX'] = { $max: '$data.' + thisLayout.id };
+				groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			}
 		}
 
@@ -1068,7 +1099,8 @@ export class MatchDataHelper {
 				for (let teamIdx = 0; teamIdx < teamList.length; teamIdx++) {
 					if (aggRowsByTeam[teamList[teamIdx]]) {
 						avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'] * 10) / 10).toFixed(1);
-						maxRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX'] * 10) / 10).toFixed(1);
+						let maxVal = this.extractPercentileFromSortedArray(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG']);
+						maxRow[teamList[teamIdx]] = (Math.round(maxVal * 10) / 10).toFixed(1);
 					}
 				}
 				avgTable.push(avgRow);
