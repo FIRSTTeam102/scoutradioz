@@ -33,7 +33,8 @@ utilities.refreshTier();
     await utilities.insert('heatmapcolors', { name: 'Steamship', key: 'steamship', min: { r: 106, g: 74, b: 60 }, max: { r: 15, g: 101, b: 161 } })
     await utilities.insert('heatmapcolors', { name: 'Beach', key: 'beach', min: { r: 255, g: 190, b: 106 }, max: { r: 64, g: 176, b: 166 } })
     await utilities.insert('heatmapcolors', { name: 'Moraine', key: 'moraine', min: { r: 73, g: 41, b: 10 }, max: { r: 40, g: 203, b: 236 } })
-
+    await utilities.insert('heatmapcolors', { name: 'Orple test', key: 'test4', min: { r: 40, g: 20, b: 68 }, max: { r: 117, g: 49, b: 17 } })
+    await utilities.insert('heatmapcolors', { name: 'Orple test 2', key: 'test5', min: { r: 120, g: 60, b: 204 }, max: { r: 351, g: 147, b: 51 } })
     process.exit(0);
 })();
 // grayscale min(0,0,0), max(200,200,200)!
