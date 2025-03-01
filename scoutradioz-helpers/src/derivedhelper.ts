@@ -1,7 +1,6 @@
 import assert from 'assert';
 import log4js from '@log4js-node/log4js-api';
 import type { AnyDict, EventKey, OrgKey } from 'scoutradioz-types';
-import { NONAME } from 'dns';
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
 
