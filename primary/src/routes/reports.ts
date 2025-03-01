@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { AggRange, Event, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, SchemaItem, Team, Upload } from 'scoutradioz-types';
+import type { AggRange, Event, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, SchemaItem, Team, Upload, HeatMapColors, } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
@@ -17,6 +17,16 @@ router.all('/*', wrap(async (req, res, next) => {
 	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate (Permissions.ACCESS_VIEWER)) {
+		let cookieKey= 'scoutradiozheatmap';
+		if (req.cookies[cookieKey]) {
+			logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
+			let heatMapColors: HeatMapColors = await utilities.findOne('heatmapcolors',
+				{key: req.cookies[cookieKey]}, 
+				{},
+				{allowCache: true}
+			);
+			res.locals.heatMapColors= heatMapColors;
+		}
 		next();
 	}
 }));
@@ -1380,7 +1390,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
-	
+
 	res.render('./reports/allteammetrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
 		aggdata: aggArray,

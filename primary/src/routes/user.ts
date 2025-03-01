@@ -6,7 +6,7 @@ import wrap from '../helpers/express-async-handler';
 // import utilities from '../../../scoutradioz-utilities/src/utilities';
 import { matchData as matchDataHelper } from 'scoutradioz-helpers';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { Org, Role, User } from 'scoutradioz-types';
+import type { Org, Role, User, HeatMapColors } from 'scoutradioz-types';
 import Permissions from '../helpers/permissions';
 
 const router = express.Router();
@@ -631,6 +631,34 @@ router.get('/preferences', wrap(async (req, res) => {
 	res.redirect('/user/preferences/reportcolumns');
 }));
 
+router.get('/preferences/heatmapcolors', wrap(async (req, res) =>  {
+	logger.addContext('funcName', 'preferences/heatmapcolors[get]');
+	logger.info('ENTER');
+	
+	let redirectURL = req.getFixedRedirectURL(); //////////////////////////////
+
+	let heatMapOptions: HeatMapColors[] = await utilities.find('heatmapcolors',
+		{}, 
+		{sort: {name: 1}},
+		{allowCache: true}
+	);
+	logger.debug(`Heat map options= ${JSON.stringify(heatMapOptions)}`);
+
+	let cookieKey= 'scoutradiozheatmap';
+	let defaultKey= 'default';
+	if (req.cookies[cookieKey]) {
+		logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
+		defaultKey= req.cookies[cookieKey];
+	}
+
+	res.render('./user/preferences/heatmapcolors', {
+		title: req.msg('user.heatmapcolors.title'),
+		heatMapOptions,
+		redirectURL: redirectURL,
+		defaultKey,
+	});
+}));
+
 router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'preferences/reportcolumns[get]');
 	logger.info('ENTER');
@@ -689,6 +717,24 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 		matchDataHelper: matchDataHelper,
 		redirectURL: redirectURL,
 	});
+}));
+
+router.post('/preferences/heatmapcolors', wrap(async (req, res) => {
+	logger.addContext('funcName', 'preferences/heatmapcolors[post]');
+	logger.info('ENTER');
+
+	let cookieKey = 'scoutradiozheatmap';
+	
+	logger.debug('req.body=' + JSON.stringify(req.body));
+	
+	if(req.body['heatMapSelection']){
+		res.cookie(cookieKey, req.body['heatMapSelection'], {maxAge: 30E9});
+	}
+
+	let redirectURL = req.getFixedRedirectURL() || '/home';
+	logger.debug(`Redirect: ${redirectURL}`);
+
+	res.redirect(redirectURL + '?alert=' + req.msgUrl('user.reportcolumns.saved') + '&type=success&autofade=true');
 }));
 
 router.post('/preferences/reportcolumns', wrap(async (req, res) => {
