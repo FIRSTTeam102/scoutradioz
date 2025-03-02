@@ -269,7 +269,32 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
 	
 	let match = await utilities.findOne('matches', {key: match_key});
-	if (!match) return logger.error(`Match not found: ${match_key}`), res.send(`Match not found: ${match_key}`);
+	if (!match) {
+		logger.warn(`Can't find match ${match_key} attempting to (re)pull schedule`);
+		// 2025-03-02, M.O'C: We *really* shouldn't be getting a "upcoming match" notification without one in the system
+		// so this likely means we missed a schedule update webhook... if so, re-pull the schedule
+	
+		// Reload the matches
+		let url = 'event/' + event_key + '/matches';
+		logger.debug('url=' + url);
+		let matchData = await utilities.requestTheBlueAlliance(url);
+		if (matchData && matchData.length && matchData.length > 0) {
+			logger.debug(`Matches received: ${matchData.length}`);
+	
+			// First delete existing match data for the given event
+			await utilities.remove('matches', {'event_key': event_key});
+			// Now, insert the new data
+			await utilities.insert('matches', matchData);
+			logger.info(`Schedule reload for ${event_key} complete`);
+
+			// try to re-pull the one match
+			match = await utilities.findOne('matches', {key: match_key});
+			if (!match) return logger.error(`Match not found: ${match_key}`), res.send(`Match not found: ${match_key}`);
+		}
+		else {
+			return logger.error(`No matches found! match: ${match_key}, event: ${event_key}`), res.send(`No matches found! match: ${match_key}, event: ${event_key}`);
+		}
+	}
 
 	// Synchronize the rankings (just in case)
 	await syncRankings(event_key);
