@@ -586,11 +586,8 @@ export class MatchDataHelper {
 		);
 		// 2025-03-02, M.O'C: during webhook updates when multiple teams are at the same event,
 		// if one team's schema blows this assert then most or none of the teams get updated
-		try {
-			assert(orgschema);
-		}
-		catch (error) {
-			logger.error(`Caught ${error} for org_key=${org_key}, event_year=${event_year}, event_key=${event_key} - exiting function`);
+		if (!orgschema) {
+			logger.warn(`No orgschema for org_key=${org_key}, event_year=${event_year}, event_key=${event_key} - exiting`);
 			return;
 		}
 
