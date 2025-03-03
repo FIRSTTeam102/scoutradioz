@@ -584,7 +584,13 @@ export class MatchDataHelper {
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
-		assert(orgschema);
+		// 2025-03-02, M.O'C: during webhook updates when multiple teams are at the same event,
+		// if one team's schema blows this assert then most or none of the teams get updated
+		if (!orgschema) {
+			logger.warn(`No orgschema for org_key=${org_key}, event_year=${event_year}, event_key=${event_key} - exiting`);
+			return;
+		}
+
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
