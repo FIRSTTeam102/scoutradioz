@@ -169,6 +169,7 @@
 		"passwordalreadyexists": "Password already exists. Please submit your current password.",
 		"newpasswordboth": "Please fill both password forms.",
 		"newpasswordsuccess": "Set password successfully.",
+		"customizereports": "Customize reports",
 		"reportcolumns": {
 			"title": "Choose report columns",
 			"saved": "Saved column preferences successfully.",
@@ -181,6 +182,12 @@
 			"save": "Save column selections",
 			"clearOrgDefaults": "Clear organization defaults",
 			"clearOrgDefaultsConfirmation": "Doing this will clear your organization's report column defaults (for EVERYONE, not just you). Are you sure?"
+		},
+		"heatmapcolors": {
+			"title":"Choose heat map colors",
+			"intro": "Choose a color scheme for the heat maps on data. This is designed to allow people who are color blind to visualize the data easier.",
+			"name": "Name",
+			"sample":"Sample"
 		}
 	},
 	"scouting": {

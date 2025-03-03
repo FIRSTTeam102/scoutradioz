@@ -1,0 +1,67 @@
+//-
+	User config page with checkboxes to choose which columns are visible in a report.
+		PARAM
+			title- title of the page
+			heatMapOptions- all the possible color options
+			rederectURL- page redirected back to when form is submitted
+			defaultKey- which key is selected
+		user.ts	
+		'/user/preferences/heatmapcolors'
+	//
+extends ../../layout
+block content
+	h2!=msg('user.heatmapcolors.title')
+	h6
+		i!=msgMarked('user.heatmapcolors.intro')
+	
+	- var valStyle = 'w3-right-align w3-text-white'
+	
+	- function getValR(min, max, val, item) { if (min == max) return item.min.r; var thisVal = val; if (thisVal < min) thisVal = min; if (thisVal > max) thisVal = max; return ( Math.round(((thisVal - min)/(max - min)) * (item.max.r - item.min.r) + item.min.r) ) }
+	- function getValG(min, max, val, item) { if (min == max) return item.min.g; var thisVal = val; if (thisVal < min) thisVal = min; if (thisVal > max) thisVal = max; return ( Math.round(((thisVal - min)/(max - min)) * (item.max.g - item.min.g) + item.min.g) ) }
+	- function getValB(min, max, val, item) { if (min == max) return item.min.b; var thisVal = val; if (thisVal < min) thisVal = min; if (thisVal > max) thisVal = max; return ( Math.round(((thisVal - min)/(max - min)) * (item.max.b - item.min.b) + item.min.b) ) }
+
+	style.
+		.table-fixed {
+			vertical-align: text-bottom;
+			width: 50px;
+		}
+		.table-variable {
+			vertical-align: text-bottom;
+			width: #{colPercent}%;
+		}
+
+	form(action="/user/preferences/heatmapcolors" method="post")
+		input(type="hidden" name="redirectURL" value=redirectURL)
+		div(class="w3-section w3-auto")
+		table(class="w3-table metricTable")
+			tr
+				th!=msg('user.heatmapcolors.name')
+				th 
+				th!=msg('user.heatmapcolors.sample')
+			each item in heatMapOptions
+				tr 
+					td
+						label(for=`select_${item.key}`)= item.name 
+					td 
+						input(type="radio" id=`select_${item.key}` name="heatMapSelection" value=item.key checked=(item.key==defaultKey))
+					td
+						label(for=`select_${item.key}`)
+							table
+							
+								tr 
+									- for (var i=9; i>0; i--){
+										td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
+									- }
+								tr 
+									- let iVals = [5, 2, 7, 4, 9, 1, 3, 8, 6]
+									- for (var j=0; j<9; j++){
+										- //let i= Math.ceil(Math.random()*9)
+										- let i = iVals[j]
+										td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
+									- }
+								tr 
+									- for (var i=1; i<10; i++){
+										td(class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
+									- }
+		input(class="w3-btn theme-submit" type='submit' value!=msg('scouting.submit'))
+							
