@@ -265,7 +265,8 @@
 		"teamName": "Team name",
 		"none": "None",
 		"photo": "Photo",
-		"loadTeamPhotos": "Refresh with team photos"
+		"loadTeamPhotos": "Refresh with team photos",
+		"moreMatches": "There are more matches in the schedule, but will be revealed as matches are completed."
 	},
 	"driveDashboard": {
 		"title": "Drive team dashboard",
