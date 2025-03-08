@@ -667,7 +667,7 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 	if (typeof teamsInput !== 'string') throw new e.UserError(res.msg('errors.specifyTeamCsv'));
 
 	// use helper function
-	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamsInput, req.cookies);
+	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamsInput, req.cookies, true);
 	
 	let teams = allianceStatsData.teams;
 	let teamList = allianceStatsData.teamList;
@@ -772,7 +772,7 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
 
 	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -822,7 +822,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
 
 	let aggQuery = [];
 	let redAllianceArray = match.alliances.red.team_keys;

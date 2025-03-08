@@ -66,7 +66,7 @@ export declare class MatchDataHelper {
      * @param {string} colCookie Comma-separated list of metric IDs
      * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
      */
-    static getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string): Promise<MongoDocument[]>;
+    static getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns?: boolean): Promise<MongoDocument[]>;
     /**
      * Recalculates aggregated data ranges for org & event and stores in DB
      * @param {string} org_key Org key
@@ -88,9 +88,10 @@ export declare class MatchDataHelper {
      * @param {string} org_key Org key
      * @param {string} teams_list Comma-separated list of teams, red alliance first, use ",0" between red list and blue list
      * @param {object} cookies req.cookies
+     * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
      * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
      */
-    static getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any): Promise<AllianceStatsData>;
+    static getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any, showAllColumns?: boolean): Promise<AllianceStatsData>;
     /**
      * Get the form layout / schema for a given event and org.
      * TODO: this function doesn't exactly belong in this function cuz it's not directly related to matchdata

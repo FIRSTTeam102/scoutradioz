@@ -316,6 +316,9 @@
 		"metricMAX": "Metric (max)",
 		"MIN1": "Minimum",
 		"VAR1": "Variance",
+		"STDDEVtwoWordAbbreviation": "Std Dev",
+		"NTHPRCtwoWordAbbreviation": "{n}th %ile",
+		"MOVAVGtwoWordAbbreviation": "Mov Avg",
 		"metric": "Metric",
 		"insufficientData": "Insufficient data at this time, come back later!"
 	},

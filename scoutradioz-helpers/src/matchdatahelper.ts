@@ -491,7 +491,7 @@ export class MatchDataHelper {
 	 * @param {string} colCookie Comma-separated list of metric IDs
 	 * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
 	 */
-	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string) {
+	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getModifiedMatchScoutingLayout');
 		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
 
@@ -567,7 +567,8 @@ export class MatchDataHelper {
 		logger.trace('noneSelected=' + noneSelected + ',savedCols=' + JSON.stringify(savedCols));
 
 		// Use the cookies (if defined, or if defaults set) to slim down the layout array
-		if (noneSelected)
+		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
+		if (noneSelected || showAllColumns)
 			scorelayout = scorelayoutDB;
 		else {
 			// Weed out unselected columns
@@ -1003,9 +1004,10 @@ export class MatchDataHelper {
 	 * @param {string} org_key Org key
 	 * @param {string} teams_list Comma-separated list of teams, red alliance first, use ",0" between red list and blue list
 	 * @param {object} cookies req.cookies
+	 * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
 	 * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
 	 */
-	static async getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any) {
+	static async getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getAllianceStatsData');
 
 		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
@@ -1018,7 +1020,8 @@ export class MatchDataHelper {
 		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 		let cookie_key = org_key + '_' + event_year + '_cols';
 		let colCookie = cookies[cookie_key];
-		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
+		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
 
 		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match: { 'team_key': { $in: teamList }, 'org_key': org_key, 'event_key': event_key } });
@@ -1099,7 +1102,7 @@ export class MatchDataHelper {
 				for (let teamIdx = 0; teamIdx < teamList.length; teamIdx++) {
 					if (aggRowsByTeam[teamList[teamIdx]]) {
 						avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'] * 10) / 10).toFixed(1);
-						let maxVal = this.extractPercentileFromSortedArray(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG']);
+						let maxVal = this.extractPercentileFromSortedArray(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX']);
 						maxRow[teamList[teamIdx]] = (Math.round(maxVal * 10) / 10).toFixed(1);
 					}
 				}
