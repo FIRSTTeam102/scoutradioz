@@ -316,12 +316,12 @@ router.get('/teamintel', wrap(async (req, res) => {
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
-			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MIN'] = {$minN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -346,10 +346,12 @@ router.get('/teamintel', wrap(async (req, res) => {
 			// Recompute VAR first = StdDev/Mean
 			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
+			let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+			aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
 			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
 			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			aggRow['max'] = (Math.round(aggresult[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+			let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+			aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
 			aggTable.push(aggRow);
 		}
 	}
@@ -524,12 +526,12 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
-			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MIN'] = {$minN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -554,10 +556,12 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 			// Recompute VAR first = StdDev/Mean
 			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
+			let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+			aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
 			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
 			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			aggRow['max'] = (Math.round(aggresult[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+			let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+			aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
 			aggTable.push(aggRow);
 		}
 	}
@@ -673,7 +677,7 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 	if (typeof teamsInput !== 'string') throw new e.UserError(res.msg('errors.specifyTeamCsv'));
 
 	// use helper function
-	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamsInput, req.cookies);
+	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamsInput, req.cookies, true);
 	
 	let teams = allianceStatsData.teams;
 	let teamList = allianceStatsData.teamList;
@@ -778,7 +782,7 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
 
 	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -828,7 +832,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
 
 	let aggQuery = [];
 	let redAllianceArray = match.alliances.red.team_keys;
@@ -1144,7 +1148,8 @@ router.get('/metrics', wrap(async (req, res) => {
 			aggRow['key'] = thisLayout.id;
 			
 			// Recompute VAR first = StdDev/Mean
-			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
+			// 2025-03-08, M.O'C: leave it as stddev... hey turns out it was stddev all along (this result got overwritten below anyway)
+			//aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 		
 			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
 			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
@@ -1241,7 +1246,8 @@ router.get('/metricintel', wrap(async (req, res) => {
 		for (let thisAgg of aggdata) {
 			//var thisAgg = aggdata[aggIdx];
 			// Recompute VAR first = StdDev/Mean
-			thisAgg[metricKey + 'VAR'] = thisAgg[metricKey + 'VAR'] / (thisAgg[metricKey + 'AVG'] + 0.001);
+			// 2025-03-08, M.O'C: leave it as stddev
+			//thisAgg[metricKey + 'VAR'] = thisAgg[metricKey + 'VAR'] / (thisAgg[metricKey + 'AVG'] + 0.001);
 			
 			thisAgg[metricKey + 'MIN'] = (Math.round(thisAgg[metricKey + 'MIN'] * 10)/10).toFixed(1);
 			thisAgg[metricKey + 'AVG'] = (Math.round(thisAgg[metricKey + 'AVG'] * 10)/10).toFixed(1);
@@ -1350,7 +1356,8 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			// 2020-03-01, M.O'C: Converting MAX to Nth (~90th) percentile
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -1373,7 +1380,10 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-				let roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+				// 2020-03-01, M.O'C: Converting MAX to Nth (~90th) percentile
+				let maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
+				let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
+				//logger.debug(`${thisLayout.id + 'MAX'}=${thisAgg[thisLayout.id + 'MAX']}, length=${thisAgg[thisLayout.id + 'MAX'].length}... maxVal=${maxVal}`);
 				thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 				thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 			}
