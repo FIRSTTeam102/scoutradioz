@@ -1138,7 +1138,8 @@ router.get('/metrics', wrap(async (req, res) => {
 			aggRow['key'] = thisLayout.id;
 			
 			// Recompute VAR first = StdDev/Mean
-			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
+			// 2025-03-08, M.O'C: leave it as stddev... hey turns out it was stddev all along (this result got overwritten below anyway)
+			//aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 		
 			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
 			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
@@ -1235,7 +1236,8 @@ router.get('/metricintel', wrap(async (req, res) => {
 		for (let thisAgg of aggdata) {
 			//var thisAgg = aggdata[aggIdx];
 			// Recompute VAR first = StdDev/Mean
-			thisAgg[metricKey + 'VAR'] = thisAgg[metricKey + 'VAR'] / (thisAgg[metricKey + 'AVG'] + 0.001);
+			// 2025-03-08, M.O'C: leave it as stddev
+			//thisAgg[metricKey + 'VAR'] = thisAgg[metricKey + 'VAR'] / (thisAgg[metricKey + 'AVG'] + 0.001);
 			
 			thisAgg[metricKey + 'MIN'] = (Math.round(thisAgg[metricKey + 'MIN'] * 10)/10).toFixed(1);
 			thisAgg[metricKey + 'AVG'] = (Math.round(thisAgg[metricKey + 'AVG'] * 10)/10).toFixed(1);
