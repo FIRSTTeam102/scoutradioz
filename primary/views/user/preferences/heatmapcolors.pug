@@ -42,37 +42,28 @@ block content
 		div(class="w3-section w3-auto" )
 			table(class="w3-table metricTable" width=145)
 				each item in heatMapOptions
-					tr
+					tr(data-for=`select_${item.key}`)
 						td(width=100)
 						td(width=100)
-						label(for=`select_${item.key}`)
-							- for (var i=9; i>0; i--){
-								td(height=30 width=40 class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)}`)
-									label(style='height=100% width=100%' for=`select_${item.key}`)
-										div= i
-							- }
-					tr 
-						- let iVals = [5, 2, 7, 4, 9, 1, 3, 8, 6]
-						td
-							label(for=`select_${item.key}`)= item.name 
+						each i in [9, 8, 7, 6, 5, 4, 3, 2, 1]
+							td(height=30 width=40 class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)}`)= i
+					tr(data-for=`select_${item.key}`) 
+						td= item.name 
 						td 
 							input(type="radio" id=`select_${item.key}` name="heatMapSelection" value=item.key checked=(item.key==defaultKey))
-						- for (var j=0; j<9; j++){
-							- //let i= Math.ceil(Math.random()*9)
-							- let i = iVals[j]
-							td(height=30 width=40 class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)
-								label(style='height=100% width=100%' for=`select_${item.key}`)
-									div= i
-						- }
-					tr
+						each i in [5, 2, 7, 4, 9, 1, 3, 8, 6]
+							td(height=30 width=40 class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
+					tr(data-for=`select_${item.key}`)
 						td 
 						td  
-							- for (var i=1; i<10; i++){
-								td(height=30 width=40 class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)
-									label(style='height=100% width=100%' for=`select_${item.key}`)
-										div= i
-							- }
+						each i in [1, 2, 3, 4, 5, 6, 7, 8, 9]
+							td(height=30 width=40 class=`${valStyle}` style=`background-color: rgb(${getValR(1, 9, i, item)},${getValG(1, 9, i, item)},${getValB(1, 9, i, item)})`)= i
 					tr 
 					td(hight=15)
 		input(class="w3-btn theme-submit" type='submit' value!=msg('scouting.submit'))
-							
+	script.
+		//- Emulate "label(for=...)" behavior with a click handler
+		$('[data-for]').on('click', function() {
+			const id = $(this).attr('data-for');
+			$('#' + id).prop('checked', true);
+		});
