@@ -12,6 +12,28 @@ block content
 			padding: 8px 16px;
 			margin-left: -60px;
 		}
+		tbody tr {
+			counter-increment: row-number;
+		}
+		thead tr::before {
+			content: ""
+		}
+		tbody tr::before {
+			content: counter(row-number);
+			display: table-cell;
+			padding: 8px 0px;
+			text-align: right;
+			opacity: 0.7;
+		}
+		tbody {
+			counter-reset: row-number;
+		}
+		@media(max-width: 425px) {
+			.w3-table th, .w3-table td {
+				padding-left: 4px;
+				padding-right: 4px;
+			}
+		}
 	include templates/heatmap
 	- var aggRangeMap = [];
 	for scoreItem in currentAggRanges
@@ -23,20 +45,14 @@ block content
 	h6.i!=msg('reports.teamClick')
 	
 	if (aggdata)
-		div(class="w3-auto w3-content")
-			div(class="w3-show-inline-block")
-				table(class="w3-table")
-					tr
-						th(class="w3-right-align w3-tooltip") 
-					each agg, i in aggdata
-						tr
-							td(class="w3-right-align")= i+1
-			div(class="w3-show-inline-block")
-				table(class="w3-table" id="metricTable")
+		div(class="w3-auto w3-content" style="max-width: 600px;")
+			table(class="w3-table" id="metricTable")
+				thead
 					tr
 						th(class="w3-center")!=msg('reports.team')
 						each metric in ['MIN', 'AVG', 'VAR', 'MAX']
 							th(class="w3-right-align w3-tooltip")!=msg(`metrics.${metric}1`)
+				tbody
 					each agg, i in aggdata
 						tr
 							td(class="w3-text-light-gray w3-center")

@@ -226,6 +226,11 @@ export class I18n {
 
 	// Replace named keywords (eg. {name}) with arguments
 	_parameterize(text: string, parameters?: I18nParameters) {
+		// Tooltip separator
+		if (text.includes('|>')) {
+			let [label, tooltip] = text.split('|>');
+			text = `<span class="w3-tooltip">${label}<span class="w3-tooltiptext">${tooltip}</span>`;
+		}
 		// @todo: Make escaping work (eg. \{c} or {c\}c})
 		if (parameters && typeof parameters === 'object')
 			return text.replace(/\{([^}]+)\}/g, (match, key) => {
@@ -238,7 +243,7 @@ export class I18n {
 	// Returns a plain message with substituted args
 	@qqxOutput()
 	msg(name: string, parameters?: I18nParameters) {
-		return this.sanitizeHtml(this._parameterize(this._rawMsg(name, this.locale), parameters), false);
+		return this.sanitizeHtml(this._parameterize(this._rawMsg(name, this.locale), parameters));
 	}
 
 	// Returns a URL-encoded message
