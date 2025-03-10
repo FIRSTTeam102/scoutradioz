@@ -103,6 +103,37 @@ export class MatchDataHelper {
 		}
 	}
 
+	/**
+	 * Takes a sorted array of numbers (high to low, or low to high) and interpolates a value at a given percentile.
+	 * If the numbers are high to low, the percentile would be how far along toward the highest the result should be.
+	 * For length 0: returns 0
+	 * For length 1: return the only value
+	 * For length 2: returns a value interpolated between the two
+	 * and so forth
+	 * @param sortedArray The array of numbers
+	 * @param percentile The target interpolated percentile. Defaults to 10/11 (~90th percentile, means at 12 elements function will return the 11th element)
+	 * @returns the interpolated value
+	 */
+	static extractPercentileFromSortedArray(sortedArray: number[], percentile: number = 10.0/11.0): number {
+		let maxVal = 0; let firstVal = 0; let secondVal = 0;
+		let maxValLength = sortedArray.length; let lengthPercent = 0;
+		switch (maxValLength) {
+			case 0:
+				maxVal = 0;
+				break;
+			case 1:
+				maxVal = sortedArray[0];
+				break;
+			default:
+				firstVal = sortedArray[0];
+				secondVal = sortedArray[1];
+				lengthPercent = (maxValLength - 2)/(maxValLength - 1);
+				maxVal = secondVal + (firstVal - secondVal) * ((percentile - lengthPercent) / (1 - lengthPercent));
+				break;
+		}
+		return maxVal;
+	}
+
 	static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData) {
 		let derivedMetric = NaN;
 		// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
@@ -460,7 +491,7 @@ export class MatchDataHelper {
 	 * @param {string} colCookie Comma-separated list of metric IDs
 	 * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
 	 */
-	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string) {
+	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getModifiedMatchScoutingLayout');
 		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
 
@@ -536,7 +567,8 @@ export class MatchDataHelper {
 		logger.trace('noneSelected=' + noneSelected + ',savedCols=' + JSON.stringify(savedCols));
 
 		// Use the cookies (if defined, or if defaults set) to slim down the layout array
-		if (noneSelected)
+		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
+		if (noneSelected || showAllColumns)
 			scorelayout = scorelayoutDB;
 		else {
 			// Weed out unselected columns
@@ -978,9 +1010,10 @@ export class MatchDataHelper {
 	 * @param {string} org_key Org key
 	 * @param {string} teams_list Comma-separated list of teams, red alliance first, use ",0" between red list and blue list
 	 * @param {object} cookies req.cookies
+	 * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
 	 * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
 	 */
-	static async getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any) {
+	static async getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getAllianceStatsData');
 
 		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
@@ -993,7 +1026,8 @@ export class MatchDataHelper {
 		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 		let cookie_key = org_key + '_' + event_year + '_cols';
 		let colCookie = cookies[cookie_key];
-		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
+		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
 
 		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match: { 'team_key': { $in: teamList }, 'org_key': org_key, 'event_key': event_key } });
@@ -1038,7 +1072,7 @@ export class MatchDataHelper {
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 				groupClause[thisLayout.id + 'AVG'] = { $last: '$' + thisLayout.id + 'EMA' };
-				groupClause[thisLayout.id + 'MAX'] = { $max: '$data.' + thisLayout.id };
+				groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			}
 		}
 
@@ -1074,7 +1108,8 @@ export class MatchDataHelper {
 				for (let teamIdx = 0; teamIdx < teamList.length; teamIdx++) {
 					if (aggRowsByTeam[teamList[teamIdx]]) {
 						avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'] * 10) / 10).toFixed(1);
-						maxRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX'] * 10) / 10).toFixed(1);
+						let maxVal = this.extractPercentileFromSortedArray(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX']);
+						maxRow[teamList[teamIdx]] = (Math.round(maxVal * 10) / 10).toFixed(1);
 					}
 				}
 				avgTable.push(avgRow);
