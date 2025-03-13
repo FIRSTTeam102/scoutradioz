@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import type Mathjs from 'mathjs';
 import wrap from '../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
-import type { AnyDict, Match, MatchFormData, Event, Org } from 'scoutradioz-types';
+import type { AnyDict, Match, MatchFormData, Event, Org, EventOrgScouting, EventScouting, EventScoutingSummary } from 'scoutradioz-types';
 import e from 'scoutradioz-http-errors';
 const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
@@ -93,6 +93,30 @@ router.get('/browse', wrap(async (req, res, next) => {
 	
 	// for now, this only works with the current year. TODO: be able to browse past years
 	let current_year = (new Date()).getFullYear();
+
+	// 2025-03-13, M.O'C: Implement caching of event scouting summary; refresh every 15 minutes
+	// check the database for the cached data
+	let eventScoutingSummary: EventScoutingSummary[] = await utilities.find('eventscoutingsummary', {
+		year: current_year
+	},{
+		sort: {'writeTime': -1}
+	});
+	// if there is data AND the data is less than 15 minutes old, use it
+	if (eventScoutingSummary.length > 0) {
+		let thisSummary = eventScoutingSummary[0];
+		let now = Date.now();
+		if (now - thisSummary.writeTime < 900000) { // 15 minutes
+			let delta = (now - thisSummary.writeTime) / 1000.0;
+			logger.debug(`Using cached event scouting summary for year ${current_year} - delta=${delta} seconds, now=${now} epoch`);
+			res.render('./browse', {
+				fulltitle: res.msg('index.browse.title'),
+				year: current_year,
+				event_scouting: thisSummary.events
+			});
+			return;
+		}
+	}
+	// 2025-03-13, M.O'C: otherwise... regenerate!
 
 	// 
 	// Get the latest match played timestamp per year
@@ -541,6 +565,16 @@ router.get('/browse', wrap(async (req, res, next) => {
 	// sort the array by date
 	eventScoutingArray.sort((a, b) => (a.eventStart < b.eventStart ? 1 : -1));
 
+	// delete the previous event scouting summary
+	await utilities.remove('eventscoutingsummary', {year: current_year});
+	// save the event scouting summary
+	let eventScoutingSummaryDoc: EventScoutingSummary = {
+		year: current_year,
+		events: eventScoutingArray,
+		writeTime: Date.now()
+	};
+	await utilities.insert('eventscoutingsummary', eventScoutingSummaryDoc);
+
 	res.render('./browse', {
 		fulltitle: res.msg('index.browse.title'),
 		year: current_year,
@@ -723,25 +757,4 @@ function getNumberFrom(dict: AnyDict|MatchFormData|undefined, key: string): numb
 	let thisItem = dict[key];
 	if (typeof thisItem === 'number') return thisItem;
 	else return 0;
-}
-
-/**
- * Objects for browsing data by events
- */
-export declare interface EventOrgScouting {
-	orgKey: string;
-	orgName: string;
-	countScoutingReports: number;
-	medianSpr?: number;
-	minSpr?: number;
-	isTspsEligible: boolean,
-	tsps?: number;
-}
-
-export declare interface EventScouting {
-	eventKey: string;
-	eventName: string;
-	eventStart: string;
-	possibleScoutingReports: number,
-	orgData?: EventOrgScouting[];
 }
