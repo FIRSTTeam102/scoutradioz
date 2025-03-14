@@ -336,26 +336,29 @@ router.get('/teamintel', wrap(async (req, res) => {
 
 	// Unspool single row of aggregate results into tabular form
 	let aggTable = [];
-	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		let thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiable(thisLayout)) {
-			let aggRow: MongoDocument = {};
-			aggRow['key'] = thisLayout.id;
-			
-			// Recompute VAR first = StdDev/Mean
-			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
+	// 2025-03-14, M.O'C: Only process agg results if there is any data
+	if (aggresult && Object.keys(aggresult).length > 0) {
+		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+			let thisLayout = scorelayout[scoreIdx];
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiable(thisLayout)) {
+				let aggRow: MongoDocument = {};
+				aggRow['key'] = thisLayout.id;
+				
+				// Recompute VAR first = StdDev/Mean
+				aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
-			aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
-			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
-			aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
-			aggTable.push(aggRow);
+				let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+				aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
+				aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
+				let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+				aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
+				aggTable.push(aggRow);
+			}
 		}
+		//logger.debug('aggTable=' + JSON.stringify(aggTable));
 	}
-	//logger.debug('aggTable=' + JSON.stringify(aggTable));
 	//logger.debug('pitData=' + JSON.stringify(pitData));
 
 	// read in the current agg ranges
@@ -546,23 +549,26 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 
 	// Unspool single row of aggregate results into tabular form
 	let aggTable = [];
-	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		let thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			let aggRow: MongoDocument = {};
-			aggRow['key'] = thisLayout.id;
-			
-			// Recompute VAR first = StdDev/Mean
-			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
+	// 2025-03-14, M.O'C: Only process agg results if there is any data
+	if (aggresult && Object.keys(aggresult).length > 0) {
+		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+			let thisLayout = scorelayout[scoreIdx];
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+				let aggRow: MongoDocument = {};
+				aggRow['key'] = thisLayout.id;
+				
+				// Recompute VAR first = StdDev/Mean
+				aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
-			aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
-			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
-			aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
-			aggTable.push(aggRow);
+				let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+				aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
+				aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
+				let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+				aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
+				aggTable.push(aggRow);
+			}
 		}
 	}
 	//logger.debug('aggTable=' + JSON.stringify(aggTable));
