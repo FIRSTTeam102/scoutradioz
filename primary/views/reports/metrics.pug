@@ -19,7 +19,7 @@ block content
 					tr
 						th(class="w3-right-align" style="width: 25%")!=msg('reports.team')
 						each metric in ['MIN', 'AVG', 'VAR', 'MAX']
-							th(class="w3-right-align w3-tooltip")!=msg(`metrics.${metric}1`)
+							th(class="w3-right-align w3-tooltip")!=msg(`metrics.metric${metric}`)
 					each agg in aggdata
 						tr
 							- var text = agg.key; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)

@@ -236,6 +236,39 @@ export declare interface OrgSchema extends DbDocument {
 }
 
 /**
+ * Summary of scouting data for an org and an event.
+ */
+export declare interface EventOrgScouting {
+	orgKey: string;
+	orgName: string;
+	countScoutingReports: number;
+	medianSpr?: number;
+	minSpr?: number;
+	isTspsEligible: boolean,
+	tsps?: number;
+}
+
+/**
+ * Summary of scouting data for a given event.
+ */
+export declare interface EventScouting {
+	eventKey: string;
+	eventName: string;
+	eventStart: string;
+	possibleScoutingReports: number,
+	orgData?: EventOrgScouting[];
+}
+
+/**
+ * Summary of scouting data for a given year.
+ */
+export declare interface EventScoutingSummary {
+	year: number;
+	events: EventScouting[];
+	writeTime: number;
+}
+
+/**
  * @deprecated - now identical to SchemaItem
  */
 export declare type LayoutEdit = SchemaItem;
@@ -773,13 +806,14 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
 export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'aggranges' ? AggRange :
 	colName extends 'events' ? Event :
+	colName extends 'eventscoutingsummary' ? EventScoutingSummary :
 	// colName extends 'i18n' ?  :
 	colName extends 'layout' ? (DerivedLayoutLegacy|Layout|DerivedLayout) :
 	colName extends 'matches' ? Match :

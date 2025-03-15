@@ -31,6 +31,18 @@ export declare class MatchDataHelper {
      * @param item layout element
      */
     static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem>;
+    /**
+     * Takes a sorted array of numbers (high to low, or low to high) and interpolates a value at a given percentile.
+     * If the numbers are high to low, the percentile would be how far along toward the highest the result should be.
+     * For length 0: returns 0
+     * For length 1: return the only value
+     * For length 2: returns a value interpolated between the two
+     * and so forth
+     * @param sortedArray The array of numbers
+     * @param percentile The target interpolated percentile. Defaults to 10/11 (~90th percentile, means at 12 elements function will return the 11th element)
+     * @returns the interpolated value
+     */
+    static extractPercentileFromSortedArray(sortedArray: number[], percentile?: number): number;
     static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData): number;
     /**
      * Calculate derived metrics for a provided array of match data items.
@@ -54,7 +66,7 @@ export declare class MatchDataHelper {
      * @param {string} colCookie Comma-separated list of metric IDs
      * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
      */
-    static getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string): Promise<MongoDocument[]>;
+    static getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns?: boolean): Promise<MongoDocument[]>;
     /**
      * Recalculates aggregated data ranges for org & event and stores in DB
      * @param {string} org_key Org key
@@ -76,9 +88,10 @@ export declare class MatchDataHelper {
      * @param {string} org_key Org key
      * @param {string} teams_list Comma-separated list of teams, red alliance first, use ",0" between red list and blue list
      * @param {object} cookies req.cookies
+     * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
      * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
      */
-    static getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any): Promise<AllianceStatsData>;
+    static getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any, showAllColumns?: boolean): Promise<AllianceStatsData>;
     /**
      * Get the form layout / schema for a given event and org.
      * TODO: this function doesn't exactly belong in this function cuz it's not directly related to matchdata
