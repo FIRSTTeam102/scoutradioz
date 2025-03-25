@@ -1613,7 +1613,7 @@ router.get('/exportimages', wrap(async (req, res) => {
 	const thisYear = req.event.year;
 	
 	let uploads: Upload[] = await utilities.find('uploads', 
-		{org_key: org_key, removed: false, year: req.event.year},
+		{org_key: org_key, removed: false, year: req.event.year, team_key: {$exists: true}},
 		{},
 	);
 	
