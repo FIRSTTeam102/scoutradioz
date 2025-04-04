@@ -21,13 +21,13 @@ router.all('/*', wrap(async (req, res, next) => {
  * @views /manage/adminindex
  */
 router.get('/', wrap(async (req, res) => {
-	const thisFuncName = 'manage.index[get]: ';
+	logger.addContext('funcName', 'manage.index[get]');
 	
 	// for events search
 	const eventListYear =
 		(typeof req.query.eventListYear === 'string') ? parseInt(req.query.eventListYear) : new Date().getFullYear();
 		
-	logger.debug(`${thisFuncName} eventListYear=${eventListYear}`);
+	logger.debug(`eventListYear=${eventListYear}`);
 	
 	const org: Org = await utilities.findOne('orgs', 
 		{org_key: req._user.org_key}, {},
