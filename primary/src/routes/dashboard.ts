@@ -45,7 +45,10 @@ router.get('/driveteam', wrap(async (req, res) => {
 	// 2022-03-16 JL: Adding an "all" button
 	// 2024-04-04 JL: Added cookie to store which team key (of the team keys in the org) we think the user belongs to
 	let teamKeyCookie = req.cookies['selectedTeamKey'];
-	if (typeof req.query.team_key === 'string' && !req.query.all) {
+	if (req.query.all) {
+		teamKey = 'all';
+	}
+	else if (typeof req.query.team_key === 'string') {
 		teamKey = req.query.team_key;
 		if (thisUser.org.team_keys?.includes(teamKey)) {
 			logger.debug('Setting teamKey cookie from query parameter because it\'s in the org\'s list of team_keys');
@@ -56,7 +59,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 		logger.debug(`Setting teamKey to ${teamKeyCookie} from cookie`);
 		teamKey = teamKeyCookie;
 	}
-	else if (thisUser.org.team_key && !req.query.all) {
+	else if (thisUser.org.team_key) {
 		logger.debug(`Setting teamKey ${teamKey} from org team key`);
 		teamKey = thisUser.org.team_key;
 	}
