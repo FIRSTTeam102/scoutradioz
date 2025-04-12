@@ -460,8 +460,10 @@ export class MatchDataHelper {
 					tparse += parse;
 					tresolve += resolve;
 				}
-				catch {
-					matchData[thisItem.id] = NaN;
+				catch (err) {
+					//matchData[thisItem.id] = NaN;
+					logger.trace(`${err} - thisItem.id ${thisItem.id} previously was NaN'd`);
+					delete matchData[thisItem.id];
 				}
 			}
 			// Legacy format
