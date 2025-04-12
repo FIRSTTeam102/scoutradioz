@@ -38,6 +38,8 @@ block content
 					a(href=images.b.lg)
 						img(src=images.b.sm alt="" class="w3-image team-image-sm")
 		div(class="w3-padding")
+			a(class="theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key)!=msg('reports.teamAllMatchData', {team: team.key.substring(3)})
+		div(class="w3-padding")
 			a(class="theme-link w3-btn" href=`/reports/upcoming?team_key=${team.key}`)!=msg('reports.upcomingMatchesTeam', {team: teamNum})
 		div(class="w3-padding")
 			a(class="theme-link w3-btn" href=`/reports/teamintelhistory?team_key=${team.key}`)!=msg('reports.teamDataYear', {team: teamNum})
@@ -178,8 +180,6 @@ block content
 				if (matches && matches.length > 0)		
 					h6.i!=msg('reports.teamMatchClick')
 					h6.i!=msg('reports.overallMatchClick')
-					h6(class="theme-text")
-						a(class="theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key)!=msg('reports.teamAllMatchData', {team: team.key.substring(3)})
 					hr 
 					
 					each match in matches
