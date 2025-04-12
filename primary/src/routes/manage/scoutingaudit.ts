@@ -495,7 +495,8 @@ router.get('/spr', wrap(async (req, res) => {
 
 			// retrieve the scouting data for this match
 			let matchScoutReports: MatchScouting[] = await utilities.find('matchscouting',
-				{ 'org_key': orgKey, 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { $exists: true }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
+				// @ts-ignore -- ignoring because 'data' by definition can't be null... yet at the moment somehow sometimes it *is* null, so we want to avoid the linter flagging "$ne: null" as an issue
+				{ 'org_key': orgKey, 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { $ne: null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
 			);
 			logger.trace(`thisAlliance=${thisAlliance},thisMatch.key=${thisMatch.key} ...matchScoutReports.length=${matchScoutReports.length}`); // JL: changed frequent log to trace 
 			// can't compare if we don't have three (3) scouting reports
