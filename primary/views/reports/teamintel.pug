@@ -180,6 +180,8 @@ block content
 				if (matches && matches.length > 0)		
 					h6.i!=msg('reports.teamMatchClick')
 					h6.i!=msg('reports.overallMatchClick')
+					h6(class="theme-text")
+						a(class="theme-link w3-btn" href="/reports/teamdata?team_key=" + team.key)!=msg('reports.teamAllMatchData', {team: team.key.substring(3)})
 					hr 
 					
 					each match in matches
