@@ -94,6 +94,15 @@ router.get('/browse', wrap(async (req, res, next) => {
 	// for now, this only works with the current year. TODO: be able to browse past years
 	let current_year = (new Date()).getFullYear();
 
+	// 2025-04-14, M.O'C: Further enforce not recalculating cached data older than N days ago
+	let right_now = new Date();
+	let lookback_days = 7;
+	if (req.query.lookback_days)
+		lookback_days = parseInt(req.query.lookback_days as string);
+	let lookback_date = new Date(right_now.getTime() - (lookback_days * 24 * 60 * 60 * 1000));
+	// get as a string "YYYY-MM-DD"
+	let lookback_string = lookback_date.toISOString().split('T')[0];
+
 	// 2025-03-13, M.O'C: Implement caching of event scouting summary; refresh every 15 minutes
 	// check the database for the cached data
 	let eventScoutingSummary: EventScoutingSummary[] = await utilities.find('eventscoutingsummary', {
@@ -102,12 +111,19 @@ router.get('/browse', wrap(async (req, res, next) => {
 		sort: {'writeTime': -1}
 	});
 	// if there is data AND the data is less than 15 minutes old, use it
+	let eventOrgDict: { [id: string]: EventScouting } = {};
 	if (eventScoutingSummary.length > 0) {
 		let thisSummary = eventScoutingSummary[0];
 		let now = Date.now();
-		if (now - thisSummary.writeTime < 900000) { // 15 minutes
+
+		// 2025-04-14
+		if (req.query.forceRefresh == 'true') {
+			logger.warn('Forcing a refresh!');
+		}
+		else if (now - thisSummary.writeTime < 900000 || req.query.forceRefresh == 'true') { // 15 minutes
 			let delta = (now - thisSummary.writeTime) / 1000.0;
 			logger.debug(`Using cached event scouting summary for year ${current_year} - delta=${delta} seconds, now=${now} epoch`);
+
 			res.render('./browse', {
 				fulltitle: res.msg('index.browse.title'),
 				year: current_year,
@@ -115,6 +131,11 @@ router.get('/browse', wrap(async (req, res, next) => {
 			});
 			return;
 		}
+
+		// otherwise copy the existing data into a dictionary for later use
+		if (thisSummary.events)
+			for (let i = 0; i < thisSummary.events.length; i++)
+				eventOrgDict[thisSummary.events[i].eventKey] = thisSummary.events[i];
 	}
 	// 2025-03-13, M.O'C: otherwise... regenerate!
 
@@ -242,324 +263,334 @@ router.get('/browse', wrap(async (req, res, next) => {
 	// Loop through each event
 	for (let eventIdx = 0; eventIdx < eventList.length; eventIdx++) {
 		let thisEventKey = eventList[eventIdx];
-		let thisEventOrgs = eventToOrgsDict[thisEventKey];
 
-		// get the matches for this event
-		let matches: Match[] = await utilities.find('matches',
-			{ 'event_key': thisEventKey, 'comp_level': 'qm', 'score_breakdown': { '$ne': undefined }, 'alliances.red.score': {$ne: -1} }, { sort: { match_number: 1 } },
-			{allowCache: true, maxCacheAge: 300}
-		);
-		let matchDict: { [id: string]: Match } = {};
-		let debugFirstMatch = true;
-		for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
-			if (debugFirstMatch) {
-				logger.trace(`matchIdx=${matchIdx}, matches[matchIdx]=${JSON.stringify(matches[matchIdx])}`);
-				debugFirstMatch = false;
-			}
-			//logger.debug(`matches[matchIdx].key=${matches[matchIdx].key}`);
-			matchDict[matches[matchIdx].key] = matches[matchIdx];
+		// 2025-04-14, M.O'C: If the event started before the 'lookback_date', just use the cached value
+		if (eventInfoDict[thisEventKey] && eventInfoDict[thisEventKey].start_date < lookback_string) {
+			let existingEventOrgScouting = eventOrgDict[thisEventKey];
+			logger.debug(`for event ${thisEventKey}, ${eventInfoDict[thisEventKey].start_date} is before ${lookback_string} - using existingEventOrgScouting=${JSON.stringify(existingEventOrgScouting)}`);
+			eventScoutingArray.push(existingEventOrgScouting);
 		}
+		// otherwise, compute
+		else {
+			let thisEventOrgs = eventToOrgsDict[thisEventKey];
 
-		// Set event-level evaluation - possible # of match scouting reports (and) initial "eventMinSpr"
-		let thisEventMatchCount = matches.length * 6;
-		logger.debug(`### AT ${thisEventKey}: ${JSON.stringify(thisEventOrgs)} ~ has ${thisEventMatchCount} possible match reports`);
-		// Use some arbitrarily high number to start the 'event minimum SPR' with
-		const ARBITRARILY_HIGH_SPR = 99999.9;		
-		let thisEventMinSpr = ARBITRARILY_HIGH_SPR;
-		// Keep track of teams with TSPS-possible data at the event
-		let tspsPossibleDataCount = 0;
-		// Array for storing org scouting info
-		let thisEventOrgScoutingArray: EventOrgScouting[] = [];
-
-		// Loop through each team at this event
-		for (let teamIdx = 0; teamIdx < thisEventOrgs.length; teamIdx++) {
-			let thisOrgKey = thisEventOrgs[teamIdx];
-			logger.debug(`-- Org ${thisOrgKey}:`);
-
-			// track values per org: orgKey, numReports, medianSpr, minSpr, tsps
-			let thisNumReports = eventOrgCountDict[thisEventKey + '|' + thisOrgKey];
-			let thisMedianSpr: number = NaN;
-			let thisMinSpr: number = NaN;
-
-			let cp_per_match_per_alliance = [
-				{
-					$match: {
-						'event_key': thisEventKey,
-						'org_key': thisOrgKey,
-						'data': {'$ne': undefined}
-					}
-				},
-				{
-					$group: {
-						_id: {
-							match_key: '$match_key',
-							alliance: '$alliance'
-						},
-						count: { $sum: 1 },
-						total_contributed_points: { $sum: '$data.contributedPoints' },
-						actual_scorer_names: { $push: '$actual_scorer.name' },
-						actual_scorer_ids: { $push: '$actual_scorer.id' }
-					}
-				},
-				{
-					$project: {
-						_id: 0,
-						match_key: '$_id.match_key',
-						alliance: '$_id.alliance',
-						count: 1,
-						total_contributed_points: 1,
-						actual_scorer_names: 1,
-						actual_scorer_ids: 1
-					}
-				},
-				{
-					$sort: {
-						'match_key': 1,
-						'alliance': 1
-					}
-				}
-			];
-
-			let cpPerMatchPerAlliance = await utilities.aggregate('matchscouting', cp_per_match_per_alliance, {allowCache: true, maxCacheAge: 300});
-			//logger.debug(`event=${thisEventKey}~org=${thisOrgKey}: ${JSON.stringify(cpPerMatchPerAlliance)}`);
-
-			//
-			// Calculate SPRs & find the median
-			//
-
-			// dictionary of scouts - each item should be keyed by scout name and contain (a) total matches scouted + (b) total error point diffs & ratios	
-			let scoutScoreDict: Dict<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = {};
-
-			// SPR arrays setup
-			let scoutSprList:string[] = [];
-			let emptyRow:number[] = [];
-			let matrix:number[][] = [];
-			let vector:number[][] = [];
-
+			// get the matches for this event
+			let matches: Match[] = await utilities.find('matches',
+				{ 'event_key': thisEventKey, 'comp_level': 'qm', 'score_breakdown': { '$ne': undefined }, 'alliances.red.score': {$ne: -1} }, { sort: { match_number: 1 } },
+				{allowCache: true, maxCacheAge: 300}
+			);
+			let matchDict: { [id: string]: Match } = {};
 			let debugFirstMatch = true;
-			for (let cppmpaIdx = 0; cppmpaIdx < cpPerMatchPerAlliance.length; cppmpaIdx++) {
-				let thisCppmpa = cpPerMatchPerAlliance[cppmpaIdx];
-				if (thisCppmpa.count === 3) {
-					if (debugFirstMatch) {
-						logger.trace(`thisCppmpa=${JSON.stringify(thisCppmpa)}`);
-						debugFirstMatch = false;
+			for (let matchIdx = 0; matchIdx < matches.length; matchIdx++) {
+				if (debugFirstMatch) {
+					logger.trace(`matchIdx=${matchIdx}, matches[matchIdx]=${JSON.stringify(matches[matchIdx])}`);
+					debugFirstMatch = false;
+				}
+				//logger.debug(`matches[matchIdx].key=${matches[matchIdx].key}`);
+				matchDict[matches[matchIdx].key] = matches[matchIdx];
+			}
+
+			// Set event-level evaluation - possible # of match scouting reports (and) initial "eventMinSpr"
+			let thisEventMatchCount = matches.length * 6;
+			logger.debug(`### AT ${thisEventKey}: ${JSON.stringify(thisEventOrgs)} ~ has ${thisEventMatchCount} possible match reports`);
+			// Use some arbitrarily high number to start the 'event minimum SPR' with
+			const ARBITRARILY_HIGH_SPR = 99999.9;		
+			let thisEventMinSpr = ARBITRARILY_HIGH_SPR;
+			// Keep track of teams with TSPS-possible data at the event
+			let tspsPossibleDataCount = 0;
+			// Array for storing org scouting info
+			let thisEventOrgScoutingArray: EventOrgScouting[] = [];
+
+			// Loop through each team at this event
+			for (let teamIdx = 0; teamIdx < thisEventOrgs.length; teamIdx++) {
+				let thisOrgKey = thisEventOrgs[teamIdx];
+				logger.debug(`-- Org ${thisOrgKey}:`);
+
+				// track values per org: orgKey, numReports, medianSpr, minSpr, tsps
+				let thisNumReports = eventOrgCountDict[thisEventKey + '|' + thisOrgKey];
+				let thisMedianSpr: number = NaN;
+				let thisMinSpr: number = NaN;
+
+				let cp_per_match_per_alliance = [
+					{
+						$match: {
+							'event_key': thisEventKey,
+							'org_key': thisOrgKey,
+							'data': {'$ne': undefined}
+						}
+					},
+					{
+						$group: {
+							_id: {
+								match_key: '$match_key',
+								alliance: '$alliance'
+							},
+							count: { $sum: 1 },
+							total_contributed_points: { $sum: '$data.contributedPoints' },
+							actual_scorer_names: { $push: '$actual_scorer.name' },
+							actual_scorer_ids: { $push: '$actual_scorer.id' }
+						}
+					},
+					{
+						$project: {
+							_id: 0,
+							match_key: '$_id.match_key',
+							alliance: '$_id.alliance',
+							count: 1,
+							total_contributed_points: 1,
+							actual_scorer_names: 1,
+							actual_scorer_ids: 1
+						}
+					},
+					{
+						$sort: {
+							'match_key': 1,
+							'alliance': 1
+						}
 					}
+				];
 
-					let thisMatchKey = thisCppmpa.match_key;
-					let thisAlliance: 'red'|'blue' = thisCppmpa.alliance;
+				let cpPerMatchPerAlliance = await utilities.aggregate('matchscouting', cp_per_match_per_alliance, {allowCache: true, maxCacheAge: 300});
+				//logger.debug(`event=${thisEventKey}~org=${thisOrgKey}: ${JSON.stringify(cpPerMatchPerAlliance)}`);
 
-					let thisMatch = matchDict[thisMatchKey];
-					if (!thisMatch) {
-						logger.warn(`No match found for thisMatchKey=${thisMatchKey}`);
-					}
-					else {
-						let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
-						let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
-						let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
-						let frcTot = totalPoints - foulPoints;
-	
-						let orgTot = thisCppmpa.total_contributed_points;
+				//
+				// Calculate SPRs & find the median
+				//
 
-						let errDiff = Math.abs(orgTot - frcTot);
-						let errRatio = errDiff / frcTot;
-						if (errRatio > 1.0)
-							errRatio = 1.0;
+				// dictionary of scouts - each item should be keyed by scout name and contain (a) total matches scouted + (b) total error point diffs & ratios	
+				let scoutScoreDict: Dict<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = {};
 
-						logger.trace(`Match found for thisMatchKey=${thisMatchKey}: frcTot=${frcTot}, orgTot=${orgTot}`);
+				// SPR arrays setup
+				let scoutSprList:string[] = [];
+				let emptyRow:number[] = [];
+				let matrix:number[][] = [];
+				let vector:number[][] = [];
 
-						for (let scoutIdx = 0; scoutIdx < 3; scoutIdx++ ) {
-							let thisScoutId = thisCppmpa.actual_scorer_ids[scoutIdx];
-							let thisScoutName = thisCppmpa.actual_scorer_names[scoutIdx];
-							let thisScoutRecord = scoutScoreDict[thisScoutId];
-							if (!thisScoutRecord) {
-								// add rows & cols to matrix, and add an element to the vector
-								let thisScoutIndex = vector.length;
-								vector.push([0]);
-								logger.trace(`thisScoutName=${thisScoutName},thisScoutId=${thisScoutId},thisScoutIndex=${thisScoutIndex}`);
-								scoutSprList.push(thisScoutName);
-		
-								emptyRow = [];
-								for (let i = 0; i < matrix.length; i++) {
-									emptyRow.push(0);
-									matrix[i].push(0);
-								}
-								emptyRow.push(0);
-								matrix.push(emptyRow);
-								//logger.debug(`ADD vector=${JSON.stringify(vector)}`);
-								//logger.debug(`ADD matrix=${JSON.stringify(matrix)}`);
-		
-								scoutScoreDict[thisScoutId] = {count: 1, avgDiff: errDiff, avgRatio: errRatio, totDiff: errDiff, totRatio: errRatio, sprIndex: thisScoutIndex, sprScore: 0};
-							}
-							else {
-								logger.trace(`updating ${JSON.stringify(thisScoutRecord)}`);
-								let newCount = thisScoutRecord.count + 1;
-								let newTotDiff = thisScoutRecord.totDiff + errDiff;
-								let avgDiff = newTotDiff / newCount;
-								let newTotRatio = thisScoutRecord.totRatio + errRatio;
-								let avgRatio = newTotRatio / newCount;
-								scoutScoreDict[thisScoutId] = {count: newCount, avgDiff: avgDiff, avgRatio: avgRatio, totDiff: newTotDiff, totRatio: newTotRatio, sprIndex: thisScoutRecord.sprIndex, sprScore: 0};
-							}
+				let debugFirstMatch = true;
+				for (let cppmpaIdx = 0; cppmpaIdx < cpPerMatchPerAlliance.length; cppmpaIdx++) {
+					let thisCppmpa = cpPerMatchPerAlliance[cppmpaIdx];
+					if (thisCppmpa.count === 3) {
+						if (debugFirstMatch) {
+							logger.trace(`thisCppmpa=${JSON.stringify(thisCppmpa)}`);
+							debugFirstMatch = false;
 						}
 
-						// SPR matrix & vector updates
-						for (let x = 0; x < thisCppmpa.actual_scorer_ids.length; x++) {
-							let thisScout = thisCppmpa.actual_scorer_ids[x];
-							if (!thisScout) {
-								logger.debug('No actual_scorer for scout report idx=' + x);
-								continue;
+						let thisMatchKey = thisCppmpa.match_key;
+						let thisAlliance: 'red'|'blue' = thisCppmpa.alliance;
+
+						let thisMatch = matchDict[thisMatchKey];
+						if (!thisMatch) {
+							logger.warn(`No match found for thisMatchKey=${thisMatchKey}`);
+						}
+						else {
+							let thisScoreBreakdown = thisMatch.score_breakdown[thisAlliance];
+							let totalPoints = getNumberFrom(thisScoreBreakdown, 'totalPoints');
+							let foulPoints = getNumberFrom(thisScoreBreakdown, 'foulPoints');
+							let frcTot = totalPoints - foulPoints;
+		
+							let orgTot = thisCppmpa.total_contributed_points;
+
+							let errDiff = Math.abs(orgTot - frcTot);
+							let errRatio = errDiff / frcTot;
+							if (errRatio > 1.0)
+								errRatio = 1.0;
+
+							logger.trace(`Match found for thisMatchKey=${thisMatchKey}: frcTot=${frcTot}, orgTot=${orgTot}`);
+
+							for (let scoutIdx = 0; scoutIdx < 3; scoutIdx++ ) {
+								let thisScoutId = thisCppmpa.actual_scorer_ids[scoutIdx];
+								let thisScoutName = thisCppmpa.actual_scorer_names[scoutIdx];
+								let thisScoutRecord = scoutScoreDict[thisScoutId];
+								if (!thisScoutRecord) {
+									// add rows & cols to matrix, and add an element to the vector
+									let thisScoutIndex = vector.length;
+									vector.push([0]);
+									logger.trace(`thisScoutName=${thisScoutName},thisScoutId=${thisScoutId},thisScoutIndex=${thisScoutIndex}`);
+									scoutSprList.push(thisScoutName);
+			
+									emptyRow = [];
+									for (let i = 0; i < matrix.length; i++) {
+										emptyRow.push(0);
+										matrix[i].push(0);
+									}
+									emptyRow.push(0);
+									matrix.push(emptyRow);
+									//logger.debug(`ADD vector=${JSON.stringify(vector)}`);
+									//logger.debug(`ADD matrix=${JSON.stringify(matrix)}`);
+			
+									scoutScoreDict[thisScoutId] = {count: 1, avgDiff: errDiff, avgRatio: errRatio, totDiff: errDiff, totRatio: errRatio, sprIndex: thisScoutIndex, sprScore: 0};
+								}
+								else {
+									logger.trace(`updating ${JSON.stringify(thisScoutRecord)}`);
+									let newCount = thisScoutRecord.count + 1;
+									let newTotDiff = thisScoutRecord.totDiff + errDiff;
+									let avgDiff = newTotDiff / newCount;
+									let newTotRatio = thisScoutRecord.totRatio + errRatio;
+									let avgRatio = newTotRatio / newCount;
+									scoutScoreDict[thisScoutId] = {count: newCount, avgDiff: avgDiff, avgRatio: avgRatio, totDiff: newTotDiff, totRatio: newTotRatio, sprIndex: thisScoutRecord.sprIndex, sprScore: 0};
+								}
 							}
-							// 2022-02-20 JL: renamed thisScoutName to thisScout, added thisScoutId
-							let thisScoutId = thisCppmpa.actual_scorer_ids[x];
-							let thisScoutName = thisCppmpa.actual_scorer_names[x];
-							// let thisScoutName = thisScout.name;
-							
-							let xIndex = scoutScoreDict[thisScoutId].sprIndex;
-							vector[xIndex][0] = vector[xIndex][0] + errDiff;
-							for (let y = 0; y < thisCppmpa.actual_scorer_ids.length; y++) {
-								let thisScout2 = thisCppmpa.actual_scorer_ids[y];
-								if (!thisScout2) {
-									logger.trace('No actual_scorer 2 for scout report idx=' + y);
+
+							// SPR matrix & vector updates
+							for (let x = 0; x < thisCppmpa.actual_scorer_ids.length; x++) {
+								let thisScout = thisCppmpa.actual_scorer_ids[x];
+								if (!thisScout) {
+									logger.debug('No actual_scorer for scout report idx=' + x);
 									continue;
 								}
-								let thisScoutId2 = thisCppmpa.actual_scorer_ids[y];
-								let thisScoutName2 = thisCppmpa.actual_scorer_names[x];
+								// 2022-02-20 JL: renamed thisScoutName to thisScout, added thisScoutId
+								let thisScoutId = thisCppmpa.actual_scorer_ids[x];
+								let thisScoutName = thisCppmpa.actual_scorer_names[x];
+								// let thisScoutName = thisScout.name;
 								
-								let yIndex = scoutScoreDict[thisScoutId2].sprIndex;
-								logger.trace(`scout1=${thisScoutName},scout2=${thisScoutName2},xIndex=${xIndex},yIndex=${yIndex}`);
+								let xIndex = scoutScoreDict[thisScoutId].sprIndex;
+								vector[xIndex][0] = vector[xIndex][0] + errDiff;
+								for (let y = 0; y < thisCppmpa.actual_scorer_ids.length; y++) {
+									let thisScout2 = thisCppmpa.actual_scorer_ids[y];
+									if (!thisScout2) {
+										logger.trace('No actual_scorer 2 for scout report idx=' + y);
+										continue;
+									}
+									let thisScoutId2 = thisCppmpa.actual_scorer_ids[y];
+									let thisScoutName2 = thisCppmpa.actual_scorer_names[x];
+									
+									let yIndex = scoutScoreDict[thisScoutId2].sprIndex;
+									logger.trace(`scout1=${thisScoutName},scout2=${thisScoutName2},xIndex=${xIndex},yIndex=${yIndex}`);
 
-								matrix[yIndex][xIndex] = matrix[yIndex][xIndex] + 1;
+									matrix[yIndex][xIndex] = matrix[yIndex][xIndex] + 1;
+								}
 							}
 						}
 					}
 				}
-			}
 
-			// what is the determinant?
-			logger.trace(`matrix=${JSON.stringify(matrix)}`);
-			if (matrix.length > 0)
-				logger.trace(`...math.det(matrix)=${mathjs.det(matrix)}`);
-			else
-				logger.trace('...math.det(matrix)=matrix_is_zero_size');
-			logger.trace(`vector=${JSON.stringify(vector)}`);
+				// what is the determinant?
+				logger.trace(`matrix=${JSON.stringify(matrix)}`);
+				if (matrix.length > 0)
+					logger.trace(`...math.det(matrix)=${mathjs.det(matrix)}`);
+				else
+					logger.trace('...math.det(matrix)=matrix_is_zero_size');
+				logger.trace(`vector=${JSON.stringify(vector)}`);
 
-			// solve!
-			try {
-				let solution = mathjs.lusolve(matrix, vector) as Mathjs.MathNumericType[][];
-				logger.trace(`solution=${JSON.stringify(solution)}`);
+				// solve!
+				try {
+					let solution = mathjs.lusolve(matrix, vector) as Mathjs.MathNumericType[][];
+					logger.trace(`solution=${JSON.stringify(solution)}`);
 
-				for (let key in scoutScoreDict) {
-					let thisSprIndex:number = scoutScoreDict[key].sprIndex;
-					scoutScoreDict[key].sprScore = Number(solution[thisSprIndex][0]);
+					for (let key in scoutScoreDict) {
+						let thisSprIndex:number = scoutScoreDict[key].sprIndex;
+						scoutScoreDict[key].sprScore = Number(solution[thisSprIndex][0]);
+					}
 				}
-			}
-			catch (err) {
-				logger.warn(`could not calculate solution! err=${err}`);
-			}
-						
-			// sort scoutScoreDict by sprScore
-			let sortedValues:Array<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = Object.values(scoutScoreDict);
-			// reverse sort!
-			sortedValues.sort((a, b) => a.sprScore - b.sprScore);
-			logger.trace('sortedValues=' + JSON.stringify(sortedValues));
+				catch (err) {
+					logger.warn(`could not calculate solution! err=${err}`);
+				}
+							
+				// sort scoutScoreDict by sprScore
+				let sortedValues:Array<{count: number, avgDiff: number, avgRatio: number, totDiff: number, totRatio: number, sprIndex: number, sprScore: number}> = Object.values(scoutScoreDict);
+				// reverse sort!
+				sortedValues.sort((a, b) => a.sprScore - b.sprScore);
+				logger.trace('sortedValues=' + JSON.stringify(sortedValues));
 
-			// // reconstruct scoutScoreDict
-			// scoutScoreDict = {};
-			// for (let thisIdx in sortedValues) {
-			// 	//logger.trace(`thisIdx=${thisIdx}`);
-			// 	let thisValue = sortedValues[thisIdx];
-			// 	logger.trace(`thisValue=${thisValue}`);
-			// 	logger.trace(`thisValue.sprIndex=${thisValue.sprIndex}`);
-			// 	logger.trace(`scoutSprList[thisValue.sprIndex]=${scoutSprList[thisValue.sprIndex]}`);
-			// 	scoutScoreDict[scoutSprList[thisValue.sprIndex]] = thisValue;
-			// }
-			// // final results
-			// logger.trace('scoutScoreDict=' + JSON.stringify(scoutScoreDict));
+				// // reconstruct scoutScoreDict
+				// scoutScoreDict = {};
+				// for (let thisIdx in sortedValues) {
+				// 	//logger.trace(`thisIdx=${thisIdx}`);
+				// 	let thisValue = sortedValues[thisIdx];
+				// 	logger.trace(`thisValue=${thisValue}`);
+				// 	logger.trace(`thisValue.sprIndex=${thisValue.sprIndex}`);
+				// 	logger.trace(`scoutSprList[thisValue.sprIndex]=${scoutSprList[thisValue.sprIndex]}`);
+				// 	scoutScoreDict[scoutSprList[thisValue.sprIndex]] = thisValue;
+				// }
+				// // final results
+				// logger.trace('scoutScoreDict=' + JSON.stringify(scoutScoreDict));
 
-			let sprLength = sortedValues.length;
-			if (sprLength > 0) {
-				thisMinSpr = sortedValues[0].sprScore;
-				if (thisMinSpr < thisEventMinSpr)
-					thisEventMinSpr = thisMinSpr;
+				let sprLength = sortedValues.length;
+				if (sprLength > 0) {
+					thisMinSpr = sortedValues[0].sprScore;
+					if (thisMinSpr < thisEventMinSpr)
+						thisEventMinSpr = thisMinSpr;
 
-				thisMedianSpr = 0.0;
-				// do we have an odd number of items?
-				if (sprLength & 1) {
-					thisMedianSpr = sortedValues[Math.trunc(sprLength/2.0)].sprScore; 
-					logger.trace(`thisNumReports=${thisNumReports} ~ thisMinSpr=${thisMinSpr} ~ sprLength ${sprLength} is odd, thisMedianSpr=${thisMedianSpr}`);
+					thisMedianSpr = 0.0;
+					// do we have an odd number of items?
+					if (sprLength & 1) {
+						thisMedianSpr = sortedValues[Math.trunc(sprLength/2.0)].sprScore; 
+						logger.trace(`thisNumReports=${thisNumReports} ~ thisMinSpr=${thisMinSpr} ~ sprLength ${sprLength} is odd, thisMedianSpr=${thisMedianSpr}`);
+					}
+					else {
+						thisMedianSpr = (sortedValues[Math.trunc(sprLength/2.0) - 1].sprScore + sortedValues[Math.trunc(sprLength/2.0)].sprScore) / 2.0;
+						logger.trace(`thisNumReports=${thisNumReports} ~ thisMinSpr=${thisMinSpr} ~ sprLength ${sprLength} is even, thisMedianSpr=${thisMedianSpr}`);
+					}
+				}
+
+				let thisIsTspsElgibile: boolean = false; 
+				// do we have TSPS-possible data?
+				if (!isNaN(thisMinSpr) && !isNaN(thisMedianSpr) && !(thisMinSpr === 0.0 && thisMedianSpr === 0.0)) {
+					logger.trace('Has TSPS possible!');
+					thisIsTspsElgibile = true;
+					tspsPossibleDataCount += 1;
 				}
 				else {
-					thisMedianSpr = (sortedValues[Math.trunc(sprLength/2.0) - 1].sprScore + sortedValues[Math.trunc(sprLength/2.0)].sprScore) / 2.0;
-					logger.trace(`thisNumReports=${thisNumReports} ~ thisMinSpr=${thisMinSpr} ~ sprLength ${sprLength} is even, thisMedianSpr=${thisMedianSpr}`);
+					logger.warn('Not TSPS possible data');
 				}
+
+				let thisEventOrgScouting: EventOrgScouting = { 
+					countScoutingReports: thisNumReports,
+					orgKey: thisOrgKey,
+					orgName: orgInfoDict[thisOrgKey].nickname,
+					isTspsEligible: thisIsTspsElgibile
+				};
+				if (thisIsTspsElgibile) {
+					thisEventOrgScouting.medianSpr = thisMedianSpr;
+					thisEventOrgScouting.minSpr = thisMinSpr;
+				}
+
+				thisEventOrgScoutingArray.push(thisEventOrgScouting);
 			}
 
-			let thisIsTspsElgibile: boolean = false; 
-			// do we have TSPS-possible data?
-			if (!isNaN(thisMinSpr) && !isNaN(thisMedianSpr) && !(thisMinSpr === 0.0 && thisMedianSpr === 0.0)) {
-				logger.trace('Has TSPS possible!');
-				thisIsTspsElgibile = true;
-				tspsPossibleDataCount += 1;
-			}
-			else {
-				logger.warn('Not TSPS possible data');
-			}
+			// calculate Total Scouting Performance Scores **IF** there are at least 2 orgs with valid data
+			logger.trace(`thisEventMinSpr=${thisEventMinSpr}, tspsPossibleDataCount=${tspsPossibleDataCount}`);
+			if (tspsPossibleDataCount > 1) {
+				// normalization value
+				let thisSprNormalization = Math.abs(thisEventMinSpr);
 
-			let thisEventOrgScouting: EventOrgScouting = { 
-				countScoutingReports: thisNumReports,
-				orgKey: thisOrgKey,
-				orgName: orgInfoDict[thisOrgKey].nickname,
-				isTspsEligible: thisIsTspsElgibile
-			};
-			if (thisIsTspsElgibile) {
-				thisEventOrgScouting.medianSpr = thisMedianSpr;
-				thisEventOrgScouting.minSpr = thisMinSpr;
-			}
+				// find the 'best' normalized SPR
+				let thisBestSpr = ARBITRARILY_HIGH_SPR;
+				for (let thisTspsIdx in thisEventOrgScoutingArray) {
+					let thisScoutingBlob = thisEventOrgScoutingArray[thisTspsIdx];
+					if (thisScoutingBlob.isTspsEligible && typeof(thisScoutingBlob.medianSpr) == 'number' && thisScoutingBlob.medianSpr < thisBestSpr)
+						thisBestSpr = thisScoutingBlob.medianSpr;
+				}
 
-			thisEventOrgScoutingArray.push(thisEventOrgScouting);
-		}
-
-		// calculate Total Scouting Performance Scores **IF** there are at least 2 orgs with valid data
-		logger.trace(`thisEventMinSpr=${thisEventMinSpr}, tspsPossibleDataCount=${tspsPossibleDataCount}`);
-		if (tspsPossibleDataCount > 1) {
-			// normalization value
-			let thisSprNormalization = Math.abs(thisEventMinSpr);
-
-			// find the 'best' normalized SPR
-			let thisBestSpr = ARBITRARILY_HIGH_SPR;
-			for (let thisTspsIdx in thisEventOrgScoutingArray) {
-				let thisScoutingBlob = thisEventOrgScoutingArray[thisTspsIdx];
-				if (thisScoutingBlob.isTspsEligible && typeof(thisScoutingBlob.medianSpr) == 'number' && thisScoutingBlob.medianSpr < thisBestSpr)
-					thisBestSpr = thisScoutingBlob.medianSpr;
-			}
-
-			// calculate TSPS
-			// thisEventMatchCount is total possible scouting reports
-			for (let thisTspsIdx in thisEventOrgScoutingArray) {
-				let thisScoutingBlob = thisEventOrgScoutingArray[thisTspsIdx];
-				if (thisScoutingBlob.isTspsEligible && typeof(thisScoutingBlob.medianSpr) == 'number') {
-					let sprComponent = (thisBestSpr + thisSprNormalization) / (thisScoutingBlob.medianSpr + thisSprNormalization);
-					let thisMatchCount = thisScoutingBlob.countScoutingReports;
-					if (typeof(thisMatchCount) == 'number' && thisMatchCount > thisEventMatchCount) {
-						logger.warn(`for org=${thisScoutingBlob.orgKey} at event=${thisEventKey}, org match count ${thisMatchCount} > event match count ${thisEventMatchCount}`);
-						thisMatchCount = thisEventMatchCount;
+				// calculate TSPS
+				// thisEventMatchCount is total possible scouting reports
+				for (let thisTspsIdx in thisEventOrgScoutingArray) {
+					let thisScoutingBlob = thisEventOrgScoutingArray[thisTspsIdx];
+					if (thisScoutingBlob.isTspsEligible && typeof(thisScoutingBlob.medianSpr) == 'number') {
+						let sprComponent = (thisBestSpr + thisSprNormalization) / (thisScoutingBlob.medianSpr + thisSprNormalization);
+						let thisMatchCount = thisScoutingBlob.countScoutingReports;
+						if (typeof(thisMatchCount) == 'number' && thisMatchCount > thisEventMatchCount) {
+							logger.warn(`for org=${thisScoutingBlob.orgKey} at event=${thisEventKey}, org match count ${thisMatchCount} > event match count ${thisEventMatchCount}`);
+							thisMatchCount = thisEventMatchCount;
+						}
+						let coverageComponent = thisMatchCount / thisEventMatchCount;
+						// Total Scouting Performance Score!
+						let thisTsps = (sprComponent + coverageComponent) / 2.0;
+						thisScoutingBlob.tsps = thisTsps;					
 					}
-					let coverageComponent = thisMatchCount / thisEventMatchCount;
-					// Total Scouting Performance Score!
-					let thisTsps = (sprComponent + coverageComponent) / 2.0;
-					thisScoutingBlob.tsps = thisTsps;					
 				}
 			}
-		}
 
-		let thisEventScouting: EventScouting = {
-			eventKey: thisEventKey, 
-			eventName: eventInfoDict[thisEventKey].name,
-			eventStart: eventInfoDict[thisEventKey].start_date,
-			possibleScoutingReports: thisEventMatchCount,
-			orgData: thisEventOrgScoutingArray
-		};
-		logger.debug(`thisEventScouting=${JSON.stringify(thisEventScouting)}`);
-		eventScoutingArray.push(thisEventScouting);
+			let thisEventScouting: EventScouting = {
+				eventKey: thisEventKey, 
+				eventName: eventInfoDict[thisEventKey].name,
+				eventStart: eventInfoDict[thisEventKey].start_date,
+				possibleScoutingReports: thisEventMatchCount,
+				orgData: thisEventOrgScoutingArray
+			};
+			logger.debug(`thisEventScouting=${JSON.stringify(thisEventScouting)}`);
+			eventScoutingArray.push(thisEventScouting);
+		}
 	}
 
 	// sort the array by date
