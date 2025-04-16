@@ -37,7 +37,7 @@ block content
 		if scoringMatches.length > 0
 			h3(class="theme-text")!=msg('dashboard.upcomingMatches')
 			br 
-			each match in scoringMatches
+			each match in scoringMatches.slice(0,15)
 				- match.alliance = (match.alliance == "red") ? "Red" : "Blue";
 				- var btnColor = (match.alliance == "Red") ? "alliance-red" : "alliance-blue"
 				
@@ -53,6 +53,8 @@ block content
 						a(href=`/scouting/match?key=${match.match_team_key}&alliance=${match.alliance}`) 
 							div(class=`gear-btn ${btnColor} theme-hover-white w3-btn w3-section w3-margin-left w3-margin-right`)
 								span= match.team_key.substring(3)
+			if scoringMatches.length > 15
+				p= msg('dashboard.moreMatches')
 			hr 
 		div(class="w3-container w3-padding-16")
 			a(href="/dashboard/pits") 
@@ -61,3 +63,5 @@ block content
 			a(href="/dashboard/matches") 
 				div(class="gear-btn theme-link w3-btn w3-section w3-margin-left w3-margin-right")
 					span!=msg('dashboard.oneOffMatch')
+	
+		

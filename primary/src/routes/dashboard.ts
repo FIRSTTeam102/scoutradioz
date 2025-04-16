@@ -414,7 +414,7 @@ router.get('/', wrap(async (req, res) => {
 		'assigned_scorer.id': thisUserId, 
 		'time': { $gte: latestTimestamp }
 	}, { 
-		limit: 15, 
+		limit: 16, 
 		sort: {'time': 1} 
 	});
 
