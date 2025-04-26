@@ -171,54 +171,7 @@ router.get('/matches', wrap(async (req, res) => {
 	});
 }));
 
-router.post('/matches/generate', wrap(async (req, res) => {
-	logger.addContext('funcName', 'matches/generate[post]');
-	
-	// Gap between matches equal to or over this value means a "major" gap (e.g., lunch, overnight, etc.)
-	const matchGapBreakThreshold = 30 * 60;  // 30 minutes, in seconds
-	// Size of match blocks to be scouted - scouts will do this many matches in a row
-	let matchBlockSize = 5;  // default
-	
-	if (req.body.blockSize) {
-		matchBlockSize = req.body.blockSize;
-		logger.trace('Overriding matchBlockSize to ' + matchBlockSize);
-		// remove from req.body before proceeding to pulling out the multi-checkbox list
-		delete req.body.blockSize;
-	}
-	assert(!req.body.blockSize);
-	
-	const event_key = req.event.key;
-	const org_key = req._user.org_key;
-	const event_year = req.event.year;
-	
-	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
-	
-	const availableArray: number[] = []; // User IDs
-	let stoppingForBreaks = true;
-	let scoutPlayoffs = false;
-	logger.trace('*** Tagged as available:');
-	for(let user in req.body) {
-		const userId = user.split('|')[0];
-		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
-		// 2024-04-04, M.O'C: Enable option to assign scouting to playoffs
-		if (userId != 'skipBreaks' && userId != 'scoutPlayoffs') { 
-			const userName = user.split('|')[1]; // unused
-			logger.trace(`user: ${userId} | ${userName}`);
-			assert(userId && userName, 'Could not find both userId and userName');
-			availableArray.push(Number(userId));
-		}
-		else {
-			if (userId === 'skipBreaks') {
-				logger.debug('Assignments will continue past breaks!');
-				stoppingForBreaks = false;
-			}
-			else if (userId === 'scoutPlayoffs') {
-				logger.debug('Assignments will be generated for playoffs!');
-				scoutPlayoffs = true;
-			}
-		}
-	}
-	
+const regenerateIfNeeded = async (scoutPlayoffs: boolean, event_key: string, org_key: string, event_year: number): Promise<string[]> => {
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
 		{org_key, event_key},
 		{sort: {time: 1}}
@@ -401,6 +354,59 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			matchScoutingAssignments = newMatchAssignmentsArray;
 		}
 	}
+
+	return outputNotes;
+};
+
+router.post('/matches/generate', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matches/generate[post]');
+	
+	// Gap between matches equal to or over this value means a "major" gap (e.g., lunch, overnight, etc.)
+	const matchGapBreakThreshold = 30 * 60;  // 30 minutes, in seconds
+	// Size of match blocks to be scouted - scouts will do this many matches in a row
+	let matchBlockSize = 5;  // default
+	
+	if (req.body.blockSize) {
+		matchBlockSize = req.body.blockSize;
+		logger.trace('Overriding matchBlockSize to ' + matchBlockSize);
+		// remove from req.body before proceeding to pulling out the multi-checkbox list
+		delete req.body.blockSize;
+	}
+	assert(!req.body.blockSize);
+	
+	const event_key = req.event.key;
+	const org_key = req._user.org_key;
+	const event_year = req.event.year;
+	
+	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
+	
+	const availableArray: number[] = []; // User IDs
+	let stoppingForBreaks = true;
+	let scoutPlayoffs = false;
+	logger.trace('*** Tagged as available:');
+	for(let user in req.body) {
+		const userId = user.split('|')[0];
+		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
+		// 2024-04-04, M.O'C: Enable option to assign scouting to playoffs
+		if (userId != 'skipBreaks' && userId != 'scoutPlayoffs') { 
+			const userName = user.split('|')[1]; // unused
+			logger.trace(`user: ${userId} | ${userName}`);
+			assert(userId && userName, 'Could not find both userId and userName');
+			availableArray.push(Number(userId));
+		}
+		else {
+			if (userId === 'skipBreaks') {
+				logger.debug('Assignments will continue past breaks!');
+				stoppingForBreaks = false;
+			}
+			else if (userId === 'scoutPlayoffs') {
+				logger.debug('Assignments will be generated for playoffs!');
+				scoutPlayoffs = true;
+			}
+		}
+	}
+	
+	const outputNotes = await regenerateIfNeeded(scoutPlayoffs, event_key, org_key, event_year);
 	
 	//
 	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
@@ -676,6 +682,152 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	res.redirect(`/dashboard/matches?alert=${alert}`);
+}));
+
+router.post('/matches/upload', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matches/upload[post]');
+
+	const event_key = req.event.key;
+	const org_key = req._user.org_key;
+	const event_year = req.event.year;
+	
+	logger.info(`ENTER org_key=${org_key}`);
+
+	const assignments: { [matchId: string]: number } = req.body.assignments;
+	if (!assignments) {
+		logger.error('No assignments were found in the request body!');
+		return res.send({ status: 400, message: 'No assignments were found in the request body!' });
+	}
+
+	const scouts: number[] = [];
+	for (const scoutId of Object.values(assignments)) {
+		if (!scouts.includes(scoutId)) {
+			scouts.push(scoutId);
+		}
+	}
+	
+	const outputNotes = await regenerateIfNeeded(false, event_key, org_key, event_year);
+	
+	//
+	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
+	//
+	// - matchscouts is the "queue"; need a pointer to indicate where we are
+	// TODO: Use _id, not name, because names can be modified!
+	// 2022-03-01, M.O'C: Adding 'org_key': org_key into the 2nd part of the "or" clause
+	const matchScouts = await utilities.find('users', 
+		{$and: [
+			{'_id': {$in: scouts}, 'org_key': org_key}, 
+			// {'event_info.assigned': true, 'org_key': org_key}
+		]}
+	) as WithDbId<User>[]; // JL: temporary
+	logger.trace(`matchScouts=${JSON.stringify(matchScouts)}`);
+
+	const matchScoutMap = Object.fromEntries(matchScouts.map(scout => [scout._id.toString(), scout]));
+
+	const actualAssignments: { [matchId: string]: ScouterRecord } = Object.fromEntries(Object.entries(assignments)
+		.filter(([matchId, scoutId]) => Object.keys(matchScoutMap).includes(scoutId.toString()))
+		.map(([matchId, scoutId]) => [matchId, { id: scoutId, name: matchScoutMap[scoutId.toString()].name}]));
+	
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
+
+	// Avoid crashing server if all matches at an event are done
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
+	if (timestampArray && timestampArray[0]) {
+		let latestMatch = timestampArray[0];
+		latestTimestamp = latestMatch.time + 1;
+	}
+
+	// Clear 'assigned_scorer' from all unresolved team@matches
+	await utilities.bulkWrite('matchscouting', 
+		[{updateMany: {
+			filter: { org_key, event_key, time: { $gte: latestTimestamp } }, 
+			update: { $unset: { 'assigned_scorer' : '' } }
+		}}]
+	);
+	
+	// Special case for no scouters assigned: Stop the re-assigning process and render the match scouting dashboard
+	if (matchScouts.length === 0) {
+		logger.info('No valid match scouts were selected; Leaving the match scouting assignments blank');
+		return res.send({ status: 400, message: 'No valid scouters were selected, so the assignments were left blank.' });
+	}
+	
+	let comingMatches: Match[] = await utilities.find('matches', 
+		{event_key: event_key, time: {$gte: latestTimestamp}},
+		{sort: {time: 1}}
+	);
+
+	// 2024-03-20, M.O'C: The changes to "use latest timestamp" instead of "next unplayed timestamp" broke scheduling when you're doing the 2nd run past breaks
+	for (let matchesIdx in comingMatches) {
+		const thisMatch = comingMatches[matchesIdx];
+		const thisMatchKey = thisMatch.key;
+		
+		let teamScoutMap: Dict<ScouterRecord> = {}; // map of team->scout associations; reset for each matc
+		
+		let teamArray: TeamKey[] = [...comingMatches[matchesIdx].alliances.red.team_keys, ...comingMatches[matchesIdx].alliances.blue.team_keys];
+		logger.trace('comingMatch[' + matchesIdx + ']: teamArray=' + JSON.stringify(teamArray));
+		
+		// cycle through teams and assign to the scouters, after teamArray has been shuffled
+		for (let i = 0; i < teamArray.length; i++) {
+			let thisTeamKey = teamArray[i];
+			// Grab the next available scout
+			if (actualAssignments[thisMatchKey + '_' + thisTeamKey]) {
+				teamScoutMap[thisTeamKey] = actualAssignments[thisMatchKey + '_' + thisTeamKey];
+			}
+		}
+
+		// show all the team-scout assignments
+		let assignmentPromisesArray = [];
+		for (let teamKey in teamScoutMap) {
+			if (teamScoutMap.hasOwnProperty(teamKey)) {
+				// Write the assignment to the DB!
+				let thisMatchTeamKey = thisMatchKey + '_' + teamKey;
+				let thisScout = teamScoutMap[teamKey];
+				
+				// 2024-01-23, M.O'C: If there are fewer than 6 available scouts, some entries might be null
+				if (thisScout != null) {
+					let thisPromise = utilities.update('matchscouting', 
+						{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
+						{ $set: { assigned_scorer : thisScout }} 
+					);
+					assignmentPromisesArray.push(thisPromise);
+				}
+			}
+		}									
+		// wait for all the updates to finish
+		await Promise.all(assignmentPromisesArray);
+	}
+	
+	// lastly, mark assigned scouters as assigned
+	let writeResult = await utilities.bulkWrite('users', [
+		
+		// JL: TODO LATER AFTER WE MAKE SURE THIS DOESN'T BREAK THINGS: Set scouters NOT assigend to match scouting to event_info.assigned = false
+		// {
+		// 	updateMany: {
+		// 		filter: {_id: {$not: {$in: scoutAssignedObjectIdList}}},
+		// 		update: {$set: {'event_info.assigned': false}}
+		// 	}
+		// }, 
+		{
+			updateMany: {
+				filter: {_id: {$in: matchScouts.map(scout => scout._id)}},
+				update: {$set: {'event_info.assigned': true}}
+			}
+		}
+	]);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+
+	// all done, go to the matches list
+	let alert;
+	if (outputNotes.length > 0) {
+		alert = `Wrote match assignments. Notes of what occurred during the process: \n - ${outputNotes.join('\n - ')}`;
+	}
+	else {
+		alert = 'Wrote match assignments successfully.';
+	}
+	
+	return res.send({ status: 200, message: alert });
 }));
 
 /* POST to Set scoutingPair Service */
