@@ -383,12 +383,13 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	const availableArray: number[] = []; // User IDs
 	let stoppingForBreaks = true;
 	let scoutPlayoffs = false;
+	let keepStations = false;
 	logger.trace('*** Tagged as available:');
 	for(let user in req.body) {
 		const userId = user.split('|')[0];
 		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
 		// 2024-04-04, M.O'C: Enable option to assign scouting to playoffs
-		if (userId != 'skipBreaks' && userId != 'scoutPlayoffs') { 
+		if (userId != 'skipBreaks' && userId != 'scoutPlayoffs' && userId != 'keepStations') { 
 			const userName = user.split('|')[1]; // unused
 			logger.trace(`user: ${userId} | ${userName}`);
 			assert(userId && userName, 'Could not find both userId and userName');
@@ -402,6 +403,10 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			else if (userId === 'scoutPlayoffs') {
 				logger.debug('Assignments will be generated for playoffs!');
 				scoutPlayoffs = true;
+			}
+			else if (userId === 'keepStations') {
+				logger.debug('Assignments will keep stations!');
+				keepStations = true;
 			}
 		}
 	}
@@ -520,6 +525,8 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		scoutsPerMatch = matchScoutsPlusScoutedCount.length;
 	}
 
+	let stationOffset = 0; // offset for the station number (0-5) to be used when assigning scouts to stations, used when keeping stations
+
 	// 2024-03-20, M.O'C: The changes to "use latest timestamp" instead of "next unplayed timestamp" broke scheduling when you're doing the 2nd run past breaks
 	let notFirstMatch: boolean = false;
 	for (let matchesIdx in comingMatches) {
@@ -549,6 +556,9 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			logger.trace(`Updated current scouts: ${JSON.stringify(scoutArray)}`);
 			
 			matchBlockCounter = 0;
+
+			if (keepStations)
+				stationOffset = Math.floor(Math.random() * 6); // randomize the station offset for the next block of matches
 		}
 		matchBlockCounter++;
 		
@@ -599,8 +609,10 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// Shuffle the team array
 		// 2024-01-24, M.O'C: **IF** there are <6 scouts, THEN sort by matches assigned
 		// (so as to end up with an even distribution of assignments across matches)
-		if (scoutsPerMatch >= 6)
-			teamArray.sort(() => Math.random() - 0.5);
+		if (scoutsPerMatch >= 6) {
+			if (!keepStations)
+				teamArray.sort(() => Math.random() - 0.5);
+		}
 		else {
 			for (let i = 0; i < 6; i++) {
 				if (!numPerTeam[teamArray[i]])
@@ -617,7 +629,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		}
 		// cycle through teams and assign to the scouters, after teamArray has been shuffled
 		for (let i = 0; i < scoutsPerMatch; i++) {
-			let thisTeamKey = teamArray[i];
+			let thisTeamKey = teamArray[(i + stationOffset) % teamArray.length];
 			// Grab the next available scout
 			teamScoutMap[thisTeamKey] = scoutArray[i];
 			numPerTeam[thisTeamKey] = numPerTeam[thisTeamKey] + 1;
