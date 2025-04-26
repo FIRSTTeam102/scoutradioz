@@ -609,9 +609,11 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// Shuffle the team array
 		// 2024-01-24, M.O'C: **IF** there are <6 scouts, THEN sort by matches assigned
 		// (so as to end up with an even distribution of assignments across matches)
+		if (keepStations) {
+			// if we keep stations don't do any changing of team array
+		}
 		if (scoutsPerMatch >= 6) {
-			if (!keepStations)
-				teamArray.sort(() => Math.random() - 0.5);
+			teamArray.sort(() => Math.random() - 0.5);
 		}
 		else {
 			for (let i = 0; i < 6; i++) {
