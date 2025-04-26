@@ -52,7 +52,7 @@ block content
 			h4!=msg('manage.members.importExport')
 		div(class='w3-row')
 			form#addMembers(action='javascript:writeAssignments()' method='post')
-				input#fileUpload(type='file' accept='.json,.csv,application/json,text/csv' class='w3-hide')
+				input#fileUpload(type='file' accept='.json,application/json' class='w3-hide')
 				div(class='w3-col m1 s6 w3-padding-small')
 					button(type='submit' class='w3-btn theme-submit w3-block')!=msg('upload')
 				div(class='w3-padding-small w3-col m2 s6')
@@ -112,19 +112,15 @@ block content
 			if (!file) {
 				NotificationCard.error('No file selected.');
 				return;
-			} else if (file.type !== 'application/json' && file.type !== 'text/csv') {
-				NotificationCard.error('Invalid file type (must be JSON or CSV).');
+			} else if (file.type !== 'application/json') {
+				NotificationCard.error('Invalid file type (must be JSON).');
 				return;
 			}
 			file.text().then(text => {
 				text = text.replace(/\r\n/g, '\n').trim();
-				let toUpload = text;
-				if (file.type === 'text/csv') {
-					// do csv stuff
-				}
 				$.post({
 					url: '/manage/assignments/matches/upload',
-					data: toUpload,
+					data: text,
 					contentType: 'application/json',
 				}).done(response => {
 					if (response.status === 200) {
