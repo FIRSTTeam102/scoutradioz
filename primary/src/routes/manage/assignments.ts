@@ -1276,8 +1276,15 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	// Extract 'from' & 'to' from req
 	let swapoutID = parseInt(req.body.swapout);
 	let swapinID = parseInt(req.body.swapin);
+	// extract numMatches from req
+	let numMatches = parseInt(req.body.numMatches);
 	
 	if (!swapoutID || !swapinID) return res.redirect('?alert=Please select both users to swap.&type=error');
+
+	if (numMatches === null || numMatches === undefined || numMatches < -1) {
+		logger.error(thisFuncName + 'numMatches is invalid: ' + numMatches);
+		return res.redirect('?alert=Invalid number of matches to swap.&type=error');
+	}
 	
 	logger.info(thisFuncName + 'swap out ' + swapinID + ', swap in ' + swapoutID);
 	
@@ -1297,15 +1304,27 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 		let latestMatch = matchDocs[0];
 		latestTimestamp = latestMatch.time + 1;
 	}
+
+	let writeResult;
 		
-	// Do the updateMany - change instances of swapout to swapin
-	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	// 2023-02-07 JL: changing scouter name to ScouterRecord
-	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, 
-		update:{ $set: { assigned_scorer: {
-			id: swapin._id,
-			name: swapin.name
-		}}}}}]);
+	if (numMatches === -1) {
+		// Do the updateMany - change instances of swapout to swapin
+		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+		// 2023-02-07 JL: changing scouter name to ScouterRecord
+		writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, 
+			update:{ $set: { assigned_scorer: {
+				id: swapin._id,
+				name: swapin.name
+			}}}}}]);
+	}
+	else {
+		let scoutings = await utilities.find('matchscouting', {'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, {sort: {time: 1}});
+		writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { '_id': { $in: scoutings.slice(0, numMatches).map(scouting => scouting._id)}, org_key, event_key, time: { $gte: latestTimestamp } }, 
+			update:{ $set: { assigned_scorer: {
+				id: swapin._id,
+				name: swapin.name
+			}}}}}]);
+	}
 	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
 
 	res.redirect('/dashboard/matches');
