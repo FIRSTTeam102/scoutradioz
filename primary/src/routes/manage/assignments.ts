@@ -6,6 +6,7 @@ import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitS
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import Permissions from '../../helpers/permissions';
+import { BulkWriteResult } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('assignments');
@@ -1305,7 +1306,7 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 		latestTimestamp = latestMatch.time + 1;
 	}
 
-	let writeResult;
+	let writeResult: BulkWriteResult;
 		
 	if (numMatches === -1) {
 		// Do the updateMany - change instances of swapout to swapin
@@ -1318,14 +1319,20 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 			}}}}}]);
 	}
 	else {
-		let scoutings = await utilities.find('matchscouting', {'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, {sort: {time: 1}});
-		writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { '_id': { $in: scoutings.slice(0, numMatches).map(scouting => scouting._id)}, org_key, event_key, time: { $gte: latestTimestamp } }, 
+		// find first numMatches scouted by swapout and change to swapin
+		let scoutedBySwapOut = await utilities.find('matchscouting', {'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, {sort: {time: 1}});
+		writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { '_id': { $in: scoutedBySwapOut.slice(0, numMatches).map(scouting => scouting._id)}, org_key, event_key, time: { $gte: latestTimestamp } }, 
 			update:{ $set: { assigned_scorer: {
 				id: swapin._id,
 				name: swapin.name
 			}}}}}]);
 	}
 	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+
+	if (writeResult.modifiedCount > 0) {
+		// modified more than zero, so we can set the event_info.assigned to true for the swapin user
+		await utilities.update('users', {_id: swapinID, org_key}, {$set: {'event_info.assigned': true}});
+	}
 
 	res.redirect('/dashboard/matches');
 }));
