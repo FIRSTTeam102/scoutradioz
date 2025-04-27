@@ -513,6 +513,7 @@
 			"clearGroupsWarning": "Clear all scouting groups? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)",
 			"deleteGroup": "Delete group",
 			"erasePitAssignmentsAndData": "*WARNING:* Erases all pit scouting assignments and data for the current event.\n\nTo continue, enter your password.",
+			"keepStations": "Check this box to have a scouter stay scouting the same station for a block",
 			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
 			"scoutingGroups": "Scouting groups",
 			"skipBreaks": "Check this box to generate assignments ignoring breaks in the schedule",
