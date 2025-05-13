@@ -46,9 +46,11 @@ block content
 				label  !{msg('manage.assignments.scoutPlayoffs')}&nbsp;
 				p
 				input(type="checkbox" class="w3-check" name='keepStations' id='keepStations')
-				label  !{msg('manage.assignments.keepStations')}&nbsp;
+				label  !{msg('manage.assignments.keepStations.main')}&nbsp;
+				span(class="sprite sp-18 sp-info sp-inline w3-tooltip")
+					span(class="w3-tooltiptext w3-left-align")!=msgMarked('manage.assignments.keepStations.tooltipSixOrMore')
 				span(class="sprite sp-18 sp-warn sp-inline w3-tooltip")
-					span(class="w3-tooltiptext w3-left-align")!=msgMarked('manage.assignments.keepStationsSprWarning')
+					span(class="w3-tooltiptext w3-left-align")!=msgMarked('manage.assignments.keepStations.tooltipSprWarning')
 
 				p
 				button(type="submit" class="w3-btn theme-submit")!=msg('manage.assignments.assignMatchTeams')
