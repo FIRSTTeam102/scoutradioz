@@ -527,6 +527,8 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 
 	let stationOffset = 0; // offset for the station number (0-5) to be used when assigning scouts to stations, used when keeping stations
+	logger.debug('stationOffset=' + stationOffset);
+	logger.debug('matchScoutsPlusScoutedCount.length=' + matchScoutsPlusScoutedCount.length);
 
 	// 2024-03-20, M.O'C: The changes to "use latest timestamp" instead of "next unplayed timestamp" broke scheduling when you're doing the 2nd run past breaks
 	let notFirstMatch: boolean = false;
@@ -559,7 +561,11 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			matchBlockCounter = 0;
 
 			if (keepStations)
-				stationOffset = Math.floor(Math.random() * 6); // randomize the station offset for the next block of matches
+				//// stationOffset = Math.floor(Math.random() * 6); // randomize the station offset for the next block of matches
+				// if available scouts is an odd number...
+				if (matchScoutsPlusScoutedCount.length % 2 == 1)
+					// ...then flip the station offset between blocks
+					stationOffset = 3 - stationOffset;
 		}
 		matchBlockCounter++;
 		
@@ -610,11 +616,11 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// Shuffle the team array
 		// 2024-01-24, M.O'C: **IF** there are <6 scouts, THEN sort by matches assigned
 		// (so as to end up with an even distribution of assignments across matches)
-		if (keepStations) {
-			// if we keep stations don't do any changing of team array
-		}
 		if (scoutsPerMatch >= 6) {
-			teamArray.sort(() => Math.random() - 0.5);
+			// if we keep stations don't do any changing of team array
+			if (!keepStations)
+				// shuffle the team array
+				teamArray.sort(() => Math.random() - 0.5);
 		}
 		else {
 			for (let i = 0; i < 6; i++) {
