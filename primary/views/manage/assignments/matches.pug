@@ -59,13 +59,14 @@ block content
 			h4!=msg('manage.members.importExport')
 		div(class='w3-row')
 			form#addMembers(action='javascript:writeAssignments()' method='post')
-				input#fileUpload(type='file' accept='.json,application/json' class='w3-hide')
+				input#fileUpload(type='file' accept='.json,.csv,application/json,text/csv' class='w3-hide')
 				div(class='w3-col m1 s6 w3-padding-small')
 					button(type='submit' class='w3-btn theme-submit w3-block')!=msg('upload')
 				div(class='w3-padding-small w3-col m2 s6')
 					label(for='fileUpload' class='w3-btn w3-block theme-submit')!=msg('manage.members.selectAFile')
 				div(class='w3-padding-small w3-col mauto')
 					div(class="theme-inline-padding")#fileName!=msg('manage.members.noFileSelected')
+	script(src=`${fileRoot}/lib/csv-parse.min.js`)
 	script.
 		let toggleSubteamCheckboxes = $('.subteamToggle');
 		let pitScoutCheckboxes = $('[data-pit-scout]');
@@ -119,12 +120,34 @@ block content
 			if (!file) {
 				NotificationCard.error('No file selected.');
 				return;
-			} else if (file.type !== 'application/json') {
-				NotificationCard.error('Invalid file type (must be JSON).');
+			} else if (file.type !== 'application/json' && file.type !== 'text/csv') {
+				NotificationCard.error('Invalid file type (must be JSON or CSV).');
 				return;
 			}
 			file.text().then(text => {
 				text = text.replace(/\r\n/g, '\n').trim();
+				if (file.type === 'text/csv') {
+					const assignments = {};
+					try {
+						const parsed = csv_parse_sync.parse(text, {
+							columns: ["match_team_key", "scouter_id"],
+							relax_column_count_less: true,
+						});
+						for (let i = 0; i < parsed.length; i++) {
+							const row = parsed[i];
+							if (i === 0 && row.match_team_key.toLowerCase() === 'match_team_key' && row.scouter_id.toLowerCase() === 'scouter_id') continue;
+							if (row.match_team_key !== undefined && row.scouter_id !== undefined) {
+								assignments[row.match_team_key.trim()] = parseInt(row.scouter_id);
+							} else {
+								return NotificationCard.error('CSV Parsing Error: not enough fields in row ' + (i + 1));
+							}
+						}
+					} catch (error) {
+						return NotificationCard.error('CSV Parsing Error: ' + error.message);
+					}
+					text = JSON.stringify({ assignments });
+					console.log(text);
+				}
 				$.post({
 					url: '/manage/assignments/matches/upload',
 					data: text,
