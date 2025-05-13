@@ -68,6 +68,7 @@ block content
 					div(class="theme-inline-padding")#fileName!=msg('manage.members.noFileSelected')
 	script(src=`${fileRoot}/lib/csv-parse.min.js`)
 	script.
+		const userMap = !{JSON.stringify(Object.fromEntries(available.map(user => ([ user.name.toLowerCase(), user._id ]))))};
 		let toggleSubteamCheckboxes = $('.subteamToggle');
 		let pitScoutCheckboxes = $('[data-pit-scout]');
 		
@@ -137,7 +138,9 @@ block content
 							const row = parsed[i];
 							if (i === 0 && row.match_team_key.toLowerCase() === 'match_team_key' && row.scouter_id.toLowerCase() === 'scouter_id') continue;
 							if (row.match_team_key !== undefined && row.scouter_id !== undefined) {
-								assignments[row.match_team_key.trim()] = parseInt(row.scouter_id);
+								if (/^-?\d+$/.test(row.scouter_id.trim())) assignments[row.match_team_key.trim()] = parseInt(row.scouter_id);
+								else if (userMap[row.scouter_id.trim().toLowerCase()]) assignments[row.match_team_key.trim()] = userMap[row.scouter_id.trim().toLowerCase()];
+								else return NotificationCard.error('CSV Parsing Error: invalid scouter ID or name ' + row.scouter_id);
 							} else {
 								return NotificationCard.error('CSV Parsing Error: not enough fields in row ' + (i + 1));
 							}
@@ -146,7 +149,6 @@ block content
 						return NotificationCard.error('CSV Parsing Error: ' + error.message);
 					}
 					text = JSON.stringify({ assignments });
-					console.log(text);
 				}
 				$.post({
 					url: '/manage/assignments/matches/upload',
