@@ -512,7 +512,15 @@
 			"clearGroups": "Clear all scouting groups",
 			"clearGroupsWarning": "Clear all scouting groups? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)",
 			"deleteGroup": "Delete group",
+			"downloadCSV": "Download assignments as CSV",
+			"downloadJSON": "Download assignments as JSON",
 			"erasePitAssignmentsAndData": "*WARNING:* Erases all pit scouting assignments and data for the current event.\n\nTo continue, enter your password.",
+			"import": "Import assignments",
+			"keepStations": {
+				"main": "Check this box to have a scouter stay scouting the same station for a block",
+				"tooltipSixOrMore": "This setting is ignored if you have fewer than 6 scouters (the system needs flexibility to optimize team coverage with fewer scouts)",
+				"tooltipSprWarning": "If you check this box, it could have a negative effect on the accuracy of SPR calculations. This is because the groups of scouters watching each alliance will be be identical for many matches, and there will be less variety for the algorithm to work with to solve which individual scouts are the likely sources of errors."
+			},
 			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
 			"scoutingGroups": "Scouting groups",
 			"skipBreaks": "Check this box to generate assignments ignoring breaks in the schedule",
