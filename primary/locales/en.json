@@ -512,6 +512,8 @@
 			"clearGroups": "Clear all scouting groups",
 			"clearGroupsWarning": "Clear all scouting groups? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)",
 			"deleteGroup": "Delete group",
+			"downloadCSV": "Download assignments as CSV",
+			"downloadJSON": "Download assignments as JSON",
 			"erasePitAssignmentsAndData": "*WARNING:* Erases all pit scouting assignments and data for the current event.\n\nTo continue, enter your password.",
 			"import": "Import assignments",
 			"keepStations": {
