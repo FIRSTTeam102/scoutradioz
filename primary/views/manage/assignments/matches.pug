@@ -139,6 +139,7 @@ block content
 							const row = parsed[i];
 							if (i === 0 && row.match_team_key.toLowerCase() === 'match_team_key' && row.scouter_id.toLowerCase() === 'scouter_id') continue;
 							if (row.match_team_key !== undefined && row.scouter_id !== undefined) {
+								if (!row.scouter_id) continue; // skip empty scouter IDs
 								if (/^-?\d+$/.test(row.scouter_id.trim()) && userIds.includes(parseInt(row.scouter_id))) assignments[row.match_team_key.trim()] = parseInt(row.scouter_id);
 								else if (userMap[row.scouter_id.trim().toLowerCase()]) assignments[row.match_team_key.trim()] = userMap[row.scouter_id.trim().toLowerCase()];
 								else return NotificationCard.error('CSV Parsing Error: invalid scouter ID or name ' + row.scouter_id);
@@ -155,10 +156,15 @@ block content
 						const parsed = JSON.parse(text);
 						if (parsed.assignments) {
 							for (const key in parsed.assignments) {
+								if (!parsed.assignments[key]) {
+									delete parsed.assignments[key]; // skip empty scouter IDs
+									continue;
+								}
 								if (/^-?\d+$/.test(parsed.assignments[key]) && userIds.includes(parseInt(parsed.assignments[key]))) continue;
 								else if (userMap[parsed.assignments[key].trim().toLowerCase()]) parsed.assignments[key] = userMap[parsed.assignments[key].trim().toLowerCase()];
 								else return NotificationCard.error('JSON Parsing Error: invalid scouter ID or name ' + parsed.assignments[key]);
 							}
+							text = JSON.stringify(parsed);
 						} else {
 							return NotificationCard.error('JSON Parsing Error: no assignments field');
 						}

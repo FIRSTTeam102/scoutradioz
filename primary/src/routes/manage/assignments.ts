@@ -856,12 +856,12 @@ router.get('/matches/download-csv', wrap(async (req, res) => {
 	const org_key = req._user.org_key;
 	const event_key = req.event.key;
 
-	const scoutings = await utilities.find('matchscouting', { org_key, event_key, assigned_scorer: { $ne: undefined } }, { sort: { time: 1, alliance: -1, team_key: 1 } });
+	const scoutings = await utilities.find('matchscouting', { org_key, event_key }, { sort: { time: 1, alliance: -1, team_key: 1 } });
 
 	res.setHeader('Content-Type', 'text/csv');
 	res.setHeader('Content-Disposition', `attachment; filename=${org_key}_${event_key}_assignments.csv`);
 
-	return res.send('match_team_key,assigned_scorer\n' + scoutings.map(scouting => `${scouting.match_team_key},${scouting.assigned_scorer?.name}\n`).join(''));
+	return res.send('match_team_key,scouter_id\n' + scoutings.map(scouting => `${scouting.match_team_key},${scouting.assigned_scorer?.name ?? ''}\n`).join(''));
 }));
 
 router.get('/matches/download-json', wrap(async (req, res) => {
@@ -869,12 +869,12 @@ router.get('/matches/download-json', wrap(async (req, res) => {
 	const org_key = req._user.org_key;
 	const event_key = req.event.key;
 
-	const scoutings = await utilities.find('matchscouting', { org_key, event_key, assigned_scorer: { $ne: undefined } }, { sort: { time: 1, alliance: -1, team_key: 1 } });
+	const scoutings = await utilities.find('matchscouting', { org_key, event_key }, { sort: { time: 1, alliance: -1, team_key: 1 } });
 
 	res.setHeader('Content-Type', 'application/json');
 	res.setHeader('Content-Disposition', `attachment; filename=${org_key}_${event_key}_assignments.json`);
 
-	return res.send(JSON.stringify({ assignments: Object.fromEntries(scoutings.map(scouting => [scouting.match_team_key, scouting.assigned_scorer?.id])) }, null, 4));
+	return res.send(JSON.stringify({ assignments: Object.fromEntries(scoutings.map(scouting => [scouting.match_team_key, scouting.assigned_scorer?.id ?? ''])) }, null, 4));
 }));
 
 /* POST to Set scoutingPair Service */
