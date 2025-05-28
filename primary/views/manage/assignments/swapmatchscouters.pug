@@ -23,5 +23,8 @@ block content
 				option
 				each user, i in users
 					option(value=user._id class="w3-bar-item") #{user.name}
+		div(class="w3-container w3-padding-16")
+			label(class="w3-quarter w3-label theme-inline-padding") Number of matches to swap (-1 for all): 
+			input(class="w3-half theme-input" type="number" name="numMatches" value="-1")
 		div(class="w3-padding-16")
 			input(type="submit" class="gear-btn theme-link w3-btn" value="Submit")
