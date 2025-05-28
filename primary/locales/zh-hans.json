@@ -36,7 +36,10 @@
 			"title": "根据赛事与组织浏览数据",
 			"pastEvents": "若想浏览更早的数据可用“浏览更早赛事的数据”，位于 信息与报告 下的菜单选项",
 			"avgErrorRate": "Mdn. 错误率（与最小值）",
-			"tspsScore": "TSPS"
+			"tspsScore": "TSPS",
+			"orgKeyAndNickname": "组织关键 - 昵称",
+			"matchScoutingEntries": "# 比赛侦察入口",
+			"tspsExplained": "‘TSPS’是**相对**总侦察表现分（高效的多机构合作侦察比赛！）"
 		}
 	},
 	"hello": {
@@ -64,7 +67,8 @@
 		"footer": {
 			"copyright": "版权所有 {date} FIRST Team 102 和 Robotics Fund Inc.\n开源并获得 AGPLv3 许可。",
 			"tba": "由蓝色联盟提供支持。",
-			"frc": "我们很自豪能成为 FIRST 机器人竞赛的参与者。"
+			"frc": "我们很自豪能成为 FIRST 机器人竞赛的参与者。",
+			"github": "在GitHub上面查看我们的源代码"
 		},
 		"nav": {
 			"home": "主页",
@@ -107,7 +111,8 @@
 				"switchorg": "改变组织"
 			},
 			"help": "需要帮忙？检查我们的维基！",
-			"thanks": "特别鸣谢"
+			"thanks": "特别鸣谢",
+			"voyager": "切换到 Voyager 离线模块"
 		}
 	},
 	"home": {
@@ -168,11 +173,18 @@
 			"save": "保存列选择",
 			"clearOrgDefaults": "清除组织默认值",
 			"clearOrgDefaultsConfirmation": "这样做将清除您组织的报告列默认值（对每个人，而不仅仅是您）。你确定吗？"
+		},
+		"customizereports": "定制报告",
+		"heatmapcolors": {
+			"name": "名字",
+			"sample": "样本",
+			"title": "选择热力图的颜色",
+			"intro": "为数据上的热力图选择颜色方案。这是为了让色盲人士更容易地阅读数据。"
 		}
 	},
 	"scouting": {
 		"match": "比赛侦察",
-		"pit": "坑侦察",
+		"pit": "Pit区侦察",
 		"subheading": "{team} <span class=\"unimportant\">来自{city}，{state}</span>",
 		"pitHeading": "团队#{team}",
 		"upload": {
@@ -226,8 +238,8 @@
 		"matchNumber": "匹配 {number}",
 		"unassigned": "未分配",
 		"unassignedOptions": "未分配侦察员的选项",
-		"oneOffPit": "一次性坑侦察",
-		"oneOffMatch": "一次性球探",
+		"oneOffPit": "一次性Pit侦察",
+		"oneOffMatch": "一次性比赛侦察",
 		"assigned": "已分配",
 		"team": "团队",
 		"teamName": "队名",
@@ -237,25 +249,30 @@
 		"sfNumber": "半决赛 {number}",
 		"fNumber": "决赛{number}",
 		"matchResultMissedAdmin": "点此查看FIRST赛事数据并上传缺失赛事",
-		"matchResultMissedWarning": "警告：一场赛事结果可能被遗漏！"
+		"matchResultMissedWarning": "警告：一场赛事结果可能被遗漏！",
+		"assignedTeamsMissingNotAdmin": "请求一只队伍的权限确认pit分配并如有需要重新分配。",
+		"matchResultMissedNotAdmin": "请求其他队伍的权限确认FIRST比赛数据并更新丢失的比赛数据",
+		"assignedTeamsMissingAdmin": "点击这里， 如果有需要重新做pit工作。",
+		"assignedTeamsMissingWarning": "警告： 一些已分配的队伍缺失"
 	},
 	"driveDashboard": {
 		"title": "驱动团队仪表板",
-		"noTeams": "没有找到参加本次锦标赛的球队。",
+		"noTeams": "没有找到参加本次锦标赛的队伍。",
 		"noMatches": "本次锦标赛没有即将到来的比赛。",
 		"noMatchesTeam": "找不到团队 {team} 的匹配项。",
 		"viewFor": "查看仪表板…",
 		"chooseTeam": "[选择团队]",
 		"viewOr": "或者",
-		"allTeams": "所有球队",
-		"selectedTeam": "入选团队",
+		"allTeams": "所有队伍",
+		"selectedTeam": "入选的团队",
 		"nextMatch": "下一场比赛：",
 		"nextMatchTeam": "{team} 队的下一场比赛：",
 		"relativeStrengths": "相对优势：",
 		"legendShowHide": "单击图例以隐藏/显示该团队",
 		"futureMatches": "未来比赛：",
 		"futureMatchesTeam": "{team} 队的未来比赛：",
-		"compareAlliance": "比较联盟"
+		"compareAlliance": "比较联盟",
+		"otherTeams": "其他队伍"
 	},
 	"allianceselection": {
 		"title": "联盟选择",
@@ -272,7 +289,15 @@
 		"priority": "优先",
 		"priorityAbbr": "V",
 		"team": "团队",
-		"rank": "FRC排名"
+		"rank": "FRC排名",
+		"numAlliances": "联盟数量：",
+		"numRounds": "局数：",
+		"tooltipPicklist": "每个FRC队伍有自己的选择目录。点击前往查看该队伍的选择目录。",
+		"choosePicklist": "查看选择目录...",
+		"tapForPopup": "点击队号查看该队伍情报，包括侦察员笔记。",
+		"noRankings": "目前没有可用排名，请稍后再试！",
+		"skip": "跳过",
+		"options": "选项 &#9660;"
 	},
 	"metrics": {
 		"raw": "原始数据",
@@ -286,7 +311,8 @@
 		"MIN1": "最低限度",
 		"VAR1": "方差",
 		"metric": "公制",
-		"insufficientData": "暂时数据不足，稍后再来！"
+		"insufficientData": "暂时数据不足，稍后再来！",
+		"metricMIN": "公制（最低）"
 	},
 	"alliance": {
 		"red": "红色联盟",
@@ -322,7 +348,7 @@
 		"compareAllianceClick": "单击一个联盟以查看比较的个人团队统计数据：",
 		"team": "团队",
 		"teamNumber": "团队 {team}",
-		"rank": "秩",
+		"rank": "排名",
 		"rankNumber": "排名 {number}",
 		"allTeams": "所有团队",
 		"allianceStats": "联盟球队统计",
@@ -370,7 +396,7 @@
 			"titleHistory": "英特尔历史：团队 {team}",
 			"show": "显示 {type}",
 			"hide": "隐藏{type}",
-			"pitScouting": "坑侦察",
+			"pitScouting": "Pit区侦察",
 			"statistics": "统计数据",
 			"previousMatches": "以前的比赛",
 			"yearStatistics": "{year}年的统计数据",
@@ -384,7 +410,7 @@
 			"title": "英特尔：{matchType} {match} 团队 {team}",
 			"header": "匹配#{match} - {alliance} 联盟"
 		},
-		"noMatchScoutData": "没有可用于球队 {team} 的比赛球探数据用于比赛 {match}。",
+		"noMatchScoutData": "没有可用于队伍 {team} 的比赛数据用于比赛 {match}。",
 		"noMatchScoutData2": "本场比赛没有球队{team}的球探数据可用。",
 		"viewIntelPage": "查看该团队的情报页面",
 		"upcomingMatchMetrics": "即将到来的比赛的指标",
@@ -392,7 +418,8 @@
 		"exportData": {
 			"noType": "没有为导出指定（或无效）数据类型。",
 			"noData": "找不到类型“{type}”的数据。"
-		}
+		},
+		"browsePastEvents": "从过去比赛浏览数据"
 	},
 	"errors": {
 		"teamMissing": "找不到团队 {team} 的详细信息。自从您创建球探任务以来，团队列表是否发生了变化？",
@@ -419,30 +446,100 @@
 			"editMatchResults": "编辑比赛结果",
 			"editMatchSchedule": "修改比赛日程",
 			"editTeams": "编辑团队列表",
-			"getCurrentTeams": "更新球队名单",
-			"matches": "火柴",
+			"getCurrentTeams": "更新队伍名单",
+			"matches": "比赛（FIRST数据）",
 			"recalcDerived": "重新计算衍生指标",
-			"setCurrentEvent": "设置当前事件"
+			"setCurrentEvent": "设置当前事件",
+			"successSetEvent": "成功设置当前事件为*{事件名}*。",
+			"noEvent": "没有设置事件",
+			"successClear": "成功清除当前事件。",
+			"confirmSetEvent": "给*{orgName}*设置*{eventName}*为当前事件？",
+			"editRankings": "更改排名",
+			"recalcDerivedSuccess": "派生指标成功重新计算！",
+			"manual": "手动数据入口",
+			"confirmClear": "你确定想要清除当前事件*{orgName}*？",
+			"eventData": "事件数据：[[{event}]]",
+			"setCurrentEventKey": "设置当前事件密钥",
+			"editRankingsInstructions": "点击减号/加号更改排名；刷新页面更新",
+			"invalidEventKey": "无效的事件密钥：‘{eventKey}’。点击列表中的一个事件自动设置。"
 		},
 		"assignments": {
 			"swapMatchAssignments": "换入/换出比赛账户",
-			"swapPitAssignments": "交换矿坑侦察任务"
+			"swapPitAssignments": "交换Pit区侦察任务",
+			"clearGroupsWarning": "清除所有的侦察团队？这*不会*删除侦察数据。\n（考虑使用这个如果这有一个错误或者你看不到侦察组合的成员/未分配名单。）",
+			"deleteGroup": "删除组合",
+			"submitNewGroup": "提交选择的人员作为一个侦察队伍",
+			"clearGroups": "清除所有的侦察团队",
+			"match": "比赛侦察分配",
+			"erasePitAssignmentsAndData": "*警告:*清除当前事件的所有Pit区侦察分配和数据。\n\n如果继续，请输入你的密码。",
+			"availablePotentialScouters": {
+				"noneFound": "没有找到成员。你必须【标记一些成员为存在的（{url}）。",
+				"tooltip": "这个名单中的侦察者和成员都是被【标记为存在的】（{url}）。",
+				"main": "可用的潜在侦察者"
+			},
+			"clearAllPit": "清除所有Pit区侦察数据和分配",
+			"blockSize": {
+				"main": "按...模块分配",
+				"tooltipAssignees": "*如果你们只有6个侦察者他们将侦察每一场比赛而且没有休息。\n*如果你们有12个侦察者，他们将侦察N场比赛，然后休息N场比赛，轮回进行。如果有超过12个侦察者，他们将休息2xN场比赛。一个推荐的“N”是5。\n*如果你有7到11个侦察者，他们将偶尔侦察2xN场比赛在休息N场比赛前。一个推荐的“N”是3。"
+			},
+			"clearAllMatch": "清除所有比赛数据和人员分配",
+			"assignPitTeams": "将队伍分配给pit区侦察组合",
+			"assignMatchTeams": "分配比赛给以选择的侦擦者",
+			"checkUncheckSubteamMembers": "确定/不确定一个子团队中的所有成员",
+			"pit": "Pit区侦察分配",
+			"noTeams": "未定义的队伍名单！确保点击‘更新当前队伍’",
+			"scoutingGroups": "侦察团队",
+			"scoutPlayoffs": "勾选此框去生成淘汰赛分配",
+			"skipBreaks": "勾选此框生成分配并且忽略休息",
+			"permanentDeleteWarning": "继续进行，你将会*永久删除**{number}*{type}中的数据和{eventName}中的侦察分配。你确定想继续吗？"
 		},
 		"members": {
-			"passwordAuditLink": "点此查看他们是否有设置密码"
+			"passwordAuditLink": "点此查看他们是否有设置密码",
+			"clickUpdateReminder": "当你改进每个成员的时候确保点击_Update更新_。",
+			"main": "组织成员",
+			"importExport": "导入/导出",
+			"successSetPresent": "目前的成员成功更新。",
+			"permissionLevel": "许可等级",
+			"noFileSelected": "没有文件被选择。",
+			"selectAFile": "选择一个文件",
+			"downloadCSV": "以CSV格式下载",
+			"teamAdminPasswordReminder": "如果你创建了一个队伍管理员，请确保他们自己登录并创建安全密码。否则，学生可以以自己身份登录。"
+		},
+		"forms": {
+			"sprCalculation": "SPR计算"
+		},
+		"config": {
+			"teams": "队伍",
+			"tooltipSubteamKey": "给每个子队伍写一个独特的定义。每当你创建一个子队伍，可以改变标签不可以改变但是密钥不可以改变。",
+			"tooltipTeams": "把所有FRC队伍的数字和这个组织联系起来，用逗号隔开。这可以有多种情况如果你的组织是一个侦察集体，或者如果你的队伍和其他FRC队伍共享侦察者。",
+			"tooltipClassKey": "给每个类写一个独特的定义。每当你创建一个类，可以改变标签不可以改变但是密钥不可以改变。",
+			"invalidTeams": "找不到一个队伍带数字“{number}”。请输入一个用逗号分隔的FRC队伍数字表。",
+			"updatedSuccessfully": "更新成功。",
+			"updatedButFixSubteams": "组织配置完成更新，但是一个或多个用户需要更新因为子队伍/类的密钥改变。\n-*通过用户名单并且确保每个人有子队伍和类。\n-点击‘更新’给每个用户更新*",
+			"title": "配置{org}",
+			"id": "昵称",
+			"manageFormImages": "管理形成图片",
+			"uploadImage": "上传图片"
 		}
 	},
 	"tryAgainLater": "请稍后再试。",
 	"yes": "是的",
 	"no": "不",
-	"matches": "火柴",
+	"matches": "比赛",
 	"name": "姓名",
 	"year": "年份",
 	"thankyou": {
 		"2023offseason": "2023非赛季",
 		"2023inseason": "2023赛季",
 		"title": "谢谢！",
-		"2020to2022": "{year2020} 到 {year2022}"
+		"2020to2022": "{year2020} 到 {year2022}",
+		"thanks": "感谢我们的抢先体验合作伙伴！",
+		"threestarters": "三个创始人"
 	},
-	"update": "更新"
+	"update": "更新",
+	"date": "日期",
+	"add": "添加",
+	"upload": "上传",
+	"actions": "行动",
+	"key": "密钥"
 }
