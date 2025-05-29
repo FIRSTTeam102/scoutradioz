@@ -112,7 +112,7 @@
 				"switchorg": "Change organization"
 			},
 			"help": "Need help? Check our wiki!",
-			"thanks": "Special thanks"
+			"thanks": "Special thanks / How to donate"
 		}
 	},
 	"home": {
@@ -133,6 +133,10 @@
 	},
 	"thankyou": {
 		"title": "Thank you!",
+		"thanksdonations": "Thanks to our generous donors and sponsors!",
+		"howtodonate": "How to donate",
+		"clickheretodonate": "If you would like to support Scoutradioz, please consider donating to our project by clicking here",
+		"donate": "Donate",
 		"thanks": "Thanks to our Early-Access Partners!",
 		"threestarters": "The Three Starters",
 		"2020to2022": "{year2020} to {year2022}",
