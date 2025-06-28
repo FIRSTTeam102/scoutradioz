@@ -736,6 +736,15 @@ export declare interface TeamSimple extends DbDocument {
 }
 
 /**
+ * Summary of scouting data for a given year.
+ */
+export declare interface Supporter {
+	type: 'donor' | 'sponsor';
+	name: string;
+	amount: number;
+}
+
+/**
  * Contains info for a user-uploaded image.
  * @collection uploads
  * @interface Upload
@@ -806,7 +815,7 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'supporters'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
@@ -831,6 +840,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'schemas' ? Schema :
 	colName extends 'scoutingpairs' ? ScoutingPair :
 	colName extends 'sessions' ? Session :
+	colName extends 'supporters' ? Supporter :
 	colName extends 'sveltesessions' ? LuciaSession :
 	colName extends 'teams' ? Team :
 	colName extends 'uploads' ? Upload :

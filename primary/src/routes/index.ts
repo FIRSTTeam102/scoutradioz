@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import type Mathjs from 'mathjs';
 import wrap from '../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
-import type { AnyDict, Match, MatchFormData, Event, Org, EventOrgScouting, EventScouting, EventScoutingSummary } from 'scoutradioz-types';
+import type { AnyDict, Match, MatchFormData, Event, Org, EventOrgScouting, EventScouting, EventScoutingSummary, Supporter } from 'scoutradioz-types';
 import e from 'scoutradioz-http-errors';
 const mathjs: Mathjs.MathJsStatic = require('mathjs');
 
@@ -689,7 +689,22 @@ router.get('/thankyou', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'thankyou[get]');
 	logger.debug('ENTER');
 	
-	res.render('./thankyou', { 
+	let donors: Supporter[] = await utilities.find('supporters', {
+		type: 'donor'
+	},{
+		sort: {'writeTime': -1}
+	});
+	//logger.debug(`donors=${JSON.stringify(donors)}`);
+
+	let sponsors: Supporter[] = await utilities.find('supporters', {
+		type: 'sponsor'
+	},{
+		sort: {'writeTime': -1}
+	});
+
+	res.render('./thankyou', {
+		donors: donors, 
+		sponsors: sponsors,
 		title: res.msg('thankyou.title'),
 	});
 }));

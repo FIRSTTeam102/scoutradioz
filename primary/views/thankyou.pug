@@ -10,12 +10,22 @@ block content
 		h1(class="theme-text")!=msg('thankyou.thanksdonations')
 
 		h2(class="theme-text")!=msg('thankyou.donors')
-		p.
-			FRC Team <b>4068</b>
+		p
+			if donors.length === 0
+				span!=msg('thankyou.workinprogress')
+			else
+				each donor, i in donors
+					span=donor.name
+					br
 
 		h2(class="theme-text")!=msg('thankyou.sponsors')
-		p 
-			span!=msg('thankyou.workinprogress')
+		p
+			if sponsors.length === 0
+				span!=msg('thankyou.workinprogress')
+			else
+				each sponsor, i in sponsors
+					span=sponsor.name
+					br
 
 		br
 		i!=msg('thankyou.clickheretodonate')
