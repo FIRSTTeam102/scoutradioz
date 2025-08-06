@@ -197,7 +197,7 @@ export interface DerivedItem extends SchemaItemBase {
  * Note: Since some types don't need an id, you may get typescript errors when trying to access the id property.
  * Use e.g. `if ('id' in item)` to check if the item has an id, as that "in" syntax is preferred by TS
  */
-export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | ImageItem | SpacerItem | DerivedItem | DerivedItemLegacy;
+export type SchemaItem = NumberInputItem | TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | ImageItem | SpacerItem | DerivedItem | DerivedItemLegacy;
 
 /**
  * Sub-object SPR calculation

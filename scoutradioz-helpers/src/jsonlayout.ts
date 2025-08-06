@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
+import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem, NumberInputItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
 const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image'];
@@ -119,6 +119,10 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 				validateTextBlock(item);
 				testData[item.id] = '';
 				break;
+			case 'number':
+				validateNumberInput(item);
+				testData[item.id] = 0;
+				break;
 			case 'derived':
 				validateDerived(item);
 				break;
@@ -207,6 +211,11 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 	}
 
 	function validateTextBlock(item: TextBlockItem) {
+		checkExpectedKeys(item, ['type', 'id', 'label'], true);
+		checkId(item);
+	}
+
+	function validateNumberInput(item: NumberInputItem) {
 		checkExpectedKeys(item, ['type', 'id', 'label'], true);
 		checkId(item);
 	}
