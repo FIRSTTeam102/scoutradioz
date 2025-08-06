@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -489,13 +489,13 @@ export class MatchDataHelper {
 
 	/**
 	 * @param {string} org_key Org key
-	 * @param {number} event_year Year of event
+	 * @param {number} event_key Event key
 	 * @param {string} colCookie Comma-separated list of metric IDs
 	 * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
 	 */
-	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns: boolean = false) {
+	static async getModifiedMatchScoutingLayout(org_key: string, event_key: string, colCookie: string, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getModifiedMatchScoutingLayout');
-		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
+		logger.info('ENTER org_key=' + org_key + ',event_key=' + event_key + ',colCookie=' + colCookie);
 
 		if (!utilities) {
 			throw new Error('Utilities has not been configured!');
@@ -511,18 +511,7 @@ export class MatchDataHelper {
 		// 	{ sort: { 'order': 1 } },
 		// 	{ allowCache: true }
 		// );
-		const orgschema = await utilities.findOne('orgschemas',
-			{ org_key, year: event_year, form_type: 'matchscouting' },
-			{},
-			{ allowCache: true, maxCacheAge: 180 }
-		);
-		assert(orgschema);
-		const schema = await utilities.findOne('schemas',
-			{ _id: orgschema.schema_id, },
-			{},
-			{ allowCache: true, maxCacheAge: 180 }
-		);
-		assert(schema);
+		const schema = await this.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 		const scorelayoutDB = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		//const scorelayoutDB = schema.layout.filter(item => item.id);
 		logger.trace(`scoreLayoutDB=${JSON.stringify(scorelayoutDB)}`);
@@ -550,7 +539,7 @@ export class MatchDataHelper {
 			}
 
 			logger.trace('theseColDefaults=' + JSON.stringify(theseColDefaults));
-			let defaultSet = theseColDefaults[event_year];
+			let defaultSet = theseColDefaults[parseInt(event_key.slice(0, 4))];
 			logger.trace('defaultSet=' + defaultSet);
 
 			if (defaultSet) {
@@ -1029,7 +1018,7 @@ export class MatchDataHelper {
 		let cookie_key = org_key + '_' + event_year + '_cols';
 		let colCookie = cookies[cookie_key];
 		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
-		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
+		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_key, colCookie, showAllColumns);
 
 		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match: { 'team_key': { $in: teamList }, 'org_key': org_key, 'event_key': event_key } });

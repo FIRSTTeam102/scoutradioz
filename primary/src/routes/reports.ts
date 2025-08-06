@@ -485,7 +485,7 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKeysArray[0], colCookie);
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'team_key': teamKey, 'year': eventYear } });
@@ -741,7 +741,7 @@ router.get('/teamdata', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie);
 
 	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -788,7 +788,7 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
+	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie, true);
 
 	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -838,7 +838,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie, true);
 
 	let aggQuery = [];
 	let redAllianceArray = match.alliances.red.team_keys;
@@ -1313,7 +1313,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// 2020-02-15, M.O'C: Leverage column selection cookies - pull in the cookies
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie);
 
 	// Build the aggregation data
 	let aggQuery = [];

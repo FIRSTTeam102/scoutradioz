@@ -62,11 +62,11 @@ export declare class MatchDataHelper {
     }>;
     /**
      * @param {string} org_key Org key
-     * @param {number} event_year Year of event
+     * @param {number} event_key Event key
      * @param {string} colCookie Comma-separated list of metric IDs
      * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
      */
-    static getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns?: boolean): Promise<MongoDocument[]>;
+    static getModifiedMatchScoutingLayout(org_key: string, event_key: string, colCookie: string, showAllColumns?: boolean): Promise<MongoDocument[]>;
     /**
      * Recalculates aggregated data ranges for org & event and stores in DB
      * @param {string} org_key Org key
