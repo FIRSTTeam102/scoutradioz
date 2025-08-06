@@ -412,11 +412,11 @@ export class MatchDataHelper {
 	/**
 	 * Calculate derived metrics for a provided array of match data items.
 	 * @param {string} org_key Org key
-	 * @param {number} event_year Year of event
+	 * @param {string} event_key Event key
 	 * @param {Object} matchData Scouting data ("data" field in the db)
 	 * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
 	 */
-	static async calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData) {
+	static async calculateDerivedMetrics(org_key: string, event_key: string, matchData: MatchFormData) {
 		// let st = performance.now();
 		// Just derived fields from the org's match scouting layout for this year
 		// let derivedLayout = await utilities.find('layout',
@@ -427,7 +427,7 @@ export class MatchDataHelper {
 
 		let t_dbStart = performance.now();
 		const orgschema = await utilities.findOne('orgschemas',
-			{ org_key, year: event_year, form_type: 'matchscouting' },
+			{ org_key, event_key, form_type: 'matchscouting' },
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
@@ -603,7 +603,7 @@ export class MatchDataHelper {
 		// 	{ allowCache: true }
 		// );
 		const orgschema = await utilities.findOne('orgschemas',
-			{ org_key, year: event_year, form_type: 'matchscouting' },
+			{ org_key, event_key, form_type: 'matchscouting' },
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
@@ -1226,17 +1226,10 @@ export class MatchDataHelper {
 	 * @param event_key 
 	 */
 	static async getSchemaForOrgAndEvent(org_key: OrgKey, event_key: EventKey, form_type: Schema['form_type']): Promise<Schema> {
-		// later, this lookup won't be needed because orgschemas will be org+event rather than org+year
-		const { year } = await utilities.findOne('events',
-			{ key: event_key },
-			{},
-			{ allowCache: true, maxCacheAge: 180 }
-		);
-
 		const orgschema = await utilities.findOne('orgschemas',
-			{ org_key, year, form_type },
+			{ org_key, event_key, form_type },
 		);
-		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}!`);
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${event_key}!`);
 
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
@@ -1249,8 +1242,6 @@ export class MatchDataHelper {
 
 		// make sure org has permission to use this schema (either an owner of unpublished schema, OR it is published)
 		assert(schema.owners.includes(org_key) || schema.published, `Org ${org_key} does not have permission to use un-published schema "${schema.name}"!`);
-		// todo: maybe we don't need this match? maybe we can remove the "year" field from Schema?
-		assert(schema.year === year, `Schema year ${schema.year} and event year ${year} do not match!`);
 
 		return schema;
 	}
