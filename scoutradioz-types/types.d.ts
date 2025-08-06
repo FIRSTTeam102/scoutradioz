@@ -133,6 +133,10 @@ export interface TextBlockItem extends FormInputItem {
 	type: 'textblock';
 }
 
+export interface NumberInputItem extends FormInputItem {
+	type: 'number';
+}
+
 export interface CheckBoxItem extends FormInputItem {
 	type: 'checkbox';
 }
