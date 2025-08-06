@@ -224,12 +224,11 @@ export declare interface Schema extends DbDocument {
 }
 
 /**
- * Ties an org to a layout key
- * TODO: link org+event instead of just org+year
+ * Ties an org to a layout key for a specific event
  */
 export declare interface OrgSchema extends DbDocument {
 	org_key: OrgKey;
-	year: number;
+	event_key: EventKey;
 	form_type: 'matchscouting'|'pitscouting';
 	/** ID of the item in the Schemas database */
 	schema_id: ObjectId;
