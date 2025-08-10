@@ -11,6 +11,7 @@ declare class State {
 	t605Alliances: integer[];
 	currentT605: integer;
 	doingRevisits: boolean;
+	declinedTeams: Array<TeamKey>;
 }
 
 // Moves added in the move history
@@ -75,6 +76,8 @@ $(function(){
 	});
 	console.log(`s-a:$(function() - Cloned in ${Date.now() - startTime} ms`);
 
+	$('#btnDecline').hide();
+
 	// Undo button
 	$('#btnUndo').on('click', function(){
 		doUndo();
@@ -83,6 +86,11 @@ $(function(){
 	// Skip button
 	$('#btnSkip').on('click', function(){
 		doSkip();
+	});
+
+	// Decline button
+	$('#btnDecline').on('click', function(){
+		doDecline();
 	});
 
 	// Options button
@@ -142,6 +150,8 @@ function doUndo(){
 			//refresh state
 			if (TRACE) console.log(`s-a:doUndo|requestAnimationFrame - lastState.state=${JSON.stringify(lastState.state)}`);
 			state = lastState.state;
+			if (state.currentSelectedTeam != null) $('#btnDecline').show();
+			else $('#btnDecline').hide();
 
 			//get last team thingy
 			let lastMove = state.moveHistory.pop();
@@ -248,6 +258,57 @@ function doSkip(){
 	if (TRACE) console.log('s-a:doSkip - EXIT');
 }
 
+function doDecline() {
+	console.log('s-a:doDecline - ENTER');
+
+	let clonedState = cloneState();
+	let clonedHTML = $('#allianceSelection').clone();
+
+	const currentSelectedTeam = state.currentSelectedTeam;
+	state.currentSelectedTeam = null;
+
+	state.declinedTeams.push(currentSelectedTeam);
+
+	let currentSpot = 0;
+
+	//find rank of team
+	for (let i = 0; i < state.rankings.length; i++) {
+		if (state.rankings[i] == currentSelectedTeam) {
+			currentSpot = i;
+		}
+	}
+	
+	let thisMove: Move = {
+		teamKeys: [currentSelectedTeam],
+	};
+	state.moveHistory.push(thisMove);
+
+	unHighlightRow(currentSelectedTeam);
+	grayOutRow(currentSelectedTeam);
+
+	//if team is not a captain, hide team from below list
+	if (currentSpot > numAlliances) {
+		$(`#${currentSelectedTeam}`).parent().hide();
+	}
+	$(`#${currentSelectedTeam}`).removeClass('team-available')
+		.removeClass('team-highlighted')
+		.removeClass('team-revisted')
+		.removeClass('team-skipped')
+		.addClass('team-taken')
+		.attr('spot-available', 'false')
+		.attr('declined', 'true')
+		.attr('available', 'false');
+	// Hide the decline button
+	$('#btnDecline').hide();
+
+	previousStates.push({
+		state: clonedState,
+		html: clonedHTML
+	});
+
+	console.log('s-a:doDecline - EXIT');
+}
+
 function moveToNextRevisitWithClone(clonedState: State, clonedHTML: JQuery, thisMove: Move) {
 	let team1 = moveToNextRevisit();
 
@@ -293,6 +354,7 @@ function doAllianceTeamClick(this: HTMLElement){
 
 	//isAvailable: if this is a team that can be picked
 	if (isAvailable) {
+		$('#btnDecline').show();
 		//if there is a team already selected, remove highlight
 		if (currentSelectedTeam) {
 			$(`#${currentSelectedTeam}`).removeClass('team-highlighted');
@@ -323,6 +385,7 @@ function doAllianceTeamClick(this: HTMLElement){
 	else if (spotIsAvailable) {
 		//if a team is selected, DO EVERYTHING
 		if (currentSelectedTeam) {
+			$('#btnDecline').hide();
 
 			if (TRACE) console.log(`s-a:doAllianceTeamClick - <<<<<< currentSelectedTeam=${currentSelectedTeam}`);
 			$(`#${currentSelectedTeam}`).removeClass('team-highlighted')
@@ -376,6 +439,18 @@ function doAllianceTeamClick(this: HTMLElement){
 					//set this spot's contents to next team
 					thisSpot.html(nextTeamInThisSpot.substring(3));
 					//id has to be set after the fact
+
+					thisSpot.removeClass('team-taken').attr('available', 'true');
+
+					if (state.declinedTeams.includes(nextTeamInThisSpot)) {
+						thisSpot.removeClass('team-available')
+							.removeClass('team-highlighted')
+							.removeClass('team-revisted')
+							.removeClass('team-skipped')
+							.addClass('team-taken')
+							.attr('spot-available', 'false')
+							.attr('available', 'false');
+					}
 
 					//if this team is not a captain, just hide em
 					if (!$(`#${nextTeamInThisSpot}`).attr('alliance')) {
@@ -588,6 +663,11 @@ function cloneState(): State{
 		t605Alliances[i] = state.t605Alliances[i];
 	}
 
+	const declinedTeams = [];
+	for(let i = 0; i < state.declinedTeams.length; i++){
+		declinedTeams[i] = state.declinedTeams[i];
+	}
+
 	// console.log(clone);
 	
 	//clone currentSelectedTeam, currentRound, currentAlliance
@@ -600,7 +680,8 @@ function cloneState(): State{
 		t605s: t605s,
 		t605Alliances: t605Alliances,
 		currentT605: state.currentT605,
-		doingRevisits: state.doingRevisits
+		doingRevisits: state.doingRevisits,
+		declinedTeams: declinedTeams
 	};
 
 	if (TRACE) console.log(`s-a:cloneState - EXIT clone=${JSON.stringify(clone)}`);

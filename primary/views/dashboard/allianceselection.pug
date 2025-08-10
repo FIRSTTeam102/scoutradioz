@@ -77,6 +77,7 @@ block content
 				div(class="w3-left")
 					div(id="btnUndo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
 					div(id="btnSkip" class="w3-btn theme-submit w3-margin-left")!=msg('allianceselection.skip')
+					div(id="btnDecline" class="w3-btn theme-submit w3-margin-left")!=msg('allianceselection.decline')
 				div(class="w3-right")
 					div(id="btnOptions" class="w3-btn theme-input")!=msg('allianceselection.options', undefined, '\xa0')
 			section(class="w3-row")
@@ -164,6 +165,7 @@ block content
 			state.t605Alliances = [];
 			state.currentT605 = 0;
 			state.doingRevisits = false;
+			state.declinedTeams = [];
 		
 			// i18n messages used by client script
 			window.i18n = {};
