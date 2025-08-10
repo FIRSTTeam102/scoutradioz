@@ -19,7 +19,7 @@ declare class Move {
 	// allianceSpot: integer;  // M.O'C, 2025-02-17: This is not used
 	newAllianceCaptain?: TeamKey;
 	// previousSpot: integer;  // M.O'C, 2025-02-17: This is not used
-	teamKey: TeamKey;
+	teamKeys: TeamKey[];
 	skippedAllianceCaptain?: TeamKey;
 }
 
@@ -146,13 +146,15 @@ function doUndo(){
 			//get last team thingy
 			let lastMove = state.moveHistory.pop();
 			if (!lastMove) throw new Error(i18n['noLastMove']);
-			let lastTeam = lastMove.teamKey;
+			let lastTeams = lastMove.teamKeys;
 			//let lastSpot = lastMove.previousSpot;
 			let lastNewCaptain = lastMove.newAllianceCaptain;
-			console.log(`s-a:doUndo - lastMove=${JSON.stringify(lastMove)}, lastNewCaptain=${JSON.stringify(lastNewCaptain)}, lastTeam=${JSON.stringify(lastTeam)}`);
-			
-			if (lastTeam && lastTeam != lastMove.skippedAllianceCaptain)
-				unGrayOutRow(lastTeam);
+			console.log(`s-a:doUndo - lastMove=${JSON.stringify(lastMove)}, lastNewCaptain=${JSON.stringify(lastNewCaptain)}, lastTeams=${JSON.stringify(lastTeams)}`);
+
+			lastTeams.forEach(lastTeam => {
+				if (lastTeam && lastTeam != lastMove.skippedAllianceCaptain)
+					unGrayOutRow(lastTeam);
+			});
 			if (lastNewCaptain)
 				unGrayOutRow(lastNewCaptain);
 		});
@@ -162,29 +164,11 @@ function doUndo(){
 }
 
 function doSkip(){
-	//
-	// **** WARNING WARNING DANGER WILL ROBINSON ****
-	// It's *possible* in the UI for an alliance captain to be skipped so often that selections "round the corner" and
-	// lower alliances have made a 3rd pick before the skipped alliance has made their 2nd.
-	//
-	// HOWEVER - per T605...
-	//    Violation: The ALLIANCE is skipped, and the emcee moves to the next ALLIANCE,
-	//    unless the selection is the last of a round in which case the ALLIANCE
-	//    receives the next highest-ranked unselected team to the ALLIANCE.
-	// ...And!...
-	//    The ALLIANCE CAPTAIN with the last selection of a given round may not be the ALLIANCE CAPTAIN scheduled to have the final pick.
-	//    For example, imagine in round 1 that ALLIANCES 1-6 have all made valid selections and ALLIANCE Lead 7 receives a pick clock violation.
-	//    If ALLIANCE Lead 8 makes a valid selection, then ALLIANCE Lead 7 now has the final selection of round 1.
-	//
-	// ...meaning that the alliance being "rounded on" would NOT be able to be "rounded on" after all, as they'll be automatically assigned
-	// a pick before the end of the round.
-	//
-
 	if (TRACE) console.log('s-a:doSkip - ENTER');
 
 	//Clone this state into previousStates
 	let thisMove: Move = {
-		teamKey: state.rankings[state.currentAlliance],
+		teamKeys: [state.rankings[state.currentAlliance]],
 		//teamKey: currentSelectedTeam,
 		skippedAllianceCaptain: state.rankings[state.currentAlliance]
 		//previousSpot: currentSpot,
@@ -360,7 +344,7 @@ function doAllianceTeamClick(this: HTMLElement){
 			let clonedState = cloneState();
 			let clonedHTML = $('#allianceSelection').clone();
 			let thisMove: Move = {
-				teamKey: currentSelectedTeam,
+				teamKeys: [currentSelectedTeam],
 				//previousSpot: currentSpot,
 				//allianceSpot: state.currentRound == 0 ? 2 : 3,
 			};
@@ -473,7 +457,7 @@ function moveToNextCaptainWithClone(clonedState: State, clonedHTML: JQuery, this
 
 	// push into move history after we've identified who the new alliance captain is
 	clonedState.moveHistory.push(thisMove);
-	console.log(`s-a:doAllianceTeamClick - clonedState.moveHistory=${JSON.stringify(clonedState.moveHistory)}`);
+	console.log(`s-a:moveToNextCaptainWithClone - clonedState.moveHistory=${JSON.stringify(clonedState.moveHistory)}`);
 	
 	previousStates.push({
 		state: clonedState,
@@ -499,7 +483,65 @@ function moveToNextCaptain(){
 	}
 	// next round
 	else {
+		let currTeam = 1;
+
+		const addedTeams: string[] = [];
+		let clonedState = cloneState();
+		let clonedHTML = $('#allianceSelection').clone();
+
+		// assign teams automatically to T605 alliances at round end
+		while (state.t605Alliances.length > 0) {
+			while ($('#' + state.rankings[currTeam]).attr('available') == 'false') {
+				currTeam++;
+			}
+			state.currentAlliance = state.t605Alliances.splice(0, 1)[0];
+			state.t605s.splice(0, 1);
+			const currentSelectedTeam = state.rankings[currTeam];
+			console.log(`s-a:moveToNextCaptain - currTeam=${currTeam}, currentSelectedTeam=${currentSelectedTeam}, state.currentAlliance=${state.currentAlliance}`);
+			const slot = $(`#all${state.currentAlliance}team${state.currentRound+2}`);
+
+			$(`#${currentSelectedTeam}`).removeClass('team-highlighted')
+				.removeClass('team-revisted')
+				.removeClass('team-skipped');
+
+			addedTeams.push(currentSelectedTeam!);
+
+			$(`#${currentSelectedTeam}`).parent().hide();
+
+			//remove team from rankings
+			state.rankings.splice(currTeam, 1);
+	
+			//gray out selected team's row
+			grayOutRow(currentSelectedTeam);
+
+			//place the selected team into the selected spot
+			slot.html(currentSelectedTeam!.substring(3));
+
+			//gray out the now-populated slot
+			slot.removeClass('team-available')	//remove highlight
+				.removeClass('team-revisted')
+				.removeClass('team-skipped')
+				.addClass('team-taken')			//make dark
+				.attr('spot-available', 'false');	//make spot no longer able to be populated
+			
+			state.currentSelectedTeam = null;
+		}
+
+		if (addedTeams.length > 0) {
+			state.moveHistory.push({
+				teamKeys: addedTeams,
+				//previousSpot: currentSpot,
+				//allianceSpot: state.currentRound == 0 ? 2 : 3,
+			});
+			previousStates.push({
+				state: clonedState,
+				html: clonedHTML
+			});
+		}
+
 		state.currentRound++;
+
+		state.currentAlliance = state.currentRound % 2 == 0 ? 1 : numAlliances;
 		
 		$(`#all${state.currentAlliance}team${state.currentRound+2}`).addClass('team-available')
 			.attr('spot-available', 'true');
@@ -613,8 +655,6 @@ function unHighlightRow(teamKey: TeamKey){
 	});
 
 	let children = $(`.row_${teamKey}`).children();
-
-	let targetR = 240, targetG = 240, targetB = 255;
 
 	for(let i = 3; i < children.length; i++){
 
