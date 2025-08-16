@@ -234,7 +234,7 @@ export class LocalDB extends Dexie {
 			schemas: '&_id',
 			teams: '&key, team_number',
 			orgs: '&org_key',
-			orgschemas: '&[org_key+year+form_type]',
+			orgschemas: '&[org_key+event_key+form_type]',
 			
 			uploads: '&_id, [org_key+year]',
 			images: '&s3_key',

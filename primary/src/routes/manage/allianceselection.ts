@@ -4,7 +4,7 @@ import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import Permissions from '../../helpers/permissions';
 import { matchData as matchDataHelper } from 'scoutradioz-helpers';
-import e, { assert } from 'scoutradioz-http-errors';
+import e from 'scoutradioz-http-errors';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import type {  Ranking, AggRange, OrgTeamValue } from 'scoutradioz-types';
 
@@ -44,7 +44,7 @@ router.get('/', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = org_key + '_' + event_year + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_key, colCookie);
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { org_key, event_key } });
