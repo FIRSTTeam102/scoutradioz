@@ -960,7 +960,6 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	logger.addContext('funcName', 'metricsranked[get]');
 	logger.info('ENTER');
 	
-	let eventYear = req.event.year;
 	let orgKey = req._user.org_key;
 	let eventKey = req.event.key;
 
@@ -1092,7 +1091,6 @@ router.get('/metrics', wrap(async (req, res) => {
 	logger.addContext('funcName', 'metrics[get]');
 	logger.info('ENTER');
 	
-	let eventYear = req.event.year;
 	const org_key = req._user.org_key;
 	
 	// for later querying by event_key
@@ -1445,7 +1443,21 @@ router.get('/exportdata', wrap(async (req, res) => {
 	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',dataSpan=' + dataSpan + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
-	const { layout: exportLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, dataType);
+
+	const exportLayout: SchemaItem[] = [];
+
+	for (const orgschema of await utilities.find('orgschemas', {org_key: orgKey, form_type: dataType, event_key: { $regex: '^' + eventYear }})) {
+		const schema = await utilities.findOne('schemas', { _id: orgschema.schema_id });
+		if (schema) {
+			schema.layout.forEach(item => {
+				if (matchDataHelper.isMetric(item) && !exportLayout.some(
+					existingItem => matchDataHelper.isMetric(existingItem) && existingItem.id === item.id
+				)) {
+					exportLayout.push(item);
+				}
+			});
+		}
+	}
 
 	// sanity check
 	//logger.debug("layout=" + JSON.stringify(exportLayout));
