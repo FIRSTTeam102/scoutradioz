@@ -47,11 +47,11 @@ export declare class MatchDataHelper {
     /**
      * Calculate derived metrics for a provided array of match data items.
      * @param {string} org_key Org key
-     * @param {number} event_year Year of event
+     * @param {string} event_key Event key
      * @param {Object} matchData Scouting data ("data" field in the db)
      * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
      */
-    static calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData): Promise<{
+    static calculateDerivedMetrics(org_key: string, event_key: string, matchData: MatchFormData): Promise<{
         matchData: MatchFormData;
         db: number;
         constructor: number;
@@ -62,11 +62,11 @@ export declare class MatchDataHelper {
     }>;
     /**
      * @param {string} org_key Org key
-     * @param {number} event_year Year of event
+     * @param {number} event_key Event key
      * @param {string} colCookie Comma-separated list of metric IDs
      * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
      */
-    static getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns?: boolean): Promise<MongoDocument[]>;
+    static getModifiedMatchScoutingLayout(org_key: string, event_key: string, colCookie: string, showAllColumns?: boolean): Promise<MongoDocument[]>;
     /**
      * Recalculates aggregated data ranges for org & event and stores in DB
      * @param {string} org_key Org key

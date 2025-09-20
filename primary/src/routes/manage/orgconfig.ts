@@ -3,7 +3,7 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
 import { upload as uploadHelper } from 'scoutradioz-helpers';
-import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation, Upload } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, Schema, SprCalculation, Upload } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
@@ -170,14 +170,9 @@ router.get('/editform', wrap(async (req, res) => {
 
 	let org_key = req._user.org_key;
 
-	let year = parseInt(String(req.query.year)) || req.event.year;
-	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
-
-	if (year === -1) {
-		let currentYear = new Date().getFullYear();
-		logger.debug(`Year is -1, aka, event not set. Setting year to current year: ${currentYear}`);
-		year = currentYear;
-	}
+	// Use the current event for form editing
+	let event_key = req.event.key;
+	if (!event_key) throw new e.UserError('No current event set.');
 
 	// load form definition data from the database
 	let schema: Schema | undefined,
@@ -199,25 +194,62 @@ router.get('/editform', wrap(async (req, res) => {
 		}`;
 
 	const orgschema = await utilities.findOne('orgschemas',
-		{ org_key, year, form_type },
+		{ org_key, event_key, form_type },
 	);
 	if (orgschema) {
 		schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, owners: org_key },
 		);
-		assert(schema, `For ${org_key} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`);
+		assert(schema, `For ${org_key} and ${event_key}, orgschema existed in the database but pointed to nonexistent schema!`);
 		// Create string representation of layout
 		layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
 		// 2025-02-01, M.O'C: Only do if SPR calculation exists
 		if (schema.spr_calculation)
 			sprLayout = JSON.stringify(schema.spr_calculation).replace(/`/g, '\\`');
 		else
-			logger.info(`For ${org_key} and ${year}, orgschema existed in the database but had no SPR calculation - using default`);
+			logger.info(`For ${org_key} and ${event_key}, orgschema existed in the database but had no SPR calculation - using default`);
+	}
+	else {
+		// No schema for current event - check if org has schemas from other events in the same year
+		logger.info(`No orgschema found for ${org_key} at ${event_key}, checking for schemas from other events in year ${req.event.year}`);
+		
+		// Find all events in the same year
+		const eventsInYear = await utilities.find('events', { year: req.event.year });
+		const eventKeysInYear = eventsInYear.map(event => event.key);
+		
+		// Find orgschemas for this org and form_type from any event in the same year
+		const orgSchemasInYear = await utilities.find('orgschemas', {
+			org_key,
+			form_type,
+			event_key: { $in: eventKeysInYear }
+		});
+		
+		if (orgSchemasInYear.length > 0) {
+			// Get the schemas and find the most recently updated one
+			const schemaIds = orgSchemasInYear.map(os => os.schema_id);
+			const schemasInYear = await utilities.find('schemas', {
+				_id: { $in: schemaIds },
+				owners: org_key
+			}, { sort: { last_modified: -1 } }); // Sort by most recent first
+			
+			if (schemasInYear.length > 0) {
+				const mostRecentSchema = schemasInYear[0];
+				logger.info(`Found ${schemasInYear.length} existing schemas for ${org_key} in year ${req.event.year}, using most recent from ${mostRecentSchema.last_modified}`);
+				
+				// Use the most recent schema as a template
+				layout = JSON.stringify(mostRecentSchema.layout).replace(/`/g, '\\`');
+				if (mostRecentSchema.spr_calculation)
+					sprLayout = JSON.stringify(mostRecentSchema.spr_calculation).replace(/`/g, '\\`');
+				
+				// Don't set the schema variable since we want to create a new one, just use the layout
+				logger.info(`Using existing schema layout as template for new event ${event_key}`);
+			}
+		}
 	}
 
 	// Get name, description, and whether it's published from the schema (or assign defaults)
 	let { name, description, published } = schema || {
-		name: `${org_key}'s ${year} ${form_type} Form`,
+		name: `${org_key}'s ${event_key} ${form_type} Form`,
 		description: '',
 		published: false
 	};
@@ -226,7 +258,7 @@ router.get('/editform', wrap(async (req, res) => {
 	let existingFormData = new Map<string, string>();
 	let previousDataExists = false;
 	// get existing data schema (if any)
-	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', { org_key, year, 'data': { $exists: true } }, {});
+	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', { org_key, event_key, 'data': { $exists: true } }, {});
 	matchDataFind.forEach((element) => {
 		let thisMatch: MatchScouting = element;
 		if (thisMatch['data']) {
@@ -267,7 +299,8 @@ router.get('/editform', wrap(async (req, res) => {
 		published,
 		form_type,
 		org_key,
-		year,
+		event_key,
+		year: req.event.year,
 		previousDataExists,
 		previousKeys
 	});
@@ -296,6 +329,10 @@ router.post('/submitform', wrap(async (req, res) => {
 
 	assert(!isNaN(year), 'invalid year!');
 	assert(['matchscouting', 'pitscouting'].includes(form_type), 'invalid form_type!');
+
+	// Convert year to event_key using current event
+	const event_key = req.event.key;
+	if (!event_key) throw new e.UserError('No current event set.');
 
 	// Get the list of org images (for checking image IDs in form)
 	const orgImages = await uploadHelper.findOrgImages(org_key, year);
@@ -337,7 +374,7 @@ router.post('/submitform', wrap(async (req, res) => {
 
 		// Get existing schema metadata from db
 		const orgschema = await utilities.findOne('orgschemas',
-			{ org_key, year, form_type },
+			{ org_key, event_key, form_type },
 		);
 		// schema did exist in db; update it now
 		if (orgschema) {
@@ -382,7 +419,7 @@ router.post('/submitform', wrap(async (req, res) => {
 
 			let newOrgSchema: OrgSchema = {
 				org_key,
-				year,
+				event_key,
 				form_type,
 				schema_id: insertResult.insertedId,
 			};

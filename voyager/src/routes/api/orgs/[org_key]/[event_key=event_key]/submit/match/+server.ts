@@ -114,7 +114,7 @@ export const POST: RequestHandler = async ({
 		}
 		console.debug('data(UPDATED:1)=', JSON.stringify(data));
 		console.log(matchDataHelper.fixDatumType, matchDataHelper.calculateDerivedMetrics);
-		let { matchData } = await matchDataHelper.calculateDerivedMetrics(org_key, event.year, data);
+		let { matchData } = await matchDataHelper.calculateDerivedMetrics(org_key, event_key, data);
 		data = matchData;
 		console.debug('data(UPDATED:2)=', JSON.stringify(data));
 
