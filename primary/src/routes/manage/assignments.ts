@@ -336,7 +336,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		
 		// If there are none in the db, we can simply insert the new ones and call it a day
 		if (matchScoutingAssignments.length === 0) {
-			logger.debug('No exiting assignments; simply inserting');
+			logger.debug('No existing assignments; simply inserting');
 			let writeResult = await utilities.insert('matchscouting', newMatchAssignmentsArray);
 			logger.debug(`Inserted ${writeResult?.insertedCount} new blank matchData`);
 			matchScoutingAssignments = newMatchAssignmentsArray;
@@ -377,6 +377,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 				if (thisSubmission) {
 					logger.trace(`Repopulating data for ${matchTeam.match_team_key}`);
 					matchTeam.data = thisSubmission.data;
+					if (matchTeam.data == null) delete matchTeam.data; // Remove entries that may have somehow became null
 					// JL note: actual_scouter and useragent could be undefined, so I'd rather not add the keys unless they're defined
 					if (thisSubmission.actual_scorer) matchTeam.actual_scorer = thisSubmission.actual_scorer;
 					if (thisSubmission.useragent) matchTeam.useragent = thisSubmission.useragent;
