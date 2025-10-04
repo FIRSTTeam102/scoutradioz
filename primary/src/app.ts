@@ -18,7 +18,7 @@ const appStartupTime = Date.now();
 import awsMiddleware from 'aws-serverless-express/middleware';
 //load .env variables
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config(); // todo: remove and use sst?
 
 //log4js config
 let log4jsConfig = {

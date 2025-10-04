@@ -5,13 +5,14 @@
 
 declare module "sst" {
   export interface Resource {
-    "PrimaryApi": {
-      "type": "sst.aws.ApiGatewayV2"
-      "url": string
-    }
-    "PrimaryFunction": {
+    "Primary": {
       "name": string
       "type": "sst.aws.Function"
+      "url": string
+    }
+    "Router": {
+      "type": "sst.aws.Router"
+      "url": string
     }
   }
 }
