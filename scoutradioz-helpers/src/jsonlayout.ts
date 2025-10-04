@@ -1,8 +1,8 @@
 import assert from 'assert';
-import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
+import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
-const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived'];
+const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image'];
 
 export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[]) {
 	assert(sprLayout.points_per_robot_metric, 'SPR calculation must have "points\\_per\\_robot\\_metric" which refers to the ID of a field in your match form schema');
@@ -14,8 +14,12 @@ export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[
 			break;
 		}
 	}
-	assert(foundMatchingMetric, `SPR calculation points\\_per\\_robot\\_metric '${sprLayout.points_per_robot_metric}' does not match any field in your match form schema`);
-	
+	assert(foundMatchingMetric, 
+		new Error(`SPR calculation points\\_per\\_robot\\_metric '${sprLayout.points_per_robot_metric}' does not match any field in your match form schema. SPR calculations will be disabled.`,
+			{cause: 'points_per_robot_metric_no_match'} // to track this specific error
+		)
+	);
+
 	assert(sprLayout.subtract_points_from_FRC, 'SPR calculation must have "subtract\\_points\\_from\\_FRC" object which refers to fields in the FRC alliance score schema');
 	//assert(typeof sprLayout.subtract_points_from_FRC === 'object' && !Array.isArray(sprLayout.subtract_points_from_FRC) && sprLayout.subtract_points_from_FRC !== null, 'SPR calculation "subtract_points_from_FRC" must be an object of {string}: {number} pairs, where the strings refer to fields in the FRC alliance score schema');
 	let subtractPoints = sprLayout.subtract_points_from_FRC;
@@ -27,7 +31,7 @@ export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[
 	return sprLayout;
 }
 
-export function validateJSONLayout(layout: SchemaItem[]) {
+export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[]) {
 	assert(Array.isArray(layout), 'Expected JSON input to be an array');
 
 	let existingIds = new Set<string>();
@@ -117,6 +121,9 @@ export function validateJSONLayout(layout: SchemaItem[]) {
 				break;
 			case 'derived':
 				validateDerived(item);
+				break;
+			case 'image':
+				validateImage(item, orgImageKeys);
 				break;
 			default:
 				// @ts-ignore
@@ -223,6 +230,11 @@ export function validateJSONLayout(layout: SchemaItem[]) {
 			delete item.id;
 		}
 		checkExpectedKeys(item, ['type', 'label'], true);
+	}
+
+	function validateImage(item: ImageItem, orgImageKeys: string[]) {
+		checkExpectedKeys(item, ['type', 'image_id'], true);
+		assert(orgImageKeys.includes(item.image_id), `Image ID ${item.image_id} not found in organization images`);
 	}
 
 	function checkId(item: { id: string }) {

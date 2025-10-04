@@ -112,7 +112,7 @@
 				"switchorg": "Change organization"
 			},
 			"help": "Need help? Check our wiki!",
-			"thanks": "Special thanks"
+			"thanks": "Special thanks / How to donate"
 		}
 	},
 	"home": {
@@ -133,6 +133,13 @@
 	},
 	"thankyou": {
 		"title": "Thank you!",
+		"thanksdonations": "Thanks to our generous supporters!",
+		"donors": "Donors",
+		"sponsors": "Sponsors",
+		"workinprogress": "(work in progress)",
+		"howtodonate": "How to donate",
+		"clickheretodonate": "To support Scoutradioz and (if you want) be listed on this page, click here!",
+		"donate": "Donate",
 		"thanks": "Thanks to our Early-Access Partners!",
 		"threestarters": "The Three Starters",
 		"2020to2022": "{year2020} to {year2022}",
@@ -169,6 +176,7 @@
 		"passwordalreadyexists": "Password already exists. Please submit your current password.",
 		"newpasswordboth": "Please fill both password forms.",
 		"newpasswordsuccess": "Set password successfully.",
+		"customizereports": "Customize reports",
 		"reportcolumns": {
 			"title": "Choose report columns",
 			"saved": "Saved column preferences successfully.",
@@ -181,6 +189,12 @@
 			"save": "Save column selections",
 			"clearOrgDefaults": "Clear organization defaults",
 			"clearOrgDefaultsConfirmation": "Doing this will clear your organization's report column defaults (for EVERYONE, not just you). Are you sure?"
+		},
+		"heatmapcolors": {
+			"title":"Choose heat map colors",
+			"intro": "Choose a color scheme for the heat maps on data. This is designed to allow people who are color blind to visualize the data easier.",
+			"name": "Name",
+			"sample":"Sample"
 		}
 	},
 	"scouting": {
@@ -258,7 +272,8 @@
 		"teamName": "Team name",
 		"none": "None",
 		"photo": "Photo",
-		"loadTeamPhotos": "Refresh with team photos"
+		"loadTeamPhotos": "Refresh with team photos",
+		"moreMatches": "There are more matches in the schedule, but will be revealed as matches are completed."
 	},
 	"driveDashboard": {
 		"title": "Drive team dashboard",
@@ -281,10 +296,13 @@
 	},
 	"allianceselection": {
 		"title": "Alliance selection",
-		"intro": "Tap a team, then tap the empty slot [2] or [3] to move them up.\nAs teams are selected for alliances, they will gray out in the table below.",
+		"intro": "Tap a team, then tap the empty slot [2] or [3] to move them up, or the Decline button if they decline.\nAs teams are selected for alliances, they will gray out in the table below.",
+		"skipRevisit": "If a team runs out of time, hit Skip to highlight that alliance slot as skipped and go to the next slot with the option to declare a pick. Skipped alliance slots get revisited (in the order that they were skipped) after each accepted alliance invitation or new time-expired violation.",
 		"preferred": "Before alliance selection, you and your team lead(s) can mark your preferred teams on <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">this page</a>.",
 		"tapForPopup": "Tap a team number to view that team's intel, including scouter notes.",
 		"undo": "Undo",
+		"skip": "Skip",
+		"decline": "Decline",
 		"allianceNumber": "Alliance {number}",
 		"showData": "Show team data",
 		"wontSave": "This page won't be saved.",
@@ -306,14 +324,16 @@
 	"metrics": {
 		"raw": "Raw data",
 		"show": "Show: ",
-		"AVG": "Averages",
-		"AVG1": "Average",
 		"metricAVG": "Metric (avg)",
-		"MAX": "Maximums",
-		"MAX1": "Maximum",
 		"metricMAX": "Metric (max)",
-		"MIN1": "Minimum",
-		"VAR1": "Variance",
+		"metricMIN": "Metric (min)",
+		"metricVAR": "Metric (var)",
+		"AVG": "Trending |> Exponential Moving Averages",
+		"AVG1": "Trending |> Exponential Moving Average",
+		"MAX": "Capability |> 90th Percentiles",
+		"MAX1": "Capability |> 90th Percentile",
+		"MIN1": "Floor |> 10th Percentile",
+		"VAR1": "Swing |> Standard Deviation",
 		"metric": "Metric",
 		"insufficientData": "Insufficient data at this time, come back later!"
 	},
@@ -482,6 +502,7 @@
 		},
 		"assignments": {
 			"pit": "Pit scouting assignments",
+			"noTeams": "List of teams not defined! Make sure to click 'Update current teams'",
 			"match": "Match scouting assignments",
 			"assignPitTeams": "Assign teams to pit scouting groups",
 			"assignMatchTeams": "Assign matches to selected scouters",
@@ -500,7 +521,15 @@
 			"clearGroups": "Clear all scouting groups",
 			"clearGroupsWarning": "Clear all scouting groups? This will *not* delete scouting data.\n(Consider using this if there has been an error and you cannot see members on the Scouting pairs / unassigned list.)",
 			"deleteGroup": "Delete group",
+			"downloadCSV": "Download assignments as CSV",
+			"downloadJSON": "Download assignments as JSON",
 			"erasePitAssignmentsAndData": "*WARNING:* Erases all pit scouting assignments and data for the current event.\n\nTo continue, enter your password.",
+			"import": "Import assignments",
+			"keepStations": {
+				"main": "Check this box to have a scouter stay scouting the same station for a block",
+				"tooltipSixOrMore": "This setting is ignored if you have fewer than 6 scouters (the system needs flexibility to optimize team coverage with fewer scouts)",
+				"tooltipSprWarning": "If you check this box, it could have a negative effect on the accuracy of SPR calculations. This is because the groups of scouters watching each alliance will be be identical for many matches, and there will be less variety for the algorithm to work with to solve which individual scouts are the likely sources of errors."
+			},
 			"permanentDeleteWarning": "By proceeding, you will be *permanently deleting* the data from *{number}* {type} scouting assignments from _{eventName}_. Are you sure you want to continue?",
 			"scoutingGroups": "Scouting groups",
 			"skipBreaks": "Check this box to generate assignments ignoring breaks in the schedule",
@@ -517,6 +546,8 @@
 			"invalidTeams": "Could not find a team with the number \"{number}\". Please enter a comma-separated list of FRC team numbers.",
 			"updatedSuccessfully": "Updated successfully.",
 			"updatedButFixSubteams": "Org config has updated, but one or more users will need to be updated due to subteam / class keys changing.\n- *Go through the list of users and make sure everyone has a subteam and class.\n- Click 'Update' for each user that has been updated.*",
+			"uploadImage": "Upload image",
+			"manageFormImages": "Manage form images",
 			"id": "ID",
 			"teams": "Team(s)"
 		},

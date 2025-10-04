@@ -25,6 +25,15 @@ block content
 			border: 1px solid white!important;
 			cursor: pointer;
 		}
+		.team-skipped{
+			background-color: #894450!important;
+			border: 1px solid #999999!important;
+		}
+		.team-revisted{
+			background-color: #B97488!important;
+			border: 1px solid white!important;
+			cursor: pointer;
+		}
 		.team-highlighted{
 			background-color: #c5c5df!important;
 			border: 1px solid white!important;
@@ -59,6 +68,7 @@ block content
 	if !orgTeamKeys || picklist_key
 		div(class="w3-mobile w3-center")
 			p.i!=msg('allianceselection.intro')
+			p.i!=msg('allianceselection.skipRevisit')
 			p.i!=msgMarked('allianceselection.preferred')
 			if !matchcountConsistent
 				a(href="/manage/currentevent/matches") 
@@ -66,6 +76,8 @@ block content
 			div(class="w3-row w3-padding-small")
 				div(class="w3-left")
 					div(id="btnUndo" class="w3-btn theme-submit")!=msg('allianceselection.undo')
+					div(id="btnSkip" class="w3-btn theme-submit w3-margin-left")!=msg('allianceselection.skip')
+					div(id="btnDecline" class="w3-btn theme-submit w3-margin-left")!=msg('allianceselection.decline')
 				div(class="w3-right")
 					div(id="btnOptions" class="w3-btn theme-input")!=msg('allianceselection.options', undefined, '\xa0')
 			section(class="w3-row")
@@ -148,6 +160,12 @@ block content
 			state.currentAlliance = 1;
 			//Previous states of allianceSelection
 			var previousStates = [];
+			//No T605s to start (i.e., no one has yet been skipped)
+			state.t605s = [];
+			state.t605Alliances = [];
+			state.currentT605 = 0;
+			state.doingRevisits = false;
+			state.declinedTeams = [];
 		
 			// i18n messages used by client script
 			window.i18n = {};

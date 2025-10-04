@@ -1,8 +1,11 @@
 <script lang="ts">
 	import Scanner from '../Scanner.svelte';
 	import LeadSyncMothership from '../LeadSyncMothership.svelte';
+	import { setPageTitle } from '$lib/utils';
 	import SlidingTabs from '$lib/SlidingTabs.svelte';
 	import LeadQrCode from '../LeadQRCode.svelte';
+	
+	setPageTitle('Scouting lead sync')
 	
 	const tabs = [
 		{label: 'Scan', id: 'scanner'},

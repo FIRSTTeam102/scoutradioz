@@ -33,7 +33,8 @@ $(function(){
 		
 		pitSubmission.submit((err, response) => {
 			if (err || !response) {
-				NotificationCard.error('An error occurred. Please retry.');
+				let message = typeof err === 'string' ? err : 'An error occurred. Please retry.';
+				NotificationCard.error(message);
 			}
 			else{
 				let message = response.message;

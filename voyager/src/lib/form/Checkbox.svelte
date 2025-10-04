@@ -1,15 +1,28 @@
 <script lang="ts">
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
-	import type { LayoutField } from '$lib/types';
+	import type { CheckBoxItem } from 'scoutradioz-types';
 
-	export let checked: any = false; // any because of weird casting to generic data
-	export let field: LayoutField;
-	export let isDefaultValue: boolean;
-	$: isDefaultValue = (checked === false);
+	interface Props {
+		checked?: any; // any because of weird casting to generic data
+		field: CheckBoxItem;
+		onchange: () => void;
+	}
+
+	let { checked: checkedNumber = $bindable(0), field, onchange: onchangeProp }: Props = $props();
+
+	// JL note: SMUI Checkbox requires 'checked' attribute to be boolean, but we store checkboxes as numbers.
+	// 	It's simplest to translate on the fly between boolean and number inside here.
+	let checked = $state(!!checkedNumber);
+	function onchange() {
+		checkedNumber = checked ? 1 : 0;
+		onchangeProp();
+	}
 </script>
 
 <FormField>
-	<Checkbox bind:checked on:change/>
-	<span slot="label">{field.label}</span>
+	<Checkbox bind:checked {onchange} />
+	{#snippet label()}
+		<span>{field.label}</span>
+	{/snippet}
 </FormField>

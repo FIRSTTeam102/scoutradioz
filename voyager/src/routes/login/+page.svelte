@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import assert from '$lib/assert';
-	import db from '$lib/localDB';
+	import db, { type LightOrg } from '$lib/localDB';
 	import { addRefreshButtonFunctionality, getPageLayoutContexts, postJSON, setPageTitle } from '$lib/utils';
 
 	import Autocomplete from '@smui-extra/autocomplete';
@@ -16,21 +16,21 @@
 	import type { Org } from 'scoutradioz-types';
 	import { onMount } from 'svelte';
 
-	import { FormLayoutOperations, LightOrgOperations } from '$lib/DBOperations';
+	import { FormLayoutOperations, SchemaOperations, LightOrgOperations } from '$lib/DBOperations';
 	
 	setPageTitle(msg('user.login.title'))
 
 	const logger = getLogger('login');
 	
-	let org: Org|null = null;
-	let org_password = '';
+	let org: Org|null = $state(null);
+	let org_password = $state('');
 
 	const { snackbar, refreshButton, refreshButtonAnimation } = getPageLayoutContexts();
 	addRefreshButtonFunctionality(async () => {
 		await LightOrgOperations.download();
 	})
 	// Retrieve the orgs from the database
-	$: orgs = liveQuery(async () => {
+	let orgs_observable = liveQuery(async () => {
 		let retVal = await db.lightorgs.toArray();
 
 		return retVal.sort(function (a, b) {
@@ -40,6 +40,11 @@
 			else return 0;
 		});
 	});
+	// JL: Workaround because SMUI dropdowns don't like to work with raw objects
+	let orgs: LightOrg[]|undefined = $state();
+	orgs_observable.subscribe(value => orgs = value);
+	
+	$inspect(orgs);
 
 	onMount(async () => {
 		let needsSync = await LightOrgOperations.needsSync();
@@ -80,8 +85,8 @@
 				textfield$variant="filled"
 				textfield$style="width: 100%"
 				style="width: 100%"
-				options={$orgs}
-				disabled={!$orgs}
+				options={orgs}
+				disabled={!orgs}
 				getOptionLabel={getOrgOptionLabel}
 				bind:value={org}
 				label={msg('Organization')}
@@ -95,7 +100,9 @@
 					disabled={!org}
 					bind:value={org_password}
 				>
-					<HelperText slot="helper">{msg('user.login.orgpasswordhelptext')}</HelperText>
+						{#snippet helper()}
+							<HelperText >{msg('user.login.orgpasswordhelptext')}</HelperText>
+						{/snippet}
 				</Textfield>
 			</div>
 			<div class="basis-1/6 justify-self-center self-start">
@@ -104,7 +111,7 @@
 					style="width: 100%; justify-self: center"
 					variant="unelevated"
 					disabled={!org || !org_password}
-					on:click={() => {
+					onclick={() => {
 						assert(org && org_password, 'Org / org password not specified');
 
 						logger.debug('Sending request to /login/pick-org');
@@ -129,7 +136,7 @@
 								// 	the page layout context will be at its old value [possibly undefined]
 								logger.debug('Done inserting user; now downloading form layout')
 								await invalidateAll();
-								await FormLayoutOperations.download('both');
+								await SchemaOperations.download('both');
 								console.log('doing goto pick-user!');
 								goto('/login/pick-user');
 								console.log('post goto');

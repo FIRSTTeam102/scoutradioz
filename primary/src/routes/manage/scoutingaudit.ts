@@ -175,12 +175,13 @@ router.get('/uploads', wrap(async (req, res) => {
 	if (!year || isNaN(year)) year = req.event.year;
 	
 	let uploads: Upload[] = await utilities.find('uploads', 
-		{org_key: org_key, removed: false, year: year},
+		{org_key: org_key, team_key: { $exists: true }, removed: false, year: year},
 		{},
 	);
 	
 	// Years that contain any non-removed uploads
-	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, removed: false});
+	// Look specifically for records which have 'team_key' (i.e., uploaded during pit scouting)
+	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, team_key: { $exists: true }, removed: false});
 	
 	uploads.sort((a, b) => {
 		let aNum = parseInt(a.team_key.substring(3));
@@ -494,7 +495,8 @@ router.get('/spr', wrap(async (req, res) => {
 
 			// retrieve the scouting data for this match
 			let matchScoutReports: MatchScouting[] = await utilities.find('matchscouting',
-				{ 'org_key': orgKey, 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { '$ne': null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
+				// @ts-ignore -- ignoring because 'data' by definition can't be null... yet at the moment somehow sometimes it *is* null, so we want to avoid the linter flagging "$ne: null" as an issue
+				{ 'org_key': orgKey, 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { $ne: null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
 			);
 			logger.trace(`thisAlliance=${thisAlliance},thisMatch.key=${thisMatch.key} ...matchScoutReports.length=${matchScoutReports.length}`); // JL: changed frequent log to trace 
 			// can't compare if we don't have three (3) scouting reports
@@ -720,7 +722,7 @@ router.get('/matchscores', wrap(async (req, res) => {
 
 			// retrieve the scouting data for this match
 			let matchScoutReports: MatchScouting[] = await utilities.find('matchscouting',
-				{ 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { '$ne': null }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
+				{ 'event_key': eventKey, 'match_key': thisMatch.key, 'data': { $exists: true }, 'alliance': thisAlliance }, { sort: { actual_scorer: 1 } }
 			);
 			console.debug('matchScoutReports.length=' + matchScoutReports.length);
 			// can't compare if we don't have three (3) scouting reports

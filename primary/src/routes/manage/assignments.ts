@@ -6,6 +6,7 @@ import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitS
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import Permissions from '../../helpers/permissions';
+import type { BulkWriteResult } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('assignments');
@@ -158,7 +159,7 @@ router.get('/matches', wrap(async (req, res) => {
 	});
 	
 	// Find the number of match assignments WITH data
-	const matchAssignments = await utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: {$ne: null}});
+	const matchAssignments = await utilities.find('matchscouting', {org_key: org_key, event_key: event_key, data: { $exists: true }});
 	const matchAssignmentsCount = matchAssignments.length;
 	
 	logger.trace('Awaiting all db requests');
@@ -171,54 +172,7 @@ router.get('/matches', wrap(async (req, res) => {
 	});
 }));
 
-router.post('/matches/generate', wrap(async (req, res) => {
-	logger.addContext('funcName', 'matches/generate[post]');
-	
-	// Gap between matches equal to or over this value means a "major" gap (e.g., lunch, overnight, etc.)
-	const matchGapBreakThreshold = 30 * 60;  // 30 minutes, in seconds
-	// Size of match blocks to be scouted - scouts will do this many matches in a row
-	let matchBlockSize = 5;  // default
-	
-	if (req.body.blockSize) {
-		matchBlockSize = req.body.blockSize;
-		logger.trace('Overriding matchBlockSize to ' + matchBlockSize);
-		// remove from req.body before proceeding to pulling out the multi-checkbox list
-		delete req.body.blockSize;
-	}
-	assert(!req.body.blockSize);
-	
-	const event_key = req.event.key;
-	const org_key = req._user.org_key;
-	const event_year = req.event.year;
-	
-	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
-	
-	const availableArray: number[] = []; // User IDs
-	let stoppingForBreaks = true;
-	let scoutPlayoffs = false;
-	logger.trace('*** Tagged as available:');
-	for(let user in req.body) {
-		const userId = user.split('|')[0];
-		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
-		// 2024-04-04, M.O'C: Enable option to assign scouting to playoffs
-		if (userId != 'skipBreaks' && userId != 'scoutPlayoffs') { 
-			const userName = user.split('|')[1]; // unused
-			logger.trace(`user: ${userId} | ${userName}`);
-			assert(userId && userName, 'Could not find both userId and userName');
-			availableArray.push(Number(userId));
-		}
-		else {
-			if (userId === 'skipBreaks') {
-				logger.debug('Assignments will continue past breaks!');
-				stoppingForBreaks = false;
-			}
-			else if (userId === 'scoutPlayoffs') {
-				logger.debug('Assignments will be generated for playoffs!');
-				scoutPlayoffs = true;
-			}
-		}
-	}
-	
+const regenerateIfNeeded = async (scoutPlayoffs: boolean, event_key: string, org_key: string, event_year: number): Promise<string[]> => {
 	let matchScoutingAssignments: MatchScouting[] = await utilities.find('matchscouting', 
 		{org_key, event_key},
 		{sort: {time: 1}}
@@ -401,6 +355,64 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			matchScoutingAssignments = newMatchAssignmentsArray;
 		}
 	}
+
+	return outputNotes;
+};
+
+router.post('/matches/generate', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matches/generate[post]');
+	
+	// Gap between matches equal to or over this value means a "major" gap (e.g., lunch, overnight, etc.)
+	const matchGapBreakThreshold = 30 * 60;  // 30 minutes, in seconds
+	// Size of match blocks to be scouted - scouts will do this many matches in a row
+	let matchBlockSize = 5;  // default
+	
+	if (req.body.blockSize) {
+		matchBlockSize = req.body.blockSize;
+		logger.trace('Overriding matchBlockSize to ' + matchBlockSize);
+		// remove from req.body before proceeding to pulling out the multi-checkbox list
+		delete req.body.blockSize;
+	}
+	assert(!req.body.blockSize);
+	
+	const event_key = req.event.key;
+	const org_key = req._user.org_key;
+	const event_year = req.event.year;
+	
+	logger.info(`ENTER org_key=${org_key}, matchBlockSize=${matchBlockSize}`);
+	
+	const availableArray: number[] = []; // User IDs
+	let stoppingForBreaks = true;
+	let scoutPlayoffs = false;
+	let keepStations = false;
+	logger.trace('*** Tagged as available:');
+	for(let user in req.body) {
+		const userId = user.split('|')[0];
+		// 2024-01-24, M.O'C: special case, checkbox to 'skipBreaks'
+		// 2024-04-04, M.O'C: Enable option to assign scouting to playoffs
+		if (userId != 'skipBreaks' && userId != 'scoutPlayoffs' && userId != 'keepStations') { 
+			const userName = user.split('|')[1]; // unused
+			logger.trace(`user: ${userId} | ${userName}`);
+			assert(userId && userName, 'Could not find both userId and userName');
+			availableArray.push(Number(userId));
+		}
+		else {
+			if (userId === 'skipBreaks') {
+				logger.debug('Assignments will continue past breaks!');
+				stoppingForBreaks = false;
+			}
+			else if (userId === 'scoutPlayoffs') {
+				logger.debug('Assignments will be generated for playoffs!');
+				scoutPlayoffs = true;
+			}
+			else if (userId === 'keepStations') {
+				logger.debug('Assignments will keep stations!');
+				keepStations = true;
+			}
+		}
+	}
+	
+	const outputNotes = await regenerateIfNeeded(scoutPlayoffs, event_key, org_key, event_year);
 	
 	//
 	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
@@ -514,6 +526,10 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		scoutsPerMatch = matchScoutsPlusScoutedCount.length;
 	}
 
+	let stationOffset = 0; // offset for the station number (0-5) to be used when assigning scouts to stations, used when keeping stations
+	logger.debug('stationOffset=' + stationOffset);
+	logger.debug('matchScoutsPlusScoutedCount.length=' + matchScoutsPlusScoutedCount.length);
+
 	// 2024-03-20, M.O'C: The changes to "use latest timestamp" instead of "next unplayed timestamp" broke scheduling when you're doing the 2nd run past breaks
 	let notFirstMatch: boolean = false;
 	for (let matchesIdx in comingMatches) {
@@ -543,6 +559,13 @@ router.post('/matches/generate', wrap(async (req, res) => {
 			logger.trace(`Updated current scouts: ${JSON.stringify(scoutArray)}`);
 			
 			matchBlockCounter = 0;
+
+			if (keepStations)
+				//// stationOffset = Math.floor(Math.random() * 6); // randomize the station offset for the next block of matches
+				// if available scouts is an odd number...
+				if (matchScoutsPlusScoutedCount.length % 2 == 1)
+					// ...then flip the station offset between blocks
+					stationOffset = 3 - stationOffset;
 		}
 		matchBlockCounter++;
 		
@@ -593,8 +616,12 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		// Shuffle the team array
 		// 2024-01-24, M.O'C: **IF** there are <6 scouts, THEN sort by matches assigned
 		// (so as to end up with an even distribution of assignments across matches)
-		if (scoutsPerMatch >= 6)
-			teamArray.sort(() => Math.random() - 0.5);
+		if (scoutsPerMatch >= 6) {
+			// if we keep stations don't do any changing of team array
+			if (!keepStations)
+				// shuffle the team array
+				teamArray.sort(() => Math.random() - 0.5);
+		}
 		else {
 			for (let i = 0; i < 6; i++) {
 				if (!numPerTeam[teamArray[i]])
@@ -611,7 +638,7 @@ router.post('/matches/generate', wrap(async (req, res) => {
 		}
 		// cycle through teams and assign to the scouters, after teamArray has been shuffled
 		for (let i = 0; i < scoutsPerMatch; i++) {
-			let thisTeamKey = teamArray[i];
+			let thisTeamKey = teamArray[(i + stationOffset) % teamArray.length];
 			// Grab the next available scout
 			teamScoutMap[thisTeamKey] = scoutArray[i];
 			numPerTeam[thisTeamKey] = numPerTeam[thisTeamKey] + 1;
@@ -676,6 +703,178 @@ router.post('/matches/generate', wrap(async (req, res) => {
 	}
 	
 	res.redirect(`/dashboard/matches?alert=${alert}`);
+}));
+
+router.post('/matches/upload', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matches/upload[post]');
+
+	const event_key = req.event.key;
+	const org_key = req._user.org_key;
+	const event_year = req.event.year;
+	
+	logger.info(`ENTER org_key=${org_key}`);
+
+	const assignments: { [matchId: string]: number } = req.body.assignments;
+	if (!assignments) {
+		logger.error('No assignments were found in the request body!');
+		return res.send({ status: 400, message: 'No assignments were found in the request body!' });
+	}
+
+	const scouts: number[] = [];
+	for (const scoutId of Object.values(assignments)) {
+		if (!scouts.includes(scoutId)) {
+			scouts.push(scoutId);
+		}
+	}
+	
+	const outputNotes = await regenerateIfNeeded(false, event_key, org_key, event_year);
+	
+	//
+	// Read all assigned OR tagged members, ordered by 'seniority' ~ have an array ordered by seniority
+	//
+	// - matchscouts is the "queue"; need a pointer to indicate where we are
+	// TODO: Use _id, not name, because names can be modified!
+	// 2022-03-01, M.O'C: Adding 'org_key': org_key into the 2nd part of the "or" clause
+	const matchScouts = await utilities.find('users', 
+		{$and: [
+			{'_id': {$in: scouts}, 'org_key': org_key}, 
+			// {'event_info.assigned': true, 'org_key': org_key}
+		]}
+	) as WithDbId<User>[]; // JL: temporary
+	logger.trace(`matchScouts=${JSON.stringify(matchScouts)}`);
+
+	const matchScoutMap = Object.fromEntries(matchScouts.map(scout => [scout._id.toString(), scout]));
+
+	const actualAssignments: { [matchId: string]: ScouterRecord } = Object.fromEntries(Object.entries(assignments)
+		.filter(([matchId, scoutId]) => Object.keys(matchScoutMap).includes(scoutId.toString()))
+		.map(([matchId, scoutId]) => [matchId, { id: scoutId, name: matchScoutMap[scoutId.toString()].name}]));
+	
+	// 2024-01-27, M.O'C: Switch to *max* time of *resolved* matches [where alliance scores != -1]
+	const timestampArray = await utilities.find('matches', { event_key: event_key, 'alliances.red.score': {$ne: -1} },{sort: {'time': -1}});
+
+	// Avoid crashing server if all matches at an event are done
+	// 2024-02-06, M.O'C: Have to change 'latestTimestamp' to be *early* UNLESS matches have been played
+	let latestTimestamp = 1234;
+	if (timestampArray && timestampArray[0]) {
+		let latestMatch = timestampArray[0];
+		latestTimestamp = latestMatch.time + 1;
+	}
+
+	// Clear 'assigned_scorer' from all unresolved team@matches
+	await utilities.bulkWrite('matchscouting', 
+		[{updateMany: {
+			filter: { org_key, event_key, time: { $gte: latestTimestamp } }, 
+			update: { $unset: { 'assigned_scorer' : '' } }
+		}}]
+	);
+	
+	// Special case for no scouters assigned: Stop the re-assigning process and render the match scouting dashboard
+	if (matchScouts.length === 0) {
+		logger.info('No valid match scouts were selected; Leaving the match scouting assignments blank');
+		return res.send({ status: 400, message: 'No valid scouters were selected, so the assignments were left blank.' });
+	}
+	
+	let comingMatches: Match[] = await utilities.find('matches', 
+		{event_key: event_key, time: {$gte: latestTimestamp}},
+		{sort: {time: 1}}
+	);
+
+	// 2024-03-20, M.O'C: The changes to "use latest timestamp" instead of "next unplayed timestamp" broke scheduling when you're doing the 2nd run past breaks
+	for (let matchesIdx in comingMatches) {
+		const thisMatch = comingMatches[matchesIdx];
+		const thisMatchKey = thisMatch.key;
+		
+		let teamScoutMap: Dict<ScouterRecord> = {}; // map of team->scout associations; reset for each matc
+		
+		let teamArray: TeamKey[] = [...comingMatches[matchesIdx].alliances.red.team_keys, ...comingMatches[matchesIdx].alliances.blue.team_keys];
+		logger.trace('comingMatch[' + matchesIdx + ']: teamArray=' + JSON.stringify(teamArray));
+		
+		// cycle through teams and assign to the scouters, after teamArray has been shuffled
+		for (let i = 0; i < teamArray.length; i++) {
+			let thisTeamKey = teamArray[i];
+			// Grab the next available scout
+			if (actualAssignments[thisMatchKey + '_' + thisTeamKey]) {
+				teamScoutMap[thisTeamKey] = actualAssignments[thisMatchKey + '_' + thisTeamKey];
+			}
+		}
+
+		// show all the team-scout assignments
+		let assignmentPromisesArray = [];
+		for (let teamKey in teamScoutMap) {
+			if (teamScoutMap.hasOwnProperty(teamKey)) {
+				// Write the assignment to the DB!
+				let thisMatchTeamKey = thisMatchKey + '_' + teamKey;
+				let thisScout = teamScoutMap[teamKey];
+				
+				// 2024-01-23, M.O'C: If there are fewer than 6 available scouts, some entries might be null
+				if (thisScout != null) {
+					let thisPromise = utilities.update('matchscouting', 
+						{ org_key: org_key, match_team_key : thisMatchTeamKey }, 
+						{ $set: { assigned_scorer : thisScout }} 
+					);
+					assignmentPromisesArray.push(thisPromise);
+				}
+			}
+		}									
+		// wait for all the updates to finish
+		await Promise.all(assignmentPromisesArray);
+	}
+	
+	// lastly, mark assigned scouters as assigned
+	let writeResult = await utilities.bulkWrite('users', [
+		
+		// JL: TODO LATER AFTER WE MAKE SURE THIS DOESN'T BREAK THINGS: Set scouters NOT assigend to match scouting to event_info.assigned = false
+		// {
+		// 	updateMany: {
+		// 		filter: {_id: {$not: {$in: scoutAssignedObjectIdList}}},
+		// 		update: {$set: {'event_info.assigned': false}}
+		// 	}
+		// }, 
+		{
+			updateMany: {
+				filter: {_id: {$in: matchScouts.map(scout => scout._id)}},
+				update: {$set: {'event_info.assigned': true}}
+			}
+		}
+	]);
+	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+
+	// all done, go to the matches list
+	let alert;
+	if (outputNotes.length > 0) {
+		alert = `Wrote match assignments. Notes of what occurred during the process: \n - ${outputNotes.join('\n - ')}`;
+	}
+	else {
+		alert = 'Wrote match assignments successfully.';
+	}
+	
+	return res.send({ status: 200, message: alert });
+}));
+
+router.get('/matches/download-csv', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matches/download-csv[get]');
+	const org_key = req._user.org_key;
+	const event_key = req.event.key;
+
+	const scoutings = await utilities.find('matchscouting', { org_key, event_key }, { sort: { time: 1, alliance: -1, team_key: 1 } });
+
+	res.setHeader('Content-Type', 'text/csv');
+	res.setHeader('Content-Disposition', `attachment; filename=${org_key}_${event_key}_assignments.csv`);
+
+	return res.send('match_team_key,scouter_id\n' + scoutings.map(scouting => `${scouting.match_team_key},${scouting.assigned_scorer?.name ?? ''}\n`).join(''));
+}));
+
+router.get('/matches/download-json', wrap(async (req, res) => {
+	logger.addContext('funcName', 'matches/download-json[get]');
+	const org_key = req._user.org_key;
+	const event_key = req.event.key;
+
+	const scoutings = await utilities.find('matchscouting', { org_key, event_key }, { sort: { time: 1, alliance: -1, team_key: 1 } });
+
+	res.setHeader('Content-Type', 'application/json');
+	res.setHeader('Content-Disposition', `attachment; filename=${org_key}_${event_key}_assignments.json`);
+
+	return res.send(JSON.stringify({ assignments: Object.fromEntries(scoutings.map(scouting => [scouting.match_team_key, scouting.assigned_scorer?.id ?? ''])) }, null, 4));
 }));
 
 /* POST to Set scoutingPair Service */
@@ -825,8 +1024,184 @@ router.post('/clearscoutingpairs', wrap(async (req, res) => {
 
 
 router.post('/generateteamallocations', wrap(async (req, res) => {
+	//generateTeamAllocations(req, res);
+
+	logger.addContext('funcName', 'generateTeamAllocations');
 	
-	generateTeamAllocations(req, res);
+	const event_key = req.event.key;
+	const year = req.event.year;
+	const org_key = req._user.org_key;
+	
+	// Pull 'active team key' from DB
+	let thisOrg = await utilities.findOne('orgs', {'org_key': org_key});
+	// Get a list of all the active team keys in this org. Usually only 1 long, sometimes multiple, should never be 0 long but accounting for it just in case.
+	let activeTeamKeys = (thisOrg.team_key ? [thisOrg.team_key] : thisOrg.team_keys) || [];
+	
+	//
+	// Get the current set of already-assigned pairs; make a map of {"id": {"prim", "seco", "tert"}}
+	//
+	const scoutingpairs = await utilities.find('scoutingpairs', {org_key});
+	
+	// Iterate through scoutingpairs; create {1st: 2nd: 3rd:} and add to 'dict' keying off 1st <1, or 1/2 2/1, or 1/2/3 2/3/1 3/1/2>
+	let primaryAndBackupMap: Dict<PitScoutingSet> = {};
+	let scoutingAssignedArray: number[] = [];
+	
+	for (let i in scoutingpairs) {
+		const thisPair = scoutingpairs[i];
+		logger.trace('Current pair:', thisPair);
+		
+		// Group of 3
+		if (thisPair.member3) {
+			assert(thisPair.member2, 'If member3 is defined, then member2 must also be defined!');
+			
+			let set1: PitScoutingSet = {
+				primary: thisPair.member1,
+				secondary: thisPair.member2,
+				tertiary: thisPair.member3,
+			};
+			let set2: PitScoutingSet = {
+				primary: thisPair.member2,
+				secondary: thisPair.member3,
+				tertiary: thisPair.member1,
+			};
+			let set3: PitScoutingSet = {
+				primary: thisPair.member3,
+				secondary: thisPair.member1,
+				tertiary: thisPair.member2
+			};
+			// JL note: Can't use ObjectId as a dictionary key, so they have to be typecast to a string
+			primaryAndBackupMap[String(set1.primary.id)] = set1;
+			primaryAndBackupMap[String(set2.primary.id)] = set2;
+			primaryAndBackupMap[String(set3.primary.id)] = set3;
+			scoutingAssignedArray.push(set1.primary.id, set2.primary.id, set3.primary.id);
+		}
+		// group of 2
+		else if (thisPair.member2) {
+			let set1: PitScoutingSet = {
+				primary: thisPair.member1,
+				secondary: thisPair.member2,
+			};
+			let set2: PitScoutingSet = {
+				primary: thisPair.member2,
+				secondary: thisPair.member1,
+			};
+			primaryAndBackupMap[String(set1.primary.id)] = set1;
+			primaryAndBackupMap[String(set2.primary.id)] = set2;
+			scoutingAssignedArray.push(set1.primary.id, set2.primary.id);
+		}
+		// group of 1
+		else {
+			let set1: PitScoutingSet = {
+				primary: thisPair.member1
+			};
+			primaryAndBackupMap[String(set1.primary.id)] = set1;
+			scoutingAssignedArray.push(set1.primary.id);
+		}
+	}
+	
+	//
+	// Read all present members, ordered by 'seniority' ~ have an array ordered by seniority
+	//
+	const teamMembers = await utilities.find('users',
+		{_id: {$in: scoutingAssignedArray}, org_key},
+		{sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, name: 1}}
+	);
+	
+	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
+	// 2023-02-12 JL: Switching to req.teams
+	//assert(req.teams, 'List of teams not defined! Make sure to click "Update current teams"');
+	if(!req.teams) {
+		res.render('./message',{
+			title: res.msg('manage.assignments.pit'),
+			message: res.msg('manage.assignments.noTeams'),
+		});
+		return;
+	}
+	const teamArray = req.teams;
+	
+	// 2023-02-12 JL: Added a query to get existing scouting data on a per-team basis
+	// 2024-03-26 M.O'C: Include super-scouting data
+	const existingScoutingData = await utilities.find('pitscouting', {event_key, org_key, $or: [ {data: { $ne: undefined }}, {super_data: { $ne: undefined }} ]});
+	
+	//
+	// Cycle through teams, adding 1st 2nd 3rd to each based on array of 1st2nd3rds
+	//
+	let teamAssignments: PitScouting[] = [];
+	// 2023-02-12 JL: Removed unused teamassignmentsbyTeam
+	let assigneePointer = 0;
+	for (let i in teamArray) {
+		const thisTbaTeam = teamArray[i];
+		let thisTeammember = teamMembers[assigneePointer];
+		let thisTeammemberId = String(thisTeammember._id);
+		let thisPrimaryAndBackup = primaryAndBackupMap[thisTeammemberId];
+		logger.trace(`i=${i}, assigneePointer=${assigneePointer}, team=${thisTbaTeam.key}, thisTeamMember=${thisTeammember.name}`);
+		logger.trace('thisPrimaryAndBackup', thisPrimaryAndBackup);
+		
+		const team_key = thisTbaTeam.key;
+		
+		let thisAssignment: PitScouting = {
+			year,
+			event_key,
+			org_key,
+			team_key,
+		};
+		
+		// 2018-03-15, M.O'C: Skip assigning if this teams is the "active" team
+		// 2023-02-12 JL: Switched to supporting multiple "active" teams
+		if (!activeTeamKeys.some(key => key === team_key)) {
+			thisAssignment.primary = thisPrimaryAndBackup.primary;
+			thisAssignment.secondary = thisPrimaryAndBackup.secondary;
+			if (thisPrimaryAndBackup.tertiary)
+				thisAssignment.tertiary = thisPrimaryAndBackup.tertiary;
+			
+			// Update assignee pointer
+			assigneePointer++;
+			if (assigneePointer >= teamMembers.length)
+				assigneePointer = 0;
+		}
+		else {
+			logger.trace(`Skipping team ${team_key}`);
+		}
+		
+		// 2023-02-12 JL: Check for existing scouting data and insert it 
+		// 2024-03-26 M.O'C: Adding super_data, plus checks for each type
+		for (let thisEntry of existingScoutingData) {
+			if (thisEntry.team_key === team_key) {
+				logger.trace(`Appending data for team_key ${team_key}`);
+				if (thisEntry.data)
+					thisAssignment.data = thisEntry.data;
+				if (thisEntry.super_data)
+					thisAssignment.super_data = thisEntry.super_data;
+			}
+		}
+		
+		// Array for mass insert
+		teamAssignments.push(thisAssignment);
+	}
+	logger.trace('****** New/updated teamassignments:');
+	for (let assignment of teamAssignments) {
+		logger.trace(`team=${assignment.team_key}, primary=${assignment.primary?.name}, secondary=${assignment.secondary?.name}, tertiary=${assignment.tertiary?.name}`);
+	}
+	
+	// Sanity check for data deletion
+	let teamAssignmentsWithData = 0;
+	// 2024-03-26, M.O'C: Adding super_data to the check
+	for (let assignment of teamAssignments) if (assignment.data || assignment.super_data) teamAssignmentsWithData++;
+	logger.info(`Generated team assignments with data inserted: ${teamAssignmentsWithData}. Previously found: ${existingScoutingData.length}`);
+	if (teamAssignmentsWithData !== existingScoutingData.length) {
+		logger.warn('Numbers do not match!!!');
+		logger.debug('Data dump:', existingScoutingData.map(item => {
+			return {key: item.team_key, data: item.data};
+		}));
+	}
+	
+	// Delete ALL the old elements first for the 'current' event
+	await utilities.remove('pitscouting', {org_key, event_key});
+	
+	// Insert the new data
+	await utilities.insert('pitscouting', teamAssignments);
+	
+	res.redirect('./?alert=Generated pit scouting assignments successfully.');	
 }));
 
 
@@ -934,8 +1309,15 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 	// Extract 'from' & 'to' from req
 	let swapoutID = parseInt(req.body.swapout);
 	let swapinID = parseInt(req.body.swapin);
+	// extract numMatches from req
+	let numMatches = parseInt(req.body.numMatches);
 	
 	if (!swapoutID || !swapinID) return res.redirect('?alert=Please select both users to swap.&type=error');
+
+	if (numMatches === null || numMatches === undefined || numMatches < -1) {
+		logger.error(thisFuncName + 'numMatches is invalid: ' + numMatches);
+		return res.redirect('?alert=Invalid number of matches to swap.&type=error');
+	}
 	
 	logger.info(thisFuncName + 'swap out ' + swapinID + ', swap in ' + swapoutID);
 	
@@ -955,16 +1337,34 @@ router.post('/swapmatchscouters', wrap(async (req, res) => {
 		let latestMatch = matchDocs[0];
 		latestTimestamp = latestMatch.time + 1;
 	}
+
+	let writeResult: BulkWriteResult;
 		
-	// Do the updateMany - change instances of swapout to swapin
-	// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
-	// 2023-02-07 JL: changing scouter name to ScouterRecord
-	let writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, 
-		update:{ $set: { assigned_scorer: {
-			id: swapin._id,
-			name: swapin.name
-		}}}}}]);
+	if (numMatches === -1) {
+		// Do the updateMany - change instances of swapout to swapin
+		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
+		// 2023-02-07 JL: changing scouter name to ScouterRecord
+		writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { 'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, 
+			update:{ $set: { assigned_scorer: {
+				id: swapin._id,
+				name: swapin.name
+			}}}}}]);
+	}
+	else {
+		// find first numMatches scouted by swapout and change to swapin
+		let scoutedBySwapOut = await utilities.find('matchscouting', {'assigned_scorer.id': swapoutID, org_key, event_key, time: { $gte: latestTimestamp } }, {sort: {time: 1}});
+		writeResult = await utilities.bulkWrite('matchscouting', [{updateMany:{filter: { '_id': { $in: scoutedBySwapOut.slice(0, numMatches).map(scouting => scouting._id)}, org_key, event_key, time: { $gte: latestTimestamp } }, 
+			update:{ $set: { assigned_scorer: {
+				id: swapin._id,
+				name: swapin.name
+			}}}}}]);
+	}
 	logger.debug(`writeResult=${JSON.stringify(writeResult)}`);
+
+	if (writeResult.modifiedCount > 0) {
+		// modified more than zero, so we can set the event_info.assigned to true for the swapin user
+		await utilities.update('users', {_id: swapinID, org_key}, {$set: {'event_info.assigned': true}});
+	}
 
 	res.redirect('/dashboard/matches');
 }));
@@ -1084,177 +1484,5 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 	let redirect = req.getURLWithQueryParameters('/manage/assignments/swappitassignments', {scoutId: scoutId});
 	res.redirect(redirect);
 }));
-
-async function generateTeamAllocations(req: express.Request, res: express.Response) {
-	logger.addContext('funcName', 'generateTeamAllocations');
-	
-	const event_key = req.event.key;
-	const year = req.event.year;
-	const org_key = req._user.org_key;
-	
-	// Pull 'active team key' from DB
-	let thisOrg = await utilities.findOne('orgs', {'org_key': org_key});
-	// Get a list of all the active team keys in this org. Usually only 1 long, sometimes multiple, should never be 0 long but accounting for it just in case.
-	let activeTeamKeys = (thisOrg.team_key ? [thisOrg.team_key] : thisOrg.team_keys) || [];
-	
-	//
-	// Get the current set of already-assigned pairs; make a map of {"id": {"prim", "seco", "tert"}}
-	//
-	const scoutingpairs = await utilities.find('scoutingpairs', {org_key});
-	
-	// Iterate through scoutingpairs; create {1st: 2nd: 3rd:} and add to 'dict' keying off 1st <1, or 1/2 2/1, or 1/2/3 2/3/1 3/1/2>
-	let primaryAndBackupMap: Dict<PitScoutingSet> = {};
-	let scoutingAssignedArray: number[] = [];
-	
-	for (let i in scoutingpairs) {
-		const thisPair = scoutingpairs[i];
-		logger.trace('Current pair:', thisPair);
-		
-		// Group of 3
-		if (thisPair.member3) {
-			assert(thisPair.member2, 'If member3 is defined, then member2 must also be defined!');
-			
-			let set1: PitScoutingSet = {
-				primary: thisPair.member1,
-				secondary: thisPair.member2,
-				tertiary: thisPair.member3,
-			};
-			let set2: PitScoutingSet = {
-				primary: thisPair.member2,
-				secondary: thisPair.member3,
-				tertiary: thisPair.member1,
-			};
-			let set3: PitScoutingSet = {
-				primary: thisPair.member3,
-				secondary: thisPair.member1,
-				tertiary: thisPair.member2
-			};
-			// JL note: Can't use ObjectId as a dictionary key, so they have to be typecast to a string
-			primaryAndBackupMap[String(set1.primary.id)] = set1;
-			primaryAndBackupMap[String(set2.primary.id)] = set2;
-			primaryAndBackupMap[String(set3.primary.id)] = set3;
-			scoutingAssignedArray.push(set1.primary.id, set2.primary.id, set3.primary.id);
-		}
-		// group of 2
-		else if (thisPair.member2) {
-			let set1: PitScoutingSet = {
-				primary: thisPair.member1,
-				secondary: thisPair.member2,
-			};
-			let set2: PitScoutingSet = {
-				primary: thisPair.member2,
-				secondary: thisPair.member1,
-			};
-			primaryAndBackupMap[String(set1.primary.id)] = set1;
-			primaryAndBackupMap[String(set2.primary.id)] = set2;
-			scoutingAssignedArray.push(set1.primary.id, set2.primary.id);
-		}
-		// group of 1
-		else {
-			let set1: PitScoutingSet = {
-				primary: thisPair.member1
-			};
-			primaryAndBackupMap[String(set1.primary.id)] = set1;
-			scoutingAssignedArray.push(set1.primary.id);
-		}
-	}
-	
-	//
-	// Read all present members, ordered by 'seniority' ~ have an array ordered by seniority
-	//
-	const teamMembers = await utilities.find('users',
-		{_id: {$in: scoutingAssignedArray}, org_key},
-		{sort: {'org_info.seniority': 1, 'org_info.subteam_key': 1, name: 1}}
-	);
-	
-	// 2020-02-09, M.O'C: Switch from "currentteams" to using the list of keys in the current event
-	// 2023-02-12 JL: Switching to req.teams
-	assert(req.teams, 'List of teams not defined! Make sure to click "Update current teams"');
-	const teamArray = req.teams;
-	
-	// 2023-02-12 JL: Added a query to get existing scouting data on a per-team basis
-	// 2024-03-26 M.O'C: Include super-scouting data
-	const existingScoutingData = await utilities.find('pitscouting', {event_key, org_key, $or: [ {data: { $ne: undefined }}, {super_data: { $ne: undefined }} ]});
-	
-	//
-	// Cycle through teams, adding 1st 2nd 3rd to each based on array of 1st2nd3rds
-	//
-	let teamAssignments: PitScouting[] = [];
-	// 2023-02-12 JL: Removed unused teamassignmentsbyTeam
-	let assigneePointer = 0;
-	for (let i in teamArray) {
-		const thisTbaTeam = teamArray[i];
-		let thisTeammember = teamMembers[assigneePointer];
-		let thisTeammemberId = String(thisTeammember._id);
-		let thisPrimaryAndBackup = primaryAndBackupMap[thisTeammemberId];
-		logger.trace(`i=${i}, assigneePointer=${assigneePointer}, team=${thisTbaTeam.key}, thisTeamMember=${thisTeammember.name}`);
-		logger.trace('thisPrimaryAndBackup', thisPrimaryAndBackup);
-		
-		const team_key = thisTbaTeam.key;
-		
-		let thisAssignment: PitScouting = {
-			year,
-			event_key,
-			org_key,
-			team_key,
-		};
-		
-		// 2018-03-15, M.O'C: Skip assigning if this teams is the "active" team
-		// 2023-02-12 JL: Switched to supporting multiple "active" teams
-		if (!activeTeamKeys.some(key => key === team_key)) {
-			thisAssignment.primary = thisPrimaryAndBackup.primary;
-			thisAssignment.secondary = thisPrimaryAndBackup.secondary;
-			if (thisPrimaryAndBackup.tertiary)
-				thisAssignment.tertiary = thisPrimaryAndBackup.tertiary;
-			
-			// Update assignee pointer
-			assigneePointer++;
-			if (assigneePointer >= teamMembers.length)
-				assigneePointer = 0;
-		}
-		else {
-			logger.trace(`Skipping team ${team_key}`);
-		}
-		
-		// 2023-02-12 JL: Check for existing scouting data and insert it 
-		// 2024-03-26 M.O'C: Adding super_data, plus checks for each type
-		for (let thisEntry of existingScoutingData) {
-			if (thisEntry.team_key === team_key) {
-				logger.trace(`Appending data for team_key ${team_key}`);
-				if (thisEntry.data)
-					thisAssignment.data = thisEntry.data;
-				if (thisEntry.super_data)
-					thisAssignment.super_data = thisEntry.super_data;
-			}
-		}
-		
-		// Array for mass insert
-		teamAssignments.push(thisAssignment);
-	}
-	logger.trace('****** New/updated teamassignments:');
-	for (let assignment of teamAssignments) {
-		logger.trace(`team=${assignment.team_key}, primary=${assignment.primary?.name}, secondary=${assignment.secondary?.name}, tertiary=${assignment.tertiary?.name}`);
-	}
-	
-	// Sanity check for data deletion
-	let teamAssignmentsWithData = 0;
-	// 2024-03-26, M.O'C: Adding super_data to the check
-	for (let assignment of teamAssignments) if (assignment.data || assignment.super_data) teamAssignmentsWithData++;
-	logger.info(`Generated team assignments with data inserted: ${teamAssignmentsWithData}. Previously found: ${existingScoutingData.length}`);
-	if (teamAssignmentsWithData !== existingScoutingData.length) {
-		logger.warn('Numbers do not match!!!');
-		logger.debug('Data dump:', existingScoutingData.map(item => {
-			return {key: item.team_key, data: item.data};
-		}));
-	}
-	
-	// Delete ALL the old elements first for the 'current' event
-	await utilities.remove('pitscouting', {org_key, event_key});
-	
-	// Insert the new data
-	await utilities.insert('pitscouting', teamAssignments);
-	
-	res.redirect('./?alert=Generated pit scouting assignments successfully.');
-}
 
 export default router;

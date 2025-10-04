@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import { matchData as matchDataHelper, upload as uploadHelper } from 'scoutradioz-helpers';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 import e, { assert } from 'scoutradioz-http-errors';
-import type { AggRange, Event, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, SchemaItem, Team, Upload } from 'scoutradioz-types';
+import type { AggRange, Event, Match, MatchFormData, MatchScouting, PitScouting, Ranking, RankingPoints, SchemaItem, Team, Upload, HeatMapColors, } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../helpers/express-async-handler';
@@ -17,6 +17,16 @@ router.all('/*', wrap(async (req, res, next) => {
 	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate (Permissions.ACCESS_VIEWER)) {
+		let cookieKey= 'scoutradiozheatmap';
+		if (req.cookies[cookieKey]) {
+			logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
+			let heatMapColors: HeatMapColors = await utilities.findOne('heatmapcolors',
+				{key: req.cookies[cookieKey]}, 
+				{},
+				{allowCache: true}
+			);
+			res.locals.heatMapColors= heatMapColors;
+		}
 		next();
 	}
 }));
@@ -254,7 +264,15 @@ router.get('/teamintel', wrap(async (req, res) => {
 	const { layout: scorelayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 
 	// Pit data layout
-	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'pitscouting');
+	// 2025-02-24, M.O'C: Teams might not have defined a pit scouting layout
+	let layout: SchemaItem[] = [];
+	try {
+		const schema = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'pitscouting');
+		layout = schema.layout;
+	}
+	catch (error) {
+		logger.warn('No pit scouting schema found for org ' + orgKey + ' and event ' + eventKey);
+	}
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'event_key': eventKey, 'team_key': teamKey } });
@@ -298,12 +316,12 @@ router.get('/teamintel', wrap(async (req, res) => {
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiable(thisLayout)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
-			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MIN'] = {$minN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -318,24 +336,29 @@ router.get('/teamintel', wrap(async (req, res) => {
 
 	// Unspool single row of aggregate results into tabular form
 	let aggTable = [];
-	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		let thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiable(thisLayout)) {
-			let aggRow: MongoDocument = {};
-			aggRow['key'] = thisLayout.id;
-			
-			// Recompute VAR first = StdDev/Mean
-			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
+	// 2025-03-14, M.O'C: Only process agg results if there is any data
+	if (aggresult && Object.keys(aggresult).length > 0) {
+		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+			let thisLayout = scorelayout[scoreIdx];
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiable(thisLayout)) {
+				let aggRow: MongoDocument = {};
+				aggRow['key'] = thisLayout.id;
+				
+				// Recompute VAR first = StdDev/Mean
+				aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
-			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			aggRow['max'] = (Math.round(aggresult[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
-			aggTable.push(aggRow);
+				let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+				aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
+				aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
+				let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+				aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
+				aggTable.push(aggRow);
+			}
 		}
+		//logger.debug('aggTable=' + JSON.stringify(aggTable));
 	}
-	//logger.debug('aggTable=' + JSON.stringify(aggTable));
 	//logger.debug('pitData=' + JSON.stringify(pitData));
 
 	// read in the current agg ranges
@@ -343,6 +366,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 	
 	const images = await uploadHelper.findTeamImages(orgKey, eventYear, teamKey);
+	const orgImages = await uploadHelper.findOrgImages(orgKey, eventYear);
 	
 	res.render('./reports/teamintel', {
 		title: res.msg('reports.teamIntel.title', {team: teamKey.substring(3)}),
@@ -357,6 +381,7 @@ router.get('/teamintel', wrap(async (req, res) => {
 		matches,
 		matchDataHelper,
 		images,
+		orgImages,
 		rankingPoints,
 		expandSection,
 	});
@@ -504,12 +529,12 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 			//logger.debug('thisLayout.type=' + thisLayout.type + ', thisLayout.id=' + thisLayout.id);
-			groupClause[thisLayout.id + 'MIN'] = {$min: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MIN'] = {$minN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
 			groupClause[thisLayout.id + 'VAR'] = {$stdDevSamp: '$data.' + thisLayout.id};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -524,21 +549,26 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 
 	// Unspool single row of aggregate results into tabular form
 	let aggTable = [];
-	for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
-		let thisLayout = scorelayout[scoreIdx];
-		//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
-		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-			let aggRow: MongoDocument = {};
-			aggRow['key'] = thisLayout.id;
-			
-			// Recompute VAR first = StdDev/Mean
-			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
+	// 2025-03-14, M.O'C: Only process agg results if there is any data
+	if (aggresult && Object.keys(aggresult).length > 0) {
+		for (let scoreIdx = 0; scoreIdx < scorelayout.length; scoreIdx++) {
+			let thisLayout = scorelayout[scoreIdx];
+			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
+			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+				let aggRow: MongoDocument = {};
+				aggRow['key'] = thisLayout.id;
+				
+				// Recompute VAR first = StdDev/Mean
+				aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 
-			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
-			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-			aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
-			aggRow['max'] = (Math.round(aggresult[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
-			aggTable.push(aggRow);
+				let minVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MIN']);
+				aggRow['min'] = (Math.round(minVal * 10)/10).toFixed(1);
+				aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				aggRow['var'] = (Math.round(aggresult[thisLayout.id + 'VAR'] * 10)/10).toFixed(1);
+				let maxVal = matchDataHelper.extractPercentileFromSortedArray(aggresult[thisLayout.id + 'MAX']);
+				aggRow['max'] = (Math.round(maxVal * 10)/10).toFixed(1);
+				aggTable.push(aggRow);
+			}
 		}
 	}
 	//logger.debug('aggTable=' + JSON.stringify(aggTable));
@@ -594,6 +624,8 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 	let org_key = req._user.org_key;
 	const event_key = req.event.key;
 	
+	const orgImages = await uploadHelper.findOrgImages(org_key, eventYear);
+
 	// Match data layout
 	const { layout } = await matchDataHelper.getSchemaForOrgAndEvent(org_key, event_key, 'matchscouting');
 
@@ -635,6 +667,7 @@ router.get('/teammatchintel', wrap(async (req, res) => {
 		teammatch,
 		teamKey: match_team_key.split('_')[2],
 		matchDataHelper,
+		orgImages,
 	});
 }));
 
@@ -650,7 +683,7 @@ router.get('/alliancestats', wrap(async (req, res) =>  {
 	if (typeof teamsInput !== 'string') throw new e.UserError(res.msg('errors.specifyTeamCsv'));
 
 	// use helper function
-	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamsInput, req.cookies);
+	let allianceStatsData = await matchDataHelper.getAllianceStatsData(eventYear, eventKey, orgKey, teamsInput, req.cookies, true);
 	
 	let teams = allianceStatsData.teams;
 	let teamList = allianceStatsData.teamList;
@@ -755,7 +788,7 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
 
 	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -805,7 +838,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
 
 	let aggQuery = [];
 	let redAllianceArray = match.alliances.red.team_keys;
@@ -1121,7 +1154,8 @@ router.get('/metrics', wrap(async (req, res) => {
 			aggRow['key'] = thisLayout.id;
 			
 			// Recompute VAR first = StdDev/Mean
-			aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
+			// 2025-03-08, M.O'C: leave it as stddev... hey turns out it was stddev all along (this result got overwritten below anyway)
+			//aggRow['var'] = aggRow['var'] / (aggRow['avg'] + 0.001);
 		
 			aggRow['min'] = (Math.round(aggresult[thisLayout.id + 'MIN'] * 10)/10).toFixed(1);
 			aggRow['avg'] = (Math.round(aggresult[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
@@ -1218,7 +1252,8 @@ router.get('/metricintel', wrap(async (req, res) => {
 		for (let thisAgg of aggdata) {
 			//var thisAgg = aggdata[aggIdx];
 			// Recompute VAR first = StdDev/Mean
-			thisAgg[metricKey + 'VAR'] = thisAgg[metricKey + 'VAR'] / (thisAgg[metricKey + 'AVG'] + 0.001);
+			// 2025-03-08, M.O'C: leave it as stddev
+			//thisAgg[metricKey + 'VAR'] = thisAgg[metricKey + 'VAR'] / (thisAgg[metricKey + 'AVG'] + 0.001);
 			
 			thisAgg[metricKey + 'MIN'] = (Math.round(thisAgg[metricKey + 'MIN'] * 10)/10).toFixed(1);
 			thisAgg[metricKey + 'AVG'] = (Math.round(thisAgg[metricKey + 'AVG'] * 10)/10).toFixed(1);
@@ -1302,7 +1337,9 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 		thisLayout.key = thisLayout.id;
 		scorelayout[scoreIdx] = thisLayout;
 		//if it is a valid data type, add this layout's ID to groupClause
+		logger.debug('thisLayout.type=' + thisLayout.type);
 		if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
+			logger.debug('thisLayout.type is quantifiable');
 			let thisEMAclause: MongoDocument = {};
 			let thisEMAinner: MongoDocument = {};
 			thisEMAinner['alpha'] = emaAlpha;
@@ -1325,7 +1362,8 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 			//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 			groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
-			groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+			// 2020-03-01, M.O'C: Converting MAX to Nth (~90th) percentile
+			groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 		}
 	}
 	aggQuery.push({ $group: groupClause });
@@ -1348,7 +1386,10 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 				let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-				let roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+				// 2020-03-01, M.O'C: Converting MAX to Nth (~90th) percentile
+				let maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
+				let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
+				//logger.debug(`${thisLayout.id + 'MAX'}=${thisAgg[thisLayout.id + 'MAX']}, length=${thisAgg[thisLayout.id + 'MAX'].length}... maxVal=${maxVal}`);
 				thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 				thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 			}
@@ -1365,7 +1406,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// read in the current agg ranges
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
-	
+
 	res.render('./reports/allteammetrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
 		aggdata: aggArray,
@@ -1404,11 +1445,11 @@ router.get('/exportdata', wrap(async (req, res) => {
 	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',dataSpan=' + dataSpan + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
-	const { layout: matchLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
+	const { layout: exportLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, dataType);
 
 	// sanity check
-	//logger.debug("layout=" + JSON.stringify(matchLayout));
-	if (!matchLayout || matchLayout.length == 0) {
+	//logger.debug("layout=" + JSON.stringify(exportLayout));
+	if (!exportLayout || exportLayout.length == 0) {
 		res.redirect('/?alert=' + res.msg('reports.exportData.noData', {type: dataType}));
 		return;
 	}
@@ -1469,6 +1510,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	}
 	let pivotDataKeys = pivotDataCols.split(',');
 	let isFirstRow = true;
+	const isAuthorized = req._user.role.access_level >= Permissions.ACCESS_SCOUTER;
 	for (let i in scored) {
 		if (scored[i].data) {
 			let thisScored = scored[i];
@@ -1477,11 +1519,19 @@ router.get('/exportdata', wrap(async (req, res) => {
 				isFirstRow = false;
 				// initialize header row with particular columns
 				let headerRow = pivotDataCols;
+				// add scouter name if authorized
+				if (isAuthorized) {
+					headerRow += ',scouter';
+				}
 				// add on metric IDs
-				for (let thisItem of matchLayout) {
+				for (let thisItem of exportLayout) {
 					// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
 					if (matchDataHelper.isMetric(thisItem) && !isOtherNotesAndUnauthorized(thisItem)) 
 						headerRow += ',' + thisItem.id;
+				}
+				// add super notes if authorized
+				if (isAuthorized) {
+					headerRow += ',superNotes';
 				}
 				//logger.debug("headerRow=" + headerRow);
 				fullCSVoutput = headerRow;
@@ -1513,17 +1563,32 @@ router.get('/exportdata', wrap(async (req, res) => {
 				dataRow += thisVal.replace(/(\r\n|\n|\r)/gm,'');
 			}
 
+			// add scouter name if authorized
+			if (isAuthorized) {
+				if ('actual_scorer' in thisScored) 
+					dataRow += ',"' + (thisScored.actual_scorer?.name ?? '') + '"';
+				
+				else if ('actual_scouter' in thisScored) 
+					dataRow += ',"' + (thisScored.actual_scouter?.name ?? '') + '"';
+				
+				else
+					dataRow += ',';
+			}
+
 			// cycle through the metrics
-			for (let thisItem of matchLayout) {
+			for (let thisItem of exportLayout) {
 				// 2022-04-04 JL: If the user is not logged in as a scouter, then don't include otherNotes in the export
 				if (matchDataHelper.isMetric(thisItem) && !isOtherNotesAndUnauthorized(thisItem)) {
 					dataRow += ',';
-					if (!thisItem.id) throw new e.InternalDatabaseError(`Layout item does not have a layout ID! (label=${'label' in thisItem ? thisItem.label : ''}, _id=${thisItem._id})`);
+					if (!thisItem.id) throw new e.InternalDatabaseError(`Layout item does not have a layout ID! (item=${JSON.stringify(thisItem)})`);
 					if (thisData[thisItem.id] || thisData[thisItem.id] == 0) {
 						let thisVal = '' + thisData[thisItem.id];
 						dataRow += '"' + thisVal.replace(/(\r\n|\n|\r)/gm,'') + '"';
 					}
 				}
+			}
+			if (isAuthorized) {
+				dataRow += ',"' + ('' + (thisScored.super_data?.otherNotes ?? '')).replace(/(\r\n|\n|\r)/gm,'') + '"';	
 			}
 			//logger.debug("dataRow=" + dataRow);
 			fullCSVoutput += '\n' + dataRow;
@@ -1554,7 +1619,7 @@ router.get('/exportimages', wrap(async (req, res) => {
 	const thisYear = req.event.year;
 	
 	let uploads: Upload[] = await utilities.find('uploads', 
-		{org_key: org_key, removed: false, year: req.event.year},
+		{org_key: org_key, removed: false, year: req.event.year, team_key: {$exists: true}},
 		{},
 	);
 	

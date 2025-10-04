@@ -9,7 +9,11 @@
 		'At augue eget arcu dictum varius duis at. Elit ut aliquam purus sit amet luctus venenatis lectus. Morbi enim nunc faucibus a pellentesque sit amet porttitor. Consectetur lorem donec massa sapien faucibus et molestie ac feugiat. Sagittis aliquam malesuada bibendum arcu. Diam sit amet nisl suscipit adipiscing bibendum est. Nisl nunc mi ipsum faucibus vitae aliquet nec ullamcorper sit. Habitant morbi tristique senectus et netus et malesuada fames. Pulvinar etiam non quam lacus suspendisse. Nunc mi ipsum faucibus vitae aliquet nec ullamcorper sit amet. Ac feugiat sed lectus vestibulum mattis ullamcorper velit sed. Urna molestie at elementum eu facilisis sed odio morbi quis. Morbi enim nunc faucibus a pellentesque sit amet porttitor eget. Tincidunt arcu non sodales neque sodales. Adipiscing vitae proin sagittis nisl rhoncus mattis rhoncus urna. Sit amet dictum sit amet. Habitant morbi tristique senectus et netus et malesuada fames ac. Integer vitae justo eget magna fermentum iaculis eu. Nulla porttitor massa id neque aliquam vestibulum morbi blandit. Et malesuada fames ac turpis.',
 	]
 	
-	export let paragraphs: number = 3;
+	interface Props {
+		paragraphs?: number;
+	}
+
+	let { paragraphs = 3 }: Props = $props();
 </script>
 
 {#if paragraphs > 0}

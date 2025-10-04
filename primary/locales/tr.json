@@ -1,49 +1,61 @@
 {
 	"index": {
-		"fulltitle": "Scoutradioz: Bir Hizmet Olarak FRC İzcilik",
-		"welcome": "Scoutradioz'a hoş geldiniz",
-		"choice": "Sen:",
+		"fulltitle": "Scoutradioz: Hizmet Olarak FRC Scouting",
+		"welcome": "Scoutradioz'a Hoş Geldiniz",
+		"choice": "Ne yapmak istersiniz:",
 		"viewer": {
-			"choice": "Verileri görüntülemek istiyor",
-			"intro": "Scoutradioz, ekiplerin/kuruluşların yarışmalarda kendi özel istihbaratlarını toplamalarını sağlar.",
-			"action": "Hangi verileri topladıklarını görmek için aşağıdan bir kuruluş seçin!"
+			"choice": "Verileri görüntülemek",
+			"intro": "Scoutradioz, takımların/organizasyonların yarışmalarda kendi özel istihbaratlarını toplamalarını sağlar.",
+			"action": "Hangi verileri topladıklarını görmek için aşağıdan bir organizasyonu seçin!"
 		},
 		"scouter": {
-			"choice": "Scout'ta oturum açma"
+			"choice": "Scout için giriş yapmak"
 		},
 		"info": {
-			"choice": "Scoutradioz ve ekibinizin bunu nasıl kullanabileceği hakkında bilgi edinmekle ilgileniyorsunuz",
-			"intro": "Scoutradioz, The Gearheads tarafından geliştirilen ve ekiplerin ve kuruluşların **yarışmalarda kendi özelleştirilmiş istihbaratlarını toplamalarını** sağlayan bir FRC keşif uygulamasıdır.",
+			"choice": "Scoutradioz hakkında bilgi edinmek ve takımınızın nasıl kullanabileceğini öğrenmek",
+			"intro": "Scoutradioz, The Gearheads tarafından geliştirilen ve takımların ve organizasyonların **yarışmalarda kendi özelleştirilmiş istihbaratlarını toplamalarını** sağlayan bir FRC keşif uygulamasıdır.",
 			"features": {
 				"intro": "Başlangıçta 2018'de oluşturulan Scoutradioz gelişmeye devam etti ve artık Amazon Web Services üzerinde çalışıyor. Scoutradioz'un sunduğu bazı özelliklerin bir listesi:",
-				"modular": "Kuruluşunuzun tam olarak hangi bilgileri kaydetmek ve göstermek istediğinizi seçebilmesi için **modüler ve yapılandırılabilir** pit ve maç keşif anketleri",
-				"automatic": "**Otomatik**, kişiselleştirilmiş pit ve maç izleme atamaları",
+				"modular": "Organizasyonunuzun tam olarak hangi bilgileri kaydetmek ve göstermek istediğini seçebilmesi için **modüler ve ayarlanabilir** pit ve maç scout anketleri",
+				"automatic": "**Otomatik**, kişiselleştirilmiş pit ve maç scout atamaları",
 				"advanced": "**Gelişmiş** raporlar ve metrikler",
-				"management": "Maç atamalarını denetleme, gözcüleri içeri ve dışarı değiştirme ve üye listesini yönetme gibi etkinlik yönetimi araçları",
+				"management": "Maç atamalarını denetleme, scoutları değiştirme ve üye listesini yönetme gibi etkinlik yönetimi araçları",
 				"free": "Ve tabii ki tamamen ücretsiz!"
 			},
-			"github": "GitHub'daki kodumuza ve belgelerimize bakın",
+			"github": "Kodumuza Github üzerinden göz atın",
 			"discord": "Discord'umuza Katılın",
-			"partner": "Erken Erişim iş ortağı olmak için başvurun",
-			"first": "*FIRST* ve FRC hakkında daha fazla bilgi"
+			"partner": "Erken-Erişim partneri olmak için başvurun",
+			"first": "*FIRST* ve FRC hakkında daha fazla bilgi",
+			"wiki": "Detaylı dokümantasyon için wiki'mize göz atın",
+			"signup": "Scoutradioz'u kullanmak için takımınızı kaydedin"
 		},
-		"view": "görüş",
-		"login": "Giriş yapmak"
+		"view": "Görüntüle",
+		"login": "Giriş yap",
+		"browse": {
+			"title": "Etkinlik ve organizasyona göre verileri görüntüleyin",
+			"link": "Veya buraya tıklayarak etkinliğe göre veri arayın",
+			"tspsExplained": "'TSPS' **göreceli** Toplam Scout Performans Skorudur (organizasyonlar arası scout dostluk yarışmaları için yararlı) - ve 'Mdn.' ise Medyan'ın kısaltmasıdır",
+			"pastEvents": "Eski verileri görmek için Bilgi ve Raporlar menüsünden 'Geçmiş etkinliklerden veriler arayın' menüsünü kullanmanız gerekebilir",
+			"orgKeyAndNickname": "Organizasyon anahtarı - İsim",
+			"matchScoutingEntries": "Maç scout girişi sayısı",
+			"avgErrorRate": "Medyan hata oranı (ve minimum değeri)",
+			"tspsScore": "TSPS"
+		}
 	},
 	"hello": {
-		"world": "Selam Dünya!",
+		"world": "Merhaba Dünya!",
 		"name": "Merhaba, {name}!"
 	},
-	"selectOrg": "Lütfen bir kuruluş seçin.",
+	"selectOrg": "Lütfen bir organizasyon seçin.",
 	"error": {
 		"title": "Hata: {message}",
 		"report": {
 			"intro": "Bu hatayı düzeltmemize yardımcı olmak için lütfen:",
-			"screenshot": "Bu hata mesajının ekran görüntüsünü alın,",
-			"url": "Sayfanın üst kısmındaki \"Paylaş\" düğmesini tıklayarak bu sayfanın tam URL'sini kopyalayın,",
-			"send": "Bu hatayı almak için tıkladığınız bağlantı gibi alakalı bilgilerle birlikte ekran görüntüsünü Discord sunucumuzda veya {github}GitHub sayfamızda{/github} yayınlayın."
+			"screenshot": "Hata mesajının ekran görüntüsünü alın,",
+			"url": "Sayfanın üst kısmındaki \"Paylaş\" düğmesine tıklayarak bu sayfanın tam URL'sini kopyalayın,",
+			"send": "Bu hatayı almak için tıkladığınız bağlantı gibi alakalı bilgilerle birlikte ekran görüntüsünü Discord sunucumuzda veya {github}GitHub sayfamızda{/github} paylaşın."
 		},
-		"stack": "Yığın izleme:"
+		"stack": "Stack trace:"
 	},
 	"layout": {
 		"untitled": "İsimsiz sayfa",
@@ -53,27 +65,29 @@
 			"user": "{user} - {org}"
 		},
 		"footer": {
-			"copyright": "Telif Hakkı {date} FIRST Team 102 ve Robotics Fund Inc.\nAçık kaynaklıdır ve AGPLv3 ile lisanslanmıştır.",
-			"tba": "Mavi İttifak tarafından desteklenmektedir.",
-			"frc": "FIRST Robotics Competition'ın katılımcısı olmaktan gurur duyuyoruz."
+			"copyright": "Telif Hakkı {date} FIRST Team 102 ve Robotics Fund Inc.\nAçık Kaynak ve AGPLv3 ile lisanslanmıştır.",
+			"tba": "Powered by The Blue Alliance.",
+			"frc": "FIRST Robotics Competition'ın katılımcısı olmaktan gurur duyuyoruz.",
+			"github": "Kaynak kodumuza GitHub üzerinde göz atın"
 		},
 		"nav": {
-			"home": "Ev",
+			"home": "Ana Sayfa",
 			"reports": {
 				"main": "Bilgi ve raporlar: [[{event}]]",
 				"teams": "Takımlar",
 				"teamList": "{number}: {name}",
 				"teamStats": "Takım istatistikleri",
-				"yearStats": "{year} için tam istatistikler",
+				"yearStats": "{year} için tüm istatistikler",
 				"export": {
-					"main": "CSV'ye aktar",
-					"match": "Maç izleme verileri: [[{event}]]",
-					"pit": "Pit keşif verileri: [[{event}]]",
-					"matchAll": "Maç izleme verileri: [[{year} yılının tamamı]]",
-					"pitAll": "Çukur keşif verileri: [[{year} yılının tamamı]]"
+					"main": "Dışarıya veri aktar",
+					"match": "[CSV] Maç scout verileri: [[{event}]]",
+					"pit": "Pit scout verileri: [[{event}]]",
+					"matchAll": "[CSV] Maç scout verileri: [[{year} yılı]]",
+					"pitAll": "[CSV] Pit scout verileri: [[{year} yılı]]",
+					"photos": "[Zip] Robot fotoğrafları: [[{year} yılı]]"
 				}
 			},
-			"scouting": "İzcilik",
+			"scouting": "Scout",
 			"manage": {
 				"main": "Yönet: [[{org}]]",
 				"members": {
@@ -82,124 +96,133 @@
 					"passwords": "Üye şifrelerini denetle/sıfırla"
 				},
 				"scouters": {
-					"main": "İzciler",
-					"event": "Gözcüler: [[{event}]]",
-					"audit": "İzcilik denetimi",
-					"present": "hediye ayarla"
+					"main": "Scoutlar",
+					"event": "Scoutlar: [[{event}]]",
+					"audit": "Scout denetimi",
+					"present": "Etkinlikte kimlerin bulunduğunu ayarlayın"
 				}
 			},
-			"admin": "yönetici",
+			"admin": "Yönetici",
 			"user": {
 				"main": "Kullanıcı: [[{user}]]",
-				"fallback": "kullanıcı",
+				"fallback": "Kullanıcı",
 				"login": "Giriş yap: [[{org}]]",
 				"logout": "Çıkış Yap",
 				"switchorg": "Organizasyonu değiştir"
 			},
-			"help": "Yardıma mı ihtiyacınız var? Wiki'mizi kontrol edin!"
+			"help": "Yardıma mı ihtiyacınız var? Wiki'mizi kontrol edin!",
+			"thanks": "Teşekkürler",
+			"voyager": "Voyager çevrimdışı modülüne geçiş yap"
 		}
 	},
 	"home": {
-		"title": "Ev",
+		"title": "Ana Sayfa",
 		"menu": "Menüyü açmak için sol üstteki {menu} öğesine tıklayın",
 		"tournamentInfo": "Turnuva bilgisi",
-		"teamInfo": "takım bilgisi",
-		"teamNum": "Takım #",
+		"teamInfo": "Takım bilgisi",
+		"teamNum": "Takım No.",
 		"stats": "İstatistikler",
 		"userLogin": "Kullanıcı Girişi",
-		"scoutingDashboard": "Keşif kontrol paneli",
-		"management": "Yönetmek",
-		"admin": "yönetici",
-		"specifyTeam": "Bir takım belirtmelisiniz."
+		"scoutingDashboard": "Scout kontrol paneli",
+		"management": "Yönetim",
+		"admin": "Yönetici",
+		"specifyTeam": "Bir takım belirtmelisiniz.",
+		"formDemos": "Formları önizle",
+		"matchFormDemo": "Maç Formu",
+		"pitFormDemo": "Pit Formu"
 	},
 	"share": {
-		"changeOrg": "{org}'u görüntülüyorsunuz.\nGörüntülemek istediğiniz kuruluşu değiştirmek için menüden *Org: {org}*'a tıklayın ve *Organizasyonu Değiştir*'i seçin."
+		"changeOrg": "{org}'u görüntülüyorsunuz.\nGörüntülemek istediğiniz kuruluşu değiştirmek için menüden *Organizasyon: {org}*'a tıklayın ve *Organizasyonu Değiştir*'i seçin.{org}"
 	},
 	"user": {
-		"loginOrg": "{org}'da oturum açın",
+		"loginOrg": "{org}'a giriş yapın",
 		"orgpassword": "Organizasyon şifresi:",
 		"next": "Sonraki",
 		"name": "İsim:",
 		"personalpassword": "Kişisel şifre:",
 		"createnew": "Lütfen yeni bir şifre oluşturun.",
-		"mustcreate": "Kuruluşunuzda yükseltilmiş izinleriniz var, bu nedenle başkalarının sizin adınıza oturum açmasını önlemek için bir parola belirlemelisiniz.",
+		"mustcreate": "Kuruluşunuzda yükseltilmiş izinleriniz var, bu nedenle başkalarının sizin adınıza giriş yapmasını önlemek için bir parola belirlemelisiniz.",
 		"currentpassword": "Mevcut Şifre:",
 		"newpassword": "Yeni Şifre:",
-		"newpassword2": "Teyit etmek:",
+		"newpassword2": "Teyit:",
 		"newpasswordmismatch": "Yeni şifreler uyuşmuyor.",
-		"login": "Giriş yapmak",
+		"login": "Giriş yap",
 		"changepassword": "Şifre değiştir",
 		"blankpassword": "Henüz kendi şifreniz yoksa boş bırakın.",
-		"selectorg": "Lütfen oturum açmak için bir kuruluş seçin.",
-		"logoutbeforelogin": "Lütfen başka bir kullanıcıda oturum açmadan önce oturumu kapatın.",
-		"orgpasswordrequired": "Lütfen kuruluşunuzun parolasını girin. Geri dönmek için sol üstteki navigasyonu açın.",
-		"orgpasswordincorrect": "{org} kuruluşu için yanlış şifre.",
-		"resubmitlogin": "Üzgünüz, lütfen kuruluş giriş bilgilerinizi yeniden gönderin.",
+		"selectorg": "Lütfen giriş yapmak için bir kuruluş seçin.",
+		"logoutbeforelogin": "Lütfen başka bir kullanıcı olarak giriş yapmadan önce mevcut kullanıcıdan çıkış yapın.",
+		"orgpasswordrequired": "Lütfen organizasyonunuzun şifresini girin. Geri dönmek için sol üstteki navigasyon menüsünü açın.",
+		"orgpasswordincorrect": "{org} organizasyonu için yanlış şifre.",
+		"resubmitlogin": "Üzgünüz, lütfen organizasyon giriş bilgilerinizi yeniden gönderin.",
 		"selectuser": "Lütfen bir kullanıcı seçin.",
 		"nouserexists": "Böyle bir kullanıcı mevcut değil.",
-		"incorrectpassword": "Yanlış parola.",
+		"incorrectpassword": "Yanlış şifre.",
 		"incorrectpasswordcurrent": "Yanlış mevcut şifre.",
-		"passwordalreadyexists": "Şifre zaten var. Lütfen mevcut şifrenizi giriniz.",
+		"passwordalreadyexists": "Bu şifre halihazırda bulunuyor. Lütfen mevcut şifrenizi giriniz.",
 		"newpasswordboth": "Lütfen her iki şifre formunu da doldurunuz.",
-		"newpasswordsuccess": "Parolayı başarıyla ayarlayın.",
+		"newpasswordsuccess": "Şifre başarıyla ayarlandı.",
 		"reportcolumns": {
 			"title": "Rapor sütunlarını seçin",
 			"saved": "Sütun tercihleri başarıyla kaydedildi.",
-			"clearedorgdefaults": "Kuruluş varsayılan sütunları başarıyla temizlendi.",
-			"intro": "HİÇBİRİ seçilirse, rapor sayfaları kuruluş için varsayılan sütun grubunu gösterir.\nKuruluşun varsayılan sütunları **kalındır**.\nTÜMÜ veya BAZIları seçilirse, rapor sayfaları YALNIZCA seçili sütunları gösterir.",
+			"clearedorgdefaults": "Organizasyonun varsayılan sütunları başarıyla temizlendi.",
+			"intro": "HİÇBİRİ seçilirse, rapor sayfaları organizasyon için varsayılan sütun grubunu gösterir.\nOrganizasyonun varsayılan sütunları **kalındır**.\nTÜMÜ veya BAZIları seçilirse, rapor sayfaları YALNIZCA seçili sütunları gösterir.",
 			"default": "Varsayılan",
-			"checkAll": "hepsini kontrol et",
-			"uncheckAll": "Tümünü işaretleme",
-			"setOrgDefalts": "Kuruluş varsayılanlarını ayarlamak için bunu işaretleyin",
+			"checkAll": "Hepsini işaretle",
+			"uncheckAll": "Hepsinin işaretini kaldır",
+			"setOrgDefalts": "Organizasyon varsayılanlarını ayarlamak için bunu işaretleyin",
 			"save": "Sütun seçimlerini kaydet",
-			"clearOrgDefaults": "Kuruluş varsayılanlarını temizle",
-			"clearOrgDefaultsConfirmation": "Bunu yapmak, kuruluşunuzun rapor sütunu varsayılanlarını temizleyecektir (yalnızca sizin için değil, HERKES için). Emin misin?"
+			"clearOrgDefaults": "Organizasyon varsayılanlarını temizle",
+			"clearOrgDefaultsConfirmation": "Bunu yapmak, kuruluşunuzun rapor sütunu varsayılanlarını temizleyecektir (yalnızca sizin için değil, HERKES için). Emin misiniz?"
 		}
 	},
 	"scouting": {
-		"match": "Maç izleme",
-		"pit": "Çukur keşif",
-		"subheading": "{team} <span class=\"unimportant\">{city} adresinden, {state}</span>",
+		"match": "Maç Scoutu",
+		"pit": "Pit Scoutu",
+		"subheading": "{team} <span class=\"unimportant\"> {city} şehrinden, {state}</span>",
 		"pitHeading": "Takım #{team}",
 		"upload": {
 			"main": "Ana fotoğrafı yükle",
 			"small": "Küçük #{n} yükleyin",
-			"preprocess": "Mobil verileri korumak için fotoğrafları önceden işlemek mi istiyorsunuz?"
+			"preprocess": "Mobil verileri korumak için fotoğraflar önceden işlensin mi?"
 		},
 		"matchHeading": "Maç #{match}, Takım #{team}",
 		"dynamicScrolling": "Dinamik kaydırmayı etkinleştir",
-		"submit": "Göndermek",
+		"submit": "Gönder",
 		"orgManagerActions": "Organizasyon yöneticisi eylemleri:",
 		"clearData": "Net veriler",
-		"clearDataConfirm": "Bu maç için keşif verilerini *KALICI OLARAK SİLMEK* istediğinizden *EMİN* iseniz, şifrenizi aşağıya girin.",
-		"invalidMatchKey": "Geçersiz eşleşme anahtarı seti.",
+		"clearDataConfirm": "Bu maç için scout verilerini *KALICI OLARAK SİLMEK* istediğinizden *EMİNSENİZ* , şifrenizi aşağıya girin.",
+		"invalidMatchKey": "Geçersiz maç anahtar seti.",
 		"invalidTeam": "Takım {team} mevcut değil.",
-		"invalidTeamKey": "Ekip anahtarı tanımlanmamış veya geçersiz.",
+		"invalidTeamKey": "Takım anahtarı tanımlanmamış veya geçersiz.",
 		"noDataSubmit": "{url} adresine hiçbir veri gönderilmedi.",
 		"submitSuccess": "Veriler başarıyla gönderildi.",
-		"deleteSuccess": "Veriler başarıyla silindi. Ekrandaki verileri yeniden göndermek istemeniz durumunda sayfadan başka bir yere yönlendirilmeyeceksiniz."
+		"deleteSuccess": "Veriler başarıyla silindi. Ekrandaki verileri yeniden göndermek isterseniz sayfadan başka bir yere yönlendirilmeyeceksiniz.",
+		"supernotes": "{team} takımı için Super scout notları:",
+		"supermatch": "Bu maçı super scout yap",
+		"supermatchnotes": "Super scout maç notları:",
+		"superpit": "Super scout"
 	},
 	"notifications": {
 		"status": "Maç bildirimleri bu cihaz için {status}.",
-		"enabled": "etkinleştirilmiş",
-		"disabled": "engelli",
+		"enabled": "etkin",
+		"disabled": "devre dışı",
 		"confirmEnable": "Bu cihazda maç bildirimleri etkinleştirilsin mi?",
-		"subscribing": "Push bildirimlerine abone olunuyor…",
+		"subscribing": "Anlık bildirimlere abone olunuyor…",
 		"goneWrong": "Bir şeyler ters gitmiş olabilir. Veri:",
 		"error": "Bir hata oluştu:",
 		"disabling": "Anlık bildirimler devre dışı bırakılıyor…",
 		"noPermission": "Bize izin verilmedi.",
-		"dbSaveFailed": "Abonelik alındı ancak veritabanımıza kaydedemedik.",
-		"testPageTitle": "Bildirimler test sayfası",
-		"invalidKey": "Maç yok ve maç takımı anahtarı",
+		"dbSaveFailed": "Abonelik isteği ulaştı ancak veritabanımıza kaydedilemedi.",
+		"testPageTitle": "Bildirimler için test sayfası",
+		"invalidKey": "Maç ve maç takım anahtarı yok",
 		"invalidMatch": "Eşleşme bulunamadı",
 		"content": {
 			"title": "{match} yakında başlayacak",
-			"body": "{alliance} ittifakında {team} ekibine atandınız.",
-			"ifFocused": "Unutmayın, {match} başlamak üzere!"
+			"body": "{alliance} ittifakında {team} takımına atandınız.",
+			"ifFocused": "Unutma, {match} başlamak üzere!"
 		},
 		"actions": {
-			"scout": "İzci maçı"
+			"scout": "Maçı Scoutla"
 		}
 	},
 	"dashboard": {
@@ -413,5 +436,13 @@
 	"tryAgainLater": "Lütfen daha sonra tekrar deneyiniz.",
 	"yes": "Evet",
 	"no": "hayır",
-	"matches": "Maçlar"
+	"matches": "Maçlar",
+	"thankyou": {
+		"title": "Teşekkürler!",
+		"thanks": "Erken-Erişim Partnerlerimize teşekkür ederiz!",
+		"2023inseason": "2023 Sezonu İçinde",
+		"2023offseason": "2023 Off Season",
+		"threestarters": "Üç Kurucu",
+		"2020to2022": "{year2020}'den {year2022}'ye"
+	}
 }

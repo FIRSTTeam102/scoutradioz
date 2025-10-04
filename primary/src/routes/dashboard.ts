@@ -6,7 +6,7 @@ import Permissions from '../helpers/permissions';
 import { upload as uploadHelper, matchData as matchDataHelper } from 'scoutradioz-helpers';
 import e from 'scoutradioz-http-errors';
 import type { MongoDocument } from 'scoutradioz-utilities';
-import type { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event } from 'scoutradioz-types';
+import type { Match, PitScouting, MatchScouting, ScoutingPair, Ranking, TeamKey, Team, AggRange, Event, HeatMapColors,} from 'scoutradioz-types';
 
 const router = express.Router();
 const logger = getLogger('dashboard');
@@ -16,6 +16,16 @@ router.all('/*', wrap(async (req, res, next) => {
 	logger.removeContext('funcName');
 	//Require viewer-level authentication for every method in this route.
 	if (await req.authenticate(Permissions.ACCESS_VIEWER)) {
+		let cookieKey= 'scoutradiozheatmap';
+		if (req.cookies[cookieKey]) {
+			logger.trace('req.cookies[cookie_key]=' + JSON.stringify(req.cookies[cookieKey]));
+			let heatMapColors: HeatMapColors = await utilities.findOne('heatmapcolors',
+				{key: req.cookies[cookieKey]}, 
+				{},
+				{allowCache: true}
+			);
+			res.locals.heatMapColors= heatMapColors;
+		}
 		next();
 	} 
 }));
@@ -35,7 +45,10 @@ router.get('/driveteam', wrap(async (req, res) => {
 	// 2022-03-16 JL: Adding an "all" button
 	// 2024-04-04 JL: Added cookie to store which team key (of the team keys in the org) we think the user belongs to
 	let teamKeyCookie = req.cookies['selectedTeamKey'];
-	if (typeof req.query.team_key === 'string' && !req.query.all) {
+	if (req.query.all) {
+		teamKey = 'all';
+	}
+	else if (typeof req.query.team_key === 'string') {
 		teamKey = req.query.team_key;
 		if (thisUser.org.team_keys?.includes(teamKey)) {
 			logger.debug('Setting teamKey cookie from query parameter because it\'s in the org\'s list of team_keys');
@@ -46,7 +59,7 @@ router.get('/driveteam', wrap(async (req, res) => {
 		logger.debug(`Setting teamKey to ${teamKeyCookie} from cookie`);
 		teamKey = teamKeyCookie;
 	}
-	else if (thisUser.org.team_key && !req.query.all) {
+	else if (thisUser.org.team_key) {
 		logger.debug(`Setting teamKey ${teamKey} from org team key`);
 		teamKey = thisUser.org.team_key;
 	}
@@ -401,7 +414,7 @@ router.get('/', wrap(async (req, res) => {
 		'assigned_scorer.id': thisUserId, 
 		'time': { $gte: latestTimestamp }
 	}, { 
-		limit: 10, 
+		limit: 16, 
 		sort: {'time': 1} 
 	});
 
@@ -576,7 +589,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				//	Therefore, keeping the avg as .id and adding MAX as an "option" (to be displayed small on the table)
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				groupClause[thisLayout.id + 'AVG'] = {$last: '$' + thisLayout.id + 'EMA'};
-				groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+				//groupClause[thisLayout.id + 'MAX'] = {$max: '$data.' + thisLayout.id};
+				groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			}
 		}
 		//add $group > groupClause (Layout w/ data)
@@ -615,7 +629,8 @@ router.get('/allianceselection', wrap(async (req, res) => {
 				let thisLayout = scoreLayout[scoreIdx];
 				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
 					let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-					let roundedValMax = (Math.round(thisAgg[thisLayout.id + 'MAX'] * 10)/10).toFixed(1);
+					let maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
+					let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
 					thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 					thisAgg[thisLayout.id + 'MAX'] = roundedValMax;
 				}

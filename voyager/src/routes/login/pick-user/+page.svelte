@@ -16,22 +16,28 @@
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 	setPageTitle(
 		msg('user.loginOrg', { org: data.org.nickname }),
 		msg('user.login.currentlyAt', { event: data.event?.name || data.event_key || 'unknown' })
 	);
-	let user: LightUser | null = null;
+	let user: LightUser | null = $state(null);
 	let userPicker: Autocomplete;
 
 	// Retrieve the orgs from the database
-	$: users = liveQuery(async () => {
+	let users_observable = liveQuery(async () => {
 		return await db.lightusers
 			.where({
 				org_key: data.org_key
 			})
 			.sortBy('name');
 	});
+	let users: LightUser[]|undefined = $state();
+	users_observable.subscribe(value => users = value);
 
 	const logger = getLogger('login (user)');
 
@@ -56,7 +62,7 @@
 			logger.debug('Clearing user');
 			db.user.clear();
 
-			let result = await db.user.put(user);
+			let result = await db.user.put($state.snapshot(user));
 			logger.debug(`Result of db.user.put(user) = ${result}`);
 			// After the user is set in the db, invalidate all page loads so that org/etc. info are all reloaded from Dexie
 			invalidateAll();
@@ -96,7 +102,7 @@
 	let needsPassword = false;
 	let needsToCreatePassword = false;
 
-	let password = '';
+	let password = $state('');
 </script>
 
 <section class="comfortable">
@@ -110,8 +116,8 @@
 				textfield$variant="filled"
 				textfield$style="width: 100%"
 				style="width: 100%"
-				options={$users}
-				disabled={!$users}
+				options={users}
+				disabled={!users}
 				getOptionLabel={getUserOptionLabel}
 				bind:value={user}
 				bind:this={userPicker}
@@ -126,7 +132,9 @@
 					style="width: 100%"
 					type="password"
 					bind:value={password}>
-					<HelperText slot="helper">{msg('user.login.orgpasswordhelptext')}</HelperText>
+					{#snippet helper()}
+						<HelperText>{msg('user.login.orgpasswordhelptext')}</HelperText>
+					{/snippet}
 				</Textfield>
 			</div>
 		{/if}
@@ -136,7 +144,7 @@
 				class="btn-same-height-as-input"
 				style="width: 100%"
 				disabled={!user}
-				on:click={async () => {
+				onclick={async () => {
 					// Log in user
 					await updateUser(user);
 					goto(`/sync/lead#2`);

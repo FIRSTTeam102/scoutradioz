@@ -20,7 +20,7 @@
 	
 </script>
 
-<div class="cards">
+<div class="match-scouting-cards">
 	{#each matches as group}
 		<Card>
 			<CContent>
@@ -55,75 +55,3 @@
 		</Card>
 	{/each}
 </div>
-
-<style lang="scss">
-	@use '@material/button/index' as mdc-button;
-	@use '@material/theme/color-palette';
-	@use '@material/shape' as mdc-shape;
-	@use '@material/theme';
-	@use '../../../lib/cards.scss' as cards;
-
-	.cards {
-		@include cards.container;
-
-		.head {
-			text-align: center;
-		}
-
-		h3 {
-			margin: 0;
-		}
-	}
-	:global(.cards) {
-		$red: color-palette.$red-900;
-		$blue: color-palette.$blue-900;
-		$grey: color-palette.$grey-700;
-
-		:global(.mdc-deprecated-list-item--selected) {
-			@include theme.property(--mdc-theme-primary, on-primary);
-			border-radius: mdc-shape.$small-component-radius;
-		}
-
-		:global(.red.incomplete) {
-			:global(&.mdc-deprecated-list-item--selected) {
-				background: transparentize($red, 0.9);
-			}
-			:global(.mdc-button) {
-				@include mdc-button.filled-accessible($red);
-			}
-		}
-		:global(.blue.incomplete) {
-			:global(&.mdc-deprecated-list-item--selected) {
-				--mdc-theme-primary: $blue;
-				background: transparentize($blue, 0.9);
-			}
-			:global(.mdc-button) {
-				@include mdc-button.filled-accessible($blue);
-			}
-		}
-		// JL note: not perfect, definitely wanna redo the styling, but it gets the idea across and it's really late
-		:global(.red.complete-locally) {
-			:global(.mdc-button) {
-				@include mdc-button.ink-color($red);
-				@include mdc-button.outline-color($red);
-				@include mdc-button.filled-accessible(mix($red, $grey, 20%));
-				border-style: dashed;
-				border-width: 2px;
-			}
-		}
-		:global(.blue.complete-locally) {
-			:global(.mdc-button) {
-				@include mdc-button.ink-color($blue);
-				@include mdc-button.outline-color($blue);
-				@include mdc-button.filled-accessible(mix($blue, $grey, 20%));
-				border-style: dashed;
-				border-width: 2px;
-			}
-		}
-		:global(.complete-and-synced) {
-			:global(.mdc-button) {
-				@include mdc-button.filled-accessible($grey);
-			}
-		}
-	}
-</style>

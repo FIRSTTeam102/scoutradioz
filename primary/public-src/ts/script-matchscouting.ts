@@ -272,8 +272,9 @@ $(function () {
 		);
 
 		matchSubmission.submit((err, response) => {
-			if (err || !response || !response.message) {
-				NotificationCard.error('An error occurred. Please retry.');
+			if (err || !response) {
+				let message = typeof err === 'string' ? err : 'An error occurred. Please retry.';
+				NotificationCard.error(message);
 			}
 			else {
 				let message = response.message;

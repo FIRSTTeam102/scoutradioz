@@ -56,5 +56,5 @@ export type RefreshButtonAnimationContext = {
 	 * Make the refresh button spin while the callback is being executed and then automatically stop.
 	 * @param cb Function to run, preferably an async function.
 	 */
-	autoplay: (cb: () => Promise<void>|void) => Promise<void>,
+	autoplay: (cb: () => Promise<unknown>|unknown) => Promise<unknown>,
 }

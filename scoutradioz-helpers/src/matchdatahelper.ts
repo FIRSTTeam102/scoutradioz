@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -60,29 +60,26 @@ export class MatchDataHelper {
 	 * @param {string} type The type of the element, e.g. checkbox/counter/slider.
 	 * @return {string|number} 
 	 */
-	static fixDatumType(value: formDataOutput, type: string) {
+	static fixDatumType(value: formDataOutput|boolean, type: SchemaItem['type']): formDataOutput {
 
 		let newVal;
 
 		// Note: Derived metrics are always returned as numbers (but this method should not be called for derived metrics)
 		switch (type) {
 			case 'checkbox': {
-				if (value === 'true' || value === true) newVal = 1;
+				if (value === 'true' || value == true || value == '1') newVal = 1;
 				else newVal = 0;
 				break;
 			}
 			case 'counter':
-			case 'counterallownegative':
-			case 'badcounter':
-			case 'slider':
-			case 'timeslider': {
+			case 'slider': {
 				newVal = -1;
 				let parsedVal = parseInt(value);
 				if (!isNaN(parsedVal)) newVal = parsedVal;
 				break;
 			}
 			default:
-				newVal = value;
+				newVal = String(value);
 		}
 
 		return newVal;
@@ -93,20 +90,52 @@ export class MatchDataHelper {
 	 * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
 	 * @param item layout element
 	 */
-	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | SpacerItem> {
+	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem> {
 
 		switch (item.type) {
 			case 'spacer':
 			case 'header':
 			case 'subheader':
+			case 'image':
 				return false;
 			default:
 				return true;
 		}
 	}
 
+	/**
+	 * Takes a sorted array of numbers (high to low, or low to high) and interpolates a value at a given percentile.
+	 * If the numbers are high to low, the percentile would be how far along toward the highest the result should be.
+	 * For length 0: returns 0
+	 * For length 1: return the only value
+	 * For length 2: returns a value interpolated between the two
+	 * and so forth
+	 * @param sortedArray The array of numbers
+	 * @param percentile The target interpolated percentile. Defaults to 10/11 (~90th percentile, means at 12 elements function will return the 11th element)
+	 * @returns the interpolated value
+	 */
+	static extractPercentileFromSortedArray(sortedArray: number[], percentile: number = 10.0/11.0): number {
+		let maxVal = 0; let firstVal = 0; let secondVal = 0;
+		let maxValLength = sortedArray.length; let lengthPercent = 0;
+		switch (maxValLength) {
+			case 0:
+				maxVal = 0;
+				break;
+			case 1:
+				maxVal = sortedArray[0];
+				break;
+			default:
+				firstVal = sortedArray[0];
+				secondVal = sortedArray[1];
+				lengthPercent = (maxValLength - 2)/(maxValLength - 1);
+				maxVal = secondVal + (firstVal - secondVal) * ((percentile - lengthPercent) / (1 - lengthPercent));
+				break;
+		}
+		return maxVal;
+	}
+
 	static calculateDerivedLegacy(thisItem: DerivedItemLegacy, matchData: MatchFormData) {
-		let derivedMetric: number | null = NaN;
+		let derivedMetric = NaN;
 		// JL - Note: I don't want to do any error checking in here, to minimize the amount of computation time needed.
 		//	Error checking should be done at the time of creating the layout. (TODO: error checking :] )
 		//	The very last operator must NOT have an "as", and every consequent operator should probably have an "as"
@@ -314,6 +343,8 @@ export class MatchDataHelper {
 						}
 						else value = ifFalseKey;
 					}
+					
+					if (value === null) value = 0; // 2025-02-15 JL: prevent null from being saved to a variable or output
 
 					// 2022-04-10 JL: Don't allow intermediate conditions to output null; only final operations
 					if (typeof thisOp.as === 'string') {
@@ -371,7 +402,7 @@ export class MatchDataHelper {
 		}
 
 		// Turns checkboxes into 0 and 1
-		function parseNumber(item: formDataOutput): number {
+		function parseNumber(item: formDataOutput|boolean): number {
 			if (item === 'true' || item === true) return 1;
 			else if (item === 'false' || item === false) return 0;
 			else return parseFloat(item);
@@ -407,7 +438,7 @@ export class MatchDataHelper {
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
-		const derivedLayout = schema.layout.filter(item => item.type === 'derived');
+		const derivedLayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		let t_dbEnd = performance.now();
 
 		const derivedCalculator = new DerivedCalculator(convertValuesDict(matchData));
@@ -423,14 +454,16 @@ export class MatchDataHelper {
 					let {
 						answer, tokenize, parse, resolve
 					} = derivedCalculator.runFormula(thisItem.formula, thisItem.id);
-					logger.debug(tokenize, parse, resolve);
+					// logger.debug(tokenize, parse, resolve);
 					matchData[thisItem.id] = answer;
 					ttokenize += tokenize;
 					tparse += parse;
 					tresolve += resolve;
 				}
-				catch {
-					matchData[thisItem.id] = NaN;
+				catch (err) {
+					//matchData[thisItem.id] = NaN;
+					logger.trace(`${err} - thisItem.id ${thisItem.id} previously was NaN'd`);
+					delete matchData[thisItem.id];
 				}
 			}
 			// Legacy format
@@ -460,7 +493,7 @@ export class MatchDataHelper {
 	 * @param {string} colCookie Comma-separated list of metric IDs
 	 * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
 	 */
-	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string) {
+	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getModifiedMatchScoutingLayout');
 		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
 
@@ -490,7 +523,9 @@ export class MatchDataHelper {
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
-		const scorelayoutDB = schema.layout.filter(item => item.type === 'derived');
+		const scorelayoutDB = schema.layout.filter(item => MatchDataHelper.isMetric(item));
+		//const scorelayoutDB = schema.layout.filter(item => item.id);
+		logger.trace(`scoreLayoutDB=${JSON.stringify(scorelayoutDB)}`);
 
 		// Process the cookies & (if selections defined) prepare to reduce
 		let savedCols: StringDict = {};
@@ -534,16 +569,19 @@ export class MatchDataHelper {
 		logger.trace('noneSelected=' + noneSelected + ',savedCols=' + JSON.stringify(savedCols));
 
 		// Use the cookies (if defined, or if defaults set) to slim down the layout array
-		if (noneSelected)
+		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
+		if (noneSelected || showAllColumns)
 			scorelayout = scorelayoutDB;
 		else {
 			// Weed out unselected columns
 			for (let thisLayout of scorelayoutDB) {
 				//var thisLayout = scorelayoutDB[i];
 				if (this.isQuantifiableType(thisLayout.type)) {
-					assert(thisLayout.id, `Layout element has no ID: ${JSON.stringify(thisLayout)}`);
-					if (savedCols[thisLayout.id])
-						scorelayout.push(thisLayout);
+					if ('id' in thisLayout) {
+						assert(thisLayout.id, `Layout element has no ID: ${JSON.stringify(thisLayout)}`);
+						if (savedCols[thisLayout.id])
+							scorelayout.push(thisLayout);
+					}
 				}
 				else
 					scorelayout.push(thisLayout);
@@ -580,14 +618,20 @@ export class MatchDataHelper {
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
-		assert(orgschema);
+		// 2025-03-02, M.O'C: during webhook updates when multiple teams are at the same event,
+		// if one team's schema blows this assert then most or none of the teams get updated
+		if (!orgschema) {
+			logger.warn(`No orgschema for org_key=${org_key}, event_year=${event_year}, event_key=${event_key} - exiting`);
+			return;
+		}
+
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
-		const scorelayout = schema.layout.filter(item => item.type === 'derived');
+		const scorelayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		
 		logger.trace('scorelayout=' + JSON.stringify(scorelayout));
 
@@ -968,9 +1012,10 @@ export class MatchDataHelper {
 	 * @param {string} org_key Org key
 	 * @param {string} teams_list Comma-separated list of teams, red alliance first, use ",0" between red list and blue list
 	 * @param {object} cookies req.cookies
+	 * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
 	 * @return {AllianceStatsData} Data blob containing teams, teamList, currentAggRanges, avgdata, maxdata
 	 */
-	static async getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any) {
+	static async getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getAllianceStatsData');
 
 		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
@@ -983,7 +1028,8 @@ export class MatchDataHelper {
 		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 		let cookie_key = org_key + '_' + event_year + '_cols';
 		let colCookie = cookies[cookie_key];
-		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
+		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
 
 		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match: { 'team_key': { $in: teamList }, 'org_key': org_key, 'event_key': event_key } });
@@ -1028,7 +1074,7 @@ export class MatchDataHelper {
 				// 2022-03-28, M.O'C: Replacing flat $avg with the exponential moving average
 				//groupClause[thisLayout.id + 'AVG'] = {$avg: '$data.' + thisLayout.id}; 
 				groupClause[thisLayout.id + 'AVG'] = { $last: '$' + thisLayout.id + 'EMA' };
-				groupClause[thisLayout.id + 'MAX'] = { $max: '$data.' + thisLayout.id };
+				groupClause[thisLayout.id + 'MAX'] = {$maxN: {'input': '$data.' + thisLayout.id, 'n': 12}};
 			}
 		}
 
@@ -1064,7 +1110,8 @@ export class MatchDataHelper {
 				for (let teamIdx = 0; teamIdx < teamList.length; teamIdx++) {
 					if (aggRowsByTeam[teamList[teamIdx]]) {
 						avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'] * 10) / 10).toFixed(1);
-						maxRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX'] * 10) / 10).toFixed(1);
+						let maxVal = this.extractPercentileFromSortedArray(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX']);
+						maxRow[teamList[teamIdx]] = (Math.round(maxVal * 10) / 10).toFixed(1);
 					}
 				}
 				avgTable.push(avgRow);
@@ -1200,7 +1247,7 @@ export class MatchDataHelper {
 		const orgschema = await utilities.findOne('orgschemas',
 			{ org_key, year, form_type },
 		);
-		assert(orgschema, `Schema not found for ${org_key} and ${year}!`);
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}!`);
 
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },

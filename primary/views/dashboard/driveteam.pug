@@ -291,6 +291,7 @@ block content
 				}
 				
 				//- Multiselect for selecting team_key - Auto submit when it changes
-				$('select[name=team_key]').on('change', () => {
-					$('form[name=driveDashboardTeam]').submit();
+				$('select[name=team_key]').on('change', (e) => {
+					let isTeamNumberSelected = $(e.target).val()?.startsWith('frc');
+					if (isTeamNumberSelected) $('form[name=driveDashboardTeam]').submit();
 				});

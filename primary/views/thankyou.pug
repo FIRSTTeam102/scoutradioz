@@ -6,6 +6,35 @@ block content
 	h6(class="theme-text").i!=msg('home.menu', {menu: '≡'})
 	p
 	div(class="w3-container w3-section")
+		hr
+		h1(class="theme-text")!=msg('thankyou.thanksdonations')
+
+		h2(class="theme-text")!=msg('thankyou.donors')
+		p
+			if donors.length === 0
+				span!=msg('thankyou.workinprogress')
+			else
+				each donor, i in donors
+					span=donor.name
+					br
+
+		h2(class="theme-text")!=msg('thankyou.sponsors')
+		p
+			if sponsors.length === 0
+				span!=msg('thankyou.workinprogress')
+			else
+				each sponsor, i in sponsors
+					span=sponsor.name
+					br
+
+		br
+		i!=msg('thankyou.clickheretodonate')
+		br
+		a(href="https://www.zeffy.com/en-US/donation-form/d3daa230-a0d2-466c-a427-3e5800b51710")
+			div(class="gear-btn theme-link w3-btn")
+				span!=msg('thankyou.donate')
+
+		hr
 		h1(class="theme-text")!=msg('thankyou.thanks')
 		
 		h2(class="theme-text")!=msg('thankyou.threestarters')

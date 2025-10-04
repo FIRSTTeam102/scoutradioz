@@ -2,13 +2,15 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
-import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation } from 'scoutradioz-types';
+import { upload as uploadHelper } from 'scoutradioz-helpers';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation, Upload } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 import Permissions from '../../helpers/permissions';
 import { validateJSONLayout, validateSprLayout } from 'scoutradioz-helpers';
+import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 //import { write } from 'fs';
 
 const router = express.Router();
@@ -184,7 +186,8 @@ router.get('/editform', wrap(async (req, res) => {
 			{ "type": "header", "label": "Sample" },
 			{ "type": "subheader", "label": "Replace this JSON with the code that defines your scouting form" },
 			{ "type": "spacer" },
-			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" }
+			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" },
+			{ "type": "derived", "id": "contributedPoints", "formula": "1 + min(2 * 3, 1/4) - log(32, 2)"}
 		]`,
 		// 2025-02-01, M.O'C: Adding SPR calculations
 		// default "blank" sprLayout, with default data
@@ -223,7 +226,7 @@ router.get('/editform', wrap(async (req, res) => {
 	let existingFormData = new Map<string, string>();
 	let previousDataExists = false;
 	// get existing data schema (if any)
-	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', { org_key, year, 'data': { $ne: null } }, {});
+	let matchDataFind: MatchScouting[] = await utilities.find('matchscouting', { org_key, year, 'data': { $exists: true } }, {});
 	matchDataFind.forEach((element) => {
 		let thisMatch: MatchScouting = element;
 		if (thisMatch['data']) {
@@ -294,15 +297,31 @@ router.post('/submitform', wrap(async (req, res) => {
 	assert(!isNaN(year), 'invalid year!');
 	assert(['matchscouting', 'pitscouting'].includes(form_type), 'invalid form_type!');
 
+	// Get the list of org images (for checking image IDs in form)
+	const orgImages = await uploadHelper.findOrgImages(org_key, year);
+	const orgImageKeys = Object.keys(orgImages);
+	logger.debug(`orgImageKeys=${JSON.stringify(orgImageKeys)}`);
+
 	// Validate json layout
 	const jsonParsed = JSON.parse(jsonString);
-	const { warnings, layout } = validateJSONLayout(jsonParsed);
+	const { warnings, layout } = validateJSONLayout(jsonParsed, orgImageKeys);
 
 	// 2025-02-01, M.O'C: Adding in SPR calcs for match scouting
 	let sprLayout: SprCalculation | undefined;
 	if (form_type === 'matchscouting') {
 		const sprParsed = JSON.parse(sprString);
-		sprLayout = validateSprLayout(sprParsed, jsonParsed);
+		try {
+			sprLayout = validateSprLayout(sprParsed, jsonParsed);
+		}
+		catch (err) {
+			// If the error is points_per_robot_metric, then display warning instead of throwing error
+			if (err instanceof Error && 'cause' in err && err.cause === 'points_per_robot_metric_no_match') {
+				warnings.push(err.message);
+			}
+			else {
+				throw err;
+			}
+		}
 	}
 
 	/**
@@ -379,6 +398,99 @@ router.post('/submitform', wrap(async (req, res) => {
 		sprLayout,
 		saved: save
 	});
+}));
+
+// 2025-02-0, M.O'C: Added 'org specific' image uploads
+router.get('/uploads', wrap(async (req, res) => {
+	
+	const org_key = req._user.org_key;
+	
+	let uploadURL = process.env.UPLOAD_URL + '/' + process.env.TIER + '/image';
+
+	// Get the year from either the HTTP query or the current event
+	let year;
+	if (typeof req.query.year === 'string') year = parseInt(req.query.year);
+	if (!year || isNaN(year)) year = req.event.year;
+	
+	let uploads = await utilities.find('uploads', 
+		{org_key: org_key, image_id: { $exists: true }, removed: false, year: year},
+		{},
+	);
+	
+	// Years that contain any non-removed uploads
+	// Look specifically for records which have 'team_key' (i.e., uploaded during pit scouting)
+	let years = await utilities.distinct('uploads', 'year', {org_key: org_key, image_id: { $exists: true }, removed: false});
+	
+	uploads.sort((a, b) => {
+		if ( a.image_id < b.image_id ){
+			return -1;
+		}
+		if ( a.image_id > b.image_id ){
+			return 1;
+		}
+		return 0;
+	});
+	//logger.debug(`uploads=${JSON.stringify(uploads)}`);
+	
+	// 2022-03-08 JL: Previous logic didn't work, it always left out at least one document
+	let uploadsByImageId: Dict<(Upload & {links: ImageLinks})[]> = {};
+	for (let upload of uploads) {
+		//logger.debug(`upload=${JSON.stringify(upload)}`);
+		if (upload.hasOwnProperty('image_id')) {
+			let key = upload.image_id;
+			if (!uploadsByImageId[key]) uploadsByImageId[key] = [];
+			// Clone of the upload but with links added
+			let uploadWithLinks = {
+				...upload,
+				links: uploadHelper.getLinks(upload)
+			};
+			//logger.debug(`uploadWithLinks=${JSON.stringify(uploadWithLinks)}`);
+			uploadsByImageId[key].push(uploadWithLinks);
+		}
+	}
+	//logger.debug(`uploadsByImageId=${JSON.stringify(uploadsByImageId)}`);
+	
+	res.render('./manage/config/uploads', {
+		title: req.msg('manage.config.manageFormImages'),
+		uploadsByImageId,
+		years,
+		thisYear: year,
+		uploadURL,
+	});
+}));
+
+router.post('/uploads/delete', wrap(async (req, res) => {
+	let thisFuncName = 'config.uploads.delete: ';
+	
+	try {
+		logger.debug(`${thisFuncName} ENTER`);
+		
+		let uploadId = req.body.id;
+		let orgKey = req._user.org_key;
+	
+		let upload: Upload = await utilities.findOne('uploads', {_id: uploadId, org_key: orgKey, removed: false});
+		
+		if (upload) {
+			
+			logger.info(`${req._user} has deleted: ${JSON.stringify(upload)}`);
+			
+			let writeResult = await utilities.update('uploads',
+				{_id: uploadId, org_key: orgKey},
+				{$set: {removed: true}}
+			);
+			
+			logger.debug(`${thisFuncName} writeResult=${writeResult}`);
+			res.status(200).send(writeResult);
+		}
+		else {
+			logger.error(`${thisFuncName} Could not find upload in db, id=${uploadId}`);
+			res.status(400).send('Could not find upload in database.');
+		}
+	}
+	catch (err) {
+		logger.error(err);
+		res.status(500).send(JSON.stringify(err));
+	}
 }));
 
 router.get('/pitsurvey', wrap(async (req, res) => {

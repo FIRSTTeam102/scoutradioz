@@ -116,6 +116,39 @@ app.use(express.urlencoded({ extended: false }));
 // load platform settings, including maintenance mode and news, after cookie parsing
 app.use(usefunctions.loadPlatformSettings);
 
+//User agent for logging
+// @ts-ignore 2025-02-10, M.O'C: Causing an error on Mike's desktop PC:
+//
+// src/app.ts:120:9 - error TS2769: No overload matches this call.
+//   The last overload gave the following error.
+//     Argument of type '(req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, res: Response<any, Record<string, any>>, next?: NextFunction | undefined) => void' is not assignable to parameter of type 'PathParams'.
+//
+// 120 app.use(useragent.express());
+//             ~~~~~~~~~~~~~~~~~~~
+//
+//   ../node_modules/@types/express-serve-static-core/index.d.ts:153:5
+//     153     <
+//             ~
+//     154         P = ParamsDictionary,
+//         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//     ... 
+//     162         ...handlers: Array<RequestHandlerParams<P, ResBody, ReqBody, ReqQuery, LocalsObj>>
+//         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//     163     ): T;
+//         ~~~~~~~~~
+//     The last overload is declared here.
+//
+app.use(useragent.express());
+
+// Block bots (make sure this is below express.static so they can still access robots.txt)
+app.use((req, res, next) => {
+	if (req.useragent?.isBot && req.originalUrl !== '/') {
+		logger.debug(`Blocked ${req.method} request from bot to ${req.originalUrl}`);
+		return res.status(403).send();
+	}
+	next();
+});
+
 //Internationalization
 //Must be before any other custom code
 import { I18n } from './helpers/i18n';
@@ -161,10 +194,6 @@ app.use(session({
 		}
 	}),
 }));
-
-//User agent for logging
-// @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
-app.use(useragent.express());
 
 //Passport setup (user authentication)
 require('./helpers/passport-config');

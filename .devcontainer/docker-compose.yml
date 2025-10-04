@@ -9,9 +9,11 @@ services:
         # Update 'VARIANT' to pick an LTS version of Node.js: 18, 16, 14.
         # Append -bullseye or -buster to pin to an OS version.
         # Use -bullseye variants on local arm64/Apple Silicon.
-        VARIANT: 18-buster
+        VARIANT: 22-bookworm
     volumes:
       - ..:/workspace:cached
+      # JL note: this won't work on linux machines but i swear to god, even when i set a "HOME" environment variable on windows, mounting ${HOME} does not work, so i have given up and will just revisit this if and when another dev with aws credentials is running a linux/macos machine
+      - ${USERPROFILE}/.aws/credentials:/home/node/.aws/credentials:ro
 
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity

@@ -1,5 +1,8 @@
 import assert from 'assert';
+import log4js from '@log4js-node/log4js-api';
 import type { AnyDict, EventKey, OrgKey } from 'scoutradioz-types';
+const logger = log4js.getLogger('helpers.matchData');
+logger.level = process.env.LOG_LEVEL || 'debug';
 
 export type ValueDict = { [key: string]: value };
 
@@ -30,7 +33,7 @@ export class DerivedCalculator {
 		if (allowString && typeof val === 'string' && val.startsWith('\'') && val.endsWith('\'')) return val.substring(1, val.length - 1);
 
 		// Return a TypeError with the unparsable variable name, for error checking in calling script
-		throw new TypeError('Unexpected token: -' + val, { cause: val });
+		throw new TypeError('Unexpected token: - ' + val, { cause: val });
 	}
 	evaluatePEMDASOp(arr: ValueStructure, ops: string[]) {
 		let idx: number;
@@ -126,10 +129,23 @@ export class DerivedCalculator {
 				});
 				let variable = rawArgs[0];
 				assert(typeof variable === 'string', new TypeError(`Expected variable name as first argument in multiselect; found ${variable}`));
-				let varValue = this.parseValue(variable, true); // get value for comparison, allowing strings
+				// 2025-02-28, M.O'C: If there is no key in the DB for the multiselect to operate on, "this.parseValue()" throws a [silent] error and the data ends up NaN'd
+				// for now we're catching this case and feeding 'VARVALUE-UNDEFINED' to the later logic
+				let varValue = undefined;
+				try {
+					varValue = this.parseValue(variable, true); // get value for comparison, allowing strings
+				}
+				catch (error) {
+					logger.error(`this.parseValue() error: ${error}`);
+					varValue = 'VARVALUE-UNDEFINED';
+				}
 				if (typeof varValue === 'string') varValue = varValue.toLowerCase(); // for case insensitivity
 
-				let defaultVal = NaN;
+				// 2025-02-28, M.O'C: Band-aid until the following fixes/updates are in place...
+				// -- Fix Voyager so multiselects do not default to blank & end up not setting a value in the 'data' object if a multiselect isn't picked
+				// -- Update form validation to check & ensure that all the options in a multiselect() formula are actually represented in the specified field
+				// -- Possible: Extend multiselect() formula so users can override "default value" behavior if they desire
+				let defaultVal = 0;
 				if (rawArgs.length % 2 == 0) {
 					let lastValue = this.parseValue(rawArgs.pop() as string);
 					assert(typeof lastValue === 'number', new TypeError(`Expected default value of multiselect to be a number, but got string (${lastValue})`));
@@ -140,6 +156,9 @@ export class DerivedCalculator {
 					if (typeof cmpValue === 'string') cmpValue = cmpValue.toLowerCase();
 					let retValue = this.parseValue(rawArgs[i + 1]); // return value if comparison succeeds
 					if (varValue === cmpValue) {
+						//if (Number.isNaN(retValue)) {
+						// logger.debug(`rawArgs[i]=${rawArgs[i]}, cmpValue=${cmpValue}, rawArgs[i+1]=${rawArgs[i+1]}, retValue=${retValue}`);
+						//}
 						return [retValue];
 					}
 				}

@@ -1,5 +1,9 @@
-import { LoggingEvent } from 'log4js';
-import express, { RequestHandler, Request, Response } from 'express';
+import type { LoggingEvent } from 'log4js';
+import type { RequestHandler, Request, Response } from 'express';
+import express from 'express';
+import utilities from 'scoutradioz-utilities';
+import { config as configHelpers, matchData as matchDataHelper } from 'scoutradioz-helpers';
+import type { Match } from 'scoutradioz-types';
 
 type AsyncHandler = (cb: RequestHandler2) => RequestHandler2;
 
@@ -18,13 +22,18 @@ const _crypto = require('crypto');
 const log4js = require('log4js');
 const wrap: AsyncHandler = require('express-async-handler');
 const webpush = require('web-push');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const helpers = require('@firstteam102/scoutradioz-helpers');
-const matchDataHelper = helpers.matchData;
 
 //utililties config
-utilities.config(require('../databases.json'));
-helpers.config(utilities); // pass the utilities db object to helpers
+utilities.config(require('../databases.json'), {
+	cache: {
+		enable: true,
+		maxAge: 30,
+	},
+	debug: (process.env.UTILITIES_DEBUG === 'true'),
+	schemasWithNumberIds: ['users'],
+});
+//helpers.config(utilities); // pass the utilities db object to helpers
+configHelpers(utilities);
 
 //log4js config
 let log4jsConfig = {
@@ -260,7 +269,32 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',match_key=' + match_key);
 	
 	let match = await utilities.findOne('matches', {key: match_key});
-	if (!match) return logger.error(`Match not found: ${match_key}`), res.send(`Match not found: ${match_key}`);
+	if (!match) {
+		logger.warn(`Can't find match ${match_key} attempting to (re)pull schedule`);
+		// 2025-03-02, M.O'C: We *really* shouldn't be getting a "upcoming match" notification without one in the system
+		// so this likely means we missed a schedule update webhook... if so, re-pull the schedule
+	
+		// Reload the matches
+		let url = 'event/' + event_key + '/matches';
+		logger.debug('url=' + url);
+		let matchData = await utilities.requestTheBlueAlliance(url);
+		if (matchData && matchData.length && matchData.length > 0) {
+			logger.debug(`Matches received: ${matchData.length}`);
+	
+			// First delete existing match data for the given event
+			await utilities.remove('matches', {'event_key': event_key});
+			// Now, insert the new data
+			await utilities.insert('matches', matchData);
+			logger.info(`Schedule reload for ${event_key} complete`);
+
+			// try to re-pull the one match
+			match = await utilities.findOne('matches', {key: match_key});
+			if (!match) return logger.error(`Match not found: ${match_key}`), res.send(`Match not found: ${match_key}`);
+		}
+		else {
+			return logger.error(`No matches found! match: ${match_key}, event: ${event_key}`), res.send(`No matches found! match: ${match_key}, event: ${event_key}`);
+		}
+	}
 
 	// Synchronize the rankings (just in case)
 	await syncRankings(event_key);
@@ -270,14 +304,17 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 	let orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
-		//var aggRangePromises = [];
+		let aggRangePromises = [];
 		for (let i in orgsAtEvent) {
 			let thisOrg = orgsAtEvent[i];
 			// 2022-04-06 JL note: No need to await these
-			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			// 2025-02-28 M.O'C: Might need to await these after all, they're not finishing
+			//matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			let thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
-		//Promise.all(aggRangePromises);
+		await Promise.all(aggRangePromises);
 	}
 
 	// push notifications	
@@ -325,10 +362,12 @@ async function handleMatchScore( data: {match: Match} ) {
 	}
 	// Renaming the 'teams' attribute
 	if (!data.match.alliances.blue.team_keys) {
+		// @ts-ignore - this is for legacy webhook stuff
 		let blue_team_keys = data.match.alliances.blue.teams;
 		data.match.alliances.blue.team_keys = blue_team_keys;
 	}
 	if (!data.match.alliances.red.team_keys) {
+		// @ts-ignore - this is for legacy webhook stuff
 		let red_team_keys = data.match.alliances.red.teams;
 		data.match.alliances.red.team_keys = red_team_keys;
 	}
@@ -349,16 +388,17 @@ async function handleMatchScore( data: {match: Match} ) {
 	let orgsAtEvent = await utilities.find('orgs', {event_key: event_key});
 	if (orgsAtEvent && orgsAtEvent.length > 0) {
 		// For each org, run the agg ranges stuff
-		//var aggRangePromises = [];
+		let aggRangePromises = [];
 		for (let i in orgsAtEvent) {
 			let thisOrg = orgsAtEvent[i];
 			// 2022-04-06 JL note: No need to await these
-			matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
-			//var thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
-			//aggRangePromises.push(thisPromise);
+			// 2025-02-28 M.O'C: Might need to await these after all, they're not finishing
+			//matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key); 			
+			let thisPromise = matchDataHelper.calculateAndStoreAggRanges(thisOrg.org_key, event_year, event_key);
+			aggRangePromises.push(thisPromise);
 		}
 		// wait for all the updates to finish
-		//Promise.all(aggRangePromises);
+		await Promise.all(aggRangePromises);
 	}
 	console.log(data.match.time, event_key);
 	// Find the match-after-next-match, for push notifications.

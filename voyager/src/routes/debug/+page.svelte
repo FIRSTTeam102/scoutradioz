@@ -14,7 +14,7 @@
 	import Select, { Option } from '@smui/select';
 	import { liveQuery, type IndexableTypeArray, type Observable } from 'dexie';
 
-	const { snackbar, dialog} = getPageLayoutContexts();
+	const { snackbar, dialog } = getPageLayoutContexts();
 
 	let groups: Observable<IndexableTypeArray>;
 	$: groups = liveQuery(() => db.logs.orderBy('group').uniqueKeys());
@@ -23,40 +23,31 @@
 
 	let items: Observable<Log[]>;
 	$: items = liveQuery(() => {
-		let collection =
-			selectedLogGroup !== 'all'
-				? db.logs.where({ group: selectedLogGroup })
-				: db.logs.orderBy('time');
+		let collection = selectedLogGroup !== 'all' ? db.logs.where({ group: selectedLogGroup }) : db.logs.orderBy('time');
 		return collection
 			.and((log) => log.level >= selectedLevelNum)
 			.reverse()
 			.toArray();
 	});
-	let rowsPerPage = 10;
+	let nRowsPerPage = 10;
 	let currentPage = 0;
-	
+
 	const maxMessageLength = 100;
 
-	$: start = currentPage * rowsPerPage;
-	$: end = Math.min(start + rowsPerPage, $items?.length);
+	$: start = currentPage * nRowsPerPage;
+	$: end = Math.min(start + nRowsPerPage, $items?.length);
 	$: slice = $items?.slice(start, end);
-	$: lastPage = $items ? Math.max(Math.ceil($items.length / rowsPerPage) - 1, 0) : 0;
+	$: lastPage = $items ? Math.max(Math.ceil($items.length / nRowsPerPage) - 1, 0) : 0;
 
 	$: if (currentPage > lastPage) {
 		currentPage = lastPage;
 	}
 
 	async function copyToClipboard() {
-		let collection =
-			selectedLogGroup !== 'all'
-				? db.logs.where({ group: selectedLogGroup })
-				: db.logs.toCollection();
+		let collection = selectedLogGroup !== 'all' ? db.logs.where({ group: selectedLogGroup }) : db.logs.toCollection();
 		let logs = await collection.and((log) => log.level >= selectedLevelNum).toArray();
 		let text = logs
-			.map(
-				(log) =>
-					`[${log.group}] [${logLevelNumberToString(log.level).toUpperCase()}]: ${log.message}`
-			)
+			.map((log) => `[${log.group}] [${logLevelNumberToString(log.level).toUpperCase()}]: ${log.message}`)
 			.join('\n');
 		await navigator.clipboard.writeText(text);
 		snackbar.open(`Copied ${logs.length} log message(s) to clipboard`, 4000);
@@ -67,6 +58,8 @@
 
 	// Allow the changing of the recorded log level
 	let recordedLogLevel: logLevel = getGlobalLogLevel();
+
+	$: setGlobalLogLevel(recordedLogLevel); // todo change to runes
 </script>
 
 <h1>Debug stuff</h1>
@@ -80,8 +73,7 @@
 		setTimeout(() => {
 			location.href = location.href; // reload page
 		}, 1000);
-	}}>Wipe local database</button
->
+	}}>Wipe local database</button>
 
 <button
 	on:click={async () => {
@@ -91,11 +83,10 @@
 		} else {
 			snackbar.error('Something went wrong');
 		}
-	}}>Flush server database cache</button
->
+	}}>Flush server database cache</button>
 
 <h1>Logging behavior</h1>
-<Select variant="filled" label="Log level to record" bind:value={recordedLogLevel} on:MDCSelect:change={() => setGlobalLogLevel(recordedLogLevel)}>
+<Select variant="filled" label="Log level to record" bind:value={recordedLogLevel}>
 	<Option value="trace">Trace</Option>
 	<Option value="debug">Debug</Option>
 	<Option value="info">Info</Option>
@@ -125,15 +116,14 @@
 	<Option value="fatal">Fatal</Option>
 </Select>
 
-<IconButton class="material-icons" on:click={copyToClipboard}>content_copy</IconButton>
+<IconButton class="material-icons" onclick={copyToClipboard}>content_copy</IconButton>
 <IconButton
 	class="material-icons"
-	on:click={async () => {
+	onclick={async () => {
 		if (confirm('Delete all logs stored on the device?')) {
 			await db.logs.clear();
 		}
-	}}>delete</IconButton
->
+	}}>delete</IconButton>
 
 <DataTable table$aria-label="User list" style="width: 100%;">
 	<Head>
@@ -152,9 +142,11 @@
 					<Cell>{logLevelNumberToString(item.level)}</Cell>
 					<Cell>{item.time.toLocaleString()}</Cell>
 					{#if item.message?.length > maxMessageLength}
-						<Cell class='cursor-pointer text-ellipsis overflow-hidden' on:click={() => {
-							dialog.show(item.time.toLocaleString(), item.message.replace(/\n/g, '<br>'), {disableNo: true,})
-						}}>{item.message.substring(0, maxMessageLength)}...</Cell>
+						<Cell
+							class="cursor-pointer text-ellipsis overflow-hidden"
+							onclick={() => {
+								dialog.show(item.time.toLocaleString(), item.message.replace(/\n/g, '<br>'), { disableNo: true });
+							}}>{item.message.substring(0, maxMessageLength)}...</Cell>
 					{:else}
 						<Cell>{item.message}</Cell>
 					{/if}
@@ -162,46 +154,48 @@
 			{/each}
 		{/if}
 	</Body>
-	<Pagination slot="paginate">
-		<svelte:fragment slot="rowsPerPage">
-			<Label>Rows Per Page</Label>
-			<Select variant="outlined" bind:value={rowsPerPage} noLabel>
-				<Option value={10}>10</Option>
-				<Option value={25}>25</Option>
-				<Option value={100}>100</Option>
-			</Select>
-		</svelte:fragment>
-		<svelte:fragment slot="total">
-			{start + 1}-{end} of {$items?.length || 'unknown'}
-		</svelte:fragment>
+	{#snippet paginate()}
+		<Pagination>
+			<!-- <svelte:fragment slot="rowsPerPage"> -->
+			{#snippet rowsPerPage()}
+				<Label>Rows Per Page</Label>
+				<Select variant="outlined" bind:value={nRowsPerPage} noLabel>
+					<Option value={10}>10</Option>
+					<Option value={25}>25</Option>
+					<Option value={100}>100</Option>
+				</Select>
+			{/snippet}
+			<!-- </svelte:fragment> -->
+			<!-- <svelte:fragment slot="total"> -->
+			{#snippet total()}
+				{start + 1}-{end} of {$items?.length || 'unknown'}
+			{/snippet}
+			<!-- </svelte:fragment> -->
 
-		<IconButton
-			class="material-icons"
-			action="first-page"
-			title="First page"
-			on:click={() => (currentPage = 0)}
-			disabled={currentPage === 0}>first_page</IconButton
-		>
-		<IconButton
-			class="material-icons"
-			action="prev-page"
-			title="Prev page"
-			on:click={() => currentPage--}
-			disabled={currentPage === 0}>chevron_left</IconButton
-		>
-		<IconButton
-			class="material-icons"
-			action="next-page"
-			title="Next page"
-			on:click={() => currentPage++}
-			disabled={currentPage === lastPage}>chevron_right</IconButton
-		>
-		<IconButton
-			class="material-icons"
-			action="last-page"
-			title="Last page"
-			on:click={() => (currentPage = lastPage)}
-			disabled={currentPage === lastPage}>last_page</IconButton
-		>
-	</Pagination>
+			<IconButton
+				class="material-icons"
+				action="first-page"
+				title="First page"
+				onclick={() => (currentPage = 0)}
+				disabled={currentPage === 0}>first_page</IconButton>
+			<IconButton
+				class="material-icons"
+				action="prev-page"
+				title="Prev page"
+				onclick={() => currentPage--}
+				disabled={currentPage === 0}>chevron_left</IconButton>
+			<IconButton
+				class="material-icons"
+				action="next-page"
+				title="Next page"
+				onclick={() => currentPage++}
+				disabled={currentPage === lastPage}>chevron_right</IconButton>
+			<IconButton
+				class="material-icons"
+				action="last-page"
+				title="Last page"
+				onclick={() => (currentPage = lastPage)}
+				disabled={currentPage === lastPage}>last_page</IconButton>
+		</Pagination>
+	{/snippet}
 </DataTable>

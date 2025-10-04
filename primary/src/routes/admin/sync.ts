@@ -357,7 +357,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	logger.info(`SUCCESS - done in ${beforebulkWrite - startTime} ms, bulkwrite time: ${Date.now() - beforebulkWrite} - writeResult = ${JSON.stringify(writeResult)}, Times: ${JSON.stringify(times)}`);
 
 	// 2023-03-19 JL: Recalculate agg ranges when recalculating derived
-	matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
+	await matchDataHelper.calculateAndStoreAggRanges(org_key, event_year, event_key);
 
 	// Delete the old scored data
 	// await utilities.remove('matchscouting', {'org_key': org_key, 'event_key': event_key, 'data': {$exists: true} });

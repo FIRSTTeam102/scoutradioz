@@ -14,14 +14,22 @@ declare interface StringDict {
 }
 
 declare type integer = number;
-export declare type formDataOutput = number|boolean|string|null;
+export declare type formDataOutput = number|string;
 
 export declare interface MatchFormData {
 	[key: string]: formDataOutput;
 }
 
+export declare interface PitFormData {
+	[key: string]: formDataOutput;
+}
+
 declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
+}
+
+export declare interface Dict<T> {
+	[key: string]: T;
 }
 
 // 2022-12-10 JL: Removed 'extends Document' and renamed to 'DocumentWithID' to:
@@ -106,7 +114,7 @@ declare interface FormSliderOptions {
 export declare interface Layout extends DbDocument {
 	year: number;
 	order: number|string;
-	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived';
+	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived'|'image';
 	form_type: 'matchscouting'|'pitscouting';
 	org_key: OrgKey;
 	label?: string;
@@ -156,6 +164,11 @@ export interface SubheaderItem extends SchemaItemBase {
 	label: string;
 }
 
+export interface ImageItem extends SchemaItemBase {
+	type: 'image';
+	image_id: string;
+}
+
 export interface SpacerItem extends SchemaItemBase { 
 	type: 'spacer';
 }
@@ -180,7 +193,7 @@ export interface DerivedItem extends SchemaItemBase {
  * Note: Since some types don't need an id, you may get typescript errors when trying to access the id property.
  * Use e.g. `if ('id' in item)` to check if the item has an id, as that "in" syntax is preferred by TS
  */
-export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | SpacerItem | DerivedItem | DerivedItemLegacy;
+export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | ImageItem | SpacerItem | DerivedItem | DerivedItemLegacy;
 
 /**
  * Sub-object SPR calculation
@@ -220,6 +233,39 @@ export declare interface OrgSchema extends DbDocument {
 	form_type: 'matchscouting'|'pitscouting';
 	/** ID of the item in the Schemas database */
 	schema_id: ObjectId;
+}
+
+/**
+ * Summary of scouting data for an org and an event.
+ */
+export declare interface EventOrgScouting {
+	orgKey: string;
+	orgName: string;
+	countScoutingReports: number;
+	medianSpr?: number;
+	minSpr?: number;
+	isTspsEligible: boolean,
+	tsps?: number;
+}
+
+/**
+ * Summary of scouting data for a given event.
+ */
+export declare interface EventScouting {
+	eventKey: string;
+	eventName: string;
+	eventStart: string;
+	possibleScoutingReports: number,
+	orgData?: EventOrgScouting[];
+}
+
+/**
+ * Summary of scouting data for a given year.
+ */
+export declare interface EventScoutingSummary {
+	year: number;
+	events: EventScouting[];
+	writeTime: number;
 }
 
 /**
@@ -431,6 +477,26 @@ export declare interface OrgClass {
 
 /**
  * Values for each team that an org sets on their alliance selection page.
+ * @collection heatmapcolors
+ * @interface HeatMapColors
+ */
+export declare interface HeatMapColors extends DbDocument {
+	name: string;
+	key: string;
+	min: {
+		r: number;
+		g: number;
+		b: number;
+	}
+	max: {
+		r: number;
+		g: number;
+		b: number;
+	}
+}
+
+/**
+ * Values for each team that an org sets on their alliance selection page.
  * @collection orgteamvalues
  * @interface OrgTeamValue
  */
@@ -526,7 +592,7 @@ export declare interface PitScouting extends DbDocument {
 	secondary?: ScouterRecord;
 	tertiary?: ScouterRecord;
 	actual_scouter?: ScouterRecord;
-	data?: StringDict;
+	data?: PitFormData;
 	super_data?: StringDict;
 	useragent?: UserAgent;
 	date_completed?: Date;
@@ -670,6 +736,15 @@ export declare interface TeamSimple extends DbDocument {
 }
 
 /**
+ * Summary of scouting data for a given year.
+ */
+export declare interface Supporter {
+	type: 'donor' | 'sponsor';
+	name: string;
+	amount: number;
+}
+
+/**
  * Contains info for a user-uploaded image.
  * @collection uploads
  * @interface Upload
@@ -678,6 +753,7 @@ export declare interface Upload extends DbDocument {
 	org_key: OrgKey;
 	year: number;
 	team_key: TeamKey;
+	image_id: string;
 	uploader: {
 		name: string;
 		id: string;
@@ -739,13 +815,14 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'sveltesessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'supporters'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
 export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'aggranges' ? AggRange :
 	colName extends 'events' ? Event :
+	colName extends 'eventscoutingsummary' ? EventScoutingSummary :
 	// colName extends 'i18n' ?  :
 	colName extends 'layout' ? (DerivedLayoutLegacy|Layout|DerivedLayout) :
 	colName extends 'matches' ? Match :
@@ -753,6 +830,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'orgs' ? Org :
 	colName extends 'orgschemas' ? OrgSchema :
 	colName extends 'orgteamvalues' ? OrgTeamValue :
+	colName extends 'heatmapcolors' ? HeatMapColors :
 	colName extends 'passwords' ? any : // JL: With the way we type-annotate stuff, it's easier to declare items in passwords as 'any' and then just type annotate it because we manually guarantee these guys
 	colName extends 'pitscouting' ? PitScouting :
 	colName extends 'platformsettings' ? PlatformSettings :
@@ -762,6 +840,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'schemas' ? Schema :
 	colName extends 'scoutingpairs' ? ScoutingPair :
 	colName extends 'sessions' ? Session :
+	colName extends 'supporters' ? Supporter :
 	colName extends 'sveltesessions' ? LuciaSession :
 	colName extends 'teams' ? Team :
 	colName extends 'uploads' ? Upload :
