@@ -30,10 +30,16 @@ export default $config({
 				throw new Error('git hash must be specified via an environment variable HASH=$(git rev-parse HEAD)');
 		}
 
+		let domain;
+		if ($app.stage === 'prod') {
+			domain = 'scoutradioz.com';		
+		}
+		else {
+			domain = `${$app.stage}-sst.scoutradioz.com`;
+		}
 		// Use Router instead of ApiGatewayV2
-		const subdomain = ($app.stage === 'prod') ? '' : `${$app.stage}-sst.`;
 		const router = new sst.aws.Router('Router', {
-			domain: `${subdomain}scoutradioz.com`,
+			domain,
 			transform: {
 				// https://www.pulumi.com/registry/packages/aws/api-docs/cloudfront/cachepolicy/#inputs
 				// cachePolicy: {
@@ -42,18 +48,30 @@ export default $config({
 			}
 		});
 
+		let copyFiles;
+		if ($dev) {
+			copyFiles = [
+				{ from: 'views', to: 'views' },
+				{ from: 'locales', to: 'locales' },
+				{ from: 'public', to: 'public' },
+			];
+		}
+		else {
+			copyFiles = [
+				{ from: 'views', to: 'views' },
+				{ from: 'locales', to: 'locales' },
+			];
+		}
+
 		const lambdaFunc = new sst.aws.Function('Primary', {
 			handler: 'src/lambda.handler',
 			runtime: 'nodejs22.x',
 			architecture: 'arm64',
 			timeout: '45 seconds',
 			memory: '512 MB', // todo reduce if possible
-			copyFiles: [
-				{ from: 'views', to: 'views' },
-				{ from: 'locales', to: 'locales' },
-			],
+			copyFiles,
 			concurrency: {
-				provisioned: 0, // always keep # instances warm - todo: 1 warm on prod, 0 on others, use env var
+				provisioned: Number(process.env.PROVISIONED_CONCURRENCY) || 0, // always keep # instances warm (note: could turn quite expensive)
 				reserved: 20
 			},
 			environment: {
@@ -62,7 +80,7 @@ export default $config({
 				TIER: $app.stage,
 				ALIAS: $app.stage, // todo
 				GIT_COMMIT_HASH: String(gitHash),
-				STATICFILES_USE_S3: 'true',
+				STATICFILES_USE_S3: String(process.env.STATICFILES_USE_S3),
 				S3_BUCKET: String(process.env.S3_BUCKET),
 				LOG_LEVEL: String(process.env.LOG_LEVEL),
 				EMA_ALPHA: String(process.env.EMA_ALPHA),
@@ -75,7 +93,8 @@ export default $config({
 					instance: router,
 					path: '/'
 				}
-			}
+			},
+			versioning: true,
 		});
 
 		return {
