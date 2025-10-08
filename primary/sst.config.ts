@@ -75,8 +75,8 @@ export default $config({
 				reserved: 20
 			},
 			environment: {
-				COLORIZE_LOGS: 'false',
-				NODE_ENV: ($app.stage === 'prod' || $app.stage === 'qa') ? 'production' : 'development',
+				COLORIZE_LOGS: String(process.env.COLORIZE_LOGS),
+				NODE_ENV: String(process.env.NODE_ENV),
 				TIER: $app.stage,
 				ALIAS: $app.stage, // todo
 				GIT_COMMIT_HASH: String(gitHash),

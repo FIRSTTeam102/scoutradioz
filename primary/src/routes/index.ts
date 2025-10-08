@@ -135,7 +135,8 @@ router.get('/browse', wrap(async (req, res, next) => {
 		// otherwise copy the existing data into a dictionary for later use
 		if (thisSummary.events)
 			for (let i = 0; i < thisSummary.events.length; i++)
-				eventOrgDict[thisSummary.events[i].eventKey] = thisSummary.events[i];
+				if (thisSummary.events[i])
+					eventOrgDict[thisSummary.events[i].eventKey] = thisSummary.events[i];
 	}
 	// 2025-03-13, M.O'C: otherwise... regenerate!
 

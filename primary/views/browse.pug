@@ -29,26 +29,27 @@ block content
 		i
 			h6!=msgMarked('index.browse.tspsExplained')
 		each event, i in event_scouting
-			div.w3-padding
-				h3= event.eventName 
+			if event
+				div.w3-padding
+					h3= event.eventName 
 
-				table(class="W3-table")
-					tr
-						th(style="max-width: unset;")=msg('index.browse.orgKeyAndNickname')
-						th=msg('index.browse.matchScoutingEntries')
-						th=msg('index.browse.avgErrorRate')
-						th=msg('index.browse.tspsScore')
-					each org, i in event.orgData
-						tr 
-							- let orgKeyAndNick = org.orgKey + ' - ' + org.orgName
-							td
-								u
-									a(href=`/${org.orgKey}/reports/allteammetrics`)=orgKeyAndNick
-							- let orgScout = org.countScoutingReports + ' (' + ((Math.round((100 * org.countScoutingReports/event.possibleScoutingReports) * 10)/10).toFixed(1)) + '%)'
-							td=orgScout
-							- let orgSpr = '------------------'
-							- if (!isNaN(org.medianSpr) && !isNaN(org.minSpr) && !(org.medianSpr == 0.0 && org.minSpr == 0.0)) orgSpr = ((Math.round(org.medianSpr * 100)/100).toFixed(2)) + ' (' + ((Math.round(org.minSpr * 100)/100).toFixed(2)) + ')'
-							td=orgSpr
-							- let orgTsps = '---'
-							- if (org.tsps) orgTsps = (Math.round(org.tsps * 1000)/1000).toFixed(3)
-							td=orgTsps
+					table(class="W3-table")
+						tr
+							th(style="max-width: unset;")=msg('index.browse.orgKeyAndNickname')
+							th=msg('index.browse.matchScoutingEntries')
+							th=msg('index.browse.avgErrorRate')
+							th=msg('index.browse.tspsScore')
+						each org, i in event.orgData
+							tr 
+								- let orgKeyAndNick = org.orgKey + ' - ' + org.orgName
+								td
+									u
+										a(href=`/${org.orgKey}/reports/allteammetrics`)=orgKeyAndNick
+								- let orgScout = org.countScoutingReports + ' (' + ((Math.round((100 * org.countScoutingReports/event.possibleScoutingReports) * 10)/10).toFixed(1)) + '%)'
+								td=orgScout
+								- let orgSpr = '------------------'
+								- if (!isNaN(org.medianSpr) && !isNaN(org.minSpr) && !(org.medianSpr == 0.0 && org.minSpr == 0.0)) orgSpr = ((Math.round(org.medianSpr * 100)/100).toFixed(2)) + ' (' + ((Math.round(org.minSpr * 100)/100).toFixed(2)) + ')'
+								td=orgSpr
+								- let orgTsps = '---'
+								- if (org.tsps) orgTsps = (Math.round(org.tsps * 1000)/1000).toFixed(3)
+								td=orgTsps
