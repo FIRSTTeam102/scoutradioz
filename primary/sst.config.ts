@@ -81,6 +81,7 @@ export default $config({
 				ALIAS: $app.stage, // todo
 				GIT_COMMIT_HASH: String(gitHash),
 				STATICFILES_USE_S3: String(process.env.STATICFILES_USE_S3),
+				UPLOAD_URL: String(process.env.UPLOAD_URL),
 				S3_BUCKET: String(process.env.S3_BUCKET),
 				LOG_LEVEL: String(process.env.LOG_LEVEL),
 				EMA_ALPHA: String(process.env.EMA_ALPHA),
