@@ -32,7 +32,10 @@ export default $config({
 
 		let domain;
 		if ($app.stage === 'prod') {
-			domain = 'scoutradioz.com';		
+			domain = {
+				name: 'scoutradioz.com',
+				redirects: ['www.scoutradioz.com'],
+			};
 		}
 		else {
 			domain = `${$app.stage}-sst.scoutradioz.com`;
