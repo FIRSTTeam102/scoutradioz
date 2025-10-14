@@ -17,14 +17,12 @@
 	"scripts": {
 		"start": "npx nodemon --ext ts ./src/www.ts",
 		"update": "yarn && yarn upgrade --pattern 'scoutradioz*'",
-		"build": "npx tsc && yarn run compile-static",
-		"win-build": "yarn run build",
+		"build": "yarn run compile-static",
 		"---readme---": "Use the win-X scripts if you're using Windows. Always upload to test or QA first, then extensively test before promoting to prod.",
 		"archive": "node ../scripts/uploadversion.js --archive --folder $npm_package_config_folder",
-		"win-archive": "node ../scripts/uploadversion.js --archive --folder %npm_package_config_folder%",
 		"deploy-test": "HASH=$(git rev-parse HEAD) sst deploy --stage test",
-		"deploy-qa": "HASH=$(git rev-parse HEAD) sst deploy --stage qa",
-		"deploy-prod": "HASH=$(git rev-parse HEAD) sst deploy --stage prod",
+		"deploy-qa": "yarn check-working-tree-clean && HASH=$(git rev-parse HEAD) sst deploy --stage qa",
+		"deploy-prod": "yarn check-working-tree-clean && HASH=$(git rev-parse HEAD) sst deploy --stage prod",
 		"sync-test": "bun ../scripts/s3sync.ts --tier test --folder public",
 		"sync-qa": "bun ../scripts/s3sync.ts --tier qa --folder public",
 		"sync-prod": "bun ../scripts/s3sync.ts --tier prod --folder public",
@@ -32,7 +30,8 @@
 		"---readme3---": "Scripts related to compiling static files from Typescript -> JS and LESS -> CSS.",
 		"compile-less": "echo 'Compiling and minifying LESS' && node ../scripts/compileLess.js",
 		"compile-ts": "echo 'Compiling TypeScript' && cd public-src && yarn && cd ts-bundled && npx tsc && cd ../ts && (mv ../../public/js/bundle.d.ts . || move ../../public/js/bundle.d.ts .); npx tsc",
-		"compile-static": "yarn run compile-less && yarn run compile-ts"
+		"compile-static": "yarn run compile-less && yarn run compile-ts",
+		"check-working-tree-clean": "if [ -n \"$(git status --porcelain)\" ]; then echo 'Working tree not clean! Aborting (Commit, stash, or revert your files!)'; exit 1; fi"
 	},
 	"license": "Apache-2.0",
 	"dependencies": {
