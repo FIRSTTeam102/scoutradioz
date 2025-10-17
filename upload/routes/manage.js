@@ -1,10 +1,11 @@
-const router = require('express').Router();
-const wrap = require('express-async-handler');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-const logger = require('log4js').getLogger('manage');
-const e = require('@firstteam102/http-errors');
+import { Router } from 'express';
+import wrap from 'express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+import log4js from 'log4js';
+import { S3Client, CopyObjectCommand, GetObjectAttributesCommand, ObjectAttributes, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
-const { S3Client, CopyObjectCommand, GetObjectAttributesCommand, ObjectAttributes, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const router = Router();
+const logger = log4js.getLogger('manage');
 const client = new S3Client({
 	region: process.env.S3_REGION
 });

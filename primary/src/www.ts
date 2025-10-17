@@ -3,9 +3,14 @@
 import child_process from 'child_process';
 import 'colors';
 import http from 'http';
+import { config } from 'dotenv';
+import path from 'path';
 
 //for views to either have a base of /prod/ or /
 process.env.local = 'true';
+
+config({ path: path.join(__dirname, '../.env.dev') });
+console.log(process.env.TIER);
 
 /**
  * Specify some configuration with command line arguments

@@ -1,8 +1,10 @@
 //For colorful logging
-require('colors');
-const logger = require('log4js').getLogger('usefunctions');
+import 'colors';
+import log4js from 'log4js';
 
-var functions = module.exports = {};
+const logger = log4js.getLogger('usefunctions');
+
+const functions = {};
 
 /**
  * logger for logger.debug
@@ -84,3 +86,5 @@ functions.errorHandler = function(err, req, res, next) {
 	
 	logger.removeContext('funcName');
 };
+
+export default functions;

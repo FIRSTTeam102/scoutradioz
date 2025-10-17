@@ -2,6 +2,7 @@
 	"name": "scoutradioz-image-upload",
 	"version": "2.1.1",
 	"description": "The HTTP Lambda function that handles photo uploads.",
+	"type": "module",
 	"main": "lambda.js",
 	"config": {
 		"s3BucketName": "scoutradioz-cloudformation",

@@ -1,7 +1,10 @@
-const router = require('express').Router();
-const logger = require('log4js').getLogger();
-const Jimp = require('jimp');
-//const path = require('path');
+import { Router } from 'express';
+import log4js from 'log4js';
+import Jimp from 'jimp';
+//import path from 'path';
+
+const router = Router();
+const logger = log4js.getLogger();
 
 var imageTemplate, pointerTemplate, headerFont, teamFont;
 

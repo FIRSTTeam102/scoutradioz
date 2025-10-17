@@ -11,6 +11,7 @@ import utilities from 'scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
 import helpers, { config as configHelpers } from 'scoutradioz-helpers';
+import fs from 'fs';
 
 const appStartupTime = Date.now();
 
@@ -100,10 +101,10 @@ app.get('/*', (req, res, next) => {
 app.use(utilities.refreshTier);
 
 //Boilerplate setup
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(process.cwd(), 'views'));
 app.set('view engine', 'pug');
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
 // @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 // app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
 
@@ -152,9 +153,10 @@ app.use((req, res, next) => {
 //Internationalization
 //Must be before any other custom code
 import { I18n } from './helpers/i18n';
-const i18n = new I18n({
-	directory: path.join(__dirname, './locales')
-});
+// SST moves locales into a different directory
+let localesPath = path.join(__dirname, './locales');
+if (!fs.existsSync(localesPath)) localesPath = path.join(__dirname, '../locales');
+const i18n = new I18n({ directory: localesPath });
 app.use(i18n.middleware());
 
 //Session
