@@ -38,7 +38,7 @@ export default $config({
 			};
 		}
 		else {
-			domain = `${$app.stage}-sst.scoutradioz.com`;
+			domain = `${$app.stage}.scoutradioz.com`;
 		}
 		// Use Router instead of ApiGatewayV2
 		const router = new sst.aws.Router('Router', {
