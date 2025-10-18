@@ -75,7 +75,7 @@ export default $config({
 			copyFiles,
 			concurrency: {
 				provisioned: Number(process.env.PROVISIONED_CONCURRENCY) || 0, // always keep # instances warm (note: could turn quite expensive)
-				reserved: 20
+				reserved: Number(process.env.RESERVED_CONCURRENCY) || 1
 			},
 			environment: {
 				COLORIZE_LOGS: String(process.env.COLORIZE_LOGS),
