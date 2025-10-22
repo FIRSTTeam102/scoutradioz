@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-if(!$){
+if (!$) {
 	console.error('scoutradioz.js error: jQuery not enabled');
 }
 
@@ -26,8 +26,8 @@ $(() => {
 		});
 		newsCard.show();
 	}
-	
-	
+
+
 	// if (Cookies.get('accepted') != 'true') {
 	// 	let cookiesMessage = new NotificationCard('Scoutradioz uses some cookies in order to operate. We do not use third party cookies or tracking cookies.',
 	// 		{ttl: 0, exitable: true, onexit: function(){
@@ -39,13 +39,13 @@ $(() => {
 	//		We can't disable Cookies.org_key, but we can disable non necessary ones like report columns and the selected "Are you:" button on the chooseorg page
 	//		Possible text: "Before you reject the use of non-necessary cookies, please take a look at our cookie policy, where we explain what each is used for. We do not use third party cookies or tracking cookies."
 	Cookies.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
-	
+
 	if ('serviceWorker' in navigator) {
-		navigator.serviceWorker.addEventListener('message', function(event) {
+		navigator.serviceWorker.addEventListener('message', function (event) {
 			console.log('Received a message from service worker: ', event.data);
 
 			let message = event.data.ifFocused.message;
-			NotificationCard.show(message, {ttl: 3500});
+			NotificationCard.show(message, { ttl: 3500 });
 		});
 	}
 });
@@ -56,16 +56,16 @@ declare function debugToHTML(message: any, replace?: boolean): void;
  * Run a particular piece of code when the window resizes, but after waiting a few ms to reduce processor demand.
  * @param cb Callback to run on a resize event.
  */
-declare function onResize(cb: () => void): void; 
+declare function onResize(cb: () => void): void;
 (() => {
-		
+
 	const resizeCallbacks: Array<() => void> = [];
-	
-	window.onResize = function(cb: () => void) {
+
+	window.onResize = function (cb: () => void) {
 		resizeCallbacks.push(cb);
 		requestAnimationFrame(cb); // Run the callback once
 	};
-	
+
 	let ticking = false;
 	$(window).on('resize', () => {
 		if (resizeCallbacks.length > 0) {
@@ -82,7 +82,7 @@ declare function onResize(cb: () => void): void;
 			}
 		}
 	});
-	
+
 	let debugLogger = document.createElement('div');
 	$(debugLogger).css({
 		'background-color': 'white',
@@ -95,11 +95,11 @@ declare function onResize(cb: () => void): void;
 		'width': '25%',
 		'padding': '8px 16px',
 	});
-	
-	window.debugToHTML = function(message: string, replace?: boolean) {
-		
+
+	window.debugToHTML = function (message: string, replace?: boolean) {
+
 		let text;
-		
+
 		switch (typeof message) {
 			case 'string':
 			case 'number':
@@ -111,21 +111,21 @@ declare function onResize(cb: () => void): void;
 			default:
 				text = message;
 		}
-		
+
 		//if logger is not already added to document.body, add it now
-		if ( !$(debugLogger).parent()[0] ) {
-			
+		if (!$(debugLogger).parent()[0]) {
+
 			$(document.body).append(debugLogger);
 		}
-		
+
 		let newTextElem = document.createElement('pre');
-		$(newTextElem).text(text).css({'margin': '0.5em 0px'});
-		
+		$(newTextElem).text(text).css({ 'margin': '0.5em 0px' });
+
 		if (replace === true) $(debugLogger).html('');
 		$(debugLogger).append(newTextElem);
 	};
 })();
-	
+
 /**
  * Assert a condition & display an error message to the user.
  * @param condition Condition to test
@@ -135,8 +135,8 @@ function assert(condition: unknown, message?: any): asserts condition {
 	if (!condition) {
 		let err = new Error();
 		NotificationCard.error(
-			`ERROR: ${message}\nPlease report as an issue on our GitHub page.\n\nCall stack: ${err.stack}`, 
-			{exitable: true, ttl: 0}
+			`ERROR: ${message}\nPlease report as an issue on our GitHub page.\n\nCall stack: ${err.stack}`,
+			{ exitable: true, ttl: 0 }
 		);
 		throw err;
 	}
@@ -152,7 +152,7 @@ function lightAssert(condition: unknown, message?: any): asserts condition {
 		let err = new Error();
 		NotificationCard.error(
 			`ERROR: ${message}`,
-			{exitable: true, ttl: 0}
+			{ exitable: true, ttl: 0 }
 		);
 		throw err;
 	}
@@ -160,25 +160,25 @@ function lightAssert(condition: unknown, message?: any): asserts condition {
 
 function scrollToId(id: string) {
 	let elem = document.getElementById(id);
-	if (elem) elem.scrollIntoView({behavior: 'smooth'});
+	if (elem) elem.scrollIntoView({ behavior: 'smooth' });
 	else console.error(`Element with id ${id} not found.`);
 }
 
-async function share(orgKey: string|boolean) {
-	
+async function share(orgKey: string | boolean) {
+
 	let origin = window.location.origin;
 	let pathname = window.location.pathname;
 	let search = window.location.search;
-	
+
 	//if orgKey is defined, add it to the base of the pathname
 	if (orgKey != false) {
 		pathname = '/' + orgKey + pathname;
 	}
-	
+
 	let shareURL = origin + pathname + search;
-	
+
 	console.log(shareURL);
-	
+
 	// First, attempt to use the browser's native Share functionality
 	if ('share' in navigator && 'canShare' in navigator) {
 		let shareData = {
@@ -186,7 +186,7 @@ async function share(orgKey: string|boolean) {
 			title: document.title,
 		};
 		console.log(`Attempting to share: ${JSON.stringify(shareData)}`);
-		
+
 		if (navigator.canShare(shareData)) {
 			try {
 				navigator.share(shareData);
@@ -198,12 +198,12 @@ async function share(orgKey: string|boolean) {
 			}
 		}
 	}
-	
+
 	// Attempt to use navigator.clipboard.writeText
 	if (navigator.clipboard && navigator.clipboard.writeText) {
-		
+
 		console.log('Attempting navigator.clipboard.writeText');
-		
+
 		navigator.clipboard.writeText(shareURL)
 			.then(() => {
 				NotificationCard.good('Copied link to clipboard. Share it in an app.');
@@ -223,13 +223,13 @@ async function share(orgKey: string|boolean) {
 
 function selectLanguage() {
 	lightAssert(locales, 'List of languages not found.');
-	
+
 	let promptItems: PromptItem[] = [];
-	
+
 	let prompt: Prompt;
 	let currentLang = document.documentElement.lang || 'en';
-	let langNames = new Intl.DisplayNames([currentLang], {type: 'language'});
-	
+	let langNames = new Intl.DisplayNames([currentLang], { type: 'language' });
+
 	// Create a list of clickable items for each language we have
 	locales.forEach((locale, idx) => {
 		let newElem = document.createElement('div');
@@ -246,7 +246,7 @@ function selectLanguage() {
 		};
 		promptItems.push(newElem);
 	});
-	
+
 	prompt = new Prompt(promptItems, [{
 		label: 'Cancel',
 		action: () => {
@@ -254,21 +254,21 @@ function selectLanguage() {
 		},
 		default: true,
 	}]);
-	
+
 	prompt.show();
 }
 
 function copyClipboardDom(text: string) {
 	try {
-		
+
 		console.log('Attempting DOM copy');
-		
+
 		let shareURLInput: JQuery<HTMLInputElement> = $('#shareURLInput');
 		shareURLInput.attr('value', text);
 		shareURLInput[0].select();
-		shareURLInput[0].setSelectionRange(0, 99999); 
+		shareURLInput[0].setSelectionRange(0, 99999);
 		document.execCommand('copy');
-		
+
 		NotificationCard.good('Copied link to clipboard. Share it in an app.');
 	}
 	catch (err: any) {
@@ -276,12 +276,12 @@ function copyClipboardDom(text: string) {
 		NotificationCard.error(`Could not copy to clipboard. Error: ${err.message}`);
 	}
 }
-	
+
 /**
  * Measure the time interval to execute the callback function.
  * @param cb Function to run
  */
-function measureTime(cb: () => void) : number {
+function measureTime(cb: () => void): number {
 	let st = performance.now();
 	cb();
 	return performance.now() - st;

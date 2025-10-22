@@ -94,6 +94,9 @@ declare namespace Express {
 			browser: string;
 		}
 		
+		/** org key that was picked from the login page */
+		picked_org?: string; 
+		
 		// @ts-ignore
 		/**
 		 * Because the type of req.user is declared in Passport as User|undefined, TypeScript will always think that

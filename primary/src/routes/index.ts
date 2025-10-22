@@ -24,6 +24,14 @@ router.get('/try-video-scouting', wrap(async (req, res) => {
 	});
 }));
 
+// Trap for bots to ban their IP
+router.get('/contact-us', wrap(async (req, res) => {
+	logger.info(`Request to Contact Us trap by ${req.shortagent.ip}`);
+	let x = new e.HttpError('Temporarily Unavailable');
+	x.status = 503;
+	throw x;
+}));
+
 /**
  * The "index" page that loads is now a form to select an organization.
  */
@@ -66,7 +74,15 @@ router.get('/', wrap(async (req, res, next) => {
 				]} 
 			}},
 			{$project: {
-				event: 0
+				_id: 0,
+				nickname: 1,
+				event_key: 1,
+				event_label: 1,
+				org_key: 1,
+				team_number: 1,
+				team_numbers: 1,
+				team_key: 1,
+				team_keys: 1,
 			}}
 		];
 		
@@ -74,12 +90,15 @@ router.get('/', wrap(async (req, res, next) => {
 		
 		const selectedButton = req.query['customer'] || req.cookies['homepageButton']; // Previously-selected "Are you:" button on the homepage
 		
-		res.render('./index', {
+		res.render('svelte', {
+			page: 'choose-org',
 			fulltitle: res.msg('index.fulltitle'),
-			orgs: orgs,
-			redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 			isOrgSelectScreen: true,
-			selectedButton: selectedButton
+			data: {
+				orgs,
+				redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
+				selectedButton,
+			}
 		});
 	}
 }));
@@ -667,13 +686,16 @@ router.get('/home', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'home[get]');
 	logger.debug('ENTER');
 	
+	// logger.info('req.picked_org: ' + req.picked_org);
+	
 	let redirect = req.getRedirectURL();
 	if (redirect) {
 			
 		logger.debug(`redirect: ${redirect}`);
 		res.redirect(redirect);
 	}
-	else if (!req.user) res.redirect('/');
+	// else if (!req.user && !req.picked_org) throw new e.ForbiddenError('No org has been picked');
+	else if (!req.user) throw new e.ForbiddenError('No org has been picked');
 	else {
 		res.render('./home', { 
 			title: res.msg('home.title'),

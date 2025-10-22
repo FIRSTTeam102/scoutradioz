@@ -34,6 +34,7 @@ async function compileLess() {
 			sourceMapURL: 'style.css.map',
 			outputSourceFiles: true,
 			sourceMapRootpath: 'less/',
+			sourceMapFileInline: true,
 			sourceMapBasepath: pathToLess, // Remove the full folder path of the LESS source files from the base map
 		},
 	})
