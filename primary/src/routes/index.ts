@@ -695,7 +695,7 @@ router.get('/home', wrap(async (req, res) =>  {
 		res.redirect(redirect);
 	}
 	// else if (!req.user && !req.picked_org) throw new e.ForbiddenError('No org has been picked');
-	else if (!req.user) throw new e.ForbiddenError('No org has been picked');
+	else if (!req.user) res.redirect('/');
 	else {
 		res.render('./home', { 
 			title: res.msg('home.title'),
