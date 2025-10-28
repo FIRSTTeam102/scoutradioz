@@ -10,6 +10,10 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
+    "Public": {
+      "type": "sst.aws.StaticSite"
+      "url": string
+    }
     "Router": {
       "type": "sst.aws.Router"
       "url": string

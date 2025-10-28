@@ -104,7 +104,7 @@ app.use(utilities.refreshTier);
 app.set('views', path.join(process.cwd(), 'views'));
 app.set('view engine', 'pug');
 
-app.use(express.static(path.join(process.cwd(), 'public')));
+app.use('/public', express.static(path.join(process.cwd(), 'public')));
 // @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 // app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
 

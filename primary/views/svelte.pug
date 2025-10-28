@@ -39,7 +39,7 @@ block content
 			}
 		}, 250);
 		try {
-			const App = (await import('#{fileRoot}/svelte/#{page}.js?v=#{functionVersion}')).default
+			const App = (await import('/public/svelte/#{page}.js?v=#{functionVersion}')).default
 			const { mount } = await import('https://esm.sh/svelte@5.42.3'); // PJL todo: get version from package.json
 			const app = mount(App, {
 				target: document.getElementById('content'), // content is the id of the main content element

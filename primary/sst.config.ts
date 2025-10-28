@@ -50,6 +50,14 @@ export default $config({
 				// }
 			}
 		});
+		
+		const publicFiles = new sst.aws.StaticSite('Public', {
+			path: 'public',
+			router: {
+				instance: router,
+				path: '/public'
+			}
+		});
 
 		let copyFiles;
 		if ($dev) {
@@ -83,13 +91,11 @@ export default $config({
 				TIER: $app.stage,
 				ALIAS: $app.stage, // todo
 				GIT_COMMIT_HASH: String(gitHash),
-				STATICFILES_USE_S3: String(process.env.STATICFILES_USE_S3),
 				UPLOAD_URL: String(process.env.UPLOAD_URL),
-				S3_BUCKET: String(process.env.S3_BUCKET),
+				S3_BUCKET: String(process.env.S3_BUCKET), // not needed for public files, but needed for image uploads
 				LOG_LEVEL: String(process.env.LOG_LEVEL),
 				EMA_ALPHA: String(process.env.EMA_ALPHA),
-				// PJL note: SST sets function version to $LATEST, so we can work around this where we need func. version by using a timestamp
-				LAMBDA_PUBLISH_DATE: new Date().toISOString().replace(/\D/g, ''),
+				LAMBDA_PUBLISH_DATE: new Date().toISOString().replace(/\D/g, ''), // PJL note: SST sets function version to $LATEST, so we can work around this where we need func. version by using a timestamp
 			},
 			nodejs: {
 				install: ['pug'],
@@ -105,6 +111,7 @@ export default $config({
 
 		return {
 			lambdaFunc: lambdaFunc.name,
+			publicFiles: publicFiles.url,
 			url: router.url,
 		};
 	},

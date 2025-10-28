@@ -203,20 +203,7 @@ class UseFunctions {
 			res.locals.user = req.user;
 		} 
 		
-		let fileRoot;
-		
-		//If we have set a process tier and S3 bucket name, then set fileRoot to an S3 url
-		if( process.env.TIER && process.env.S3_BUCKET && process.env.STATICFILES_USE_S3 == 'true' ){
-			
-			fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}`;
-		}
-		//Otherwise set fileRoot as / for local filesystem
-		else{
-			
-			fileRoot = '';
-		}
-		
-		res.locals.fileRoot = fileRoot;
+		res.locals.fileRoot = '/public';
 		
 		//Set alert local in here so that we don't have to throw this into Every Single Route
 		res.locals.alert = req.query.alert;
