@@ -359,7 +359,8 @@ class UseFunctions {
 		res.locals.eventIsOrgCurrent = req.event.isOrgCurrent;
 		
 		// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
-		res.locals.functionVersion = process.env.LAMBDA_FUNCTION_VERSION;
+		// 2025-10-17 PJL: switched to LAMBDA_PUBLISH_DATE which is a timestamp we set at deployment time
+		res.locals.functionVersion = process.env.LAMBDA_PUBLISH_DATE;
 		
 		logger.removeContext('funcName');
 		next();

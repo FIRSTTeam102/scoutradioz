@@ -88,6 +88,8 @@ export default $config({
 				S3_BUCKET: String(process.env.S3_BUCKET),
 				LOG_LEVEL: String(process.env.LOG_LEVEL),
 				EMA_ALPHA: String(process.env.EMA_ALPHA),
+				// PJL note: SST sets function version to $LATEST, so we can work around this where we need func. version by using a timestamp
+				LAMBDA_PUBLISH_DATE: new Date().toISOString().replace(/\D/g, ''),
 			},
 			nodejs: {
 				install: ['pug'],
