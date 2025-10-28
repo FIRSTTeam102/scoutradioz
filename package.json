@@ -41,7 +41,7 @@
 		"eslint-plugin-import": "^2.25.4",
 		"eslint-plugin-scoutradioz-eslint": "file:scoutradioz-eslint",
 		"monaco-editor": "^0.52.2",
-		"svelte": "^5.40.2"
+		"svelte": "5.42.3"
 	},
 	"dependencies": {
 		"archiver": "^5.3.0",

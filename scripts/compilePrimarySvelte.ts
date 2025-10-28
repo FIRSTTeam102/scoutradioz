@@ -16,6 +16,10 @@ export async function compilePrimarySvelte() {
 
 	// read all the files in the current directory, recursively
 	const files = await readdir(svelteSrcLoc, { recursive: true });
+
+	const json = await Bun.file(path.join(__dirname, '../package.json')).json();
+	const svelteVersion = json.devDependencies.svelte.replace('^', '').replace('~', '');
+
 	
 	// Remove all files in svelteDestLoc
 	await rmdir(svelteDestLoc, { recursive: true });
@@ -60,14 +64,14 @@ export async function compilePrimarySvelte() {
 
 			// Convert package imports into esm.sh links
 			code = code
-				.replace(/((?:import|from) *['"])(svelte|@smui)/g, '$1https://esm.sh/$2');
+				.replace(/((?:import|from) *['"])(svelte)/g, `$1https://esm.sh/svelte@${svelteVersion}`);
 
 			await Bun.write(path.join(svelteDestLoc, file.replace('.svelte', '.js')), code);
-
 		}
 		catch (err) {
-			console.log(`${svelteName} ${err}`);
+			console.log(`${svelteName}: ${err}`);
 		}
+		console.log(`${svelteName}: Compiled ${files.length} files (Svelte ${svelteVersion})`);
 	}
 }
 
