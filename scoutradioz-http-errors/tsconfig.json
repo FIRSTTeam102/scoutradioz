@@ -9,6 +9,7 @@
 		"declaration": true,
 		"declarationDir": "./types",
 		"newLine": "crlf",
+		"skipLibCheck": true,
 		//   "removeComments": true,
 	},
 	"include": [
