@@ -3,7 +3,7 @@ import {
 } from 'svelte/compiler';
 import { mount } from 'svelte';
 import path from 'path';
-import { readdir, lstat, rmdir, mkdir } from 'node:fs/promises';
+import { readdir, lstat, rmdir, mkdir, exists } from 'node:fs/promises';
 import { build } from 'esbuild';
 import sveltePlugin from 'esbuild-svelte';
 import { svelteName } from './names.js';
@@ -20,9 +20,9 @@ export async function compilePrimarySvelte() {
 	const json = await Bun.file(path.join(__dirname, '../package.json')).json();
 	const svelteVersion = json.devDependencies.svelte.replace('^', '').replace('~', '');
 
-	
-	// Remove all files in svelteDestLoc
-	await rmdir(svelteDestLoc, { recursive: true });
+	// Ensure destination directory exists & is empty
+	if (await exists(svelteDestLoc))
+		await rmdir(svelteDestLoc, { recursive: true });
 	await mkdir(svelteDestLoc);
 
 	for (let file of files) {
@@ -71,7 +71,7 @@ export async function compilePrimarySvelte() {
 		catch (err) {
 			console.log(`${svelteName}: ${err}`);
 		}
-		console.log(`${svelteName}: Compiled ${files.length} files (Svelte ${svelteVersion})`);
+		console.log(`${svelteName}: Compiled ${files.filter(file=>file.endsWith('.svelte')).length} files (Svelte ${svelteVersion})`);
 	}
 }
 
