@@ -12,6 +12,7 @@ import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
 import helpers, { config as configHelpers } from 'scoutradioz-helpers';
 import fs from 'fs';
+import { auth as openIdAuth } from 'express-openid-connect';
 
 const appStartupTime = Date.now();
 
@@ -213,16 +214,18 @@ app.use(passport.initialize());
 app.use(passport.session({pauseStream: true,}));
 
 // Setting up a test of Auth0 per 
-const { auth } = require('express-openid-connect');
 const auth_config = {
 	authRequired: false,
 	auth0Logout: true,
 	secret: 'a long, randomly-generated string stored in env',
-	baseURL: 'http://localhost:3000',
+	baseURL: 'placeholder',
 	clientID: 'Cc9pYymwCaeoPAG0srbxhAneC2bSiK7V',
 	issuerBaseURL: 'https://dev-stailinn.us.auth0.com'
 };
-app.use(auth(auth_config));
+app.use((req, res, next) => {
+	auth_config.baseURL = `${req.protocol}://${req.get('host')}`;
+	return openIdAuth(auth_config)(req, res, next);
+});
 
 //Various other middleware stuff
 app.use(usefunctions.initialMiddleware);
