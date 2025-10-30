@@ -203,6 +203,18 @@ require('./helpers/passport-config');
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Setting up a test of Auth0 per 
+const { auth } = require('express-openid-connect');
+const auth_config = {
+	authRequired: false,
+	auth0Logout: true,
+	secret: 'a long, randomly-generated string stored in env',
+	baseURL: 'http://localhost:3000',
+	clientID: 'Cc9pYymwCaeoPAG0srbxhAneC2bSiK7V',
+	issuerBaseURL: 'https://dev-stailinn.us.auth0.com'
+};
+app.use(auth(auth_config));
+
 //Various other middleware stuff
 app.use(usefunctions.initialMiddleware);
 //Logging and timestamping

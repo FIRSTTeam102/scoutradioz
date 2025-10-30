@@ -732,6 +732,47 @@ router.get('/thankyou', wrap(async (req, res) =>  {
 	});
 }));
 
+/**
+ * A "callback" URL for receiving OAuth callbacks.
+ */
+router.get('/callback', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'root[get]');
+	logger.debug('ENTER');
+	
+	return res.send('SUCCESS ' + 1 + ' callback ' + 2);
+}));
+
+/**
+ * A "logout" URL
+ */
+router.get('/authlogout', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'root[get]');
+	logger.debug('ENTER');
+	
+	return res.send('SUCCESS ' + 1 + ' authlogout ' + 2);
+}));
+
+/**
+ * Check login status
+ */
+router.get('/authcheck', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'root[get]');
+	logger.debug('ENTER');
+	
+	return res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+}));
+
+/**
+ * Get the user profile
+ */
+router.get('/profile', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'root[get]');
+	logger.debug('ENTER');
+	
+	return res.send(JSON.stringify(req.oidc.user));
+}));
+
+
 router.get('/throwanerror', wrap(async (req, res) => {
 	logger.addContext('funcName', 'throwanerror[get]');
 	
