@@ -23,12 +23,6 @@ router.get('/', wrap(async (req, res) => {
 	res.redirect(301, '/');
 }));
 
-//no longer used bb
-router.get('/selectorg', wrap(async (req, res) =>  {
-	
-	res.redirect(301, '/');
-}));
-
 router.get('/login', wrap(async (req, res) => {
 	logger.addContext('funcName', 'login[get]');
 	
@@ -80,10 +74,9 @@ router.post('/login/select', wrap(async (req, res) => {
 	if( !await req.authenticate( Permissions.ACCESS_VIEWER ) ) return null;
 	
 	//get contents of request and selected organization
-	let org_key: string = req._user.org_key;
-	let org_password: string = req.body.org_password;
-	logger.debug(`- ${org_key}`);
-	
+	let org_key = req._user.org_key;
+	let org_password = req.body.org_password;
+	const selectedOrg = req._user.org;
 	
 	//Make sure that form is filled
 	if(!org_key || !org_password || org_key === '' || org_password === ''){
@@ -91,16 +84,6 @@ router.post('/login/select', wrap(async (req, res) => {
 	}
 	
 	//If form is filled, then proceed.
-	
-	//Get org that matches request
-	let selectedOrg: Org = await utilities.findOne('orgs', 
-		{'org_key': org_key}, {},
-		{allowCache: true}
-	);
-	
-	//If organization does not exist, send internal error
-	if(!selectedOrg) return res.redirect(500, '/user/selectorg');
-	
 	let passwordHash = selectedOrg.default_password;
 	
 	//Compare password to correct hash
@@ -111,7 +94,7 @@ router.post('/login/select', wrap(async (req, res) => {
 		
 		// 2022-04-03 JL: Changing "name: {$ne: 'default_user'}" to "visible: true"
 		let users: User[] = await utilities.find('users', 
-			{org_key: org_key, visible: true}, 
+			{org_key, visible: true}, 
 			{sort: {name: 1}},
 			{allowCache: true}
 		);
@@ -119,8 +102,8 @@ router.post('/login/select', wrap(async (req, res) => {
 		res.render('./user/selectuser', {
 			title: req.msg('user.loginOrg', {org: selectedOrg.nickname}),
 			org: selectedOrg,
-			users: users,
-			org_password: org_password, //Must be passed back to user so they can send org's password back with their request (Avoid dealing with tokens & cookies)
+			users,
+			org_password, //Must be passed back to user so they can send org's password back with their request (Avoid dealing with tokens & cookies)
 			redirectURL: req.body.redirectURL,
 		});
 	}
@@ -242,6 +225,8 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 				//If error, then log and return an error
 				if(err){ console.error(err); return res.send({status: 500, alert: err}); }
 				
+				res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
+				
 				logger.debug('Sending success/password_needed: false');
 				logger.info(`${user.name} has logged in`);
 				
@@ -282,6 +267,8 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 			
 			//If error, then log and return an error
 			if(err){ console.error(err); return res.send({status: 500, alert: err}); }
+
+			res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
 			
 			logger.info(`${user.name} has logged in`);
 			
@@ -367,6 +354,8 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 			
 			//If error, then log and return an error
 			if(err){ logger.error(err); return res.send({status: 500, alert: err}); }
+
+			res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
 			
 			let userRole: Role = await utilities.findOne('roles', 
 				{role_key: user.role_key},
@@ -567,59 +556,15 @@ router.get('/logout', wrap(async (req, res) =>  {
 	//Logout works a bit differently now.
 	//First destroy session, THEN "log in" to default_user of organization.
 	
-	if( !req.user ) return res.redirect('/');
+	if( !req.user ) return res.redirect('/home');
 	
 	let org_key = req.user.org_key;
 	
 	//destroy session
 	req.logout(async () => {
-		
-		//after current session is destroyed, now re log in to org
-		let selectedOrg: Org = await utilities.findOne('orgs', 
-			{'org_key': org_key}, {},
-			{allowCache: true}
-		);
-		if(!selectedOrg) return res.redirect(500, '/');
-		
-		let defaultUser = await utilities.findOne<any>('users', 
-			{'org_key': org_key, name: 'default_user'}, {},
-			{allowCache: true}
-		);
-		if(!defaultUser) return res.redirect(500, '/');
-		
-		
-		//Now, log in to defaultUser
-		req.logIn(defaultUser, async function(err){
-				
-			//If error, then log and return an error
-			if(err){ console.error(err); return res.send({status: 500, alert: err}); }
-			
-			//now, once default user is logged in, redirect to index
-			res.redirect('/');
-		});
-	});
-}));
-
-//Switch a user's organization
-router.get('/switchorg', wrap(async (req, res) => {
-	logger.addContext('funcName', 'switchorg[get]');
-	
-	//This will log the user out of their organization.
-	
-	//destroy session
-	req.logout(() => {
-	
-		req.session.destroy(async function (err) {
-			if (err) return console.log(err);
-			
-			//clear org_key cookie
-			logger.debug('Clearing org_key cookie');
-			res.clearCookie('org_key');
-			
-			//now, redirect to index
-			if (req.query.alert) res.redirect(`/?alert=${req.query.alert}`);
-			else res.redirect('/');
-		});
+		// after session is destroyed, set picked_org so they go back to default user
+		res.cookie('picked_org', org_key);
+		res.redirect('/home');
 	});
 }));
 

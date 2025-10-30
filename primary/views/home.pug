@@ -66,7 +66,7 @@ block content
 			div(class="gear-btn theme-link w3-btn")
 				span!=msg('layout.nav.voyager')
 
-	if user.role && user.role.access_level >= Permissions.ACCESS_SCOUTER
+	if user && user.role.access_level >= Permissions.ACCESS_SCOUTER
 		div(class="w3-container w3-section")
 			h4(class="theme-text")!=msg('home.formDemos')
 			a(href="/scouting/match?key=2024srdemo_qm99_frc999999&alliance=Blue")

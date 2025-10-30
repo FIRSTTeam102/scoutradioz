@@ -6,10 +6,15 @@
 		Actions as DActions,
 	} from '@smui/dialog';
 	import Autocomplete from '@smui-extra/autocomplete';
+	import Paper from '@smui/paper';
 	import type { Org } from 'scoutradioz-types';
 	let { data } = $props();
 
 	let orgs = data.orgs as Org[];
+	let signedInOrgKey = data.originalOrgKey as string|undefined;
+	let signedInUser = data.originalUser as string|undefined;
+	
+	let signedInOrg = orgs.find(org => org.org_key === signedInOrgKey);
 
 	const getOrgOptionLabel = (org: Org) => {
 		if (!org) return '';
@@ -22,15 +27,13 @@
 	function logInToOrg() {
 		if (!org) return;
 		Cookies.set('picked_org', org?.org_key);
-		// location.href = '/user/login';
-		location.href = `selectorg-login?org_key=${org.org_key}&rdr=/home`;
+		location.href = '/user/login';
 	}
 
 	function viewOrg() {
 		if (!org) return;
 		Cookies.set('picked_org', org.org_key);
-		// location.href = '/home';
-		location.href = `/${org.org_key}/home`;
+		location.href = '/home';
 	}
 
 	const msg = (str: string) => str; // Placeholder for localization function
@@ -59,6 +62,12 @@
 			>Just see the data</Button
 		>
 	</div>
+	{#if signedInOrg}
+		<Paper class="w3-margin-top">
+			<i>You are signed in to {signedInOrg.nickname} as {signedInUser}.</i>
+			<Button href='/home' class='w3-show-inline'>Return to {signedInOrg.nickname}</Button>
+		</Paper>
+	{/if}
 	<hr />
 	<h2>Log in via social</h2>
 	<Button variant="unelevated" disabled

@@ -351,24 +351,17 @@ class NavHelpers {
 			label: '!layout.nav.user.switchorg',
 			sprite: 'org',
 			visible: userLoggedIn,
-			href: '/user/switchorg'
+			href: 'javascript:Cookies.remove("picked_org"); location.href = "/"',
+			submenu: (req, res) => {
+				if (!req.original_user) return undefined;
+				return [
+					{
+						label: req.msg('layout.nav.user.switchBackToOrg', {org: req.original_user.org.nickname}),
+						href: 'javascript:Cookies.remove("picked_org"); location.href = "/home"'
+					}
+				];
+			}
 		},
-		// {
-		// 	label: (req, res) => `Org: [[${req.user.org.nickname}]]`,
-		// 	sprite: 'org',
-		// 	visible: userLoggedIn,
-		// 	submenu: [
-		// 		{
-		// 			label: 'Change Organization',
-		// 			href: '/user/switchorg',
-		// 		},
-		// 		{
-		// 			label: 'Log In',
-		// 			href: '/user/login',
-		// 			visible: (req, res) => req.user.name === 'default_user',
-		// 		}
-		// 	]
-		// },
 		{
 			label: '!layout.nav.help',
 			sprite: 'help',

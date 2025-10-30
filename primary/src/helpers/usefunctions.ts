@@ -40,6 +40,26 @@ class UseFunctions {
 		//For logging
 		req.requestTime = Date.now();
 		
+		req.picked_org = req.cookies['picked_org'];
+		if (req.picked_org) {
+			const defaultUser = await utilities.findOne('users', {
+				org_key: req.picked_org,
+				name: 'default_user'
+			}, {}, {allowCache: true});
+			// Store signed-in user here for pages that need it
+			if (req.user) {
+				req.original_user = req.user;
+				req.original_user.org = await utilities.findOne('orgs', 
+					{org_key: req.original_user.org_key},
+					{},
+					{allowCache: true}
+				);
+				res.locals.original_user = req.original_user;
+			}
+			// @ts-expect-error Variables 'role' and 'org' are populated down the chain
+			req.user = defaultUser;
+		}
+		
 		if(req.user){
 			let userRole = await utilities.findOne('roles', 
 				{role_key: req.user.role_key}, {},
@@ -125,7 +145,6 @@ class UseFunctions {
 		req.localeString = localeString;*/
 		// CD 2022-05-31: use value from i18n helper
 		req.localeString = req.locale;
-		
 		// JL: See the JSDoc note in namespace-extensions.d.ts
 		if (req.user) req._user = req.user;
 	
@@ -135,6 +154,8 @@ class UseFunctions {
 	static authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
 	
 		req.authenticate = async function (accessLevel: string|number|undefined) {
+			
+			logger.info('picked_org: ' + req.cookies['picked_org']);
 			
 			//Parse number from accessLevel
 			let accessLevelNum;
@@ -201,7 +222,7 @@ class UseFunctions {
 			);
 			req.user.org = org;
 			res.locals.user = req.user;
-		} 
+		}
 		
 		res.locals.fileRoot = '/public';
 		
@@ -272,8 +293,8 @@ class UseFunctions {
 		
 		// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
 		let thisOrg: Org|undefined = undefined;
-		if (req && req.user && req.user.org_key) {
-			let thisOrgKey = req.user.org_key;
+		if (req.user && req.user.org_key || req.picked_org) {
+			let thisOrgKey = req.user?.org_key || req.picked_org;
 			thisOrg = await utilities.findOne('orgs', 
 				{'org_key': thisOrgKey}, 
 				{},

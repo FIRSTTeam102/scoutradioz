@@ -164,20 +164,15 @@ function scrollToId(id: string) {
 	else console.error(`Element with id ${id} not found.`);
 }
 
-async function share(orgKey: string | boolean) {
+async function share(orgKey: string) {
 
 	let origin = window.location.origin;
 	let pathname = window.location.pathname;
 	let search = window.location.search;
 
-	//if orgKey is defined, add it to the base of the pathname
-	if (orgKey != false) {
-		pathname = '/' + orgKey + pathname;
-	}
-
-	let shareURL = origin + pathname + search;
-
-	console.log(shareURL);
+	let shareURL: string;
+	if (orgKey) shareURL = `${origin}/share?org=${orgKey}&page=${encodeURIComponent(pathname + search)}`;
+	else shareURL = window.location.href;
 
 	// First, attempt to use the browser's native Share functionality
 	if ('share' in navigator && 'canShare' in navigator) {

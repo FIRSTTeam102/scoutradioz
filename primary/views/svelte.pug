@@ -30,7 +30,6 @@ block content
 	div.no-outline#svelte-content
 	script(type='module').
 		const data = JSON.parse(`!{JSON.stringify(data)}`);
-		console.log('mydata', data)
 		let mounted = false;
 		//- only show loading thing after a short delay
 		setTimeout(() => {

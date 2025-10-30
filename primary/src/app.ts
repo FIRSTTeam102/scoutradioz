@@ -97,6 +97,15 @@ app.get('/*', (req, res, next) => {
 });
 */
 
+// Filter out obvious bot requests
+app.use((req, res, next) => {
+	if (
+		req.path.startsWith('/.well-known') ||
+		req.path.endsWith('.php')
+	) return res.status(404).send();
+	next();
+});
+
 //Must be the very first app.use
 app.use(utilities.refreshTier);
 
@@ -201,7 +210,7 @@ app.use(session({
 require('./helpers/passport-config');
 // @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.session({pauseStream: true,}));
 
 // Setting up a test of Auth0 per 
 const { auth } = require('express-openid-connect');
@@ -278,7 +287,7 @@ app.use('/admin', adminindex);
 app.use('/admin/externaldata', externaldata);
 app.use('/admin/orgs', orgs);
 
-app.use('/', share);
+app.use('/share', share);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);

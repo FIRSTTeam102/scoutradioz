@@ -186,7 +186,7 @@ html(lang=locale dir=getLocaleDirection(locale))
 							//- div(class="centered")
 							span(class="sprite sp-32 sp-i18n")
 						//- Share
-						- var orgKey = user ? user.org.org_key : 0;
+						- var orgKey = user ? user.org.org_key : '';
 						a(href=`javascript:share('${orgKey}')` class="centered" title=msg('layout.share'))
 							- var spriteType = isIOS ? 'sp-share-ios' : 'sp-share-android';
 							//- div(class="centered")
@@ -210,12 +210,14 @@ html(lang=locale dir=getLocaleDirection(locale))
 						if (headerlogos[themeYear])
 							img(src=`${fileRoot}/images/${headerlogos[themeYear][0]}` alt=headerlogos[themeYear][1] class="w3-image w3-center" style="max-height: 160px;")
 						if (!isOrgSelectScreen)
-							h3=eventName
+							h3 #{eventName}
 								if (!eventIsOrgCurrent)
 									span(class="sprite sp-warn sp-20 sp-inline w3-tooltip")
 										span(class="w3-tooltiptext w3-medium") 
 											span You are currently viewing a different event from the rest of your organization.
 											a(class="link" href='/reports/clearbrowsedevent') Tap here to switch back to your org's current event.
+								if user && user.org
+									span(class="unimportant")  - #{user.org.nickname}
 				main(class="w3-padding w3-mobile w3-center" id="content")
 					block content
 
