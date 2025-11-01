@@ -683,28 +683,50 @@ router.get('/thankyou', wrap(async (req, res) =>  {
 /**
  * A "callback" URL for receiving OAuth callbacks.
  */
-router.get('/callback', wrap(async (req, res, next) => {
-	logger.addContext('funcName', 'root[get]');
+router.get('/callback2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'callback2[get]');
 	logger.debug('ENTER');
 	
 	return res.send('SUCCESS ' + 1 + ' callback ' + 2);
 }));
 
 /**
+ * A "login" URL which declares auth parameters (2025-10-31: doesn't do anything)
+ * but also passes in a value {currently pulled fromn an URL param "foo"}
+ * which is used in a specific 'returnTo' URL after login.
+ */
+router.get('/login2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'login2[get]');
+	logger.debug('ENTER');
+
+	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	let authorizationParams: any = {
+		response_type: 'id_token',
+		response_mode: 'form_post',
+		scope: 'openid profile email',
+		custom_param: 'custom_value_2'
+	};
+
+	let foo = req.query.foo;
+
+	res.oidc.login({ authorizationParams: authorizationParams, returnTo: `/profile?foo=${foo}` });
+}));
+
+/**
  * A "logout" URL
  */
-router.get('/authlogout', wrap(async (req, res, next) => {
-	logger.addContext('funcName', 'root[get]');
+router.get('/logout2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'logout2[get]');
 	logger.debug('ENTER');
 	
-	return res.send('SUCCESS ' + 1 + ' authlogout ' + 2);
+	res.oidc.logout({ returnTo: '/profile?foo=logged_out' });
 }));
 
 /**
  * Check login status
  */
 router.get('/authcheck', wrap(async (req, res, next) => {
-	logger.addContext('funcName', 'root[get]');
+	logger.addContext('funcName', 'authcheck[get]');
 	logger.debug('ENTER');
 	
 	return res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
@@ -714,10 +736,12 @@ router.get('/authcheck', wrap(async (req, res, next) => {
  * Get the user profile
  */
 router.get('/profile', wrap(async (req, res, next) => {
-	logger.addContext('funcName', 'root[get]');
+	logger.addContext('funcName', 'profile[get]');
 	logger.debug('ENTER');
-	
-	return res.send(JSON.stringify(req.oidc.user));
+
+	let foo = req.query.foo;
+
+	return res.send('profile ' + JSON.stringify(req.oidc.user) + ' foo=' + foo);
 }));
 
 
