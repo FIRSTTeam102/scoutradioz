@@ -218,6 +218,11 @@ html(lang=locale dir=getLocaleDirection(locale))
 											a(class="link" href='/reports/clearbrowsedevent') Tap here to switch back to your org's current event.
 								if user && user.org
 									span(class="unimportant")  - #{user.org.nickname}
+									if original_user && original_user.org
+										span(class="sprite sp-warn sp-20 sp-inline w3-tooltip")
+											span(class="w3-tooltiptext w3-medium") 
+												span You are signed in to #{original_user.org.nickname} as #{original_user.name}.
+												a(class="link" href=`javascript:Cookies.remove('picked_org'); location.href = '/home'`)  Return to #{original_user.org.nickname}
 				main(class="w3-padding w3-mobile w3-center" id="content")
 					block content
 
