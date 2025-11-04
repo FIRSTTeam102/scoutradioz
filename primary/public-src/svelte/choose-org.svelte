@@ -10,7 +10,7 @@
 	import type { Org } from 'scoutradioz-types';
 	let { data } = $props();
 
-	let orgs = data.orgs as Org[];
+	let orgs = $state(data.orgs) as Org[];
 	let signedInOrgKey = data.originalOrgKey as string|undefined;
 	let signedInUser = data.originalUser as string|undefined;
 	
