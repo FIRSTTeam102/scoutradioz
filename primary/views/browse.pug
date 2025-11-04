@@ -44,7 +44,7 @@ block content
 								- let orgKeyAndNick = org.orgKey + ' - ' + org.orgName
 								td
 									u
-										a(href=`/${org.orgKey}/reports/allteammetrics`)=orgKeyAndNick
+										a(href=`javascript:Cookies.set('picked_org', '${org.orgKey}'); location.href = '/reports/allteammetrics'`)=orgKeyAndNick
 								- let orgScout = org.countScoutingReports + ' (' + ((Math.round((100 * org.countScoutingReports/event.possibleScoutingReports) * 10)/10).toFixed(1)) + '%)'
 								td=orgScout
 								- let orgSpr = '------------------'
