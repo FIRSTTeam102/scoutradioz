@@ -219,8 +219,8 @@ const auth_config = {
 	auth0Logout: true,
 	secret: 'a long, randomly-generated string stored in env',
 	baseURL: 'placeholder',
-	clientID: 'KB8tsBQ4SLgJJcUaxgFmDokAG7p2owx7',
-	issuerBaseURL: 'https://sr-development.us.auth0.com'
+	clientID: 'AOjDEt1p4UCAqBnNCDt4Dkk0zmu9oe3R',
+	issuerBaseURL: 'https://scoutradioz.us.auth0.com'
 };
 app.use((req, res, next) => {
 	auth_config.baseURL = `${req.protocol}://${req.get('host')}`;

@@ -549,6 +549,14 @@ router.post('/changepassword', wrap(async (req, res) => {
 	res.redirect('/?alert=' + req.msgUrl('user.newpasswordsuccess'));
 }));
 
+//Log out social AND then *also* legacy
+router.get('/logout/social', wrap(async (req, res) =>  {
+	logger.addContext('funcName', '/logout/social[get]');
+	logger.debug('ENTER');
+	
+	res.oidc.logout({ returnTo: '/user/logout' });
+}));
+
 //Log out
 router.get('/logout', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'logout[get]');

@@ -327,11 +327,28 @@ class NavHelpers {
 				{
 					label: '!layout.nav.user.logout',
 					href: '/user/logout',
+					visible: (req, res) => !req.oidc.user,
+				},
+				{
+					label: '!layout.nav.user.logout',
+					href: '/user/logout/social',
+					visible: (req, res) => !!req.oidc.user,
 				},
 				{
 					label: '!user.changepassword',
 					href: '/user/changepassword',
-				}
+					visible: (req, res) => !req.oidc.user,
+				},
+				{
+					label: '!user.linksocial',
+					href: '/user/linksocial',
+					visible: (req, res) => !req.oidc.user,
+				},
+				{
+					label: '!user.unlinksocial',
+					href: '/user/unlinksocial',
+					visible: (req, res) => !!req.oidc.user,
+				},
 			]
 		},
 		// User login when not signed in
