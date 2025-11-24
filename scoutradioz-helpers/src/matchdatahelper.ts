@@ -1195,10 +1195,12 @@ export class MatchDataHelper {
 							let numVal = parseFloat(thisVal);
 							// Special case: If max == min then all values are Math.sign(Math.abs(max))
 							let normVal = Math.sign(Math.abs(max));
-							if (max != min) {
+							if (max != min)
 								normVal = (numVal - min) / (max - min);
-								thisNorm[theseKeys[j]] = (Math.round(normVal * 10) / 10).toFixed(1);
-							}
+							// 2025-11-24, M.O'C: Can't only value this when max != min  ^_^;;
+							// otherwise, leaves values blank (and then the spider chart ends up rotationally "off by one")
+							// luckily was not a bug in the "average" norms above, only here in "max" norms
+							thisNorm[theseKeys[j]] = (Math.round(normVal * 10) / 10).toFixed(1);
 						}
 					}
 				}
