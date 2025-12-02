@@ -213,13 +213,16 @@ require('./helpers/passport-config');
 app.use(passport.initialize());
 app.use(passport.session({pauseStream: true,}));
 
+// Read Auth0 settings from environment information
+let auth0_secret = process.env.AUTH0_SECRET; // || 'a long, randomly-generated string stored in env';
+let auth0_clientid = process.env.AUTH0_CLIENTID; // || 'AOjDEt1p4UCAqBnNCDt4Dkk0zmu9oe3R';
 // Setting up a test of Auth0 per 
 const auth_config = {
 	authRequired: false,
 	auth0Logout: true,
-	secret: 'a long, randomly-generated string stored in env',
+	secret: auth0_secret,
 	baseURL: 'placeholder',
-	clientID: 'AOjDEt1p4UCAqBnNCDt4Dkk0zmu9oe3R',
+	clientID: auth0_clientid,
 	issuerBaseURL: 'https://scoutradioz.us.auth0.com'
 };
 app.use((req, res, next) => {
