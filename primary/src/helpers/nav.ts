@@ -341,12 +341,12 @@ class NavHelpers {
 				},
 				{
 					label: '!user.linksocial',
-					href: '/user/linksocial',
+					href: '/user/social/link',
 					visible: (req, res) => !req.oidc.user,
 				},
 				{
 					label: '!user.unlinksocial',
-					href: '/user/unlinksocial',
+					href: '/user/social/unlink',
 					visible: (req, res) => !!req.oidc.user,
 				},
 			]

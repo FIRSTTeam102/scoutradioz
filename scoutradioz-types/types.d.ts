@@ -773,6 +773,7 @@ export declare interface Upload extends DbDocument {
 export declare interface User extends DbDocumentWithNumberId {
 	org_key: OrgKey;
 	name: string;
+	linked_auth: string;  // Stores the 'sub' identifier from Auth0
 	role_key: RoleKey;
 	password: 'default'|'disabled'|string;
 	org_info: {

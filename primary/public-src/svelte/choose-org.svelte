@@ -70,8 +70,8 @@
 	{/if}
 	<hr />
 	<h2>Log in via social</h2>
-	<Button variant="unelevated" disabled
-		>Sign in with Google (Not yet supported)</Button
+	<Button variant="unelevated" href="/user/social/login"
+		>Sign in with a social connection</Button
 	>
 	<hr />
 	<h2>See what data is available</h2>

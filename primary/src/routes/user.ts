@@ -576,6 +576,132 @@ router.get('/logout', wrap(async (req, res) =>  {
 	});
 }));
 
+//Log in via social - calls out to Auth0 then redirects to /user/social/login/redirect
+router.get('/social/login', wrap(async (req, res) =>  {
+	logger.addContext('funcName', '/social/login[get]');
+	logger.debug('ENTER');
+
+	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	let authorizationParams: any = {
+		response_type: 'id_token',
+		response_mode: 'form_post',
+		scope: 'openid profile email',
+		custom_param: 'custom_value_2'
+	};
+
+	//let foo = req.query.foo;
+	// returnTo: `/profile?foo=${foo}`
+
+	res.oidc.login({ authorizationParams: authorizationParams, returnTo: '/user/social/login/redirect' });
+}));
+
+//Upon successful social login
+router.get('/social/login/redirect', wrap(async (req, res, next) => {
+	logger.addContext('funcName', '/social/login/redirect[get]');
+	logger.debug('ENTER');
+
+	// Sanity-check: Make sure we have a logged-in social identity
+	if (!req.oidc.user) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.nosociallogin') + '&type=error');
+	}
+
+	// Snag the social "id" from Auth0
+	let socialSub = req.oidc.user.sub;
+	// Locate 0-N users associated with the social identity
+	let userList: User[] | null = await utilities.find('users', {'linked_auth': socialSub}, {}, {allowCache: true});
+
+	// If zero associated users... prompt them to link via a legacy login
+	if (!userList || userList.length === 0 || !userList[0])
+		return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' ZERO users');
+	
+	// If two or more associated users... give them a list to choose from
+	if (userList.length > 1)
+		return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' MULTIPLE users, userList=' + JSON.stringify(userList));
+
+	// If exactly one associated user... log them in as that user
+	logger.debug('Logging in');
+	// 2022-05-17 JL: Allowing this variable to be "any" because scoutradioz-types.User is not assignable to express.User (in req.logIn)
+	let user = await utilities.findOne<any>('users', {_id: userList[0]._id});
+
+	//If comparison succeeded, then log in user
+	req.logIn(user, async function(err){
+		
+		//If error, then log and return an error
+		if(err){ logger.error(err); return res.send({status: 500, alert: err}); }
+
+		res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
+		
+		let userRole: Role = await utilities.findOne('roles', 
+			{role_key: user.role_key},
+			{},
+			{allowCache: true}
+		);
+		
+		let redirectURL;
+		
+		//Set redirect url depending on user's access level
+		if (req.body.redirectURL) redirectURL = req.body.redirectURL;
+		else if (userRole.access_level === Permissions.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
+		else if (userRole.access_level === Permissions.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
+		else if (userRole.access_level === Permissions.ACCESS_SCOUTER) redirectURL = '/dashboard';
+		else redirectURL = '/home';
+		
+		logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
+		
+		// //send success and redirect
+		// return res.send({
+		// 	status: 200,
+		// 	redirect_url: redirectURL
+		return res.redirect(redirectURL);
+	});
+
+	//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' userList=' + JSON.stringify(userList));
+}));
+
+//Link social - calls out to Auth0 then redirects to /user/social/link/redirect
+router.get('/social/link', wrap(async (req, res) =>  {
+	logger.addContext('funcName', '/social/link[get]');
+	logger.debug('ENTER');
+
+	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	let authorizationParams: any = {
+		response_type: 'id_token',
+		response_mode: 'form_post',
+		scope: 'openid profile email',
+		custom_param: 'custom_value_2'
+	};
+
+	//let foo = req.query.foo;
+	// returnTo: `/profile?foo=${foo}`
+
+	res.oidc.login({ authorizationParams: authorizationParams, returnTo: '/user/social/link/redirect' });
+}));
+
+//Upon successful social login
+router.get('/social/link/redirect', wrap(async (req, res, next) => {
+	logger.addContext('funcName', '/social/link/redirect[get]');
+	logger.debug('ENTER');
+
+	// Sanity-check: Make sure we have a logged-in user & a logged-in social identity
+	if (!req.user || !req.oidc.user || req.user.name === 'default_user') {
+		return res.redirect('/home?alert=' + req.msgUrl('user.notloggedin') + '&type=error');
+	}
+
+	// Is the currently-logged-in user account already tied to a social account?
+	let currentUser: User | null = await utilities.findOne('users', {'_id': req.user._id}, {}, {allowCache: true});
+	if (currentUser && currentUser.linked_auth) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.socialalreadylinked') + '&type=error');
+	}
+
+	// Snag the social "id" from Auth0
+	let socialSub = req.oidc.user.sub;
+	// Update the user record to link the social ID
+	await utilities.update('users', {'_id': req.user._id}, {$set: {linked_auth: socialSub}});
+
+	return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' req.user=' + JSON.stringify(req.user));
+}));
+
+
 //user preferences
 router.get('/preferences', wrap(async (req, res) => {
 	logger.addContext('funcName', 'preferences[get]');
