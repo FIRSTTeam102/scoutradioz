@@ -340,14 +340,14 @@ class NavHelpers {
 					visible: (req, res) => !req.oidc.user,
 				},
 				{
-					label: '!user.linksocial',
+					label: '!user.social.link',
 					href: '/user/social/link',
-					visible: (req, res) => !req.oidc.user,
+					visible: (req, res) => !req.oidc.user && !req.user?.linked_auth,
 				},
 				{
-					label: '!user.unlinksocial',
-					href: '/user/social/unlink',
-					visible: (req, res) => !!req.oidc.user,
+					label: '!user.social.unlink',
+					href: 'javascript:Confirm.show("Are you sure you want to unlink the social account?").then(result => { if (result.cancelled === false) location.href = "/user/social/unlink"})',
+					visible: (req, res) => !!req.oidc.user || !!req.user?.linked_auth,
 				},
 			]
 		},
@@ -357,6 +357,12 @@ class NavHelpers {
 			sprite: 'user',
 			visible: (req, res) => !!req.user && req._user.name === 'default_user',
 			href: '/user/login'
+		},
+		{
+			label: (req, res) => req.msg('layout.nav.user.sociallogin'),
+			sprite: 'user',
+			visible: (req, res) => !!req.user && req._user.name === 'default_user',
+			href: '/user/social/login'
 		},
 		{
 			label: '!layout.nav.voyager',

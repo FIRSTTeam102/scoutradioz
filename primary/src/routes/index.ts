@@ -78,7 +78,10 @@ router.get('/', wrap(async (req, res, next) => {
 		originalOrgKey = req.user.org.org_key;
 		originalUser = req.user.name;
 	}
-		
+	let socialUser = undefined;
+	if (req.oidc.user)
+		socialUser = req.oidc.user;
+
 	res.render('svelte', {
 		page: 'choose-org',
 		fulltitle: res.msg('index.fulltitle'),
@@ -89,6 +92,7 @@ router.get('/', wrap(async (req, res, next) => {
 			selectedButton,
 			originalUser,
 			originalOrgKey,
+			socialUser,
 		}
 	});
 	

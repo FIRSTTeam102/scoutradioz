@@ -229,7 +229,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 				
 				logger.debug('Sending success/password_needed: false');
 				logger.info(`${user.name} has logged in`);
-				
+
 				let redirectURL;
 				//if redirectURL has been passed from another function then send it back
 				if (req.body.redirectURL) {
@@ -238,7 +238,15 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 				else {
 					redirectURL = '/dashboard';
 				}
-				
+
+				// are we logging in in the context of a social login? call function to link (or) message that account is already linked
+				// pass in 'user' and 'oidc.user', get back success true (if failed, assume already linked)
+				logger.debug(`1 current user.linked_auth=${user.linked_auth}`);
+
+				let alertString = checkAndLinkSocial(req, user);
+				if (alertString)
+					redirectURL += '?' + alertString;
+
 				//now, return succes with redirect to dashboard
 				res.send({
 					status: 200,
@@ -271,12 +279,18 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 			res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
 			
 			logger.info(`${user.name} has logged in`);
-			
+			logger.debug(`2 current user.linked_auth=${user.linked_auth}`);
+
+			let redirectURL = '/home';
+			let alertString = checkAndLinkSocial(req, user);
+			if (alertString)
+				redirectURL += '?' + alertString;
+
 			//Now, return with redirect_url: '/'
 			res.send({
 				status: 200,
 				password_needed: false,
-				redirect_url: '/'
+				redirect_url: redirectURL
 			});
 		});
 	}
@@ -373,7 +387,12 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 			else redirectURL = '/home';
 			
 			logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
-			
+			logger.debug(`3 current user.linked_auth=${user.linked_auth}`);
+
+			let alertString = checkAndLinkSocial(req, user);
+			if (alertString)
+				redirectURL += '?' + alertString;
+
 			//send success and redirect
 			return res.send({
 				status: 200,
@@ -484,9 +503,19 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	req.logIn(user, function(err){
 		
 		if(err) logger.error(err);
-		
+		logger.info(`${user.name} has logged in`);
+		logger.debug(`4 current user.linked_auth=${user.linked_auth}`);
+
+		//let redirectURL = '/home?alert=' + req.msgUrl('user.newpasswordsuccess');
+		let redirectURL = '/home';
+		let newpasswordMsg = req.msg('user.newpasswordsuccess');
+
+		let alertString = checkAndLinkSocial(req, user, newpasswordMsg);
+		if (alertString)
+			redirectURL += '?' + alertString;
+
 		res.send({
-			redirect_url: '/?alert=' + req.msgUrl('user.newpasswordsuccess')
+			redirect_url: redirectURL
 		});
 	});
 }));
@@ -602,7 +631,7 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 
 	// Sanity-check: Make sure we have a logged-in social identity
 	if (!req.oidc.user) {
-		return res.redirect('/home?alert=' + req.msgUrl('user.nosociallogin') + '&type=error');
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
 	}
 
 	// Snag the social "id" from Auth0
@@ -612,7 +641,8 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 
 	// If zero associated users... prompt them to link via a legacy login
 	if (!userList || userList.length === 0 || !userList[0])
-		return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' ZERO users');
+		return res.redirect('/?alert=' + req.msgUrl('user.social.loginwithlegacy'));
+		//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' ZERO users');
 	
 	// If two or more associated users... give them a list to choose from
 	if (userList.length > 1)
@@ -646,7 +676,7 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 		else if (userRole.access_level === Permissions.ACCESS_SCOUTER) redirectURL = '/dashboard';
 		else redirectURL = '/home';
 		
-		logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
+		logger.info(`${user.name} has logged in SOCIALLY with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
 		
 		// //send success and redirect
 		// return res.send({
@@ -684,13 +714,13 @@ router.get('/social/link/redirect', wrap(async (req, res, next) => {
 
 	// Sanity-check: Make sure we have a logged-in user & a logged-in social identity
 	if (!req.user || !req.oidc.user || req.user.name === 'default_user') {
-		return res.redirect('/home?alert=' + req.msgUrl('user.notloggedin') + '&type=error');
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
 	}
 
 	// Is the currently-logged-in user account already tied to a social account?
 	let currentUser: User | null = await utilities.findOne('users', {'_id': req.user._id}, {}, {allowCache: true});
 	if (currentUser && currentUser.linked_auth) {
-		return res.redirect('/home?alert=' + req.msgUrl('user.socialalreadylinked') + '&type=error');
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.alreadylinked', {user: currentUser.name}) + '&type=error');
 	}
 
 	// Snag the social "id" from Auth0
@@ -698,9 +728,34 @@ router.get('/social/link/redirect', wrap(async (req, res, next) => {
 	// Update the user record to link the social ID
 	await utilities.update('users', {'_id': req.user._id}, {$set: {linked_auth: socialSub}});
 
-	return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' req.user=' + JSON.stringify(req.user));
+	//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' req.user=' + JSON.stringify(req.user));
+	return res.redirect('/home?alert=' + req.msgUrl('user.social.linksuccess', {user: currentUser.name}) + '&type=success&autofade=true');
 }));
 
+// unlink the social login from the user account
+router.get('/social/unlink', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'social.unlink[get]');
+	logger.debug('ENTER');
+	
+	res.oidc.logout({ returnTo: '/user/social/unlink/redirect' });
+}));
+
+// unlink the social login from the user account
+router.get('/social/unlink/redirect', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'social.unlink.redirect[get]');
+	logger.debug('ENTER');
+	
+	// Sanity-check: Make sure we have a logged-in social identity
+	if (!req.user) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
+	}
+
+	// Update the user record to delete the social ID (if set)
+	await utilities.update('users', {'_id': req.user._id}, {$unset: {linked_auth: ''}});
+	
+	return res.redirect('/home?alert=' + req.msgUrl('user.social.unlinksuccess', {user: req.user.name}) + '&type=success&autofade=true');
+	//return res.send('unlink req.oidc.user=' + JSON.stringify(req.oidc.user) + ' req.user.name=' + req.user?.name);
+}));
 
 //user preferences
 router.get('/preferences', wrap(async (req, res) => {
@@ -943,3 +998,38 @@ router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, r
 }));
 
 export default router;
+
+// 2025-12-03, M.O'C: Function to check to see if we are logging in in the context of a social login, and link the accounts if possible
+// Returns an alert string if there is a message to be shown to the user (or undefined if no message)
+function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | undefined {	
+	let alertString = undefined;
+	let insertMsg = '';
+	if (otherMsg)
+		insertMsg = otherMsg + '\n';
+
+	// are we logging in in the context of a social login? call function to link (or) message that account is already linked
+	if (req.oidc && req.oidc.user) {
+		let socialSub = req.oidc.user.sub;
+		// first check if the user already has a linked account; if not, link it
+		if (!user.linked_auth) {
+			//link social id to user account
+			utilities.update('users', { '_id': user._id }, { $set: { linked_auth: socialSub } });
+			logger.info(`Linked social account ${req.oidc.user.name} to Scoutradioz user ${user.name}`);
+			alertString = `alert=${insertMsg}${req.msgUrl('user.social.linksuccess', {user: user.name})}&type=success&autofade=true`;
+		}
+		else {
+			// only warn if it's a different social account
+			if (user.linked_auth !== socialSub) {
+				logger.warn(`User ${user.name} already has a linked social account ${user.linked_auth}; not linking ${socialSub}`);
+				alertString = `alert=${insertMsg}${req.msgUrl('user.social.alreadylinked', {user: user.name})}&type=success&autofade=true`;
+			}
+		}
+	}
+
+	// in case we were passed a different message, still show it
+	if (!alertString && otherMsg)
+		alertString = otherMsg;
+
+	return alertString;
+}
+

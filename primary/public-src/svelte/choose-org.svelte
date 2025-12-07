@@ -13,6 +13,7 @@
 	let orgs = $state(data.orgs) as Org[];
 	let signedInOrgKey = data.originalOrgKey as string|undefined;
 	let signedInUser = data.originalUser as string|undefined;
+	let socialUser = data.socialUser as any|undefined;
 	
 	let signedInOrg = orgs.find(org => org.org_key === signedInOrgKey);
 
@@ -68,11 +69,25 @@
 			<Button href='/home' class='w3-show-inline'>Return to {signedInOrg.nickname}</Button>
 		</Paper>
 	{/if}
+	{#if !signedInOrg && socialUser}
+	<Paper class="w3-margin-top">
+		<i>To link social login {socialUser.name} to a Scoutradioz account, log in above!</i>
+	</Paper>
+	{/if}
+	{#if socialUser}
 	<hr />
-	<h2>Log in via social</h2>
+	<h2>Log out of social</h2>
+	<Button variant="unelevated" href="/user/logout/social"
+		>Sign out as {socialUser.name}</Button
+	>
+	{/if}
+	{#if !socialUser && !signedInOrg}
+	<hr />
+	<h2>Log in via social</h2> 
 	<Button variant="unelevated" href="/user/social/login"
 		>Sign in with a social connection</Button
 	>
+	{/if}
 	<hr />
 	<h2>See what data is available</h2>
 	<Button variant="unelevated" href="/browse">Browse all current events</Button>
