@@ -27,9 +27,9 @@ class UseFunctions {
 		}
 		
 		// If the user has not viewed this news item yet, AND it hasn't yet expired, send the summary to the client for it to display
-		if (req.cookies['last_news_update_read'] !== platformSettings.news.cookie_value && new Date() < platformSettings.news.expires) {
+		if (req.cookies['last_news_update_read'].trim() !== platformSettings.news.cookie_value.trim() && new Date() < platformSettings.news.expires) {
 			res.cookie('news_update_to_display', platformSettings.news.summary); // string for client to display
-			res.cookie('news_update_id', platformSettings.news.cookie_value); // cookie value for client to set to last_news_update_read after they dismiss it
+			res.cookie('news_update_id', platformSettings.news.cookie_value.trim()); // cookie value for client to set to last_news_update_read after they dismiss it
 		}
 		
 		next();
