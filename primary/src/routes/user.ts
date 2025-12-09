@@ -496,7 +496,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	let hash = await bcrypt.hash( p1, saltRounds );
 	
 	let writeResult = await utilities.update('users', {_id: userID}, {$set: {password: hash}});
-	
+
 	// logger.debug(`${p1} -> ${hash}`);
 	logger.debug('createpassword: ' + JSON.stringify(writeResult, null, 2));
 	
@@ -506,13 +506,22 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 		logger.info(`${user.name} has logged in`);
 		logger.debug(`4 current user.linked_auth=${user.linked_auth}`);
 
-		//let redirectURL = '/home?alert=' + req.msgUrl('user.newpasswordsuccess');
 		let redirectURL = '/home';
+
 		let newpasswordMsg = req.msg('user.newpasswordsuccess');
 
 		let alertString = checkAndLinkSocial(req, user, newpasswordMsg);
-		if (alertString)
+		if (alertString) {
 			redirectURL += '?' + alertString;
+			logger.debug(`redirectURL<alertString>=${redirectURL}`);
+		}
+		else {
+			redirectURL += '?alert=' + req.msgUrl('user.newpasswordsuccess');
+			logger.debug(`redirectURL<no alertString>=${redirectURL}`);
+		}
+
+		// 2025-12-08, M.O'C: remove the 'picked_org' cookie
+		res.clearCookie('picked_org');
 
 		res.send({
 			redirect_url: redirectURL
@@ -575,7 +584,7 @@ router.post('/changepassword', wrap(async (req, res) => {
 	
 	logger.debug('changepassword: ' + JSON.stringify(writeResult), true);
 	
-	res.redirect('/?alert=' + req.msgUrl('user.newpasswordsuccess'));
+	res.redirect('/home?alert=' + req.msgUrl('user.newpasswordsuccess'));
 }));
 
 //Log out social AND then *also* legacy
@@ -1005,7 +1014,7 @@ function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | und
 	let alertString = undefined;
 	let insertMsg = '';
 	if (otherMsg)
-		insertMsg = otherMsg + '\n';
+		insertMsg = otherMsg + '/n';
 
 	// are we logging in in the context of a social login? call function to link (or) message that account is already linked
 	if (req.oidc && req.oidc.user) {
@@ -1028,7 +1037,7 @@ function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | und
 
 	// in case we were passed a different message, still show it
 	if (!alertString && otherMsg)
-		alertString = otherMsg;
+		alertString = 'alert=' + otherMsg;
 
 	return alertString;
 }
