@@ -645,6 +645,8 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 
 	// Snag the social "id" from Auth0
 	let socialSub = req.oidc.user.sub;
+	let socialUser = req.oidc.user;
+
 	// Locate 0-N users associated with the social identity
 	let userList: User[] | null = await utilities.find('users', {'linked_auth': socialSub}, {}, {allowCache: true});
 
@@ -654,8 +656,19 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 		//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' ZERO users');
 	
 	// If two or more associated users... give them a list to choose from
-	if (userList.length > 1)
-		return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' MULTIPLE users, userList=' + JSON.stringify(userList));
+	if (userList.length > 1) {
+		//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' MULTIPLE users, userList=' + JSON.stringify(userList));
+		logger.debug('Multiple associated users, userList=' + JSON.stringify(userList));
+		return res.render('svelte', {
+			page: 'choose-user-social',
+			fulltitle: res.msg('user.social.chooseusertitle'),
+			data: {
+				users: userList,
+				redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
+				socialUser,
+			}
+		});
+	}
 
 	// If exactly one associated user... log them in as that user
 	logger.debug('Logging in');

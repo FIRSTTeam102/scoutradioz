@@ -186,7 +186,9 @@
 			"linksuccess": "Successfully linked {user} to social account.",
 			"alreadylinked": "{user} is already linked to a social account.",
 			"unlinksuccess": "Successfully unlinked your social account from {user}.",
-			"loginwithlegacy": "Log in with a Scoutradioz user to link your account."
+			"loginwithlegacy": "Log in with a Scoutradioz user to link your account.",
+			"chooseusertitle": "Choose user",
+			"chooseuser": "Choose which Scoutradioz user to log in as:"
 		},
 		"customizereports": "Customize reports",
 		"reportcolumns": {
