@@ -91,10 +91,16 @@
 	<hr />
 	<h2>See what data is available</h2>
 	<Button variant="unelevated" href="/browse">Browse all current events</Button>
-	<!-- <hr />
-	<Button onclick={() => (learnMoreOpen = true)}
-		>Learn more about Scoutradioz</Button
-	>
+	<hr />
+	<Paper class="w3-grid" style="grid: auto / 1fr 1fr; gap: 1em">
+		<Button href="https://wiki.team102.org/scoutradioz/what_is_scoutradioz"
+			>Learn more about Scoutradioz</Button
+		>
+		<Button href="https://docs.google.com/forms/d/e/1FAIpQLSfIugRLrny7-3k0nwgtUs2Vsr5jyMRlMojNgRMYVHdTZX1PiA/viewform"
+			>Sign up your team!</Button
+		>
+	</Paper>
+	<!-- 
 	<Button href="">Sign up your team</Button> -->
 </div>
 <!-- <Dialog bind:open={learnMoreOpen}>

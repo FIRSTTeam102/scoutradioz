@@ -184,7 +184,7 @@
 			"link": "Link social account",
 			"unlink": "Unlink social account",
 			"linksuccess": "Successfully linked {user} to social account.",
-			"alreadylinked": "{user} is already linked to a social account.",
+			"alreadylinked": "{user} is already linked to a social account, no new link was created./nYou can unlink the existing social from the User menu.",
 			"unlinksuccess": "Successfully unlinked your social account from {user}.",
 			"loginwithlegacy": "Log in with a Scoutradioz user to link your account.",
 			"chooseusertitle": "Choose user",

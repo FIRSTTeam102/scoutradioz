@@ -710,6 +710,66 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 	//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' userList=' + JSON.stringify(userList));
 }));
 
+//Upon selecting a user from multiple users
+router.get('/social/login/choose', wrap(async (req, res, next) => {
+	logger.addContext('funcName', '/social/login/choose[get]');
+	logger.debug('ENTER');
+
+	// Sanity-check: Make sure we have a logged-in social identity
+	if (!req.oidc.user) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
+	}
+
+	// user id from URL
+	let userId = Number(req.query.user_id);
+
+	// Snag the social "id" from Auth0
+	let socialSub = req.oidc.user.sub;
+
+	// Load all the users associated with the current social login
+	// 2022-05-17 JL: Allowing this variable to be "any" because scoutradioz-types.User is not assignable to express.User (in req.logIn)
+	let userList = await utilities.find<any>('users', {'linked_auth': socialSub}, {}, {allowCache: true});
+
+	let foundUser = userList.find(user => user._id === userId);
+	assert(foundUser, new e.UserError('User ID not associated with that social login'));
+
+	// If exactly one associated user... log them in as that user
+	logger.debug('Logging in as ' + foundUser.name);
+	let user = foundUser;
+
+	//If comparison succeeded, then log in user
+	req.logIn(user, async function(err){
+		
+		//If error, then log and return an error
+		if(err){ logger.error(err); return res.send({status: 500, alert: err}); }
+
+		res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
+		
+		let userRole: Role = await utilities.findOne('roles', 
+			{role_key: user.role_key},
+			{},
+			{allowCache: true}
+		);
+		
+		let redirectURL;
+		
+		//Set redirect url depending on user's access level
+		if (req.body.redirectURL) redirectURL = req.body.redirectURL;
+		else if (userRole.access_level === Permissions.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
+		else if (userRole.access_level === Permissions.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
+		else if (userRole.access_level === Permissions.ACCESS_SCOUTER) redirectURL = '/dashboard';
+		else redirectURL = '/home';
+		
+		logger.info(`${user.name} has logged in SOCIALLY with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
+		
+		// //send success and redirect
+		// return res.send({
+		// 	status: 200,
+		// 	redirect_url: redirectURL
+		return res.redirect(redirectURL);
+	});
+}));
+
 //Link social - calls out to Auth0 then redirects to /user/social/link/redirect
 router.get('/social/link', wrap(async (req, res) =>  {
 	logger.addContext('funcName', '/social/link[get]');
@@ -1043,7 +1103,7 @@ function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | und
 			// only warn if it's a different social account
 			if (user.linked_auth !== socialSub) {
 				logger.warn(`User ${user.name} already has a linked social account ${user.linked_auth}; not linking ${socialSub}`);
-				alertString = `alert=${insertMsg}${req.msgUrl('user.social.alreadylinked', {user: user.name})}&type=success&autofade=true`;
+				alertString = `alert=${insertMsg}${req.msgUrl('user.social.alreadylinked', {user: user.name})}&type=error`;
 			}
 		}
 	}
