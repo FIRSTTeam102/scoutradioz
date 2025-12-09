@@ -6,7 +6,6 @@
 		Actions as DActions,
 	} from '@smui/dialog';
 	import Paper from '@smui/paper';
-    import { unsubscribe } from 'diagnostics_channel';
 	import type { User } from 'scoutradioz-types';
 	let { data } = $props();
 
@@ -32,7 +31,7 @@
 	<h1>Choose a user</h1>
 	{#each users as u (u._id)}
 		<div class="w3-grid w3-margin-top" style="grid: auto / 1fr 1fr; gap: 1em">
-			<Button on:click={() => handleClick(u._id)}
+			<Button variant="unelevated" href={"/user/social/login?user_id=" + u._id}
 				>{u.org_key + ' - ' + u.name}</Button
 			>
 		</div>
