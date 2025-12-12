@@ -534,7 +534,14 @@
 		"title": "谢谢！",
 		"2020to2022": "{year2020} 到 {year2022}",
 		"thanks": "感谢我们的抢先体验合作伙伴！",
-		"threestarters": "三个创始人"
+		"threestarters": "三个创始人",
+		"thanksdonations": "感谢支持！",
+		"donors": "捐赠者名录",
+		"sponsors": "赞助商名录",
+		"workinprogress": "建设中",
+		"howtodonate": "捐赠方式",
+		"clickheretodonate": "支持Scoutradioz，以及（如果你想）被列入本页致谢名单，请点击此处！",
+		"donate": "支持我们"
 	},
 	"update": "更新",
 	"date": "日期",
