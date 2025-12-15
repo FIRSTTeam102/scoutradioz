@@ -839,6 +839,74 @@ router.get('/social/unlink/redirect', wrap(async (req, res, next) => {
 	//return res.send('unlink req.oidc.user=' + JSON.stringify(req.oidc.user) + ' req.user.name=' + req.user?.name);
 }));
 
+//// Auth0 debugging
+
+/**
+ * A "callback" URL for receiving OAuth callbacks.
+ */
+router.get('/social/debug/callback2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'callback2[get]');
+	logger.debug('ENTER');
+	
+	return res.send('SUCCESS ' + 1 + ' callback ' + 2);
+}));
+
+/**
+ * A "login" URL which declares auth parameters (2025-10-31: doesn't do anything)
+ * but also passes in a value {currently pulled fromn an URL param "foo"}
+ * which is used in a specific 'returnTo' URL after login.
+ */
+router.get('/social/debug/login2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'login2[get]');
+	logger.debug('ENTER');
+
+	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	let authorizationParams: any = {
+		response_type: 'id_token',
+		response_mode: 'form_post',
+		scope: 'openid profile email',
+		custom_param: 'custom_value_2'
+	};
+
+	let foo = req.query.foo;
+
+	res.oidc.login({ authorizationParams: authorizationParams, returnTo: `/user/social/debug/profile?foo=${foo}` });
+}));
+
+/**
+ * A "logout" URL
+ */
+router.get('/social/debug/logout2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'logout2[get]');
+	logger.debug('ENTER');
+	
+	res.oidc.logout({ returnTo: '/user/social/debug/profile?foo=logged_out' });
+}));
+
+/**
+ * Check login status
+ */
+router.get('/social/debug/authcheck', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'authcheck[get]');
+	logger.debug('ENTER');
+	
+	return res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+}));
+
+/**
+ * Get the user profile
+ */
+router.get('/social/debug/profile', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'profile[get]');
+	logger.debug('ENTER');
+
+	let foo = req.query.foo;
+
+	return res.send('profile ' + JSON.stringify(req.oidc.user) + ' foo=' + foo);
+}));
+
+//// end Auth0 debugging
+
 //user preferences
 router.get('/preferences', wrap(async (req, res) => {
 	logger.addContext('funcName', 'preferences[get]');
