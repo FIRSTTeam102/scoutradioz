@@ -25,3 +25,4 @@ voyager/static/*.css*
 voyager/.sst
 
 .sst
+state.json
