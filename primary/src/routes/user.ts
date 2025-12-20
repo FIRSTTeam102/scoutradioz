@@ -220,7 +220,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 			logger.debug('Logging in scouter');
 		
 			//If password is default, then we may proceed
-			req.logIn(user, function(err){
+			req.logIn(user, async function(err){
 				
 				//If error, then log and return an error
 				if(err){ console.error(err); return res.send({status: 500, alert: err}); }
@@ -271,7 +271,7 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		logger.debug('Logging in viewer');
 		
 		//if access_level < Permissions.ACCESS_SCOUTER, then log in user
-		req.logIn(user, function(err){
+		req.logIn(user, async function(err){
 			
 			//If error, then log and return an error
 			if(err){ console.error(err); return res.send({status: 500, alert: err}); }
@@ -502,7 +502,7 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	// logger.debug(`${p1} -> ${hash}`);
 	logger.debug('createpassword: ' + JSON.stringify(writeResult, null, 2));
 	
-	req.logIn(user, function(err){
+	req.logIn(user, async function(err){
 		
 		if(err) logger.error(err);
 		logger.info(`${user.name} has logged in`);
