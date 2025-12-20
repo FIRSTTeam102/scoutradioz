@@ -88,6 +88,7 @@ export default $config({
 			environment: {
 				COLORIZE_LOGS: String(process.env.COLORIZE_LOGS),
 				NODE_ENV: String(process.env.NODE_ENV),
+				SR_HOSTNAME: domain,
 				TIER: $app.stage,
 				ALIAS: $app.stage, // todo
 				GIT_COMMIT_HASH: String(gitHash),

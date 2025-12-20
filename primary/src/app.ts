@@ -226,7 +226,7 @@ const auth_config = {
 	issuerBaseURL: 'https://scoutradioz.us.auth0.com'
 };
 app.use((req, res, next) => {
-	auth_config.baseURL = `${req.protocol}://${req.get('host')}`;
+	auth_config.baseURL = `${req.protocol}://${process.env.SR_HOSTNAME || req.get('host')}`;
 	return openIdAuth(auth_config)(req, res, next);
 });
 
