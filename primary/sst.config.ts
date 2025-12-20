@@ -30,15 +30,17 @@ export default $config({
 				throw new Error('git hash must be specified via an environment variable HASH=$(git rev-parse HEAD)');
 		}
 
-		let domain;
+		let domain, sr_hostname;
 		if ($app.stage === 'prod') {
 			domain = {
 				name: 'scoutradioz.com',
 				redirects: ['www.scoutradioz.com'],
 			};
+			sr_hostname = domain.name;
 		}
 		else {
 			domain = `${$app.stage}.scoutradioz.com`;
+			sr_hostname = domain;
 		}
 		// Use Router instead of ApiGatewayV2
 		const router = new sst.aws.Router('Router', {
@@ -88,7 +90,7 @@ export default $config({
 			environment: {
 				COLORIZE_LOGS: String(process.env.COLORIZE_LOGS),
 				NODE_ENV: String(process.env.NODE_ENV),
-				SR_HOSTNAME: domain,
+				SR_HOSTNAME: sr_hostname,
 				TIER: $app.stage,
 				ALIAS: $app.stage, // todo
 				GIT_COMMIT_HASH: String(gitHash),
