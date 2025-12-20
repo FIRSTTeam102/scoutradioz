@@ -95,6 +95,8 @@ export default $config({
 				S3_BUCKET: String(process.env.S3_BUCKET), // not needed for public files, but needed for image uploads
 				LOG_LEVEL: String(process.env.LOG_LEVEL),
 				EMA_ALPHA: String(process.env.EMA_ALPHA),
+				AUTH0_SECRET: String(process.env.AUTH0_SECRET),
+				AUTH0_CLIENTID: String(process.env.AUTH0_CLIENTID),
 				LAMBDA_PUBLISH_DATE: new Date().toISOString().replace(/\D/g, ''), // PJL note: SST sets function version to $LATEST, so we can work around this where we need func. version by using a timestamp
 			},
 			nodejs: {
