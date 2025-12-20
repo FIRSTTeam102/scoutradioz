@@ -7,8 +7,8 @@ process.env.local = true;
  * Module dependencies.
  */
 
-var app = require('./app');
-var http = require('http');
+const app = (await import('./app.js')).default;
+import http from 'http';
 
 /**
  * Get port from environment and store in Express.

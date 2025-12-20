@@ -681,4 +681,4 @@ export function getNewSubmissionHistory<T extends {history?: ScouterHistoryRecor
 	return history;
 }
 
-module.exports = router;
+export default router;

@@ -3,16 +3,17 @@
  * Its license is provided at the bottom of this file.
  */
 
-var crypto = require('crypto');
-var stream = require('stream');
-var fileType = require('file-type');
-var parallel = require('run-parallel');
+import crypto from 'crypto';
+import stream from 'stream';
+import fileType from 'file-type';
+import parallel from 'run-parallel';
+import Jimp from 'jimp';
+import concat from 'concat-stream';
+import log4js from 'log4js';
+import { Upload } from '@aws-sdk/lib-storage';
+import { S3Client } from '@aws-sdk/client-s3';
 
-const Jimp = require('jimp');
-const concat = require('concat-stream');
-const logger = require('log4js').getLogger('S3Storage');
-const { Upload } = require('@aws-sdk/lib-storage');
-const { S3Client } = require('@aws-sdk/client-s3');
+const logger = log4js.getLogger('S3Storage');
 
 logger.level = process.env.LOG_LEVEL || 'debug';
 
@@ -476,12 +477,14 @@ S3Storage.prototype._removeFile = function (req, file, cb) {
 	this.s3.deleteObject({ Bucket: file.bucket, Key: file.key }, cb);
 };
 
-module.exports = function (opts) {
+function createS3Storage(opts) {
 	return new S3Storage(opts);
-};
+}
 
-module.exports.AUTO_CONTENT_TYPE = autoContentType;
-module.exports.DEFAULT_CONTENT_TYPE = defaultContentType;
+createS3Storage.AUTO_CONTENT_TYPE = autoContentType;
+createS3Storage.DEFAULT_CONTENT_TYPE = defaultContentType;
+
+export default createS3Storage;
 
 /*
 Below is the license of badunk's "multer-s3" package.

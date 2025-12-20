@@ -104,4 +104,4 @@ router.all('/verify-temp-user-removed', async (req, res, next) => {
 	});
 });
 
-module.exports = router;
+export default router;

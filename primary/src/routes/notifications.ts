@@ -224,4 +224,4 @@ async function isValidSaveRequest (req: express.Request, res: express.Response) 
 	return true;
 }
 
-module.exports = router;
+export default router;

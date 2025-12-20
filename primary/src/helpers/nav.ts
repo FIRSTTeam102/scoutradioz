@@ -327,11 +327,28 @@ class NavHelpers {
 				{
 					label: '!layout.nav.user.logout',
 					href: '/user/logout',
+					visible: (req, res) => !req.oidc.user,
+				},
+				{
+					label: '!layout.nav.user.logout',
+					href: '/user/logout/social',
+					visible: (req, res) => !!req.oidc.user,
 				},
 				{
 					label: '!user.changepassword',
 					href: '/user/changepassword',
-				}
+					visible: (req, res) => !req.oidc.user,
+				},
+				{
+					label: '!user.social.link',
+					href: '/user/social/link',
+					visible: (req, res) => !req.oidc.user && !req.user?.linked_auth,
+				},
+				{
+					label: '!user.social.unlink',
+					href: 'javascript:Confirm.show("Are you sure you want to unlink the social account?").then(result => { if (result.cancelled === false) location.href = "/user/social/unlink"})',
+					visible: (req, res) => !!req.oidc.user || !!req.user?.linked_auth,
+				},
 			]
 		},
 		// User login when not signed in
@@ -340,6 +357,12 @@ class NavHelpers {
 			sprite: 'user',
 			visible: (req, res) => !!req.user && req._user.name === 'default_user',
 			href: '/user/login'
+		},
+		{
+			label: (req, res) => req.msg('layout.nav.user.sociallogin'),
+			sprite: 'user',
+			visible: (req, res) => !!req.user && req._user.name === 'default_user',
+			href: '/user/social/login'
 		},
 		{
 			label: '!layout.nav.voyager',
@@ -351,24 +374,17 @@ class NavHelpers {
 			label: '!layout.nav.user.switchorg',
 			sprite: 'org',
 			visible: userLoggedIn,
-			href: '/user/switchorg'
+			href: 'javascript:Cookies.remove("picked_org"); location.href = "/"',
+			submenu: (req, res) => {
+				if (!req.original_user) return undefined;
+				return [
+					{
+						label: req.msg('layout.nav.user.switchBackToOrg', {org: req.original_user.org.nickname}),
+						href: 'javascript:Cookies.remove("picked_org"); location.href = "/home"'
+					}
+				];
+			}
 		},
-		// {
-		// 	label: (req, res) => `Org: [[${req.user.org.nickname}]]`,
-		// 	sprite: 'org',
-		// 	visible: userLoggedIn,
-		// 	submenu: [
-		// 		{
-		// 			label: 'Change Organization',
-		// 			href: '/user/switchorg',
-		// 		},
-		// 		{
-		// 			label: 'Log In',
-		// 			href: '/user/login',
-		// 			visible: (req, res) => req.user.name === 'default_user',
-		// 		}
-		// 	]
-		// },
 		{
 			label: '!layout.nav.help',
 			sprite: 'help',
@@ -388,5 +404,4 @@ class NavHelpers {
 	}
 }
 
-const navHelpers = module.exports = new NavHelpers();
-export default navHelpers;
+export default new NavHelpers();

@@ -653,4 +653,4 @@ router.post('/updatepresent', wrap(async (req, res) => {
 	res.redirect(`/manage?alert=${res.msgUrl('manage.members.successSetPresent')}`);
 }));
 
-module.exports = router;
+export default router;

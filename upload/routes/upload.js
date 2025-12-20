@@ -1,17 +1,18 @@
-const router = require('express').Router();
-const multer = require('multer');
-const logger = require('log4js').getLogger('upload');
-const S3Storage = require('../helpers/S3Storage');
-//const path = require('path');
-const crypto = require('crypto');
-const wrap = require('express-async-handler');
+import { Router } from 'express';
+import multer from 'multer';
+import log4js from 'log4js';
+import S3Storage from '../helpers/S3Storage.js';
+//import { path } from 'path';
+import crypto from 'crypto';
+import wrap from 'express-async-handler';
+import utilities from '@firstteam102/scoutradioz-utilities';
+
+const router = Router();
+const logger = log4js.getLogger('upload');
 
 logger.level = process.env.LOG_LEVEL || 'debug';
-// const AWS = require('aws-sdk');
+// import AWS from 'aws-sdk';
 // const s3 = new AWS.S3();
-
-
-const utilities = require('@firstteam102/scoutradioz-utilities');
 
 logger.warn('Images will be uploaded to S3.');
 
@@ -215,4 +216,4 @@ router.post('/image', upload.single('image'), wrap(async (req, res, next) => {
 	
 }));
 
-module.exports = router;
+export default router;

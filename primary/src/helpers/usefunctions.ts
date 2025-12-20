@@ -7,10 +7,9 @@ import Permissions from './permissions';
 import 'colors';
 import type express from 'express';
 import type { Org, Role, Team } from 'scoutradioz-types';
-
+import navHelpers from '../helpers/nav';
 
 const logger = getLogger('usefunctions');
-const navHelpers = require('../helpers/nav');
 
 // There are some pages where we don't want the year, but the rest of the string is good
 class DateTimeExtras {
@@ -28,9 +27,9 @@ class UseFunctions {
 		}
 		
 		// If the user has not viewed this news item yet, AND it hasn't yet expired, send the summary to the client for it to display
-		if (req.cookies['last_news_update_read'] !== platformSettings.news.cookie_value && new Date() < platformSettings.news.expires) {
+		if (platformSettings.news?.cookie_value && (req.cookies['last_news_update_read']?.trim() !== platformSettings.news.cookie_value.trim()) && new Date() < platformSettings.news.expires) {
 			res.cookie('news_update_to_display', platformSettings.news.summary); // string for client to display
-			res.cookie('news_update_id', platformSettings.news.cookie_value); // cookie value for client to set to last_news_update_read after they dismiss it
+			res.cookie('news_update_id', platformSettings.news.cookie_value.trim()); // cookie value for client to set to last_news_update_read after they dismiss it
 		}
 		
 		next();
@@ -40,6 +39,29 @@ class UseFunctions {
 	static async initialMiddleware(req: express.Request, res: express.Response, next: express.NextFunction){
 		//For logging
 		req.requestTime = Date.now();
+		
+		// User previewed an org - Save the logged-in user to another var for other routes to use,
+		// 	and set req.user to the previewed org's default user for the rest of the app's code to
+		// 	work as normal
+		req.picked_org = req.cookies['picked_org'];
+		if (req.picked_org) {
+			const defaultUser = await utilities.findOne('users', {
+				org_key: req.picked_org,
+				name: 'default_user'
+			}, {}, {allowCache: true});
+			// Store signed-in user here for pages that need it
+			if (req.user) {
+				req.original_user = req.user;
+				req.original_user.org = await utilities.findOne('orgs', 
+					{org_key: req.original_user.org_key},
+					{},
+					{allowCache: true}
+				);
+				res.locals.original_user = req.original_user;
+			}
+			// @ts-expect-error Variables 'role' and 'org' are populated down the chain
+			req.user = defaultUser;
+		}
 		
 		if(req.user){
 			let userRole = await utilities.findOne('roles', 
@@ -126,7 +148,6 @@ class UseFunctions {
 		req.localeString = localeString;*/
 		// CD 2022-05-31: use value from i18n helper
 		req.localeString = req.locale;
-		
 		// JL: See the JSDoc note in namespace-extensions.d.ts
 		if (req.user) req._user = req.user;
 	
@@ -136,6 +157,8 @@ class UseFunctions {
 	static authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
 	
 		req.authenticate = async function (accessLevel: string|number|undefined) {
+			
+			logger.debug('req.authenticate: picked_org = ' + req.cookies['picked_org']);
 			
 			//Parse number from accessLevel
 			let accessLevelNum;
@@ -202,22 +225,9 @@ class UseFunctions {
 			);
 			req.user.org = org;
 			res.locals.user = req.user;
-		} 
-		
-		let fileRoot;
-		
-		//If we have set a process tier and S3 bucket name, then set fileRoot to an S3 url
-		if( process.env.TIER && process.env.S3_BUCKET && process.env.STATICFILES_USE_S3 == 'true' ){
-			
-			fileRoot = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${process.env.TIER}`;
-		}
-		//Otherwise set fileRoot as / for local filesystem
-		else{
-			
-			fileRoot = '';
 		}
 		
-		res.locals.fileRoot = fileRoot;
+		res.locals.fileRoot = '/public';
 		
 		//Set alert local in here so that we don't have to throw this into Every Single Route
 		res.locals.alert = req.query.alert;
@@ -286,8 +296,9 @@ class UseFunctions {
 		
 		// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
 		let thisOrg: Org|undefined = undefined;
-		if (req && req.user && req.user.org_key) {
-			let thisOrgKey = req.user.org_key;
+		// PL TODO: `|| picked_org` probably not needed
+		if (req.user && req.user.org_key || req.picked_org) {
+			let thisOrgKey = req.user?.org_key || req.picked_org;
 			thisOrg = await utilities.findOne('orgs', 
 				{'org_key': thisOrgKey}, 
 				{},
@@ -360,7 +371,8 @@ class UseFunctions {
 		res.locals.eventIsOrgCurrent = req.event.isOrgCurrent;
 		
 		// The version number that has been invoked, allowing us to append it to our static scripts so that browsers automatically pull their latest version
-		res.locals.functionVersion = process.env.LAMBDA_FUNCTION_VERSION;
+		// 2025-10-17 PJL: switched to LAMBDA_PUBLISH_DATE which is a timestamp we set at deployment time
+		res.locals.functionVersion = process.env.LAMBDA_PUBLISH_DATE;
 		
 		logger.removeContext('funcName');
 		next();

@@ -380,4 +380,4 @@ function promiseTimeout(time: number) {
 	});
 }
 
-module.exports = router;
+export default router;

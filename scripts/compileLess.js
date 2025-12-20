@@ -34,6 +34,8 @@ async function compileLess() {
 			sourceMapURL: 'style.css.map',
 			outputSourceFiles: true,
 			sourceMapRootpath: 'less/',
+			// PL TODO: set to false when deploying to prod/qa, or depend on process.env.node_env
+			sourceMapFileInline: true,
 			sourceMapBasepath: pathToLess, // Remove the full folder path of the LESS source files from the base map
 		},
 	})

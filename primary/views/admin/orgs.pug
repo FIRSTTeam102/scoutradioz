@@ -39,7 +39,7 @@ block content
 							span(class="sprite sp-24 sp-inline sp-delete")
 			br 
 			label(class="w3-label gear-btn") Log in to #{org.nickname}:
-			a(href=`/selectorg-login?org_key=${org.org_key}`)
+			a(href=`javascript:Cookies.set('picked_org', '${org.org_key}'); location.href = '/user/login'`)
 				div(class="w3-btn theme-submit" ) Normally
 			div(class="w3-btn theme-submit w3-margin-left" onclick=`loginToOrg('${org.org_key}')`) as Scoutradioz Admin
 		hr 

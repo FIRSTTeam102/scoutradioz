@@ -1,11 +1,18 @@
-const express = require('express');						//main express shiz
-const path = require('path');							//for filesystem
-const useragent = require('express-useragent');			//for info on connected users
-const log4js = require('log4js');						//for extensive logging functionality
+import express from 'express';						//main express shiz
+import path from 'path';							//for filesystem
+import useragent from 'express-useragent';			//for info on connected users
+import log4js from 'log4js';						//for extensive logging functionality
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
 
-const usefunctions = require('./helpers/usefunctions');
-const utilities = require('@firstteam102/scoutradioz-utilities');
-utilities.config(require('./databases.json'), {
+import usefunctions from './helpers/usefunctions.js';
+import utilities from '@firstteam102/scoutradioz-utilities';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const databasesConfig = JSON.parse(readFileSync(path.join(__dirname, 'databases.json'), 'utf8'));
+utilities.config(databasesConfig, {
 	cache: {
 		enable: true,
 		maxAge: 300,
@@ -13,10 +20,8 @@ utilities.config(require('./databases.json'), {
 	schemasWithNumberIds: ['users'],
 });
 
-//AWS middleware magic
-require('aws-serverless-express/middleware');
 //load .env variables
-require('dotenv').config();
+import 'dotenv/config';
 
 //log4js config
 function logTier(logEvent) {
@@ -61,7 +66,6 @@ const app = express();
 
 //Must be the very first app.use
 app.use(utilities.refreshTier);
-
 //Boilerplate setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -91,9 +95,9 @@ app.use(async function(req, res, next){
 app.use(usefunctions.logger);
 
 //USER ROUTES
-const upload = require('./routes/upload');
-const generate = require('./routes/generate');
-const manage = require('./routes/manage');
+import upload from './routes/upload.js';
+import generate from './routes/generate.js';
+import manage from './routes/manage.js';
 
 app.use((req, res, next) => {
 	logger.removeContext('funcName');
@@ -138,4 +142,4 @@ app.use(usefunctions.notFoundHandler);
 app.use(usefunctions.errorHandler);
 
 // Export your express server so you can import it in the lambda function.
-module.exports = app;
+export default app;

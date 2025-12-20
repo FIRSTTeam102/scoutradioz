@@ -6,7 +6,7 @@ import type { Match, MatchFormData, MatchScouting, OrgSubteam, PitScouting, PitS
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import Permissions from '../../helpers/permissions';
-import { BulkWriteResult } from 'mongodb';
+import type { BulkWriteResult } from 'mongodb';
 
 const router = express.Router();
 const logger = getLogger('assignments');
@@ -1485,4 +1485,4 @@ router.post('/swappitassignments', wrap(async (req, res) => {
 	res.redirect(redirect);
 }));
 
-module.exports = router;
+export default router;

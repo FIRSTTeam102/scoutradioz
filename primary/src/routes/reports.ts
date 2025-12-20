@@ -1670,4 +1670,4 @@ router.get('/choosecolumns', wrap(async (req, res) =>  {
 	res.redirect(301, '/user/preferences/reportcolumns');
 }));
 
-module.exports = router;
+export default router;

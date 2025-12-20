@@ -11,6 +11,8 @@ import utilities from 'scoutradioz-utilities'; 	// Database utilities
 import { MongoClient } from 'mongodb';							// MongoDB client
 import type { LoggingEvent } from 'log4js';
 import helpers, { config as configHelpers } from 'scoutradioz-helpers';
+import fs from 'fs';
+import { auth as openIdAuth } from 'express-openid-connect';
 
 const appStartupTime = Date.now();
 
@@ -18,7 +20,7 @@ const appStartupTime = Date.now();
 import awsMiddleware from 'aws-serverless-express/middleware';
 //load .env variables
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config(); // todo: remove and use sst?
 
 //log4js config
 let log4jsConfig = {
@@ -96,16 +98,25 @@ app.get('/*', (req, res, next) => {
 });
 */
 
+// Filter out obvious bot requests
+app.use((req, res, next) => {
+	if (
+		req.path.startsWith('/.well-known') ||
+		req.path.endsWith('.php')
+	) return res.status(404).send();
+	next();
+});
+
 //Must be the very first app.use
 app.use(utilities.refreshTier);
 
 //Boilerplate setup
-app.set('views', path.join(__dirname, '..', 'views'));
+app.set('views', path.join(process.cwd(), 'views'));
 app.set('view engine', 'pug');
 
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/public', express.static(path.join(process.cwd(), 'public')));
 // @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
-app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
+// app.use(favicon(path.join(__dirname, '..', 'public', 'icon-32.png')));
 
 app.disable('x-powered-by');
 
@@ -152,9 +163,10 @@ app.use((req, res, next) => {
 //Internationalization
 //Must be before any other custom code
 import { I18n } from './helpers/i18n';
-const i18n = new I18n({
-	directory: path.join(__dirname, '../locales')
-});
+// SST moves locales into a different directory
+let localesPath = path.join(__dirname, './locales');
+if (!fs.existsSync(localesPath)) localesPath = path.join(__dirname, '../locales');
+const i18n = new I18n({ directory: localesPath });
 app.use(i18n.middleware());
 
 //Session
@@ -199,7 +211,24 @@ app.use(session({
 require('./helpers/passport-config');
 // @ts-ignore 2025-01-17, M.O'C: TODO Jordan look at this
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.session({pauseStream: true,}));
+
+// Read Auth0 settings from environment information
+let auth0_secret = process.env.AUTH0_SECRET; // || 'a long, randomly-generated string stored in env';
+let auth0_clientid = process.env.AUTH0_CLIENTID; // || 'AOjDEt1p4UCAqBnNCDt4Dkk0zmu9oe3R';
+// Setting up a test of Auth0 per 
+const auth_config = {
+	authRequired: false,
+	auth0Logout: true,
+	secret: auth0_secret,
+	baseURL: 'placeholder',
+	clientID: auth0_clientid,
+	issuerBaseURL: 'https://scoutradioz.us.auth0.com'
+};
+app.use((req, res, next) => {
+	auth_config.baseURL = `${req.protocol}://${process.env.SR_HOSTNAME || req.get('host')}`;
+	return openIdAuth(auth_config)(req, res, next);
+});
 
 //Various other middleware stuff
 app.use(usefunctions.initialMiddleware);
@@ -216,31 +245,31 @@ app.use(usefunctions.authenticate);
 app.use(usefunctions.setViewVariables);
 
 //SCOUTRADIOZ ADMIN ROUTE FOR SYNCING - PLACED FIRST TO ENABLE UNAUTHENTICATED AUTOMATED CALLS
-let sync = require('./routes/admin/sync');
+let sync = require('./routes/admin/sync').default;
 app.use('/admin/sync', sync);
 
 //USER ROUTES
-let index = require('./routes/index');
-let user = require('./routes/user');
-let dashboard = require('./routes/dashboard');
-let scouting = require('./routes/scouting');
-let reports = require('./routes/reports');
-let notifications = require('./routes/notifications');
-let share = require('./routes/share');
+let index = require('./routes/index').default;
+let user = require('./routes/user').default;
+let dashboard = require('./routes/dashboard').default;
+let scouting = require('./routes/scouting').default;
+let reports = require('./routes/reports').default;
+let notifications = require('./routes/notifications').default;
+let share = require('./routes/share').default;
 //ORG MANAGEMENT ROUTES
-let manageindex = require('./routes/manage/indexmgmt');
-let allianceselection = require('./routes/manage/allianceselection');
-let currentevent = require('./routes/manage/currentevent');
-let config = require('./routes/manage/orgconfig');
-let manualdata = require('./routes/manage/manualdata');
-let orgmembers = require('./routes/manage/members');
-let scoutingaudit = require('./routes/manage/scoutingaudit');
-let assignments = require('./routes/manage/assignments');
+let manageindex = require('./routes/manage/indexmgmt').default;
+let allianceselection = require('./routes/manage/allianceselection').default;
+let currentevent = require('./routes/manage/currentevent').default;
+let config = require('./routes/manage/orgconfig').default;
+let manualdata = require('./routes/manage/manualdata').default;
+let orgmembers = require('./routes/manage/members').default;
+let scoutingaudit = require('./routes/manage/scoutingaudit').default;
+let assignments = require('./routes/manage/assignments').default;
 //SCOUTRADIOZ ADMIN ROUTES
-let adminindex = require('./routes/admin/indexadmin');
-let tests = require('./routes/admin/tests');
-let externaldata = require('./routes/admin/externaldata');
-let orgs = require('./routes/admin/orgs');
+let adminindex = require('./routes/admin/indexadmin').default;
+let tests = require('./routes/admin/tests').default;
+let externaldata = require('./routes/admin/externaldata').default;
+let orgs = require('./routes/admin/orgs').default;
 
 //CONNECT URLS TO ROUTES
 app.use('/', index);
@@ -264,7 +293,7 @@ app.use('/admin', adminindex);
 app.use('/admin/externaldata', externaldata);
 app.use('/admin/orgs', orgs);
 
-app.use('/', share);
+app.use('/share', share);
 
 // catch 404 and forward to error handler
 app.use(usefunctions.notFoundHandler);

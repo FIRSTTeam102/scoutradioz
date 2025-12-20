@@ -23,12 +23,6 @@ router.get('/', wrap(async (req, res) => {
 	res.redirect(301, '/');
 }));
 
-//no longer used bb
-router.get('/selectorg', wrap(async (req, res) =>  {
-	
-	res.redirect(301, '/');
-}));
-
 router.get('/login', wrap(async (req, res) => {
 	logger.addContext('funcName', 'login[get]');
 	
@@ -80,10 +74,9 @@ router.post('/login/select', wrap(async (req, res) => {
 	if( !await req.authenticate( Permissions.ACCESS_VIEWER ) ) return null;
 	
 	//get contents of request and selected organization
-	let org_key: string = req._user.org_key;
-	let org_password: string = req.body.org_password;
-	logger.debug(`- ${org_key}`);
-	
+	let org_key = req._user.org_key;
+	let org_password = req.body.org_password;
+	const selectedOrg = req._user.org;
 	
 	//Make sure that form is filled
 	if(!org_key || !org_password || org_key === '' || org_password === ''){
@@ -91,16 +84,6 @@ router.post('/login/select', wrap(async (req, res) => {
 	}
 	
 	//If form is filled, then proceed.
-	
-	//Get org that matches request
-	let selectedOrg: Org = await utilities.findOne('orgs', 
-		{'org_key': org_key}, {},
-		{allowCache: true}
-	);
-	
-	//If organization does not exist, send internal error
-	if(!selectedOrg) return res.redirect(500, '/user/selectorg');
-	
 	let passwordHash = selectedOrg.default_password;
 	
 	//Compare password to correct hash
@@ -111,7 +94,7 @@ router.post('/login/select', wrap(async (req, res) => {
 		
 		// 2022-04-03 JL: Changing "name: {$ne: 'default_user'}" to "visible: true"
 		let users: User[] = await utilities.find('users', 
-			{org_key: org_key, visible: true}, 
+			{org_key, visible: true}, 
 			{sort: {name: 1}},
 			{allowCache: true}
 		);
@@ -119,8 +102,8 @@ router.post('/login/select', wrap(async (req, res) => {
 		res.render('./user/selectuser', {
 			title: req.msg('user.loginOrg', {org: selectedOrg.nickname}),
 			org: selectedOrg,
-			users: users,
-			org_password: org_password, //Must be passed back to user so they can send org's password back with their request (Avoid dealing with tokens & cookies)
+			users,
+			org_password, //Must be passed back to user so they can send org's password back with their request (Avoid dealing with tokens & cookies)
 			redirectURL: req.body.redirectURL,
 		});
 	}
@@ -237,14 +220,16 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 			logger.debug('Logging in scouter');
 		
 			//If password is default, then we may proceed
-			req.logIn(user, function(err){
+			req.logIn(user, async function(err){
 				
 				//If error, then log and return an error
 				if(err){ console.error(err); return res.send({status: 500, alert: err}); }
 				
+				res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
+				
 				logger.debug('Sending success/password_needed: false');
 				logger.info(`${user.name} has logged in`);
-				
+
 				let redirectURL;
 				//if redirectURL has been passed from another function then send it back
 				if (req.body.redirectURL) {
@@ -253,7 +238,15 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 				else {
 					redirectURL = '/dashboard';
 				}
-				
+
+				// are we logging in in the context of a social login? call function to link (or) message that account is already linked
+				// pass in 'user' and 'oidc.user', get back success true (if failed, assume already linked)
+				logger.debug(`login path 1: current user.linked_auth=${user.linked_auth}`);
+
+				let alertString = await checkAndLinkSocial(req, user);
+				if (alertString) // PL/MO'C TODO: if req.body.redirectURL has an ?alert=, then this may break
+					redirectURL += '?' + alertString;
+
 				//now, return succes with redirect to dashboard
 				res.send({
 					status: 200,
@@ -278,18 +271,27 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 		logger.debug('Logging in viewer');
 		
 		//if access_level < Permissions.ACCESS_SCOUTER, then log in user
-		req.logIn(user, function(err){
+		req.logIn(user, async function(err){
 			
 			//If error, then log and return an error
 			if(err){ console.error(err); return res.send({status: 500, alert: err}); }
+
+			res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
 			
 			logger.info(`${user.name} has logged in`);
-			
+
+			logger.debug(`login path 2: current user.linked_auth=${user.linked_auth}`);
+
+			let redirectURL = '/home';
+			let alertString = await checkAndLinkSocial(req, user);
+			if (alertString)
+				redirectURL += '?' + alertString;
+
 			//Now, return with redirect_url: '/'
 			res.send({
 				status: 200,
 				password_needed: false,
-				redirect_url: '/'
+				redirect_url: redirectURL
 			});
 		});
 	}
@@ -367,6 +369,8 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 			
 			//If error, then log and return an error
 			if(err){ logger.error(err); return res.send({status: 500, alert: err}); }
+
+			res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
 			
 			let userRole: Role = await utilities.findOne('roles', 
 				{role_key: user.role_key},
@@ -385,6 +389,12 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 			
 			logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
 			
+			logger.debug(`login path 3: current user.linked_auth=${user.linked_auth}`);
+
+			let alertString = await checkAndLinkSocial(req, user);
+			if (alertString)
+				redirectURL += '?' + alertString;
+
 			//send success and redirect
 			return res.send({
 				status: 200,
@@ -488,16 +498,35 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 	let hash = await bcrypt.hash( p1, saltRounds );
 	
 	let writeResult = await utilities.update('users', {_id: userID}, {$set: {password: hash}});
-	
+
 	// logger.debug(`${p1} -> ${hash}`);
 	logger.debug('createpassword: ' + JSON.stringify(writeResult, null, 2));
 	
-	req.logIn(user, function(err){
+	req.logIn(user, async function(err){
 		
 		if(err) logger.error(err);
-		
+		logger.info(`${user.name} has logged in`);
+		logger.debug(`login path 4: current user.linked_auth=${user.linked_auth}`);
+
+		let redirectURL = '/home';
+
+		let newpasswordMsg = req.msg('user.newpasswordsuccess');
+
+		let alertString = await checkAndLinkSocial(req, user, newpasswordMsg);
+		if (alertString) {
+			redirectURL += '?' + alertString;
+			logger.debug(`redirectURL<alertString>=${redirectURL}`);
+		}
+		else {
+			redirectURL += '?alert=' + req.msgUrl('user.newpasswordsuccess');
+			logger.debug(`redirectURL<no alertString>=${redirectURL}`);
+		}
+
+		// 2025-12-08, M.O'C: remove the 'picked_org' cookie
+		res.clearCookie('picked_org');
+
 		res.send({
-			redirect_url: '/?alert=' + req.msgUrl('user.newpasswordsuccess')
+			redirect_url: redirectURL
 		});
 	});
 }));
@@ -557,7 +586,15 @@ router.post('/changepassword', wrap(async (req, res) => {
 	
 	logger.debug('changepassword: ' + JSON.stringify(writeResult), true);
 	
-	res.redirect('/?alert=' + req.msgUrl('user.newpasswordsuccess'));
+	res.redirect('/home?alert=' + req.msgUrl('user.newpasswordsuccess'));
+}));
+
+//Log out social AND then *also* legacy
+router.get('/logout/social', wrap(async (req, res) =>  {
+	logger.addContext('funcName', '/logout/social[get]');
+	logger.debug('ENTER');
+	
+	res.oidc.logout({ returnTo: '/user/logout' });
 }));
 
 //Log out
@@ -567,61 +604,311 @@ router.get('/logout', wrap(async (req, res) =>  {
 	//Logout works a bit differently now.
 	//First destroy session, THEN "log in" to default_user of organization.
 	
-	if( !req.user ) return res.redirect('/');
+	if( !req.user ) return res.redirect('/home');
 	
 	let org_key = req.user.org_key;
 	
 	//destroy session
 	req.logout(async () => {
-		
-		//after current session is destroyed, now re log in to org
-		let selectedOrg: Org = await utilities.findOne('orgs', 
-			{'org_key': org_key}, {},
-			{allowCache: true}
-		);
-		if(!selectedOrg) return res.redirect(500, '/');
-		
-		let defaultUser = await utilities.findOne<any>('users', 
-			{'org_key': org_key, name: 'default_user'}, {},
-			{allowCache: true}
-		);
-		if(!defaultUser) return res.redirect(500, '/');
-		
-		
-		//Now, log in to defaultUser
-		req.logIn(defaultUser, async function(err){
-				
-			//If error, then log and return an error
-			if(err){ console.error(err); return res.send({status: 500, alert: err}); }
-			
-			//now, once default user is logged in, redirect to index
-			res.redirect('/');
-		});
+		// after session is destroyed, set picked_org so they go back to default user
+		res.cookie('picked_org', org_key);
+		res.redirect('/home');
 	});
 }));
 
-//Switch a user's organization
-router.get('/switchorg', wrap(async (req, res) => {
-	logger.addContext('funcName', 'switchorg[get]');
+//Log in via social - calls out to Auth0 then redirects to /user/social/login/redirect
+router.get('/social/login', wrap(async (req, res) =>  {
+	logger.addContext('funcName', '/social/login[get]');
+	logger.debug('ENTER');
+
+	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	// M.O'C: may not be needed
+	let authorizationParams: any = {
+		response_type: 'id_token',
+		response_mode: 'form_post',
+		scope: 'openid profile email',
+		custom_param: 'custom_value_2'
+	};
+
+	//let foo = req.query.foo;
+	// returnTo: `/profile?foo=${foo}`
+
+	res.oidc.login({ authorizationParams: authorizationParams, returnTo: '/user/social/login/redirect' });
+}));
+
+//Upon successful social login
+router.get('/social/login/redirect', wrap(async (req, res, next) => {
+	logger.addContext('funcName', '/social/login/redirect[get]');
+	logger.debug('ENTER');
+
+	// Sanity-check: Make sure we have a logged-in social identity
+	if (!req.oidc.user) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
+	}
+
+	// Snag the social "id" from Auth0
+	let socialSub = req.oidc.user.sub;
+	let socialUser = req.oidc.user;
+
+	// Locate 0-N users associated with the social identity
+	let userList: User[] | null = await utilities.find('users', {'linked_auth': socialSub}, {}, {allowCache: true});
+
+	// If zero associated users... prompt them to link via a legacy login
+	if (!userList || userList.length === 0 || !userList[0])
+		return res.redirect('/?alert=' + req.msgUrl('user.social.loginwithlegacy'));
+		//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' ZERO users');
 	
-	//This will log the user out of their organization.
-	
-	//destroy session
-	req.logout(() => {
-	
-		req.session.destroy(async function (err) {
-			if (err) return console.log(err);
-			
-			//clear org_key cookie
-			logger.debug('Clearing org_key cookie');
-			res.clearCookie('org_key');
-			
-			//now, redirect to index
-			if (req.query.alert) res.redirect(`/?alert=${req.query.alert}`);
-			else res.redirect('/');
+	// If two or more associated users... give them a list to choose from
+	if (userList.length > 1) {
+		//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' MULTIPLE users, userList=' + JSON.stringify(userList));
+		logger.debug('Multiple associated users, userList=' + JSON.stringify(userList));
+		return res.render('svelte', {
+			page: 'choose-user-social',
+			fulltitle: res.msg('user.social.chooseusertitle'),
+			data: {
+				users: userList,
+				redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
+				socialUser,
+			}
 		});
+	}
+
+	// If exactly one associated user... log them in as that user
+	logger.debug('Logging in');
+	// 2022-05-17 JL: Allowing this variable to be "any" because scoutradioz-types.User is not assignable to express.User (in req.logIn)
+	let user = await utilities.findOne<any>('users', {_id: userList[0]._id});
+
+	//If comparison succeeded, then log in user
+	req.logIn(user, async function(err){
+		
+		//If error, then log and return an error
+		if(err){ logger.error(err); return res.send({status: 500, alert: err}); }
+
+		res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
+		
+		let userRole: Role = await utilities.findOne('roles', 
+			{role_key: user.role_key},
+			{},
+			{allowCache: true}
+		);
+		
+		let redirectURL;
+		
+		//Set redirect url depending on user's access level
+		if (req.body.redirectURL) redirectURL = req.body.redirectURL;
+		else if (userRole.access_level === Permissions.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
+		else if (userRole.access_level === Permissions.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
+		else if (userRole.access_level === Permissions.ACCESS_SCOUTER) redirectURL = '/dashboard';
+		else redirectURL = '/home';
+		
+		logger.info(`${user.name} has logged in SOCIALLY with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
+		
+		// //send success and redirect
+		// return res.send({
+		// 	status: 200,
+		// 	redirect_url: redirectURL
+		return res.redirect(redirectURL);
+	});
+
+	//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' userList=' + JSON.stringify(userList));
+}));
+
+//Upon selecting a user from an oidc account with multiple linked users
+router.get('/social/login/choose', wrap(async (req, res, next) => {
+	logger.addContext('funcName', '/social/login/choose[get]');
+	logger.debug('ENTER');
+
+	// Sanity-check: Make sure we have a logged-in social identity
+	if (!req.oidc.user) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
+	}
+
+	// user id from URL
+	let userId = Number(req.query.user_id);
+
+	// Snag the social "id" from Auth0
+	let socialSub = req.oidc.user.sub;
+
+	// Load all the users associated with the current social login
+	// 2022-05-17 JL: Allowing this variable to be "any" because scoutradioz-types.User is not assignable to express.User (in req.logIn)
+	let userList = await utilities.find<any>('users', {'linked_auth': socialSub}, {}, {allowCache: true});
+
+	let foundUser = userList.find(user => user._id === userId);
+	assert(foundUser, new e.UserError('User ID not associated with that social login'));
+
+	// If exactly one associated user... log them in as that user
+	logger.debug('Logging in as ' + foundUser.name);
+	let user = foundUser;
+
+	//If comparison succeeded, then log in user
+	req.logIn(user, async function(err){
+		
+		//If error, then log and return an error
+		if(err){ logger.error(err); return res.send({status: 500, alert: err}); }
+
+		res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
+		
+		let userRole: Role = await utilities.findOne('roles', 
+			{role_key: user.role_key},
+			{},
+			{allowCache: true}
+		);
+		
+		let redirectURL;
+		
+		//Set redirect url depending on user's access level
+		if (req.body.redirectURL) redirectURL = req.body.redirectURL;
+		else if (userRole.access_level === Permissions.ACCESS_GLOBAL_ADMIN) redirectURL = '/admin';
+		else if (userRole.access_level === Permissions.ACCESS_TEAM_ADMIN) redirectURL = '/manage';
+		else if (userRole.access_level === Permissions.ACCESS_SCOUTER) redirectURL = '/dashboard';
+		else redirectURL = '/home';
+		
+		logger.info(`${user.name} has logged in SOCIALLY with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
+		
+		// //send success and redirect
+		// return res.send({
+		// 	status: 200,
+		// 	redirect_url: redirectURL
+		return res.redirect(redirectURL);
 	});
 }));
+
+//Link social - calls out to Auth0 then redirects to /user/social/link/redirect
+router.get('/social/link', wrap(async (req, res) =>  {
+	logger.addContext('funcName', '/social/link[get]');
+	logger.debug('ENTER');
+
+	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	let authorizationParams: any = {
+		response_type: 'id_token',
+		response_mode: 'form_post',
+		scope: 'openid profile email',
+		custom_param: 'custom_value_2'
+	};
+
+	//let foo = req.query.foo;
+	// returnTo: `/profile?foo=${foo}`
+
+	res.oidc.login({ authorizationParams: authorizationParams, returnTo: '/user/social/link/redirect' });
+}));
+
+//Upon successful social login
+router.get('/social/link/redirect', wrap(async (req, res, next) => {
+	logger.addContext('funcName', '/social/link/redirect[get]');
+	logger.debug('ENTER');
+
+	// Sanity-check: Make sure we have a logged-in user & a logged-in social identity
+	if (!req.user || !req.oidc.user || req.user.name === 'default_user') {
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
+	}
+
+	// Is the currently-logged-in user account already tied to a social account?
+	let currentUser: User | null = await utilities.findOne('users', {'_id': req.user._id}, {}, {allowCache: true});
+	if (currentUser && currentUser.linked_auth) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.alreadylinked', {user: currentUser.name}) + '&type=error');
+	}
+
+	// Snag the social "id" from Auth0
+	let socialSub = req.oidc.user.sub;
+	// Update the user record to link the social ID
+	await utilities.update('users', {'_id': req.user._id}, {$set: {linked_auth: socialSub}});
+
+	//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' req.user=' + JSON.stringify(req.user));
+	return res.redirect('/home?alert=' + req.msgUrl('user.social.linksuccess', {user: currentUser.name}) + '&type=success&autofade=true');
+}));
+
+// unlink the social login from the user account
+router.get('/social/unlink', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'social.unlink[get]');
+	logger.debug('ENTER');
+	
+	res.oidc.logout({ returnTo: '/user/social/unlink/redirect' });
+}));
+
+// unlink the social login from the user account
+router.get('/social/unlink/redirect', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'social.unlink.redirect[get]');
+	logger.debug('ENTER');
+	
+	// Sanity-check: Make sure we have a logged-in social identity
+	if (!req.user) {
+		return res.redirect('/home?alert=' + req.msgUrl('user.social.notloggedin') + '&type=error');
+	}
+
+	// Update the user record to delete the social ID (if set)
+	await utilities.update('users', {'_id': req.user._id}, {$unset: {linked_auth: ''}});
+	
+	return res.redirect('/home?alert=' + req.msgUrl('user.social.unlinksuccess', {user: req.user.name}) + '&type=success&autofade=true');
+	//return res.send('unlink req.oidc.user=' + JSON.stringify(req.oidc.user) + ' req.user.name=' + req.user?.name);
+}));
+
+//// Auth0 debugging
+
+/**
+ * A "callback" URL for receiving OAuth callbacks.
+ */
+router.get('/social/debug/callback2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'callback2[get]');
+	logger.debug('ENTER');
+	
+	return res.send('SUCCESS ' + 1 + ' callback ' + 2);
+}));
+
+/**
+ * A "login" URL which declares auth parameters (2025-10-31: doesn't do anything)
+ * but also passes in a value {currently pulled fromn an URL param "foo"}
+ * which is used in a specific 'returnTo' URL after login.
+ */
+router.get('/social/debug/login2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'login2[get]');
+	logger.debug('ENTER');
+
+	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	let authorizationParams: any = {
+		response_type: 'id_token',
+		response_mode: 'form_post',
+		scope: 'openid profile email',
+		custom_param: 'custom_value_2'
+	};
+
+	let foo = req.query.foo;
+
+	res.oidc.login({ authorizationParams: authorizationParams, returnTo: `/user/social/debug/profile?foo=${foo}` });
+}));
+
+/**
+ * A "logout" URL
+ */
+router.get('/social/debug/logout2', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'logout2[get]');
+	logger.debug('ENTER');
+	
+	res.oidc.logout({ returnTo: '/user/social/debug/profile?foo=logged_out' });
+}));
+
+/**
+ * Check login status
+ */
+router.get('/social/debug/authcheck', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'authcheck[get]');
+	logger.debug('ENTER');
+	
+	return res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+}));
+
+/**
+ * Get the user profile
+ */
+router.get('/social/debug/profile', wrap(async (req, res, next) => {
+	logger.addContext('funcName', 'profile[get]');
+	logger.debug('ENTER');
+
+	let foo = req.query.foo;
+
+	return res.send('profile ' + JSON.stringify(req.oidc.user) + ' foo=' + foo);
+}));
+
+//// end Auth0 debugging
 
 //user preferences
 router.get('/preferences', wrap(async (req, res) => {
@@ -863,4 +1150,39 @@ router.post('/preferences/reportcolumns/clearorgdefaultcols', wrap(async (req, r
 	res.redirect('/user/preferences/reportcolumns?alert=' + req.msgUrl('user.reportcolumns.clearedorgdefaults') + '&type=success&autofade=true');
 }));
 
-module.exports = router;
+export default router;
+
+// 2025-12-03, M.O'C: Function to check to see if we are logging in in the context of a social login, and link the accounts if possible
+// Returns an alert string if there is a message to be shown to the user (or undefined if no message)
+async function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | undefined {	
+	let alertString = undefined;
+	let insertMsg = '';
+	if (otherMsg)
+		insertMsg = otherMsg + '/n';
+
+	// are we logging in in the context of a social login? call function to link (or) message that account is already linked
+	if (req.oidc && req.oidc.user) {
+		let socialSub = req.oidc.user.sub;
+		// first check if the user already has a linked account; if not, link it
+		if (!user.linked_auth) {
+			//link social id to user account
+			await utilities.update('users', { '_id': user._id }, { $set: { linked_auth: socialSub } });
+			logger.info(`Linked social account ${req.oidc.user.name} to Scoutradioz user ${user.name}`);
+			alertString = `alert=${insertMsg}${req.msgUrl('user.social.linksuccess', {user: user.name})}&type=success&autofade=true`;
+		}
+		else {
+			// only warn if it's a different social account
+			if (user.linked_auth !== socialSub) {
+				logger.warn(`User ${user.name} already has a linked social account ${user.linked_auth}; not linking ${socialSub}`);
+				alertString = `alert=${insertMsg}${req.msgUrl('user.social.alreadylinked', {user: user.name})}&type=error`;
+			}
+		}
+	}
+
+	// in case we were passed a different message, still show it
+	if (!alertString && otherMsg)
+		alertString = 'alert=' + otherMsg;
+
+	return alertString;
+}
+

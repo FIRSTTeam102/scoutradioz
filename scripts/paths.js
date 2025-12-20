@@ -8,6 +8,7 @@ const pathToUpload = path.join(pathToRoot, 'upload');
 
 const pathToPublicSrc = path.join(pathToPrimary, 'public-src');
 const pathToLess = path.join(pathToPublicSrc, 'less');
+const pathToSvelte = path.join(pathToPublicSrc, 'svelte');
 
 const pathToPublicCss = path.join(pathToPrimary, 'public', 'css');
 
@@ -25,4 +26,5 @@ module.exports = {
 	pathToTs,
 	pathToTsBundled,
 	pathToPublicJs,
+	pathToSvelte,
 };

@@ -2,9 +2,10 @@ const fs = require('fs');
 const { spawn, ChildProcessWithoutNullStreams } = require('child_process');
 require('colors');
 
-const { mongodName, primaryName, uploadName, lessName, errorName } = require('./names');
-const { pathToPrimary, pathToUpload, pathToLess } = require('./paths');
+const { mongodName, primaryName, uploadName, lessName, errorName, svelteName } = require('./names');
+const { pathToPrimary, pathToUpload, pathToLess, pathToSvelte } = require('./paths');
 const { compileLess } = require('./compileLess');
+const { compilePrimarySvelte } = require('./compilePrimarySvelte');
 
 /** @type ChildProcessWithoutNullStreams  */
 let childMongod, 
@@ -161,10 +162,19 @@ function init() {
 	let lessWatcher = fs.watch(pathToLess, {}, function () {
 		if (lessTimeout) clearTimeout(lessTimeout);
 		lessTimeout = setTimeout(() => {
-			console.log(`${lessName}: Change detected. Reloading...`);
+			console.log(`${lessName}: Change detected. Re-compiling...`);
 			compileLess();
 		}, 100);
 	});
+	
+	let svelteWatcher = fs.watch(pathToSvelte, {}, function() {
+		console.log(`${svelteName}: Change detected. Re-compiling...`);
+		compilePrimarySvelte();
+	});
+	
+	setTimeout(() => {
+		compilePrimarySvelte();
+	}, 200);
 	
 	// Text input, allowing "rs" to be typed to restart our Express scripts
 	process.stdin.on('data', function (data) {
@@ -184,6 +194,7 @@ function init() {
 		
 		// Close our file watchers and kill our child processes
 		lessWatcher.close();
+		svelteWatcher.close();
 		childPrimary.kill('SIGINT');
 		childUpload.kill('SIGINT');
 		childTS.kill('SIGINT');

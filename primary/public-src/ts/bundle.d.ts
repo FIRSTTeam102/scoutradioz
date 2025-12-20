@@ -298,7 +298,7 @@ declare function assert(condition: unknown, message?: any): asserts condition;
  */
 declare function lightAssert(condition: unknown, message?: any): asserts condition;
 declare function scrollToId(id: string): void;
-declare function share(orgKey: string | boolean): Promise<void>;
+declare function share(orgKey: string): Promise<void>;
 declare function selectLanguage(): void;
 declare function copyClipboardDom(text: string): void;
 /**

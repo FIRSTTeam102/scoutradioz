@@ -108,8 +108,10 @@
 				"main": "User: [[{user}]]",
 				"fallback": "User",
 				"login": "Log in: [[{org}]]",
+				"sociallogin": "Social login",
 				"logout": "Log out",
-				"switchorg": "Change organization"
+				"switchorg": "View another organization",
+				"switchBackToOrg": "Switch back to: [[{org}]]"
 			},
 			"help": "Need help? Check our wiki!",
 			"thanks": "Special thanks / How to donate"
@@ -176,6 +178,18 @@
 		"passwordalreadyexists": "Password already exists. Please submit your current password.",
 		"newpasswordboth": "Please fill both password forms.",
 		"newpasswordsuccess": "Set password successfully.",
+		"social": {
+			"login": "Social login",
+			"notloggedin": "Please log in.",
+			"link": "Link social account",
+			"unlink": "Unlink social account",
+			"linksuccess": "Successfully linked {user} to social account.",
+			"alreadylinked": "{user} is already linked to a social account, no new link was created./nYou can unlink the existing social from the User menu.",
+			"unlinksuccess": "Successfully unlinked your social account from {user}.",
+			"loginwithlegacy": "Log in with a Scoutradioz user to link your account.",
+			"chooseusertitle": "Choose user",
+			"chooseuser": "Choose which Scoutradioz user to log in as:"
+		},
 		"customizereports": "Customize reports",
 		"reportcolumns": {
 			"title": "Choose report columns",
