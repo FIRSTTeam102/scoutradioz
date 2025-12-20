@@ -136,21 +136,6 @@ html(lang=locale dir=getLocaleDirection(locale))
 					alert("It appears you are using an unsupported browser. Please use a modern browser (e.g. Chromium, Firefox, Edge, and newer versions of Safari) for Scoutradioz. Unfortunately, iOS versions 9 and below are not supported.");
 				})
 			}
-			
-			//- PJL note: typescript is being weird and compiling this code wrong
-			async function loadSveltePage(url, data = {}) {
-				const App = (await import(url))
-				const { mount } = await import('https://esm.sh/svelte');
-				console.log('App', App);
-				console.log('App.default', App.default);
-				console.log('mount', mount);
-				const app = mount(App.default, {
-					target: document.getElementById('content'), // content is the id of the main content element
-					props: {
-						data
-					}
-				});
-			}
 	body(class="theme-text")
 		div(id="page")
 			noscript

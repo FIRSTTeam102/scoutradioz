@@ -78,9 +78,7 @@ router.get('/', wrap(async (req, res, next) => {
 		originalOrgKey = req.user.org.org_key;
 		originalUser = req.user.name;
 	}
-	let socialUser = undefined;
-	if (req.oidc.user)
-		socialUser = req.oidc.user;
+	let socialUser = req.oidc.user || undefined;
 
 	res.render('svelte', {
 		page: 'choose-org',
@@ -148,6 +146,9 @@ router.get('/browse', wrap(async (req, res, next) => {
 
 		// otherwise copy the existing data into a dictionary for later use
 		if (thisSummary.events)
+			// PL TODO:
+			// for (let event of thisSummary.events)
+			// 	eventOrgDict[event.eventKey] = event;
 			for (let i = 0; i < thisSummary.events.length; i++)
 				if (thisSummary.events[i])
 					eventOrgDict[thisSummary.events[i].eventKey] = thisSummary.events[i];
@@ -638,15 +639,12 @@ router.get('/home', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'home[get]');
 	logger.debug('ENTER');
 	
-	// logger.info('req.picked_org: ' + req.picked_org);
-	
 	let redirect = req.getRedirectURL();
 	if (redirect) {
 			
 		logger.debug(`redirect: ${redirect}`);
 		res.redirect(redirect);
 	}
-	// else if (!req.user && !req.picked_org) throw new e.ForbiddenError('No org has been picked');
 	else if (!req.user) res.redirect('/');
 	else {
 		res.render('./home', { 
@@ -684,7 +682,6 @@ router.get('/thankyou', wrap(async (req, res) =>  {
 	});
 }));
 
-
 router.get('/throwanerror', wrap(async (req, res) => {
 	logger.addContext('funcName', 'throwanerror[get]');
 	
@@ -697,79 +694,6 @@ router.get('/usererror', wrap(async (req, res) => {
 	
 	throw new e.UserError();
 }));
-
-// Moved the select-org process into a helper function so I can do it with the standard selectorg and & one which immediately takes you to the login screen
-// async function doSelectOrg(req: express.Request, res: express.Response, cb: () => void) {
-	
-// 	let org_key = req.body.org_key || req.query.org_key;
-// 	logger.debug(`org_key=${org_key}`);
-	
-// 	//Make sure that form is filled
-// 	if(!org_key || org_key == ''){
-// 		logger.debug('Form isn\'t filled, redir. and telling to select an org.');
-// 		return res.redirect('/?alert=' + res.msgUrl('selectOrg'));
-// 	}
-	
-// 	//search for organization in database
-// 	let selectedOrg = await utilities.findOne('orgs', 
-// 		{'org_key': org_key}, {},
-// 		{allowCache: true}
-// 	);
-	
-// 	//If organization does not exist:
-// 	if(!selectedOrg) {
-// 		//If there is an org_key cookie, remove it
-// 		if (req.cookies.org_key) {
-// 			res.clearCookie('org_key');
-// 		}
-// 		//Redirect to home, without the invalid org_key query parameter
-// 		return res.redirect(`/?redirectURL=${req.getFixedRedirectURL()}`);
-// 	}
-	
-// 	//Now, sign in to organization's default user
-// 	let defaultUser = await utilities.findOne<any>('users', 
-// 		{org_key: org_key, name: 'default_user'}, {},
-// 		{allowCache: true}
-// 	);
-// 	logger.debug(`defaultUser=${JSON.stringify(defaultUser)}`);
-	
-// 	if(!defaultUser){
-// 		logger.debug('No default user');
-// 		return res.redirect(`/user/switchorg?alert=Error: No default user for organization ${org_key} exists in database.`);
-// 	}
-	
-// 	//gotta catch if the person pressed the back button first, then gotta log out before loggin in
-// 	if( req.user ){
-// 		//destroy session then log in to default user
-// 		req.logout(() => {
-// 			doLogin();
-// 		});
-// 		logger.debug('req.user is defined, so we are logging them out first');
-// 	}
-// 	else {
-// 		doLogin();
-// 	}
-	
-// 	function doLogin() {	
-// 		//Now, log in to defaultUser
-// 		req.logIn(defaultUser, function(err){
-		
-// 			logger.debug('defaultUser logged in');
-		
-// 			//set org_key cookie to selected organization
-// 			logger.debug('Setting org_key cookie');
-// 			res.cookie('org_key', org_key, {maxAge: 30E9});
-			
-// 			//If error, then log and return an error
-// 			if(err){ logger.error(err); return res.status(500).send({alert: err}); }
-			
-// 			res.clearCookie('picked_org'); // Clear picked_org cookie because we're signing in to it
-		
-// 			cb();
-// 		});
-// 	}
-// }
-
 
 export default router;
 

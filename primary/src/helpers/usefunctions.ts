@@ -40,6 +40,9 @@ class UseFunctions {
 		//For logging
 		req.requestTime = Date.now();
 		
+		// User previewed an org - Save the logged-in user to another var for other routes to use,
+		// 	and set req.user to the previewed org's default user for the rest of the app's code to
+		// 	work as normal
 		req.picked_org = req.cookies['picked_org'];
 		if (req.picked_org) {
 			const defaultUser = await utilities.findOne('users', {
@@ -155,7 +158,7 @@ class UseFunctions {
 	
 		req.authenticate = async function (accessLevel: string|number|undefined) {
 			
-			logger.info('picked_org: ' + req.cookies['picked_org']);
+			logger.debug('req.authenticate: picked_org = ' + req.cookies['picked_org']);
 			
 			//Parse number from accessLevel
 			let accessLevelNum;
@@ -293,6 +296,7 @@ class UseFunctions {
 		
 		// replacing 'current' collection with "currentEvent" attribute in a specific org [tied to the user after choosing an org]
 		let thisOrg: Org|undefined = undefined;
+		// PL TODO: `|| picked_org` probably not needed
 		if (req.user && req.user.org_key || req.picked_org) {
 			let thisOrgKey = req.user?.org_key || req.picked_org;
 			thisOrg = await utilities.findOne('orgs', 

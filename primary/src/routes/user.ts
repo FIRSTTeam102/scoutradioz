@@ -241,10 +241,10 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 
 				// are we logging in in the context of a social login? call function to link (or) message that account is already linked
 				// pass in 'user' and 'oidc.user', get back success true (if failed, assume already linked)
-				logger.debug(`1 current user.linked_auth=${user.linked_auth}`);
+				logger.debug(`login path 1: current user.linked_auth=${user.linked_auth}`);
 
-				let alertString = checkAndLinkSocial(req, user);
-				if (alertString)
+				let alertString = await checkAndLinkSocial(req, user);
+				if (alertString) // PL/MO'C TODO: if req.body.redirectURL has an ?alert=, then this may break
 					redirectURL += '?' + alertString;
 
 				//now, return succes with redirect to dashboard
@@ -279,10 +279,11 @@ router.post('/login/withoutpassword', wrap(async (req, res) => {
 			res.clearCookie('picked_org'); // if logging in, then clear the previewing-org cookie
 			
 			logger.info(`${user.name} has logged in`);
-			logger.debug(`2 current user.linked_auth=${user.linked_auth}`);
+
+			logger.debug(`login path 2: current user.linked_auth=${user.linked_auth}`);
 
 			let redirectURL = '/home';
-			let alertString = checkAndLinkSocial(req, user);
+			let alertString = await checkAndLinkSocial(req, user);
 			if (alertString)
 				redirectURL += '?' + alertString;
 
@@ -387,9 +388,10 @@ router.post('/login/withpassword', wrap(async (req, res) => {
 			else redirectURL = '/home';
 			
 			logger.info(`${user.name} has logged in with role ${userRole.label} (${userRole.access_level}) and is redirected to ${redirectURL}`);
-			logger.debug(`3 current user.linked_auth=${user.linked_auth}`);
+			
+			logger.debug(`login path 3: current user.linked_auth=${user.linked_auth}`);
 
-			let alertString = checkAndLinkSocial(req, user);
+			let alertString = await checkAndLinkSocial(req, user);
 			if (alertString)
 				redirectURL += '?' + alertString;
 
@@ -504,13 +506,13 @@ router.post('/login/createpassword', wrap(async (req, res) =>  {
 		
 		if(err) logger.error(err);
 		logger.info(`${user.name} has logged in`);
-		logger.debug(`4 current user.linked_auth=${user.linked_auth}`);
+		logger.debug(`login path 4: current user.linked_auth=${user.linked_auth}`);
 
 		let redirectURL = '/home';
 
 		let newpasswordMsg = req.msg('user.newpasswordsuccess');
 
-		let alertString = checkAndLinkSocial(req, user, newpasswordMsg);
+		let alertString = await checkAndLinkSocial(req, user, newpasswordMsg);
 		if (alertString) {
 			redirectURL += '?' + alertString;
 			logger.debug(`redirectURL<alertString>=${redirectURL}`);
@@ -620,6 +622,7 @@ router.get('/social/login', wrap(async (req, res) =>  {
 	logger.debug('ENTER');
 
 	// https://auth0.github.io/express-openid-connect/interfaces/ConfigParams.html#authorizationparams
+	// M.O'C: may not be needed
 	let authorizationParams: any = {
 		response_type: 'id_token',
 		response_mode: 'form_post',
@@ -710,7 +713,7 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 	//return res.send('profile: ' + JSON.stringify(req.oidc.user) + ' userList=' + JSON.stringify(userList));
 }));
 
-//Upon selecting a user from multiple users
+//Upon selecting a user from an oidc account with multiple linked users
 router.get('/social/login/choose', wrap(async (req, res, next) => {
 	logger.addContext('funcName', '/social/login/choose[get]');
 	logger.debug('ENTER');
@@ -1151,7 +1154,7 @@ export default router;
 
 // 2025-12-03, M.O'C: Function to check to see if we are logging in in the context of a social login, and link the accounts if possible
 // Returns an alert string if there is a message to be shown to the user (or undefined if no message)
-function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | undefined {	
+async function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | undefined {	
 	let alertString = undefined;
 	let insertMsg = '';
 	if (otherMsg)
@@ -1163,7 +1166,7 @@ function checkAndLinkSocial(req, user: any, otherMsg: string = ''): string | und
 		// first check if the user already has a linked account; if not, link it
 		if (!user.linked_auth) {
 			//link social id to user account
-			utilities.update('users', { '_id': user._id }, { $set: { linked_auth: socialSub } });
+			await utilities.update('users', { '_id': user._id }, { $set: { linked_auth: socialSub } });
 			logger.info(`Linked social account ${req.oidc.user.name} to Scoutradioz user ${user.name}`);
 			alertString = `alert=${insertMsg}${req.msgUrl('user.social.linksuccess', {user: user.name})}&type=success&autofade=true`;
 		}
