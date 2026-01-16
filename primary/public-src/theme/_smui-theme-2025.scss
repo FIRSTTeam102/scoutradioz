@@ -1,0 +1,49 @@
+// This file is specifically for themeing Svelte Material UI
+@use 'sass:color';
+
+/* FRC's season colors */
+// in branding pdf, colors picked from the preview, not from the hex below
+$frc-cyan: #9CD9E8; // color from the logo
+$frc-blue: #0083AE;
+$frc-yellow: #F5E447;
+
+$frc-white: #fff;
+$frc-black: #000;
+
+/* FIRST DIVE colors */
+$fd-orange: #FF9119;
+$fd-red: #ED1C24;
+$fd-gray: #666666;
+$fd-black: #000000;
+
+// $ftc-yellow: #FFAB00;
+
+/* custom combinations */
+$darkened-green: color.scale($frc-blue, $lightness: -15%);
+
+$button-primary: color.scale($frc-blue, $lightness: -20%);
+$button-secondary: color.scale($frc-blue, $lightness: -40%);
+
+$primary: $button-primary; // unused
+$secondary: color.scale($frc-blue, $lightness: -50%); // input
+$highlight: color.scale($button-primary, $lightness: 10%); // slider
+
+$background: $fd-black;
+// $header: color.scale(color.scale($fs-pink, $saturation: -15%), $lightness: -20%);
+$header: color.scale(color.mix($fd-black, $frc-cyan, 60%), $saturation: 15%);
+$footer: $fd-gray;
+
+$header-tier-qa: color.scale($frc-yellow, $lightness: -30%);
+$header-tier-test: color.scale($fd-orange, $lightness: -50%);
+$header-tier-dev: color.scale($fd-red, $lightness: -40%);
+
+@use '@material/theme/color-palette';
+
+// Svelte Colors! (Dark Theme)
+@use '@material/theme/index' as theme with (
+	$primary: $primary,
+	$secondary: color.scale(#676778, $whiteness: -10%),
+	$surface: color.adjust(color-palette.$grey-900, $blue: +4),
+	// $background: #000,
+	$error: color-palette.$red-700
+);

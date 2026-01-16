@@ -1,41 +1,43 @@
 // This file is specifically for themeing Svelte Material UI
 @use 'sass:color';
 
-/* FRC's season colors */
-// in branding pdf, colors picked from the preview, not from the hex below
-$frc-cyan: #9CD9E8; // color from the logo
-$frc-blue: #0083AE;
-$frc-yellow: #F5E447;
+/* 2026 THEME COLORS */
 
 $frc-white: #fff;
 $frc-black: #000;
+$frc-gray: #666666;
 
-/* FIRST DIVE colors */
-$fd-orange: #FF9119;
-$fd-red: #ED1C24;
-$fd-gray: #666666;
-$fd-black: #000000;
+/* Season colors */
+// in branding pdf, but colors as picked from the preview (not from the hex listed in the PDF)
+$fs-gold: #FDC745;
+$fs-copper: #CC8903;
 
-// $ftc-yellow: #FFAB00;
+/* Game colors */
+$fg-gold: #E6AE33;  // B6 NB: *similar* to fs-gold but NOT the same
+$fg-red: #FA4614;
+$fg-green: #77DDA7;
+$fg-slate: #468292;
 
 /* custom combinations */
-$darkened-green: color.scale($frc-blue, $lightness: -15%);
+//$darkened-green: color.scale($frc-blue, $lightness: -15%);
 
-$button-primary: color.scale($frc-blue, $lightness: -20%);
-$button-secondary: color.scale($frc-blue, $lightness: -40%);
+$button-primary: color.scale($fg-slate, $lightness: -20%);
+$button-secondary: color.scale($fg-slate, $lightness: -40%);
 
 $primary: $button-primary; // unused
-$secondary: color.scale($frc-blue, $lightness: -50%); // input
-$highlight: color.scale($button-primary, $lightness: 10%); // slider
+$secondary: color.scale($fg-slate, $lightness: -40%); // input
+$highlight: $fg-green;
+//$highlight: color.scale($button-primary, $lightness: 10%); // slider
 
-$background: $fd-black;
-// $header: color.scale(color.scale($fs-pink, $saturation: -15%), $lightness: -20%);
-$header: color.scale(color.mix($fd-black, $frc-cyan, 60%), $saturation: 15%);
+$background: $frc-black;
 $footer: $fd-gray;
 
-$header-tier-qa: color.scale($frc-yellow, $lightness: -30%);
-$header-tier-test: color.scale($fd-orange, $lightness: -50%);
-$header-tier-dev: color.scale($fd-red, $lightness: -40%);
+// $header: color.scale(color.scale($fs-pink, $saturation: -15%), $lightness: -20%);
+// $header: color.scale(color.mix($fd-black, $frc-cyan, 60%), $saturation: 15%);
+$header: $fg-gold;
+$header-tier-qa: color.scale($fs-copper, $lightness: -40%);
+$header-tier-test: color.scale($fg-red, $lightness: -40%);
+$header-tier-dev: color.scale($fg-green, $lightness: -30%);
 
 @use '@material/theme/color-palette';
 

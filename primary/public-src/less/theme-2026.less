@@ -1,0 +1,57 @@
+/* 2026 THEME COLORS */
+
+@frc-white: #fff;
+@frc-black: #000;
+@frc-gray: #666666;
+
+/* Season colors */
+// in branding pdf, but colors as picked from the preview (not from the hex listed in the PDF)
+@fs-gold: #FDC745;
+@fs-copper: #CC8903;
+
+/* Game colors */
+@fg-gold: #E6AE33;  // B6 NB: *similar* to fs-gold but NOT the same
+@fg-red: #FA4614;
+@fg-green: #77DDA7;
+@fg-slate: #468292;
+
+/* custom combinations */
+//@darkened-green: darken(@fs-blue, 15%);
+
+@button-primary: shade(@fg-slate, 20%);
+@button-secondary: shade(@fg-slate, 40%);
+
+@primary: @button-primary; // unused
+@secondary: shade(@fg-slate, 40%); // input
+@highlight: @fg-green;
+//@highlight: lighten(@button-primary, 10%); // slider
+
+@background: @frc-black;
+@footer: @frc-gray;
+
+// @header: shade(desaturate(@fs-pink, 15%), 20%);
+// @header: saturate(mix(@frc-black, @fs-cyan, 60%), 15%);
+@header: @fg-gold;
+@header-tier-qa: shade(@fs-copper, 40%);
+@header-tier-test: shade(@fg-red, 40%);
+//@header-tier-dev: shade(@fg-green, 30%);
+@header-tier-dev: @header;
+
+// @prompt-color: desaturate(darken(mix(@fs-gray, mix(@fs-black, @frc-green, 50%), 70%), 17%), 10%);
+@prompt-color: desaturate(darken(mix(@frc-gray, mix(@frc-black, @fg-slate, 50%), 60%), 20%), 10%);  // originally was 'blue' where other blue items above were 'green'
+:root {	
+	/* MMenu customization */
+	--mm-color-background: @prompt-color;
+	--mm-color-background-emphasis: lighten(@prompt-color, 3%); // selected menu item
+	--mm-color-background-highlight: darken(@prompt-color, 3%); // submenu dropdown
+}
+
+/* Background */
+#page {
+	@background-fade: fade(shade(@background, 100%), 100%); // was 70%
+	background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), var(--background-image); // from layout.pug
+	background-position: 5%;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-attachment: fixed;
+}
