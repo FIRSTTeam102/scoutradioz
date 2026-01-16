@@ -76,20 +76,20 @@
 	{/if}
 	{#if socialUser}
 	<hr />
-	<h2>Log out of social</h2>
+	<h3>Log out of social</h3>
 	<Button variant="unelevated" href="/user/logout/social"
 		>Sign out as {socialUser.name}</Button
 	>
 	{/if}
 	{#if !socialUser && !signedInOrg}
 	<hr />
-	<h2>Log in via social</h2> 
+	<h3>Log in with Google, Github, Apple, or Facebook</h3> 
 	<Button variant="unelevated" href="/user/social/login"
 		>Sign in with a social connection</Button
 	>
 	{/if}
 	<hr />
-	<h2>See what data is available</h2>
+	<h3>See what data is available</h3>
 	<Button variant="unelevated" href="/browse">Browse all current events</Button>
 	<hr />
 	<Paper class="w3-grid" style="grid: auto / 1fr 1fr; gap: 1em">
