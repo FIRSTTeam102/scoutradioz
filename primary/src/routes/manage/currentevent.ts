@@ -125,35 +125,8 @@ router.post('/updatematch', wrap(async (req, res) => {
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
 
-	// Reload the rankings from TBA
-	let rankingUrl = 'event/' + eventKey + '/rankings';
-	logger.debug('rankingUrl=' + rankingUrl);
-
-	let rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
-	let rankArr: Ranking[] = [];
-	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
-		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-		let thisRankings = rankinfo.rankings;
-		for (let thisRank of thisRankings) {
-			thisRank['event_key'] = eventKey;
-			rankArr.push(thisRank);
-		}
-	}
-	//logger.debug('rankArr=' + JSON.stringify(rankArr));
-
-	let rankMap: Dict<Ranking> = {};
-	for (let rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
-		//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
-		rankMap[rankArr[rankIdx].team_key] = rankArr[rankIdx];
-	}
-
-	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	// Delete the current rankings
-	//await utilities.remove("currentrankings", {});
-	await utilities.remove('rankings', {'event_key': event_key});
-	// Insert into DB
-	//await utilities.insert("currentrankings", rankArr);
-	await utilities.insert('rankings', rankArr);
+	// Synchronize the event data such as rankings, OPR, Statbotics, etc.
+	await syncEventData(eventKey);
 
 	// Delete the matching match record
 	await utilities.remove('matches', {'key': matchId});
@@ -199,29 +172,8 @@ router.post('/updatematches', wrap(async (req, res) => {
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
 
-	// Reload the rankings from TBA
-	let rankingUrl = 'event/' + eventKey + '/rankings';
-	logger.debug('rankingUrl=' + rankingUrl);
-
-	let rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
-	let rankArr = [];
-	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
-		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-		let thisRankings = rankinfo.rankings;
-		for (let thisRank of thisRankings) {
-			thisRank['event_key'] = eventKey;
-			rankArr.push(thisRank);
-		}
-	}
-	logger.trace('rankArr=' + JSON.stringify(rankArr));
-
-	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	// Delete the current rankings
-	//await utilities.remove("currentrankings", {});
-	await utilities.remove('rankings', {'event_key': eventKey});
-	// Insert into DB
-	//await utilities.insert("currentrankings", rankArr);
-	await utilities.insert('rankings', rankArr);
+	// Synchronize the event data such as rankings, OPR, Statbotics, etc.
+	await syncEventData(eventKey);
 
 	// Get matches data from TBA
 	let url = 'event/' + eventKey + '/matches';
@@ -253,3 +205,132 @@ router.post('/updatematches', wrap(async (req, res) => {
 }));
 
 export default router;
+
+// 2026-01-16, M.O'C: Function to sync event data such as rankings, OPR, Statbotics, etc.
+async function syncEventData(eventKey: string) {
+	//// Simultaneous pulls
+	let eventDataPromises = [];
+
+	let rankingUrl = 'event/' + eventKey + '/rankings';
+	logger.debug('rankingUrl=' + rankingUrl);
+	let rankingPromise = utilities.requestTheBlueAlliance(rankingUrl);
+	eventDataPromises.push(rankingPromise);
+
+	let oprUrl = 'event/' + eventKey + '/oprs';
+	logger.debug('oprUrl=' + oprUrl);
+	let oprPromise = utilities.requestTheBlueAlliance(oprUrl);
+	eventDataPromises.push(oprPromise);
+
+	let coprUrl = 'event/' + eventKey + '/coprs';
+	logger.debug('coprUrl=' + coprUrl);
+	let coprPromise = utilities.requestTheBlueAlliance(coprUrl);
+	eventDataPromises.push(coprPromise);
+
+	// wait for all the pulls to finish
+	let eventData = await Promise.all(eventDataPromises);
+
+	// extract the various data
+	let rankinfo = eventData[0]; 
+	let oprInfo = eventData[1];
+	let coprInfo = eventData[2];
+	
+	//// Rankings from TBA
+	let rankArr: Ranking[] = [];
+	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
+		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
+		let thisRankings = rankinfo.rankings;
+		for (let thisRank of thisRankings) {
+			thisRank['event_key'] = eventKey;
+			rankArr.push(thisRank);
+		}
+	}
+	//logger.debug('rankArr=' + JSON.stringify(rankArr));
+
+	let rankMap: Dict<Ranking> = {};
+	for (let rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
+		//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+		rankMap[rankArr[rankIdx].team_key] = rankArr[rankIdx];
+	}
+
+	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+	// Delete the current rankings
+	//await utilities.remove("currentrankings", {});
+	await utilities.remove('rankings', {'event_key': eventKey});
+	// Insert into DB
+	//await utilities.insert("currentrankings", rankArr);
+	await utilities.insert('rankings', rankArr);
+
+	// OPR & cOPR
+	//logger.debug('oprInfo=' + JSON.stringify(oprInfo));
+	//logger.debug('coprInfo=' + JSON.stringify(coprInfo));
+
+	let teamMap: Dict<{}> = {};
+	// process the OPR first
+	if (oprInfo) {
+		let oprKeys = Object.keys(oprInfo);
+		logger.debug(`Processing OPRs, oprKeys=${JSON.stringify(oprKeys)}`);
+		for (let oprIdx = 0; oprIdx < oprKeys.length; oprIdx++) {
+			let thisOpr = oprKeys[oprIdx];
+			// process key name - drop plural, uppercase first letter, prefix 'tba'
+			thisOpr = thisOpr.slice(0, -1);
+			thisOpr = thisOpr.charAt(0).toUpperCase() + thisOpr.slice(1);
+			thisOpr = 'tba' + thisOpr;
+			//logger.debug(`Processing OPR type ${thisOpr}`);
+
+			let teamKeys = Object.keys(oprInfo[oprKeys[oprIdx]]);
+			if (teamKeys.length > 0) {
+				let teamData = oprInfo[oprKeys[oprIdx]];
+				//logger.debug(`teamData=${JSON.stringify(teamData)}`);
+				for (let teamIdx = 0; teamIdx < teamKeys.length; teamIdx++) {
+					let thisTeamKey = teamKeys[teamIdx];
+					let thisValue = teamData[thisTeamKey];
+					// add a team to the map if not already present
+					if (!teamMap[thisTeamKey]) teamMap[thisTeamKey] = {
+						year: parseInt(eventKey.substring(0,4)),
+						event_key: eventKey,
+						team_key: thisTeamKey,
+						type: 'tba',
+						data: {}
+					};
+					teamMap[thisTeamKey]['data'][thisOpr] = thisValue;
+				}
+			}
+		}
+	}
+
+	// cOPR next
+	if (coprInfo) {
+		let coprKeys = Object.keys(coprInfo);
+		logger.debug(`Processing cOPRs, coprKeys=${JSON.stringify(coprKeys)}`);
+		for (let coprIdx = 0; coprIdx < coprKeys.length; coprIdx++) {
+			let thisCOpr = coprKeys[coprIdx];
+			// process key name - remove spaces, uppercase first letter, prefix 'tba'
+			thisCOpr = thisCOpr.replaceAll(' ', '');
+			thisCOpr = thisCOpr.charAt(0).toUpperCase() + thisCOpr.slice(1);
+			thisCOpr = 'tba' + thisCOpr;
+			//logger.debug(`Processing OPR type ${thisCOpr}`);
+
+			let teamKeys = Object.keys(coprInfo[coprKeys[coprIdx]]);
+			if (teamKeys.length > 0) {
+				let teamData = coprInfo[coprKeys[coprIdx]];
+				//logger.debug(`teamData=${JSON.stringify(teamData)}`);
+				for (let teamIdx = 0; teamIdx < teamKeys.length; teamIdx++) {
+					let thisTeamKey = teamKeys[teamIdx];
+					let thisValue = teamData[thisTeamKey];
+					// add a team to the map if not already present
+					if (!teamMap[thisTeamKey]) teamMap[thisTeamKey] = {
+						year: parseInt(eventKey.substring(0,4)),
+						event_key: eventKey,
+						team_key: thisTeamKey,
+						type: 'tba',
+						data: {}
+					};
+					teamMap[thisTeamKey]['data'][thisCOpr] = thisValue;
+				}
+			}
+		}
+	}
+
+	// sanity check
+	//logger.debug(`After OPR processing, teamMap=${JSON.stringify(teamMap)}`);
+}
