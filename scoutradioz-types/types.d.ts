@@ -24,6 +24,12 @@ export declare interface PitFormData {
 	[key: string]: formDataOutput;
 }
 
+// 2026-01-19, M.O'C: Event-specific data per robot (e.g. OPRs from TBA and EPAs from Statbotics)
+// has very similar structure to MatchFormData and PitFormData so re-using formDataOutput
+export declare interface EventTeamData {
+	[key: string]: formDataOutput;
+}
+
 declare interface AnyDict {
 	[key: string]: string|number|boolean|null|undefined
 }
@@ -476,6 +482,18 @@ export declare interface OrgClass {
 }
 
 /**
+ * Event-level data for individual teams (e.g. OPRs from TBA and EPAs from Statbotics)
+ * @collection eventdata
+ * @interface EventData
+ */
+export declare interface EventData extends DbDocument {
+	year: number;
+	event_key: EventKey;
+	team_key: TeamKey;
+	data?: EventTeamData;
+}
+
+/**
  * Values for each team that an org sets on their alliance selection page.
  * @collection heatmapcolors
  * @interface HeatMapColors
@@ -816,13 +834,14 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'supporters'|'sveltesessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'events'|'eventdata'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'supporters'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
 export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'aggranges' ? AggRange :
 	colName extends 'events' ? Event :
+	colName extends 'eventdata' ? EventData :
 	colName extends 'eventscoutingsummary' ? EventScoutingSummary :
 	// colName extends 'i18n' ?  :
 	colName extends 'layout' ? (DerivedLayoutLegacy|Layout|DerivedLayout) :
