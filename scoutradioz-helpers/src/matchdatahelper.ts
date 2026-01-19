@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -595,6 +595,205 @@ export class MatchDataHelper {
 
 		logger.removeContext('funcName');
 		return scorelayout;
+	}
+
+	/**
+	 * Retrieve event data (rankings, OPRs, EPAs, etc.) for event and stores in DB
+	 * @param {string} eventKey Event key
+	 */
+	static async retrieveAndStoreEventData(eventYear: number, eventKey: string) {
+		logger.addContext('funcName', 'retrieveAndStoreEventData');
+		logger.info('ENTER eventYear=' + eventYear + ',eventKey=' + eventKey);
+
+		// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
+		// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs
+		// https://www.thebluealliance.com/api/v3/event/2018njfla/coprs
+		// https://api.statbotics.io/v3/team_events?event=2018njfla
+
+		//// Simultaneous pulls
+		let eventDataPromises = [];
+
+		let rankingUrl = 'event/' + eventKey + '/rankings';
+		logger.debug('rankingUrl=' + rankingUrl);
+		let rankingPromise = utilities.requestTheBlueAlliance(rankingUrl);
+		eventDataPromises.push(rankingPromise);
+
+		let oprUrl = 'event/' + eventKey + '/oprs';
+		logger.debug('oprUrl=' + oprUrl);
+		let oprPromise = utilities.requestTheBlueAlliance(oprUrl);
+		eventDataPromises.push(oprPromise);
+
+		let coprUrl = 'event/' + eventKey + '/coprs';
+		logger.debug('coprUrl=' + coprUrl);
+		let coprPromise = utilities.requestTheBlueAlliance(coprUrl);
+		eventDataPromises.push(coprPromise);
+
+		let statboticsUrl = 'team_events?event=' + eventKey;
+		logger.debug('statboticsUrl=' + statboticsUrl);
+		let statboticsPromise = utilities.requestStatbotics(statboticsUrl);
+		eventDataPromises.push(statboticsPromise);
+
+		// wait for all the pulls to finish
+		let eventData = await Promise.all(eventDataPromises);
+
+		// extract the various data
+		let rankinfo = eventData[0]; 
+		let oprInfo = eventData[1];
+		let coprInfo = eventData[2];
+		let statboticsInfo = eventData[3];
+		
+		//// Rankings from TBA
+		let rankArr: Ranking[] = [];
+		if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
+			// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
+			let thisRankings = rankinfo.rankings;
+			for (let thisRank of thisRankings) {
+				thisRank['event_key'] = eventKey;
+				rankArr.push(thisRank);
+			}
+		}
+		//logger.debug('rankArr=' + JSON.stringify(rankArr));
+
+		let rankMap: Dict<Ranking> = {};
+		for (let rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
+			//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
+			rankMap[rankArr[rankIdx].team_key] = rankArr[rankIdx];
+		}
+
+		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
+		// Delete the current rankings
+		//await utilities.remove("currentrankings", {});
+		await utilities.remove('rankings', {'event_key': eventKey});
+		// Insert into DB
+		//await utilities.insert("currentrankings", rankArr);
+		await utilities.insert('rankings', rankArr);
+
+		//// OPR & cOPR
+		let teamMap: Dict<any> = {};
+		// process the OPR first
+		if (oprInfo) {
+			let oprKeys = Object.keys(oprInfo);
+			logger.debug(`Processing OPRs, oprKeys=${JSON.stringify(oprKeys)}`);
+			for (let oprIdx = 0; oprIdx < oprKeys.length; oprIdx++) {
+				let thisOpr = oprKeys[oprIdx];
+				// process key name - drop plural, uppercase first letter, prefix 'tba'
+				thisOpr = thisOpr.slice(0, -1);
+				thisOpr = thisOpr.charAt(0).toUpperCase() + thisOpr.slice(1);
+				thisOpr = 'tba' + thisOpr;
+				//logger.debug(`Processing OPR type ${thisOpr}`);
+
+				let teamKeys = Object.keys(oprInfo[oprKeys[oprIdx]]);
+				if (teamKeys.length > 0) {
+					let teamData = oprInfo[oprKeys[oprIdx]];
+					//logger.debug(`teamData=${JSON.stringify(teamData)}`);
+					for (let teamIdx = 0; teamIdx < teamKeys.length; teamIdx++) {
+						let thisTeamKey = teamKeys[teamIdx];
+						let thisValue = teamData[thisTeamKey];
+						// add a team to the map if not already present
+						if (!teamMap[thisTeamKey]) teamMap[thisTeamKey] = {
+							year: parseInt(eventKey.substring(0,4)),
+							event_key: eventKey,
+							team_key: thisTeamKey,
+							//type: 'tba',
+							data: {}
+						};
+						teamMap[thisTeamKey]['data'][thisOpr] = thisValue;
+					}
+				}
+			}
+		}
+
+		// cOPR next
+		if (coprInfo) {
+			let coprKeys = Object.keys(coprInfo);
+			logger.debug(`Processing cOPRs, coprKeys=${JSON.stringify(coprKeys)}`);
+			for (let coprIdx = 0; coprIdx < coprKeys.length; coprIdx++) {
+				let thisCOpr = coprKeys[coprIdx];
+				// process key name - remove spaces, uppercase first letter, prefix 'tba'
+				thisCOpr = thisCOpr.replaceAll(' ', '');
+				thisCOpr = thisCOpr.charAt(0).toUpperCase() + thisCOpr.slice(1);
+				thisCOpr = 'tba' + thisCOpr;
+				//logger.debug(`Processing OPR type ${thisCOpr}`);
+
+				let teamKeys = Object.keys(coprInfo[coprKeys[coprIdx]]);
+				if (teamKeys.length > 0) {
+					let teamData = coprInfo[coprKeys[coprIdx]];
+					//logger.debug(`teamData=${JSON.stringify(teamData)}`);
+					for (let teamIdx = 0; teamIdx < teamKeys.length; teamIdx++) {
+						let thisTeamKey = teamKeys[teamIdx];
+						let thisValue = teamData[thisTeamKey];
+						// add a team to the map if not already present
+						if (!teamMap[thisTeamKey]) teamMap[thisTeamKey] = {
+							year: parseInt(eventKey.substring(0,4)),
+							event_key: eventKey,
+							team_key: thisTeamKey,
+							//type: 'tba',
+							data: {}
+						};
+						teamMap[thisTeamKey]['data'][thisCOpr] = thisValue;
+					}
+				}
+			}
+		}
+
+		//// Statbotics data
+		//logger.debug('Statbotics data received: ' + JSON.stringify(statboticsInfo));
+		//let epaTeamMap: Dict<any> = {};
+		let notDebuggedEpaYet = true;
+		if (statboticsInfo && statboticsInfo.length > 0) {
+			for (let statIdx = 0; statIdx < statboticsInfo.length; statIdx++) {
+				let thisStat = statboticsInfo[statIdx];
+				let thisTeamKey = 'frc' + thisStat.team;
+				// add this team to the map if not already present
+				if (!teamMap[thisTeamKey]) teamMap[thisTeamKey] = {
+					year: parseInt(eventKey.substring(0,4)),
+					event_key: eventKey,
+					team_key: thisTeamKey,
+					//type: 'epa',
+					data: {}
+				};
+				teamMap[thisTeamKey]['data']['epaUnitless'] = thisStat.epa.unitless;
+				teamMap[thisTeamKey]['data']['epaNorm'] = thisStat.epa.norm;
+
+				let epaKeys = Object.keys(thisStat.epa.breakdown);
+				if (notDebuggedEpaYet) {
+					logger.debug(`Processing EPAs, epaKeys: ${JSON.stringify(epaKeys)}`);
+					notDebuggedEpaYet = false;
+				}
+				//logger.debug(`Processing EPAs, epaKeys=${JSON.stringify(epaKeys)}`);
+				for (let epaIdx = 0; epaIdx < epaKeys.length; epaIdx++) {
+					let thisEpaKey = epaKeys[epaIdx];
+					// remove underscores and capitalize first character after each underscore
+					thisEpaKey = thisEpaKey.split('_').map( (word, index) => {
+						if (index === 0) return word;
+						return word.charAt(0).toUpperCase() + word.slice(1);
+					}).join('');
+					// process key name - prefix 'epa'
+					thisEpaKey = 'epa' + thisEpaKey.charAt(0).toUpperCase() + thisEpaKey.slice(1);
+
+					let thisValue = thisStat.epa.breakdown[epaKeys[epaIdx]];
+					teamMap[thisTeamKey]['data'][thisEpaKey] = thisValue;
+				}
+			}			
+		}
+
+		// Convert teamMap to array
+		let eventDataArr: EventData[] = [];
+		let teamKeys = Object.keys(teamMap);
+		for (let teamIdx = 0; teamIdx < teamKeys.length; teamIdx++) {
+			eventDataArr.push(teamMap[teamKeys[teamIdx]]);
+		}
+
+		// sanity check
+		logger.debug('Found ' + eventDataArr.length + ' event data for event ' + eventKey);
+			
+		// First delete existing match data for the given event
+		await utilities.remove('eventdata', {'event_key': eventKey});
+		// Now, insert the new data
+		await utilities.insert('eventdata', eventDataArr);
+
+		logger.info('EXIT inserted ' + eventDataArr.length);
+		logger.removeContext('funcName');
 	}
 
 	/**
