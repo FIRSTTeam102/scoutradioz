@@ -85,6 +85,20 @@ export declare interface AggRange extends DbDocument {
 }
 
 /**
+ * Contains the ranges for aggregations of metrics per org, per event; as well as for non-team-specific event metrics.
+ * @collection dataranges
+ * @interface DataRange
+ */
+export declare interface DataRange extends DbDocument {
+	org_key: OrgKey|null;
+	event_key: EventKey;
+	metric_id: string;
+	data_type: string|null;
+	min: number;
+	max: number;
+}
+
+/**
  * Data for an event -- From TBA API.
  * @collection events
  * @interface Event
@@ -834,12 +848,13 @@ export declare interface UserAgent {
 /**
  * Possible collection names in the SR database.
  */
-export declare type CollectionName = 'aggranges'|'events'|'eventdata'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'supporters'|'sveltesessions'|'teams'|'uploads'|'users';
+export declare type CollectionName = 'aggranges'|'dataranges'|'events'|'eventdata'|'eventscoutingsummary'|'i18n'|'layout'|'matches'|'matchscouting'|'orgs'|'orgschemas'|'orgteamvalues'|'heatmapcolors'|'passwords'|'pitscouting'|'platformsettings'|'rankingpoints'|'rankings'|'roles'|'schemas'|'scoutingpairs'|'sessions'|'supporters'|'sveltesessions'|'teams'|'uploads'|'users';
 /**
  * Gets the correct schema for the given collection name.
  */
 export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'aggranges' ? AggRange :
+	colName extends 'dataranges' ? DataRange :
 	colName extends 'events' ? Event :
 	colName extends 'eventdata' ? EventData :
 	colName extends 'eventscoutingsummary' ? EventScoutingSummary :

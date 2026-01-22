@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -670,6 +670,7 @@ export class MatchDataHelper {
 
 		//// OPR & cOPR
 		let teamMap: Dict<any> = {};
+		let metricIds: Dict<any> = {};
 		// process the OPR first
 		if (oprInfo) {
 			let oprKeys = Object.keys(oprInfo);
@@ -681,6 +682,9 @@ export class MatchDataHelper {
 				thisOpr = thisOpr.charAt(0).toUpperCase() + thisOpr.slice(1);
 				thisOpr = 'tba' + thisOpr;
 				//logger.debug(`Processing OPR type ${thisOpr}`);
+
+				// add metric to the metricIds map
+				metricIds[thisOpr] = thisOpr;
 
 				let teamKeys = Object.keys(oprInfo[oprKeys[oprIdx]]);
 				if (teamKeys.length > 0) {
@@ -714,6 +718,9 @@ export class MatchDataHelper {
 				thisCOpr = thisCOpr.charAt(0).toUpperCase() + thisCOpr.slice(1);
 				thisCOpr = 'tba' + thisCOpr;
 				//logger.debug(`Processing OPR type ${thisCOpr}`);
+
+				// add metric to the metricIds map
+				metricIds[thisCOpr] = thisCOpr;
 
 				let teamKeys = Object.keys(coprInfo[coprKeys[coprIdx]]);
 				if (teamKeys.length > 0) {
@@ -771,6 +778,9 @@ export class MatchDataHelper {
 					// process key name - prefix 'epa'
 					thisEpaKey = 'epa' + thisEpaKey.charAt(0).toUpperCase() + thisEpaKey.slice(1);
 
+					// add metric to the metricIds map
+					metricIds[thisEpaKey] = thisEpaKey;
+
 					let thisValue = thisStat.epa.breakdown[epaKeys[epaIdx]];
 					teamMap[thisTeamKey]['data'][thisEpaKey] = thisValue;
 				}
@@ -792,7 +802,67 @@ export class MatchDataHelper {
 		// Now, insert the new data
 		await utilities.insert('eventdata', eventDataArr);
 
-		logger.info('EXIT inserted ' + eventDataArr.length);
+		////
+		//// now update event data ranges (min & max)
+		////
+		let rangeMap: Dict<DataRange> = {};
+		// initialize rangeMap
+		let metricIdKeys = Object.keys(metricIds);
+		for (let metricIdx = 0; metricIdx < metricIdKeys.length; metricIdx++) {
+			let thisMetricId = metricIdKeys[metricIdx];
+			rangeMap[thisMetricId] = {
+				org_key: null,
+				event_key: eventKey,
+				metric_id: thisMetricId,
+				data_type: null,
+				min: Number.POSITIVE_INFINITY,
+				max: Number.NEGATIVE_INFINITY
+			};
+		}
+		// process each team's eventdata
+		for (let eventDataIdx = 0; eventDataIdx < eventDataArr.length; eventDataIdx++) {
+			let thisEventData = eventDataArr[eventDataIdx];
+			let thisData = thisEventData.data;
+			// skip if data do not exist
+			if (!thisData) continue;
+			// process each metric if data exists
+			for (let metricIdx = 0; metricIdx < metricIdKeys.length; metricIdx++) {
+				let thisMetricId = metricIdKeys[metricIdx];
+				if (!rangeMap[thisMetricId]) continue; // sanity check
+				let thisValue = thisData[thisMetricId];
+				if (typeof thisValue === 'number') {
+					// check min
+					if (thisValue < rangeMap[thisMetricId].min)
+						rangeMap[thisMetricId].min = thisValue;
+					// check max
+					if (thisValue > rangeMap[thisMetricId].max)
+						rangeMap[thisMetricId].max = thisValue;
+				}
+			}
+		}
+		// convert rangeMap to array
+		let rangeArr: DataRange[] = [];
+		let rangeMetricIds = Object.keys(rangeMap);
+		for (let rangeIdx = 0; rangeIdx < rangeMetricIds.length; rangeIdx++) {
+			let thisRangeMetricId = rangeMetricIds[rangeIdx];
+			if (!rangeMap[thisRangeMetricId]) continue; // sanity check
+			// only add to array if min & max have been updated
+			if (rangeMap[thisRangeMetricId].min !== Number.POSITIVE_INFINITY &&
+				rangeMap[thisRangeMetricId].max !== Number.NEGATIVE_INFINITY) {
+				rangeArr.push(rangeMap[thisRangeMetricId]);
+			}
+		}
+
+		// sanity check
+		//logger.debug('rangeArr=' + JSON.stringify(rangeArr));
+
+		// First delete existing event data ranges for the given event
+		// (org_key=null and data_type=null indicate event-level ranges)
+		await utilities.remove('dataranges', {'event_key': eventKey, 'org_key': null, 'data_type': null});
+		// Now, insert the new data
+		await utilities.insert('dataranges', rangeArr);
+
+		logger.info('EXIT inserted ' + eventDataArr.length + ' eventdata records and ' + rangeArr.length + ' dataranges for event ' + eventKey);
 		logger.removeContext('funcName');
 	}
 
