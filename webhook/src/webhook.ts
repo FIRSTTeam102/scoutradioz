@@ -297,7 +297,7 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 	}
 
 	// Synchronize the rankings (just in case)
-	await syncRankings(event_key);
+	await syncEventData(event_key);
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
@@ -421,7 +421,8 @@ async function handleMatchScore( data: {match: Match} ) {
 	}
 	
 	// Synchronize the rankings
-	// await syncRankings(event_key); //////////////////////////////////////////////////////////////
+	// 2026-01-16, M.O'C: Re-enabling syncing rankings (now "event data") after match score
+	await syncEventData(event_key);
 }
 
 async function handleStartingCompLevel( data: StartingCompLevel ) {
@@ -430,7 +431,7 @@ async function handleStartingCompLevel( data: StartingCompLevel ) {
 	let event_key = data.event_key; // <-- Comment this out & send 'starting_comp_level' webhooks from TBA to cause errors
 	
 	// Synchronize the rankings
-	await syncRankings(event_key);
+	await syncEventData(event_key);
 }
 
 async function handleAllianceSelection( data: any /*TODO*/ ) {
@@ -469,7 +470,7 @@ async function handleScheduleUpdated( data: ScheduleUpdated /*TODO*/ ) {
 	}
 
 	// Synchronize the rankings (just in case)
-	await syncRankings(event_key);
+	await syncEventData(event_key);
 }
 
 async function handleAwardsPosted( data: any /*TODO*/ ) {
@@ -480,11 +481,11 @@ async function handleAwardsPosted( data: any /*TODO*/ ) {
 ////////// Helper functions
 
 // Pull down rankings for event event_key
-async function syncRankings(event_key: EventKey) {
-	logger.addContext('funcName', 'syncRankings');
+async function syncEventData(event_key: EventKey) {
+	logger.addContext('funcName', 'syncEventData');
 	logger.info('ENTER');
 
-	// Reload the rankings from TBA
+	//// Reload the rankings from TBA
 	let rankingUrl = 'event/' + event_key + '/rankings';
 	logger.info('rankingUrl=' + rankingUrl);
 
@@ -508,6 +509,9 @@ async function syncRankings(event_key: EventKey) {
 	// Insert into DB
 	//await utilities.insert("currentrankings", rankArr);
 	await utilities.insert('rankings', rankArr);
+
+	//// Pull TBA OPR, cOPR, Statbotics
+	// TODO
 }
 
 // Send push notifications for a particular match.

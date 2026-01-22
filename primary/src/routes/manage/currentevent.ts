@@ -119,41 +119,12 @@ router.post('/updatematch', wrap(async (req, res) => {
 	let event_key = req.event.key;
 	let org_key = req._user.org_key;
 		
-	let eventKey = req.event.key;
-	
 	// While we're here - Get the latest ranking (& OPR data...? maybe not?)
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
 	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
 
-	// Reload the rankings from TBA
-	let rankingUrl = 'event/' + eventKey + '/rankings';
-	logger.debug('rankingUrl=' + rankingUrl);
-
-	let rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
-	let rankArr: Ranking[] = [];
-	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
-		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-		let thisRankings = rankinfo.rankings;
-		for (let thisRank of thisRankings) {
-			thisRank['event_key'] = eventKey;
-			rankArr.push(thisRank);
-		}
-	}
-	//logger.debug('rankArr=' + JSON.stringify(rankArr));
-
-	let rankMap: Dict<Ranking> = {};
-	for (let rankIdx = 0; rankIdx < rankArr.length; rankIdx++) {
-		//logger.debug('rankIdx=' + rankIdx + ', team_key=' + rankings[rankIdx].team_key + ', rank=' + rankings[rankIdx].rank);
-		rankMap[rankArr[rankIdx].team_key] = rankArr[rankIdx];
-	}
-
-	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	// Delete the current rankings
-	//await utilities.remove("currentrankings", {});
-	await utilities.remove('rankings', {'event_key': event_key});
-	// Insert into DB
-	//await utilities.insert("currentrankings", rankArr);
-	await utilities.insert('rankings', rankArr);
+	// Synchronize the event data such as rankings, OPR, Statbotics, etc.
+	await matchDataHelper.retrieveAndStoreEventData(event_year, event_key);
 
 	// Delete the matching match record
 	await utilities.remove('matches', {'key': matchId});
@@ -195,33 +166,8 @@ router.post('/updatematches', wrap(async (req, res) => {
 	let event_year = req.event.year;
 	let org_key = req._user.org_key;
 
-	// While we're here - Get the latest ranking (& OPR data...? maybe not?)
-	// https://www.thebluealliance.com/api/v3/event/2018njfla/rankings
-	// https://www.thebluealliance.com/api/v3/event/2018njfla/oprs (?)
-
-	// Reload the rankings from TBA
-	let rankingUrl = 'event/' + eventKey + '/rankings';
-	logger.debug('rankingUrl=' + rankingUrl);
-
-	let rankinfo = await utilities.requestTheBlueAlliance(rankingUrl);
-	let rankArr = [];
-	if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
-		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-		let thisRankings = rankinfo.rankings;
-		for (let thisRank of thisRankings) {
-			thisRank['event_key'] = eventKey;
-			rankArr.push(thisRank);
-		}
-	}
-	logger.trace('rankArr=' + JSON.stringify(rankArr));
-
-	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	// Delete the current rankings
-	//await utilities.remove("currentrankings", {});
-	await utilities.remove('rankings', {'event_key': eventKey});
-	// Insert into DB
-	//await utilities.insert("currentrankings", rankArr);
-	await utilities.insert('rankings', rankArr);
+	// Synchronize the event data such as rankings, OPR, Statbotics, etc.
+	await matchDataHelper.retrieveAndStoreEventData(event_year, eventKey);
 
 	// Get matches data from TBA
 	let url = 'event/' + eventKey + '/matches';

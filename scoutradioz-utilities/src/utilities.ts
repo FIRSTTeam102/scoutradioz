@@ -1034,6 +1034,31 @@ export class Utilities {
 	}
 
 	/**
+	 * Asynchronous request to Statbotics API. Requires a URL ending to execute correctly.
+	 * @param url ENDING of URL, after "https://.../v3/" DO NOT INCLUDE A / AT THE START
+	 * @return JSON-formatted response from Statbotics
+	 * @throws Network error 
+	 */
+	async requestStatbotics(url: string): Promise<any> {
+		logger.addContext('funcName', 'requestStatbotics');
+
+		//Setup our request URL (may include parameters in url)
+		// example: https://api.statbotics.io/v3/team_events?event=2025mrcmp
+		let requestURL = 'https://api.statbotics.io/v3/' + url; // + `&t=${Date.now()}`;
+
+		logger.info(`Sending request to Statbotics at ${url}`);
+
+		// Fetch from Statbotics (requires at least Node v18)
+		let response = await fetch(requestURL);
+
+		let json = await response.json();
+
+		if (this.options.debug) logger.trace(`Full Statbotics response: ${JSON.stringify(json)}`);
+
+		return json;
+	}
+
+	/**
 	 * Asynchronous request to FIRST's API. Requires a URL ending to execute correctly. 
 	 * @param url ENDING of URL, after "https://.../v2.0/" DO NOT INCLUDE A / AT THE START
 	 * @return JSON-formatted response from FIRST
