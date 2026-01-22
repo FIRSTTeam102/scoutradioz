@@ -854,7 +854,7 @@ export class MatchDataHelper {
 		}
 
 		// sanity check
-		//logger.debug('rangeArr=' + JSON.stringify(rangeArr));
+		logger.debug('Created ' + rangeArr.length + ' min/max values for ' + eventKey);
 
 		// First delete existing event data ranges for the given event
 		// (org_key=null and data_type=null indicate event-level ranges)
