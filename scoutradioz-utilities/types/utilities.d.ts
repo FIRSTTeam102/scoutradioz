@@ -258,6 +258,13 @@ export declare class Utilities {
      */
     requestTheBlueAlliance(url: string): Promise<any>;
     /**
+     * Asynchronous request to Statbotics API. Requires a URL ending to execute correctly.
+     * @param url ENDING of URL, after "https://.../v3/" DO NOT INCLUDE A / AT THE START
+     * @return JSON-formatted response from Statbotics
+     * @throws Network error
+     */
+    requestStatbotics(url: string): Promise<any>;
+    /**
      * Asynchronous request to FIRST's API. Requires a URL ending to execute correctly.
      * @param url ENDING of URL, after "https://.../v2.0/" DO NOT INCLUDE A / AT THE START
      * @return JSON-formatted response from FIRST

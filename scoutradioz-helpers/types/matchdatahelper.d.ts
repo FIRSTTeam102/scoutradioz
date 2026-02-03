@@ -68,6 +68,11 @@ export declare class MatchDataHelper {
      */
     static getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns?: boolean): Promise<MongoDocument[]>;
     /**
+     * Retrieve event data (rankings, OPRs, EPAs, etc.) for event and stores in DB
+     * @param {string} eventKey Event key
+     */
+    static retrieveAndStoreEventData(eventYear: number, eventKey: string): Promise<void>;
+    /**
      * Recalculates aggregated data ranges for org & event and stores in DB
      * @param {string} org_key Org key
      * @param {number} event_year Year of event
