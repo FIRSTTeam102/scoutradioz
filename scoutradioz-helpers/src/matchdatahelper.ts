@@ -634,19 +634,13 @@ export class MatchDataHelper {
 		eventDataPromises.push(statboticsPromise);
 
 		// wait for all the pulls to finish
-		let eventData = await Promise.all(eventDataPromises);
-
-		// extract the various data
-		let rankinfo = eventData[0]; 
-		let oprInfo = eventData[1];
-		let coprInfo = eventData[2];
-		let statboticsInfo = eventData[3];
+		let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(eventDataPromises);
 		
 		//// Rankings from TBA
 		let rankArr: Ranking[] = [];
-		if (rankinfo && rankinfo.rankings && rankinfo.rankings.length > 0) {
+		if (rankInfo && rankInfo.rankings && rankInfo.rankings.length > 0) {
 			// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-			let thisRankings = rankinfo.rankings;
+			let thisRankings = rankInfo.rankings;
 			for (let thisRank of thisRankings) {
 				thisRank['event_key'] = eventKey;
 				rankArr.push(thisRank);
