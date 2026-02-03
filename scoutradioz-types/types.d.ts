@@ -92,8 +92,25 @@ export declare interface AggRange extends DbDocument {
 export declare interface DataRange extends DbDocument {
 	org_key: OrgKey|null;
 	event_key: EventKey;
+	/**
+	 * Metric id as defined in the json, e.g., "contributedPoints" (equivalent to "key" in soon-to-be deprecated AggRange table)
+	 */
 	metric_id: string;
-	data_type: string|null;
+	/**
+	 * The type of aggregation.
+	 * 
+	 * - Minimum: `MIN`
+	 * - Floor: `FLR` [10th percentile]
+	 * - Median: `MED` [50th percentile]
+	 * - Average: `AVG`
+	 * - Trending: `TRN` [Exponential Moving Average]
+	 * - Capability: `CPB` [90th percentile]
+	 * - Maximum: `MAX`
+	 * - Standard Dev: `STD`
+	 * - Variance: `VAR`
+	 * - `null` for metrics that don't aggregate, like OPR and EPA.
+	 */
+	data_type: 'MIN'|'FLR'|'MED'|'AVG'|'TRN'|'CPB'|'MAX'|'STD'|'VAR'|null;
 	min: number;
 	max: number;
 }
