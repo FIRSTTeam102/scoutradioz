@@ -7,6 +7,7 @@
 	import Slider from './Slider.svelte';
 	import Textblock from './Textblock.svelte';
 	import Image from './Image.svelte';
+	import NumberInput from './NumberInput.svelte';
 	
 	interface Props {
 		layout: SchemaItem[];
@@ -56,6 +57,12 @@
 			/>
 		{:else if field.type === 'textblock'}
 			<Textblock
+				bind:value={formData[field.id]}
+				{field}
+				{onchange}
+			/>
+		{:else if field.type === 'number'}
+			<NumberInput
 				bind:value={formData[field.id]}
 				{field}
 				{onchange}

@@ -133,6 +133,10 @@ export interface TextBlockItem extends FormInputItem {
 	type: 'textblock';
 }
 
+export interface NumberInputItem extends FormInputItem {
+	type: 'number';
+}
+
 export interface CheckBoxItem extends FormInputItem {
 	type: 'checkbox';
 }
@@ -193,7 +197,7 @@ export interface DerivedItem extends SchemaItemBase {
  * Note: Since some types don't need an id, you may get typescript errors when trying to access the id property.
  * Use e.g. `if ('id' in item)` to check if the item has an id, as that "in" syntax is preferred by TS
  */
-export type SchemaItem = TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | ImageItem | SpacerItem | DerivedItem | DerivedItemLegacy;
+export type SchemaItem = NumberInputItem | TextBlockItem | CheckBoxItem | CounterItem | SliderItem | CounterItem | MultiselectItem | HeaderItem | SubheaderItem | ImageItem | SpacerItem | DerivedItem | DerivedItemLegacy;
 
 /**
  * Sub-object SPR calculation
@@ -224,12 +228,11 @@ export declare interface Schema extends DbDocument {
 }
 
 /**
- * Ties an org to a layout key
- * TODO: link org+event instead of just org+year
+ * Ties an org to a layout key for a specific event
  */
 export declare interface OrgSchema extends DbDocument {
 	org_key: OrgKey;
-	year: number;
+	event_key: EventKey;
 	form_type: 'matchscouting'|'pitscouting';
 	/** ID of the item in the Schemas database */
 	schema_id: ObjectId;

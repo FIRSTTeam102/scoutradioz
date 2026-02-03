@@ -330,7 +330,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 				ttokenize,
 				tparse,
 				tresolve,
-			} = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, thisScored.data);
+			} = await matchDataHelper.calculateDerivedMetrics(org_key, event_key, thisScored.data);
 			
 			times.db += db;
 			times.constructor += constructor;

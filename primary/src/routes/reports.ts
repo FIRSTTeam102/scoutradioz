@@ -485,7 +485,7 @@ router.get('/teamintelhistory', wrap(async (req, res) => {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKeysArray[0], colCookie);
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { 'data':{$exists:true}, 'org_key': orgKey, 'team_key': teamKey, 'year': eventYear } });
@@ -741,7 +741,7 @@ router.get('/teamdata', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie);
 
 	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -788,7 +788,7 @@ router.get('/matchdata', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
+	let scoreLayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie, true);
 
 	logger.trace(`scoreLayout: ${JSON.stringify(scoreLayout)}`);
 
@@ -838,7 +838,7 @@ router.get('/matchmetrics', wrap(async (req, res) =>  {
 	// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie, true);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie, true);
 
 	let aggQuery = [];
 	let redAllianceArray = match.alliances.red.team_keys;
@@ -960,7 +960,6 @@ router.get('/metricsranked', wrap(async (req, res) => {
 	logger.addContext('funcName', 'metricsranked[get]');
 	logger.info('ENTER');
 	
-	let eventYear = req.event.year;
 	let orgKey = req._user.org_key;
 	let eventKey = req.event.key;
 
@@ -1092,7 +1091,6 @@ router.get('/metrics', wrap(async (req, res) => {
 	logger.addContext('funcName', 'metrics[get]');
 	logger.info('ENTER');
 	
-	let eventYear = req.event.year;
 	const org_key = req._user.org_key;
 	
 	// for later querying by event_key
@@ -1313,7 +1311,7 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// 2020-02-15, M.O'C: Leverage column selection cookies - pull in the cookies
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
-	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventKey, colCookie);
 
 	// Build the aggregation data
 	let aggQuery = [];
@@ -1445,7 +1443,21 @@ router.get('/exportdata', wrap(async (req, res) => {
 	logger.info('ENTER event_key=' + eventKey + ',org_key=' + orgKey + ',data_type=' + dataType + ',dataSpan=' + dataSpan + ',req.shortagent=' + JSON.stringify(req.shortagent));
 
 	// read in the list of form options
-	const { layout: exportLayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, dataType);
+
+	const exportLayout: SchemaItem[] = [];
+
+	for (const orgschema of await utilities.find('orgschemas', {org_key: orgKey, form_type: dataType, event_key: { $regex: '^' + eventYear }})) {
+		const schema = await utilities.findOne('schemas', { _id: orgschema.schema_id });
+		if (schema) {
+			schema.layout.forEach(item => {
+				if (matchDataHelper.isMetric(item) && !exportLayout.some(
+					existingItem => matchDataHelper.isMetric(existingItem) && existingItem.id === item.id
+				)) {
+					exportLayout.push(item);
+				}
+			});
+		}
+	}
 
 	// sanity check
 	//logger.debug("layout=" + JSON.stringify(exportLayout));
