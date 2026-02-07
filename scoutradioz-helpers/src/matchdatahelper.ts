@@ -460,9 +460,9 @@ export class MatchDataHelper {
 		if (importdata && importdata.length > 0) {
 			for (let datafield of importdata) {
 				let sourcedata = undefined;
-				if (pitData!.data && 'pit' == datafield.substring(0, 3).toLowerCase())
+				if (pitData && pitData.data && 'pit' == datafield.substring(0, 3).toLowerCase())
 					sourcedata = pitData.data;
-				if (eventData!.data && 'evt' == datafield.substring(0, 3).toLowerCase())
+				if (eventData && eventData.data && 'evt' == datafield.substring(0, 3).toLowerCase())
 					sourcedata = eventData.data;
 				logger.debug(`sourcedata = ${JSON.stringify(sourcedata)}`);
 				if (sourcedata) {
