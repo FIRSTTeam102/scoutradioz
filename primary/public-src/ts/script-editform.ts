@@ -200,7 +200,7 @@ const pigrammerSchema = {
 				type: 'object',
 				properties: {
 					type: {
-						const: 'import'
+						const: 'import_data'
 					},
 					data_fields: {
 						type: 'array',
