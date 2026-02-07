@@ -1,8 +1,8 @@
 import assert from 'assert';
-import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem } from 'scoutradioz-types';
+import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem, ImportItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
-const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image'];
+const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image', 'import'];
 
 export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[]) {
 	assert(sprLayout.points_per_robot_metric, 'SPR calculation must have "points\\_per\\_robot\\_metric" which refers to the ID of a field in your match form schema');
@@ -125,6 +125,9 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 			case 'image':
 				validateImage(item, orgImageKeys);
 				break;
+			case 'import':
+				validateImport(item);
+				break;
 			default:
 				// @ts-ignore
 				throw new TypeError(`Unexpected item.type ${item.type} - must be one of ${validTypes.join(', ')}`);
@@ -235,6 +238,11 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 	function validateImage(item: ImageItem, orgImageKeys: string[]) {
 		checkExpectedKeys(item, ['type', 'image_id'], true);
 		assert(orgImageKeys.includes(item.image_id), `Image ID ${item.image_id} not found in organization images`);
+	}
+
+	function validateImport(item: ImportItem) {
+		checkExpectedKeys(item, ['type', 'data_fields'], true);
+		// assert(orgImageKeys.includes(item.image_id), `Image ID ${item.image_id} not found in organization images`);
 	}
 
 	function checkId(item: { id: string }) {

@@ -186,7 +186,7 @@ router.get('/editform', wrap(async (req, res) => {
 			{ "type": "header", "label": "Sample" },
 			{ "type": "subheader", "label": "Replace this JSON with the code that defines your scouting form" },
 			{ "type": "spacer" },
-			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived" ], "id": "yourIdsShouldBeCamelCase" },
+			{ "type": "multiselect", "label": "You can insert form elements of the following type:", "options": [ "header", "subheader", "spacer", "checkbox", "textblock", "counter", "multiselect", "slider", "derived", "import" ], "id": "yourIdsShouldBeCamelCase" },
 			{ "type": "derived", "id": "contributedPoints", "formula": "1 + min(2 * 3, 1/4) - log(32, 2)"}
 		]`,
 		// 2025-02-01, M.O'C: Adding SPR calculations

@@ -195,6 +195,18 @@ const pigrammerSchema = {
 				},
 				required: ['type', 'label', 'id'],
 				additionalProperties: false
+			},
+			{
+				type: 'object',
+				properties: {
+					type: {
+						const: 'import'
+					},
+					data_fields: {
+						type: 'array',
+						items: {}
+					}
+				}
 			}
 		]
 	}
