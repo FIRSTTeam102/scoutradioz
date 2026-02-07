@@ -228,7 +228,7 @@ export interface DerivedItem extends SchemaItemBase {
 
 export interface ImportDataItem extends SchemaItemBase {
 	type: 'importdata';
-	datafields: any[];
+	datafields: string[];
 	id: string;
 }
 

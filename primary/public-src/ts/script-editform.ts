@@ -203,8 +203,8 @@ const pigrammerSchema = {
 						const: 'importdata'
 					},
 					datafields: {
-						type: 'object',
-						additionalProperties: {
+						type: 'array',
+						items: {
 							type: 'string'
 						}
 					}

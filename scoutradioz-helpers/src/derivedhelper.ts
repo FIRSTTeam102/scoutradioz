@@ -21,6 +21,7 @@ export class DerivedCalculator {
 	}
 
 	parseValue(val: value, allowString = false): value {
+		//logger.debug(`allowString=${allowString} - Parsing value: ${val} (type ${typeof val}) JSON.stringify(val)=${JSON.stringify(val)}`);
 		if (typeof val === 'number') return val;
 		// otherwise, val is string
 		if (val === 'true') return 1;
@@ -28,6 +29,7 @@ export class DerivedCalculator {
 		let parsed = parseFloat(val);
 		if (!isNaN(parsed)) return parsed;
 		let fromDict = this.values[val];
+		//logger.debug(`--- Parsed value from dict: ${fromDict} (type ${typeof fromDict}) JSON.stringify(fromDict)=${JSON.stringify(fromDict)}`);
 		if (typeof fromDict === 'string' || typeof fromDict === 'number') return fromDict;
 		// strings only allowed as args to multiselect and are surrounded by singlequotes
 		if (allowString && typeof val === 'string' && val.startsWith('\'') && val.endsWith('\'')) return val.substring(1, val.length - 1);

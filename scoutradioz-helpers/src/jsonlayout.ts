@@ -47,6 +47,7 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 			throw new Error(`Issue with item #${i}: ${err}.\nRelevant item: ${JSON.stringify(item)}`, { cause: i });
 		}
 	}
+	//console.log(`Finished validating layout items. Test data object formed: ${JSON.stringify(testData)}`);
 	// after forming the testdata object, attempt to calculate derived metrics
 	let calculator = new DerivedCalculator(convertValuesDict(testData));
 	for (let i = 0; i < layout.length; i++) {
@@ -127,6 +128,10 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 				break;
 			case 'importdata':
 				validateImportData(item);
+				// add a dummy value for each imported data field in the array
+				for (let field of item.datafields) {
+					testData[field] = 0;
+				}
 				break;
 			default:
 				// @ts-ignore
