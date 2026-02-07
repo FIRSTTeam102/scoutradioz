@@ -6,6 +6,7 @@ import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, Mat
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
+import { json } from 'stream/consumers';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -455,6 +456,25 @@ export class MatchDataHelper {
 			if (item.type == 'importdata')
 				importdata = item.datafields;
 		logger.debug(`importdata = ${JSON.stringify(importdata)}`);
+
+		if (importdata && importdata.length > 0) {
+			for (let datafield of importdata) {
+				let sourcedata = undefined;
+				if (pitData!.data && 'pit' == datafield.substring(0, 3).toLowerCase())
+					sourcedata = pitData.data;
+				if (eventData!.data && 'evt' == datafield.substring(0, 3).toLowerCase())
+					sourcedata = eventData.data;
+				logger.debug(`sourcedata = ${JSON.stringify(sourcedata)}`);
+				if (sourcedata) {
+					let fieldname = datafield.substring(3);
+					let value = 0;
+					if (sourcedata[fieldname]) {
+						value = Number(sourcedata[fieldname]);
+					}
+					matchData[datafield] = value;
+				}
+			}
+		}
 
 		const derivedLayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		let t_dbEnd = performance.now();
