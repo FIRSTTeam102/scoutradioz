@@ -321,6 +321,14 @@ router.get('/recalcderived', wrap(async (req, res) => {
 	//var debugCountdown = 0;
 	for (let i in scored) {
 		let thisScored = scored[i];
+
+		// Johan, 2/7/2026: Need to extract the team key from the match team key
+		let match_team_key = thisScored.match_team_key;
+		let lastUnderscoreIndex = match_team_key.lastIndexOf('_');
+		let team_key = undefined;
+		if (lastUnderscoreIndex !== -1) 
+			team_key = match_team_key.substring(lastUnderscoreIndex + 1);
+
 		if (thisScored.data) {
 			// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
 			let { matchData: thisScoredUpdated,
@@ -330,7 +338,7 @@ router.get('/recalcderived', wrap(async (req, res) => {
 				ttokenize,
 				tparse,
 				tresolve,
-			} = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, thisScored.data);
+			} = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, event_key, team_key, thisScored.data);
 			
 			times.db += db;
 			times.constructor += constructor;

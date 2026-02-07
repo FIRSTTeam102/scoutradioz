@@ -416,7 +416,7 @@ export class MatchDataHelper {
 	 * @param {Object} matchData Scouting data ("data" field in the db)
 	 * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
 	 */
-	static async calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData) {
+	static async calculateDerivedMetrics(org_key: string, event_year: number, event_key: string, team_key: string, matchData: MatchFormData) {
 		// let st = performance.now();
 		// Just derived fields from the org's match scouting layout for this year
 		// let derivedLayout = await utilities.find('layout',
@@ -438,6 +438,24 @@ export class MatchDataHelper {
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
+
+		// Johan 2/7/2026: Include data for pit/event calculations
+		let pitData = await utilities.findOne('pitscouting',
+			{event_key: event_key, team_key: team_key, org_key: org_key, 'data': {$exists: true}},
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		let eventData = await utilities.findOne('eventdata',
+			{event_key: event_key, team_key: team_key, 'data': {$exists: true}},
+			{},
+			{ allowCache: true, maxCacheAge: 180}
+		);
+		let importdata = undefined;
+		for (let item of schema.layout)
+			if (item.type == 'importdata')
+				importdata = item.datafields;
+		logger.debug(`importdata = ${JSON.stringify(importdata)}`);
+
 		const derivedLayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		let t_dbEnd = performance.now();
 
