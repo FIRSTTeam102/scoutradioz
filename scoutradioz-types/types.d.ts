@@ -151,7 +151,7 @@ declare interface FormSliderOptions {
 export declare interface Layout extends DbDocument {
 	year: number;
 	order: number|string;
-	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived'|'image'|'import_data';
+	type: 'checkbox'|'counter'|'counterallownegative'|'badcounter'|'slider'|'timeslider'|'multiselect'|'textblock'|'h2'|'h3'|'spacer'|'derived'|'image'|'importdata';
 	form_type: 'matchscouting'|'pitscouting';
 	org_key: OrgKey;
 	label?: string;
@@ -227,8 +227,8 @@ export interface DerivedItem extends SchemaItemBase {
 }
 
 export interface ImportDataItem extends SchemaItemBase {
-	type: 'import_data';
-	data_fields: any[];
+	type: 'importdata';
+	datafields: any[];
 	id: string;
 }
 

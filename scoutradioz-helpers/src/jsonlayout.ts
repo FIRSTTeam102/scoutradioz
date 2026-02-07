@@ -2,7 +2,7 @@ import assert from 'assert';
 import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem, ImportDataItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
-const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image', 'import_data'];
+const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image', 'importdata'];
 
 export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[]) {
 	assert(sprLayout.points_per_robot_metric, 'SPR calculation must have "points\\_per\\_robot\\_metric" which refers to the ID of a field in your match form schema');
@@ -125,7 +125,7 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 			case 'image':
 				validateImage(item, orgImageKeys);
 				break;
-			case 'import_data':
+			case 'importdata':
 				validateImportData(item);
 				break;
 			default:
@@ -241,7 +241,7 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 	}
 
 	function validateImportData(item: ImportDataItem) {
-		checkExpectedKeys(item, ['type', 'data_fields'], true);
+		checkExpectedKeys(item, ['type', 'datafields'], true);
 		// assert(orgImageKeys.includes(item.image_id), `Image ID ${item.image_id} not found in organization images`);
 	}
 
