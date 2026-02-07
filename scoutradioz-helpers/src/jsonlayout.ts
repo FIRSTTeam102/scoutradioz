@@ -241,7 +241,8 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 	}
 
 	function validateImportData(item: ImportDataItem) {
-		checkExpectedKeys(item, ['type', 'datafields'], true);
+		// 'false' because "datafields" should be an object
+		checkExpectedKeys(item, ['type', 'datafields'], false);
 		// assert(orgImageKeys.includes(item.image_id), `Image ID ${item.image_id} not found in organization images`);
 	}
 
