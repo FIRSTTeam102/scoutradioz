@@ -8,7 +8,7 @@
 		"strict": true,
 		"declaration": true,
 		"declarationDir": "./types",
-		"newLine": "crlf",
+		"newLine": "lf",
 		"skipLibCheck": true,
 		//   "removeComments": true,
 	},

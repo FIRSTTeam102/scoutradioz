@@ -13,7 +13,7 @@
 		"declarationDir": "./types",
 		"noImplicitAny": true,
 		"skipLibCheck": true,
-		"newLine": "crlf",
+		"newLine": "lf",
 		//   "removeComments": true,
 	},
 	"include": [

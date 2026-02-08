@@ -9,7 +9,7 @@
 		"noImplicitAny": false,
 		"noImplicitThis": false,
 		"moduleResolution": "node",
-		"newLine": "crlf",
+		"newLine": "lf",
 		"resolveJsonModule": true,
 	}
 }

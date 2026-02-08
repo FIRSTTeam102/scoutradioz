@@ -9,7 +9,7 @@
 		"declaration": true,
 		"declarationDir": "./types",
 		"moduleResolution": "nodenext",
-		"newLine": "crlf",
+		"newLine": "lf",
 		"skipLibCheck": true,
 		//   "removeComments": true,
 	},
