@@ -6,7 +6,6 @@ import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, Mat
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
-import { json } from 'stream/consumers';
 
 const logger = log4js.getLogger('helpers.matchData');
 logger.level = process.env.LOG_LEVEL || 'debug';
@@ -443,29 +442,30 @@ export class MatchDataHelper {
 
 		// Johan 2/7/2026: Include data for pit/event calculations
 		let pitData = await utilities.findOne('pitscouting',
-			{event_key: event_key, team_key: team_key, org_key: org_key, 'data': {$exists: true}},
+			{event_key, team_key, org_key, 'data': {$exists: true}},
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		let eventData = await utilities.findOne('eventdata',
-			{event_key: event_key, team_key: team_key, 'data': {$exists: true}},
+			{event_key, team_key, 'data': {$exists: true}},
 			{},
 			{ allowCache: true, maxCacheAge: 180}
 		);
-		let importdata = undefined;
-		for (let item of schema.layout)
-			if (item.type == 'importdata')
-				importdata = item.datafields;
-		logger.debug(`importdata = ${JSON.stringify(importdata)}`);
+		// Grab the datafields of all importdata objects and combine them into a single array
+		let importdata = schema.layout
+			.filter(item => item.type === 'importdata')
+			.map(item => item.datafields)
+			.reduce((accumulator, datafields) => [...accumulator, ...datafields], []);
+		logger.trace(`importdata = ${JSON.stringify(importdata)}`);
 
 		if (importdata && importdata.length > 0) {
 			for (let datafield of importdata) {
 				let sourcedata = undefined;
-				if (pitData && pitData.data && 'pit' == datafield.substring(0, 3).toLowerCase())
+				if (pitData?.data && 'pit' == datafield.substring(0, 3).toLowerCase())
 					sourcedata = pitData.data;
-				if (eventData && eventData.data && 'evt' == datafield.substring(0, 3).toLowerCase())
+				if (eventData?.data && 'evt' == datafield.substring(0, 3).toLowerCase())
 					sourcedata = eventData.data;
-				logger.debug(`sourcedata = ${JSON.stringify(sourcedata)}`);
+				// logger.trace(`sourcedata = ${JSON.stringify(sourcedata)}`);
 				if (sourcedata) {
 					let fieldname = datafield.substring(3);
 					let value = 0;
