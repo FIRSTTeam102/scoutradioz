@@ -1,7 +1,2 @@
-# Set core.autocrlf to true for the rest of the repository
-* text=auto eol=auto
-# Set all .sh files to use LF instead of CRLF
-*.sh text eol=lf
-
-# Set core.autocrlf to false for the .devcontainer folder
-.devcontainer/* -text eol=lf
+# Set all text files to LF for the whole repository
+* text=auto eol=lf

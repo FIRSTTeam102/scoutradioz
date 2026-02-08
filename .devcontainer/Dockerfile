@@ -3,6 +3,8 @@
 ARG VARIANT
 FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:${VARIANT}
 
+RUN git config --system core.autocrlf false && git config --system core.eol lf
+
 # Install MongoDB command line tools if on buster and x86_64 (arm64 not supported)
 ARG MONGO_TOOLS_VERSION=5.0
 RUN . /etc/os-release \
