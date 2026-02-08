@@ -91,13 +91,14 @@ export class MatchDataHelper {
 	 * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
 	 * @param item layout element
 	 */
-	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem> {
+	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem | ImportDataItem> {
 
 		switch (item.type) {
 			case 'spacer':
 			case 'header':
 			case 'subheader':
 			case 'image':
+			case 'importdata':
 				return false;
 			default:
 				return true;
