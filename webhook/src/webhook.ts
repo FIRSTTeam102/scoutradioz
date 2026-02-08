@@ -296,8 +296,8 @@ async function handleUpcomingMatch( data: UpcomingMatch, req: Request, res: Resp
 		}
 	}
 
-	// Synchronize the rankings (just in case)
-	await syncEventData(event_key);
+	// Synchronize the event data - rankings, OPRs, EPAs, etc. (just in case)
+	await matchDataHelper.retrieveAndStoreEventData(event_year, event_key);
 
 	// If any teams are "at" this event, (re)run the aggrange calculator for each one
 	// Why do this for 'upcoming match' notifications?... In case a scout posted their data late, this will catch up with their data
@@ -422,16 +422,17 @@ async function handleMatchScore( data: {match: Match} ) {
 	
 	// Synchronize the rankings
 	// 2026-01-16, M.O'C: Re-enabling syncing rankings (now "event data") after match score
-	await syncEventData(event_key);
+	await matchDataHelper.retrieveAndStoreEventData(event_year, event_key);
 }
 
 async function handleStartingCompLevel( data: StartingCompLevel ) {
 	logger.addContext('funcName', 'handleStartingCompLevel');
 	logger.info('ENTER (sync rankings only) data=' + JSON.stringify(data));
 	let event_key = data.event_key; // <-- Comment this out & send 'starting_comp_level' webhooks from TBA to cause errors
+	let event_year = parseInt(event_key.substring(0, 4));
 	
 	// Synchronize the rankings
-	await syncEventData(event_key);
+	await matchDataHelper.retrieveAndStoreEventData(event_year, event_key);
 }
 
 async function handleAllianceSelection( data: any /*TODO*/ ) {
@@ -470,7 +471,7 @@ async function handleScheduleUpdated( data: ScheduleUpdated /*TODO*/ ) {
 	}
 
 	// Synchronize the rankings (just in case)
-	await syncEventData(event_key);
+	await matchDataHelper.retrieveAndStoreEventData(event_year, event_key);
 }
 
 async function handleAwardsPosted( data: any /*TODO*/ ) {
@@ -509,9 +510,6 @@ async function syncEventData(event_key: EventKey) {
 	// Insert into DB
 	//await utilities.insert("currentrankings", rankArr);
 	await utilities.insert('rankings', rankArr);
-
-	//// Pull TBA OPR, cOPR, Statbotics
-	// TODO
 }
 
 // Send push notifications for a particular match.

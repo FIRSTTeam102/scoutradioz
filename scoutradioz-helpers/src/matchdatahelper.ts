@@ -662,9 +662,12 @@ export class MatchDataHelper {
 		//await utilities.insert("currentrankings", rankArr);
 		await utilities.insert('rankings', rankArr);
 
-		//// OPR & cOPR
+		//// Store per-team, per-event data - build a Dict keyed by team key,
+		//// add to its "data" attribute as we parse data
 		let teamMap: Dict<any> = {};
 		let metricIds: Dict<any> = {};
+
+		//// OPR & cOPR
 		// process the OPR first
 		if (oprInfo) {
 			let oprKeys = Object.keys(oprInfo);
