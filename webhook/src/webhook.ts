@@ -481,37 +481,6 @@ async function handleAwardsPosted( data: any /*TODO*/ ) {
 
 ////////// Helper functions
 
-// Pull down rankings for event event_key
-async function syncEventData(event_key: EventKey) {
-	logger.addContext('funcName', 'syncEventData');
-	logger.info('ENTER');
-
-	//// Reload the rankings from TBA
-	let rankingUrl = 'event/' + event_key + '/rankings';
-	logger.info('rankingUrl=' + rankingUrl);
-
-	let rankData = await utilities.requestTheBlueAlliance(rankingUrl);
-	let rankArr = [];
-	if (rankData && rankData.rankings && rankData.rankings.length > 0) {
-		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings'; enrich with event_key 
-		let thisRankings = rankData.rankings;
-		for (let i in thisRankings) {
-			let thisRank = thisRankings[i];
-			thisRank['event_key'] = event_key;
-			rankArr.push(thisRank);
-		}
-	}
-	logger.trace('rankArr=' + JSON.stringify(rankArr));
-
-	// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
-	// Delete the current rankings
-	//await utilities.remove("currentrankings", {});
-	await utilities.remove('rankings', {'event_key': event_key});
-	// Insert into DB
-	//await utilities.insert("currentrankings", rankArr);
-	await utilities.insert('rankings', rankArr);
-}
-
 // Send push notifications for a particular match.
 async function sendUpcomingNotifications(match: Match, teamKeys: Array<TeamKey>) {
 	
