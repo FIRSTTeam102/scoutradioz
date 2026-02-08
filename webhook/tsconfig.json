@@ -7,7 +7,7 @@
         "outDir": "./build",
         "esModuleInterop": true,
         "strict": true,
-        "newLine": "crlf",
+        "newLine": "lf",
         "skipLibCheck": true
         //   "removeComments": true,
     },

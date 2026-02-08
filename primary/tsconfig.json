@@ -13,7 +13,7 @@
 		"experimentalDecorators": true,
 		"incremental": true,
 		"skipLibCheck": true, // Dumb conflict between @types/node and DOM lib
-		"newLine": "crlf",
+		"newLine": "lf",
 		//   "removeComments": true,
 	},
 	"include": [
