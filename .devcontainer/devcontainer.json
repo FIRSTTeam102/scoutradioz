@@ -12,7 +12,7 @@
 			"settings": {
 				"mdb.confirmRunAll": false
 			},
-			"extensions": ["mongodb.mongodb-vscode", "svelte.svelte-vscode"]
+			"extensions": ["mongodb.mongodb-vscode", "svelte.svelte-vscode", "github.vscode-pull-request-github", "maattdd.gitless"]
 		}
 	},
 
