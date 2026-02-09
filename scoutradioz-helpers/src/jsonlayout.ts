@@ -248,7 +248,15 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 	function validateImportData(item: ImportDataItem) {
 		// 'false' because "datafields" should be an object
 		checkExpectedKeys(item, ['type', 'datafields'], false);
-		// assert(orgImageKeys.includes(item.image_id), `Image ID ${item.image_id} not found in organization images`);
+		// make sure they're the correct types
+		assert(typeof item['type'] === 'string', new TypeError(`Property 'type' should be string; found ${typeof item['type']}!`));
+		assert(Array.isArray(item['datafields']), new TypeError(`Property 'datafields' should be an array; found ${typeof item['datafields']}!`));
+		// go through the datafields, check the prefix/namespaces
+		for (let datafield of item['datafields']) {
+			assert(datafield.length >= 4, new TypeError(`Data field value '${datafield}' should be a 3-character prefix followed by a field ID`));
+			let prefix = datafield.substring(0, 3).toLowerCase();
+			assert(prefix == 'pit' || prefix == 'ext', new TypeError(`Data field values should be prefixed by "PIT" or "EXT", found ${prefix}`));
+		}
 	}
 
 	function checkId(item: { id: string }) {
