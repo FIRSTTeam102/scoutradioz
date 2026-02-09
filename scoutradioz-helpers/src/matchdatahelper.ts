@@ -461,6 +461,7 @@ export class MatchDataHelper {
 		if (importdata && importdata.length > 0) {
 			for (let datafield of importdata) {
 				let sourcedata = undefined;
+				// "PIT" and "EXT": See also jsonlayout.ts, validateImportData()
 				if (pitData?.data && 'pit' == datafield.substring(0, 3).toLowerCase())
 					sourcedata = pitData.data;
 				if (eventData?.data && 'ext' == datafield.substring(0, 3).toLowerCase())

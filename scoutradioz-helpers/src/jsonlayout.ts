@@ -255,6 +255,7 @@ export function validateJSONLayout(layout: SchemaItem[], orgImageKeys: string[])
 		for (let datafield of item['datafields']) {
 			assert(datafield.length >= 4, new TypeError(`Data field value '${datafield}' should be a 3-character prefix followed by a field ID`));
 			let prefix = datafield.substring(0, 3).toLowerCase();
+			// "PIT" and "EXT": See also matchdatahelper.ts, calculateDerivedMetrics()
 			assert(prefix == 'pit' || prefix == 'ext', new TypeError(`Data field values should be prefixed by "PIT" or "EXT", found ${prefix}`));
 		}
 	}
