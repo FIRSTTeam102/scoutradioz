@@ -189,21 +189,24 @@ router.post('/', wrap(async (req, res) => {
 			await handleUpcomingMatch( messageData, req, res );
 			break;
 		// 2020-02-20, adding 'match_video' - appears to be the same data as 'match_score'
+		// 2026-02-09, moved 'match_video' to its own DNGN handler [might *not* be the same (and we don't want to do all the same things)]
 		case 'match_score':
-		case 'match_video':
 			await handleMatchScore( messageData );
+			break;
+		case 'match_video':
+			await handleMatchVideo( messageData );  // DNGN
 			break;
 		case 'starting_comp_level':
 			await handleStartingCompLevel( messageData );
 			break;
 		case 'alliance_selection':
-			await handleAllianceSelection( messageData );
-			break;
-		case 'schedule_updated':
-			await handleScheduleUpdated( messageData );
+			await handleAllianceSelection( messageData );  // DNGN
 			break;
 		case 'awards_posted':
 			await handleAwardsPosted( messageData );
+			break;
+		case 'schedule_updated':
+			await handleScheduleUpdated( messageData );
 			break;
 		default:
 			logger.info('unknown messageType-' + messageType + ',messageData=' + JSON.stringify(messageData));
@@ -437,6 +440,11 @@ async function handleStartingCompLevel( data: StartingCompLevel ) {
 
 async function handleAllianceSelection( data: any /*TODO*/ ) {
 	logger.addContext('funcName', 'handleAllianceSelection');
+	logger.info('ENTER DNGN data=' + JSON.stringify(data));
+}
+
+async function handleMatchVideo( data: any /*TODO*/ ) {
+	logger.addContext('funcName', 'handleMatchVideo');
 	logger.info('ENTER DNGN data=' + JSON.stringify(data));
 }
 
