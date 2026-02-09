@@ -153,6 +153,53 @@ router.get('/resynceventteams', wrap(async (req, res) => {
 	});
 }));
 
+// Function to refresh the 'event data' (OPRs & EPAs) of events
+// 	(should be called after /resynceventlist)
+router.get('/resynceventdata', wrap(async (req, res) => {
+	logger.addContext('funcName', 'resynceventdata[get]');
+	logger.info('ENTER');
+
+
+	if (typeof req.query.year !== 'string' || typeof req.query.start !== 'string' || typeof req.query.end !== 'string') {
+		return res.send({
+			success: false,
+			message: 'start, year, and end must be defined'
+		});
+	}
+	const year = parseInt(req.query.year);
+	const start = parseInt(req.query.start);
+	const end = parseInt(req.query.end); // note: splice() treats end as EXCLUSIVE, so do start=0 end=10, then start=10 end=20, etc.
+
+	if (isNaN(year) || isNaN(start) || isNaN(end)) {
+		return res.send({
+			success: false,
+			message: `start and/or year and/or end are NaN! start=${start}, year=${year}, end=${end}`
+		});
+	}
+
+	logger.debug(`Year=${year}, start=${start}, end=${end}`);
+
+	// Grab event keys from the db, and sort them by string
+	const eventKeys = await utilities.distinct('events', 'key', { year });
+	eventKeys.sort();
+
+	let keysToRequest = eventKeys.slice(start, end);
+	logger.debug(`Going to request event data for these event keys: ${keysToRequest}`);
+
+	let updatedNum = 0;
+	for (let thisEventKey of keysToRequest) {
+		await matchDataHelper.retrieveAndStoreEventData(year, thisEventKey);
+		updatedNum += 1;
+		await promiseTimeout(200); // Wait a short bit
+	}
+
+	//return a simple SUCCESS message if it works
+	return res.send({
+		success: true,
+		updated: updatedNum
+	});
+}));
+
 // Function to refresh the list of events for the current year (and) to refresh all teams data
 router.get('/resyncevents', wrap(async (req, res) => {
 	logger.addContext('funcName', 'resyncevents[get]');
