@@ -39,7 +39,7 @@ mixin Image(item, orgImages)
 
 
 mixin Checkbox(item, answer)
-	- console.log(answer)
+	//- console.log(answer)
 	div(class="w3-padding-large")
 		//- JL note: double equals 1 is on purpose
 		input(type="checkbox" class="w3-check" checked=(answer === 'true' || answer == 1) id=item.id onclick=`updateCheckbox('${item.id}')`)

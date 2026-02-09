@@ -513,7 +513,7 @@ export class MatchDataHelper {
 		let t_derivedEnd = performance.now();
 
 		// logger.trace(`${dt - st}, ${performance.now() - dt}`);
-		logger.debug('total', ttokenize, tparse, tresolve);
+		logger.trace('total', ttokenize, tparse, tresolve);
 
 		return {
 			matchData,
