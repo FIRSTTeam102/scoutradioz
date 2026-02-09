@@ -1,5 +1,5 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
@@ -30,7 +30,7 @@ export declare class MatchDataHelper {
      * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
      * @param item layout element
      */
-    static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem>;
+    static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem | ImportDataItem>;
     /**
      * Takes a sorted array of numbers (high to low, or low to high) and interpolates a value at a given percentile.
      * If the numbers are high to low, the percentile would be how far along toward the highest the result should be.
@@ -51,7 +51,7 @@ export declare class MatchDataHelper {
      * @param {Object} matchData Scouting data ("data" field in the db)
      * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
      */
-    static calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData): Promise<{
+    static calculateDerivedMetrics(org_key: string, event_year: number, event_key: string, team_key: string, matchData: MatchFormData): Promise<{
         matchData: MatchFormData;
         db: number;
         constructor: number;

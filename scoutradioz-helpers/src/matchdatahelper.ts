@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -90,13 +90,14 @@ export class MatchDataHelper {
 	 * 2025-01-23 JL: Changed function param from type to schemaitem to make TS happy
 	 * @param item layout element
 	 */
-	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem> {
+	static isMetric(item: SchemaItem): item is Exclude<SchemaItem, HeaderItem | SubheaderItem | ImageItem | SpacerItem | ImportDataItem> {
 
 		switch (item.type) {
 			case 'spacer':
 			case 'header':
 			case 'subheader':
 			case 'image':
+			case 'importdata':
 				return false;
 			default:
 				return true;
@@ -416,7 +417,7 @@ export class MatchDataHelper {
 	 * @param {Object} matchData Scouting data ("data" field in the db)
 	 * @returns {Object} matchData - Same object, not cloned, with the derived metrics added
 	 */
-	static async calculateDerivedMetrics(org_key: string, event_year: number, matchData: MatchFormData) {
+	static async calculateDerivedMetrics(org_key: string, event_year: number, event_key: string, team_key: string, matchData: MatchFormData) {
 		// let st = performance.now();
 		// Just derived fields from the org's match scouting layout for this year
 		// let derivedLayout = await utilities.find('layout',
@@ -438,6 +439,45 @@ export class MatchDataHelper {
 			{ allowCache: true, maxCacheAge: 180 }
 		);
 		assert(schema);
+
+		// Johan 2/7/2026: Include data for pit/event calculations
+		let pitData = await utilities.findOne('pitscouting',
+			{event_key, team_key, org_key, 'data': {$exists: true}},
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		let eventData = await utilities.findOne('eventdata',
+			{event_key, team_key, 'data': {$exists: true}},
+			{},
+			{ allowCache: true, maxCacheAge: 180}
+		);
+		// Grab the datafields of all importdata objects and combine them into a single array
+		let importdata = schema.layout
+			.filter(item => item.type === 'importdata')
+			.map(item => item.datafields)
+			.reduce((accumulator, datafields) => [...accumulator, ...datafields], []);
+		logger.trace(`importdata = ${JSON.stringify(importdata)}`);
+
+		if (importdata && importdata.length > 0) {
+			for (let datafield of importdata) {
+				let sourcedata = undefined;
+				// "PIT" and "EXT": See also jsonlayout.ts, validateImportData()
+				if (pitData?.data && 'pit' == datafield.substring(0, 3).toLowerCase())
+					sourcedata = pitData.data;
+				if (eventData?.data && 'ext' == datafield.substring(0, 3).toLowerCase())
+					sourcedata = eventData.data;
+				// logger.trace(`sourcedata = ${JSON.stringify(sourcedata)}`);
+				if (sourcedata) {
+					let fieldname = datafield.substring(3);
+					let value = 0;
+					if (sourcedata[fieldname]) {
+						value = Number(sourcedata[fieldname]);
+					}
+					matchData[datafield] = value;
+				}
+			}
+		}
+
 		const derivedLayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		let t_dbEnd = performance.now();
 
@@ -474,7 +514,7 @@ export class MatchDataHelper {
 		let t_derivedEnd = performance.now();
 
 		// logger.trace(`${dt - st}, ${performance.now() - dt}`);
-		logger.debug('total', ttokenize, tparse, tresolve);
+		logger.trace('total', ttokenize, tparse, tresolve);
 
 		return {
 			matchData,

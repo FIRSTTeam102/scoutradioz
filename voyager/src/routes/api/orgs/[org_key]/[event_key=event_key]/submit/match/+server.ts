@@ -91,6 +91,12 @@ export const POST: RequestHandler = async ({
 
 	for (let localMatch of data) {
 		let { event_key, org_key, actual_scorer, data, match_team_key, history } = localMatch;
+		// Johan, 2/7/2026: Need to extract the team key from the match team key
+		let lastUnderscoreIndex = match_team_key.lastIndexOf('_');
+		let team_key = undefined;
+		if (lastUnderscoreIndex !== -1) 
+			team_key = match_team_key.substring(lastUnderscoreIndex + 1);
+
 		if (!data) {
 			console.warn(`Match ${localMatch.match_team_key} does not have data in submission; ignoring and keeping data`);
 			continue;
@@ -114,7 +120,7 @@ export const POST: RequestHandler = async ({
 		}
 		console.debug('data(UPDATED:1)=', JSON.stringify(data));
 		console.log(matchDataHelper.fixDatumType, matchDataHelper.calculateDerivedMetrics);
-		let { matchData } = await matchDataHelper.calculateDerivedMetrics(org_key, event.year, data);
+		let { matchData } = await matchDataHelper.calculateDerivedMetrics(org_key, event.year, event_key, team_key, data);
 		data = matchData;
 		console.debug('data(UPDATED:2)=', JSON.stringify(data));
 

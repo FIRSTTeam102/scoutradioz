@@ -230,6 +230,11 @@ router.post('/match/submit', wrap(async (req, res) => {
 	const event_key = req.event.key;
 	let event_year = req.event.year;
 	let match_team_key = matchData.match_team_key;
+	// Johan, 2/7/2026: Need to extract the team key from the match team key
+	let lastUnderscoreIndex = match_team_key.lastIndexOf('_');
+	let team_key = undefined;
+	if (lastUnderscoreIndex !== -1) 
+		team_key = match_team_key.substring(lastUnderscoreIndex + 1);
 	let org_key = req._user.org_key; // JL note: this probably throws an error if the user is not logged in
 
 	logger.debug('match_key=' + match_team_key + ' ~ thisUserName=' + thisScouterRecord.name);
@@ -248,7 +253,7 @@ router.post('/match/submit', wrap(async (req, res) => {
 	logger.debug('matchData(UPDATED:1)=' + JSON.stringify(correctedData));
 
 	// 2022-02-22, JL: Moved dervied metric calculations into matchDataHelper
-	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, correctedData);
+	let { matchData: matchDataNew } = await matchDataHelper.calculateDerivedMetrics(org_key, event_year, event_key, team_key, correctedData);
 	correctedData = matchDataNew; // JL: this is temporary while we have debugging info
 	logger.debug('matchData(UPDATED:2)=' + JSON.stringify(correctedData));
 	
