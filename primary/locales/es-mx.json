@@ -30,7 +30,9 @@
 		"view": "Ver",
 		"login": "Iniciar sesión",
 		"browse": {
-			"pastEvents": "Para ver datos más viejos tal vez necesitarás usar la opción de menú debajo de Info y Reportes, ‘Buscar datos de eventos previos’"
+			"pastEvents": "Para ver datos más viejos tal vez necesitarás usar la opción de menú debajo de Info y Reportes, ‘Buscar datos de eventos previos’",
+			"link": "O haga clic aquí para buscar los datos por evento",
+			"title": "Ver datos por evento y organización"
 		}
 	},
 	"hello": {
