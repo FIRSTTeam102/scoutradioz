@@ -436,7 +436,8 @@ export class MatchDataHelper {
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
-		assert(orgschema);
+		let form_type = 'matchscouting';
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${event_year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
@@ -550,7 +551,8 @@ export class MatchDataHelper {
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
-		assert(orgschema);
+		let form_type = 'matchscouting';
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${event_year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
@@ -658,7 +660,8 @@ export class MatchDataHelper {
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
-		assert(orgschema);
+		let form_type = 'matchscouting';
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${event_year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
@@ -1748,7 +1751,7 @@ export class MatchDataHelper {
 		const orgschema = await utilities.findOne('orgschemas',
 			{ org_key, year, form_type },
 		);
-		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}!`);
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
