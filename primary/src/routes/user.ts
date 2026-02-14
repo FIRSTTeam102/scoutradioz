@@ -961,6 +961,10 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	const { layout: matchlayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
 	//logger.debug("matchlayout=" + JSON.stringify(matchlayout))
 	
+	// read in the event data schema for the given year
+	const eventDataSchema = await utilities.findOne('eventdataschemas', { year: eventYear });
+	logger.debug(`eventDataSchema.fields=${JSON.stringify(eventDataSchema.fields)}`);
+
 	let orgColumnDefaults;
 	let orgCols: StringDict = {};
 	//Boolean for the view
@@ -998,6 +1002,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	res.render('./user/preferences/reportcolumns', {
 		title: req.msg('user.reportcolumns.title'),
 		layout: matchlayout,
+		eventDataFields: eventDataSchema.fields,
 		savedCols: savedCols,
 		orgCols: orgCols,
 		doesOrgHaveNoDefaults: doesOrgHaveNoDefaults,

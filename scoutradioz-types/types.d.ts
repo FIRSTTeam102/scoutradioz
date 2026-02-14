@@ -530,6 +530,16 @@ export declare interface EventData extends DbDocument {
 }
 
 /**
+ * "Schema" for event data (basically, array of strings which are the keys to eventdata for a given year)
+ * @collection eventdataschemas
+ * @interface EventDataSchema
+ */
+export declare interface EventDataSchema extends DbDocument {
+	year: number;
+	fields?: string[];
+}
+
+/**
  * Values for each team that an org sets on their alliance selection page.
  * @collection heatmapcolors
  * @interface HeatMapColors
@@ -879,6 +889,7 @@ export declare type CollectionSchema<colName extends CollectionName> =
 	colName extends 'dataranges' ? DataRange :
 	colName extends 'events' ? Event :
 	colName extends 'eventdata' ? EventData :
+	colName extends 'eventdataschemas' ? EventDataSchema :
 	colName extends 'eventscoutingsummary' ? EventScoutingSummary :
 	// colName extends 'i18n' ?  :
 	colName extends 'layout' ? (DerivedLayoutLegacy|Layout|DerivedLayout) :
