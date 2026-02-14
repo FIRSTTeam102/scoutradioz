@@ -202,7 +202,9 @@
 			"setOrgDefalts": "Check this to set the organization defaults",
 			"save": "Save column selections",
 			"clearOrgDefaults": "Clear organization defaults",
-			"clearOrgDefaultsConfirmation": "Doing this will clear your organization's report column defaults (for EVERYONE, not just you). Are you sure?"
+			"clearOrgDefaultsConfirmation": "Doing this will clear your organization's report column defaults (for EVERYONE, not just you). Are you sure?",
+			"externalData": "Select external data fields to show in multi-team reports",
+			"noExternalData": "No external data fields are available yet, check after TMS synced events have occurred"
 		},
 		"heatmapcolors": {
 			"title":"Choose heat map colors",

@@ -14,6 +14,10 @@ let utilities: Utilities;
 
 export class MatchDataHelper {
 
+	static readonly SELECTED_COLUMNS_MODE_ALL: number = 0;
+	static readonly SELECTED_COLUMNS_MODE_ORG_ONLY: number = 1;
+	static readonly SELECTED_COLUMNS_MODE_EXTERNAL_ONLY: number = 2;
+
 	/**
 	 * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
 	 * @param {Utilities} utilitiesModule 
@@ -432,7 +436,8 @@ export class MatchDataHelper {
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
-		assert(orgschema);
+		let form_type = 'matchscouting';
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${event_year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
@@ -531,6 +536,105 @@ export class MatchDataHelper {
 	 * @param {string} org_key Org key
 	 * @param {number} event_year Year of event
 	 * @param {string} colCookie Comma-separated list of metric IDs
+	 * @return {object} key:key sets of metrics representing the selected columns
+	 */
+	static async getSelectedColumns(org_key: string, event_year: number, colCookie: string, mode: number = MatchDataHelper.SELECTED_COLUMNS_MODE_ALL) {
+		logger.addContext('funcName', 'getSelectedColumns');
+		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
+
+		if (!utilities) {
+			throw new Error('Utilities has not been configured!');
+		}
+
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year: event_year, form_type: 'matchscouting' },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		let form_type = 'matchscouting';
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${event_year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
+		const schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		assert(schema);
+		const scorelayoutDB = schema.layout.filter(item => MatchDataHelper.isMetric(item));
+		//const scorelayoutDB = schema.layout.filter(item => item.id);
+		logger.trace(`scoreLayoutDB=${JSON.stringify(scorelayoutDB)}`);
+
+		// Process the cookies & (if selections defined) prepare to reduce
+		let savedCols: StringDict = {};
+		let noneSelected = true;
+		//colCookie = "a,b,ccc,d";
+
+		// 2020-03-03, M.O'C: Read "default" columns from DB if none set - TODO could be cached
+		if (!colCookie) {
+			let thisOrg = await utilities.findOne('orgs',
+				{ org_key: org_key }, {},
+				{ allowCache: true }
+			);
+			////logger.trace("thisOrg=" + JSON.stringify(thisOrg));
+			let thisConfig = thisOrg.config;
+			logger.trace('thisConfig=' + JSON.stringify(thisConfig));
+
+			assert(thisConfig, 'Org has no config!'); // 2023-02-14 JL: Changed if (!thisConfig) thisConfig = {}; to an assert b/c orgs should always have a config
+			let theseColDefaults = thisOrg.config.columnDefaults;
+			if (!theseColDefaults) {
+				theseColDefaults = {};
+				thisOrg.config['columnDefaults'] = theseColDefaults;
+			}
+
+			logger.trace('theseColDefaults=' + JSON.stringify(theseColDefaults));
+			let defaultSet = theseColDefaults[event_year];
+			logger.trace('defaultSet=' + defaultSet);
+
+			if (defaultSet) {
+				colCookie = defaultSet;
+				//logger.trace('Using org default cookies=' + colCookie);
+			}
+		}
+
+		if (colCookie) {
+			logger.trace('colCookie=' + colCookie);
+			noneSelected = false;
+			let savedColArray = colCookie.split(',');
+			for (let savedCol of savedColArray)
+				savedCols[savedCol] = savedCol;
+		}
+
+		// Modify savedCols based on mode
+		if (mode === MatchDataHelper.SELECTED_COLUMNS_MODE_ORG_ONLY) {
+			// Keep only columns that are in the org's layout
+			savedCols = Object.fromEntries(Object.entries(savedCols).filter(([key]) => scorelayoutDB.some(item => item.id === key)));
+		}
+		else if (mode === MatchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY) {
+			// Keep only columns that are NOT in the org's layout
+			savedCols = Object.fromEntries(Object.entries(savedCols).filter(([key]) => !scorelayoutDB.some(item => item.id === key)));
+			// remove prefixes
+			savedCols = Object.fromEntries(Object.entries(savedCols).map(([key, value]) => {
+				let newKey = key;
+				let newValue = value;
+				if (key.startsWith('EXT|')) {
+					newKey = key.substring(4);
+					newValue = value.substring(4);
+				}
+				return [newKey, newValue];
+			}));
+			logger.trace(`External-only savedCols=${JSON.stringify(savedCols)}`);
+		}
+
+		// TODO put back to 'trace'
+		logger.debug('noneSelected=' + noneSelected + ',savedCols=' + JSON.stringify(savedCols));
+
+		logger.removeContext('funcName');
+		return savedCols;
+	}
+	
+	/**
+	 * @param {string} org_key Org key
+	 * @param {number} event_year Year of event
+	 * @param {string} colCookie Comma-separated list of metric IDs
 	 * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
 	 */
 	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns: boolean = false) {
@@ -556,7 +660,8 @@ export class MatchDataHelper {
 			{},
 			{ allowCache: true, maxCacheAge: 180 }
 		);
-		assert(orgschema);
+		let form_type = 'matchscouting';
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${event_year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },
 			{},
@@ -632,6 +737,7 @@ export class MatchDataHelper {
 		if (scorelayout)
 			retLength = scorelayout.length;
 		logger.info('EXIT returning ' + retLength);
+		//logger.debug('scorelayout=' + JSON.stringify(scorelayout));
 
 		logger.removeContext('funcName');
 		return scorelayout;
@@ -1337,6 +1443,10 @@ export class MatchDataHelper {
 		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
 		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
 
+		// 2026-02-14, M.O'C: Bolting on external data if needed
+		let selectedExternalColumns = await MatchDataHelper.getSelectedColumns(org_key, event_year, colCookie, MatchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY);
+		//logger.debug('selectedExternalColumns=' + JSON.stringify(selectedExternalColumns));
+		
 		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match: { 'team_key': { $in: teamList }, 'org_key': org_key, 'event_key': event_key } });
 
@@ -1385,7 +1495,7 @@ export class MatchDataHelper {
 		}
 
 		aggQuery.push({ $group: groupClause });
-		logger.debug('aggQuery=', aggQuery);
+		logger.trace('aggQuery=', aggQuery);
 
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggR = await utilities.aggregate('matchscouting', aggQuery);
@@ -1399,6 +1509,65 @@ export class MatchDataHelper {
 		for (let resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
 			aggRowsByTeam[aggresult[resultIdx]['_id']] = aggresult[resultIdx];
 		logger.trace('aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]));
+		//logger.debug('aggRowByTeam = ' + JSON.stringify(aggRowsByTeam));
+
+		// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
+		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
+		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+			let teamKey = rankings[rankIdx].team_key;
+			let found = false;
+			for (let aggIdx = 0; aggIdx < aggRowsByTeam.length; aggIdx++) {
+				if (aggRowsByTeam[aggIdx]._id == teamKey) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				let emptyAgg: MongoDocument = {};
+				emptyAgg['_id'] = teamKey;
+				aggRowsByTeam[teamKey] = emptyAgg;
+			}
+		}
+
+		// 2026-02-14, M.O'C: Bolting on external data if needed
+		if (selectedExternalColumns) {
+			let selectedExternalKeys = Object.keys(selectedExternalColumns);
+			if (selectedExternalKeys.length > 0) {
+				//
+				// read in the external (event) per-team data for this event, merge into the aggArray based on team_key
+				//
+				let externalData = await utilities.find('eventdata', {'event_key': event_key});
+				let externalDataMap: Dict<MongoDocument> = {};
+				for (let extIdx = 0; extIdx < externalData.length; extIdx++) {
+					externalDataMap[externalData[extIdx].team_key] = externalData[extIdx];
+				}
+				Object.keys(aggRowsByTeam).forEach(teamKey => {
+					if (!externalDataMap[teamKey]) {
+						logger.warn(`No external data for team ${teamKey} in event ${event_key}`);
+					}
+					else {
+						let thisTeam = aggRowsByTeam[teamKey];
+						for (let key of selectedExternalKeys) {
+							thisTeam[key + 'AVG'] = Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10;
+							thisTeam[key + 'MAX'] = [];
+							thisTeam[key + 'MAX'].push(Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10);
+						}
+						aggRowsByTeam[teamKey] = thisTeam;
+					}
+				});
+				//
+				// attach the selected external columns to the scorelayout for display purposes
+				//
+				for (let key of selectedExternalKeys) {
+					let newItem: any = {};
+					newItem['type'] = 'derived';
+					for (const thisKey of ['formula', 'id', 'key']) {
+						newItem[thisKey] = key;
+					}
+					scorelayout.push(newItem);
+				}
+			}
+		}
 
 		// Unspool N rows of aggregate results into tabular form
 		let avgTable: MetricRow[] = [];
@@ -1519,6 +1688,33 @@ export class MatchDataHelper {
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges
 		let currentAggRanges = await utilities.find('aggranges', { 'org_key': org_key, 'event_key': event_key });
+		// 2026-02-14, M.O'C: Bolting on external data if needed
+		if (selectedExternalColumns) {
+			let selectedExternalKeys = Object.keys(selectedExternalColumns);
+			if (selectedExternalKeys.length > 0) {
+				//
+				// read in external (event) data ranges for this event, merge into the currentAggRanges based on metric key
+				//
+				// org_key is null because these are NOT team data ranges
+				let externalDataRanges = await utilities.find('dataranges', {'event_key': event_key, org_key: null});
+				let externalDataRangesMap: Dict<MongoDocument> = {};
+				for (let rangeIdx = 0; rangeIdx < externalDataRanges.length; rangeIdx++) {
+					externalDataRangesMap[externalDataRanges[rangeIdx].metric_id] = externalDataRanges[rangeIdx];
+				}
+				//logger.debug('externalDataRangesMap=' + JSON.stringify(externalDataRangesMap));
+				for (let key of selectedExternalKeys) {
+					let newAgg: any = {};
+					newAgg['org_key'] = org_key;
+					newAgg['event_key'] = event_key;
+					newAgg['key'] = key;
+					for (const agg of ['MIN', 'AVG', 'VAR', 'MAX']) {
+						newAgg[agg + 'min'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].min : 0) * 10) / 10;
+						newAgg[agg + 'max'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].max : 0) * 10) / 10;
+					}
+					currentAggRanges.push(newAgg);
+				}
+			}
+		}
 
 		// 2024-02-07, M.O'C: Adding in super-scout notes
 		let pitData: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key': event_key, 'team_key': { $in: teamList }, 'super_data.otherNotes': { $ne: null } });
@@ -1555,7 +1751,7 @@ export class MatchDataHelper {
 		const orgschema = await utilities.findOne('orgschemas',
 			{ org_key, year, form_type },
 		);
-		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}!`);
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 
 		const schema = await utilities.findOne('schemas',
 			{ _id: orgschema.schema_id, },

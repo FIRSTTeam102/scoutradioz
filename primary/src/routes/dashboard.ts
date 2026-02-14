@@ -618,6 +618,25 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		//Aggregate with this query we made
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggArray = await utilities.aggregate('matchscouting', aggQuery);
+
+		// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
+		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+			let teamKey = rankings[rankIdx].team_key;
+			let found = false;
+			for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+				if (aggArray[aggIdx]._id == teamKey) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				let emptyAgg: MongoDocument = {};
+				emptyAgg['_id'] = teamKey;
+				aggArray.push(emptyAgg);
+			}
+		}
+
+		// sanity-check
 		if(!aggArray[0])
 			throw 'Couldn\'t find scoringdata in allianceselection';
 		
@@ -680,7 +699,72 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges
 		let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': org_key, 'event_key': event_key});
-	
+
+		//
+		// Bolt on external data if needed
+		//
+		let selectedExternalColumns = await matchDataHelper.getSelectedColumns(org_key, event_year, colCookie, matchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY);
+		logger.debug('selectedExternalColumns=' + JSON.stringify(selectedExternalColumns));
+		// get the keys of the selected external columns
+		if (selectedExternalColumns) {
+			let selectedExternalKeys = Object.keys(selectedExternalColumns);
+			if (selectedExternalKeys.length > 0) {
+				//
+				// read in the external (event) per-team data for this event, merge into the aggArray based on team_key
+				//
+				let externalData = await utilities.find('eventdata', {'event_key': event_key});
+				let externalDataMap: Dict<MongoDocument> = {};
+				for (let extIdx = 0; extIdx < externalData.length; extIdx++) {
+					externalDataMap[externalData[extIdx].team_key] = externalData[extIdx];
+				}
+				//logger.debug('externalDataMap=' + JSON.stringify(externalDataMap));
+				// merge the selected external data into the aggArray
+				for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+					let thisAgg = aggArray[aggIdx];
+					let teamKey = thisAgg._id;
+					if (externalDataMap[teamKey]) {
+						for (let key of selectedExternalKeys) {
+							thisAgg[key + 'AVG'] = (Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10).toFixed(1);
+							thisAgg[key + 'MAX'] = (Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10).toFixed(1);
+						}
+						aggArray[aggIdx] = thisAgg;
+					}
+				}
+				//
+				// read in external (event) data ranges for this event, merge into the currentAggRanges based on metric key
+				//
+				// org_key is null because these are NOT team data ranges
+				let externalDataRanges = await utilities.find('dataranges', {'event_key': event_key, org_key: null});
+				let externalDataRangesMap: Dict<MongoDocument> = {};
+				for (let rangeIdx = 0; rangeIdx < externalDataRanges.length; rangeIdx++) {
+					externalDataRangesMap[externalDataRanges[rangeIdx].metric_id] = externalDataRanges[rangeIdx];
+				}
+				//logger.debug('externalDataRangesMap=' + JSON.stringify(externalDataRangesMap));
+				for (let key of selectedExternalKeys) {
+					let newAgg: any = {};
+					newAgg['org_key'] = org_key;
+					newAgg['event_key'] = event_key;
+					newAgg['key'] = key;
+					for (const agg of ['MIN', 'AVG', 'VAR', 'MAX']) {
+						newAgg[agg + 'min'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].min : 0) * 10) / 10;
+						newAgg[agg + 'max'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].max : 0) * 10) / 10;
+					}
+					currentAggRanges.push(newAgg);
+				}
+				//
+				// attach the selected external columns to the scorelayout for display purposes
+				//
+				for (let key of selectedExternalKeys) {
+					let newItem: any = {};
+					newItem['type'] = 'derived';
+					for (const thisKey of ['formula', 'id', 'key']) {
+						newItem[thisKey] = key;
+					}
+					scoreLayout.push(newItem);
+				}
+			}
+		}
+
 		//logger.debug('aggArray=' + JSON.stringify(aggArray));
 		res.render('./dashboard/allianceselection', {
 			title: res.msg('allianceselection.title'),

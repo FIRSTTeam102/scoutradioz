@@ -3,7 +3,7 @@ import { getLogger } from 'log4js';
 import wrap from '../../helpers/express-async-handler';
 import utilities from 'scoutradioz-utilities';
 import { matchData as matchDataHelper } from 'scoutradioz-helpers';
-import type { Event, MatchScouting } from 'scoutradioz-types';
+import type { Event, EventDataSchema, MatchScouting } from 'scoutradioz-types';
 import { assert } from 'scoutradioz-http-errors';
 
 const router = express.Router();
@@ -284,6 +284,70 @@ router.get('/resyncevents', wrap(async (req, res) => {
 	//return a simple SUCCESS message if it works
 	return res.send('SUCCESS ' + year + ' updated ' + updatedNum);
 }));
+
+// Function to read and store external data schema for a given year
+router.get('/resynceventdataschema', wrap(async (req, res) => {
+	logger.addContext('funcName', 'resynceventdataschema[get]');
+	logger.info('ENTER');
+
+	// Get the year from the URL (or default to the current year)
+	let year: number;
+	if (typeof req.query.year === 'string') {
+		year = parseInt(req.query.year);
+	}
+	else {
+		year = new Date().getFullYear();
+		logger.debug('No year specified, defaulting to ' + year);
+	}
+	logger.debug('Year: ' + year);
+
+	const aggPipeline = [
+		// 1. Filter for the specific year and ensure 'data' exists/is an object
+		{ $match: { year: year, data: { $exists: true, $type: 'object' } } },
+		// 2. Convert the 'data' object into an array of k/v pairs 
+		// e.g., { "data": { "foo": 1, "bar": 2 } } -> [ {k:"foo",v:1}, {k:"bar",v:2} ]
+		{ $project: { data_kv: { $objectToArray: '$data' } } },
+		// 3. Deconstruct the array so we can look at keys
+		{ $unwind: '$data_kv' },
+		// 4. Collect ALL unique keys into a set (deduplication happens here)
+		{ $group: { _id: null, unique_fields: { $addToSet: '$data_kv.k' } } },
+		// 5. Unwind the set so we can sort the entries
+		{ $unwind: '$unique_fields' },
+		// 6. Sort alphabetically (1 = Ascending)
+		{ $sort: { 'unique_fields': 1 } },
+		// 7. Group back into a single array
+		{ $group: { _id: null, sorted_fields: { $push: '$unique_fields' } } },
+		// 8. Clean up output to show just the list
+		{ $project: { _id: 0, sorted_fields: 1 } }
+	];
+	const fieldList = await utilities.aggregate('eventdata', aggPipeline, {allowCache: true});
+
+	// build a new EventDataSchema object
+	const newSchema: EventDataSchema = {
+		year: year,
+		fields: []
+	};
+
+	let numFields = 0;
+	if (fieldList && fieldList[0] && fieldList[0].sorted_fields) {
+		logger.debug(`eventList=${JSON.stringify(fieldList[0].sorted_fields)}`);
+		numFields = fieldList[0].sorted_fields.length;
+		newSchema.fields = fieldList[0].sorted_fields;
+	}
+	else {
+		logger.warn(`No eventdata found for year ${year} or unexpected format! eventList=${JSON.stringify(fieldList)}`);
+	}
+
+	// Remove matching existing event data schema for year
+	let removeResult = await utilities.remove('eventdataschemas', { year });
+	// Now insert new event data schema
+	let insertResult = await utilities.insert('eventdataschemas', newSchema);
+
+	// return a simple SUCCESS message if it works
+	return res.send('SUCCESS ' + year + ' saved ' +  numFields);
+}));
+
+
 
 // Function to refresh all teams data
 router.get('/resyncteams', wrap(async (req, res) => {
