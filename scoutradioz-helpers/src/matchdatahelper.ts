@@ -1440,6 +1440,10 @@ export class MatchDataHelper {
 		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
 		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
 
+		// 2026-02-14, M.O'C: Bolting on external data if needed
+		let selectedExternalColumns = await MatchDataHelper.getSelectedColumns(org_key, event_year, colCookie, MatchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY);
+		//logger.debug('selectedExternalColumns=' + JSON.stringify(selectedExternalColumns));
+		
 		let aggQuery: MongoDocument[] = [];
 		aggQuery.push({ $match: { 'team_key': { $in: teamList }, 'org_key': org_key, 'event_key': event_key } });
 
@@ -1488,7 +1492,7 @@ export class MatchDataHelper {
 		}
 
 		aggQuery.push({ $group: groupClause });
-		logger.debug('aggQuery=', aggQuery);
+		logger.trace('aggQuery=', aggQuery);
 
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggR = await utilities.aggregate('matchscouting', aggQuery);
@@ -1502,6 +1506,47 @@ export class MatchDataHelper {
 		for (let resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
 			aggRowsByTeam[aggresult[resultIdx]['_id']] = aggresult[resultIdx];
 		logger.trace('aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]));
+		//logger.debug('aggRowByTeam = ' + JSON.stringify(aggRowsByTeam));
+
+		// 2026-02-14, M.O'C: Bolting on external data if needed
+		if (selectedExternalColumns) {
+			let selectedExternalKeys = Object.keys(selectedExternalColumns);
+			if (selectedExternalKeys.length > 0) {
+				//
+				// read in the external (event) per-team data for this event, merge into the aggArray based on team_key
+				//
+				let externalData = await utilities.find('eventdata', {'event_key': event_key});
+				let externalDataMap: Dict<MongoDocument> = {};
+				for (let extIdx = 0; extIdx < externalData.length; extIdx++) {
+					externalDataMap[externalData[extIdx].team_key] = externalData[extIdx];
+				}
+				Object.keys(aggRowsByTeam).forEach(teamKey => {
+					if (!externalDataMap[teamKey]) {
+						logger.warn(`No external data for team ${teamKey} in event ${event_key}`);
+					}
+					else {
+						let thisTeam = aggRowsByTeam[teamKey];
+						for (let key of selectedExternalKeys) {
+							thisTeam[key + 'AVG'] = Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10;
+							thisTeam[key + 'MAX'] = [];
+							thisTeam[key + 'MAX'].push(Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10);
+						}
+						aggRowsByTeam[teamKey] = thisTeam;
+					}
+				});
+				//
+				// attach the selected external columns to the scorelayout for display purposes
+				//
+				for (let key of selectedExternalKeys) {
+					let newItem: any = {};
+					newItem['type'] = 'derived';
+					for (const thisKey of ['formula', 'id', 'key']) {
+						newItem[thisKey] = key;
+					}
+					scorelayout.push(newItem);
+				}
+			}
+		}
 
 		// Unspool N rows of aggregate results into tabular form
 		let avgTable: MetricRow[] = [];
@@ -1622,6 +1667,33 @@ export class MatchDataHelper {
 		// read in the current agg ranges
 		// 2020-02-08, M.O'C: Tweaking agg ranges
 		let currentAggRanges = await utilities.find('aggranges', { 'org_key': org_key, 'event_key': event_key });
+		// 2026-02-14, M.O'C: Bolting on external data if needed
+		if (selectedExternalColumns) {
+			let selectedExternalKeys = Object.keys(selectedExternalColumns);
+			if (selectedExternalKeys.length > 0) {
+				//
+				// read in external (event) data ranges for this event, merge into the currentAggRanges based on metric key
+				//
+				// org_key is null because these are NOT team data ranges
+				let externalDataRanges = await utilities.find('dataranges', {'event_key': event_key, org_key: null});
+				let externalDataRangesMap: Dict<MongoDocument> = {};
+				for (let rangeIdx = 0; rangeIdx < externalDataRanges.length; rangeIdx++) {
+					externalDataRangesMap[externalDataRanges[rangeIdx].metric_id] = externalDataRanges[rangeIdx];
+				}
+				//logger.debug('externalDataRangesMap=' + JSON.stringify(externalDataRangesMap));
+				for (let key of selectedExternalKeys) {
+					let newAgg: any = {};
+					newAgg['org_key'] = org_key;
+					newAgg['event_key'] = event_key;
+					newAgg['key'] = key;
+					for (const agg of ['MIN', 'AVG', 'VAR', 'MAX']) {
+						newAgg[agg + 'min'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].min : 0) * 10) / 10;
+						newAgg[agg + 'max'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].max : 0) * 10) / 10;
+					}
+					currentAggRanges.push(newAgg);
+				}
+			}
+		}
 
 		// 2024-02-07, M.O'C: Adding in super-scout notes
 		let pitData: PitScouting[] = await utilities.find('pitscouting', { 'org_key': org_key, 'event_key': event_key, 'team_key': { $in: teamList }, 'super_data.otherNotes': { $ne: null } });
