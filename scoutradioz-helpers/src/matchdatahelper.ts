@@ -1508,6 +1508,24 @@ export class MatchDataHelper {
 		logger.trace('aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]));
 		//logger.debug('aggRowByTeam = ' + JSON.stringify(aggRowsByTeam));
 
+		// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
+		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
+		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+			let teamKey = rankings[rankIdx].team_key;
+			let found = false;
+			for (let aggIdx = 0; aggIdx < aggRowsByTeam.length; aggIdx++) {
+				if (aggRowsByTeam[aggIdx]._id == teamKey) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				let emptyAgg: MongoDocument = {};
+				emptyAgg['_id'] = teamKey;
+				aggRowsByTeam[teamKey] = emptyAgg;
+			}
+		}
+
 		// 2026-02-14, M.O'C: Bolting on external data if needed
 		if (selectedExternalColumns) {
 			let selectedExternalKeys = Object.keys(selectedExternalColumns);

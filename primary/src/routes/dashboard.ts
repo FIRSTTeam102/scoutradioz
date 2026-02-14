@@ -618,6 +618,25 @@ router.get('/allianceselection', wrap(async (req, res) => {
 		//Aggregate with this query we made
 		// 2020-02-11, M.O'C: Renaming "scoringdata" to "matchscouting", adding "org_key": org_key, 
 		let aggArray = await utilities.aggregate('matchscouting', aggQuery);
+
+		// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
+		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+			let teamKey = rankings[rankIdx].team_key;
+			let found = false;
+			for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+				if (aggArray[aggIdx]._id == teamKey) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				let emptyAgg: MongoDocument = {};
+				emptyAgg['_id'] = teamKey;
+				aggArray.push(emptyAgg);
+			}
+		}
+
+		// sanity-check
 		if(!aggArray[0])
 			throw 'Couldn\'t find scoringdata in allianceselection';
 		

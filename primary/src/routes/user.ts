@@ -963,7 +963,11 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	
 	// read in the event data schema for the given year
 	const eventDataSchema = await utilities.findOne('eventdataschemas', { year: eventYear });
-	logger.debug(`eventDataSchema.fields=${JSON.stringify(eventDataSchema.fields)}`);
+	let fields = [];
+	if (eventDataSchema && eventDataSchema.fields) {
+		fields = eventDataSchema.fields;
+	}
+	logger.debug(`fields=${JSON.stringify(fields)}`);
 
 	let orgColumnDefaults;
 	let orgCols: StringDict = {};
@@ -1002,7 +1006,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	res.render('./user/preferences/reportcolumns', {
 		title: req.msg('user.reportcolumns.title'),
 		layout: matchlayout,
-		eventDataFields: eventDataSchema.fields,
+		eventDataFields: fields,
 		savedCols: savedCols,
 		orgCols: orgCols,
 		doesOrgHaveNoDefaults: doesOrgHaveNoDefaults,
