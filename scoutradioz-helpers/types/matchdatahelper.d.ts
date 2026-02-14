@@ -1,6 +1,9 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
 import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem } from 'scoutradioz-types';
 export declare class MatchDataHelper {
+    static readonly SELECTED_COLUMNS_MODE_ALL: number;
+    static readonly SELECTED_COLUMNS_MODE_ORG_ONLY: number;
+    static readonly SELECTED_COLUMNS_MODE_EXTERNAL_ONLY: number;
     /**
      * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
      * @param {Utilities} utilitiesModule
@@ -60,6 +63,13 @@ export declare class MatchDataHelper {
         tparse: number;
         tresolve: number;
     }>;
+    /**
+     * @param {string} org_key Org key
+     * @param {number} event_year Year of event
+     * @param {string} colCookie Comma-separated list of metric IDs
+     * @return {object} key:key sets of metrics representing the selected columns
+     */
+    static getSelectedColumns(org_key: string, event_year: number, colCookie: string, mode?: number): Promise<StringDict>;
     /**
      * @param {string} org_key Org key
      * @param {number} event_year Year of event
@@ -153,4 +163,7 @@ export declare interface PredictiveBlock {
     redSTD?: number;
     totalCNT?: number;
     chanceOfRed?: number;
+}
+declare interface StringDict {
+    [key: string]: string;
 }
