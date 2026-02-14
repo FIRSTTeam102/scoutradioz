@@ -14,6 +14,10 @@ let utilities: Utilities;
 
 export class MatchDataHelper {
 
+	static readonly SELECTED_COLUMNS_MODE_ALL: number = 0;
+	static readonly SELECTED_COLUMNS_MODE_ORG_ONLY: number = 1;
+	static readonly SELECTED_COLUMNS_MODE_EXTERNAL_ONLY: number = 2;
+
 	/**
 	 * MDH must be provided an already-configured scoutradioz-utilities DB module in order to function.
 	 * @param {Utilities} utilitiesModule 
@@ -531,6 +535,104 @@ export class MatchDataHelper {
 	 * @param {string} org_key Org key
 	 * @param {number} event_year Year of event
 	 * @param {string} colCookie Comma-separated list of metric IDs
+	 * @return {object} key:key sets of metrics representing the selected columns
+	 */
+	static async getSelectedColumns(org_key: string, event_year: number, colCookie: string, mode: number = MatchDataHelper.SELECTED_COLUMNS_MODE_ALL) {
+		logger.addContext('funcName', 'getSelectedColumns');
+		logger.info('ENTER org_key=' + org_key + ',event_year=' + event_year + ',colCookie=' + colCookie);
+
+		if (!utilities) {
+			throw new Error('Utilities has not been configured!');
+		}
+
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year: event_year, form_type: 'matchscouting' },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		assert(orgschema);
+		const schema = await utilities.findOne('schemas',
+			{ _id: orgschema.schema_id, },
+			{},
+			{ allowCache: true, maxCacheAge: 180 }
+		);
+		assert(schema);
+		const scorelayoutDB = schema.layout.filter(item => MatchDataHelper.isMetric(item));
+		//const scorelayoutDB = schema.layout.filter(item => item.id);
+		logger.trace(`scoreLayoutDB=${JSON.stringify(scorelayoutDB)}`);
+
+		// Process the cookies & (if selections defined) prepare to reduce
+		let savedCols: StringDict = {};
+		let noneSelected = true;
+		//colCookie = "a,b,ccc,d";
+
+		// 2020-03-03, M.O'C: Read "default" columns from DB if none set - TODO could be cached
+		if (!colCookie) {
+			let thisOrg = await utilities.findOne('orgs',
+				{ org_key: org_key }, {},
+				{ allowCache: true }
+			);
+			////logger.trace("thisOrg=" + JSON.stringify(thisOrg));
+			let thisConfig = thisOrg.config;
+			logger.trace('thisConfig=' + JSON.stringify(thisConfig));
+
+			assert(thisConfig, 'Org has no config!'); // 2023-02-14 JL: Changed if (!thisConfig) thisConfig = {}; to an assert b/c orgs should always have a config
+			let theseColDefaults = thisOrg.config.columnDefaults;
+			if (!theseColDefaults) {
+				theseColDefaults = {};
+				thisOrg.config['columnDefaults'] = theseColDefaults;
+			}
+
+			logger.trace('theseColDefaults=' + JSON.stringify(theseColDefaults));
+			let defaultSet = theseColDefaults[event_year];
+			logger.trace('defaultSet=' + defaultSet);
+
+			if (defaultSet) {
+				colCookie = defaultSet;
+				//logger.trace('Using org default cookies=' + colCookie);
+			}
+		}
+
+		if (colCookie) {
+			logger.trace('colCookie=' + colCookie);
+			noneSelected = false;
+			let savedColArray = colCookie.split(',');
+			for (let savedCol of savedColArray)
+				savedCols[savedCol] = savedCol;
+		}
+
+		// Modify savedCols based on mode
+		if (mode === MatchDataHelper.SELECTED_COLUMNS_MODE_ORG_ONLY) {
+			// Keep only columns that are in the org's layout
+			savedCols = Object.fromEntries(Object.entries(savedCols).filter(([key]) => scorelayoutDB.some(item => item.id === key)));
+		}
+		else if (mode === MatchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY) {
+			// Keep only columns that are NOT in the org's layout
+			savedCols = Object.fromEntries(Object.entries(savedCols).filter(([key]) => !scorelayoutDB.some(item => item.id === key)));
+			// remove prefixes
+			savedCols = Object.fromEntries(Object.entries(savedCols).map(([key, value]) => {
+				let newKey = key;
+				let newValue = value;
+				if (key.startsWith('EXT|')) {
+					newKey = key.substring(4);
+					newValue = value.substring(4);
+				}
+				return [newKey, newValue];
+			}));
+			logger.trace(`External-only savedCols=${JSON.stringify(savedCols)}`);
+		}
+
+		// TODO put back to 'trace'
+		logger.debug('noneSelected=' + noneSelected + ',savedCols=' + JSON.stringify(savedCols));
+
+		logger.removeContext('funcName');
+		return savedCols;
+	}
+	
+	/**
+	 * @param {string} org_key Org key
+	 * @param {number} event_year Year of event
+	 * @param {string} colCookie Comma-separated list of metric IDs
 	 * @return {array} Modified (reduce) match scouting layout, from the list in colCookie
 	 */
 	static async getModifiedMatchScoutingLayout(org_key: string, event_year: number, colCookie: string, showAllColumns: boolean = false) {
@@ -632,6 +734,7 @@ export class MatchDataHelper {
 		if (scorelayout)
 			retLength = scorelayout.length;
 		logger.info('EXIT returning ' + retLength);
+		//logger.debug('scorelayout=' + JSON.stringify(scorelayout));
 
 		logger.removeContext('funcName');
 		return scorelayout;

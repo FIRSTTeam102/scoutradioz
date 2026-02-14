@@ -1407,6 +1407,75 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	// 2020-02-08, M.O'C: Tweaking agg ranges
 	let currentAggRanges: AggRange[] = await utilities.find('aggranges', {'org_key': orgKey, 'event_key': eventKey});
 
+	//
+	// Bolt on external data if needed
+	//
+	let selectedExternalColumns = await matchDataHelper.getSelectedColumns(orgKey, eventYear, colCookie, matchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY);
+	logger.debug('selectedExternalColumns=' + JSON.stringify(selectedExternalColumns));
+	// get the keys of the selected external columns
+	if (selectedExternalColumns) {
+		let selectedExternalKeys = Object.keys(selectedExternalColumns);
+		if (selectedExternalKeys.length > 0) {
+			//
+			// read in the external (event) per-team data for this event, merge into the aggArray based on team_key
+			//
+			let externalData = await utilities.find('eventdata', {'event_key': eventKey});
+			let externalDataMap: Dict<MongoDocument> = {};
+			for (let extIdx = 0; extIdx < externalData.length; extIdx++) {
+				externalDataMap[externalData[extIdx].team_key] = externalData[extIdx];
+			}
+			//logger.debug('externalDataMap=' + JSON.stringify(externalDataMap));
+			// merge the selected external data into the aggArray
+			for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+				let thisAgg = aggArray[aggIdx];
+				let teamKey = thisAgg._id;
+				if (externalDataMap[teamKey]) {
+					for (let key of selectedExternalKeys) {
+						thisAgg[key + 'AVG'] = (Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10).toFixed(1);
+						thisAgg[key + 'MAX'] = (Math.round(externalDataMap[teamKey]['data'][key] * 10) / 10).toFixed(1);
+					}
+					aggArray[aggIdx] = thisAgg;
+				}
+			}
+			//
+			// read in external (event) data ranges for this event, merge into the currentAggRanges based on metric key
+			//
+			// org_key is null because these are NOT team data ranges
+			let externalDataRanges = await utilities.find('dataranges', {'event_key': eventKey, org_key: null});
+			let externalDataRangesMap: Dict<MongoDocument> = {};
+			for (let rangeIdx = 0; rangeIdx < externalDataRanges.length; rangeIdx++) {
+				externalDataRangesMap[externalDataRanges[rangeIdx].metric_id] = externalDataRanges[rangeIdx];
+			}
+			//logger.debug('externalDataRangesMap=' + JSON.stringify(externalDataRangesMap));
+			for (let key of selectedExternalKeys) {
+				let newAgg: any = {};
+				newAgg['org_key'] = orgKey;
+				newAgg['event_key'] = eventKey;
+				newAgg['key'] = key;
+				for (const agg of ['MIN', 'AVG', 'VAR', 'MAX']) {
+					newAgg[agg + 'min'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].min : 0) * 10) / 10;
+					newAgg[agg + 'max'] = Math.round((externalDataRangesMap[key] ? externalDataRangesMap[key].max : 0) * 10) / 10;
+				}
+				currentAggRanges.push(newAgg);
+			}
+			//
+			// attach the selected external columns to the scorelayout for display purposes
+			//
+			for (let key of selectedExternalKeys) {
+				let newItem: any = {};
+				newItem['type'] = 'derived';
+				for (const thisKey of ['formula', 'id', 'key']) {
+					newItem[thisKey] = key;
+				}
+				scorelayout.push(newItem);
+			}
+		}
+	}
+
+	// logger.debug('currentAggRanges=' + JSON.stringify(currentAggRanges));
+	// logger.debug('aggArray=' + JSON.stringify(aggArray));
+	// logger.debug('scorelayout=' + JSON.stringify(scorelayout));
+
 	res.render('./reports/allteammetrics', {
 		title: res.msg('reports.allTeamMetricsTitle'),
 		aggdata: aggArray,
