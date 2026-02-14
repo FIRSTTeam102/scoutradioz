@@ -35,24 +35,28 @@ block content
 								- var thisTextClass = (orgCols[item.id]||doesOrgHaveNoDefaults) ? 'strong' : 'theme-text-secondary';
 								label(class=thisTextClass for=item.id) &nbsp;#{result2}
 							br 
-			h2!=msg('user.reportcolumns.externaldata')
-			each item in eventDataFields
-				div(class="w3-row w3-mobile w3-auto" style="width: 320px;")
-					div(class="w3-padding-small w3-left-align")
-						- var text = item; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
-						- var text = item; var result3 = "(" + item + ")"
-						- var modId = "EXT|" + item
-						- if (savedCols[modId])
-							input(type="checkbox" class="w3-check" name=modId id=modId checked="checked")
-						- else
-							input(type="checkbox" class="w3-check" name=modId id=modId)
-						div(class="w3-show-inline-block w3-left-align")
-							- var thisTextClass = (orgCols[modId]||doesOrgHaveNoDefaults) ? 'strong' : 'theme-text-secondary';
-							i
-								label(class=thisTextClass for=modId) &nbsp;#{result3}
-							br
-							label(class=thisTextClass for=modId) &nbsp;#{result2}
-						br 
+			h2!=msg('user.reportcolumns.externalData')
+			- if (eventDataFields.length == 0)
+				i
+					p!=msg('user.reportcolumns.noExternalData')
+			- else
+				each item in eventDataFields
+					div(class="w3-row w3-mobile w3-auto" style="width: 320px;")
+						div(class="w3-padding-small w3-left-align")
+							- var text = item; var result1 = text.replace( /([A-Z])/g, " $1" ); var result2 = result1.charAt(0).toUpperCase() + result1.slice(1)
+							- var text = item; var result3 = "(" + item + ")"
+							- var modId = "EXT|" + item
+							- if (savedCols[modId])
+								input(type="checkbox" class="w3-check" name=modId id=modId checked="checked")
+							- else
+								input(type="checkbox" class="w3-check" name=modId id=modId)
+							div(class="w3-show-inline-block w3-left-align")
+								- var thisTextClass = (orgCols[modId]||doesOrgHaveNoDefaults) ? 'strong' : 'theme-text-secondary';
+								i
+									label(class=thisTextClass for=modId) &nbsp;#{result3}
+								br
+								label(class=thisTextClass for=modId) &nbsp;#{result2}
+							br 
 		//-Checkbox to set org defaults
 		- if (user.role.access_level >= Permissions.ACCESS_TEAM_ADMIN)
 			br

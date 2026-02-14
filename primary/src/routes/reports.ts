@@ -1376,6 +1376,23 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	if (aggR)
 		aggArray = aggR;
 		
+	// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
+	for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+		let teamKey = rankings[rankIdx].team_key;
+		let found = false;
+		for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
+			if (aggArray[aggIdx]._id == teamKey) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			let emptyAgg: MongoDocument = {};
+			emptyAgg['_id'] = teamKey;
+			aggArray.push(emptyAgg);
+		}
+	}
+
 	//logger.debug('rankMap=' + rankMap);
 	
 	// Rewrite data into display-friendly values
