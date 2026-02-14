@@ -537,7 +537,7 @@ export class SchemaOperations extends TableOperations {
 			year,
 			form_type
 		}).first();
-		assert(orgschema);
+		assert(orgschema, `${form_type} schema not found for ${org_key} and ${year}! A Team Admin needs to define a schema via the 'Manage' page. Check the "Forms Archive" on the wiki for sample JSON to get started!`);
 
 		const schema = await db.schemas.where({
 			_id: orgschema.schema_id
