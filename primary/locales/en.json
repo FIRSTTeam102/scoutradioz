@@ -3,6 +3,7 @@
 		"fulltitle": "Scoutradioz: FRC Scouting as a Service",
 		"welcome": "Welcome to Scoutradioz",
 		"browse": {
+			"selectYear": "Select year to browse",
 			"link": "Or click here to browse data by event",
 			"title": "View data by event and org",
 			"tspsExplained": "'TSPS' is **relative** Total Scouting Performance Score (useful for friendly inter-org Scouting competitions!) - and 'Mdn.' is short for Median",
