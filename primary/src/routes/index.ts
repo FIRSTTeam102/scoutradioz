@@ -103,9 +103,16 @@ router.get('/browse', wrap(async (req, res, next) => {
 	logger.addContext('funcName', 'browse[get]');
 	logger.debug('ENTER');
 	
-	// for now, this only works with the current year. TODO: be able to browse past years
+	// 2026-02-15, M.O'C: Generate a list of years with data (going back to 2017)
 	let current_year = (new Date()).getFullYear();
-
+	if (req.query.year)
+		current_year = parseInt(req.query.year as string);
+	let yearsWithData: number[] = [];
+	let nowYear = (new Date()).getFullYear();
+	logger.debug(`Generating yearsWithData list, nowYear=${nowYear}`);
+	for (let dataYear = nowYear; dataYear >= 2017; dataYear--)
+		yearsWithData.push(dataYear);
+	
 	// 2025-04-14, M.O'C: Further enforce not recalculating cached data older than N days ago
 	let right_now = new Date();
 	let lookback_days = 7;
@@ -138,6 +145,7 @@ router.get('/browse', wrap(async (req, res, next) => {
 
 			res.render('./browse', {
 				fulltitle: res.msg('index.browse.title'),
+				yearsWithData: yearsWithData,
 				year: current_year,
 				event_scouting: thisSummary.events
 			});
@@ -624,6 +632,7 @@ router.get('/browse', wrap(async (req, res, next) => {
 
 	res.render('./browse', {
 		fulltitle: res.msg('index.browse.title'),
+		yearsWithData: yearsWithData,
 		year: current_year,
 		event_scouting: eventScoutingArray
 	});
