@@ -110,7 +110,8 @@ router.get('/browse', wrap(async (req, res, next) => {
 	let yearsWithData: number[] = [];
 	let nowYear = (new Date()).getFullYear();
 	logger.debug(`Generating yearsWithData list, nowYear=${nowYear}`);
-	for (let dataYear = nowYear; dataYear >= 2017; dataYear--)
+	// limit to 2022 and later (out of "early access")
+	for (let dataYear = nowYear; dataYear >= 2022; dataYear--)
 		yearsWithData.push(dataYear);
 	
 	// 2025-04-14, M.O'C: Further enforce not recalculating cached data older than N days ago
