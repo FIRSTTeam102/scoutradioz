@@ -77,6 +77,30 @@ router.get('/driveteam', wrap(async (req, res) => {
 		res.clearCookie('selectedTeamKey');
 	}
 	
+	// 2026-02-15, M.O'C: Filter out non-quantifiable types from the scorelayout, use to check column counts
+	let cookie_key = orgKey + '_' + eventYear + '_cols';
+	let colCookie = req.cookies[cookie_key];
+	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	scorelayout = scorelayout.filter(layout => matchDataHelper.isQuantifiableType(layout.type));
+	// add on selected external columns if any
+	let selectedExternalColumns = await matchDataHelper.getSelectedColumns(orgKey, eventYear, colCookie, matchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY);
+	if (selectedExternalColumns) {
+		let selectedExternalKeys = Object.keys(selectedExternalColumns);
+		if (selectedExternalKeys.length > 0) {
+			//
+			// attach the selected external columns to the scorelayout for display purposes
+			//
+			for (let key of selectedExternalKeys) {
+				let newItem: any = {};
+				newItem['type'] = 'derived';
+				for (const thisKey of ['formula', 'id', 'key']) {
+					newItem[thisKey] = key;
+				}
+				scorelayout.push(newItem);
+			}
+		}
+	}
+
 	logger.debug(`eventKey=${eventKey} orgKey=${orgKey} teamKey=${teamKey}`);
 	
 	// Get upcoming match data for the specified team (or "all" if no default & none specified)
@@ -249,9 +273,10 @@ router.get('/driveteam', wrap(async (req, res) => {
 			}
 		}
 	}
-	
+
 	res.render('./dashboard/driveteam', {
 		title: res.msg('driveDashboard.title'),
+		layout: scorelayout,
 		teamList: teamList,
 		currentAggRanges: currentAggRanges,
 		avgdata: avgTable,

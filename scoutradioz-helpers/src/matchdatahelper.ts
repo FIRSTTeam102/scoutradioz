@@ -1442,6 +1442,8 @@ export class MatchDataHelper {
 		let colCookie = cookies[cookie_key];
 		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
 		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
+		// 2026-02-15, M.O'C: Filter out non-quantifiable types from the scorelayout
+		scorelayout = scorelayout.filter(layout => this.isQuantifiableType(layout.type));
 
 		// 2026-02-14, M.O'C: Bolting on external data if needed
 		let selectedExternalColumns = await MatchDataHelper.getSelectedColumns(org_key, event_year, colCookie, MatchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY);

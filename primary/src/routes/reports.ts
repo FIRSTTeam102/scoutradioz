@@ -1314,6 +1314,8 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 	let cookie_key = orgKey + '_' + eventYear + '_cols';
 	let colCookie = req.cookies[cookie_key];
 	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(orgKey, eventYear, colCookie);
+	// 2026-02-15, M.O'C: Filter out non-quantifiable types from the scorelayout
+	scorelayout = scorelayout.filter(layout => matchDataHelper.isQuantifiableType(layout.type));
 
 	// Build the aggregation data
 	let aggQuery = [];
