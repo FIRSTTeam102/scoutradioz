@@ -34,7 +34,7 @@ router.all('/*', wrap(async (req, res, next) => {
 router.get('/', wrap(async (req, res) => {
 	
 	// TODO - we should probaby make an index for reports?
-	res.redirect('/?alert=No index page for /reports/');
+	res.redirect('/home?alert=No index page for /reports/');
 }));
 
 router.get('/browseevents', wrap(async (req, res) => {
@@ -70,14 +70,14 @@ router.get('/browseevent', wrap(async (req, res) => {
 	
 	res.cookie('event_key', event_key);
 	
-	res.redirect(`/?alert=Now browsing event ${event.name}`);
+	res.redirect(`/home?alert=Now browsing event ${event.name}`);
 }));
 
 router.get('/clearbrowsedevent', wrap(async (req, res) => {
 	
 	res.clearCookie('event_key');
 	
-	res.redirect('/?alert=Switched back to your org\'s current event.');
+	res.redirect('/home?alert=Switched back to your org\'s current event.');
 }));
 
 router.get('/rankings', wrap(async (req, res) => {
@@ -1530,7 +1530,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 
 	let dataType = req.query.type;
 	if (dataType !== 'pitscouting' && dataType !== 'matchscouting') {
-		res.redirect('/?alert=' + res.msgUrl('reports.exportData.noType'));
+		res.redirect('/home?alert=' + res.msgUrl('reports.exportData.noType'));
 		return;
 	}
 	let dataSpan = req.query.span;
@@ -1543,7 +1543,7 @@ router.get('/exportdata', wrap(async (req, res) => {
 	// sanity check
 	//logger.debug("layout=" + JSON.stringify(exportLayout));
 	if (!exportLayout || exportLayout.length == 0) {
-		res.redirect('/?alert=' + res.msg('reports.exportData.noData', {type: dataType}));
+		res.redirect('/home?alert=' + res.msg('reports.exportData.noData', {type: dataType}));
 		return;
 	}
 	
