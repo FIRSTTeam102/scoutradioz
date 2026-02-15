@@ -1584,8 +1584,13 @@ export class MatchDataHelper {
 				};
 				for (let teamIdx = 0; teamIdx < teamList.length; teamIdx++) {
 					if (aggRowsByTeam[teamList[teamIdx]]) {
-						avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'] * 10) / 10).toFixed(1);
-						let maxVal = this.extractPercentileFromSortedArray(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX']);
+						// 2026-02-14, M.O'C: Could be missing values for AVG and MAX; use 0 if undefined
+						avgRow[teamList[teamIdx]] = (0).toFixed(1);
+						if (aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'])
+							avgRow[teamList[teamIdx]] = (Math.round(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'AVG'] * 10) / 10).toFixed(1);
+						let maxVal = 0;
+						if (aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX'])
+							maxVal = this.extractPercentileFromSortedArray(aggRowsByTeam[teamList[teamIdx]][thisLayout.id + 'MAX']);
 						maxRow[teamList[teamIdx]] = (Math.round(maxVal * 10) / 10).toFixed(1);
 					}
 				}

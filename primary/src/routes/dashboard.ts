@@ -647,8 +647,13 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			for (let scoreIdx = 0; scoreIdx < scoreLayout.length; scoreIdx++) {
 				let thisLayout = scoreLayout[scoreIdx];
 				if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-					let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
-					let maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
+					// 2026-02-14, M.O'C: Could be missing values for AVG and MAX; use 0 if undefined
+					let roundedValAvg = (0).toFixed(1);
+					if (thisAgg[thisLayout.id + 'AVG'])
+						roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+					let maxVal = 0;
+					if (thisAgg[thisLayout.id + 'MAX'])
+						maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
 					let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
 					thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
 					thisAgg[thisLayout.id + 'MAX'] = roundedValMax;

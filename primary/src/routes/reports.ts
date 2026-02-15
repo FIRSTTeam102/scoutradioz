@@ -1402,9 +1402,14 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			let thisLayout = scorelayout[scoreIdx];
 			//if (thisLayout.type == 'checkbox' || thisLayout.type == 'counter' || thisLayout.type == 'badcounter') {
 			if (matchDataHelper.isQuantifiableType(thisLayout.type)) {
-				let roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
+				// 2026-02-14, M.O'C: Could be missing values for AVG and MAX; use 0 if undefined
+				let roundedValAvg = (0).toFixed(1);
+				if (thisAgg[thisLayout.id + 'AVG'])
+					roundedValAvg = (Math.round(thisAgg[thisLayout.id + 'AVG'] * 10)/10).toFixed(1);
 				// 2020-03-01, M.O'C: Converting MAX to Nth (~90th) percentile
-				let maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
+				let maxVal = 0;
+				if (thisAgg[thisLayout.id + 'MAX'])
+					maxVal = matchDataHelper.extractPercentileFromSortedArray(thisAgg[thisLayout.id + 'MAX']);
 				let roundedValMax = (Math.round(maxVal * 10)/10).toFixed(1);
 				//logger.debug(`${thisLayout.id + 'MAX'}=${thisAgg[thisLayout.id + 'MAX']}, length=${thisAgg[thisLayout.id + 'MAX'].length}... maxVal=${maxVal}`);
 				thisAgg[thisLayout.id + 'AVG'] = roundedValAvg;
