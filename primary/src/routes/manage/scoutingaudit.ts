@@ -66,7 +66,7 @@ router.get('/', wrap(async (req, res) =>  {
 		});
 	
 	if(!scoreData)
-		return res.redirect('/?alert=mongo error at dashboard/matches');
+		return res.redirect('/home?alert=mongo error at dashboard/matches');
 
 	// Build per-team-member array
 	let memberArr = [];
