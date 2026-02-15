@@ -10,6 +10,13 @@ block content
 			overflow: visible;
 		}
 	include templates/heatmap
+	//- 2026-02-15, M.O'C: Guardrail against too many columns being selected
+	if (layout && layout.length > 24)
+		a(href="/user/preferences/reportcolumns?rdr=/reports/allteammetrics") 
+			div(class="w3-btn theme-red") <b>WARNING: More than 24 columns being display!</b><br/>Click here and ensure 24 or fewer columns are selected	
+	if (layout && layout.length < 3)
+		a(href="/user/preferences/reportcolumns?rdr=/reports/allteammetrics") 
+			div(class="w3-btn theme-red") <b>WARNING: Fewer than 3 columns being displayed!</b><br/>Click here to select additional data for display
 	h2(class="theme-text")!=msg('reports.allTeamMetrics')
 	h6
 		i!=msg('reports.headerClick')

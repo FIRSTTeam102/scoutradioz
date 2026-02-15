@@ -45,6 +45,8 @@ router.get('/', wrap(async (req, res) => {
 	let cookie_key = org_key + '_' + event_year + '_cols';
 	let colCookie = req.cookies[cookie_key];
 	let scorelayout = await matchDataHelper.getModifiedMatchScoutingLayout(org_key, event_year, colCookie);
+	// 2026-02-15, M.O'C: Filter out non-quantifiable types from the scorelayout
+	scorelayout = scorelayout.filter(layout => matchDataHelper.isQuantifiableType(layout.type));
 
 	let aggQuery = [];
 	aggQuery.push({ $match : { org_key, event_key } });
