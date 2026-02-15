@@ -17,7 +17,7 @@ block content
 
 	div(class="w3-section")
 		button(class="theme-input w3-btn gear-btn" onclick="resetToDefault()")!=msg('user.reportcolumns.default')
-		button(class="theme-input w3-btn gear-btn" onclick="check()")!=msg('user.reportcolumns.checkAll')
+		button(class="theme-input w3-btn gear-btn" disabled onclick="check()")!=msg('user.reportcolumns.checkAll')
 		button(class="theme-red w3-btn gear-btn" onclick="uncheck()")!=msg('user.reportcolumns.uncheckAll')
 	form(action="" method="post")
 		input(type="hidden" name="redirectURL" value=redirectURL)
@@ -51,7 +51,7 @@ block content
 							- else
 								input(type="checkbox" class="w3-check" name=modId id=modId)
 							div(class="w3-show-inline-block w3-left-align")
-								- var thisTextClass = (orgCols[modId]||doesOrgHaveNoDefaults) ? 'strong' : 'theme-text-secondary';
+								- var thisTextClass = (orgCols[modId]) ? 'strong' : 'theme-text-secondary';
 								i
 									label(class=thisTextClass for=modId) &nbsp;#{result3}
 								br
@@ -81,7 +81,9 @@ block content
 			
 			for(var i = 0; i < elements.length; i++){
 				//console.log('Unchecking ' + $(elements[i]).attr('name'));
-				$(elements[i]).attr("checked", false);
+				const checkbox = document.getElementById($(elements[i]).attr('id'));
+				if (checkbox) checkbox.checked = false;
+				//$(elements[i]).attr("checked", false);
 			}
 		}
 		
@@ -89,13 +91,22 @@ block content
 			var elements = $("input");
 			
 			for(var i = 0; i < elements.length; i++){
-				$(elements[i]).attr("checked", true);
+				var id = $(elements[i]).attr("id");
+				if (id && !id.startsWith("EXT|") && id !== "setOrgDefault") {
+					//console.log(id + '... Checking ' + $(elements[i]).attr('id'));
+					const checkbox = document.getElementById($(elements[i]).attr('id'));
+					if (checkbox) checkbox.checked = true;
+					//$(elements[i]).attr("checked", true);
+				}
 			}
 		}
 		
 		function resetToDefault() {
 			if (doesOrgHaveNoDefaults) {
 				console.log('Org has no defaults; Checking all');
+				// first uncheck everthing (including external data)
+				uncheck();
+				// then check "everything" [not external data]
 				check();
 			}
 			else {
@@ -105,10 +116,14 @@ block content
 				for (var i = 0; i < elements.length; i++) {
 					var name = $(elements[i]).attr('name');
 					if (orgCols[name]) {
-						$(elements[i]).attr('checked', true);
+						const checkbox = document.getElementById($(elements[i]).attr('id'));
+						if (checkbox) checkbox.checked = true;
+						//$(elements[i]).attr('checked', true);
 					}
 					else {
-						$(elements[i]).attr('checked', false);
+						const checkbox = document.getElementById($(elements[i]).attr('id'));
+						if (checkbox) checkbox.checked = false;
+						//$(elements[i]).attr('checked', false);
 					}
 				}
 			}
