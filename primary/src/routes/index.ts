@@ -103,14 +103,14 @@ router.get('/browse', wrap(async (req, res, next) => {
 	logger.addContext('funcName', 'browse[get]');
 	logger.debug('ENTER');
 	
-	// 2026-02-15, M.O'C: Generate a list of years with data (going back to 2017)
+	// 2026-02-15, M.O'C: Generate a list of years with data (going back to 2022)
 	let current_year = (new Date()).getFullYear();
 	if (req.query.year)
 		current_year = parseInt(req.query.year as string);
 	let yearsWithData: number[] = [];
 	let nowYear = (new Date()).getFullYear();
 	logger.debug(`Generating yearsWithData list, nowYear=${nowYear}`);
-	// limit to 2022 and later (out of "early access")
+	// limit to 2022 and later (i.e. after "early access")
 	for (let dataYear = nowYear; dataYear >= 2022; dataYear--)
 		yearsWithData.push(dataYear);
 	

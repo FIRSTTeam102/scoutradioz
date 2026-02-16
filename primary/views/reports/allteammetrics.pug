@@ -10,7 +10,7 @@ block content
 			overflow: visible;
 		}
 	include templates/heatmap
-	//- 2026-02-15, M.O'C: Guardrail against too many columns being selected
+	//- 2026-02-15, M.O'C: Guardrail against too many (or too few) columns being selected
 	if (layout && layout.length > 24)
 		a(href="/user/preferences/reportcolumns?rdr=/reports/allteammetrics") 
 			div(class="w3-btn theme-red") <b>WARNING: More than 24 columns being display!</b><br/>Click here and ensure 24 or fewer columns are selected	
