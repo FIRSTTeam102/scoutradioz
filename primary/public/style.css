@@ -2354,6 +2354,9 @@ hr {
 .sprite.sp-voyager {
   --position: -24;
 }
+.sprite.sp-statbotics {
+  --position: -25;
+}
 .scouting-counter {
   font-weight: bold;
   box-sizing: content-box;
