@@ -35,7 +35,7 @@ block content
 		h3!=msg('driveDashboard.noTeams')
 	else 
 		h3=title
-		//- 2026-02-15, M.O'C: Guardrail against too many columns being selected
+		//- 2026-02-15, M.O'C: Guardrail against too many (or too few) columns being selected
 		if matches && matches[0]
 			if (layout && layout.length > 24)
 				a(href="/user/preferences/reportcolumns?rdr=/dashboard/driveteam") 
