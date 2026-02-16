@@ -1430,7 +1430,11 @@ export class MatchDataHelper {
 	static async getAllianceStatsData(event_year: number, event_key: string, org_key: string, teams_list: string, cookies: any, showAllColumns: boolean = false) {
 		logger.addContext('funcName', 'getAllianceStatsData');
 
-		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list);
+		// 2026-02-15, M.O'C: Moving this here so we can log it
+		let cookie_key = org_key + '_' + event_year + '_cols';
+		let colCookie = cookies[cookie_key];
+
+		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',teams_list=' + teams_list + ',colCookie=' + JSON.stringify(colCookie) + ',showAllColumns=' + showAllColumns);
 
 		let teams = teams_list;
 
@@ -1438,8 +1442,6 @@ export class MatchDataHelper {
 		//logger.trace('teamList=' + JSON.stringify(teamList));
 
 		// 2020-02-11, M.O'C: Combined "scoringlayout" into "layout" with an org_key & the type "matchscouting"
-		let cookie_key = org_key + '_' + event_year + '_cols';
-		let colCookie = cookies[cookie_key];
 		// 2025-03-07, M.O'C: Add ability to show all columns regardless of column selections
 		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
 		// 2026-02-15, M.O'C: Filter out non-quantifiable types from the scorelayout
@@ -1511,25 +1513,36 @@ export class MatchDataHelper {
 		for (let resultIdx = 0; resultIdx < aggresult.length; resultIdx++)
 			aggRowsByTeam[aggresult[resultIdx]['_id']] = aggresult[resultIdx];
 		logger.trace('aggRowsByTeam[' + teamList[0] + ']=' + JSON.stringify(aggRowsByTeam[teamList[0]]));
-		//logger.debug('aggRowByTeam = ' + JSON.stringify(aggRowsByTeam));
+		//logger.debug('aggRowByTeam#1 = ' + JSON.stringify(aggRowsByTeam));
 
 		// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
 		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
+		logger.trace('rankings=' + JSON.stringify(rankings));
 		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
 			let teamKey = rankings[rankIdx].team_key;
+			// in "alliance stats", only check if in 'teams_list'
+			if (teams_list.indexOf(teamKey) == -1) {
+				//logger.debug('Skipping team ' + teamKey + ' from rankings because not in teams_list');
+				continue;
+			}
+			logger.debug('Checking team ' + teamKey + ' from rankings against aggRowsByTeam');
 			let found = false;
-			for (let aggIdx = 0; aggIdx < aggRowsByTeam.length; aggIdx++) {
-				if (aggRowsByTeam[aggIdx]._id == teamKey) {
+			// buuuuuuuuug - aggRowsByTeam is a dict, not an array  :-/
+			//for (let aggIdx = 0; aggIdx < aggRowsByTeam.length; aggIdx++) {
+			for (let thisKey of Object.keys(aggRowsByTeam)) {
+				if (thisKey == teamKey) {
 					found = true;
 					break;
 				}
 			}
 			if (!found) {
+				logger.warn('SCOUTING DATA NOT FOUND! Adding empty row for team ' + teamKey);
 				let emptyAgg: MongoDocument = {};
 				emptyAgg['_id'] = teamKey;
 				aggRowsByTeam[teamKey] = emptyAgg;
 			}
 		}
+		//logger.debug('aggRowByTeam#2 = ' + JSON.stringify(aggRowsByTeam));
 
 		// 2026-02-14, M.O'C: Bolting on external data if needed
 		if (selectedExternalColumns) {
