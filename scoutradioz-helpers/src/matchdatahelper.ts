@@ -546,6 +546,7 @@ export class MatchDataHelper {
 			throw new Error('Utilities has not been configured!');
 		}
 
+		// TODO: FUNCTIONALIZE, BEGIN
 		const orgschema = await utilities.findOne('orgschemas',
 			{ org_key, year: event_year, form_type: 'matchscouting' },
 			{},
@@ -602,6 +603,7 @@ export class MatchDataHelper {
 			for (let savedCol of savedColArray)
 				savedCols[savedCol] = savedCol;
 		}
+		// TODO: FUNCTIONALIZE, END
 
 		// Modify savedCols based on mode
 		if (mode === MatchDataHelper.SELECTED_COLUMNS_MODE_ORG_ONLY) {
@@ -655,6 +657,7 @@ export class MatchDataHelper {
 		// 	{ sort: { 'order': 1 } },
 		// 	{ allowCache: true }
 		// );
+		// TODO: FUNCTIONALIZE, BEGIN
 		const orgschema = await utilities.findOne('orgschemas',
 			{ org_key, year: event_year, form_type: 'matchscouting' },
 			{},
@@ -711,6 +714,7 @@ export class MatchDataHelper {
 			for (let savedCol of savedColArray)
 				savedCols[savedCol] = savedCol;
 		}
+		// TODO: FUNCTIONALIZE, END
 		logger.trace('noneSelected=' + noneSelected + ',savedCols=' + JSON.stringify(savedCols));
 
 		// Use the cookies (if defined, or if defaults set) to slim down the layout array
@@ -1574,11 +1578,12 @@ export class MatchDataHelper {
 				// attach the selected external columns to the scorelayout for display purposes
 				//
 				for (let key of selectedExternalKeys) {
-					let newItem: any = {};
-					newItem['type'] = 'derived';
-					for (const thisKey of ['formula', 'id', 'key']) {
-						newItem[thisKey] = key;
-					}
+					let newItem = {
+						type: 'derived', // external data shall behave like derived metrics
+						formula: key,
+						id: key,
+						key, // "key" is used only in this route
+					};
 					scorelayout.push(newItem);
 				}
 			}

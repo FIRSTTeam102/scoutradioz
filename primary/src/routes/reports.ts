@@ -1486,11 +1486,12 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 			// attach the selected external columns to the scorelayout for display purposes
 			//
 			for (let key of selectedExternalKeys) {
-				let newItem: any = {};
-				newItem['type'] = 'derived';
-				for (const thisKey of ['formula', 'id', 'key']) {
-					newItem[thisKey] = key;
-				}
+				let newItem = {
+					type: 'derived', // external data shall behave like derived metrics
+					formula: key,
+					id: key,
+					key, // "key" is used only in this route
+				};
 				scorelayout.push(newItem);
 			}
 		}

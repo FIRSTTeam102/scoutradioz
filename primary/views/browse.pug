@@ -58,7 +58,7 @@ block content
 								- let orgTsps = '---'
 								- if (org.tsps) orgTsps = (Math.round(org.tsps * 1000)/1000).toFixed(3)
 								td=orgTsps
-	script(type="text/javascript").
+	script.
 		function reloadPageWithParam(selectElement) {
 			var selectedValue = selectElement.value;
 			// Get the current base URL (origin + pathname)
