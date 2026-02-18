@@ -963,10 +963,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	
 	// read in the event data schema for the given year
 	const eventDataSchema = await utilities.findOne('eventdataschemas', { year: eventYear });
-	let fields = [];
-	if (eventDataSchema && eventDataSchema.fields) {
-		fields = eventDataSchema.fields;
-	}
+	let fields = eventDataSchema?.fields || [];
 	logger.debug(`fields=${JSON.stringify(fields)}`);
 
 	let orgColumnDefaults;
