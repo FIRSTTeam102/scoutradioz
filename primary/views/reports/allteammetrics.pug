@@ -13,10 +13,10 @@ block content
 	//- 2026-02-15, M.O'C: Guardrail against too many (or too few) columns being selected
 	if (layout && layout.length > 24)
 		a(href="/user/preferences/reportcolumns?rdr=/reports/allteammetrics") 
-			div(class="w3-btn theme-red") <b>WARNING: More than 24 columns being display!</b><br/>Click here and ensure 24 or fewer columns are selected	
+			div(class="w3-btn theme-red")!=msgMarked('reports.tooManyColumns')
 	if (layout && layout.length < 3)
 		a(href="/user/preferences/reportcolumns?rdr=/reports/allteammetrics") 
-			div(class="w3-btn theme-red") <b>WARNING: Fewer than 3 columns being displayed!</b><br/>Click here to select additional data for display
+			div(class="w3-btn theme-red")!=msgMarked('reports.tooFewColumns')
 	h2(class="theme-text")!=msg('reports.allTeamMetrics')
 	h6
 		i!=msg('reports.headerClick')
