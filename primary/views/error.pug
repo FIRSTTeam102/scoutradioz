@@ -6,7 +6,7 @@
 extends layout
 block content
 	div(id="errorContents")
-		h2.i!=msg('error.title', {message: error.message})
+		h2.i=msg('error.title', {message: error.message})
 		h6 #{error.status} #{error.statusMessage}
 		//- 2022-04-04 JL: Don't show the wordy message on Not Found errors
 		if error.status != 404 && !error.disableStackTrace
