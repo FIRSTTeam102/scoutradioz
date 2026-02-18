@@ -303,7 +303,7 @@ router.get('/resynceventdataschema', wrap(async (req, res) => {
 
 	const aggPipeline = [
 		// 1. Filter for the specific year and ensure 'data' exists/is an object
-		{ $match: { year: year, data: { $exists: true, $type: 'object' } } },
+		{ $match: { year, data: { $exists: true, $type: 'object' } } },
 		// 2. Convert the 'data' object into an array of k/v pairs 
 		// e.g., { "data": { "foo": 1, "bar": 2 } } -> [ {k:"foo",v:1}, {k:"bar",v:2} ]
 		{ $project: { data_kv: { $objectToArray: '$data' } } },
@@ -344,7 +344,7 @@ router.get('/resynceventdataschema', wrap(async (req, res) => {
 	let insertResult = await utilities.insert('eventdataschemas', newSchema);
 
 	// return a simple SUCCESS message if it works
-	return res.send('SUCCESS ' + year + ' saved ' +  numFields);
+	return res.send(`SUCCESS year=${year} saved ${numFields}<br>removeResult=${JSON.stringify(removeResult)}<br>insertResult={${JSON.stringify(insertResult)}<br>Add http query ?year= to edit past year.`);
 }));
 
 
