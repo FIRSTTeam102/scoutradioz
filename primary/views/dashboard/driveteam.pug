@@ -38,11 +38,11 @@ block content
 		//- 2026-02-15, M.O'C: Guardrail against too many (or too few) columns being selected
 		if matches && matches[0]
 			if (layout && layout.length > 24)
-				a(href="/user/preferences/reportcolumns?rdr=/dashboard/driveteam") 
-					div(class="w3-btn theme-red") <b>WARNING: More than 24 columns being display!</b><br/>Click here and ensure 24 or fewer columns are selected	
+				a(href="/user/preferences/reportcolumns?rdr=/reports/allteammetrics") 
+					div(class="w3-btn theme-red")!=msgMarked('reports.tooManyColumns')
 			if (layout && layout.length < 3)
-				a(href="/user/preferences/reportcolumns?rdr=/dashboard/driveteam") 
-					div(class="w3-btn theme-red") <b>WARNING: Fewer than 3 columns being displayed!</b><br/>Click here to select additional data for display
+				a(href="/user/preferences/reportcolumns?rdr=/reports/allteammetrics") 
+					div(class="w3-btn theme-red")!=msgMarked('reports.tooFewColumns')
 		if noMatchesFoundForTeam
 			p.i!=msg('driveDashboard.noMatchesTeam', {team: selectedTeam.substring(3)})
 			- selectedTeam = 'all';

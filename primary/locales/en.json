@@ -460,7 +460,9 @@
 		"exportData": {
 			"noType": "No (or invalid) data type specified for export.",
 			"noData": "No data found for type '{type}'."
-		}
+		},
+		"tooManyColumns": "**WARNING: More than 24 columns being displayed!**<br/>Click here and ensure 24 or fewer columns are selected",
+		"tooFewColumns": "**WARNING: Fewer than 3 columns being displayed!**<br/>Click here to select additional data for display"
 	},
 	"errors": {
 		"teamMissing": "Couldn't find details for team {team}. Has the team list changed since you created the scouting assignments?",
