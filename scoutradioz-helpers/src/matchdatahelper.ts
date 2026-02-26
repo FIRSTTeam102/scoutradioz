@@ -472,16 +472,15 @@ export class MatchDataHelper {
 				if (eventData?.data && 'ext' == datafield.substring(0, 3).toLowerCase())
 					sourcedata = eventData.data;
 				// logger.trace(`sourcedata = ${JSON.stringify(sourcedata)}`);
-				if (sourcedata) {
-					let fieldname = datafield.substring(3);
-					let value = 0;
-					if (sourcedata[fieldname]) {
-						value = Number(sourcedata[fieldname]);
-					}
-					matchData[datafield] = value;
+				let fieldname = datafield.substring(3);
+				let value = 0;
+				if (sourcedata && sourcedata[fieldname]) {
+					value = Number(sourcedata[fieldname]);
 				}
+				matchData[datafield] = value;
 			}
 		}
+		//logger.debug(`matchData after importdata processing = ${JSON.stringify(matchData)}`);
 
 		const derivedLayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		let t_dbEnd = performance.now();
@@ -517,6 +516,7 @@ export class MatchDataHelper {
 			}
 		}
 		let t_derivedEnd = performance.now();
+		//logger.debug(`matchData after formula processing = ${JSON.stringify(matchData)}`);
 
 		// logger.trace(`${dt - st}, ${performance.now() - dt}`);
 		logger.trace('total', ttokenize, tparse, tresolve);
