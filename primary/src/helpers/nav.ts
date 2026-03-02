@@ -176,11 +176,11 @@ class NavHelpers {
 			submenu: [
 				{
 					label: '!user.reportcolumns.title',
-					href: (req, res) => `/user/preferences/reportcolumns?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`,
+					href: (req, res) => `/user/preferences/reportcolumns?rdr=${encodeURIComponent(req.url.replace(/alert=.*$/g, ''))}`,
 				},
 				{
 					label:'!user.heatmapcolors.title',
-					href: (req, res) => `/user/preferences/heatmapcolors?rdr=${req.fixRedirectURL(req.url.replace(/alert=.*$/g, ''))}`
+					href: (req, res) => `/user/preferences/heatmapcolors?rdr=${encodeURIComponent(req.url.replace(/alert=.*$/g, ''))}`
 				}
 			]
 		},

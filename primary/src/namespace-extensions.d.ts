@@ -138,20 +138,20 @@ declare namespace Express {
 		}>;
 
 		/**
-		 * Gets the redirectURL WITHOUT encoding ? and & (for performing the actual redirection)
+		 * Function to urlencode redirectURL by urlencoding ? and &, etc., and clearing it if it's "undefined"
 		 */
-
-		getRedirectURL: () => string;
-
+		encodeRedirectURL: (str: string) => string | undefined;
+		
 		/**
-		 * Gets the redirectURL, automatically with ? and & encoded
+		 * Retrieve redirectURL for when performing a redirection, decoding the uri component, for use when about to redirect the user.
 		 */
-		getFixedRedirectURL: () => string | undefined;
-
+		getDecodedRedirectURL: () => string | undefined;
+		
 		/**
-		 * Function to fix redirectURL by urlencoding ? and &, and clearing it if it's "undefined"
+		 * Retrieve redirectURL from the message body or url query, WITHOUT decoding the uri component, for passing back into a body/query.
 		 */
-		fixRedirectURL: (str: string) => string | undefined;
+		getEncodedRedirectURL: () => string | undefined;
+
 		/**
 		 * Function to add query parameters to an URL, respecting the one ? rule, with an object of parameters & their values which CAN be undefined or null. Undefined/null parameters are removed.
 		 * @param {string} url URL
@@ -159,7 +159,7 @@ declare namespace Express {
 		 * @returns {string} URL with the query parameters automatically fixed.
 		 */
 		getURLWithQueryParameters: (url: string, parameters: StringDict) => string;
-
+		
 		/**
 		 * Checks if a user is authenticated at a given access level. Automatically redirects the user if not authenticated.
 		 */

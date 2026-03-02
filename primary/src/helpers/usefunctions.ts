@@ -76,25 +76,25 @@ class UseFunctions {
 		// from one method that DOES set it to another method that does NOT set it
 		logger.removeContext('funcName');
 		
-		// See express-extensions.d.ts for descriptions of the methods below
+		// See namespace-extensions.d.ts for descriptions of the methods below
 		
-		req.getRedirectURL = function () {
+		req.getEncodedRedirectURL = function() {
 			let str = this.body.rdr || this.query.rdr || this.body.redirectURL || this.query.redirectURL; // 2022-03-09 JL: Adding support for "rdr" field, which is more concise than redirectURL
-			if (str instanceof Array) str = str[str.length-1]; // this can happen if some weird edgecase leads to redirectURL=a&redirectURL=b
+			if (Array.isArray(str)) str = str[str.length - 1]; // this can happen if some weird edgecase leads to redirectURL=a&redirectURL=b (in this case, take the last one)
 			return str;
 		};
 		
-		req.getFixedRedirectURL = function() {
-			let str = this.getRedirectURL();
-			return this.fixRedirectURL(str);
+		req.getDecodedRedirectURL = function() {
+			let rdr = this.getEncodedRedirectURL();
+			if (!rdr) return undefined;
+			return decodeURIComponent(rdr);
 		};
 		
-		req.fixRedirectURL = function(str) {
-			if (typeof str !== 'string') return str;
-			else if (str === 'undefined' || str === 'null') return undefined;
+		req.encodeRedirectURL = function(str) {
+			if (str === 'undefined' || str === 'null') return undefined;
 			else {
 				if (!str.startsWith('/')) str = '/' + str; // We always want a redirect to start with a slash (unless in the future we want to redirect to external sites)
-				return str.replace(/\?/g, '%3f').replace(/\&/g, '%26');
+				return encodeURIComponent(str);
 			}
 		};
 		
@@ -173,7 +173,7 @@ class UseFunctions {
 			
 			let user = req.user;
 			
-			let redirect = req.fixRedirectURL(req.originalUrl); // 2022-04-07 JL: Fixed redirects from share.js getting their URL query params borked
+			let encodedRedirectURL = encodeURIComponent(req.originalUrl); // 2022-04-07 JL: Fixed redirects from share.js getting their URL query params borked
 			
 			if (user) {
 				
@@ -189,7 +189,7 @@ class UseFunctions {
 				else{
 					
 					if (req.method == 'GET' && user.name == 'default_user') {
-						res.redirect(`/user/login?rdr=${redirect}`);
+						res.redirect(`/user/login?rdr=${encodedRedirectURL}`);
 					}
 					else {
 						res.redirect('/?alert=You are not authorized to access this page.&type=error');
@@ -198,7 +198,7 @@ class UseFunctions {
 			}
 			// If user is undefined, then send them to the index page to select an organization
 			else {
-				res.redirect(`/?rdr=${redirect}`);
+				res.redirect(`/?rdr=${encodedRedirectURL}`);
 			}
 			
 			return isAuthenticated;
