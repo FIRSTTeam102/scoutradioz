@@ -527,14 +527,25 @@ router.get('/allianceselection', wrap(async (req, res) => {
 			return;
 		}
 		// 2023-03-27, M.O'C: Scan the rankings to make sure all the data has come in
+		// 2026-02-18, M.O'C: Also check if there is insufficient data for this screen (arbitrarily drawn as if any ranking has less than 3 matches played)
+		let minimumCount = 9e9;
 		let firstCount = rankings[0].matches_played;
 		let matchcountConsistent = true;
 		for(let i = 1; i < rankings.length; i++){
 			let thisCount = rankings[i].matches_played;
+			if (thisCount < minimumCount)
+				minimumCount = thisCount;
 			if (thisCount != firstCount) {
 				matchcountConsistent = false;
-				break;
+				//break;
 			}
+		}
+		if (minimumCount < 3) {
+			res.render('./message',{
+				title: res.msg('allianceselection.title'),
+				message: res.msg('allianceselection.notEnoughData'),
+			});
+			return;
 		}
 
 		// numAlliances is ~usually~ 8, but in some cases - e.g. 2022bcvi - there are fewer

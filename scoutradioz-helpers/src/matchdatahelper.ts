@@ -472,16 +472,15 @@ export class MatchDataHelper {
 				if (eventData?.data && 'ext' == datafield.substring(0, 3).toLowerCase())
 					sourcedata = eventData.data;
 				// logger.trace(`sourcedata = ${JSON.stringify(sourcedata)}`);
-				if (sourcedata) {
-					let fieldname = datafield.substring(3);
-					let value = 0;
-					if (sourcedata[fieldname]) {
-						value = Number(sourcedata[fieldname]);
-					}
-					matchData[datafield] = value;
+				let fieldname = datafield.substring(3);
+				let value = 0;
+				if (sourcedata && sourcedata[fieldname]) {
+					value = Number(sourcedata[fieldname]);
 				}
+				matchData[datafield] = value;
 			}
 		}
+		//logger.debug(`matchData after importdata processing = ${JSON.stringify(matchData)}`);
 
 		const derivedLayout = schema.layout.filter(item => MatchDataHelper.isMetric(item));
 		let t_dbEnd = performance.now();
@@ -517,6 +516,7 @@ export class MatchDataHelper {
 			}
 		}
 		let t_derivedEnd = performance.now();
+		//logger.debug(`matchData after formula processing = ${JSON.stringify(matchData)}`);
 
 		// logger.trace(`${dt - st}, ${performance.now() - dt}`);
 		logger.trace('total', ttokenize, tparse, tresolve);
@@ -1520,10 +1520,12 @@ export class MatchDataHelper {
 		//logger.debug('aggRowByTeam#1 = ' + JSON.stringify(aggRowsByTeam));
 
 		// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
-		let rankings: Ranking[] = await utilities.find('rankings', {'event_key': event_key}, {});
-		logger.trace('rankings=' + JSON.stringify(rankings));
-		for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-			let teamKey = rankings[rankIdx].team_key;
+		// 2026-02-18, M.O'C: Rework to use team keys from event
+		let event = await utilities.findOne('events', { key: event_key}, {}, {allowCache: true, maxCacheAge: 300});
+		let event_team_keys = event?.team_keys || [];
+		// for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+		// 	let teamKey = rankings[rankIdx].team_key;
+		for (const teamKey of event_team_keys) {
 			// in "alliance stats", only check if in 'teams_list'
 			if (teams_list.indexOf(teamKey) == -1) {
 				//logger.debug('Skipping team ' + teamKey + ' from rankings because not in teams_list');

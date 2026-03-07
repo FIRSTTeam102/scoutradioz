@@ -1379,8 +1379,12 @@ router.get('/allteammetrics', wrap(async (req, res) => {
 		aggArray = aggR;
 		
 	// 2026-02-14, M.O'C: Fill in teams with ranks but no scouting data
-	for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
-		let teamKey = rankings[rankIdx].team_key;
+	// 2026-02-18, M.O'C: Rework to use team keys from event
+	let event = await utilities.findOne('events', { key: eventKey}, {}, {allowCache: true, maxCacheAge: 300});
+	let event_team_keys = event?.team_keys || [];
+	// for (let rankIdx = 0; rankIdx < rankings.length; rankIdx++) {
+	// 	let teamKey = rankings[rankIdx].team_key;
+	for (const teamKey of event_team_keys) {
 		let found = false;
 		for (let aggIdx = 0; aggIdx < aggArray.length; aggIdx++) {
 			if (aggArray[aggIdx]._id == teamKey) {
