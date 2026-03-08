@@ -763,39 +763,45 @@ export class MatchDataHelper {
 		//// Simultaneous pulls
 		let eventDataPromises = [];
 
+		// 2026-03-08, M.O'C: Original "non-wrapped" API calls, replaced with "wrapped" calls below
+		// let rankingUrl = 'event/' + eventKey + '/rankings';
+		// logger.debug('rankingUrl=' + rankingUrl);
+		// let rankingPromise = utilities.requestTheBlueAlliance(rankingUrl);
+		// eventDataPromises.push(rankingPromise);
+
 		let rankingUrl = 'event/' + eventKey + '/rankings';
 		logger.debug('rankingUrl=' + rankingUrl);
-		let rankingPromise = utilities.requestTheBlueAlliance(rankingUrl);
+		let rankingPromise = utilities.requestTheBlueAlliance(rankingUrl).catch(err => logger.error('TBA API call (event rankings) failed: ', err));
 		eventDataPromises.push(rankingPromise);
 
 		let oprUrl = 'event/' + eventKey + '/oprs';
 		logger.debug('oprUrl=' + oprUrl);
-		let oprPromise = utilities.requestTheBlueAlliance(oprUrl);
+		let oprPromise = utilities.requestTheBlueAlliance(oprUrl).catch(err => logger.error('TBA API call (event oprs) failed: ', err));
 		eventDataPromises.push(oprPromise);
 
 		let coprUrl = 'event/' + eventKey + '/coprs';
 		logger.debug('coprUrl=' + coprUrl);
-		let coprPromise = utilities.requestTheBlueAlliance(coprUrl);
+		let coprPromise = utilities.requestTheBlueAlliance(coprUrl).catch(err => logger.error('TBA API call (event coprs) failed: ', err));
 		eventDataPromises.push(coprPromise);
 
 		let statboticsUrl = 'team_events?event=' + eventKey;
 		logger.debug('statboticsUrl=' + statboticsUrl);
-		let statboticsPromise = utilities.requestStatbotics(statboticsUrl);
+		let statboticsPromise = utilities.requestStatbotics(statboticsUrl).catch(err => logger.error('Statbotics API call failed: ', err));
 		eventDataPromises.push(statboticsPromise);
 
 		// wait for all the pulls to finish
-		//let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(eventDataPromises);
+		let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(eventDataPromises);
 
 		// Map over the existing array and attach a catch to each promise
-		const safePromises = eventDataPromises.map(promise => 
-			promise.catch(error => {
-				// Optional: log the error so you know it failed
-				logger.warn('An API call failed: ' + error); 
-				return undefined; 
-			})
-		);
-
-		let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(safePromises);
+		// 2026-03-08, M.O'C: Original fix for problematic promises, replaced with wrapping promises as above
+		// const safePromises = eventDataPromises.map(promise => 
+		// 	promise.catch(error => {
+		// 		// Optional: log the error so you know it failed
+		// 		logger.warn('An API call failed: ' + error); 
+		// 		return undefined; 
+		// 	})
+		// );
+		// let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(safePromises);
 
 		//// Rankings from TBA
 		let rankArr: Ranking[] = [];
