@@ -784,8 +784,19 @@ export class MatchDataHelper {
 		eventDataPromises.push(statboticsPromise);
 
 		// wait for all the pulls to finish
-		let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(eventDataPromises);
-		
+		//let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(eventDataPromises);
+
+		// Map over the existing array and attach a catch to each promise
+		const safePromises = eventDataPromises.map(promise => 
+			promise.catch(error => {
+				// Optional: log the error so you know it failed
+				logger.warn('An API call failed: ' + error); 
+				return undefined; 
+			})
+		);
+
+		let [rankInfo, oprInfo, coprInfo, statboticsInfo] = await Promise.all(safePromises);
+
 		//// Rankings from TBA
 		let rankArr: Ranking[] = [];
 		if (rankInfo && rankInfo.rankings && rankInfo.rankings.length > 0) {
