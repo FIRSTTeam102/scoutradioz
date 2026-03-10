@@ -11,8 +11,8 @@ services:
         # Use -bullseye variants on local arm64/Apple Silicon.
         VARIANT: 22-bookworm
     volumes:
-      # - ..:/workspace:cached
-      # JL note: this won't work on linux machines but i swear to god, even when i set a "HOME" environment variable on windows, mounting ${HOME} does not work, so i have given up and will just revisit this if and when another dev with aws credentials is running a linux/macos machine
+      # Pepper note: If running on Linux, you must set an environment variable USERPROFILE that points to $HOME.
+      #   Windows could not mount ${HOME} even when an env variable was set, so it must be run this way.
       - ${USERPROFILE}/.aws/credentials:/home/node/.aws/credentials:ro
 
     # Overrides default command so things don't shut down after the process ends.
