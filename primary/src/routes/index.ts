@@ -86,7 +86,7 @@ router.get('/', wrap(async (req, res, next) => {
 		isOrgSelectScreen: true,
 		data: {
 			orgs,
-			redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
+			redirectURL: req.getEncodedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 			selectedButton,
 			originalUser,
 			originalOrgKey,

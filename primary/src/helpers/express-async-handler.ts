@@ -15,6 +15,9 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 import type express from 'express';
 import type core from 'express-serve-static-core';
 
+/**
+ * Wrap a normal GET route and use standard error handling logic that renders an error page
+ */
 function expressAsyncHandler < P = core.ParamsDictionary, ResBody = any, ReqBody = any, ReqQuery = core.Query >
 (handler: (...args: Parameters<express.RequestHandler<P, ResBody, ReqBody, ReqQuery>>) => unknown | Promise<unknown>):
 	express.RequestHandler<P, ResBody, ReqBody, ReqQuery> {
@@ -29,4 +32,23 @@ function expressAsyncHandler < P = core.ParamsDictionary, ResBody = any, ReqBody
 	};
 }
 
+/**
+ * Wrap an API route that doesn't render a page, and instead, sends the error message to the client as JSON
+ */
+function expressAsyncApiHandler < P = core.ParamsDictionary, ResBody = any, ReqBody = any, ReqQuery = core.Query >
+(handler: (...args: Parameters<express.RequestHandler<P, ResBody, ReqBody, ReqQuery>>) => unknown | Promise<unknown>):
+	express.RequestHandler<P, ResBody, ReqBody, ReqQuery> {
+	return function asyncUtilWrap(req, res, next) {
+		const fnReturn = handler(req, res, next);
+		
+		return Promise.resolve(fnReturn).catch(err => {
+			let status = err.status || 500;
+			let message = {message: String(err.message || err)};
+			// @ts-expect-error dunno what ts is on about here
+			return res.status(status).send(message);
+		});
+	};
+}
+
 export default expressAsyncHandler;
+export const wrapAPI = expressAsyncApiHandler;

@@ -167,7 +167,7 @@ function init() {
 		}, 100);
 	});
 	
-	let svelteWatcher = fs.watch(pathToSvelte, {}, function() {
+	let svelteWatcher = fs.watch(pathToSvelte, {recursive: true}, function() {
 		console.log(`${svelteName}: Change detected. Re-compiling...`);
 		compilePrimarySvelte();
 	});

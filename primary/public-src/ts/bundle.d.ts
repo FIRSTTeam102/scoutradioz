@@ -311,3 +311,29 @@ declare class Cookies {
     static set(key: string, value: string, value2?: any): string;
     static remove(key: string): void;
 }
+declare class HttpError extends Error {
+    status: number;
+    body: any;
+    constructor(status: number, message?: string, body?: any);
+}
+/**
+ * Sends a fetch request to the specified URL.
+ * @param url URL to fetch
+ * @param options Options to pass to the HTTP fetch API
+ * @returns response
+ */
+declare function fetchJSON<T = any>(url: string, options?: RequestInit): Promise<T>;
+/**
+ * Sends an AJAX POST request to the specified url, using the HTTP fetch API.
+ *
+ * Shorthand for:
+ *
+ * 		fetchJSON(url, {
+ * 			method: 'POST',
+ * 			headers: {
+ * 				'Content-Type': 'application/json',
+ * 			},
+ * 			body: JSON.stringify(data)
+ * 		});
+ */
+declare function postJSON<T = any>(url: string, body: any, options?: RequestInit): Promise<T>;

@@ -250,7 +250,7 @@ app.use('/admin/sync', sync);
 
 //USER ROUTES
 let index = require('./routes/index').default;
-let user = require('./routes/user').default;
+let user = require('./routes/user2').default;
 let dashboard = require('./routes/dashboard').default;
 let scouting = require('./routes/scouting').default;
 let reports = require('./routes/reports').default;

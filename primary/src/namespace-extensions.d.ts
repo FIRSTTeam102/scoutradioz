@@ -141,17 +141,18 @@ declare namespace Express {
 		 * Gets the redirectURL WITHOUT encoding ? and & (for performing the actual redirection)
 		 */
 
-		getRedirectURL: () => string;
+		getRedirectURL: () => string|undefined;
+		
+		/**
+		 * Gets url-encoded verison of redirectURL
+		 */
+		getEncodedRedirectURL: () => string | undefined;
 
 		/**
-		 * Gets the redirectURL, automatically with ? and & encoded
+		 * Gets url-decoded version of redirectURL
 		 */
-		getFixedRedirectURL: () => string | undefined;
+		getDecodedRedirectURL: () => string | undefined;
 
-		/**
-		 * Function to fix redirectURL by urlencoding ? and &, and clearing it if it's "undefined"
-		 */
-		fixRedirectURL: (str: string) => string | undefined;
 		/**
 		 * Function to add query parameters to an URL, respecting the one ? rule, with an object of parameters & their values which CAN be undefined or null. Undefined/null parameters are removed.
 		 * @param {string} url URL

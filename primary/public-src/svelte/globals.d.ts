@@ -4,4 +4,8 @@ declare global {
 		set: (...args: any[]) => any;
 	};
 }
+declare module '*.module.css' {
+  const classes: Record<string, string>;
+  export default classes;
+}
 export {};

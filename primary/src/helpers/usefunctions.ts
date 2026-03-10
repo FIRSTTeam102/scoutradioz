@@ -81,21 +81,20 @@ class UseFunctions {
 		req.getRedirectURL = function () {
 			let str = this.body.rdr || this.query.rdr || this.body.redirectURL || this.query.redirectURL; // 2022-03-09 JL: Adding support for "rdr" field, which is more concise than redirectURL
 			if (str instanceof Array) str = str[str.length-1]; // this can happen if some weird edgecase leads to redirectURL=a&redirectURL=b
+			else if (str === 'undefined' || str === 'null') return undefined;
 			return str;
 		};
 		
-		req.getFixedRedirectURL = function() {
+		req.getEncodedRedirectURL = function () {
 			let str = this.getRedirectURL();
-			return this.fixRedirectURL(str);
+			if (typeof str !== 'string') return str;
+			return encodeURIComponent(str);
 		};
 		
-		req.fixRedirectURL = function(str) {
+		req.getDecodedRedirectURL = function () {
+			let str = this.getRedirectURL();
 			if (typeof str !== 'string') return str;
-			else if (str === 'undefined' || str === 'null') return undefined;
-			else {
-				if (!str.startsWith('/')) str = '/' + str; // We always want a redirect to start with a slash (unless in the future we want to redirect to external sites)
-				return str.replace(/\?/g, '%3f').replace(/\&/g, '%26');
-			}
+			return decodeURIComponent(str);
 		};
 		
 		req.getURLWithQueryParameters = function(url, parameters) {
@@ -173,7 +172,7 @@ class UseFunctions {
 			
 			let user = req.user;
 			
-			let redirect = req.fixRedirectURL(req.originalUrl); // 2022-04-07 JL: Fixed redirects from share.js getting their URL query params borked
+			let redirect = encodeURIComponent(req.originalUrl); // 2022-04-07 JL: Fixed redirects from share.js getting their URL query params borked
 			
 			if (user) {
 				
@@ -192,7 +191,7 @@ class UseFunctions {
 						res.redirect(`/user/login?rdr=${redirect}`);
 					}
 					else {
-						res.redirect('/?alert=You are not authorized to access this page.&type=error');
+						res.redirect('/home?alert=You are not authorized to access this page.&type=error');
 					}
 				}
 			}
@@ -595,15 +594,3 @@ function getFixedZone(timezone: string) {
 		return fixedZone;
 	}
 }
-
-
-// declare namespace Express {
-// 	export interface Request {
-// 		requestTime?: number;
-// 		user?: User;
-// 		// Gets the redirectURL WITHOUT encoding ? and & (for performing the actual redirection)
-// 		getRedirectURL: () => string;
-// 		getFixedRedirectURL: () => string;
-// 		fixRedirectURL: (str: string) => string;
-// 	}
-// }
