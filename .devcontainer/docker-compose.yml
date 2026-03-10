@@ -13,7 +13,7 @@ services:
     volumes:
       # Pepper note: If running on Linux, you must set an environment variable USERPROFILE that points to $HOME.
       #   Windows could not mount ${HOME} even when an env variable was set, so it must be run this way.
-      - ${USERPROFILE}/.aws/credentials:/home/node/.aws/credentials:ro
+      - ${USERPROFILE}/.aws:/home/node/.aws:ro
 
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
