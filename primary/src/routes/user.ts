@@ -54,7 +54,7 @@ router.get('/login', wrap(async (req, res) => {
 	res.render('./user/login', {
 		title: req.msg('user.loginOrg', {org: selectedOrg.nickname}),
 		org: selectedOrg,
-		redirectURL: req.getFixedRedirectURL()
+		redirectURL: req.getEncodedRedirectURL(),
 	});
 }));
 
@@ -80,7 +80,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	
 	//Make sure that form is filled
 	if(!org_key || !org_password || org_key === '' || org_password === ''){
-		return res.redirect('/user/login?alert=' + req.msgUrl('user.orgpasswordrequired') + '&rdr=' + req.getFixedRedirectURL());
+		return res.redirect('/user/login?alert=' + req.msgUrl('user.orgpasswordrequired') + '&rdr=' + req.getEncodedRedirectURL());
 	}
 	
 	//If form is filled, then proceed.
@@ -109,7 +109,7 @@ router.post('/login/select', wrap(async (req, res) => {
 	}
 	//If failed, then redirect with alert
 	else{
-		res.redirect(`/user/login?alert=${req.msgUrl('user.orgpasswordincorrect', {org: selectedOrg.nickname})}&rdr=${req.getFixedRedirectURL()}`);
+		res.redirect(`/user/login?alert=${req.msgUrl('user.orgpasswordincorrect', {org: selectedOrg.nickname})}&rdr=${req.getEncodedRedirectURL()}`);
 	}
 }));
 
@@ -667,7 +667,7 @@ router.get('/social/login/redirect', wrap(async (req, res, next) => {
 			fulltitle: res.msg('user.social.chooseusertitle'),
 			data: {
 				users: userList,
-				redirectURL: req.getFixedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
+				redirectURL: req.getEncodedRedirectURL(), //redirectURL for viewer-accessible pages that need an organization to be picked before it can be accessed
 				socialUser,
 			}
 		});
@@ -922,7 +922,7 @@ router.get('/preferences/heatmapcolors', wrap(async (req, res) =>  {
 	logger.addContext('funcName', 'preferences/heatmapcolors[get]');
 	logger.info('ENTER');
 	
-	let redirectURL = req.getFixedRedirectURL(); //////////////////////////////
+	let redirectURL = req.getEncodedRedirectURL(); //////////////////////////////
 
 	let heatMapOptions: HeatMapColors[] = await utilities.find('heatmapcolors',
 		{}, 
@@ -955,7 +955,7 @@ router.get('/preferences/reportcolumns', wrap(async (req, res) =>  {
 	let orgKey = req._user.org_key;
 	let thisOrg = req._user.org;
 	let thisOrgConfig = thisOrg.config;
-	let redirectURL = req.getFixedRedirectURL(); //////////////////////////////
+	let redirectURL = req.getEncodedRedirectURL(); //////////////////////////////
 	
 	// read in the list of form options
 	const { layout: matchlayout } = await matchDataHelper.getSchemaForOrgAndEvent(orgKey, eventKey, 'matchscouting');
@@ -1024,7 +1024,7 @@ router.post('/preferences/heatmapcolors', wrap(async (req, res) => {
 		res.cookie(cookieKey, req.body['heatMapSelection'], {maxAge: 30E9});
 	}
 
-	let redirectURL = req.getFixedRedirectURL() || '/home';
+	let redirectURL = req.getDecodedRedirectURL() || '/home';
 	logger.debug(`Redirect: ${redirectURL}`);
 
 	res.redirect(redirectURL + '?alert=' + req.msgUrl('user.reportcolumns.saved') + '&type=success&autofade=true');
@@ -1114,7 +1114,7 @@ router.post('/preferences/reportcolumns', wrap(async (req, res) => {
 		
 	}
 	
-	let redirectURL = req.getFixedRedirectURL() || '/home';
+	let redirectURL = req.getDecodedRedirectURL() || '/home';
 	logger.debug(`Redirect: ${redirectURL}`);
 
 	res.redirect(redirectURL + '?alert=' + req.msgUrl('user.reportcolumns.saved') + '&type=success&autofade=true');

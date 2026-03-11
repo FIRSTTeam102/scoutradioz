@@ -249,7 +249,7 @@ export class I18n {
 	// Returns a URL-encoded message
 	@qqxOutput(encodeURI)
 	msgUrl(name: string, parameters?: I18nParameters) {
-		return encodeURI(this.msg(name, parameters));
+		return encodeURIComponent(this.msg(name, parameters));
 	}
 
 	// Returns a JS-encoded message for use in embedded scripts
