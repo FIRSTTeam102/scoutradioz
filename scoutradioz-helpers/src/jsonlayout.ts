@@ -1,8 +1,15 @@
 import assert from 'assert';
-import type { SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, LayoutEdit, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, StringDict, SubheaderItem, TextBlockItem, ImportDataItem } from 'scoutradioz-types';
+import type { ChartSections, SprCalculation, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, HeaderItem, MatchFormData, MultiselectItem, SchemaItem, SliderItem, ImageItem, SpacerItem, SubheaderItem, TextBlockItem, ImportDataItem } from 'scoutradioz-types';
 import { convertValuesDict, DerivedCalculator } from './derivedhelper.js';
 
 const validTypes = ['checkbox', 'counter', 'slider', 'multiselect', 'textblock', 'header', 'subheader', 'spacer', 'derived', 'image', 'importdata'];
+
+const validReportTypes = ['heatMapOfAllAggregations', 'stackedBarOfAggregations', 'bubbleOfAggregations', 'radarOfAggregations', 'heatMapOfAggregations', 'lineChartOfMatches', 'stackedBarOfMatches', 'bubbleOfMatches'];
+
+export function validateReportDefinitionLayout(layout: ChartSections) {
+	// TODO
+	return { warnings: [], layout };
+}
 
 export function validateSprLayout(sprLayout: SprCalculation, layout: SchemaItem[]) {
 	assert(sprLayout.points_per_robot_metric, 'SPR calculation must have "points\\_per\\_robot\\_metric" which refers to the ID of a field in your match form schema');

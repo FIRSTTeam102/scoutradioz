@@ -142,6 +142,47 @@ declare interface FormSliderOptions {
 	step: number;
 }
 
+
+/**
+ * Custom report definitions.
+ */
+export declare interface ReportSchema extends DbDocument {
+	year: number;
+	last_modified: Date,
+	created: Date,
+	chartSections: ChartSections;
+	form_type: 'reportdefinition';
+	name: string;
+	description: string;
+	published: boolean;
+	owners: OrgKey[];
+}
+
+export declare interface ChartSections {
+	allTeamsCharts?: ChartItem[];
+	teamIntelCharts?: ChartItem[];
+	driveTeamDashboardCharts?: ChartItem[];
+}
+
+export declare interface ChartItem {
+	type: 'heatMapOfAllAggregations' | 'stackedBarOfAggregations' | 'bubbleOfAggregations' | 'radarOfAggregations' | 'heatMapOfAggregations' | 'lineChartOfMatches' | 'stackedBarOfMatches' | 'bubbleOfMatches';
+}
+
+export declare interface MultiMetricChartItem extends ChartItem {
+	metrics: string[];
+}
+
+export declare interface SingleMetricChartItem extends ChartItem {
+	metric: string;
+}
+
+export declare interface BubbleChartItem extends ChartItem {
+	x_axis: string;
+	y_axis: string;
+	size?: string;
+	color?: string;
+}
+
 /**
  * A question/metric in the pit or match scouting form.
  * @deprecated

@@ -3,13 +3,13 @@ import express from 'express';
 import { getLogger } from 'log4js';
 import e, { HttpError, assert } from 'scoutradioz-http-errors';
 import { upload as uploadHelper } from 'scoutradioz-helpers';
-import type { Layout, MatchFormData, MatchScouting, OrgSchema, SchemaItem, Schema, SprCalculation, Upload } from 'scoutradioz-types';
+import type { Layout, MatchFormData, MatchScouting, OrgSchema, ReportSchema, Schema, SprCalculation, Upload } from 'scoutradioz-types';
 import type { MongoDocument } from 'scoutradioz-utilities';
 import utilities from 'scoutradioz-utilities';
 import wrap from '../../helpers/express-async-handler';
 import { getSubteamsAndClasses } from '../../helpers/orgconfig';
 import Permissions from '../../helpers/permissions';
-import { validateJSONLayout, validateSprLayout } from 'scoutradioz-helpers';
+import { validateJSONLayout, validateSprLayout, validateReportDefinitionLayout } from 'scoutradioz-helpers';
 import type { ImageLinks } from 'scoutradioz-helpers/types/uploadhelper';
 //import { write } from 'fs';
 
@@ -157,6 +157,232 @@ router.post('/setdefaultpassword', wrap(async (req, res) => {
 
 	res.redirect(`/manage?alert=Successfully changed password to ${newDefaultPassword}.`);
 
+}));
+
+router.get('/editreportdefinition', wrap(async (req, res) => {
+	logger.addContext('funcName', 'orgconfig.editreportdefinition[GET]');
+
+	if (!await req.authenticate(Permissions.ACCESS_TEAM_ADMIN)) return;
+
+	const form_type = 'reportdefinition';
+	let org_key = req._user.org_key;
+
+	let year = parseInt(String(req.query.year)) || req.event.year;
+	if (!year || isNaN(year)) throw new e.UserError('Either "year" or "key" must be set.');
+
+	if (year === -1) {
+		let currentYear = new Date().getFullYear();
+		logger.debug(`Year is -1, aka, event not set. Setting year to current year: ${currentYear}`);
+		year = currentYear;
+	}
+
+	// load form definition data from the database
+	let schema: ReportSchema | undefined,
+		// default "blank" layout, with sample data
+		layout = `{
+			"allTeamsCharts": [
+				{
+					"type": "stackedBarOfAggregations",
+					"metrics": [
+						"firstSampleMetric",
+						"secondSampleMetric",
+						"thirdSampleMetric"
+					]
+				},
+				{
+					"type": "bubbleOfAggregations",
+					"x-axis": "firstSampleMetric",
+					"y-axis": "secondSampleMetric",
+					"size": "thirdSampleMetric",
+					"color": "fourthSampleMetric"
+				}
+			],
+			"teamIntelCharts": [
+				{
+					"type": "heatMapOfAllAggregations"
+				},
+				{
+					"type": "lineChartOfMatches",
+					"metrics": [
+						"firstSampleMetric",
+						"secondSampleMetric",
+						"thirdSampleMetric"
+					]
+				},
+				{
+					"type": "stackedBarOfMatches",
+					"metrics": [
+						"firstSampleMetric",
+						"secondSampleMetric",
+						"thirdSampleMetric"
+					]
+				},
+				{
+					"type": "bubbleOfMatches",
+					"x-axis": "firstSampleMetric",
+					"y-axis": "secondSampleMetric",
+					"size": "thirdSampleMetric",
+					"color": "fourthSampleMetric"
+				}
+			],
+			"driveTeamDashboardCharts": [
+				{
+					"type": "radarOfAggregations"
+				},
+				{
+					"type": "heatMapOfAggregations"
+				},
+				{
+					"type": "lineChartOfMatches",
+					"metric": "firstSampleMetric"
+				},
+				{
+					"type": "stackedBarOfAggregations",
+					"metrics": [
+						"firstSampleMetric",
+						"secondSampleMetric",
+						"thirdSampleMetric"
+					]
+				},
+				{
+					"type": "bubbleOfAggregations",
+					"x-axis": "firstSampleMetric",
+					"y-axis": "secondSampleMetric",
+					"size": "thirdSampleMetric",
+					"color": "fourthSampleMetric"
+				}
+			]
+		}`;
+
+	const orgschema = await utilities.findOne('orgschemas',
+		{ org_key, year, form_type },
+	);
+	if (orgschema) {
+		schema = await utilities.findOne('reportschemas',
+			{ _id: orgschema.schema_id, owners: org_key },
+		);
+		assert(schema, `For ${org_key} and ${year}, orgschema existed in the database but pointed to nonexistent schema!`);
+		// Create string representation of layout
+		layout = JSON.stringify(schema.layout).replace(/`/g, '\\`');
+	}
+
+	// Get name, description, and whether it's published from the schema (or assign defaults)
+	let { name, description, published } = schema || {
+		name: `${org_key}'s ${year} ${form_type} Form`,
+		description: '',
+		published: false
+	};
+	//logger.debug(thisFuncName + 'layout=\n' + layout);
+
+	const title = 'Report Definition Layout';
+
+	res.render('./manage/config/editreportdefinition', {
+		title: title,
+		layout,
+		name,
+		description,
+		published,
+		form_type,
+		org_key,
+		year,
+	});
+}));
+
+router.post('/submitreportdefinition', wrap(async (req, res) => {
+	logger.addContext('funcName', 'submitreportdefinition[post]');
+	logger.info('ENTER');
+
+	if (!await req.authenticate(Permissions.ACCESS_TEAM_ADMIN)) return;
+
+	let thisUser = req._user;
+	// only let a user logged into the org modify their own org_key
+	let org_key = thisUser.org_key;
+	logger.debug('org_key=' + org_key);
+
+	const jsonString = req.body.jsonString;
+	logger.debug('jsonString=' + jsonString);
+	const year = parseInt(req.body.year);
+	logger.debug('year=' + year);
+	const form_type = 'reportdefinition';
+	const save = (req.body.save === 'true');
+
+	assert(!isNaN(year), 'invalid year!');
+
+	// Validate json layout
+	const jsonParsed = JSON.parse(jsonString);
+	const { warnings, layout } = validateReportDefinitionLayout(jsonParsed);
+
+	/**
+	 * TODO:
+	 * 	1. [DONE] Server-side validation of schema being ok
+	 * 	2. Take schema ID as user input, rather than just current schema set by org?
+	 * 	3. If IDs do not change, then update the existing schema; if IDs do change, create new schema
+	 * 	4. Publishing shiz
+	 */
+
+	if (save) {
+		logger.info('save=true; saving schema that was uploaded');
+
+		// Get existing schema metadata from db
+		const orgschema = await utilities.findOne('orgschemas',
+			{ org_key, year, form_type },
+		);
+		// schema did exist in db; update it now
+		if (orgschema) {
+			const schema = await utilities.findOne('reportschemas',
+				{ _id: orgschema.schema_id, owners: org_key },
+			);
+			assert(schema, new e.InternalServerError(`For ${org_key} and ${year}, orgschema existed in the database but pointed to nonexistent reporting schema!`));
+			// Insert validated & updated layout 
+			let writeResult = await utilities.update('reportschemas',
+				{ _id: schema._id, },
+				{
+					$set: {
+						layout,
+						last_modified: new Date(),
+					}
+				}
+			);
+			logger.info('writeResult=', writeResult);
+			if (writeResult.modifiedCount !== 1) {
+				throw new e.InternalServerError(`modifiedCount !== 1! ${JSON.stringify(writeResult)}`);
+			}
+		}
+		// schema didn't exist in db; create it now
+		else {
+			let newSchema: ReportSchema = {
+				year,
+				last_modified: new Date(),
+				created: new Date(),
+				form_type,
+				layout,
+				name: `${org_key}'s ${year} ${form_type} form`,
+				description: '',
+				published: false,
+				owners: [org_key],
+			};
+			let insertResult = await utilities.insert('reportschemas', newSchema);
+
+			logger.debug(`insertResult for inserting schema=${JSON.stringify(insertResult)}`);
+			assert(insertResult.insertedId, new e.InternalServerError('insertResult did not result in an insertedId!'));
+
+			let newOrgSchema: OrgSchema = {
+				org_key,
+				year,
+				form_type,
+				schema_id: insertResult.insertedId,
+			};
+
+			insertResult = await utilities.insert('orgschemas', newOrgSchema);
+			logger.debug(`insertResult for inserting orgschema=${JSON.stringify(insertResult)}`);
+		}
+	}
+
+	return res.send({
+		warnings,
+		layout,
+		saved: save
+	});
 }));
 
 router.get('/editform', wrap(async (req, res) => {

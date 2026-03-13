@@ -295,7 +295,12 @@ function getJSON() {
 		return JSON.stringify(parsed);
 	}
 	catch (err) {
-		throw onError('Invalid JSON');
+		if (err instanceof Error) {
+			throw onError(`Invalid JSON ${err.name}: ${err.message}`);
+		}
+		else {
+			throw onError('Invalid JSON');
+		}
 	}
 }
 
