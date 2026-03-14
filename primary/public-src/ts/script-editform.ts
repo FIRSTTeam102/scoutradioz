@@ -318,7 +318,7 @@ function getSprJSON() {
 			throw onError('Invalid SPR JSON');
 		}
 	}
-	else return {};
+	else return '';
 }
 
 function onError(err: string | Error) {
@@ -349,7 +349,13 @@ async function test() {
 			// Set editor to modified json layout
 			setEditorText(JSON.stringify(layout, null, 2));
 			// 2025-02-01, M.O'C: Adding in SPR field
-			setSprText(JSON.stringify(sprLayout, null, 2));
+			// 2026-03-14, M.O'C: If sprLayout is empty (because team is not using so validation failed), don't use
+			console.log('sprLayout=', sprLayout, 'sprString=', sprString);
+			if (sprLayout && Object.keys(sprLayout).length > 0)
+				setSprText(JSON.stringify(sprLayout, null, 2));
+			else
+				// the 'sprString' is unformatted so parse it & then re-format it to make it look nice
+				setSprText(JSON.stringify(JSON.parse(sprString), null, 2)); // set back to original (invalid) value so user can edit
 
 			// Finally, submit to testform
 			fetch('/scouting/testform', {
