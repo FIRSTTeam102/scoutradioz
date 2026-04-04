@@ -824,10 +824,13 @@ export class MatchDataHelper {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 		// Delete the current rankings
 		//await utilities.remove("currentrankings", {});
-		await utilities.remove('rankings', {'event_key': eventKey});
-		// Insert into DB
-		//await utilities.insert("currentrankings", rankArr);
-		await utilities.insert('rankings', rankArr);
+		// 2026-04-04, M.O'C: Hotfix to only remove & reload rankings if the 'rankArr' > 0 length
+		if (rankArr.length > 0) {
+			await utilities.remove('rankings', {'event_key': eventKey});
+			// Insert into DB
+			//await utilities.insert("currentrankings", rankArr);
+			await utilities.insert('rankings', rankArr);
+		}
 
 		//// Store per-team, per-event data - build a Dict keyed by team key,
 		//// add to its "data" attribute as we parse data
