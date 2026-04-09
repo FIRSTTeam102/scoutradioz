@@ -142,6 +142,57 @@ declare interface FormSliderOptions {
 	step: number;
 }
 
+/**
+ * Report data directives
+ *
+ * data_type values:
+ * - Minimum: `MIN`
+ * - Floor: `FLR` [10th percentile]
+ * - Median: `MED` [50th percentile]
+ * - Average: `AVG`
+ * - Trending: `TRN` [Exponential Moving Average]
+ * - Capability: `CPB` [90th percentile]
+ * - Maximum: `MAX`
+ * - Standard Dev: `STD`
+ * - Variance: `VAR`
+ */
+export declare interface ReportDataDirectives {
+	team_keys: TeamKey[];
+	metrics: string[]; // e.g. "contributedPoints", "tbaOpr", "epaTotalPoints", etc.
+	data_types: 'MIN'|'FLR'|'MED'|'AVG'|'TRN'|'CPB'|'MAX'|'STD'|'VAR'
+	normalization_needed: boolean; // whether the report generation code needs to normalize values to the highest
+	individual_matches_needed: boolean;
+}
+
+/**
+ * Structure to store aggregations (and possibly normalizations)
+ * keys are metric names (e.g. "contributedPoints", "tbaOpr", "epaTotalPoints", etc.)
+ * numericalDict is names of data types [aggregations] and their corresponding values, e.g.:
+ *   contributedPoints: {
+ *     AVG: 12.3,
+ *     MAX: 45,
+ *     ...
+ *   },
+ */
+export declare interface ReportDataTyped {
+	[key: string]: NumericalDict;
+}
+
+export declare interface ReportMatchData {
+	match_key: MatchKey;
+	match_number: number;
+	metrics: NumericalDict; // e.g. { contributedPoints: 12, tbaOpr: 3.4, ... }
+}
+
+export declare interface ReportTeamData {
+	aggregations?: ReportDataTyped;
+	normalizations?: ReportDataTyped;
+	matches?: ReportMatchData[];
+}
+
+export declare interface ReportData {
+	[team_key: string]: ReportTeamData;
+}
 
 /**
  * Custom report definitions.
