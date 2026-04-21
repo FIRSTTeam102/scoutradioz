@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/triple-slash-reference */
 /// <reference path="./.sst/platform/config.d.ts" />
 
+function throw_err(msg: string): never {
+	console.log('ERROR: ' + msg);
+	throw new Error(msg);
+}
+
 export default $config({
 	app(input) {
 		return {
@@ -20,14 +25,14 @@ export default $config({
 		console.log('Git commit hash:', gitHash);
 		console.log('Stage:', $app.stage);
 		if ($dev && $app.stage !== 'dev') {
-			throw new Error('Dev mode only allowed on "dev" tier!');
+			throw_err('Dev mode only allowed on "dev" tier!');
 		}
 		// only enforce requirements when deploying
 		if (!$dev) {
 			if (!['prod', 'qa', 'test'].includes($app.stage))
-				throw new Error('app.stage must be prod, qa, or test');
+				throw_err('app.stage must be prod, qa, or test');
 			if (!gitHash)
-				throw new Error('git hash must be specified via an environment variable HASH=$(git rev-parse HEAD)');
+				throw_err('git hash must be specified via an environment variable HASH=$(git rev-parse HEAD)');
 		}
 
 		let domain, sr_hostname;

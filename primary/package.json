@@ -86,7 +86,7 @@
 		"scoutradioz-utilities": "file:../scoutradioz-utilities",
 		"serve-favicon": "^2.5.0",
 		"smui-theme": "^8.0.3",
-		"sst": "^3.7.9",
+		"sst": "^4.9.1",
 		"web-push": "^3.4.5"
 	},
 	"nodemonConfig": {

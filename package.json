@@ -45,7 +45,6 @@
 	},
 	"dependencies": {
 		"archiver": "^5.3.0",
-		"aws-sdk": "^2.1066.0",
 		"colors": "^1.4.0",
 		"concat-stream": "^2.0.0",
 		"esbuild-svelte": "^0.9.3",
