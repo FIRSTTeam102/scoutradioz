@@ -1455,6 +1455,8 @@ export class MatchDataHelper {
 		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',showAllColumns=' + showAllColumns + ',directives=' + JSON.stringify(directives));
 
 		// set up the return data
+		//
+		// an example old call: multiple data elements for avgTable, maxTable, norms, etc.
 		// let returnData: AllianceStatsData = {
 		// 	teams,
 		// 	teamList,
@@ -1465,6 +1467,8 @@ export class MatchDataHelper {
 		// 	maxNorms,
 		// 	pitData
 		// };
+		//
+		// new call: a single data blob with multiple potential data elements, which will be populated based on the directives passed in (or default to all)		
 		let returnData: ReportData = {};
 		logger.removeContext('funcName');
 		return returnData;

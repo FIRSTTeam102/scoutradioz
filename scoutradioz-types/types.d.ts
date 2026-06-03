@@ -143,9 +143,7 @@ declare interface FormSliderOptions {
 }
 
 /**
- * Report data directives
- *
- * data_type values:
+ * Possible report data types
  * - Minimum: `MIN`
  * - Floor: `FLR` [10th percentile]
  * - Median: `MED` [50th percentile]
@@ -156,10 +154,15 @@ declare interface FormSliderOptions {
  * - Standard Dev: `STD`
  * - Variance: `VAR`
  */
+export declare type ReportDataType = 'MIN'|'FLR'|'MED'|'AVG'|'TRN'|'CPB'|'MAX'|'STD'|'VAR';
+
+/**
+ * Report data directives
+ */
 export declare interface ReportDataDirectives {
 	team_keys: TeamKey[];
 	metrics: string[]; // e.g. "contributedPoints", "tbaOpr", "epaTotalPoints", etc.
-	data_types: 'MIN'|'FLR'|'MED'|'AVG'|'TRN'|'CPB'|'MAX'|'STD'|'VAR'
+	data_types: ReportDataType[];
 	normalization_needed: boolean; // whether the report generation code needs to normalize values to the highest
 	individual_matches_needed: boolean;
 }
