@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem, ReportDataDirectives, ReportDataTyped, ReportMatchData, ReportTeamData, ReportData } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -824,10 +824,13 @@ export class MatchDataHelper {
 		// 2020-02-08, M.O'C: Change 'currentrankings' into event-specific 'rankings' 
 		// Delete the current rankings
 		//await utilities.remove("currentrankings", {});
-		await utilities.remove('rankings', {'event_key': eventKey});
-		// Insert into DB
-		//await utilities.insert("currentrankings", rankArr);
-		await utilities.insert('rankings', rankArr);
+		// 2026-04-04, M.O'C: Hotfix to only remove & reload rankings if the 'rankArr' > 0 length
+		if (rankArr.length > 0) {
+			await utilities.remove('rankings', {'event_key': eventKey});
+			// Insert into DB
+			//await utilities.insert("currentrankings", rankArr);
+			await utilities.insert('rankings', rankArr);
+		}
 
 		//// Store per-team, per-event data - build a Dict keyed by team key,
 		//// add to its "data" attribute as we parse data
@@ -1434,6 +1437,39 @@ export class MatchDataHelper {
 
 		//console.log('returnData.matches=' + JSON.stringify(returnData.matches));
 
+		logger.removeContext('funcName');
+		return returnData;
+	}
+
+	/**
+	 * Get report data - One Call To Rule Them All
+	 * @param {number} event_year Event year
+	 * @param {string} event_key Event key
+	 * @param {string} org_key Org key
+	 * @param {object} cookies req.cookies
+	 * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
+	 * @param {ReportDataDirectives} directives (optional) Object containing directives for what data to include in the report; if not provided, will default to including all data
+	 */
+	static async getReportData(event_year: number, event_key: string, org_key: string, cookies: any, showAllColumns: boolean = false, directives?: ReportDataDirectives) {
+		logger.addContext('funcName', 'getReportData');
+		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',showAllColumns=' + showAllColumns + ',directives=' + JSON.stringify(directives));
+
+		// set up the return data
+		//
+		// an example old call: multiple data elements for avgTable, maxTable, norms, etc.
+		// let returnData: AllianceStatsData = {
+		// 	teams,
+		// 	teamList,
+		// 	currentAggRanges,
+		// 	avgTable,
+		// 	maxTable,
+		// 	avgNorms,
+		// 	maxNorms,
+		// 	pitData
+		// };
+		//
+		// new call: a single data blob with multiple potential data elements, which will be populated based on the directives passed in (or default to all)		
+		let returnData: ReportData = {};
 		logger.removeContext('funcName');
 		return returnData;
 	}
