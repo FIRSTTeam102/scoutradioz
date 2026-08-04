@@ -1,23 +1,23 @@
 {
 	"index": {
-		"fulltitle": "Scoutradioz: Escultismo FRC como servicio",
+		"fulltitle": "Scoutradioz: FRC Scouting como servicio",
 		"welcome": "Bienvenido a Scoutradioz",
 		"choice": "¿Eres tú:",
 		"viewer": {
-			"choice": "Buscando a ver datos",
+			"choice": "Ver datos de scouting",
 			"intro": "Scoutradioz permite a los equipos/organizaciones recolectar información personalizada en las competiciones.",
 			"action": "¡Seleccione una organización a continuación para ver qué datos han recopilado!"
 		},
 		"scouter": {
-			"choice": "Iniciando sesión para explorar"
+			"choice": "Iniciar sesión para hacer scouting"
 		},
 		"info": {
 			"choice": "Interesado en aprender sobre Scoutradioz y cómo su equipo puede usarlo",
-			"intro": "Scoutradioz es una aplicación de exploración de FRC desarrollada por The Gearheads que permite a los equipos y organizaciones **reunir su propia información personalizada en las competiciones**.",
+			"intro": "Scoutradioz es una aplicación de scouting de FRC desarrollada por The Gearheads que permite a los equipos y organizaciones **reunir su propia información personalizada en las competiciones**.",
 			"features": {
-				"intro": "Inicialmente creado en 2018, Scoutradioz ha seguido evolucionando y ahora se ejecuta en Amazon Web Services. Aquí hay una lista de algunas de las características que ofrece Scoutradioz:",
-				"modular": "**Encuestas modulares y configurables** de exploración de boxes y partidos, para que su organización pueda elegir exactamente qué información desea registrar y mostrar",
-				"automatic": "**Automático**, asignaciones individualizadas para explorar y notar los partidos y los equipos que estan trabajando en los robots antes que vayan a un partido",
+				"intro": "Creada inicialmente en 2018, Scoutradioz ha seguido evolucionando y ahora se ejecuta en Amazon Web Services. Aquí hay una lista de algunas de las funciones que ofrece Scoutradioz:",
+				"modular": "Encuestas de scouting de pits y matches **modulares y configurables**, para que su organización pueda elegir exactamente qué información desea registrar y mostrar",
+				"automatic": "**Automáticas**, asignaciones individuales de scouting de pits y matches",
 				"advanced": "**Informes y métricas **avanzados**",
 				"management": "Herramientas de gestión de eventos como la auditoría de asignaciones de partidos, el intercambio de scouters y la gestión de una lista de miembros",
 				"free": "¡Y por supuesto, es completamente gratis!"
@@ -25,14 +25,22 @@
 			"github": "Vea nuestro código en GitHub",
 			"discord": "Únete a nuestro Discord",
 			"partner": "Solicitar ser socio de acceso anticipado",
-			"first": "Más sobre *FIRST* y FRC"
+			"first": "Más sobre *FIRST* y FRC",
+			"wiki": "Consulte nuestra wiki para ver documentación detallada",
+			"signup": "Registra a tu equipo para usar Scoutradioz"
 		},
 		"view": "Ver",
 		"login": "Iniciar sesión",
 		"browse": {
 			"pastEvents": "Para ver datos más viejos tal vez necesitarás usar la opción de menú debajo de Info y Reportes, ‘Buscar datos de eventos previos’",
-			"link": "O haga clic aquí para buscar los datos por evento",
-			"title": "Ver datos por evento y organización"
+			"link": "O haz clic aquí para ver datos por evento",
+			"title": "Ver datos por evento y organización",
+			"selectYear": "Selecciona el año para explorar",
+			"tspsExplained": "'TSPS' es el Puntaje de Rendimiento de Scouting Total **relativo** (¡útil para competencias amistosas de scouting!) - y 'Mdn.' es la abreviatura de Mediana",
+			"orgKeyAndNickname": "Clave de la organización - Nickname",
+			"matchScoutingEntries": "# de entradas de scouting de match",
+			"avgErrorRate": "Tasa de error mdn. (y mínimo)",
+			"tspsScore": "TSPS"
 		}
 	},
 	"hello": {
@@ -60,7 +68,9 @@
 		"footer": {
 			"copyright": "Copyright {date} FIRST Team 102 y Robotics Fund Inc.\nCódigo abierto y licenciado con AGPLv3.",
 			"tba": "Con la ayuda de la Blue Alliance.",
-			"frc": "Estamos orgullosos de ser participantes de FIRST Competition de Roboticos."
+			"frc": "Estamos orgullosos de ser participantes de FIRST Competition de Roboticos.",
+			"github": "Consulta nuestro código fuente en GitHub",
+			"statbotics": "EPA de Statbotics"
 		},
 		"nav": {
 			"home": "Casa",
@@ -70,7 +80,7 @@
 				"teamStats": "Estadísticas del equipo",
 				"yearStats": "Estadísticas completas para {year}",
 				"export": {
-					"main": "[CSV] Exportar datos",
+					"main": "Exportar datos",
 					"match": "[CSV] Datos de búsqueda de coincidencias: [[{event}]]",
 					"pit": "[CSV] Datos de exploración de pits: [[{event}]]",
 					"matchAll": "[CSV] Datos de exploración de partidos: [[Todo {year}]]",
@@ -100,9 +110,13 @@
 				"fallback": "Usuario",
 				"login": "Iniciar sesión: [[{org}]]",
 				"logout": "Cerrar sesión",
-				"switchorg": "Cambiar organización"
+				"switchorg": "Cambiar organización",
+				"sociallogin": "Acceso con redes sociales",
+				"switchBackToOrg": "Regresar a: [[{org}]]"
 			},
-			"help": "¿Necesitas ayuda? ¡Consulta nuestra wiki!"
+			"help": "¿Necesitas ayuda? ¡Consulta nuestra wiki!",
+			"voyager": "Cambiar al módulo offline de Voyager",
+			"thanks": "Créditos y agradecimientos / Apóyanos"
 		}
 	},
 	"home": {
@@ -116,7 +130,10 @@
 		"scoutingDashboard": "Panel de exploración",
 		"management": "Administración",
 		"admin": "Administrador",
-		"specifyTeam": "Debes especificar un equipo."
+		"specifyTeam": "Debes especificar un equipo.",
+		"formDemos": "Vista previa de los formularios",
+		"matchFormDemo": "Formulario de match",
+		"pitFormDemo": "Formulario de pits"
 	},
 	"share": {
 		"changeOrg": "Está viendo {org}.\nPara cambiar la organización que desea ver, haga clic en *Org: {org}* en el menú y seleccione *Cambiar organización*."
@@ -159,7 +176,28 @@
 			"setOrgDefalts": "Marque esto para configurar los valores predeterminados de la organización",
 			"save": "Guardar selecciones de columna",
 			"clearOrgDefaults": "Borrar los valores predeterminados de la organización",
-			"clearOrgDefaultsConfirmation": "Al hacer esto, se borrarán los valores predeterminados de las columnas de informes de su organización (para TODOS, no solo para usted). ¿Está seguro?"
+			"clearOrgDefaultsConfirmation": "Al hacer esto, se borrarán los valores predeterminados de las columnas de informes de su organización (para TODOS, no solo para usted). ¿Está seguro?",
+			"externalData": "Selecciona los campos de datos externos para mostrar en los reportes multiequipo",
+			"noExternalData": "Aún no hay campos de datos externos disponibles. Consulta de nuevo después de que ocurran los eventos sincronizados por TMS"
+		},
+		"social": {
+			"login": "Acceso con redes sociales",
+			"notloggedin": "Por favor, inicia sesión.",
+			"link": "Vincular cuenta social",
+			"unlink": "Desvincular cuenta social",
+			"linksuccess": "Se vinculó con éxito a {user} con la cuenta de redes sociales.",
+			"alreadylinked": "{user} ya tiene una cuenta de redes sociales vinculada, por lo que no se creó un nuevo vínculo./nPuedes desvincular la cuenta actual desde el menú de Usuario.",
+			"unlinksuccess": "Se desvinculó con éxito tu cuenta de redes sociales de {user}.",
+			"loginwithlegacy": "Inicia sesión con un usuario de Scoutradioz para vincular tu cuenta.",
+			"chooseusertitle": "Seleccionar usuario",
+			"chooseuser": "Selecciona el usuario de Scoutradioz para iniciar sesión:"
+		},
+		"customizereports": "Personalizar reportes",
+		"heatmapcolors": {
+			"title": "Elegir colores del mapa de calor",
+			"intro": "Elige un esquema de colores para los mapas de calor. Esto permite que las personas con daltonismo puedan visualizar los datos más fácilmente.",
+			"name": "Nombre",
+			"sample": "Muestra"
 		}
 	},
 	"scouting": {
@@ -183,7 +221,8 @@
 		"invalidTeamKey": "La clave del equipo no está definida o no es válida.",
 		"noDataSubmit": "No se enviaron datos a {url}.",
 		"submitSuccess": "Datos enviados con éxito.",
-		"deleteSuccess": "Datos eliminados con éxito. No será redirigido fuera de la página, en caso de que desee volver a enviar los datos en pantalla."
+		"deleteSuccess": "Datos eliminados con éxito. No será redirigido fuera de la página, en caso de que desee volver a enviar los datos en pantalla.",
+		"supermatch": "Super scouting de esta partida"
 	},
 	"notifications": {
 		"status": "Las notificaciones de coincidencias son {status} para este dispositivo.",
@@ -247,7 +286,7 @@
 	"allianceselection": {
 		"title": "Selección de alianza",
 		"intro": "Toca un equipo, luego toca la ranura vacía [2] o [3] para moverlos hacia arriba.\nA medida que se seleccionan equipos para alianzas, aparecerán en gris en la tabla a continuación.",
-		"preferred": "Antes de la selección de alianzas, usted y los líderes de su equipo pueden marcar sus equipos preferidos en <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\"> esta página</a>.",
+		"preferred": "Antes de la selección de alianzas, usted y los líderes de su equipo pueden marcar sus equipos preferidos en <a class=\"link\" href=\"/manage/allianceselection\" target=\"_blank\">esta página</a>.",
 		"undo": "Deshacer",
 		"allianceNumber": "Alianza {number}",
 		"showData": "Mostrar datos del equipo",
@@ -423,6 +462,15 @@
 	"thankyou": {
 		"threestarters": "Los Tres Iniciadores",
 		"thanks": "Gracias a nuestros patrones de acceso temprano!",
-		"2023inseason": "2023 En Temporada"
+		"2023inseason": "2023 En Temporada",
+		"thanksdonations": "¡Gracias a nuestros generosos colaboradores!",
+		"donors": "Donantes",
+		"sponsors": "Patrocinadores",
+		"workinprogress": "(en desarrollo)",
+		"howtodonate": "Cómo donar",
+		"clickheretodonate": "¡Para apoyar a Scoutradioz y (si quieres) aparecer en esta página, haz clic aquí!",
+		"donate": "Donar",
+		"2020to2022": "{year2020} al {year2022}",
+		"2023offseason": "Off-Season 2023"
 	}
 }
