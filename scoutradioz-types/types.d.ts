@@ -143,6 +143,101 @@ declare interface FormSliderOptions {
 }
 
 /**
+ * Possible report data types
+ * - Minimum: `MIN`
+ * - Floor: `FLR` [10th percentile]
+ * - Median: `MED` [50th percentile]
+ * - Average: `AVG`
+ * - Trending: `TRN` [Exponential Moving Average]
+ * - Capability: `CPB` [90th percentile]
+ * - Maximum: `MAX`
+ * - Standard Dev: `STD`
+ * - Variance: `VAR`
+ */
+export declare type ReportDataType = 'MIN'|'FLR'|'MED'|'AVG'|'TRN'|'CPB'|'MAX'|'STD'|'VAR';
+
+/**
+ * Report data directives
+ */
+export declare interface ReportDataDirectives {
+	team_keys: TeamKey[];
+	metrics: string[]; // e.g. "contributedPoints", "tbaOpr", "epaTotalPoints", etc.
+	data_types: ReportDataType[];
+	normalization_needed: boolean; // whether the report generation code needs to normalize values to the highest
+	individual_matches_needed: boolean;
+}
+
+/**
+ * Structure to store aggregations (and possibly normalizations)
+ * keys are metric names (e.g. "contributedPoints", "tbaOpr", "epaTotalPoints", etc.)
+ * numericalDict is names of data types [aggregations] and their corresponding values, e.g.:
+ *   contributedPoints: {
+ *     AVG: 12.3,
+ *     MAX: 45,
+ *     ...
+ *   },
+ */
+export declare interface ReportDataTyped {
+	[key: string]: NumericalDict;
+}
+
+export declare interface ReportMatchData {
+	match_key: MatchKey;
+	match_number: number;
+	metrics: NumericalDict; // e.g. { contributedPoints: 12, tbaOpr: 3.4, ... }
+}
+
+export declare interface ReportTeamData {
+	aggregations?: ReportDataTyped;
+	normalizations?: ReportDataTyped;
+	matches?: ReportMatchData[];
+}
+
+export declare interface ReportData {
+	[team_key: string]: ReportTeamData;
+}
+
+/**
+ * Custom report definitions.
+ */
+export declare interface ReportSchema extends DbDocument {
+	year: number;
+	last_modified: Date,
+	created: Date,
+	chartSections: ChartSections;
+	form_type: 'reportdefinition';
+	name: string;
+	description: string;
+	published: boolean;
+	owners: OrgKey[];
+}
+
+export declare interface ChartSections {
+	allTeamsCharts?: ChartItem[];
+	teamIntelCharts?: ChartItem[];
+	driveTeamDashboardCharts?: ChartItem[];
+}
+
+export declare interface ChartItem {
+	type: 'heatMapOfAllAggregations' | 'stackedBarOfAggregations' | 'bubbleOfAggregations' | 'radarOfAggregations' | 'heatMapOfAggregations' | 'lineChartOfMatches' | 'stackedBarOfMatches' | 'bubbleOfMatches';
+}
+
+export declare interface MultiMetricChartItem extends ChartItem {
+	metrics: string[];
+}
+
+export declare interface SingleMetricChartItem extends ChartItem {
+	metric: string;
+}
+
+export declare interface BubbleChartItem extends ChartItem {
+	x_axis: string;
+	y_axis: string;
+	size?: string;
+	color?: string;
+}
+
+/**
  * A question/metric in the pit or match scouting form.
  * @deprecated
  * @collection layout

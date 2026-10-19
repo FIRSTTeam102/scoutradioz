@@ -1,5 +1,5 @@
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem } from 'scoutradioz-types';
+import type { Match, TeamKey, AggRange, MatchFormData, PitScouting, formDataOutput, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem, ReportDataDirectives, ReportData } from 'scoutradioz-types';
 export declare class MatchDataHelper {
     static readonly SELECTED_COLUMNS_MODE_ALL: number;
     static readonly SELECTED_COLUMNS_MODE_ORG_ONLY: number;
@@ -96,6 +96,16 @@ export declare class MatchDataHelper {
      * @returns {MatchData} Data blob containing matches, teamRanks, team, and teamList
      */
     static getUpcomingMatchData(event_key: string, team_key: string, org_key: string): Promise<UpcomingMatchData>;
+    /**
+     * Get report data - One Call To Rule Them All
+     * @param {number} event_year Event year
+     * @param {string} event_key Event key
+     * @param {string} org_key Org key
+     * @param {object} cookies req.cookies
+     * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
+     * @param {ReportDataDirectives} directives (optional) Object containing directives for what data to include in the report; if not provided, will default to including all data
+     */
+    static getReportData(event_year: number, event_key: string, org_key: string, cookies: any, showAllColumns?: boolean, directives?: ReportDataDirectives): Promise<ReportData>;
     /**
      * Gets alliance stats
      * @param {number} event_year Event year
