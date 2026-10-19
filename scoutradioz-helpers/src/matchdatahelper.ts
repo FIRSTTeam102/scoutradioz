@@ -2,7 +2,7 @@
 'use strict';
 import log4js from '@log4js-node/log4js-api';
 import type { Utilities, MongoDocument } from 'scoutradioz-utilities';
-import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem, ReportDataDirectives, ReportDataTyped, ReportMatchData, ReportTeamData, ReportData } from 'scoutradioz-types';
+import type { Match, Team, Ranking, TeamKey, AggRange, DataRange, EventData, MatchFormData, PitScouting, formDataOutput, DerivedOperation, MultiplyOperation, SumOperation, SubtractOperation, DivideOperation, MultiselectOperation, ConditionOperation, CompareOperation, LogOperation, MinMaxOperation, AbsoluteValueOperation, DerivedLayout, DerivedLayoutLegacy, OrgKey, EventKey, Schema, SchemaItem, CheckBoxItem, CounterItem, DerivedItem, DerivedItemLegacy, SliderItem, HeaderItem, SubheaderItem, ImageItem, SpacerItem, ImportDataItem, ReportDataDirectives, ReportDataTyped, ReportMatchData, ReportTeamData, ReportData, ReportDataType } from 'scoutradioz-types';
 import assert from 'assert';
 import { DerivedCalculator, convertValuesDict } from './derivedhelper.js';
 import ztable from 'ztable';
@@ -1450,26 +1450,231 @@ export class MatchDataHelper {
 	 * @param {boolean} showAllColumns (optional) Show all columns regardless of column selections [defaults to false]
 	 * @param {ReportDataDirectives} directives (optional) Object containing directives for what data to include in the report; if not provided, will default to including all data
 	 */
-	static async getReportData(event_year: number, event_key: string, org_key: string, cookies: any, showAllColumns: boolean = false, directives?: ReportDataDirectives) {
-		logger.addContext('funcName', 'getReportData');
-		logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',showAllColumns=' + showAllColumns + ',directives=' + JSON.stringify(directives));
+	// static async getReportData(event_year: number, event_key: string, org_key: string, cookies: any, showAllColumns: boolean = false, directives?: ReportDataDirectives) {
+	// 	logger.addContext('funcName', 'getReportData');
+	// 	logger.info('ENTER event_year=' + event_year + ',event_key=' + event_key + ',org_key=' + org_key + ',showAllColumns=' + showAllColumns + ',directives=' + JSON.stringify(directives));
 
-		// set up the return data
-		//
-		// an example old call: multiple data elements for avgTable, maxTable, norms, etc.
-		// let returnData: AllianceStatsData = {
-		// 	teams,
-		// 	teamList,
-		// 	currentAggRanges,
-		// 	avgTable,
-		// 	maxTable,
-		// 	avgNorms,
-		// 	maxNorms,
-		// 	pitData
-		// };
-		//
-		// new call: a single data blob with multiple potential data elements, which will be populated based on the directives passed in (or default to all)		
-		let returnData: ReportData = {};
+	// 	// set up the return data
+	// 	//
+	// 	// an example old call: multiple data elements for avgTable, maxTable, norms, etc.
+	// 	// let returnData: AllianceStatsData = {
+	// 	// 	teams,
+	// 	// 	teamList,
+	// 	// 	currentAggRanges,
+	// 	// 	avgTable,
+	// 	// 	maxTable,
+	// 	// 	avgNorms,
+	// 	// 	maxNorms,
+	// 	// 	pitData
+	// 	// };
+	// 	//
+	// 	// new call: a single data blob with multiple potential data elements, which will be populated based on the directives passed in (or default to all)		
+	// 	let returnData: ReportData = {};
+	// 	logger.removeContext('funcName');
+	// 	return returnData;
+	// }
+
+	static async getReportData(
+		event_year: number,
+		event_key: string,
+		org_key: string,
+		cookies: any,
+		showAllColumns: boolean = false,
+		directives?: ReportDataDirectives
+	) {
+		logger.addContext('funcName', 'getReportData');
+		logger.info(`ENTER event_year=${event_year},event_key=${event_key},org_key=${org_key},showAllColumns=${showAllColumns},directives=${JSON.stringify(directives)}`);
+
+		const cookie_key = `${org_key}_${event_year}_cols`;
+		const colCookie = cookies?.[cookie_key];
+
+		// ----- 1. Resolve the universe of metrics ----------------------------------------
+		// Internal = anything in the org's matchscouting schema (quantifiable only).
+		// External = anything present in eventdata but not in the schema (TBA OPR, EPA, etc).
+		let scorelayout = await this.getModifiedMatchScoutingLayout(org_key, event_year, colCookie, showAllColumns);
+		scorelayout = scorelayout.filter(l => this.isQuantifiableType(l.type));
+
+		const selectedExternalColumns = await MatchDataHelper.getSelectedColumns(
+			org_key, event_year, colCookie, MatchDataHelper.SELECTED_COLUMNS_MODE_EXTERNAL_ONLY
+		);
+		const externalKeys = selectedExternalColumns ? Object.keys(selectedExternalColumns) : [];
+
+		let internalMetrics = scorelayout.map(l => l.id as string);
+		let externalMetrics = externalKeys;
+
+		if (directives?.metrics?.length) {
+			const wanted = new Set(directives.metrics);
+			internalMetrics = internalMetrics.filter(m => wanted.has(m));
+			externalMetrics = externalMetrics.filter(m => wanted.has(m));
+		}
+
+		// ----- 2. Resolve the team list --------------------------------------------------
+		const event = await utilities.findOne('events', { key: event_key }, {}, { allowCache: true, maxCacheAge: 300 });
+		const eventTeamKeys: TeamKey[] = event?.team_keys || [];
+		const teamList: TeamKey[] = directives?.team_keys?.length ? directives.team_keys : eventTeamKeys;
+
+		// ----- 3. Resolve which data_types we need --------------------------------------
+		const requestedTypes: ReportDataType[] = directives?.data_types?.length
+			? directives.data_types
+			: ['MIN', 'FLR', 'MED', 'AVG', 'TRN', 'CPB', 'MAX', 'STD', 'VAR'];
+		const wantTRN = requestedTypes.includes('TRN');
+		const wantPctile = requestedTypes.some(t => t === 'FLR' || t === 'MED' || t === 'CPB');
+		const includeMatches = !!directives?.individual_matches_needed;
+
+		// ----- 4. Build ONE matchscouting pipeline that covers every team + metric ------
+		const aggQuery: MongoDocument[] = [
+			{ $match: { team_key: { $in: teamList }, org_key, event_key } },
+			{ $sort: { team_key: 1, time: 1 } }, // needed for $expMovingAvg and stable $push
+		];
+
+		if (wantTRN && internalMetrics.length) {
+			// EMA for TRN, matches the pattern in getAllianceStatsData
+			const emaAlpha = parseFloat(process.env.EMA_ALPHA);
+			const output: MongoDocument = {};
+			for (const m of internalMetrics) {
+				output[`${m}EMA`] = { $expMovingAvg: { alpha: emaAlpha, input: `$data.${m}` } };
+			}
+			aggQuery.push({
+				$setWindowFields: {
+					partitionBy: '$team_key',
+					sortBy: { time: 1 },
+					output,
+				}
+			});
+		}
+
+		const groupClause: MongoDocument = { _id: '$team_key', _count: { $sum: 1 } };
+		for (const m of internalMetrics) {
+			const path = `$data.${m}`;
+			if (requestedTypes.includes('MIN'))  groupClause[`${m}_MIN`] = { $min: path };
+			if (requestedTypes.includes('MAX'))  groupClause[`${m}_MAX`] = { $max: path };
+			if (requestedTypes.includes('AVG'))  groupClause[`${m}_AVG`] = { $avg: path };
+			if (requestedTypes.includes('STD'))  groupClause[`${m}_STD`] = { $stdDevSamp: path };
+			if (requestedTypes.includes('TRN'))  groupClause[`${m}_TRN`] = { $last: `$${m}EMA` };
+			if (wantPctile) {
+				// Grab top-N and bottom-N for percentile extraction, mirroring existing code.
+				groupClause[`${m}__top`]    = { $maxN: { input: path, n: 12 } };
+				groupClause[`${m}__bottom`] = { $minN: { input: path, n: 12 } };
+			}
+		}
+		if (includeMatches && internalMetrics.length) {
+			const matchProjection: MongoDocument = { match_key: '$match_team_key', match_number: '$match_number' };
+			for (const m of internalMetrics) matchProjection[m] = `$data.${m}`;
+			groupClause._matches = { $push: matchProjection };
+		}
+		aggQuery.push({ $group: groupClause });
+
+		const aggResult: MongoDocument[] = internalMetrics.length
+			? await utilities.aggregate('matchscouting', aggQuery)
+			: [];
+
+		const rowsByTeam: Dict<MongoDocument> = {};
+		for (const row of aggResult) rowsByTeam[row._id] = row;
+
+		// ----- 5. Bolt on external (eventdata) values -----------------------------------
+		let externalByTeam: Dict<MongoDocument> = {};
+		if (externalMetrics.length) {
+			const externalData = await utilities.find('eventdata', { event_key });
+			for (const d of externalData) externalByTeam[d.team_key] = d;
+		}
+
+		// ----- 6. Assemble per-team aggregations + normalizations + matches -------------
+		const returnData: ReportData = {};
+		const round1 = (v: number) => Math.round(v * 10) / 10;
+
+		for (const team_key of teamList) {
+			const teamRow = rowsByTeam[team_key];
+			const aggregations: ReportDataTyped = {};
+
+			for (const m of internalMetrics) {
+				const agg: NumericalDict = {};
+				if (teamRow) {
+					if (requestedTypes.includes('MIN')) agg.MIN = round1(teamRow[`${m}_MIN`] ?? 0);
+					if (requestedTypes.includes('MAX')) agg.MAX = round1(teamRow[`${m}_MAX`] ?? 0);
+					if (requestedTypes.includes('AVG')) agg.AVG = round1(teamRow[`${m}_AVG`] ?? 0);
+					if (requestedTypes.includes('TRN')) agg.TRN = round1(teamRow[`${m}_TRN`] ?? 0);
+					if (requestedTypes.includes('STD')) {
+						const s = teamRow[`${m}_STD`] ?? 0;
+						agg.STD = round1(s);
+						if (requestedTypes.includes('VAR')) agg.VAR = round1(s * s);
+					}
+					else if (requestedTypes.includes('VAR')) {
+						agg.VAR = 0;
+					}
+					if (wantPctile) {
+						// $maxN gives descending order; $minN gives ascending.
+						const desc: number[] = teamRow[`${m}__top`] ?? [];
+						const asc:  number[] = teamRow[`${m}__bottom`] ?? [];
+						if (requestedTypes.includes('CPB')) agg.CPB = round1(this.extractPercentileFromSortedArray(desc, 10 / 11));
+						if (requestedTypes.includes('MED')) agg.MED = round1(this.extractPercentileFromSortedArray(desc, 0.5));
+						if (requestedTypes.includes('FLR')) {
+							// Re-sort ascending into a descending view so we can reuse the helper symmetrically:
+							// floor = the value at the 10% mark from the bottom.
+							agg.FLR = round1(this.extractPercentileFromSortedArray([...asc].reverse(), 10 / 11));
+						}
+					}
+				}
+				aggregations[m] = agg;
+			}
+
+			// External metrics: only one value per team, so AVG/MIN/MAX collapse to it.
+			const ext = externalByTeam[team_key]?.data;
+			for (const m of externalMetrics) {
+				const v = ext ? round1(ext[m] ?? 0) : 0;
+				const agg: NumericalDict = {};
+				for (const t of requestedTypes) {
+					if (t === 'STD' || t === 'VAR') agg[t] = 0;
+					else agg[t] = v;
+				}
+				aggregations[m] = agg;
+			}
+
+			const teamData: ReportTeamData = { aggregations };
+
+			if (includeMatches) {
+				const matches: ReportMatchData[] = [];
+				const rawMatches: MongoDocument[] = teamRow?._matches ?? [];
+				for (const rm of rawMatches) {
+					const metrics: NumericalDict = {};
+					for (const m of internalMetrics) metrics[m] = Number(rm[m] ?? 0);
+					// External metrics don't vary by match; surface the single value if requested.
+					for (const m of externalMetrics) metrics[m] = ext ? round1(ext[m] ?? 0) : 0;
+					matches.push({
+						match_key: rm.match_key,
+						match_number: rm.match_number,
+						metrics,
+					});
+				}
+				teamData.matches = matches;
+			}
+
+			returnData[team_key] = teamData;
+		}
+
+		// ----- 7. Normalization (per-metric, per-data_type, across the team set) --------
+		if (directives?.normalization_needed) {
+			const allMetrics = [...internalMetrics, ...externalMetrics];
+			for (const team_key of teamList) returnData[team_key].normalizations = {};
+
+			for (const m of allMetrics) {
+				for (const t of requestedTypes) {
+					let max = -Infinity;
+					const min = 0; // existing convention: clamp min to 0 so spider charts read sensibly
+					for (const team_key of teamList) {
+						const v = returnData[team_key].aggregations?.[m]?.[t] ?? 0;
+						if (v > max) max = v;
+					}
+					for (const team_key of teamList) {
+						const v = returnData[team_key].aggregations?.[m]?.[t] ?? 0;
+						const norm = (max === min) ? Math.sign(Math.abs(max)) : (v - min) / (max - min);
+						const target = (returnData[team_key].normalizations ??= {});
+						(target[m] ??= {})[t] = round1(norm);
+					}
+				}
+			}
+		}
+
+		logger.info(`EXIT teams=${teamList.length}, metrics=${internalMetrics.length + externalMetrics.length}, types=${requestedTypes.join(',')}, matches=${includeMatches}`);
 		logger.removeContext('funcName');
 		return returnData;
 	}
